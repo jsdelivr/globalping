@@ -9,13 +9,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: node:16-alpine
 
     services:
       redis:
         image: redislabs/redismod:latest
-        volumes:
-          - ./config/redis.conf:/usr/local/etc/redis/redis.conf
         ports:
           - 6379:6379
         options: >-
@@ -26,12 +23,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: npm install, build, and test
+      - name: install and build
         run: |
           npm ci
-          npm run lint
           npm run build
-          npm run test:coverage
         env:
           CI: true
-          REDIS_URL: redis://localhost:6379
+      - name: lint
+        run: npm run lint
+      - name: test
+        run: npm run test:coverage
