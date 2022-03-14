@@ -1,8 +1,17 @@
 import {Server} from 'socket.io';
 import {createAdapter} from '@socket.io/redis-adapter';
+import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
 import {getRedisClient} from '../redis/client.js';
 
-let io: Server;
+export type SocketData = {
+	probe: Probe;
+} & Record<any, any>;
+
+export type WSServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
+
+export const PROBES_NAMESPACE = '/probes';
+
+let io: WSServer;
 
 export const initWsServer = async () => {
 	const pubClient = getRedisClient().duplicate();
@@ -20,7 +29,7 @@ export const initWsServer = async () => {
 	io.adapter(createAdapter(pubClient, subClient));
 };
 
-export const getWsServer = (): Server => {
+export const getWsServer = (): WSServer => {
 	if (!io) {
 		throw new Error('WS server not initialized yet');
 	}

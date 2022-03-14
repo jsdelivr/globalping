@@ -1,5 +1,4 @@
-import type {Probe} from '../probe/store.js';
-import type {Locations} from './locations.js';
+import type {Location} from './locations.js';
 
 /**
  * Network Tests
@@ -36,6 +35,7 @@ type TracerouteResult = TestResult & {
 
 export type NetworkTest = PingTest | TracerouteTest;
 export type MeasurementResult = PingResult | TracerouteResult;
+export type LocationWithLimit = Location & {limit?: number};
 
 /**
  * Measurement Objects
@@ -45,8 +45,8 @@ type MeasurementStatus = 'in-progress' | 'finished';
 
 export type MeasurementRequest = {
 	measurement: NetworkTest;
-	locations: Locations[];
-	limit: number;
+	locations: LocationWithLimit[];
+	limit?: number;
 };
 
 export type MeasurementConfig = {

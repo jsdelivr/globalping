@@ -1,0 +1,13 @@
+{
+    "check-coverage": false,
+    "all": true,
+	"exclude": [
+	    "dist/",
+		"test/",
+		"**/*.d.ts"
+	],
+	"reporter": [
+		"lcov",
+		"text"
+	]
+}

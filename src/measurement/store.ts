@@ -1,5 +1,4 @@
 import cryptoRandomString from 'crypto-random-string';
-import type {Probe} from '../probe/store.js';
 import type {RedisClient} from '../lib/redis/client.js';
 import {getRedisClient} from '../lib/redis/client.js';
 import type {MeasurementRecord, MeasurementResultMessage, NetworkTest} from './types.js';
@@ -45,10 +44,10 @@ export class MeasurementStore {
 		await this.redis.executeIsolated(async client => {
 			await client.json.set(key, `$.results.${probeId}`, {
 				probe: {
-					continent: probe.continent,
-					country: probe.country,
-					city: probe.city,
-					asn: probe.asn,
+					continent: probe.location.continent,
+					country: probe.location.country,
+					city: probe.location.city,
+					asn: probe.location.asn,
 				},
 				result: {},
 			});

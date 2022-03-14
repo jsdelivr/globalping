@@ -1,4 +1,3 @@
-import type {Probe} from '../../probe/store.js';
 import {getMeasurementRunner} from '../runner.js';
 
 const runner = getMeasurementRunner();

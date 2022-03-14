@@ -13,23 +13,23 @@ const runner = getMeasurementRunner();
 const schema = Joi.object({
 	locations: Joi.array().items(Joi.object({
 		type: Joi.string().valid('continent', 'region', 'country', 'city', 'asn'),
-		value: Joi.array().items(
-			Joi.alternatives().conditional(Joi.ref('...type'), {
-				switch: [
-					{is: 'country', then: Joi.string().length(2)},
-					{is: 'region', then: Joi.string()},
-					{is: 'country', then: Joi.string().length(2)},
-					{is: 'city', then: Joi.number()},
-					{is: 'asn', then: Joi.number()},
-				],
-			}),
-		),
-	})),
-	measurement: Joi.alternatives().try(
-		PingSchema,
-		TracerouteSchema,
-	),
-	limit: Joi.number(),
+		value: Joi.alternatives().conditional('type', {
+			switch: [
+				{is: 'continent', then: Joi.string().length(2)},
+				{is: 'region', then: Joi.string()},
+				{is: 'country', then: Joi.string().length(2)},
+				{is: 'city', then: Joi.number()},
+				{is: 'asn', then: Joi.number()},
+			],
+		}),
+		limit: Joi.number().min(1).when(Joi.ref('/limit'), {
+			is: Joi.exist(),
+			then: Joi.forbidden().messages({'any.unknown': 'limit per location is not allowed when a global limit is set'}),
+			otherwise: Joi.required().messages({'any.required': 'limit per location required when no global limit is set'}),
+		}),
+	})).default([]),
+	measurement: Joi.alternatives().try(PingSchema, TracerouteSchema).required(),
+	limit: Joi.number().min(1),
 });
 
 const handle = async (ctx: Context) => {

@@ -1,11 +1,11 @@
 type Continent = {
 	type: 'continent';
-	value: Array<'AF' | 'AN' | 'AS' | 'EU' | 'NA' | 'SA' | 'OC'>;
+	value: 'AF' | 'AN' | 'AS' | 'EU' | 'NA' | 'SA' | 'OC';
 };
 
 type Region = {
 	type: 'region';
-	value: Array<'northern-europe'
+	value: 'northern-europe'
 	| 'southern-europe'
 	| 'western-europe'
 	| 'eastern-europe'
@@ -25,22 +25,22 @@ type Region = {
 	| 'caribbean'
 	| 'polynesia'
 	| 'melanesia'
-	| 'micronesia'>;
+	| 'micronesia';
 };
 
 type Country = {
 	type: 'country';
-	value: string[];
+	value: string;
 };
 
 type City = {
 	type: 'city';
-	value: number[];
+	value: number;
 };
 
 type Asn = {
 	type: 'asn';
-	value: number[];
+	value: number;
 };
 
-export type Locations = Continent | Region | Country | City | Asn;
+export type Location = Continent | Region | Country | City | Asn;

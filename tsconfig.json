@@ -1,8 +1,10 @@
 {
   "extends": "@tsconfig/node16-strictest-esm/tsconfig.json",
+  "ts-node": {
+    "files": true
+  },
   "compilerOptions": {
     "outDir": "./dist",
-    "types": ["node"],
     "moduleResolution": "node"
   },
   "include": [
