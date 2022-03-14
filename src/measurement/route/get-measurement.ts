@@ -23,8 +23,8 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		id: result.id,
 		type: result.type,
 		status: result.status,
-		created_at: result.createdAt,
-		updated_at: result.updatedAt,
+		createdAt: result.createdAt,
+		updatedAt: result.updatedAt,
 		results: Object.values(result.results).map(r => r),
 	};
 };

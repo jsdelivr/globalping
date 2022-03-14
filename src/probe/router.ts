@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import type {RemoteSocket} from 'socket.io';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
-import type {SocketData, WSServer} from '../lib/ws/server.js';
+import type {SocketData, WsServer} from '../lib/ws/server.js';
 import {getWsServer, PROBES_NAMESPACE} from '../lib/ws/server.js';
 import type {Location} from '../measurement/locations.js';
 import type {LocationWithLimit} from '../measurement/types.js';
@@ -10,7 +10,7 @@ type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
 export class ProbeRouter {
 	constructor(
-		private readonly io: WSServer,
+		private readonly io: WsServer,
 		private readonly sampleFn: typeof _.sampleSize,
 	) {}
 

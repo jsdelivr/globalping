@@ -5,7 +5,7 @@ import bodyParser from 'koa-bodyparser';
 import {validate} from '../../lib/http/middleware/validate.js';
 import {getMeasurementRunner} from '../runner.js';
 import type {MeasurementRequest} from '../types.js';
-import {PingSchema, TracerouteSchema} from '../schema/command-schema.js';
+import {pingSchema, tracerouteSchema} from '../schema/command-schema.js';
 
 const runner = getMeasurementRunner();
 
@@ -28,7 +28,7 @@ const schema = Joi.object({
 			otherwise: Joi.required().messages({'any.required': 'limit per location required when no global limit is set'}),
 		}),
 	})).default([]),
-	measurement: Joi.alternatives().try(PingSchema, TracerouteSchema).required(),
+	measurement: Joi.alternatives().try(pingSchema, tracerouteSchema).required(),
 	limit: Joi.number().min(1),
 });
 
@@ -40,7 +40,7 @@ const handle = async (ctx: Context) => {
 
 		ctx.body = {
 			id: config.id,
-			probes_count: config.probes.length,
+			probesCount: config.probes.length,
 		};
 	} catch (error: unknown) {
 		ctx.status = 400;

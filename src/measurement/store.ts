@@ -25,6 +25,7 @@ export class MeasurementStore {
 		const key = getMeasurementKey(id);
 
 		await this.redis.executeIsolated(async client => {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
 			await client.set(getMeasurementKey(id, 'probes_awaiting'), probesCount, {EX: 300});
 			await client.json.set(key, '$', {
 				id,

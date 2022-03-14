@@ -7,11 +7,12 @@ export type SocketData = {
 	probe: Probe;
 } & Record<any, any>;
 
-export type WSServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
+export type WsServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export const PROBES_NAMESPACE = '/probes';
 
-let io: WSServer;
+let io: WsServer;
 
 export const initWsServer = async () => {
 	const pubClient = getRedisClient().duplicate();
@@ -29,7 +30,7 @@ export const initWsServer = async () => {
 	io.adapter(createAdapter(pubClient, subClient));
 };
 
-export const getWsServer = (): WSServer => {
+export const getWsServer = (): WsServer => {
 	if (!io) {
 		throw new Error('WS server not initialized yet');
 	}

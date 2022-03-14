@@ -1,3 +1,4 @@
+import config from 'config';
 import {createClient, RedisClientType, RedisDefaultModules, RedisScripts} from 'redis';
 
 export type RedisClient = RedisClientType<RedisDefaultModules, RedisScripts>;
@@ -9,7 +10,7 @@ export const initRedis = async () => {
 };
 
 export const createRedisClient = async (): Promise<RedisClient> => {
-	const client = createClient({url: 'redis://localhost:6379'});
+	const client = createClient({url: config.get<string>('redis.url')});
 	await client.connect();
 
 	return client;
