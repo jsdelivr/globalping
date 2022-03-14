@@ -5,15 +5,12 @@ import process from 'node:process';
 import {initRedis} from './lib/redis/client.js';
 import {initWsServer} from './lib/ws/server.js';
 import {scopedLogger} from './lib/logger.js';
-import {ensureProbeSearchIndex} from './lib/redis/search-index.js';
 
 const logger = scopedLogger('global');
 const port = process.env['PORT'] ?? 3000;
 
 const workerFn = async () => {
 	await initRedis();
-	await ensureProbeSearchIndex();
-
 	await initWsServer();
 
 	// eslint-disable-next-line node/no-unsupported-features/es-syntax

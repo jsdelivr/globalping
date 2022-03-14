@@ -2,8 +2,7 @@ import type {Server} from 'socket.io';
 import type {RedisClient} from '../lib/redis/client.js';
 import {getRedisClient} from '../lib/redis/client.js';
 import {getWsServer} from '../lib/ws/server.js';
-import {findMatchingProbes} from '../probe/router.js';
-import type {Probe} from '../probe/store.js';
+import {getProbeRouter, ProbeRouter} from '../probe/router.js';
 import {scopedLogger} from '../lib/logger.js';
 import type {MeasurementConfig, MeasurementRequest, MeasurementResultMessage} from './types.js';
 import type {MeasurementStore} from './store.js';
@@ -11,17 +10,18 @@ import {getMeasurementKey, getMeasurementStore} from './store.js';
 
 const logger = scopedLogger('measurement');
 
-class MeasurementRunner {
+export class MeasurementRunner {
 	private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
 
 	constructor(
 		private readonly io: Server,
 		private readonly redis: RedisClient,
 		private readonly store: MeasurementStore,
+		private readonly router: ProbeRouter,
 	) {}
 
 	async run(request: MeasurementRequest): Promise<MeasurementConfig> {
-		const probes = await findMatchingProbes(request.locations, request.limit);
+		const probes = await this.router.findMatchingProbes(request.locations, request.limit);
 
 		if (probes.length === 0) {
 			throw new Error('no suitable probes');
@@ -84,11 +84,13 @@ class MeasurementRunner {
 	}
 }
 
+// Factory
+
 let runner: MeasurementRunner;
 
 export const getMeasurementRunner = () => {
 	if (!runner) {
-		runner = new MeasurementRunner(getWsServer(), getRedisClient(), getMeasurementStore());
+		runner = new MeasurementRunner(getWsServer(), getRedisClient(), getMeasurementStore(), getProbeRouter());
 	}
 
 	return runner;
