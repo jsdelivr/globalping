@@ -12,6 +12,6 @@ export const probeMetadata = async (socket: Socket, next: (error?: ExtendedError
 	} catch {
 		// Todo: add more info to log when we add probe authentication
 		logger.warn('failed to collect probe metadata');
-		next(new Error('failed to collect probe metadata'));
+		next(new Error('probe not recognized by the API'));
 	}
 };
