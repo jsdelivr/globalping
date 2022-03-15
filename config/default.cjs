@@ -1,6 +1,10 @@
 module.exports = {
 	redis: {
-		url: 'redis://localhost:6379',
+		url: '',
+		socket: {
+			tls: true,
+			rejectUnauthorized: false,
+		},
 	},
 	maxmind: {
 		accountId: '',
