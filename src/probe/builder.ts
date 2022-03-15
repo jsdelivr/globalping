@@ -1,6 +1,7 @@
 import * as process from 'node:process';
 import _ from 'lodash';
 import type {Socket} from 'socket.io';
+import isIpPrivate from 'private-ip';
 import {geoIpLookup} from '../lib/geoip/client.js';
 import {getRegionByCountry} from '../lib/location/regions.js';
 import type {Probe} from './types.js';
@@ -17,9 +18,15 @@ const fakeIpForDebug = () => _.sample([
 ])!;
 
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
+	let ipInfo;
+
 	// Todo: remoteAddress is not reliable source when behind proxy
 	// todo: cache results for ip address
-	const ipInfo = await geoIpLookup(process.env['FAKE_PROBE_IP'] ? fakeIpForDebug() : socket.conn.remoteAddress);
+	if (process.env['FAKE_PROBE_IP']) {
+		ipInfo = await geoIpLookup(fakeIpForDebug());
+	} else if (!isIpPrivate(socket.conn.remoteAddress)) {
+		ipInfo = await geoIpLookup(socket.conn.remoteAddress);
+	}
 
 	if (
 		!ipInfo
