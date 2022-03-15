@@ -54,6 +54,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "start": "node dist/index.js",
     "lint": "xo",
     "lint:fix": "xo --fix",
     "clean": "rimraf .nyc_output coverage",
