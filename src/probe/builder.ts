@@ -2,6 +2,8 @@ import * as process from 'node:process';
 import _ from 'lodash';
 import type {Socket} from 'socket.io';
 import {geoIpLookup} from '../lib/geoip/client.js';
+import {getRegionByCountry} from '../lib/location/regions.js';
+import type {Probe} from './types.js';
 
 const fakeIpForDebug = () => _.sample([
 	'95.155.94.127',
@@ -29,15 +31,18 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		throw new Error('couldn\'t detect probe location');
 	}
 
+	const unitedStatesState = ipInfo.country.isoCode === 'US' ? ipInfo.subdivisions?.[0]?.isoCode : undefined;
+
 	// Todo: add validation and handle missing or partial data
 	return {
 		client: socket.id,
 		ipAddress: socket.conn.remoteAddress,
 		location: {
-			city: ipInfo.city.geonameId,
-			country: ipInfo.country.isoCode,
-			region: 'central-europe',
 			continent: ipInfo.continent.code,
+			region: getRegionByCountry(ipInfo.country.isoCode),
+			country: ipInfo.country.isoCode,
+			state: unitedStatesState,
+			city: ipInfo.city.geonameId,
 			asn: ipInfo.traits.autonomousSystemNumber,
 		},
 	};

@@ -1,6 +1,7 @@
 import {Server} from 'socket.io';
 import {createAdapter} from '@socket.io/redis-adapter';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
+import type {Probe} from '../../probe/types.js';
 import {getRedisClient} from '../redis/client.js';
 
 export type SocketData = {

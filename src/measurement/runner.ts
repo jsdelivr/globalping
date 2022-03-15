@@ -4,8 +4,9 @@ import {getRedisClient} from '../lib/redis/client.js';
 import {getWsServer} from '../lib/ws/server.js';
 import {getProbeRouter, ProbeRouter} from '../probe/router.js';
 import {scopedLogger} from '../lib/logger.js';
-import type {MeasurementConfig, MeasurementRequest, MeasurementResultMessage} from './types.js';
+import type {Probe} from '../probe/types.js';
 import type {MeasurementStore} from './store.js';
+import type {MeasurementConfig, MeasurementRequest, MeasurementResultMessage} from './types.js';
 import {getMeasurementKey, getMeasurementStore} from './store.js';
 
 const logger = scopedLogger('measurement');

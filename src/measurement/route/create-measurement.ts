@@ -2,22 +2,27 @@ import Joi from 'joi';
 import type {Context} from 'koa';
 import type Router from '@koa/router';
 import bodyParser from 'koa-bodyparser';
-import {validate} from '../../lib/http/middleware/validate.js';
+import geoLists from 'countries-list';
 import {getMeasurementRunner} from '../runner.js';
 import type {MeasurementRequest} from '../types.js';
+import {states} from '../../lib/location/states.js';
+import {regions} from '../../lib/location/regions.js';
+import {validate} from '../../lib/http/middleware/validate.js';
 import {pingSchema, tracerouteSchema} from '../schema/command-schema.js';
 
 const runner = getMeasurementRunner();
+const {continents, countries} = geoLists;
 
-// Todo: better validation. predefined values for locations, hostname/ip validation for targets
+// Todo: better validation. hostname/ip validation for targets
 const schema = Joi.object({
 	locations: Joi.array().items(Joi.object({
-		type: Joi.string().valid('continent', 'region', 'country', 'city', 'asn'),
+		type: Joi.string().valid('continent', 'region', 'country', 'state', 'city', 'asn'),
 		value: Joi.alternatives().conditional('type', {
 			switch: [
-				{is: 'continent', then: Joi.string().length(2)},
-				{is: 'region', then: Joi.string()},
-				{is: 'country', then: Joi.string().length(2)},
+				{is: 'continent', then: Joi.string().length(2).valid(...Object.keys(continents))},
+				{is: 'region', then: Joi.string().valid(...Object.keys(regions))},
+				{is: 'country', then: Joi.string().length(2).valid(...Object.keys(countries))},
+				{is: 'state', then: Joi.string().length(2).valid(...Object.keys(states))},
 				{is: 'city', then: Joi.number()},
 				{is: 'asn', then: Joi.number()},
 			],
