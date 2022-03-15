@@ -1,12 +1,13 @@
+import config from 'config';
 import type {Server} from 'socket.io';
+import {scopedLogger} from '../lib/logger.js';
+import {getWsServer} from '../lib/ws/server.js';
 import type {RedisClient} from '../lib/redis/client.js';
 import {getRedisClient} from '../lib/redis/client.js';
-import {getWsServer} from '../lib/ws/server.js';
 import {getProbeRouter, ProbeRouter} from '../probe/router.js';
-import {scopedLogger} from '../lib/logger.js';
-import type {MeasurementConfig, MeasurementRequest, MeasurementResultMessage} from './types.js';
-import type {MeasurementStore} from './store.js';
 import {getMeasurementKey, getMeasurementStore} from './store.js';
+import type {MeasurementStore} from './store.js';
+import type {MeasurementConfig, MeasurementRequest, MeasurementResultMessage} from './types.js';
 
 const logger = scopedLogger('measurement');
 
@@ -66,10 +67,12 @@ export class MeasurementRunner {
 	}
 
 	private setTimeout(id: string): void {
+		const timeout = config.get<number>('measurement.timeout') * 1000;
+
 		const timer = setTimeout(() => {
 			this.timers.delete(id);
 			this.store.markFinished(id).catch(error => logger.error(error));
-		}, 30_000);
+		}, timeout);
 
 		this.timers.set(id, timer);
 	}
