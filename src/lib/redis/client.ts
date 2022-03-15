@@ -10,7 +10,7 @@ export const initRedis = async () => {
 };
 
 export const createRedisClient = async (): Promise<RedisClient> => {
-	const client = createClient({url: config.get<string>('redis.url')});
+	const client = createClient(config.util.toObject(config.get('redis')));
 	await client.connect();
 
 	return client;

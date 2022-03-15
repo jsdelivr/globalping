@@ -2,6 +2,7 @@ import * as process from 'node:process';
 import _ from 'lodash';
 import type {Socket} from 'socket.io';
 import isIpPrivate from 'private-ip';
+import requestIp from 'request-ip';
 import {geoIpLookup} from '../lib/geoip/client.js';
 import {getRegionByCountry} from '../lib/location/regions.js';
 import type {Probe} from './types.js';
@@ -18,14 +19,19 @@ const fakeIpForDebug = () => _.sample([
 ])!;
 
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
+	const clientIp = requestIp.getClientIp(socket.request);
+
+	if (!clientIp) {
+		throw new Error('failed to detect ip address of connected probe');
+	}
+
 	let ipInfo;
 
-	// Todo: remoteAddress is not reliable source when behind proxy
-	// todo: cache results for ip address
+	// Todo: cache results for ip address
 	if (process.env['FAKE_PROBE_IP']) {
 		ipInfo = await geoIpLookup(fakeIpForDebug());
-	} else if (!isIpPrivate(socket.conn.remoteAddress)) {
-		ipInfo = await geoIpLookup(socket.conn.remoteAddress);
+	} else if (!isIpPrivate(clientIp)) {
+		ipInfo = await geoIpLookup(clientIp);
 	}
 
 	if (
@@ -35,22 +41,25 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		|| !ipInfo.continent?.code
 		|| !ipInfo.traits?.autonomousSystemNumber
 	) {
-		throw new Error('couldn\'t detect probe location');
+		throw new Error(`couldn't detect probe location for ip ${clientIp}`);
 	}
 
-	const unitedStatesState = ipInfo.country.isoCode === 'US' ? ipInfo.subdivisions?.[0]?.isoCode : undefined;
+	const location: Probe['location'] = {
+		continent: ipInfo.continent.code,
+		region: getRegionByCountry(ipInfo.country.isoCode),
+		country: ipInfo.country.isoCode,
+		city: ipInfo.city.geonameId,
+		asn: ipInfo.traits.autonomousSystemNumber,
+	};
+
+	if (ipInfo.country.isoCode === 'US' && ipInfo.subdivisions?.[0]?.isoCode) {
+		location.state = ipInfo.subdivisions[0].isoCode;
+	}
 
 	// Todo: add validation and handle missing or partial data
 	return {
 		client: socket.id,
 		ipAddress: socket.conn.remoteAddress,
-		location: {
-			continent: ipInfo.continent.code,
-			region: getRegionByCountry(ipInfo.country.isoCode),
-			country: ipInfo.country.isoCode,
-			state: unitedStatesState,
-			city: ipInfo.city.geonameId,
-			asn: ipInfo.traits.autonomousSystemNumber,
-		},
+		location,
 	};
 };

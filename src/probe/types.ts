@@ -5,8 +5,8 @@ export type Probe = {
 		continent: string;
 		region: string;
 		country: string;
-		state: string | undefined;
 		city: number;
 		asn: number;
+		state?: string;
 	};
 };
