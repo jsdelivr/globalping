@@ -39,6 +39,7 @@
     "@types/throng": "^5.0.3",
     "c8": "^7.11.0",
     "chai": "^4.3.6",
+    "husky": "^7.0.4",
     "mocha": "^9.2.2",
     "rimraf": "^3.0.2",
     "sinon": "^13.0.1",
@@ -53,9 +54,11 @@
   "scripts": {
     "build": "tsc",
     "lint": "xo",
+    "lint:fix": "xo --fix",
     "clean": "rimraf .nyc_output coverage",
     "test": "mocha",
-    "test:coverage": "npm run clean && c8 mocha"
+    "test:coverage": "npm run clean && c8 mocha",
+    "init:hooks": "husky install"
   },
   "xo": {
     "rules": {
