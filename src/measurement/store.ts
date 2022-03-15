@@ -1,7 +1,8 @@
 import config from 'config';
 import cryptoRandomString from 'crypto-random-string';
-import {getRedisClient} from '../lib/redis/client.js';
+import type {Probe} from '../probe/types.js';
 import type {RedisClient} from '../lib/redis/client.js';
+import {getRedisClient} from '../lib/redis/client.js';
 import type {MeasurementRecord, MeasurementResultMessage, NetworkTest} from './types.js';
 
 export const getMeasurementKey = (id: string, suffix: 'probes_awaiting' | undefined = undefined): string => {

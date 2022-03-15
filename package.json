@@ -13,6 +13,7 @@
     "@maxmind/geoip2-node": "^3.4.0",
     "@socket.io/redis-adapter": "^7.1.0",
     "config": "^3.3.7",
+    "countries-list": "^2.6.1",
     "crypto-random-string": "^4.0.0",
     "gunzip-maybe": "^1.4.2",
     "joi": "^17.6.0",

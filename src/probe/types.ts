@@ -1,11 +1,12 @@
-type Probe = {
+export type Probe = {
 	client: string;
 	ipAddress: string;
 	location: {
-		city: number;
-		country: string;
-		region: string;
 		continent: string;
+		region: string;
+		country: string;
+		city: number;
 		asn: number;
+		state?: string;
 	};
 };
