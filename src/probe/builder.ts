@@ -25,6 +25,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		|| !ipInfo.country?.isoCode
 		|| !ipInfo.continent?.code
 		|| !ipInfo.traits?.autonomousSystemNumber
+		|| !ipInfo.subdivisions
 	) {
 		throw new Error('couldn\'t detect probe location');
 	}
@@ -39,6 +40,8 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 			region: 'central-europe',
 			continent: ipInfo.continent.code,
 			asn: ipInfo.traits.autonomousSystemNumber,
+			// TODO: prevent undefined != strnig error
+			state: ipInfo.subdivisions.map(s => s.isoCode)[0]!,
 		},
 	};
 };

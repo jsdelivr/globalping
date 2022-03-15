@@ -7,5 +7,6 @@ type Probe = {
 		region: string;
 		continent: string;
 		asn: number;
+		state: string;
 	};
 };
