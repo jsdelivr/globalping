@@ -12,7 +12,7 @@ const runner = getMeasurementRunner();
 // Todo: better validation. predefined values for locations, hostname/ip validation for targets
 const schema = Joi.object({
 	locations: Joi.array().items(Joi.object({
-		type: Joi.string().valid('continent', 'region', 'country', 'city', 'asn'),
+		type: Joi.string().valid('continent', 'region', 'country', 'city', 'asn', 'state'),
 		value: Joi.alternatives().conditional('type', {
 			switch: [
 				{is: 'continent', then: Joi.string().length(2)},
@@ -20,6 +20,7 @@ const schema = Joi.object({
 				{is: 'country', then: Joi.string().length(2)},
 				{is: 'city', then: Joi.number()},
 				{is: 'asn', then: Joi.number()},
+				{is: 'state', then: Joi.string().length(2)},
 			],
 		}),
 		limit: Joi.number().min(1).when(Joi.ref('/limit'), {

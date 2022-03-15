@@ -33,6 +33,11 @@ type Country = {
 	value: string;
 };
 
+type State = {
+	type: 'state';
+	value: string;
+};
+
 type City = {
 	type: 'city';
 	value: number;
@@ -43,4 +48,4 @@ type Asn = {
 	value: number;
 };
 
-export type Location = Continent | Region | Country | City | Asn;
+export type Location = Continent | Region | Country | State | City | Asn;

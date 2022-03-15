@@ -47,6 +47,7 @@ export class MeasurementStore {
 				probe: {
 					continent: probe.location.continent,
 					country: probe.location.country,
+					state: probe.location.state,
 					city: probe.location.city,
 					asn: probe.location.asn,
 				},
