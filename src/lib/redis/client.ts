@@ -10,7 +10,13 @@ export const initRedis = async () => {
 };
 
 export const createRedisClient = async (): Promise<RedisClient> => {
-	const client = createClient({url: config.get<string>('redis.url')});
+	const client = createClient({
+		url: config.get<string>('redis.url'),
+		socket: {
+			tls: true,
+			rejectUnauthorized: false,
+		},
+	});
 	await client.connect();
 
 	return client;
