@@ -19,9 +19,7 @@ export class ProbeRouter {
 		const sockets = await this.fetchSockets();
 		let filtered: Socket[];
 
-		if (locations.length === 0 && !globalLimit) {
-			filtered = sockets;
-		} else if (locations.length === 0) {
+		if (locations.length === 0) {
 			filtered = this.filterGloballyDistributed(sockets, globalLimit!);
 		} else if (globalLimit) {
 			filtered = this.filterWithGlobalLimit(sockets, locations, globalLimit);
@@ -78,11 +76,7 @@ export class ProbeRouter {
 				}
 			}
 
-			if (loc.limit) {
-				filtered.push(...(this.sampleFn(temporary, loc.limit)));
-			} else {
-				filtered.push(...temporary);
-			}
+			filtered.push(...(this.sampleFn(temporary, loc.limit)));
 		}
 
 		return filtered;

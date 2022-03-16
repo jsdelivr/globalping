@@ -1,36 +1,20 @@
 import type {DefaultContext, DefaultState, ParameterizedContext} from 'koa';
 import type Router from '@koa/router';
-import {getProbeRouter} from '../router.js';
-import type {Probe} from '../types.js';
-import type {LocationWithLimit} from '../../measurement/types.js';
+import type {RemoteSocket} from 'socket.io';
+import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
+import type {SocketData} from '../../lib/ws/server.js';
+import {getWsServer, PROBES_NAMESPACE} from '../../lib/ws/server.js';
 
-const probeRouter = getProbeRouter();
+type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
-const handleAll = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>) => {
-	const probeList = (await probeRouter.findMatchingProbes([]));
-
-	ctx.body = probeList.map((probe: Probe) => probe.location);
-};
-
-const handleCountry = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>) => {
-	const {country} = ctx.params;
-
-	const location: LocationWithLimit[] = [{type: 'country', value: country!}];
-
-	const probeList = (await probeRouter.findMatchingProbes(location));
-
-	ctx.body = probeList.map((probe: Probe) => probe.location);
-};
+const io = getWsServer();
 
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>) => {
-	if (ctx.params['country']) {
-		return handleCountry(ctx);
-	}
+	const socketList: Socket[] = await io.of(PROBES_NAMESPACE).fetchSockets();
 
-	return handleAll(ctx);
+	ctx.body = socketList.map((socket: Socket) => socket.data.probe.location);
 };
 
 export const registerGetProbesRoute = (router: Router) => {
 	router.get('/probes', handle);
-	router.get('/probes/:country([A-Z]{2})', handle);
 };
