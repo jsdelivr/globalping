@@ -1,37 +1,9 @@
-type ContinentLocation = {
-	type: 'continent';
-	value: string;
-};
+import _ from 'lodash';
+import geoLists from 'countries-list';
+import {regions} from './regions.js';
 
-type RegionLocation = {
-	type: 'region';
-	value: string;
-};
+const {countries} = geoLists;
+const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [c, r])));
 
-type CountryLocation = {
-	type: 'country';
-	value: string;
-};
-
-type StateLocation = {
-	type: 'state';
-	value: string;
-};
-
-type CityLocation = {
-	type: 'city';
-	value: number;
-};
-
-type AsnLocation = {
-	type: 'asn';
-	value: number;
-};
-
-export type Location =
-	ContinentLocation
-	| RegionLocation
-	| CountryLocation
-	| StateLocation
-	| CityLocation
-	| AsnLocation;
+export const getRegionByCountry = (country: string): string => countryToRegionMap.get(country)!;
+export const getContinentByCountry = (country: string): string => countries[country as keyof typeof countries]?.continent;

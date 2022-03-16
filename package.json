@@ -46,6 +46,7 @@
     "chai": "^4.3.6",
     "husky": "^7.0.4",
     "mocha": "^9.2.2",
+    "nock": "^13.2.4",
     "rimraf": "^3.0.2",
     "sinon": "^13.0.1",
     "ts-node": "^10.7.0",
@@ -61,7 +62,7 @@
     "start": "node dist/index.js",
     "lint": "xo",
     "lint:fix": "xo --fix",
-    "clean": "rimraf .nyc_output coverage",
+    "clean": "rimraf coverage",
     "test": "mocha",
     "test:coverage": "npm run clean && c8 mocha",
     "init:hooks": "husky install"

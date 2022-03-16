@@ -4,7 +4,7 @@ import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
 import type {SocketData, WsServer} from '../lib/ws/server.js';
 import {getWsServer, PROBES_NAMESPACE} from '../lib/ws/server.js';
 import type {LocationWithLimit} from '../measurement/types.js';
-import type {Location} from '../lib/location/location.js';
+import type {Location} from '../lib/location/types.js';
 import type {Probe} from './types.js';
 
 type Socket = RemoteSocket<DefaultEventsMap, SocketData>;

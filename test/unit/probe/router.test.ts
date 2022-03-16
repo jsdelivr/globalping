@@ -1,8 +1,8 @@
 import * as sinon from 'sinon';
 import {Server} from 'socket.io';
 import {expect} from 'chai';
-import {ProbeRouter} from '../../src/probe/router.js';
-import {PROBES_NAMESPACE} from '../../src/lib/ws/server.js';
+import {ProbeRouter} from '../../../src/probe/router.js';
+import {PROBES_NAMESPACE} from '../../../src/lib/ws/server.js';
 
 describe('probe router', () => {
 	const sandbox = sinon.createSandbox();

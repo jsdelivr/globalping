@@ -4,7 +4,7 @@ import type {Socket} from 'socket.io';
 import isIpPrivate from 'private-ip';
 import requestIp from 'request-ip';
 import {geoIpLookup} from '../lib/geoip/client.js';
-import {getRegionByCountry} from '../lib/location/regions.js';
+import {getRegionByCountry} from '../lib/location/location.js';
 import type {Probe, ProbeLocation} from './types.js';
 
 const fakeIpForDebug = () => _.sample([
