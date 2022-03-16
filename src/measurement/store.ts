@@ -49,7 +49,16 @@ export class MeasurementStore {
 		const key = getMeasurementKey(measurementId);
 		await this.redis.executeIsolated(async client => {
 			await client.json.set(key, `$.results.${probeId}`, {
-				probe: probe.location,
+				probe: {
+					continent: probe.location.continent,
+					region: probe.location.region,
+					country: probe.location.country,
+					state: probe.location.state ?? null,
+					city: probe.location.city,
+					asn: probe.location.asn,
+					longitude: probe.location.longitude,
+					latitude: probe.location.latitude,
+				},
 				result: {},
 			});
 			await client.json.set(key, '$.updatedAt', Date.now());

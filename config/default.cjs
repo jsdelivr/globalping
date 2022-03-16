@@ -6,9 +6,8 @@ module.exports = {
 			rejectUnauthorized: false,
 		},
 	},
-	maxmind: {
-		accountId: '',
-		licenseKey: '',
+	ipinfo: {
+		apiKey: '',
 	},
 	measurement: {
 		// Timeout after which measurement will be marked as finished even if not all probes respond
