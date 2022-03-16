@@ -39,6 +39,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		|| !ipInfo?.city?.geonameId
 		|| !ipInfo.country?.isoCode
 		|| !ipInfo.continent?.code
+		|| !ipInfo.location
 		|| !ipInfo.traits?.autonomousSystemNumber
 	) {
 		throw new Error(`couldn't detect probe location for ip ${clientIp}`);
@@ -50,6 +51,8 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		country: ipInfo.country.isoCode,
 		city: ipInfo.city.geonameId,
 		asn: ipInfo.traits.autonomousSystemNumber,
+		latitude: ipInfo.location.latitude,
+		longitude: ipInfo.location.longitude,
 	};
 
 	if (ipInfo.country.isoCode === 'US' && ipInfo.subdivisions?.[0]?.isoCode) {

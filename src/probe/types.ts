@@ -8,5 +8,7 @@ export type Probe = {
 		city: number;
 		asn: number;
 		state?: string;
+		latitude: number;
+		longitude: number;
 	};
 };
