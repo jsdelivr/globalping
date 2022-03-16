@@ -4,6 +4,7 @@ import Router from '@koa/router';
 import appsignal from '../appsignal.js';
 import {registerCreateMeasurementRoute} from '../../measurement/route/create-measurement.js';
 import {registerGetMeasurementRoute} from '../../measurement/route/get-measurement.js';
+import {registerGetProbesRoute} from '../../probe/route/get-probes.js';
 
 const app = new Koa();
 const router = new Router();
@@ -14,6 +15,9 @@ router.prefix('/v1');
 registerCreateMeasurementRoute(router);
 // GET /measurements/:id
 registerGetMeasurementRoute(router);
+
+// GET /probes
+registerGetProbesRoute(router);
 
 app
 	.use(router.routes())
