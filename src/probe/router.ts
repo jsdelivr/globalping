@@ -78,7 +78,11 @@ export class ProbeRouter {
 				}
 			}
 
-			filtered.push(...(this.sampleFn(temporary, loc.limit)));
+			if (loc.limit) {
+				filtered.push(...(this.sampleFn(temporary, loc.limit)));
+			} else {
+				filtered.push(...temporary);
+			}
 		}
 
 		return filtered;
