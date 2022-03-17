@@ -1,16 +1,25 @@
 import _ from 'lodash';
 import anyAscii from 'any-ascii';
 import type {ProbeLocation} from '../../probe/types.js';
+import {scopedLogger} from '../logger.js';
 import {ipinfoLookup} from './ipinfo.js';
 import {fastlyLookup} from './fastly.js';
+
+const logger = scopedLogger('geoip');
 
 export type LocationInfo = Omit<ProbeLocation, 'region'>;
 export const normalizeCityName = (string_: string): string => anyAscii(string_).toLowerCase();
 
 const bestMatch = (field: keyof LocationInfo, sources: LocationInfo[]): LocationInfo => {
 	const ranked = _.flatMap(Object.fromEntries(_.orderBy(_.entries(_.groupBy(sources, field)), ([, v]) => v.length, 'desc')));
+	const best = ranked.shift();
 
-	return ranked[0]!;
+	if (!best) {
+		logger.error(`failed to find a correct value for a filed "${field}"`, {field, sources});
+		throw new Error(`failed to find a correct value for a filed "${field}"`);
+	}
+
+	return best;
 };
 
 export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {

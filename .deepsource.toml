@@ -1,0 +1,11 @@
+version = 1
+
+test_patterns = ["test/**/*.test.ts"]
+
+[[analyzers]]
+name = "shell"
+enabled = true
+
+[[analyzers]]
+name = "javascript"
+enabled = true
