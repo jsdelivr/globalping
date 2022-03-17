@@ -77,6 +77,11 @@ export type MeasurementResponse = {
 /**
  * Probe Messages
  */
+export type MeasurementAckMessage = {
+	id: string;
+	measurementId: string;
+};
+
 export type MeasurementResultMessage = {
 	testId: string;
 	measurementId: string;

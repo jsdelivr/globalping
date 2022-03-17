@@ -56,6 +56,6 @@ const handle = async (ctx: Context) => {
 	}
 };
 
-export const registerCreateMeasurementRoute = (router: Router) => {
+export const registerCreateMeasurementRoute = (router: Router): void => {
 	router.post('/measurements', bodyParser(), validate(schema), handle);
 };
