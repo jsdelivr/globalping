@@ -11,7 +11,7 @@ export type LocationInfo = Omit<ProbeLocation, 'region'>;
 export const normalizeCityName = (string_: string): string => anyAscii(string_).toLowerCase();
 
 const bestMatch = (field: keyof LocationInfo, sources: LocationInfo[]): LocationInfo => {
-	const ranked = _.flatMap(Object.fromEntries(_.orderBy(_.entries(_.groupBy(sources, field)), ([, v]) => v.length, 'desc')));
+	const ranked = Object.values(_.groupBy(sources, field)).sort((a, b) => b.length - a.length).flat();
 	const best = ranked.shift();
 
 	if (!best) {

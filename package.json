@@ -10,7 +10,6 @@
     "@appsignal/koa": "^1.0.16",
     "@appsignal/nodejs": "^2.3.2",
     "@koa/router": "^10.1.1",
-    "@maxmind/geoip2-node": "^3.4.0",
     "@socket.io/redis-adapter": "^7.1.0",
     "any-ascii": "^0.3.0",
     "config": "^3.3.7",
