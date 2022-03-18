@@ -1,5 +1,5 @@
 import * as RateLimiterFlexible from 'rate-limiter-flexible';
-import type {IRateLimiterStoreOptions} from 'rate-limiter-flexible';
+import type {IRateLimiterStoreOptions, RateLimiterRes} from 'rate-limiter-flexible';
 import type {RedisClient} from '../redis/client.js';
 
 type GetPointsResult = number[];
@@ -17,7 +17,7 @@ export class RateLimiterRedis extends RateLimiterFlexible.RateLimiterRedis {
 		this.client = options.storeClient as RedisClient;
 	}
 
-	_getRateLimiterRes(_rlKey: string, changedPoints: number, result: RemainingPointsResult): any {
+	async _getRateLimiterRes(_rlKey: string, changedPoints: number, result: RemainingPointsResult): Promise<RateLimiterRes> {
 		const [points, ttl] = result;
 		const consumedPoints = Number(points);
 		const remainingPoints = Math.max(this.points - consumedPoints, 0);
