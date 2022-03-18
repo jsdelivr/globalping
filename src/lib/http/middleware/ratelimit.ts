@@ -13,10 +13,11 @@ const rateLimiter = new RateLimiterRedis({
 	duration: 60,
 });
 
-const methodInclude = new Set(['GET', 'HEAD', 'OPTIONS']);
+// eslint-disable-next-line unicorn/prevent-abbreviations
+const methodsWhitelist = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
-	if (methodInclude.has(ctx.method)) {
+	if (methodsWhitelist.has(ctx.method)) {
 		return next();
 	}
 
