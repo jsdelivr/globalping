@@ -22,10 +22,10 @@ registerGetMeasurementRoute(router);
 registerGetProbesRoute(router);
 
 app
-	.use(rateLimitHandler)
 	.use(cors())
 	.use(router.routes())
-	.use(router.allowedMethods());
+	.use(router.allowedMethods())
+	.use(rateLimitHandler());
 
 app.on('error', error => {
 	appsignal.tracer().setError(error);

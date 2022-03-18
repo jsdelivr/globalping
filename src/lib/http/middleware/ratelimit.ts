@@ -13,7 +13,13 @@ const rateLimiter = new RateLimiterRedis({
 	duration: 60,
 });
 
-export const rateLimitHandler = async (ctx: Context, next: Next) => {
+const methodInclude = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
+	if (methodInclude.has(ctx.method)) {
+		return next();
+	}
+
 	try {
 		await rateLimiter.consume(requestIp.getClientIp(ctx.req)!);
 	} catch {
