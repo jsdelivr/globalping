@@ -1,6 +1,7 @@
 import {createServer} from 'node:http';
 import Koa from 'koa';
 import Router from '@koa/router';
+import cors from '@koa/cors';
 import appsignal from '../appsignal.js';
 import {registerCreateMeasurementRoute} from '../../measurement/route/create-measurement.js';
 import {registerGetMeasurementRoute} from '../../measurement/route/get-measurement.js';
@@ -20,6 +21,7 @@ registerGetMeasurementRoute(router);
 registerGetProbesRoute(router);
 
 app
+	.use(cors())
 	.use(router.routes())
 	.use(router.allowedMethods());
 
