@@ -6,6 +6,7 @@ import appsignal from '../appsignal.js';
 import {registerCreateMeasurementRoute} from '../../measurement/route/create-measurement.js';
 import {registerGetMeasurementRoute} from '../../measurement/route/get-measurement.js';
 import {registerGetProbesRoute} from '../../probe/route/get-probes.js';
+import {rateLimitHandler} from './middleware/ratelimit.js';
 
 const app = new Koa();
 const router = new Router();
@@ -21,6 +22,7 @@ registerGetMeasurementRoute(router);
 registerGetProbesRoute(router);
 
 app
+	.use(rateLimitHandler)
 	.use(cors())
 	.use(router.routes())
 	.use(router.allowedMethods());
