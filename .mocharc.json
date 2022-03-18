@@ -1,12 +1,12 @@
 {
-  "extension": [
-    "ts"
+  "check-leaks": true,
+  "exit": true,
+  "file": ["test/setup.ts"],
+  "spec": [
+    "test/**/*.test.ts"
   ],
   "node-option": [
     "experimental-specifier-resolution=node",
     "loader=ts-node/esm"
-  ],
-  "spec": [
-    "test/**/*.test.ts"
   ]
 }

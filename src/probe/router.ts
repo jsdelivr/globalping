@@ -4,7 +4,7 @@ import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
 import type {SocketData, WsServer} from '../lib/ws/server.js';
 import {getWsServer, PROBES_NAMESPACE} from '../lib/ws/server.js';
 import type {LocationWithLimit} from '../measurement/types.js';
-import type {Location} from '../lib/location/location.js';
+import type {Location} from '../lib/location/types.js';
 import type {Probe} from './types.js';
 
 type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
@@ -15,15 +15,13 @@ export class ProbeRouter {
 		private readonly sampleFn: typeof _.sampleSize,
 	) {}
 
-	async findMatchingProbes(locations: LocationWithLimit[], globalLimit: number | undefined = undefined): Promise<Probe[]> {
+	async findMatchingProbes(locations: LocationWithLimit[] = [], globalLimit: number | undefined = undefined): Promise<Probe[]> {
 		const sockets = await this.fetchSockets();
-		let filtered: Socket[];
+		let filtered: Socket[] = [];
 
-		if (locations.length === 0) {
-			filtered = this.filterGloballyDistributed(sockets, globalLimit!);
-		} else if (globalLimit) {
-			filtered = this.filterWithGlobalLimit(sockets, locations, globalLimit);
-		} else {
+		if (globalLimit) {
+			filtered = locations.length > 0 ? this.filterWithGlobalLimit(sockets, locations, globalLimit) : this.filterGloballyDistributed(sockets, globalLimit);
+		} else if (locations.length > 0) {
 			filtered = this.filterWithLocationLimit(sockets, locations);
 		}
 

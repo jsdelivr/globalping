@@ -1,14 +1,16 @@
+export type ProbeLocation = {
+	continent: string;
+	region: string;
+	country: string;
+	city: string;
+	asn: number;
+	latitude: number;
+	longitude: number;
+	state: string | undefined;
+};
+
 export type Probe = {
 	client: string;
 	ipAddress: string;
-	location: {
-		continent: string;
-		region: string;
-		country: string;
-		city: number;
-		asn: number;
-		state?: string;
-		latitude: number;
-		longitude: number;
-	};
+	location: ProbeLocation;
 };

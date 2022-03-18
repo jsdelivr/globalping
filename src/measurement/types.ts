@@ -1,5 +1,5 @@
 import type {Probe} from '../probe/types.js';
-import type {Location} from '../lib/location/location.js';
+import type {Location} from '../lib/location/types.js';
 
 /**
  * Network Tests
@@ -77,6 +77,11 @@ export type MeasurementResponse = {
 /**
  * Probe Messages
  */
+export type MeasurementAckMessage = {
+	id: string;
+	measurementId: string;
+};
+
 export type MeasurementResultMessage = {
 	testId: string;
 	measurementId: string;
