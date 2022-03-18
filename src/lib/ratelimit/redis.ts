@@ -2,7 +2,8 @@ import * as RateLimiterFlexible from 'rate-limiter-flexible';
 import type {IRateLimiterStoreOptions} from 'rate-limiter-flexible';
 import type {RedisClient} from '../redis/client.js';
 
-type PttlResponse = number[];
+type GetPointsResult = number[];
+type RemainingPointsResult = number[];
 
 type Options = IRateLimiterStoreOptions & {storeClient: RedisClient};
 
@@ -16,16 +17,17 @@ export class RateLimiterRedis extends RateLimiterFlexible.RateLimiterRedis {
 		this.client = options.storeClient as RedisClient;
 	}
 
-	_getRateLimiterRes(_rlKey: string, changedPoints: number, result: {consumed: number; resTtlMs: number}): any {
-		const consumedPoints = Number(result.consumed);
+	_getRateLimiterRes(_rlKey: string, changedPoints: number, result: RemainingPointsResult): any {
+		const [points, ttl] = result;
+		const consumedPoints = Number(points);
 		const remainingPoints = Math.max(this.points - consumedPoints, 0);
-		const msBeforeNext = result.resTtlMs;
+		const msBeforeNext = ttl;
 		const isFirstInDuration = consumedPoints === changedPoints;
 
 		return new RateLimiterFlexible.RateLimiterRes(remainingPoints, msBeforeNext, consumedPoints, isFirstInDuration);
 	}
 
-	async _upsert(rlKey: string, points: number, msDuration: number, forceExpire = false): Promise<{consumed?: number; ttl?: number}> {
+	async _upsert(rlKey: string, points: number, msDuration: number, forceExpire = false): Promise<GetPointsResult> {
 		const secDuration = Math.floor(msDuration / 1000);
 
 		const multi = this.client.multi();
@@ -49,20 +51,24 @@ export class RateLimiterRedis extends RateLimiterFlexible.RateLimiterRedis {
 					ttl = 1000 * secDuration;
 				}
 
-				return {consumed, ttl};
+				return [consumed, ttl];
 			}
 
 			multi.incrBy(rlKey, points);
 		}
 
 		const result = await multi.pTTL(rlKey).exec();
-		return {consumed: result[0] as number, ttl: result[1] as number};
+		return result as GetPointsResult;
 	}
 
-	async _get(rlKey: string): Promise<PttlResponse[] | undefined> {
+	async _get(rlKey: string): Promise<GetPointsResult | undefined> {
 		const result = await this.client.multi().get(rlKey).pTTL(rlKey).exec();
 
-		return result as PttlResponse[] ?? undefined;
+		if (!result) {
+			return;
+		}
+
+		return result as GetPointsResult;
 	}
 
 	async _delete(rlKey: string): Promise<number> {
