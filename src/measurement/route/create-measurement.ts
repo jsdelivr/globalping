@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import config from 'config';
 import type {Context} from 'koa';
 import type Router from '@koa/router';
 import bodyParser from 'koa-bodyparser';
@@ -12,6 +13,7 @@ import {pingSchema, tracerouteSchema} from '../schema/command-schema.js';
 
 const runner = getMeasurementRunner();
 const {continents, countries} = geoLists;
+const measurementConfig = config.get<{limits: {global: number; location: number}}>('measurement');
 
 // Todo: better validation. hostname/ip validation for targets
 const schema = Joi.object({
@@ -27,14 +29,14 @@ const schema = Joi.object({
 				{is: 'asn', then: Joi.number()},
 			],
 		}).required(),
-		limit: Joi.number().min(1).max(50).when(Joi.ref('/limit'), {
+		limit: Joi.number().min(1).max(measurementConfig.limits.location).when(Joi.ref('/limit'), {
 			is: Joi.exist(),
 			then: Joi.forbidden().messages({'any.unknown': 'limit per location is not allowed when a global limit is set'}),
 			otherwise: Joi.required().messages({'any.required': 'limit per location required when no global limit is set'}),
 		}),
 	})).default([]),
 	measurement: Joi.alternatives().try(pingSchema, tracerouteSchema).required(),
-	limit: Joi.number().min(1).max(100),
+	limit: Joi.number().min(1).max(measurementConfig.limits.global),
 });
 
 const handle = async (ctx: Context) => {

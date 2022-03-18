@@ -14,5 +14,9 @@ module.exports = {
 		timeout: 30, // 30 seconds
 		// measurement result TTL in redis
 		resultTTL: 7 * 24 * 60, // 7 days
+		limits: {
+			global: 500,
+			location: 200,
+		},
 	},
 };
