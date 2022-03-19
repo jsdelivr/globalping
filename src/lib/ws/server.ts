@@ -6,7 +6,7 @@ import {getRedisClient} from '../redis/client.js';
 
 export type SocketData = {
 	probe: Probe;
-} & Record<any, any>;
+};
 
 export type WsServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 

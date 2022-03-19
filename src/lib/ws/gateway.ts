@@ -11,7 +11,7 @@ const logger = scopedLogger('gateway');
 io
 	.of(PROBES_NAMESPACE)
 	.use(probeMetadata)
-	.on('connect', async socket => {
+	.on('connect', socket => {
 		const {probe} = socket.data;
 
 		if (!probe) {

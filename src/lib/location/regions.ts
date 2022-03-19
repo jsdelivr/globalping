@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 export const regions = {
 	'northern-europe': ['DK', 'EE', 'FI', 'IS', 'IE', 'LV', 'LT', 'NO', 'SE', 'GB', 'FO', 'GG', 'SJ', 'AX'],
 	'southern-europe': ['AL', 'AD', 'BA', 'HR', 'GR', 'IT', 'MK', 'MT', 'ME', 'PT', 'SM', 'RS', 'SI', 'ES', 'VA', 'GI'],
@@ -23,7 +21,3 @@ export const regions = {
 	melanesia: ['FJ', 'PG', 'SB', 'VU', 'NC'],
 	micronesia: ['KI', 'MH', 'FM', 'NR', 'PW', 'MP', 'GU'],
 };
-
-const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [c, r])));
-
-export const getRegionByCountry = (country: string): string => countryToRegionMap.get(country)!;

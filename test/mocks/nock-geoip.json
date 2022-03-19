@@ -1,0 +1,104 @@
+{
+  "100.00.00.00": {
+    "ipinfo": {
+      "city": "Lagoa do Carro",
+      "region": "Pernambuco",
+      "country": "BR",
+      "loc": "-7.7568,-35.3656",
+      "org": "AS61493 InterBS S.R.L. (BAEHOST)"
+    },
+    "fastly": {
+      "as": {
+        "number": 61493
+      },
+      "geo-digitalelement": {
+        "city": "buenos aires",
+        "continent_code": "SA",
+        "country_code": "AR",
+        "country_code3": "ARG",
+        "country_name": "argentina",
+        "latitude": -34.61,
+        "longitude": -58.42,
+        "region": "C"
+      },
+      "geo-maxmind": {
+        "city": "Buenos Aires",
+        "continent_code": "SA",
+        "country_code": "AR",
+        "country_code3": "ARG",
+        "country_name": "Argentina",
+        "latitude": -34.602,
+        "longitude": -58.384,
+        "region": "07"
+      }
+    }
+  },
+  "100.00.00.01": {
+    "ipinfo": {
+      "city": "Lagoa do Carro",
+      "region": "Pernambuco",
+      "country": "BR",
+      "loc": "-7.7568,-35.3656",
+      "org": "AS61493 InterBS S.R.L. (BAEHOST)"
+    },
+    "fastly": {
+      "as": {
+        "number": 61493
+      },
+      "geo-digitalelement": {
+        "city": "Buenos Aires",
+        "continent_code": "SA",
+        "country_code": "AR",
+        "country_code3": "ARG",
+        "country_name": "argentina",
+        "latitude": -34.61,
+        "longitude": -58.42,
+        "region": "C"
+      },
+      "geo-maxmind": {
+        "city": "",
+        "continent_code": "SA",
+        "country_code": "AR",
+        "country_code3": "ARG",
+        "country_name": "Argentina",
+        "latitude": -34.602,
+        "longitude": -58.384,
+        "region": "07"
+      }
+    }
+  },
+  "100.00.00.02": {
+    "fastly": {
+      "as": {
+        "number": 40676
+      },
+      "geo-digitalelement": {
+        "city": "dallas",
+        "continent_code": "NA",
+        "country_code": "US",
+        "country_code3": "USA",
+        "country_name": "united states",
+        "latitude": 32.810,
+        "longitude": -96.880,
+        "region": "TX"
+      },
+      "geo-maxmind": {
+        "city": "Dallas",
+        "continent_code": "NA",
+        "country_code": "US",
+        "country_code3": "USA",
+        "country_name": "United States",
+        "latitude": 32.814,
+        "longitude": -96.870,
+        "region": "TX"
+      }
+    },
+    "ipinfo": {
+      "city": "Dallas",
+      "region": "Texas",
+      "country": "US",
+      "loc": "32.7492,-96.8389",
+      "org": "Psychz Networks"
+    }
+  }
+}
