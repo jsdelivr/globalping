@@ -68,7 +68,7 @@
     "lint": "xo",
     "lint:fix": "xo --fix",
     "clean": "rimraf .nyc_output coverage",
-    "test": "mocha",
+    "test": "mocha --exit",
     "test:coverage": "npm run clean && c8 mocha",
     "init:hooks": "husky install"
   },
