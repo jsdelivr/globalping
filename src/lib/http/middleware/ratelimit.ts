@@ -1,17 +1,8 @@
 import type {Context, Next} from 'koa';
 import requestIp from 'request-ip';
 import type {RateLimiterRes} from 'rate-limiter-flexible';
-import {RateLimiterRedis} from '../../ratelimit/redis.js';
-import {getRedisClient} from '../../redis/client.js';
 
-const redisClient = getRedisClient();
-
-const rateLimiter = new RateLimiterRedis({
-	storeClient: redisClient,
-	keyPrefix: 'rate',
-	points: 100,
-	duration: 60,
-});
+import rateLimiter from '../../ratelimiter.js';
 
 const setResponseHeaders = (ctx: Context, response: RateLimiterRes) => {
 	const resetDate = new Date(Date.now() + response.msBeforeNext);
