@@ -45,6 +45,7 @@
     "@types/node": "^16.11.26",
     "@types/request-ip": "^0.0.37",
     "@types/sinon": "^10.0.11",
+    "@types/supertest": "^2.0.11",
     "@types/throng": "^5.0.3",
     "c8": "^7.11.0",
     "chai": "^4.3.6",
@@ -52,6 +53,7 @@
     "mocha": "^9.2.2",
     "rimraf": "^3.0.2",
     "sinon": "^13.0.1",
+    "supertest": "^6.2.2",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.2",
     "xo": "^0.48.0"
