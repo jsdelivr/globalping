@@ -3,10 +3,10 @@ import Koa from 'koa';
 import Router from '@koa/router';
 import cors from '@koa/cors';
 import responseTime from 'koa-response-time';
-import appsignal from '../appsignal.js';
 import {registerCreateMeasurementRoute} from '../../measurement/route/create-measurement.js';
 import {registerGetMeasurementRoute} from '../../measurement/route/get-measurement.js';
 import {registerGetProbesRoute} from '../../probe/route/get-probes.js';
+import {errorHandler} from './error-handler.js';
 import {rateLimitHandler} from './middleware/ratelimit.js';
 
 const app = new Koa();
@@ -29,9 +29,7 @@ app
 	.use(router.allowedMethods())
 	.use(rateLimitHandler());
 
-app.on('error', error => {
-	appsignal.tracer().setError(error);
-});
+app.on('error', errorHandler);
 
 const server = createServer(app.callback());
 

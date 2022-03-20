@@ -68,7 +68,7 @@
     "start": "node dist/index.js",
     "lint": "xo",
     "lint:fix": "xo --fix",
-    "test": "mocha --exit",
+    "test": "NODE_ENV=test mocha",
     "clean": "rimraf coverage",
     "test:coverage": "npm run clean && c8 mocha",
     "init:hooks": "husky install"
