@@ -98,27 +98,24 @@ export class ProbeRouter {
 	}
 
 	private filterWithLocationLimit(sockets: Socket[], locations: LocationWithLimit[]): Socket[] {
-		const filtered: Socket[] = [];
+		const grouped: Map<LocationWithLimit, Socket[]> = new Map();
 
-		// Todo: O(N*M) - see if we can do it better
-		for (const loc of locations) {
-			const temporary = [];
-			for (const socket of sockets) {
-				const {probe} = socket.data;
-
-				if (!probe || filtered.includes(socket)) {
-					continue;
-				}
-
-				if (probe.location[loc.type] && probe.location[loc.type] === loc.value as unknown) {
-					temporary.push(socket);
-				}
+		for (const location of locations) {
+			const found = this.findByLocation(sockets, location);
+			if (found.length > 0) {
+				grouped.set(location, found);
 			}
-
-			filtered.push(...(_.sampleSize(temporary, loc.limit)));
 		}
 
-		return filtered;
+		const picked: Set<Socket> = new Set();
+
+		for (const [loc, soc] of grouped) {
+			for (const s of _.sampleSize(soc, loc.limit)) {
+				picked.add(s);
+			}
+		}
+
+		return [...picked];
 	}
 }
 
