@@ -7,14 +7,19 @@ import {ProbeRouter} from '../../../src/probe/router.js';
 import {PROBES_NAMESPACE, SocketData} from '../../../src/lib/ws/server.js';
 import type {DeepPartial} from '../../types.js';
 import type {ProbeLocation} from '../../../src/probe/types.js';
+import type {Location} from '../../../src/lib/location/types.js';
 
 type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
+
+const buildSocket = (id: string, location: Partial<ProbeLocation>): DeepPartial<Socket> => ({
+	id,
+	data: {probe: {location}},
+});
 
 describe('probe router', () => {
 	const sandbox = sinon.createSandbox();
 	const wsServerMock = sandbox.createStubInstance(Server);
-	// Const sampleFnMock = (items: any[], size: number): any[] => items.slice(0, size);
-	const router = new ProbeRouter(wsServerMock, _.sampleSize);
+	const router = new ProbeRouter(wsServerMock);
 
 	beforeEach(() => {
 		sandbox.reset();
@@ -25,11 +30,11 @@ describe('probe router', () => {
 	describe('route with location limit', () => {
 		it('should find probes for each location', async () => {
 			const sockets: Array<DeepPartial<Socket>> = [
-				{id: 'socket-1', data: {probe: {location: {continent: 'EU', country: 'UA'}}}},
-				{id: 'socket-2', data: {probe: {location: {continent: 'EU', country: 'PL'}}}},
-				{id: 'socket-3', data: {probe: {location: {continent: 'EU', country: 'PL'}}}},
-				{id: 'socket-4', data: {probe: {location: {continent: 'NA', country: 'UA'}}}},
-				{id: 'socket-5', data: {probe: {location: {continent: 'EU', country: 'PL'}}}},
+				buildSocket('socket-1', {continent: 'EU', country: 'UA'}),
+				buildSocket('socket-2', {continent: 'EU', country: 'PL'}),
+				buildSocket('socket-3', {continent: 'EU', country: 'PL'}),
+				buildSocket('socket-4', {continent: 'NA', country: 'UA'}),
+				buildSocket('socket-5', {continent: 'EU', country: 'PL'}),
 			];
 
 			wsServerMock.fetchSockets.resolves(sockets as never);
@@ -51,18 +56,8 @@ describe('probe router', () => {
 	describe('route globally distributed', () => {
 		type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
-		const distribution = {
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			AF: 5, AS: 15, EU: 30, OC: 10, NA: 30, SA: 10,
-		};
-
-		const buildSocket = (id: string, location: Partial<ProbeLocation>): DeepPartial<Socket> => ({
-			id,
-			data: {probe: {location}},
-		});
-
 		it('should find probes when each group is full', async () => {
-			const sockets = Object.keys(distribution)
+			const sockets = ['AF', 'AS', 'EU', 'OC', 'NA', 'SA']
 				.flatMap(continent => _.range(50).map(i => buildSocket(`${continent}-${i}`, {continent})));
 
 			wsServerMock.fetchSockets.resolves(sockets as never);
@@ -124,7 +119,48 @@ describe('probe router', () => {
 		});
 	});
 
-	describe.skip('route with global limit', () => {
-		// TODO: add tests
+	describe('route with global limit', () => {
+		it('should find probes even in overlapping locations', async () => {
+			const sockets: DeepPartial<Socket[]> = [
+				...(_.range(10_000).map(i => buildSocket(`PL-${i}`, {continent: 'EU', country: 'PL'}))),
+				...(_.range(1).map(i => buildSocket(`UA-${i}`, {continent: 'EU', country: 'UA'}))),
+			];
+			const locations: Location[] = [
+				{type: 'continent', value: 'EU'},
+				{type: 'country', value: 'UA'},
+			];
+
+			wsServerMock.fetchSockets.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes(locations, 100);
+			const grouped = _.groupBy(probes, 'location.country');
+
+			expect(probes.length).to.equal(100);
+			expect(grouped['PL']?.length).to.equal(99);
+			expect(grouped['UA']?.length).to.equal(1);
+		});
+
+		it('should evenly distribute probes', async () => {
+			const sockets: DeepPartial<Socket[]> = [
+				...(_.range(100).map(i => buildSocket(`PL-${i}`, {country: 'PL'}))),
+				...(_.range(100).map(i => buildSocket(`UA-${i}`, {country: 'UA'}))),
+				...(_.range(100).map(i => buildSocket(`NL-${i}`, {country: 'NL'}))),
+			];
+			const locations: Location[] = [
+				{type: 'country', value: 'PL'},
+				{type: 'country', value: 'UA'},
+				{type: 'country', value: 'NL'},
+			];
+
+			wsServerMock.fetchSockets.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes(locations, 100);
+			const grouped = _.groupBy(probes, 'location.country');
+
+			expect(probes.length).to.equal(100);
+			expect(grouped['PL']?.length).to.equal(34);
+			expect(grouped['UA']?.length).to.equal(33);
+			expect(grouped['NL']?.length).to.equal(33);
+		});
 	});
 });

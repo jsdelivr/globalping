@@ -12,7 +12,6 @@ type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 export class ProbeRouter {
 	constructor(
 		private readonly io: WsServer,
-		private readonly sampleFn: typeof _.sampleSize,
 	) {}
 
 	async findMatchingProbes(locations: LocationWithLimit[] = [], globalLimit: number | undefined = undefined): Promise<Probe[]> {
@@ -36,26 +35,33 @@ export class ProbeRouter {
 		return sockets.filter(s => s.data.probe.location[location.type] === location.value);
 	}
 
-	private filterGloballyDistributed(sockets: Socket[], limit: number): Socket[] {
-		const distribution = {
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			AF: 5, AS: 15, EU: 30, OC: 10, NA: 30, SA: 10, AN: 0,
-		};
+	private findByLocationAndWeight(sockets: Socket[], distribution: Map<Location, number>, limit: number): Socket[] {
+		const grouped: Map<Location, Socket[]> = new Map();
 
-		const grouped = Object.fromEntries(
-			Object
-				.keys(distribution)
-				.map<[string, Socket[]]>(value => [value, _.shuffle(this.findByLocation(sockets, {type: 'continent', value}))])
-				.filter(([, v]) => v && v.length > 0),
-		);
+		for (const [location] of distribution) {
+			const found = _.shuffle(this.findByLocation(sockets, location));
+			if (found.length > 0) {
+				grouped.set(location, found);
+			}
+		}
 
 		const picked: Set<Socket> = new Set();
 
-		while (Object.keys(grouped).length > 0 && picked.size < limit) {
+		while (grouped.size > 0 && picked.size < limit) {
 			const selectedCount = picked.size;
 
-			for (const [k, v] of Object.entries(grouped)) {
-				const weight = distribution[k as never];
+			for (const [k, v] of grouped) {
+				const weight = distribution.get(k);
+
+				if (!weight) {
+					continue;
+				}
+
+				// Circuit-breaker - we don't want to get more probes than was requested
+				if (picked.size === limit) {
+					break;
+				}
+
 				const count = Math.ceil((limit - selectedCount) * weight / 100);
 
 				for (const s of v.splice(0, count)) {
@@ -63,8 +69,7 @@ export class ProbeRouter {
 				}
 
 				if (v.length === 0) {
-					// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-					delete grouped[k];
+					grouped.delete(k);
 				}
 			}
 		}
@@ -72,16 +77,24 @@ export class ProbeRouter {
 		return [...picked];
 	}
 
+	private filterGloballyDistributed(sockets: Socket[], limit: number): Socket[] {
+		const distribution = new Map<Location, number>([
+			[{type: 'continent', value: 'AF'}, 5],
+			[{type: 'continent', value: 'AS'}, 15],
+			[{type: 'continent', value: 'EU'}, 30],
+			[{type: 'continent', value: 'OC'}, 10],
+			[{type: 'continent', value: 'NA'}, 30],
+			[{type: 'continent', value: 'SA'}, 10],
+		]);
+
+		return this.findByLocationAndWeight(sockets, distribution, limit);
+	}
+
 	private filterWithGlobalLimit(sockets: Socket[], locations: Location[], limit: number): Socket[] {
-		const filtered: Set<Socket> = new Set();
+		const weight = Math.floor(100 / locations.length);
+		const distribution = new Map(locations.map(l => [l, weight]));
 
-		for (const loc of locations) {
-			for (const s of this.findByLocation(sockets, loc)) {
-				filtered.add(s);
-			}
-		}
-
-		return this.sampleFn([...filtered.values()], limit);
+		return this.findByLocationAndWeight(sockets, distribution, limit);
 	}
 
 	private filterWithLocationLimit(sockets: Socket[], locations: LocationWithLimit[]): Socket[] {
@@ -102,7 +115,7 @@ export class ProbeRouter {
 				}
 			}
 
-			filtered.push(...(this.sampleFn(temporary, loc.limit)));
+			filtered.push(...(_.sampleSize(temporary, loc.limit)));
 		}
 
 		return filtered;
@@ -115,7 +128,7 @@ let router: ProbeRouter;
 
 export const getProbeRouter = () => {
 	if (!router) {
-		router = new ProbeRouter(getWsServer(), _.sampleSize);
+		router = new ProbeRouter(getWsServer());
 	}
 
 	return router;
