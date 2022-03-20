@@ -9,7 +9,7 @@ import type {MeasurementRequest} from '../types.js';
 import {states} from '../../lib/location/states.js';
 import {regions} from '../../lib/location/regions.js';
 import {validate} from '../../lib/http/middleware/validate.js';
-import {pingSchema, tracerouteSchema} from '../schema/command-schema.js';
+import {pingSchema, tracerouteSchema, dnsSchema} from '../schema/command-schema.js';
 
 const runner = getMeasurementRunner();
 const {continents, countries} = geoLists;
@@ -35,7 +35,7 @@ const schema = Joi.object({
 			otherwise: Joi.required().messages({'any.required': 'limit per location required when no global limit is set'}),
 		}),
 	})).default([]),
-	measurement: Joi.alternatives().try(pingSchema, tracerouteSchema).required(),
+	measurement: Joi.alternatives().try(pingSchema, tracerouteSchema, dnsSchema).required(),
 	limit: Joi.number().min(1).max(measurementConfig.limits.global),
 });
 
