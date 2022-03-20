@@ -1,5 +1,5 @@
-import {RateLimiterRedis} from './ratelimit/redis.js';
-import {getRedisClient} from './redis/client.js';
+import {RateLimiterRedis} from 'rate-limiter-flexible';
+import {getRedisClient} from './redis/legacy-client.js';
 
 const redisClient = getRedisClient();
 

@@ -3,6 +3,7 @@ import './lib/appsignal.js';
 
 import process from 'node:process';
 import {initRedis} from './lib/redis/client.js';
+import {initRedis as initLegacyRedis} from './lib/redis/legacy-client.js';
 import {initWsServer} from './lib/ws/server.js';
 import {scopedLogger} from './lib/logger.js';
 
@@ -11,6 +12,7 @@ const port = process.env['PORT'] ?? 3000;
 
 const workerFn = async () => {
 	await initRedis();
+	await initLegacyRedis();
 	await initWsServer();
 
 	// eslint-disable-next-line node/no-unsupported-features/es-syntax
