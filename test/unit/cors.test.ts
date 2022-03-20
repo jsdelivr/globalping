@@ -4,7 +4,7 @@ import {expect} from 'chai';
 
 import {getOrInitTestServer} from '../utils/http.js';
 
-describe('CORS', () => {
+describe('cors', () => {
 	let app: Server;
 	let requestAgent: any;
 

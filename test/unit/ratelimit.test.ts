@@ -3,7 +3,7 @@ import request, {Response} from 'supertest';
 import {expect} from 'chai';
 import {getOrInitTestServer} from '../utils/http.js';
 
-describe('RATE LIMITER', () => {
+describe('rate limiter', () => {
 	let app: Server;
 	let requestAgent: any;
 
