@@ -32,24 +32,52 @@ export class ProbeRouter {
 		return this.io.of(PROBES_NAMESPACE).fetchSockets();
 	}
 
+	private findByLocation(sockets: Socket[], location: Location): Socket[] {
+		return sockets.filter(s => s.data.probe.location[location.type] === location.value);
+	}
+
 	private filterGloballyDistributed(sockets: Socket[], limit: number): Socket[] {
-		return this.sampleFn(sockets, limit);
+		const distribution = {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			AF: 5, AS: 15, EU: 30, OC: 10, NA: 30, SA: 10, AN: 0,
+		};
+
+		const grouped = Object.fromEntries(
+			Object
+				.keys(distribution)
+				.map<[string, Socket[]]>(value => [value, _.shuffle(this.findByLocation(sockets, {type: 'continent', value}))])
+				.filter(([, v]) => v && v.length > 0),
+		);
+
+		const picked: Set<Socket> = new Set();
+
+		while (Object.keys(grouped).length > 0 && picked.size < limit) {
+			const selectedCount = picked.size;
+
+			for (const [k, v] of Object.entries(grouped)) {
+				const weight = distribution[k as never];
+				const count = Math.ceil((limit - selectedCount) * weight / 100);
+
+				for (const s of v.splice(0, count)) {
+					picked.add(s);
+				}
+
+				if (v.length === 0) {
+					// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+					delete grouped[k];
+				}
+			}
+		}
+
+		return [...picked];
 	}
 
 	private filterWithGlobalLimit(sockets: Socket[], locations: Location[], limit: number): Socket[] {
 		const filtered: Set<Socket> = new Set();
 
 		for (const loc of locations) {
-			for (const socket of sockets) {
-				const {probe} = socket.data;
-
-				if (!probe) {
-					continue;
-				}
-
-				if (probe.location[loc.type] === loc.value as unknown) {
-					filtered.add(socket);
-				}
+			for (const s of this.findByLocation(sockets, loc)) {
+				filtered.add(s);
 			}
 		}
 
