@@ -19,8 +19,8 @@ export const initServer = async (): Promise<Server> => {
 	return app;
 };
 
-export const getServer = () => app;
-export const getOrInitServer = async () => {
+export const getTestServer = () => app;
+export const getOrInitTestServer = async () => {
 	if (!app) {
 		return initServer();
 	}

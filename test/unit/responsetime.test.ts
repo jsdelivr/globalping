@@ -2,7 +2,7 @@ import type {Server} from 'node:http';
 import request, {Response} from 'supertest';
 import {expect} from 'chai';
 
-import {getOrInitServer} from '../utils/http.js';
+import {getOrInitTestServer} from '../utils/http.js';
 
 describe('RESPONSE TIME', () => {
 	let app: Server;
@@ -10,7 +10,7 @@ describe('RESPONSE TIME', () => {
 
 	before(async function () {
 		this.timeout(5000);
-		app = await getOrInitServer();
+		app = await getOrInitTestServer();
 		requestAgent = request(app);
 	});
 
