@@ -9,7 +9,7 @@ describe('response time', () => {
 	let requestAgent: any;
 
 	before(async function () {
-		this.timeout(5000);
+		this.timeout(20_000);
 		app = await getOrInitTestServer();
 		requestAgent = request(app);
 	});
