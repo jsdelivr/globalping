@@ -10,15 +10,26 @@ type FastlyGeoInfo = {
 	longitude: number;
 };
 
+type FastlyClientInfo = {
+	proxy_desc: string;
+	proxy_type: string;
+};
+
 type FastlyResponse = {
 	as: {
 		number: number;
 	};
+	client: FastlyClientInfo;
 	'geo-digitalelement': FastlyGeoInfo;
 	'geo-maxmind': FastlyGeoInfo;
 };
 
-export const fastlyLookup = async (addr: string): Promise<LocationInfo[]> => {
+type FastlyBundledResponse = {
+	locations: LocationInfo[];
+	client: FastlyClientInfo;
+};
+
+export const fastlyLookup = async (addr: string): Promise<FastlyBundledResponse> => {
 	const result = await got(`https://globalping-geoip.global.ssl.fastly.net/${addr}`, {
 		timeout: {request: 5000},
 	}).json<FastlyResponse>();
@@ -39,5 +50,8 @@ export const fastlyLookup = async (addr: string): Promise<LocationInfo[]> => {
 		});
 	}
 
-	return locations;
+	return {
+		locations,
+		client: result.client,
+	};
 };
