@@ -116,18 +116,154 @@ describe('geoip service', () => {
 		});
 	});
 
-	it('should detect VPN', async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get('/100.00.00.04')
-			.reply(200, mocks['100.00.00.04'].fastly);
+	describe('limit vpn/tor connection', () => {
+		it('should pass - non-vpn', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get('/100.00.01.00')
+				.reply(200, mocks['100.00.01.00'].fastly);
 
-		nock('https://ipinfo.io')
-			.get('/100.00.00.04')
-			.reply(200, mocks['100.00.00.04'].ipinfo);
+			nock('https://ipinfo.io')
+				.get('/100.00.01.00')
+				.reply(200, mocks['100.00.01.00'].ipinfo);
 
-		const response: LocationInfo | Error = await geoIpLookup('100.00.00.04').catch((error: Error) => error);
+			const response: LocationInfo | Error = await geoIpLookup('100.00.01.00').catch((error: Error) => error);
 
-		expect(response).to.be.instanceof(Error);
-		expect((response as Error).message).to.equal('vpn detected');
+			expect(response).to.deep.equal({
+				asn: 40_676,
+				city: 'dallas',
+				continent: 'NA',
+				country: 'US',
+				latitude: 32.7492,
+				longitude: -96.8389,
+				state: 'TX',
+			});
+		});
+
+		it('should pass - no client object', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get('/100.00.01.07')
+				.reply(200, mocks['100.00.01.07'].fastly);
+
+			nock('https://ipinfo.io')
+				.get('/100.00.01.07')
+				.reply(200, mocks['100.00.01.07'].ipinfo);
+
+			const response: LocationInfo | Error = await geoIpLookup('100.00.01.07').catch((error: Error) => error);
+
+			expect(response).to.deep.equal({
+				asn: 40_676,
+				city: 'dallas',
+				continent: 'NA',
+				country: 'US',
+				latitude: 32.7492,
+				longitude: -96.8389,
+				state: 'TX',
+			});
+		});
+
+		it('should detect VPN (proxy_desc)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get('/100.00.01.01')
+				.reply(200, mocks['100.00.01.01'].fastly);
+
+			nock('https://ipinfo.io')
+				.get('/100.00.01.01')
+				.reply(200, mocks['100.00.01.01'].ipinfo);
+
+			const response: LocationInfo | Error = await geoIpLookup('100.00.01.01').catch((error: Error) => error);
+
+			expect(response).to.be.instanceof(Error);
+			expect((response as Error).message).to.equal('vpn detected');
+		});
+
+		it('should detect TOR-EXIT (proxy_desc)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get('/100.00.01.02')
+				.reply(200, mocks['100.00.01.02'].fastly);
+
+			nock('https://ipinfo.io')
+				.get('/100.00.01.02')
+				.reply(200, mocks['100.00.01.02'].ipinfo);
+
+			const response: LocationInfo | Error = await geoIpLookup('100.00.01.02').catch((error: Error) => error);
+
+			expect(response).to.be.instanceof(Error);
+			expect((response as Error).message).to.equal('vpn detected');
+		});
+
+		it('should detect TOR-RELAY (proxy_desc)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get('/100.00.01.03')
+				.reply(200, mocks['100.00.01.03'].fastly);
+
+			nock('https://ipinfo.io')
+				.get('/100.00.01.03')
+				.reply(200, mocks['100.00.01.03'].ipinfo);
+
+			const response: LocationInfo | Error = await geoIpLookup('100.00.01.03').catch((error: Error) => error);
+
+			expect(response).to.be.instanceof(Error);
+			expect((response as Error).message).to.equal('vpn detected');
+		});
+
+		it('should detect corporate (proxy_type)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get('/100.00.01.03')
+				.reply(200, mocks['100.00.01.03'].fastly);
+
+			nock('https://ipinfo.io')
+				.get('/100.00.01.03')
+				.reply(200, mocks['100.00.01.03'].ipinfo);
+
+			const response: LocationInfo | Error = await geoIpLookup('100.00.01.03').catch((error: Error) => error);
+
+			expect(response).to.be.instanceof(Error);
+			expect((response as Error).message).to.equal('vpn detected');
+		});
+
+		it('should detect aol (proxy_type)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get('/100.00.01.04')
+				.reply(200, mocks['100.00.01.04'].fastly);
+
+			nock('https://ipinfo.io')
+				.get('/100.00.01.04')
+				.reply(200, mocks['100.00.01.04'].ipinfo);
+
+			const response: LocationInfo | Error = await geoIpLookup('100.00.01.04').catch((error: Error) => error);
+
+			expect(response).to.be.instanceof(Error);
+			expect((response as Error).message).to.equal('vpn detected');
+		});
+
+		it('should detect anonymous (proxy_type)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get('/100.00.01.05')
+				.reply(200, mocks['100.00.01.05'].fastly);
+
+			nock('https://ipinfo.io')
+				.get('/100.00.01.05')
+				.reply(200, mocks['100.00.01.05'].ipinfo);
+
+			const response: LocationInfo | Error = await geoIpLookup('100.00.01.05').catch((error: Error) => error);
+
+			expect(response).to.be.instanceof(Error);
+			expect((response as Error).message).to.equal('vpn detected');
+		});
+
+		it('should detect blackberry (proxy_type)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get('/100.00.01.06')
+				.reply(200, mocks['100.00.01.06'].fastly);
+
+			nock('https://ipinfo.io')
+				.get('/100.00.01.06')
+				.reply(200, mocks['100.00.01.06'].ipinfo);
+
+			const response: LocationInfo | Error = await geoIpLookup('100.00.01.06').catch((error: Error) => error);
+
+			expect(response).to.be.instanceof(Error);
+			expect((response as Error).message).to.equal('vpn detected');
+		});
 	});
 });
