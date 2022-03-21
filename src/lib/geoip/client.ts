@@ -22,6 +22,18 @@ const bestMatch = (field: keyof LocationInfo, sources: LocationInfo[]): Location
 	return best;
 };
 
+const isVpn = (client: {proxy_desc: string; proxy_type: string}): boolean => {
+	if (['anonymous', 'aol', 'blackberry', 'corporate'].includes(client.proxy_type)) {
+		return true;
+	}
+
+	if (client.proxy_desc.startsWith('tor-') || client.proxy_desc === 'vpn') {
+		return true;
+	}
+
+	return false;
+};
+
 export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 	const results = await Promise
 		.allSettled([ipinfoLookup(addr), fastlyLookup(addr)])
@@ -30,8 +42,12 @@ export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 
 			fulfilled.push(
 				ipinfo.status === 'fulfilled' ? ipinfo.value : null,
-				fastly.status === 'fulfilled' ? fastly.value : null,
+				fastly.status === 'fulfilled' ? fastly.value.locations : null,
 			);
+
+			if (fastly.status === 'fulfilled' && isVpn(fastly.value.client)) {
+				throw new Error('vpn detected');
+			}
 
 			return fulfilled.filter(v => v !== null).flat();
 		}) as LocationInfo[];
