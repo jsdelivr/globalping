@@ -166,7 +166,7 @@
       },
       "client": {
         "proxy_desc": "vpn",
-        "proxy_type": "blackberry"
+        "proxy_type": "unknown"
       }
     },
     "ipinfo": {
@@ -356,7 +356,7 @@
       },
       "client": {
         "proxy_desc": "tor-relay",
-        "proxy_type": "blackberry"
+        "proxy_type": "unknown"
       }
     },
     "ipinfo": {
