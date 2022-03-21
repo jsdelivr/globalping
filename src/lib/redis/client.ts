@@ -1,5 +1,5 @@
 import config from 'config';
-import {createClient, RedisClientType, RedisDefaultModules, RedisScripts} from 'redis';
+import {createClient, RedisClientType, RedisDefaultModules, RedisScripts, RedisClientOptions} from 'redis';
 
 export type RedisClient = RedisClientType<RedisDefaultModules, RedisScripts>;
 
@@ -9,8 +9,11 @@ export const initRedis = async () => {
 	redis = await createRedisClient();
 };
 
-export const createRedisClient = async (): Promise<RedisClient> => {
-	const client = createClient(config.util.toObject(config.get('redis')));
+export const createRedisClient = async (options?: RedisClientOptions): Promise<RedisClient> => {
+	const client = createClient({
+		...config.util.toObject(config.get('redis')),
+		...options,
+	});
 	await client.connect();
 
 	return client;

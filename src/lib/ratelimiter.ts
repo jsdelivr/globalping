@@ -1,7 +1,7 @@
 import {RateLimiterRedis} from 'rate-limiter-flexible';
-import {getRedisClient} from './redis/legacy-client.js';
+import {createRedisClient} from './redis/client.js';
 
-const redisClient = getRedisClient();
+const redisClient = await createRedisClient({legacyMode: true});
 
 export const rateLimiter = new RateLimiterRedis({
 	storeClient: redisClient,
