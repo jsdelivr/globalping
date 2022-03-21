@@ -6,9 +6,9 @@ import {scopedLogger} from '../../logger.js';
 const io = getWsServer();
 const logger = scopedLogger('ws:limit');
 
-export const verifyIpLimit = async (socket: Socket) => {
+export const verifyIpLimit = async (socket: Socket): Promise<boolean> => {
 	if (process.env['FAKE_PROBE_IP']) {
-		return;
+		return false;
 	}
 
 	const socketList = await io.of(PROBES_NAMESPACE).fetchSockets();
@@ -19,5 +19,8 @@ export const verifyIpLimit = async (socket: Socket) => {
 	if (previousSocket) {
 		socket.disconnect();
 		logger.info(`ws client ${socket.id} has reached the concurrent IP limit. Disconnected.`);
+		return true;
 	}
+
+	return false;
 };

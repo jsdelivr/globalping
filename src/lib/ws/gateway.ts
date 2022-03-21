@@ -21,7 +21,10 @@ io
 			return;
 		}
 
-		await verifyIpLimit(socket);
+		const isLimitReached = await verifyIpLimit(socket);
+		if (isLimitReached) {
+			return;
+		}
 
 		logger.info(`ws client ${socket.id} connected from ${probe.location.country}`);
 
