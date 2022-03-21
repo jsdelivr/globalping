@@ -23,11 +23,11 @@ registerGetMeasurementRoute(router);
 registerGetProbesRoute(router);
 
 app
+	.use(rateLimitHandler())
 	.use(responseTime())
 	.use(cors())
 	.use(router.routes())
-	.use(router.allowedMethods())
-	.use(rateLimitHandler());
+	.use(router.allowedMethods());
 
 app.on('error', errorHandler);
 
