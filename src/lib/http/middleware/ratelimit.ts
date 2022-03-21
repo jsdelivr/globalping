@@ -22,7 +22,7 @@ export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
 	}
 
 	try {
-		const response = await rateLimiter.consume(requestIp.getClientIp(ctx.req)!);
+		const response = await rateLimiter.consume(requestIp.getClientIp(ctx.req) ?? '');
 		setResponseHeaders(ctx, response);
 	} catch (error: unknown) { // Ts requires 'unknown' for errors
 		setResponseHeaders(ctx, error as RateLimiterRes);

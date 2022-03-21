@@ -19,9 +19,9 @@ describe('rate limiter', () => {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		const httpResponse = await requestAgent.post('/v1/').send() as Response & {req: any};
 		// Supertest renders request as ipv4
-		const clientIp = requestIp.getClientIp(httpResponse.req)!;
+		const clientIp = requestIp.getClientIp(httpResponse.req);
 		// Koa sees ipv6-ipv4 monster
-		clientIpv6 = `::ffff:${clientIp}`;
+		clientIpv6 = `::ffff:${clientIp ?? ''}`;
 
 		// eslint-disable-next-line node/no-unsupported-features/es-syntax
 		const rateLimiter = await import('../../src/lib/ratelimiter.js');
@@ -56,7 +56,7 @@ describe('rate limiter', () => {
 		it('should change values on next request (5) (POST)', async () => {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			const requestPromise = () => requestAgent.post('/v1/').send() as Response;
-			const responseList = await Promise.all(Array.from({length: 5}).map(_ => requestPromise()));
+			const responseList = await Promise.all(Array.from({length: 5}).map(() => requestPromise()));
 
 			const firstResponse = responseList[0];
 			const lastResponse = responseList[4];
