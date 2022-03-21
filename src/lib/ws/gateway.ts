@@ -4,6 +4,7 @@ import {handleMeasurementResult} from '../../measurement/handler/result.js';
 import {handleMeasurementProgress} from '../../measurement/handler/progress.js';
 import {getWsServer, PROBES_NAMESPACE} from './server.js';
 import {probeMetadata} from './middleware/probe-metadata.js';
+import {verifyIpLimit} from './helper/probe-ip-limit.js';
 
 const io = getWsServer();
 const logger = scopedLogger('gateway');
@@ -11,12 +12,17 @@ const logger = scopedLogger('gateway');
 io
 	.of(PROBES_NAMESPACE)
 	.use(probeMetadata)
-	.on('connect', socket => {
+	.on('connect', async socket => {
 		const {probe} = socket.data;
 
 		if (!probe) {
 			logger.error('socket metadata missing', socket);
 			socket.disconnect();
+			return;
+		}
+
+		const isLimitReached = await verifyIpLimit(socket);
+		if (isLimitReached) {
 			return;
 		}
 
