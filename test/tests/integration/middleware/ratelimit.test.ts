@@ -3,7 +3,7 @@ import request, {Response} from 'supertest';
 import requestIp from 'request-ip';
 import type {RateLimiterRedis} from 'rate-limiter-flexible';
 import {expect} from 'chai';
-import {getOrInitTestServer} from '../utils/http.js';
+import {getTestServer} from '../../../utils/http.js';
 
 describe('rate limiter', () => {
 	let app: Server;
@@ -13,7 +13,7 @@ describe('rate limiter', () => {
 
 	before(async function () {
 		this.timeout(15_000);
-		app = await getOrInitTestServer();
+		app = await getTestServer();
 		requestAgent = request(app);
 
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -24,7 +24,7 @@ describe('rate limiter', () => {
 		clientIpv6 = `::ffff:${clientIp ?? ''}`;
 
 		// eslint-disable-next-line node/no-unsupported-features/es-syntax
-		const rateLimiter = await import('../../src/lib/ratelimiter.js');
+		const rateLimiter = await import('../../../../src/lib/ratelimiter.js');
 		rateLimiterInstance = rateLimiter.default;
 	});
 

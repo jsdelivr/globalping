@@ -1,4 +1,52 @@
 {
+  "100.10.10.1": {
+    "ipinfo": {
+      "hostname": "66.subnet64.22.49.65.in-addr.arpa",
+      "city": "Fremont",
+      "region": "California",
+      "country": "US",
+      "loc": "37.5483,-121.9886",
+      "org": "AS6939 Hurricane Electric LLC",
+      "postal": "94536",
+      "timezone": "America/Los_Angeles"
+    },
+    "fastly": {
+      "ip": "65.49.22.66",
+      "as": {
+        "name": "hurricane electric inc.",
+        "number": 6939
+      },
+      "client": {
+        "conn_speed": "broadband",
+        "conn_type": "wired",
+        "proxy_desc": "",
+        "proxy_type": ""
+      },
+      "geo-digitalelement": {
+        "city": "san francisco",
+        "continent_code": "NA",
+        "country_code": "US",
+        "country_code3": "USA",
+        "country_name": "united states",
+        "latitude": 37.720,
+        "longitude": -122.440,
+        "region": "CA"
+      },
+      "geo-maxmind": {
+        "city": "Redwood City",
+        "continent_code": "NA",
+        "country_code": "US",
+        "country_code3": "USA",
+        "country_name": "United States",
+        "latitude": 37.472,
+        "longitude": -122.231,
+        "region": "CA"
+      },
+      "time": {
+        "utc_offset": -700
+      }
+    }
+  },
   "100.00.00.00": {
     "ipinfo": {
       "city": "Lagoa do Carro",
