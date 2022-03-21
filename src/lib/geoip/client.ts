@@ -23,6 +23,10 @@ const bestMatch = (field: keyof LocationInfo, sources: LocationInfo[]): Location
 };
 
 const isVpn = (client: {proxy_desc: string; proxy_type: string}): boolean => {
+	if (!client) {
+		return false;
+	}
+
 	if (['anonymous', 'aol', 'blackberry', 'corporate'].includes(client.proxy_type)) {
 		return true;
 	}

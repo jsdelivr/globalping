@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import nock from 'nock';
 import {expect} from 'chai';
-import {geoIpLookup} from '../../src/lib/geoip/client.js';
+import {geoIpLookup, LocationInfo} from '../../src/lib/geoip/client.js';
 
 const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
@@ -114,5 +114,20 @@ describe('geoip service', () => {
 			longitude: -96.8389,
 			state: 'TX',
 		});
+	});
+
+	it('should detect VPN', async () => {
+		nock('https://globalping-geoip.global.ssl.fastly.net')
+			.get('/100.00.00.04')
+			.reply(200, mocks['100.00.00.04'].fastly);
+
+		nock('https://ipinfo.io')
+			.get('/100.00.00.04')
+			.reply(200, mocks['100.00.00.04'].ipinfo);
+
+		const response: LocationInfo | Error = await geoIpLookup('100.00.00.04').catch((error: Error) => error);
+
+		expect(response).to.be.instanceof(Error);
+		expect((response as Error).message).to.equal('vpn detected');
 	});
 });

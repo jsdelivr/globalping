@@ -100,5 +100,43 @@
       "loc": "32.7492,-96.8389",
       "org": "Psychz Networks"
     }
+  },
+  "100.00.00.04": {
+    "fastly": {
+      "as": {
+        "number": 40676
+      },
+      "geo-digitalelement": {
+        "city": "dallas",
+        "continent_code": "NA",
+        "country_code": "US",
+        "country_code3": "USA",
+        "country_name": "united states",
+        "latitude": 32.810,
+        "longitude": -96.880,
+        "region": "TX"
+      },
+      "geo-maxmind": {
+        "city": "Dallas",
+        "continent_code": "NA",
+        "country_code": "US",
+        "country_code3": "USA",
+        "country_name": "United States",
+        "latitude": 32.814,
+        "longitude": -96.870,
+        "region": "TX"
+      },
+      "client": {
+        "proxy_desc": "vpn",
+        "proxy_type": "blackberry"
+      }
+    },
+    "ipinfo": {
+      "city": "Dallas",
+      "region": "Texas",
+      "country": "US",
+      "loc": "32.7492,-96.8389",
+      "org": "Psychz Networks"
+    }
   }
 }
