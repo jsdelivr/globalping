@@ -1,6 +1,6 @@
 module.exports = {
 	redis: {
-		url: '',
+		url: 'redis://localhost:6379',
 		socket: {
 			tls: true,
 			rejectUnauthorized: false,
