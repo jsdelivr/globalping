@@ -18,5 +18,13 @@ module.exports = {
 			global: 500,
 			location: 200,
 		},
+		globalDistribution: {
+			AF: 5,
+			AS: 15,
+			EU: 30,
+			OC: 10,
+			NA: 30,
+			SA: 10,
+		},
 	},
 };
