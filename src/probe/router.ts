@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import config from 'config';
 import type {RemoteSocket} from 'socket.io';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
 import type {SocketData, WsServer} from '../lib/ws/server.js';
@@ -51,15 +52,15 @@ export class ProbeRouter {
 			const selectedCount = picked.size;
 
 			for (const [k, v] of grouped) {
+				// Circuit-breaker - we don't want to get more probes than was requested
+				if (picked.size === limit) {
+					break;
+				}
+
 				const weight = distribution.get(k);
 
 				if (!weight) {
 					continue;
-				}
-
-				// Circuit-breaker - we don't want to get more probes than was requested
-				if (picked.size === limit) {
-					break;
 				}
 
 				const count = Math.ceil((limit - selectedCount) * weight / 100);
@@ -78,14 +79,10 @@ export class ProbeRouter {
 	}
 
 	private filterGloballyDistributed(sockets: Socket[], limit: number): Socket[] {
-		const distribution = new Map<Location, number>([
-			[{type: 'continent', value: 'AF'}, 5],
-			[{type: 'continent', value: 'AS'}, 15],
-			[{type: 'continent', value: 'EU'}, 30],
-			[{type: 'continent', value: 'OC'}, 10],
-			[{type: 'continent', value: 'NA'}, 30],
-			[{type: 'continent', value: 'SA'}, 10],
-		]);
+		const distribution = new Map<Location, number>(
+			Object.entries(config.get<Record<string, number>>('measurement.globalDistribution'))
+				.map(([value, weight]) => ([{type: 'continent', value}, weight])),
+		);
 
 		return this.findByLocationAndWeight(sockets, distribution, limit);
 	}
