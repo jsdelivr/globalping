@@ -18,7 +18,7 @@ export const verifyIpLimit = async (socket: Socket): Promise<boolean> => {
 
 	if (previousSocket) {
 		socket.disconnect();
-		logger.info(`ws client ${socket.id} has reached the concurrent IP limit. Disconnected.`);
+		logger.info(`ws client ${socket.id} has reached the concurrent IP limit. Disconnected. (${previousSocket.data.probe.ipAddress})`);
 		return true;
 	}
 
