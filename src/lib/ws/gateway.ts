@@ -33,4 +33,3 @@ io
 		socket.on('probe:measurement:progress', handleMeasurementProgress);
 		socket.on('probe:measurement:result', handleMeasurementResult);
 	});
-

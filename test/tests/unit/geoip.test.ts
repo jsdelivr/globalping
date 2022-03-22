@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import nock from 'nock';
 import {expect} from 'chai';
-import {geoIpLookup, LocationInfo} from '../../src/lib/geoip/client.js';
+import {geoIpLookup, LocationInfo} from '../../../src/lib/geoip/client.js';
 
 const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 

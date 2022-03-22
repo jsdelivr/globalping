@@ -2,7 +2,7 @@ import type {Server} from 'node:http';
 import request, {Response} from 'supertest';
 import {expect} from 'chai';
 
-import {getOrInitTestServer} from '../utils/http.js';
+import {getTestServer} from '../../../utils/http.js';
 
 describe('cors', () => {
 	let app: Server;
@@ -10,7 +10,7 @@ describe('cors', () => {
 
 	before(async function () {
 		this.timeout(15_000);
-		app = await getOrInitTestServer();
+		app = await getTestServer();
 		requestAgent = request(app);
 	});
 
