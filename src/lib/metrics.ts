@@ -2,14 +2,17 @@ import * as process from 'node:process';
 import type {Server as SocketServer} from 'socket.io';
 import type {Metrics} from '@appsignal/nodejs';
 
+import {getRedisClient, RedisClient} from '../lib/redis/client.js';
 import {getWsServer, PROBES_NAMESPACE} from './ws/server.js';
 
 export class MetricsAgent {
 	private metrics: Metrics | undefined;
 	private readonly io: SocketServer;
+	private readonly redis: RedisClient;
 
-	constructor(io: SocketServer) {
+	constructor(io: SocketServer, redis: RedisClient) {
 		this.io = io;
+		this.redis = redis;
 	}
 
 	async run() {
@@ -42,11 +45,8 @@ export class MetricsAgent {
 	}
 
 	private async intervalHandler(): Promise<void> {
-		/*
-     * TODO:
-     * - add redis results counter
-     */
 		await this.updateProbeCount();
+		await this.updateMeasurementCount();
 	}
 
 	private async updateProbeCount(): Promise<void> {
@@ -56,6 +56,30 @@ export class MetricsAgent {
 
 		const socketList = await this.io.of(PROBES_NAMESPACE).fetchSockets();
 		this.metrics.setGauge('probe.count', socketList.length, {group: 'total'});
+	}
+
+	private async updateMeasurementCount(): Promise<void> {
+		if (!this.metrics) {
+			return;
+		}
+
+		let count = 0;
+
+		const scanLoop = async (cursor = 0): Promise<void> => {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			const result = await this.redis.scan(cursor, {MATCH: 'gp:measurement:*'});
+
+			count += result.keys.length;
+			if (cursor === 0) {
+				return;
+			}
+
+			return scanLoop(result.cursor);
+		};
+
+		await scanLoop();
+
+		this.metrics.setGauge('measurement.record.count', count, {type: 'total'});
 	}
 
 	private recordMeasurementTotal(): void {
@@ -71,7 +95,7 @@ let agent: MetricsAgent;
 
 export const getMetricsAgent = () => {
 	if (!agent) {
-		agent = new MetricsAgent(getWsServer());
+		agent = new MetricsAgent(getWsServer(), getRedisClient());
 	}
 
 	return agent;
