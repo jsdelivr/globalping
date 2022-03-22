@@ -52,7 +52,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	// Todo: add validation and handle missing or partial data
 	return {
 		client: socket.id,
-		ipAddress: socket.conn.remoteAddress,
+		ipAddress: clientIp,
 		location,
 	};
 };
