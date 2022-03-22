@@ -9,7 +9,7 @@ import type {Probe} from '../probe/types.js';
 import {getMetricsAgent, MetricsAgent} from '../lib/metrics.js';
 import type {MeasurementStore} from './store.js';
 import {getMeasurementKey, getMeasurementStore} from './store.js';
-import type {MeasurementConfig, MeasurementRequest, MeasurementResultMessage} from './types.js';
+import type {MeasurementConfig, MeasurementRequest, MeasurementResultMessage, MeasurementRecord} from './types.js';
 
 const logger = scopedLogger('measurement');
 
@@ -59,6 +59,13 @@ export class MeasurementRunner {
 
 		await this.store.markFinished(data.measurementId);
 		this.clearTimeout(data.measurementId);
+
+		const record = (await this.redis.json.get(getMeasurementKey(data.measurementId))) as MeasurementRecord;
+		const ttl = await this.redis.ttl(getMeasurementKey(data.measurementId));
+		if (record && ttl) {
+			const totalTime = config.get<number>('measurement.resultTTL') - ttl;
+			this.metrics.recordMeasurementTime(record.type, totalTime);
+		}
 	}
 
 	private sendToProbes(config: MeasurementConfig) {

@@ -24,10 +24,13 @@ export class MetricsAgent {
 		setInterval(this.intervalHandler.bind(this), 60 * 1000);
 	}
 
-	/*
-    * TODO:
-    * - add measurement time record
-  */
+	recordMeasurementTime(type: string, time: number): void {
+		if (!this.metrics) {
+			return;
+		}
+
+		this.metrics.addDistributionValue('measurement.time', time, {type});
+	}
 
 	recordMeasurement(type: string): void {
 		if (!this.metrics) {
