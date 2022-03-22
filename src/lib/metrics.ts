@@ -34,7 +34,7 @@ export class MetricsAgent {
 			return;
 		}
 
-		this.metrics.incrementCounter(`measurement.${type}.count`, 1);
+		this.metrics.incrementCounter('measurement.count', 1, {type});
 		this.recordMeasurementTotal();
 	}
 
@@ -52,7 +52,7 @@ export class MetricsAgent {
 		}
 
 		const socketList = await this.io.of(PROBES_NAMESPACE).fetchSockets();
-		this.metrics.setGauge('probe.total.count', socketList.length);
+		this.metrics.setGauge('probe.count', socketList.length, {group: 'total'});
 	}
 
 	private recordMeasurementTotal(): void {
@@ -60,7 +60,7 @@ export class MetricsAgent {
 			return;
 		}
 
-		this.metrics.incrementCounter('measurement.total.count', 1);
+		this.metrics.incrementCounter('measurement.count', 1, {type: 'total'});
 	}
 }
 
