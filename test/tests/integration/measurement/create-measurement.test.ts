@@ -1,12 +1,11 @@
 import type {Server} from 'node:http';
 import {expect} from 'chai';
 import request, {SuperTest, Test} from 'supertest';
-import type {Socket as SocketClient} from 'socket.io-client';
 import {getTestServer} from '../../../utils/http.js';
-import {createFakeProbeServer} from '../../../mocks/probe.mock.js';
+import {addFakeProbe, deleteFakeProbe} from '../../../utils/ws.js';
 
 describe('Create measurement', function () {
-	this.timeout(10_000);
+	this.timeout(5000);
 
 	let app: Server;
 	let requestAgent: SuperTest<Test>;
@@ -36,14 +35,12 @@ describe('Create measurement', function () {
 	});
 
 	describe('probes connected', () => {
-		let fakeProbe: SocketClient;
-
 		before(async () => {
-			fakeProbe = await createFakeProbeServer();
+			await addFakeProbe('fake-probe-US', {location: {continent: 'NA', country: 'US'}});
 		});
 
 		after(() => {
-			fakeProbe.disconnect();
+			deleteFakeProbe('fake-probe-US');
 		});
 
 		it('should create measurement with global limit', async () => {
