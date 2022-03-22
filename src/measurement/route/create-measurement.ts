@@ -9,7 +9,7 @@ import type {MeasurementRequest} from '../types.js';
 import {states} from '../../lib/location/states.js';
 import {regions} from '../../lib/location/regions.js';
 import {validate} from '../../lib/http/middleware/validate.js';
-import {pingSchema, tracerouteSchema, dnsSchema} from '../schema/command-schema.js';
+import {dnsSchema, pingSchema, tracerouteSchema} from '../schema/command-schema.js';
 
 const runner = getMeasurementRunner();
 const {continents, countries} = geoLists;
@@ -41,21 +41,12 @@ const schema = Joi.object({
 
 const handle = async (ctx: Context) => {
 	const request = ctx.request.body as MeasurementRequest;
+	const config = await runner.run(request);
 
-	try {
-		const config = await runner.run(request);
-
-		ctx.body = {
-			id: config.id,
-			probesCount: config.probes.length,
-		};
-	} catch (error: unknown) {
-		ctx.status = 400;
-
-		if (error instanceof Error) {
-			ctx.body = error.message;
-		}
-	}
+	ctx.body = {
+		id: config.id,
+		probesCount: config.probes.length,
+	};
 };
 
 export const registerCreateMeasurementRoute = (router: Router): void => {
