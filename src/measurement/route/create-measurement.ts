@@ -21,14 +21,28 @@ const schema = Joi.object({
 		type: Joi.string().valid('continent', 'region', 'country', 'state', 'city', 'asn').required(),
 		value: Joi.alternatives().conditional('type', {
 			switch: [
-				{is: 'continent', then: Joi.string().valid(...Object.keys(continents))},
+				{
+					is: 'continent',
+					then: Joi.string().valid(...Object.keys(continents))
+						.messages({'any.only': 'The continent must be a valid two-letter ISO code'}),
+				},
 				{is: 'region', then: Joi.string().valid(...Object.keys(regions))},
-				{is: 'country', then: Joi.string().valid(...Object.keys(countries))},
-				{is: 'state', then: Joi.string().valid(...Object.keys(states))},
-				{is: 'city', then: Joi.number()},
+				{
+					is: 'country',
+					then: Joi.string().valid(...Object.keys(countries))
+						.messages({'any.only': 'The country must be a valid two-letter ISO code'}),
+				},
+				{
+					is: 'state',
+					then: Joi.string().valid(...Object.keys(states))
+						.messages({'any.only': 'The US state must be a valid two-letter code, e.g. CA'}),
+				},
+				{is: 'city', then: Joi.string().min(1).max(128)},
 				{is: 'asn', then: Joi.number()},
 			],
-		}).required(),
+		}).required().messages({
+			'any.required': 'Location value is required',
+		}),
 		limit: Joi.number().min(1).max(measurementConfig.limits.location).when(Joi.ref('/limit'), {
 			is: Joi.exist(),
 			then: Joi.forbidden().messages({'any.unknown': 'limit per location is not allowed when a global limit is set'}),

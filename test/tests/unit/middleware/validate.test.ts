@@ -1,0 +1,42 @@
+import {expect} from 'chai';
+import Joi from 'joi';
+import * as sinon from 'sinon';
+import {validate} from '../../../../src/lib/http/middleware/validate.js';
+
+describe('Validate middleware', () => {
+	const schema = Joi.object({
+		hello: Joi.string().valid('world!').required(),
+	});
+	const nextMock = sinon.stub();
+
+	beforeEach(() => {
+		nextMock.reset();
+	});
+
+	it('should call next', async () => {
+		const ctx: any = {request: {body: {hello: 'world!'}}};
+		const next = sinon.stub();
+
+		await validate(schema)(ctx, next);
+
+		expect(next.calledOnce).to.be.true;
+		expect(ctx.status).to.not.exist;
+	});
+
+	it('should return validation error', async () => {
+		const ctx: any = {request: {body: {hello: 'no one'}}};
+
+		await validate(schema)(ctx, nextMock);
+
+		expect(nextMock.notCalled).to.be.true;
+
+		expect(ctx.status).to.equal(422);
+		expect(ctx.body).to.deep.equal({
+			error: {
+				message: 'Validation Failed',
+				type: 'invalid_request_error',
+				params: {hello: '"hello" must be [world!]'},
+			},
+		});
+	});
+});
