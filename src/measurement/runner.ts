@@ -6,6 +6,7 @@ import type {RedisClient} from '../lib/redis/client.js';
 import {getRedisClient} from '../lib/redis/client.js';
 import {getProbeRouter, ProbeRouter} from '../probe/router.js';
 import type {Probe} from '../probe/types.js';
+import {getMetricsAgent, MetricsAgent} from '../lib/metrics.js';
 import type {MeasurementStore} from './store.js';
 import {getMeasurementKey, getMeasurementStore} from './store.js';
 import type {MeasurementConfig, MeasurementRequest, MeasurementResultMessage} from './types.js';
@@ -20,6 +21,7 @@ export class MeasurementRunner {
 		private readonly redis: RedisClient,
 		private readonly store: MeasurementStore,
 		private readonly router: ProbeRouter,
+		private readonly metrics: MetricsAgent,
 	) {}
 
 	async run(request: MeasurementRequest): Promise<MeasurementConfig> {
@@ -34,6 +36,7 @@ export class MeasurementRunner {
 
 		this.sendToProbes(config);
 		this.setTimeout(config.id);
+		this.metrics.recordMeasurement(request.measurement.type);
 
 		return config;
 	}
@@ -94,7 +97,7 @@ let runner: MeasurementRunner;
 
 export const getMeasurementRunner = () => {
 	if (!runner) {
-		runner = new MeasurementRunner(getWsServer(), getRedisClient(), getMeasurementStore(), getProbeRouter());
+		runner = new MeasurementRunner(getWsServer(), getRedisClient(), getMeasurementStore(), getProbeRouter(), getMetricsAgent());
 	}
 
 	return runner;

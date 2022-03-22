@@ -5,6 +5,7 @@ import process from 'node:process';
 import {initRedis} from './lib/redis/client.js';
 import {initWsServer} from './lib/ws/server.js';
 import {scopedLogger} from './lib/logger.js';
+import {getMetricsAgent} from './lib/metrics.js';
 
 const logger = scopedLogger('global');
 const port = process.env['PORT'] ?? 3000;
@@ -26,6 +27,9 @@ const workerFn = async () => {
 	// Init gateway
 	// eslint-disable-next-line node/no-unsupported-features/es-syntax
 	await import('./lib/ws/gateway.js');
+
+	const metricsAgent = getMetricsAgent();
+	await metricsAgent.run();
 
 	httpServer.listen(port, () => {
 		logger.info(`application started on port ${port}`);
