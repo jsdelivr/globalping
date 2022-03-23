@@ -6,6 +6,10 @@ module.exports = {
 			rejectUnauthorized: false,
 		},
 	},
+	appsignal: {
+		active: true,
+		pushApiKey: '',
+	},
 	ipinfo: {
 		apiKey: '',
 	},
