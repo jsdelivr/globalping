@@ -6,9 +6,10 @@ import type {RedisClient} from '../lib/redis/client.js';
 import {getRedisClient} from '../lib/redis/client.js';
 import {getProbeRouter, ProbeRouter} from '../probe/router.js';
 import type {Probe} from '../probe/types.js';
+import {getMetricsAgent, MetricsAgent} from '../lib/metrics.js';
 import type {MeasurementStore} from './store.js';
 import {getMeasurementKey, getMeasurementStore} from './store.js';
-import type {MeasurementConfig, MeasurementRequest, MeasurementResultMessage} from './types.js';
+import type {MeasurementConfig, MeasurementRequest, MeasurementResultMessage, MeasurementRecord} from './types.js';
 
 const logger = scopedLogger('measurement');
 
@@ -20,6 +21,7 @@ export class MeasurementRunner {
 		private readonly redis: RedisClient,
 		private readonly store: MeasurementStore,
 		private readonly router: ProbeRouter,
+		private readonly metrics: MetricsAgent,
 	) {}
 
 	async run(request: MeasurementRequest): Promise<MeasurementConfig> {
@@ -34,6 +36,7 @@ export class MeasurementRunner {
 
 		this.sendToProbes(config);
 		this.setTimeout(config.id);
+		this.metrics.recordMeasurement(request.measurement.type);
 
 		return config;
 	}
@@ -56,6 +59,11 @@ export class MeasurementRunner {
 
 		await this.store.markFinished(data.measurementId);
 		this.clearTimeout(data.measurementId);
+
+		const record = (await this.redis.json.get(getMeasurementKey(data.measurementId))) as MeasurementRecord;
+		if (record) {
+			this.metrics.recordMeasurementTime(record.type, (Date.now() - (new Date(record.createdAt)).getTime()));
+		}
 	}
 
 	private sendToProbes(config: MeasurementConfig) {
@@ -94,7 +102,7 @@ let runner: MeasurementRunner;
 
 export const getMeasurementRunner = () => {
 	if (!runner) {
-		runner = new MeasurementRunner(getWsServer(), getRedisClient(), getMeasurementStore(), getProbeRouter());
+		runner = new MeasurementRunner(getWsServer(), getRedisClient(), getMeasurementStore(), getProbeRouter(), getMetricsAgent());
 	}
 
 	return runner;
