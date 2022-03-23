@@ -7,7 +7,7 @@ module.exports = {
 		},
 	},
 	appsignal: {
-		active: true,
+		active: false,
 		pushApiKey: '',
 	},
 	ipinfo: {
