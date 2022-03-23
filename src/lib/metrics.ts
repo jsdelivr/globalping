@@ -18,11 +18,11 @@ export class MetricsAgent {
 		this.metrics = Appsignal.metrics();
 	}
 
-	run() {
+	run(): void {
 		this.interval = setInterval(this.intervalHandler.bind(this), 60 * 1000);
 	}
 
-	stop() {
+	stop(): void {
 		clearInterval(this.interval);
 	}
 
