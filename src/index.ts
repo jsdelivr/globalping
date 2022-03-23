@@ -29,7 +29,7 @@ const workerFn = async () => {
 	await import('./lib/ws/gateway.js');
 
 	const metricsAgent = getMetricsAgent();
-	await metricsAgent.run();
+	metricsAgent.run();
 
 	httpServer.listen(port, () => {
 		logger.info(`application started on port ${port}`);
