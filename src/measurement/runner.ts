@@ -61,10 +61,8 @@ export class MeasurementRunner {
 		this.clearTimeout(data.measurementId);
 
 		const record = (await this.redis.json.get(getMeasurementKey(data.measurementId))) as MeasurementRecord;
-		const ttl = await this.redis.ttl(getMeasurementKey(data.measurementId));
-		if (record && ttl) {
-			const totalTime = config.get<number>('measurement.resultTTL') - ttl;
-			this.metrics.recordMeasurementTime(record.type, totalTime);
+		if (record) {
+			this.metrics.recordMeasurementTime(record.type, (Date.now() - (new Date(record.createdAt)).getTime()));
 		}
 	}
 
