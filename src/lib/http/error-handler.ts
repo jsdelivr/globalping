@@ -1,9 +1,3 @@
-import * as process from 'node:process';
+import appsignal from '../appsignal.js';
 
-export const errorHandler = async (error: Error) => {
-	if (process.env['NODE_ENV'] !== 'test') {
-		// eslint-disable-next-line node/no-unsupported-features/es-syntax
-		const appsignal = await import('../appsignal.js');
-		appsignal.default.tracer().setError(error);
-	}
-};
+export const errorHandler = async (error: Error) => appsignal.tracer().setError(error);
