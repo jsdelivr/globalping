@@ -1,5 +1,6 @@
 import type {Context, Next} from 'koa';
 import createHttpError from 'http-errors';
+import appsignal from '../../appsignal.js';
 
 export const errorHandlerMw = async (ctx: Context, next: Next) => {
 	try {
@@ -15,6 +16,10 @@ export const errorHandlerMw = async (ctx: Context, next: Next) => {
 			};
 
 			return;
+		}
+
+		if (error instanceof Error) {
+			appsignal.tracer().setError(error);
 		}
 
 		ctx.status = 500;
