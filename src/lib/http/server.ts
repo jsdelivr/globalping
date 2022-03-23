@@ -30,7 +30,7 @@ app
 	.use(rateLimitHandler())
 	.use(responseTime())
 	.use(cors())
-	.use(json())
+	.use(json({pretty: false, param: 'pretty'}))
 	.use(router.routes())
 	.use(router.allowedMethods());
 
