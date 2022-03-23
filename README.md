@@ -15,4 +15,4 @@ that connects to the API will get an IP address from the list of predefined "rea
 1. clone repository
 2. `docker-compose up -d` - run redis
 3. `npm install && npm run init:hooks && npm run build`
-4. `node dist/index.js`
+4. `npm run dev`

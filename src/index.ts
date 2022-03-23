@@ -2,36 +2,16 @@
 import './lib/appsignal.js';
 
 import process from 'node:process';
-import {initRedis} from './lib/redis/client.js';
-import {initWsServer} from './lib/ws/server.js';
 import {scopedLogger} from './lib/logger.js';
-import {getMetricsAgent} from './lib/metrics.js';
+import {createServer} from './lib/server.js';
 
 const logger = scopedLogger('global');
 const port = process.env['PORT'] ?? 3000;
 
 const workerFn = async () => {
-	await initRedis();
-	await initWsServer();
+	const server = await createServer();
 
-	// eslint-disable-next-line node/no-unsupported-features/es-syntax
-	const {getWsServer} = await import('./lib/ws/server.js');
-	// eslint-disable-next-line node/no-unsupported-features/es-syntax
-	const {getHttpServer} = await import('./lib/http/server.js');
-
-	const httpServer = getHttpServer();
-	const wsServer = getWsServer();
-
-	wsServer.attach(httpServer);
-
-	// Init gateway
-	// eslint-disable-next-line node/no-unsupported-features/es-syntax
-	await import('./lib/ws/gateway.js');
-
-	const metricsAgent = getMetricsAgent();
-	metricsAgent.run();
-
-	httpServer.listen(port, () => {
+	server.listen(port, () => {
 		logger.info(`application started on port ${port}`);
 	});
 };

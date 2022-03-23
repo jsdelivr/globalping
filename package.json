@@ -65,7 +65,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "NODE_ENV=production node dist/index.js",
+    "dev": "NODE_ENV=development node dist/index.js",
     "lint": "xo",
     "lint:fix": "xo --fix",
     "test": "NODE_ENV=test mocha",

@@ -2,7 +2,7 @@ import type {Server} from 'node:http';
 import request, {Response} from 'supertest';
 import {expect} from 'chai';
 
-import {getOrInitTestServer} from '../utils/http.js';
+import {getTestServer} from '../../../utils/http.js';
 
 describe('response time', () => {
 	let app: Server;
@@ -10,13 +10,13 @@ describe('response time', () => {
 
 	before(async function () {
 		this.timeout(15_000);
-		app = await getOrInitTestServer();
+		app = await getTestServer();
 		requestAgent = request(app);
 	});
 
 	describe('X-Response-Time header', () => {
 		describe('should include the header', (): void => {
-			it('should suceed', async () => {
+			it('should succeed', async () => {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 				const response = await requestAgent.get('/').send() as Response;
 

@@ -1,10 +1,11 @@
 import {Appsignal} from '@appsignal/nodejs';
 import * as AppsignalKoa from '@appsignal/koa';
+import config from 'config';
 
 const appsignal = new Appsignal({
-	active: true,
+	active: config.get<boolean>('appsignal.active'),
 	name: 'GlobalPing API',
-	pushApiKey: '389f2523-556c-42ce-944b-d9497cf9a1ad',
+	pushApiKey: config.get<string>('appsignal.pushApiKey'),
 });
 
 appsignal.instrument(AppsignalKoa);
