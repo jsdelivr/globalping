@@ -1,5 +1,6 @@
 import config from 'config';
 import type {Server} from 'socket.io';
+import createHttpError from 'http-errors';
 import {scopedLogger} from '../lib/logger.js';
 import {getWsServer} from '../lib/ws/server.js';
 import type {RedisClient} from '../lib/redis/client.js';
@@ -28,7 +29,7 @@ export class MeasurementRunner {
 		const probes = await this.router.findMatchingProbes(request.locations, request.limit);
 
 		if (probes.length === 0) {
-			throw new Error('no suitable probes');
+			throw createHttpError(400, 'No suitable probes found');
 		}
 
 		const id = await this.store.createMeasurement(request.measurement, probes.length);

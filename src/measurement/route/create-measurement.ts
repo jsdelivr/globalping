@@ -9,7 +9,7 @@ import type {MeasurementRequest} from '../types.js';
 import {states} from '../../lib/location/states.js';
 import {regions} from '../../lib/location/regions.js';
 import {validate} from '../../lib/http/middleware/validate.js';
-import {pingSchema, tracerouteSchema, dnsSchema} from '../schema/command-schema.js';
+import {dnsSchema, pingSchema, tracerouteSchema} from '../schema/command-schema.js';
 
 const runner = getMeasurementRunner();
 const {continents, countries} = geoLists;
@@ -21,14 +21,28 @@ const schema = Joi.object({
 		type: Joi.string().valid('continent', 'region', 'country', 'state', 'city', 'asn').required(),
 		value: Joi.alternatives().conditional('type', {
 			switch: [
-				{is: 'continent', then: Joi.string().valid(...Object.keys(continents))},
+				{
+					is: 'continent',
+					then: Joi.string().valid(...Object.keys(continents))
+						.messages({'any.only': 'The continent must be a valid two-letter ISO code'}),
+				},
 				{is: 'region', then: Joi.string().valid(...Object.keys(regions))},
-				{is: 'country', then: Joi.string().valid(...Object.keys(countries))},
-				{is: 'state', then: Joi.string().valid(...Object.keys(states))},
-				{is: 'city', then: Joi.number()},
+				{
+					is: 'country',
+					then: Joi.string().valid(...Object.keys(countries))
+						.messages({'any.only': 'The country must be a valid two-letter ISO code'}),
+				},
+				{
+					is: 'state',
+					then: Joi.string().valid(...Object.keys(states))
+						.messages({'any.only': 'The US state must be a valid two-letter code, e.g. CA'}),
+				},
+				{is: 'city', then: Joi.string().min(1).max(128)},
 				{is: 'asn', then: Joi.number()},
 			],
-		}).required(),
+		}).required().messages({
+			'any.required': 'Location value is required',
+		}),
 		limit: Joi.number().min(1).max(measurementConfig.limits.location).when(Joi.ref('/limit'), {
 			is: Joi.exist(),
 			then: Joi.forbidden().messages({'any.unknown': 'limit per location is not allowed when a global limit is set'}),
@@ -41,21 +55,12 @@ const schema = Joi.object({
 
 const handle = async (ctx: Context) => {
 	const request = ctx.request.body as MeasurementRequest;
+	const config = await runner.run(request);
 
-	try {
-		const config = await runner.run(request);
-
-		ctx.body = {
-			id: config.id,
-			probesCount: config.probes.length,
-		};
-	} catch (error: unknown) {
-		ctx.status = 400;
-
-		if (error instanceof Error) {
-			ctx.body = error.message;
-		}
-	}
+	ctx.body = {
+		id: config.id,
+		probesCount: config.probes.length,
+	};
 };
 
 export const registerCreateMeasurementRoute = (router: Router): void => {

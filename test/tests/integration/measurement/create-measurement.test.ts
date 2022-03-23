@@ -29,7 +29,12 @@ describe('Create measurement', function () {
 				})
 				.expect(400)
 				.expect(response => {
-					expect(response.text).to.equal('no suitable probes');
+					expect(response.body).to.deep.equal({
+						error: {
+							message: 'No suitable probes found',
+							type: 'api_error',
+						},
+					});
 				});
 		});
 	});
