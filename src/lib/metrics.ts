@@ -65,19 +65,10 @@ export class MetricsAgent {
 
 		let count = 0;
 
-		const scanLoop = async (cursor = 0): Promise<void> => {
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			const result = await this.redis.scan(cursor, {MATCH: 'gp:measurement:*'});
-
-			count += result.keys.length;
-			if (cursor === 0) {
-				return;
-			}
-
-			return scanLoop(result.cursor);
-		};
-
-		await scanLoop();
+		// eslint-disable-next-line @typescript-eslint/naming-convention, no-empty-pattern
+		for await ({} of this.redis.scanIterator({MATCH: 'gp:measurement:*'})) {
+			count++;
+		}
 
 		this.metrics.setGauge('measurement.record.count', count, {type: 'total'});
 	}
