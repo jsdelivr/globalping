@@ -10,7 +10,7 @@ export class MetricsAgent {
 	private readonly io: SocketServer;
 	private readonly redis: RedisClient;
 
-	private interval: any;
+	private interval: NodeJS.Timer | undefined;
 
 	constructor(io: SocketServer, redis: RedisClient) {
 		this.io = io;
@@ -23,7 +23,9 @@ export class MetricsAgent {
 	}
 
 	stop(): void {
-		clearInterval(this.interval);
+		if (this.interval) {
+			clearInterval(this.interval);
+		}
 	}
 
 	recordMeasurementTime(type: string, time: number): void {
