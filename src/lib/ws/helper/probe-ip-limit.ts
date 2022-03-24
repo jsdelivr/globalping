@@ -23,6 +23,7 @@ export const verifyIpLimit = async (socket: Socket): Promise<void> => {
 		throw new WsError(
 			'IP Limit',
 			{
+				code: 'ip_limit',
 				socketId: socket.id,
 				probe: socket.data['probe'] as Probe,
 				cause: {
