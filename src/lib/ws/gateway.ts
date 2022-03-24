@@ -5,7 +5,7 @@ import {handleMeasurementResult} from '../../measurement/handler/result.js';
 import {handleMeasurementProgress} from '../../measurement/handler/progress.js';
 import {scopedLogger} from '../logger.js';
 import {getWsServer, PROBES_NAMESPACE} from './server.js';
-import {probeMetadata} from './middleware/probe-metadata.js';
+import {probeMetadata} from './middleware/index.js';
 import {verifyIpLimit} from './helper/probe-ip-limit.js';
 import {errorHandler} from './helper/error-handler.js';
 
