@@ -16,14 +16,10 @@ io
 	.of(PROBES_NAMESPACE)
 	.use(probeMetadata)
 	.on('connect', errorHandler(async (socket: Socket) => {
-		const probe = socket.data['probe'] as Probe;
-
-		if (!probe) {
-			throw new Error('socket metadata missing');
-		}
-
 		await verifyIpLimit(socket);
 
+		const probe = socket.data['probe'] as Probe;
+		socket.emit('api:connect:location', probe.location);
 		logger.info(`ws client ${socket.id} connected from ${probe.location.country}`);
 
 		// Handlers
