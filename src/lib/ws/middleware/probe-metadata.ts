@@ -3,6 +3,7 @@ import type {ExtendedError} from 'socket.io/dist/namespace.js';
 import {WsError} from '../ws-error.js';
 import {buildProbe} from '../../../probe/builder.js';
 import {scopedLogger} from '../../logger.js';
+import {InternalError} from '../../internal-error.js';
 
 const logger = scopedLogger('ws');
 
@@ -11,12 +12,15 @@ export const probeMetadata = async (socket: Socket, next: (error?: ExtendedError
 		socket.data['probe'] = await buildProbe(socket);
 		next();
 	} catch (error: unknown) {
-		const nError = new WsError((error as Error).message, {
-			socketId: socket.id,
-			cause: error,
-		});
+		let message = 'failed to collect probe metadata';
 
-		logger.warn('failed to collect probe metadata');
+		if (error instanceof InternalError && error?.public) {
+			message = error.message;
+		}
+
+		logger.warn(message);
+		const nError = new WsError(message, {socketId: socket.id});
+
 		next(nError);
 		throw nError;
 	}
