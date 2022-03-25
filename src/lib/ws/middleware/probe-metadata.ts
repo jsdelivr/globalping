@@ -21,7 +21,6 @@ export const probeMetadata = async (socket: Socket, next: (error?: ExtendedError
 		logger.warn(message);
 		const nError = new WsError(message, {socketId: socket.id});
 
-		next(nError);
 		throw nError;
 	}
 };
