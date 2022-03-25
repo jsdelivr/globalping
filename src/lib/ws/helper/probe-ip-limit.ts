@@ -27,7 +27,9 @@ export const verifyIpLimit = async (socket: Socket): Promise<void> => {
 				socketId: socket.id,
 				probe: socket.data['probe'] as Probe,
 				cause: {
-					probe: previousSocket.data.probe,
+					probe: {
+						location: previousSocket.data.probe.location,
+					},
 				},
 			},
 		);

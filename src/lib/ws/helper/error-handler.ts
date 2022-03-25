@@ -21,7 +21,7 @@ export const errorHandler = (next: NextArgument) => async (socket: Socket, mwNex
 	} catch (error: unknown) {
 		if (error instanceof WsError) {
 			socket.emit('api:error', error.toJson());
-			logger.info(`disconnecting client ${pError.info.socketId} for (${error.message})`);
+			logger.info(`disconnecting client ${error.info.socketId} for (${error.message})`);
 		}
 
 		socket.disconnect();
