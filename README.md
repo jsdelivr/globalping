@@ -81,7 +81,7 @@ Read more about the [Globalping Probe](https://github.com/jsdelivr/globalping-pr
 
 Our platform has multiple limits to avoid abusive behaviour and at the same time motivate people to contribute to the sustainability of our platform.
 
-### Global limits
+#### Global limits
 
 These limits are applied per IP address regardless if an API key supplied or not.
 
@@ -89,7 +89,7 @@ These limits are applied per IP address regardless if an API key supplied or not
 - other?
 
 
-### Un-authenticated users
+#### Un-authenticated users
 
 Anyone can connect to our API and start using without the need to provide any credentials.
 In this case we limit the amount of tests an IP address can run. A single test is defined as a succesful measurement we run and return to the user.
@@ -99,14 +99,14 @@ So a limit of 10 tests means the user can either run 10 measurements with the pr
 - other?
 
 
-### Registered jsDelivr users - Free
+#### Registered jsDelivr users - Free
 
 All registered jsDelivr users get an API key they can use to authenticate themselves and get higher limits
 
-- 2000 measurements per hour
+- 200 measurements per hour
   
 
-### GitHub Sponsors - Contribute to the development of the project
+#### GitHub Sponsors - Contribute to the development of the project
 
 By becoming a sponsor of jsDelivr you automatically help us sustain both the jsDelivr CDN and the Globalping platform.
 Your contributions will be used to help us continue the development of all projects under the [jsDelivr Organization](https://github.com/jsdelivr)
@@ -115,7 +115,7 @@ You can do this by registering on jsdelivr.com and becoming a GitHub sponsor.
 We will then automatically upgrade your account to get a higher limit as defined in each of the available plans.
 
 
-### Custom limits
+#### Custom limits
 
 Contact us to discuss about getting a custom limit for your API key.
 We're more than happy to provide higher limits to researchers, non-profits and other open source projects.
