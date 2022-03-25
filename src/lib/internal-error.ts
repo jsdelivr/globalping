@@ -1,8 +1,9 @@
 export class InternalError extends Error {
-	public: boolean;
+	expose?: boolean;
 
-	constructor(message: string, isPublic: boolean) {
+	constructor(message: string, isExposed: boolean) {
 		super(message);
-		this.public = isPublic;
+
+		this.expose = isExposed;
 	}
 }

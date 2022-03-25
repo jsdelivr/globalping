@@ -14,7 +14,7 @@ export const probeMetadata = async (socket: Socket, next: (error?: ExtendedError
 	} catch (error: unknown) {
 		let message = 'failed to collect probe metadata';
 
-		if (error instanceof InternalError && error?.public) {
+		if (error instanceof InternalError && error?.expose) {
 			message = error.message;
 		}
 
