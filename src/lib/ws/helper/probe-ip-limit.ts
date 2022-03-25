@@ -26,11 +26,6 @@ export const verifyIpLimit = async (socket: Socket): Promise<void> => {
 				code: 'ip_limit',
 				socketId: socket.id,
 				probe: socket.data['probe'] as Probe,
-				cause: {
-					probe: {
-						location: previousSocket.data.probe.location,
-					},
-				},
 			},
 		);
 	}
