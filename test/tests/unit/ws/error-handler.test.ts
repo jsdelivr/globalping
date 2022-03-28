@@ -58,4 +58,51 @@ describe('ws error', () => {
 			expect(storeError?.payload?.message).to.equal('abc');
 		});
 	});
+
+	describe('middleware', () => {
+		it('should catch error and execute cb', async () => {
+			const socket = new MockSocket('abc') as BundledMockSocket;
+			let cbError = null;
+
+			const testMethod = async (socket: Socket): Promise<void> => {
+				// Prevent unused variable err
+				socket.emit('connect', '');
+				throw new Error('abc');
+			};
+
+			const testCb = (error: Error) => {
+				cbError = error;
+			};
+
+			await errorHandler(testMethod)(socket as Socket, testCb);
+
+			const apiError = socket.store.find(m => m.event === 'api:error');
+			expect(cbError).to.not.be.null;
+			expect(cbError).to.be.instanceof(Error);
+			expect(apiError).to.not.exist;
+		});
+
+		it('should catch error, execute cb and emit api:error event', async () => {
+			const socket = new MockSocket('abc') as BundledMockSocket;
+			let cbError = null;
+
+			const testMethod = async (socket: Socket): Promise<void> => {
+				// Prevent unused variable err
+				socket.emit('connect', '');
+				throw new WsError('vpn detected', {socketId: socket.id});
+			};
+
+			const testCb = (error: Error) => {
+				cbError = error;
+			};
+
+			await errorHandler(testMethod)(socket as Socket, testCb);
+
+			const apiError = socket.store.find(m => m.event === 'api:error');
+			expect(cbError).to.not.be.null;
+			expect(cbError).to.be.instanceof(WsError);
+			expect(apiError).to.exist;
+			expect(apiError?.payload.message).to.equal('vpn detected');
+		});
+	});
 });
