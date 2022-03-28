@@ -8,7 +8,9 @@ const logger = winston.createLogger({
 		winston.format.printf(info => `[${info['timestamp'] as string}] [${info.level.toUpperCase()}] [${process.pid}] [${info['scope'] as string}] ${info.message}`),
 	),
 	transports: [
-		new winston.transports.Console(),
+		new winston.transports.Console({
+			silent: process.env['NODE_ENV'] === 'test',
+		}),
 	],
 });
 
