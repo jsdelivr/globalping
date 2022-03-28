@@ -4,10 +4,11 @@ import {WsError} from '../ws-error.js';
 import {buildProbe} from '../../../probe/builder.js';
 import {scopedLogger} from '../../logger.js';
 import {InternalError} from '../../internal-error.js';
+import {errorHandler} from '../helper/error-handler.js';
 
 const logger = scopedLogger('ws');
 
-export const probeMetadata = async (socket: Socket, next: (error?: ExtendedError) => void) => {
+export const probeMetadata = errorHandler(async (socket: Socket, next: (error?: ExtendedError) => void) => {
 	try {
 		socket.data['probe'] = await buildProbe(socket);
 		next();
@@ -23,4 +24,4 @@ export const probeMetadata = async (socket: Socket, next: (error?: ExtendedError
 
 		throw nError;
 	}
-};
+});
