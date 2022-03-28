@@ -1,0 +1,168 @@
+<div id="app">
+  <div>
+    <h2>
+      query
+    </h2>
+    <form @submit="submitPostMeasurement">
+      <div>
+        <h3>
+          general properties
+        </h3>
+        <select v-model="query.type">
+          <option disabled value="">Please select one</option>
+          <option value="ping">ping</option>
+        </select>
+        <input v-model="query.target" placeholder="target" />
+        <input type="number" v-model="query.limit" placeholder="global limit" />
+      </div>
+      <div>
+        <h3>
+          location filters
+        </h3>
+        <ul>
+          <li v-for="(m, index) in query.locations">
+            <select v-model="query.locations[index].type">
+              <option disabled value="">Please select one</option>
+              <option value="continent">continent</option>
+            </select>
+            <input v-model="query.locations[index].value" placeholder="value" />
+            <input type="number" v-model="query.locations[index].limit" placeholder="global limit" />
+          </li>
+        </ul>
+      </div>
+      <div>
+        <button @click="addNewLocation">add location</button>
+        <button @click="buildAndPostMeasurement">measure</button>
+      </div>
+    </form>
+    <div>
+      {{ response.error && response.error.error.message }}
+    </div>
+    <div>
+      {{ query.type }} {{ query.target }} {{ query.limit }} 
+    </div>
+  </div>
+  <div>
+    <h2>
+      {{ probes.length }} probes available
+    </h2>
+    <ul>
+      <li v-for="probe in probes">
+        {{ probe.city }}, {{ probe.country }}
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script src="https://unpkg.com/vue@3"></script>
+
+<script>
+  const app = () => ({
+    data() {
+      return {
+        query: {
+          type: 'ping',
+          locations: [
+            { type: 'continent', value: 'EU', limit: 0 }
+          ],
+          target: '',
+          limit: 1
+        },
+        response: {
+          data: null,
+          error: null
+        },
+        probes: [],
+        measurementId: null,
+      }
+    },
+    created () {
+      this.fetchProbes()
+    },
+    methods: {
+      submitPostMeasurement(e) {
+        e.preventDefault();
+        this.buildAndPostMeasurement();
+      },
+      buildAndPostMeasurement() {
+        const measurement = {
+          type: this.query.type,
+          target: this.query.target
+        };
+
+        const locations = this.query.locations.map(({ id, limit, ...l}) => ({
+          ...l,
+          ...(limit ? { limit } : {})
+        }))
+
+        this.postMeasurement(this.query.limit, measurement, locations);
+      },
+      addNewLocation(e) {
+        e.preventDefault();
+
+        const loc = { id: Date.now(), type: '', value: '', limit: 1 }
+        this.query.locations.push(loc);
+      },
+      async fetchProbes() {
+        const url = '/v1/probes';
+        this.probes = await (await fetch(url)).json()
+      },
+      async postMeasurement(limit = 1, measurement = {}, locations = []) {
+        const url = '/v1/measurements'
+
+        const body = {
+          measurement,
+          locations
+        };
+
+        if (!locations.find(l => l.limit)) {
+          body.limit = limit;
+        }
+
+        const response = await fetch(url, {
+          method: 'post',
+          body: JSON.stringify(body),
+          headers: {
+            'content-type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          this.measurementId = data.id;
+          this.response = {
+            data
+          };
+        } else {
+          const error = await response.json();
+
+          this.response = {
+            error
+          };
+        }
+      },
+      async fetchMeasurement() {
+        const url = `/v1/measurements/${this.measurementId}`;
+
+        const response = await fetch(url);
+
+        if (response.ok) {
+          const data = await response.json();
+
+          this.response = {
+            data
+          };
+        } else {
+          const error = await response.json();
+
+          this.response = {
+            error
+          };
+        }
+      }
+    }
+  });
+
+  Vue.createApp(app()).mount('#app')
+</script>
