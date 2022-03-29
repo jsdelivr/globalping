@@ -12,6 +12,7 @@
   <script src="https://unpkg.com/vue@3"></script>
 
   <script>
+    const ALLOWED_LOCATION_TYPES = ['continent', 'region', 'country', 'state', 'city', 'asn'];
     const probes = () => ({
       data() {
         return {
@@ -95,6 +96,9 @@
         }
       },
       methods: {
+        getLocationTypeArray() {
+          return ALLOWED_LOCATION_TYPES;
+        },
         submitPostMeasurement(e) {
           e.preventDefault();
           this.response = {};
@@ -217,7 +221,9 @@
                 <li v-for="(m, index) in query.locations">
                   <select v-model="query.locations[index].type">
                     <option disabled value="">Please select one</option>
-                    <option value="continent">continent</option>
+                    <option v-for="type in getLocationTypeArray()" :value="type">
+                      {{ type }}
+                    </option>
                   </select>
                   <input v-model="query.locations[index].value" placeholder="value" />
                   <input type="number" v-model="query.locations[index].limit" placeholder="global limit" />
