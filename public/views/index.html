@@ -15,6 +15,9 @@
     const ALLOWED_LOCATION_TYPES = ['continent', 'region', 'country', 'state', 'city', 'asn'];
     const ALLOWED_QUERY_TYPES = ['ping', 'traceroute', 'dns'];
     const ALLOWED_TRACE_PROTOCOLS = ['TCP', 'UDP', 'ICMP'];
+    const ALLOWED_DNS_TYPES = ['A', 'AAAA', 'ANY', 'CNAME', 'DNSKEY', 'DS', 'MX', 'NS', 'NSEC', 'PTR', 'RRSIG', 'SOA', 'TXT', 'SRV'];
+    const ALLOWED_DNS_PROTOCOLS = ['UDP', 'TCP'];
+
     const probes = () => ({
       data() {
         return {
@@ -52,7 +55,8 @@
             type: 'ping',
             locations: [],
             target: 'google.com',
-            limit: 1
+            limit: 1,
+            query: {}
           },
           response: {
             data: null,
@@ -104,6 +108,12 @@
         }
       },
       methods: {
+        getDnsTypeArray() {
+          return ALLOWED_DNS_TYPES;
+        },
+        getDnsProtocolArray() {
+          return ALLOWED_DNS_PROTOCOLS;
+        },
         getTraceProtocolArray() {
           return ALLOWED_TRACE_PROTOCOLS;
         },
@@ -135,6 +145,30 @@
 
             if (this.query.port) {
               measurement.port = this.query.port;
+            }
+          }
+
+          if (this.query.type === 'dns') {
+            const query = {};
+
+            if (this.query.query.protocol) {
+              query.protocol = this.query.query.protocol;
+            }
+
+            if (this.query.query.type) {
+              query.type = this.query.query.type;
+            }
+
+            if (this.query.query.port) {
+              query.port = this.query.query.port;
+            }
+
+            if (this.query.query.resolver) {
+              query.resolver = this.query.query.resolver;
+            }
+
+            if (Object.keys(query).length > 0) {
+              measurement.query = query;
             }
           }
 
@@ -256,6 +290,41 @@
                 </select>
               </div>
             </div>
+            <div v-if="query.type === 'dns'" class="form-group row">
+              <label for="query_dns_type" class="col-sm-2 col-form-label">dns type</label>
+              <div class="col-sm-10">
+                <select v-model="query.query.type" name="query_dns_type" id="query_dns_type" class="custom-select my-1 mr-sm-2">
+                  <option disabled value="">Please select one</option>
+                  <option v-for="type in getDnsTypeArray()" :value="type">
+                    {{ type }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div v-if="query.type === 'dns'" class="form-group row">
+              <label for="query_protocol" class="col-sm-2 col-form-label">protocol</label>
+              <div class="col-sm-10">
+                <select v-model="query.query.protocol" name="query_protocol" id="query_protocol" class="custom-select my-1 mr-sm-2">
+                  <option disabled value="">Please select one</option>
+                  <option v-for="protocol in getDnsProtocolArray()" :value="protocol">
+                    {{ protocol }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div v-if="query.type === 'dns'" class="form-group row">
+              <label for="query_dns_port" class="col-sm-2 col-form-label">port</label>
+              <div class="col-sm-10">
+                <input type="number" v-model="query.query.port" id="query_dns_port" name="query_dns_port" placeholder="port" />
+              </div>
+            </div>
+            <div v-if="query.type === 'dns'" class="form-group row">
+              <label for="query_dns_resolver" class="col-sm-2 col-form-label">port</label>
+              <div class="col-sm-10">
+                <input type="text" v-model="query.query.resolver" id="query_dns_resolver" name="query_dns_resolver" placeholder="resolver" />
+              </div>
+            </div>
+
             <div>
               <h3>
                 location filters
