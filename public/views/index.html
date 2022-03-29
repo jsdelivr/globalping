@@ -84,20 +84,17 @@
           }
 
           const errList = Object.entries(this.response.error.error.params).map(([key, value]) => `[${key}] ${value}`);
-          return errList.join('<br>');
+          return errList.join('<br>').trim();
+        },
+        responseRawOutput() {
+          const index = this.selectedResultIndex;
+          return this.response.data.results[index].result.rawOutput.trim();
+        },
+        responseJSON() {
+          return JSON.stringify(this.response.data, 0, 2).trim();
         }
       },
       methods: {
-        parsedRawOutput() {
-          const index = this.selectedResultIndex;
-          const string = this.response.data.results[index].result.rawOutput;
-
-          if (string) {
-            return string.replace(/(?:\r\n|\r|\n)/g, '<br>');
-          }
-
-          return '';
-        },
         submitPostMeasurement(e) {
           e.preventDefault();
           this.response = {};
@@ -250,8 +247,8 @@
           <select v-model="selectedResultIndex">
             <option v-for="(result, index) in response.data.results" :value="index">result {{ index }}</option>
           </select>
-          <span v-html="parsedRawOutput()">
-          </span>
+          <pre v-if="response.data" class="bg-light"><code>{{ responseRawOutput }}</code></pre>
+          <pre v-if="response.data" class="bg-light"><code>{{ responseJSON }}</code></pre>
         </div>
       `
     });
