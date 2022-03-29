@@ -13,6 +13,7 @@
 
   <script>
     const ALLOWED_LOCATION_TYPES = ['continent', 'region', 'country', 'state', 'city', 'asn'];
+    const ALLOWED_QUERY_TYPES = ['ping', 'traceroute', 'dns'];
     const probes = () => ({
       data() {
         return {
@@ -89,13 +90,22 @@
         },
         responseRawOutput() {
           const index = this.selectedResultIndex;
-          return this.response.data.results[index].result.rawOutput.trim();
+          const output = this.response.data.results[index].result.rawOutput;
+
+          if (!output) {
+            return null;
+          }
+
+          return output.trim();
         },
         responseJSON() {
           return JSON.stringify(this.response.data, 0, 2).trim();
         }
       },
       methods: {
+        getQueryTypeArray() {
+          return ALLOWED_QUERY_TYPES;
+        },
         getLocationTypeArray() {
           return ALLOWED_LOCATION_TYPES;
         },
@@ -191,7 +201,9 @@
               <div class="col-sm-10">
                 <select v-model="query.type" name="query_type" id="query_type" class="custom-select my-1 mr-sm-2">
                   <option disabled value="">Please select one</option>
-                  <option value="ping">ping</option>
+                  <option v-for="type in getQueryTypeArray()" :value="type">
+                    {{ type }}
+                  </option>
                 </select>
               </div>
             </div>
