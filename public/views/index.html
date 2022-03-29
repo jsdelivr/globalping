@@ -55,6 +55,7 @@
             data: null,
             error: null
           },
+          selectedResultIndex: null,
           measurementId: null,
         }
       },
@@ -65,6 +66,11 @@
             this.resultInterval = setInterval(this.fetchMeasurement.bind(this), 500);
           }
         },
+        'response.data.results'() {
+          if (!this.selectedResultIndex || this.selectedResultIndex > 0) {
+            this.selectedResultIndex = 0;
+          }
+        },
         'response.data.status'(status) {
           if (status === 'finished') {
             clearInterval(this.resultInterval);
@@ -72,7 +78,8 @@
         }
       },
       methods: {
-        parsedRawOutput(index) {
+        parsedRawOutput() {
+          const index = this.selectedResultIndex;
           const string = this.response.data.results[index].result.rawOutput;
 
           if (string) {
@@ -201,9 +208,10 @@
           {{ query.type }} {{ query.target }} {{ query.limit }}
         </div>
         <div v-if="response.data">
-          <span v-for="(result, index) in response.data.results">
-            <span v-html="parsedRawOutput(index)">
-            </span>
+          <select v-model="selectedResultIndex">
+            <option v-for="(result, index) in response.data.results" :value="index">result {{ index }}</option>
+          </select>
+          <span v-html="parsedRawOutput()">
           </span>
         </div>
       `
