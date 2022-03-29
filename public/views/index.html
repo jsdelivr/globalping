@@ -77,6 +77,16 @@
           }
         }
       },
+      computed: {
+        responseParams() {
+          if (!this.response.error || !this.response.error.error.params) {
+            return 'da'
+          }
+
+          const errList = Object.entries(this.response.error.error.params).map(([key, value]) => `[${key}] ${value}`);
+          return errList.join('<br>');
+        }
+      },
       methods: {
         parsedRawOutput() {
           const index = this.selectedResultIndex;
@@ -223,11 +233,14 @@
             </div>
           </form>
         </div>
-        <div class="row">
-          <div style="color: red;">
-            <span>
-              {{ response.error && response.error.error.message }}
-            </span>
+        <div class="row" v-if="response.error">
+          <div style="color: red;" class="col">
+            <div class="row">
+              {{ response.error.error.message }}
+            </div>
+            <div class="row">
+              {{ responseParams }}
+            </div>
           </div>
         </div>
         <div>
