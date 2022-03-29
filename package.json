@@ -79,6 +79,9 @@
     "init:hooks": "husky install"
   },
   "xo": {
+    "ignores": [
+      "public"
+    ],
     "rules": {
       "import/no-unassigned-import": "off",
       "unicorn/no-thenable": "off",

@@ -5,7 +5,7 @@ import type Router from '@koa/router';
 
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>) => {
 	const {file} = ctx.params;
-	ctx.body = fs.readFileSync(path.join(path.resolve(), '/public/views/', file ?? 'index.html'), 'utf8');
+	ctx.body = fs.readFileSync(path.join(path.resolve(), '/public/', file ?? 'index.html'), 'utf8');
 };
 
 export const registerDemoRoute = (router: Router) => {
