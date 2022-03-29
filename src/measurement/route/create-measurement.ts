@@ -18,26 +18,26 @@ const measurementConfig = config.get<{limits: {global: number; location: number}
 // Todo: better validation. hostname/ip validation for targets
 const schema = Joi.object({
 	locations: Joi.array().items(Joi.object({
-		type: Joi.string().valid('continent', 'region', 'country', 'state', 'city', 'asn').required(),
+		type: Joi.string().valid('continent', 'region', 'country', 'state', 'city', 'asn').insensitive().required(),
 		value: Joi.alternatives().conditional('type', {
 			switch: [
 				{
 					is: 'continent',
-					then: Joi.string().valid(...Object.keys(continents))
+					then: Joi.string().valid(...Object.keys(continents)).insensitive()
 						.messages({'any.only': 'The continent must be a valid two-letter ISO code'}),
 				},
-				{is: 'region', then: Joi.string().valid(...Object.keys(regions))},
+				{is: 'region', then: Joi.string().valid(...Object.keys(regions)).insensitive()},
 				{
 					is: 'country',
-					then: Joi.string().valid(...Object.keys(countries))
+					then: Joi.string().valid(...Object.keys(countries)).insensitive()
 						.messages({'any.only': 'The country must be a valid two-letter ISO code'}),
 				},
 				{
 					is: 'state',
-					then: Joi.string().valid(...Object.keys(states))
+					then: Joi.string().valid(...Object.keys(states)).insensitive()
 						.messages({'any.only': 'The US state must be a valid two-letter code, e.g. CA'}),
 				},
-				{is: 'city', then: Joi.string().min(1).max(128)},
+				{is: 'city', then: Joi.string().min(1).max(128).insensitive()},
 				{is: 'asn', then: Joi.number()},
 			],
 		}).required().messages({
