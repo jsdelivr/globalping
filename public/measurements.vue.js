@@ -135,6 +135,16 @@ const app = () => ({
       const loc = { id: Date.now(), type: '', value: '', limit: 1 }
       this.query.locations.push(loc);
     },
+    removeLocation(e) {
+      e.preventDefault();
+
+      const index = +e.target.value;
+
+      this.query.locations = [
+        ...this.query.locations.slice(0, index),
+        ...this.query.locations.slice(index + 1)
+      ];
+    },
     async postMeasurement(limit = 1, measurement = {}, locations = []) {
       const url = '/v1/measurements'
 
@@ -280,7 +290,7 @@ const app = () => ({
             location filters
           </h3>
           <ul>
-            <li v-for="(m, index) in query.locations">
+            <li v-for="(m, index) in query.locations" :key="m.id">
               <select v-model="query.locations[index].type">
                 <option disabled value="">Please select one</option>
                 <option v-for="type in getLocationTypeArray()" :value="type">
@@ -289,6 +299,7 @@ const app = () => ({
               </select>
               <input v-model="query.locations[index].value" placeholder="value" />
               <input type="number" v-model="query.locations[index].limit" placeholder="global limit" />
+              <button @click="removeLocation" :value="index">remove</button>
             </li>
           </ul>
         </div>
