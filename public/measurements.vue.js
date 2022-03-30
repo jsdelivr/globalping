@@ -14,7 +14,7 @@ const app = () => ({
       },
       selectedResultIndex: null,
       measurementId: null,
-    }
+    };
   },
   watch: {
     measurementId(nId, oId) {
@@ -37,7 +37,7 @@ const app = () => ({
   computed: {
     responseParams() {
       if (!this.response.error || !this.response.error.error.params) {
-        return 'da'
+        return '';
       }
 
       const errList = Object.entries(this.response.error.error.params).map(([key, value]) => `[${key}] ${value}`);
@@ -132,7 +132,7 @@ const app = () => ({
     addNewLocation(e) {
       e.preventDefault();
 
-      const loc = { id: Date.now(), type: '', value: '', limit: 1 }
+      const loc = { id: Date.now(), type: '', value: '', limit: 1 };
       this.query.locations.push(loc);
     },
     removeLocation(e) {
@@ -146,7 +146,7 @@ const app = () => ({
       ];
     },
     async postMeasurement(limit = 1, measurement = {}, locations = []) {
-      const url = '/v1/measurements'
+      const url = '/v1/measurements';
 
       const body = {
         measurement,
@@ -332,4 +332,4 @@ const app = () => ({
   `
 });
 
-Vue.createApp(app()).mount('#app')
+Vue.createApp(app()).mount('#app');
