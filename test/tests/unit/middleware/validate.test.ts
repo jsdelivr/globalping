@@ -39,4 +39,16 @@ describe('Validate middleware', () => {
 			},
 		});
 	});
+
+	it('should normalise incorrect input case', async () => {
+		const ctx: any = {request: {body: {input: 'text'}}};
+
+		const schema = Joi.object({
+			input: Joi.string().valid('TEXT').insensitive().required(),
+		});
+
+		await validate(schema)(ctx, nextMock);
+
+		expect(ctx.request.body.input).to.equal('TEXT');
+	});
 });
