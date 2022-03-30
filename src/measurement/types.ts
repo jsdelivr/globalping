@@ -30,8 +30,15 @@ type TracerouteTest = {
 	port: number;
 };
 
+type TraceHopResult = {
+	host: string;
+	resolvedAddress: string;
+	rtt: number[];
+};
+
 type TracerouteResult = TestResult & {
-	foo: string;
+	destination: string;
+	hops: TraceHopResult[];
 };
 
 export type NetworkTest = PingTest | TracerouteTest;
