@@ -11,6 +11,7 @@
     "src/**/*"
   ],
   "exclude": [
+    "public",
     "node_modules",
     "dist"
   ]
