@@ -30,12 +30,40 @@ type TracerouteTest = {
 	port: number;
 };
 
+type TraceHopResult = {
+	host: string;
+	resolvedAddress: string;
+	rtt: number[];
+};
 type TracerouteResult = TestResult & {
-	foo: string;
+	destination: string;
+	hops: TraceHopResult[];
 };
 
-export type NetworkTest = PingTest | TracerouteTest;
-export type MeasurementResult = PingResult | TracerouteResult;
+type DnsQueryTypes = 'A' | 'AAAA' | 'ANY' | 'CNAME' | 'DNSKEY' | 'DS' | 'MX' | 'NS' | 'NSEC' | 'PTR' | 'RRSIG' | 'SOA' | 'TXT' | 'SRV';
+
+type DnsTest = {
+	type: 'dns';
+	target: string;
+	query?: {
+		type: DnsQueryTypes;
+		resolver: string;
+		protocol: 'TCP' | 'UDP';
+		port: number;
+	};
+};
+
+// Todo: fix: dns result doesnt have rawOutput value
+type DnsResult = {
+	domain: string;
+	type: DnsQueryTypes;
+	ttl: number;
+	class: string;
+	value: string;
+};
+
+export type NetworkTest = PingTest | TracerouteTest | DnsTest;
+export type MeasurementResult = PingResult | TracerouteResult | DnsResult;
 export type LocationWithLimit = Location & {limit?: number};
 
 /**
@@ -62,7 +90,7 @@ export type MeasurementRecord = {
 	status: MeasurementStatus;
 	createdAt: number;
 	updatedAt: number;
-	results: Record<string, (PingResult | TracerouteResult)>;
+	results: Record<string, (PingResult | TracerouteResult | DnsResult)>;
 };
 
 export type MeasurementResponse = {

@@ -4,7 +4,7 @@ import {getMeasurementStore} from '../store.js';
 
 const store = getMeasurementStore();
 
-const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>) => {
+const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
 	const {id} = ctx.params;
 
 	if (!id) {
