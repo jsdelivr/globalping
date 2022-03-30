@@ -11,6 +11,7 @@ export type ProbeLocation = {
 
 export type Probe = {
 	client: string;
+	version: string | undefined;
 	ipAddress: string;
 	location: ProbeLocation;
 };

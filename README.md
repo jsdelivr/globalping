@@ -65,7 +65,7 @@ You can do it on a rented VPS or Dedicated server that has available capacity or
 It's as simple as running this command:
 
 ```
-docker run -d --restart=always --rm ghcr.io/jsdelivr/globalping-probe --name globalping-probe
+docker run -d --restart=always --name globalping-probe ghcr.io/jsdelivr/globalping-probe
 ```
 
 Notes:

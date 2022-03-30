@@ -18,6 +18,8 @@ const fakeIpForDebug = () => _.sample([
 	'79.205.97.254',
 ])!;
 
+const findProbeVersion = (socket: Socket) => String(socket.handshake.query['version']);
+
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	const clientIp = requestIp.getClientIp(socket.request);
 
@@ -52,6 +54,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	// Todo: add validation and handle missing or partial data
 	return {
 		client: socket.id,
+		version: findProbeVersion(socket),
 		ipAddress: clientIp,
 		location,
 	};

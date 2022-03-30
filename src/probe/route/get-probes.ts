@@ -12,7 +12,10 @@ const io = getWsServer();
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>) => {
 	const socketList: Socket[] = await io.of(PROBES_NAMESPACE).fetchSockets();
 
-	ctx.body = socketList.map((socket: Socket) => socket.data.probe.location);
+	ctx.body = socketList.map((socket: Socket) => ({
+		version: socket.data.probe.version,
+		location: socket.data.probe.location,
+	}));
 };
 
 export const registerGetProbesRoute = (router: Router) => {

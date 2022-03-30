@@ -2,6 +2,7 @@ import _ from 'lodash';
 import anyAscii from 'any-ascii';
 import type {ProbeLocation} from '../../probe/types.js';
 import {scopedLogger} from '../logger.js';
+import {InternalError} from '../internal-error.js';
 import {ipinfoLookup} from './ipinfo.js';
 import {fastlyLookup} from './fastly.js';
 
@@ -50,7 +51,7 @@ export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 			);
 
 			if (fastly.status === 'fulfilled' && isVpn(fastly.value.client)) {
-				throw new Error('vpn detected');
+				throw new InternalError('vpn detected', true);
 			}
 
 			return fulfilled.filter(v => v !== null).flat();
