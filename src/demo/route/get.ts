@@ -9,6 +9,6 @@ const handle = (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.
 };
 
 export const registerDemoRoute = (router: Router) => {
-	router.get('/demo/:file', handle);
-	router.get('/demo/', handle);
+	router.get('/:file', handle);
+	router.get('/', handle);
 };

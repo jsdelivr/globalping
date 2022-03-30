@@ -25,10 +25,16 @@ registerGetMeasurementRoute(router);
 // GET /probes
 registerGetProbesRoute(router);
 
+const demoRouter = new Router();
+
+demoRouter.prefix('/demo');
+
 // GET /demo
-registerDemoRoute(router);
+registerDemoRoute(demoRouter);
 
 app
+// Exclude demo router from any checks
+	.use(demoRouter.routes())
 	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 	.use(errorHandlerMw)
 	.use(rateLimitHandler())
