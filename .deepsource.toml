@@ -2,6 +2,8 @@ version = 1
 
 test_patterns = ["test/**/*.test.ts"]
 
+exclude_patterns = ["public/**"]
+
 [[analyzers]]
 name = "shell"
 enabled = true
