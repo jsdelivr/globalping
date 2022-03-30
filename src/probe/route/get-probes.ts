@@ -9,7 +9,7 @@ type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
 const io = getWsServer();
 
-const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>) => {
+const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
 	const socketList: Socket[] = await io.of(PROBES_NAMESPACE).fetchSockets();
 
 	ctx.body = socketList.map((socket: Socket) => ({
@@ -18,6 +18,6 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 	}));
 };
 
-export const registerGetProbesRoute = (router: Router) => {
+export const registerGetProbesRoute = (router: Router): void => {
 	router.get('/probes', handle);
 };

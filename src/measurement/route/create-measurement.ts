@@ -53,7 +53,7 @@ const schema = Joi.object({
 	limit: Joi.number().min(1).max(measurementConfig.limits.global),
 });
 
-const handle = async (ctx: Context) => {
+const handle = async (ctx: Context): Promise<void> => {
 	const request = ctx.request.body as MeasurementRequest;
 	const config = await runner.run(request);
 
