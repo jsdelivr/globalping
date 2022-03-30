@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import {pingSchema, tracerouteSchema} from '../../../../src/measurement/schema/command-schema.js';
+import {pingSchema, tracerouteSchema, dnsSchema} from '../../../../src/measurement/schema/command-schema.js';
 
 describe('command schema', () => {
 	describe('ping', () => {
@@ -73,6 +73,54 @@ describe('command schema', () => {
 			};
 
 			const valid = tracerouteSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(input);
+		});
+	});
+
+	describe('dns', () => {
+		it('should fail (missing values)', async () => {
+			const input = {
+				type: 'dns',
+			};
+
+			const valid = dnsSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should pass and correct values (incorrect caps)', async () => {
+			const input = {
+				type: 'DNS',
+				target: 'abc.com',
+				query: {
+					type: 'a',
+					protocol: 'tcp',
+				},
+			};
+
+			const valid = dnsSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value.type).to.equal('dns');
+			expect(valid.value.query.protocol).to.equal('TCP');
+			expect(valid.value.query.type).to.equal('A');
+		});
+
+		it('should pass (deep equal)', async () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				query: {
+					type: 'A',
+					resolver: '1.1.1.1',
+					protocol: 'UDP',
+					port: 53,
+				},
+			};
+
+			const valid = dnsSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(input);
