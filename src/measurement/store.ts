@@ -69,7 +69,11 @@ export class MeasurementStore {
 		const key = getMeasurementKey(data.measurementId);
 
 		await this.redis.executeIsolated(async client => {
-			await client.json.strAppend(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput);
+			const appendResponse = await client.json.strAppend(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput) as number[];
+			if (appendResponse.length === 0) {
+				await client.json.set(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput);
+			}
+
 			await client.json.set(key, '$.updatedAt', Date.now());
 		});
 	}
