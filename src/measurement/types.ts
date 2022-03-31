@@ -53,13 +53,19 @@ type DnsTest = {
 	};
 };
 
-// Todo: fix: dns result doesnt have rawOutput value
-type DnsResult = {
+type DnsAnswer = {
 	domain: string;
 	type: DnsQueryTypes;
 	ttl: number;
 	class: string;
 	value: string;
+};
+
+// Todo: fix: dns result doesnt have rawOutput value
+type DnsResult = TestResult & {
+	answer: DnsAnswer[];
+	time: number;
+	server: string;
 };
 
 export type NetworkTest = PingTest | TracerouteTest | DnsTest;
