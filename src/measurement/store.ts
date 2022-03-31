@@ -59,7 +59,7 @@ export class MeasurementStore {
 					longitude: probe.location.longitude,
 					latitude: probe.location.latitude,
 				},
-				result: {},
+				result: {rawOutput: ''},
 			});
 			await client.json.set(key, '$.updatedAt', Date.now());
 		});
@@ -69,7 +69,7 @@ export class MeasurementStore {
 		const key = getMeasurementKey(data.measurementId);
 
 		await this.redis.executeIsolated(async client => {
-			await client.json.set(key, `$.results.${data.testId}.result`, data.result);
+			await client.json.strAppend(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput);
 			await client.json.set(key, '$.updatedAt', Date.now());
 		});
 	}
