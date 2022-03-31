@@ -54,7 +54,7 @@ type DnsTest = {
 };
 
 // Todo: fix: dns result doesnt have rawOutput value
-type DnsResult = {
+type DnsResult = TestResult & {
 	domain: string;
 	type: DnsQueryTypes;
 	ttl: number;
