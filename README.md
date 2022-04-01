@@ -85,7 +85,8 @@ Our platform has multiple limits to avoid abusive behaviour and at the same time
 
 These limits are applied per IP address regardless if an API key supplied or not.
 
-- 100 requests per minute per IP. Covers both POST and GET.
+- 100 POST requests per minute per IP. No GET limits are implemented to support "real-time" use-cases.
+- A single measurement is limited to 200 probes per location and 500 total probes
 - other?
 
 
