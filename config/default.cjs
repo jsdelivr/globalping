@@ -17,7 +17,7 @@ module.exports = {
 		// Timeout after which measurement will be marked as finished even if not all probes respond
 		timeout: 30, // 30 seconds
 		// measurement result TTL in redis
-		resultTTL: 7 * 24 * 60, // 7 days
+		resultTTL: 7 * 24 * 60 * 60, // 7 days
 		limits: {
 			global: 500,
 			location: 200,
