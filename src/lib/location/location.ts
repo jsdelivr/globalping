@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import geoLists from 'countries-list';
 import {regions} from './regions.js';
+import {states} from './states.js';
 
 const {countries} = geoLists;
 const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [c, r])));
@@ -23,4 +24,14 @@ export const getContinentByCountry = (country: string): string => {
 	}
 
 	return countryInfo.continent;
+};
+
+export const getStateIsoByName = (state: string): string => {
+	const stateEntries = Object.entries(states).find(s => s[1] === state);
+
+	if (!stateEntries) {
+		throw new Error(`state not found ${state}`);
+	}
+
+	return String(stateEntries[0]);
 };
