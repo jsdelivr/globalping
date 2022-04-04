@@ -5,7 +5,12 @@ import isIpPrivate from 'private-ip';
 import requestIp from 'request-ip';
 import {geoIpLookup} from '../lib/geoip/client.js';
 import {getRegionByCountry} from '../lib/location/location.js';
+import {InternalError} from '../lib/internal-error.js';
 import type {Probe, ProbeLocation} from './types.js';
+
+/* eslint-disable @typescript-eslint/naming-convention */
+const VERSION_REG_EXP = /^(?:\d{1,2}\.){2}\d{1,2}$/;
+/* eslint-enable @typescript-eslint/naming-convention */
 
 const fakeIpForDebug = () => _.sample([
 	'95.155.94.127',
@@ -21,6 +26,12 @@ const fakeIpForDebug = () => _.sample([
 const findProbeVersion = (socket: Socket) => String(socket.handshake.query['version']);
 
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
+	const version = findProbeVersion(socket);
+
+	if (!VERSION_REG_EXP.test(version)) {
+		throw new InternalError(`invalid probe version (${version})`, true);
+	}
+
 	const clientIp = requestIp.getClientIp(socket.request);
 
 	if (!clientIp) {
@@ -54,7 +65,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	// Todo: add validation and handle missing or partial data
 	return {
 		client: socket.id,
-		version: findProbeVersion(socket),
+		version,
 		ipAddress: clientIp,
 		location,
 	};
