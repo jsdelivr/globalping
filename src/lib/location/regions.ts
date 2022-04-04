@@ -16,6 +16,7 @@ export const regions = {
 	'central-america': ['BZ', 'CR', 'SV', 'GT', 'HN', 'MX', 'NI', 'PA'],
 	'northern-america': ['CA', 'US', 'BM', 'GL', 'PM'],
 	'southern-america': ['AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PY', 'PE', 'SR', 'UY', 'VE', 'FK', 'GF', 'GS'],
+	australasia: ['AU', 'NZ', 'NF'],
 	caribbean: ['AG', 'BS', 'BB', 'CU', 'DM', 'DO', 'GD', 'HT', 'JM', 'KN', 'LC', 'VC', 'TT', 'GP', 'KY', 'MQ', 'MS', 'TC', 'AW', 'VG', 'VI', 'PR', 'AI', 'MF', 'BL', 'SX', 'CW', 'BQ'],
 	polynesia: ['WS', 'TO', 'TV', 'CK', 'NU', 'PF', 'PN', 'TK', 'WF'],
 	melanesia: ['FJ', 'PG', 'SB', 'VU', 'NC'],
