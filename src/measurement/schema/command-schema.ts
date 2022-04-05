@@ -9,7 +9,7 @@ export const pingSchema = Joi.object({
 export const tracerouteSchema = Joi.object({
 	type: Joi.string().valid('traceroute').insensitive().required(),
 	target: Joi.string().required(),
-	protocol: Joi.string().valid('TCP', 'UDP', 'ICMP').insensitive().default('UDP'),
+	protocol: Joi.string().valid('TCP', 'UDP', 'ICMP').insensitive().default('ICMP'),
 	port: Joi.number().port().default(80),
 });
 
