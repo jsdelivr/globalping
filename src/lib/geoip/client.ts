@@ -10,6 +10,7 @@ const logger = scopedLogger('geoip');
 
 export type LocationInfo = Omit<ProbeLocation, 'region'>;
 export const normalizeCityName = (string_: string): string => anyAscii(string_).toLowerCase();
+export const normalizeNetworkName = (string_: string): string => string_.toLowerCase();
 
 const bestMatch = (field: keyof LocationInfo, sources: LocationInfo[]): LocationInfo => {
 	const ranked = Object.values(_.groupBy(sources, field)).sort((a, b) => b.length - a.length).flat();
@@ -65,6 +66,6 @@ export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 		asn: Number(bestMatch('asn', results).asn),
 		latitude: Number(bestMatch('city', results).latitude),
 		longitude: Number(bestMatch('city', results).longitude),
-		network: bestMatch('network', results).network,
+		network: normalizeNetworkName(bestMatch('network', results).network),
 	};
 };
