@@ -94,7 +94,7 @@ describe('geoip service', () => {
 			latitude: -7.7568,
 			longitude: -35.3656,
 			state: undefined,
-			network: 'interbs',
+			network: 'interbs s.r.l. (baehost)',
 		});
 	});
 
