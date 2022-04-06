@@ -25,6 +25,7 @@ describe('geoip service', () => {
 			asn: 61_493,
 			latitude: -34.61,
 			longitude: -58.42,
+			network: 'interbs s.r.l.',
 		});
 	});
 
@@ -47,6 +48,7 @@ describe('geoip service', () => {
 			latitude: -7.7568,
 			longitude: -35.3656,
 			state: undefined,
+			network: 'interbs s.r.l.',
 		});
 	});
 
@@ -69,6 +71,7 @@ describe('geoip service', () => {
 			latitude: -34.61,
 			longitude: -58.42,
 			state: undefined,
+			network: 'interbs s.r.l.',
 		});
 	});
 
@@ -91,6 +94,7 @@ describe('geoip service', () => {
 			latitude: -7.7568,
 			longitude: -35.3656,
 			state: undefined,
+			network: 'interbs s.r.l. (baehost)',
 		});
 	});
 
@@ -113,6 +117,7 @@ describe('geoip service', () => {
 			latitude: 32.7492,
 			longitude: -96.8389,
 			state: 'TX',
+			network: 'psychz networks',
 		});
 	});
 
@@ -136,6 +141,7 @@ describe('geoip service', () => {
 				latitude: 32.7492,
 				longitude: -96.8389,
 				state: 'TX',
+				network: 'psychz networks',
 			});
 		});
 
@@ -158,6 +164,7 @@ describe('geoip service', () => {
 				latitude: 32.7492,
 				longitude: -96.8389,
 				state: 'TX',
+				network: 'psychz networks',
 			});
 		});
 

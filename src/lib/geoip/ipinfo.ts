@@ -21,6 +21,7 @@ export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 	const [lat, lon] = result.loc.split(',');
 	const match = /^AS(\d+)/.exec(result.org);
 	const parsedAsn = match?.[1] ? Number(match[1]) : null;
+	const network = result.org.split(' ').slice(1).join(' ');
 
 	return {
 		continent: getContinentByCountry(result.country),
@@ -30,5 +31,6 @@ export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 		asn: parsedAsn!,
 		latitude: Number(lat),
 		longitude: Number(lon),
+		network,
 	};
 };

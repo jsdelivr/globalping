@@ -8,6 +8,7 @@ type FastlyGeoInfo = {
 	region: string;
 	latitude: number;
 	longitude: number;
+	network: string;
 };
 
 type FastlyClientInfo = {
@@ -17,6 +18,7 @@ type FastlyClientInfo = {
 
 type FastlyResponse = {
 	as: {
+		name: string;
 		number: number;
 	};
 	client: FastlyClientInfo;
@@ -47,6 +49,7 @@ export const fastlyLookup = async (addr: string): Promise<FastlyBundledResponse>
 			asn: result.as.number,
 			latitude: data.latitude,
 			longitude: data.longitude,
+			network: result.as.name,
 		});
 	}
 

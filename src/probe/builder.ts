@@ -60,6 +60,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		asn: ipInfo.asn,
 		latitude: ipInfo.latitude,
 		longitude: ipInfo.longitude,
+		network: ipInfo.network,
 	};
 
 	// Todo: add validation and handle missing or partial data
