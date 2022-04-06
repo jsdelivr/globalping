@@ -2,12 +2,12 @@ import Joi from 'joi';
 import config from 'config';
 import type {Context} from 'koa';
 import type Router from '@koa/router';
-import bodyParser from 'koa-bodyparser';
 import geoLists from 'countries-list';
 import {getMeasurementRunner} from '../runner.js';
 import type {MeasurementRequest} from '../types.js';
 import {states} from '../../lib/location/states.js';
 import {regions} from '../../lib/location/regions.js';
+import {bodyParser} from '../../lib/http/middleware/body-parser.js';
 import {validate} from '../../lib/http/middleware/validate.js';
 import {dnsSchema, pingSchema, tracerouteSchema} from '../schema/command-schema.js';
 
