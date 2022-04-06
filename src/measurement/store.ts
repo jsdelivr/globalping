@@ -58,6 +58,7 @@ export class MeasurementStore {
 					asn: probe.location.asn,
 					longitude: probe.location.longitude,
 					latitude: probe.location.latitude,
+					network: probe.location.network,
 				},
 				result: {rawOutput: ''},
 			});
