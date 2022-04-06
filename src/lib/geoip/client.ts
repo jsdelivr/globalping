@@ -65,5 +65,6 @@ export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 		asn: Number(bestMatch('asn', results).asn),
 		latitude: Number(bestMatch('city', results).latitude),
 		longitude: Number(bestMatch('city', results).longitude),
+		network: bestMatch('network', results).network,
 	};
 };

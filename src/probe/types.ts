@@ -7,6 +7,7 @@ export type ProbeLocation = {
 	latitude: number;
 	longitude: number;
 	state: string | undefined;
+	network: string | undefined;
 };
 
 export type Probe = {

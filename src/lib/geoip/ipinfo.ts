@@ -30,5 +30,6 @@ export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 		asn: parsedAsn!,
 		latitude: Number(lat),
 		longitude: Number(lon),
+		network: String(result.org.split(' ')[1]),
 	};
 };
