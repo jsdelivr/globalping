@@ -26,7 +26,7 @@ const probes = () => ({
       </h2>
       <ul>
         <li v-for="(probe, index) in probes">
-          [{{ probe.version }}] {{ parsedLocation(index) }}
+          [{{ probe.version }}] {{ parsedLocation(index) }} -- {{ probe.location.network }}
         </li>
       </ul>
     </div>
