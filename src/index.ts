@@ -4,13 +4,11 @@ import './lib/appsignal.js';
 import process from 'node:process';
 import {scopedLogger} from './lib/logger.js';
 import {createServer} from './lib/server.js';
-import {updateList as updateMalwareList} from './lib/malware/client.js';
 
 const logger = scopedLogger('global');
 const port = process.env['PORT'] ?? 3000;
 
 const workerFn = async () => {
-	await updateMalwareList();
 	const server = await createServer();
 
 	server.listen(port, () => {

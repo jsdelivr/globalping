@@ -70,11 +70,12 @@
     "utf-8-validate": "^5.0.8"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run blacklist",
     "start": "NODE_ENV=production node dist/index.js",
     "dev": "NODE_ENV=development node dist/index.js",
     "lint": "xo",
     "lint:fix": "xo --fix",
+    "blacklist": "node dist/lib/malware/download.js",
     "test": "NODE_ENV=test mocha",
     "clean": "rimraf coverage",
     "test:coverage": "npm run clean && c8 mocha",
