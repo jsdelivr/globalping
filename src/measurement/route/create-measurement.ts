@@ -18,7 +18,7 @@ const measurementConfig = config.get<{limits: {global: number; location: number}
 // Todo: better validation. hostname/ip validation for targets
 const schema = Joi.object({
 	locations: Joi.array().items(Joi.object({
-		type: Joi.string().valid('continent', 'region', 'country', 'state', 'city', 'asn').insensitive().required(),
+		type: Joi.string().valid('continent', 'region', 'country', 'state', 'city', 'network', 'asn').insensitive().required(),
 		value: Joi.alternatives().conditional('type', {
 			switch: [
 				{
@@ -38,6 +38,7 @@ const schema = Joi.object({
 						.messages({'any.only': 'The US state must be a valid two-letter code, e.g. CA'}),
 				},
 				{is: 'city', then: Joi.string().min(1).max(128).insensitive()},
+				{is: 'network', then: Joi.string().min(1).max(128).insensitive()},
 				{is: 'asn', then: Joi.number()},
 			],
 		}).required().messages({
