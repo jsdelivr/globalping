@@ -2,14 +2,14 @@ import Joi from 'joi';
 
 export const pingSchema = Joi.object({
 	type: Joi.string().valid('ping').insensitive().required(),
-	target: Joi.string().required(),
+	target: Joi.alternatives().try(Joi.string().ip(), Joi.string().domain()).required(),
 	packets: Joi.number().min(1).max(16).default(3),
 });
 
 export const tracerouteSchema = Joi.object({
 	type: Joi.string().valid('traceroute').insensitive().required(),
-	target: Joi.string().required(),
-	protocol: Joi.string().valid('TCP', 'UDP', 'ICMP').insensitive().default('ICMP'),
+	target: Joi.alternatives().try(Joi.string().ip(), Joi.string().domain()).required(),
+	protocol: Joi.string().valid('TCP', 'UDP', 'ICMP').insensitive().default('UDP'),
 	port: Joi.number().port().default(80),
 });
 
@@ -18,10 +18,10 @@ const allowedProtocols = ['UDP', 'TCP'];
 
 export const dnsSchema = Joi.object({
 	type: Joi.string().valid('dns').insensitive().required(),
-	target: Joi.string().required(),
+	target: Joi.string().domain().required(),
 	query: Joi.object({
 		type: Joi.string().valid(...allowedTypes).insensitive().default('A'),
-		resolver: Joi.string(),
+		resolver: Joi.string().ip(),
 		protocol: Joi.string().valid(...allowedProtocols).insensitive().default('UDP'),
 		port: Joi.number().default('53'),
 	}).default({}),
