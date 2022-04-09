@@ -57,6 +57,36 @@ If you're building something custom  or simply want to learn more about all the 
 [Read the full API documentation](docs)
 
 
+### Slack App
+
+Install our Slack App to interact with the Globalping platform without ever leaving Slack. 
+
+<a href="https://slack.com/oauth/v2/authorize?client_id=956881302438.3377623023376&scope=commands&user_scope="><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
+
+It supports a human friendly format of issuing commands. To begin simply type `/globalping`.
+
+Examples:
+```
+{command} {target} from {location} limit {number of probes}
+ping 8.8.8.8 from Germany
+traceroute jsdelivr.com from South America limit 2
+```
+
+At the moment only `ping` and `traceroute` commands are supported. The location field can process all kinds of different types of locations, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`
+
+
+### GitHub Bot
+
+Our GitHub bot can by triggered by simply mentioning it in any public GitHub issue. It supports a human friendly format of issuing commands. 
+
+Examples:
+```
+@globalping ping 8.8.8.8 from Germany
+@globalping traceroute jsdelivr.com from South America limit 2
+```
+
+At the moment only `ping` and `traceroute` commands are supported. The location field can process all kinds of different types of locations, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`
+
 ## Join the Network - Run a probe
 
 Globalping relies on the community to help us expand our network of probes. So while we run our own probes in key locations we still need help from both corporate partners and individials. Consider joining our network and helping everyone by running a probe (or many). 
