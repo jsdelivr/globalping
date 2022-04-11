@@ -18,7 +18,7 @@ const measurementConfig = config.get<{limits: {global: number; location: number}
 // Todo: better validation. hostname/ip validation for targets
 const schema = Joi.object({
 	locations: Joi.array().items(Joi.object({
-		type: Joi.string().valid('continent', 'region', 'country', 'state', 'city', 'network', 'asn').insensitive().required(),
+		type: Joi.string().valid('continent', 'region', 'country', 'state', 'city', 'network', 'asn', 'magic').insensitive().required(),
 		value: Joi.alternatives().conditional('type', {
 			switch: [
 				{
@@ -40,6 +40,7 @@ const schema = Joi.object({
 				{is: 'city', then: Joi.string().min(1).max(128).insensitive()},
 				{is: 'network', then: Joi.string().min(1).max(128).insensitive()},
 				{is: 'asn', then: Joi.number()},
+				{is: 'magic', then: Joi.string().min(1).insensitive()},
 			],
 		}).required().messages({
 			'any.required': 'Location value is required',
