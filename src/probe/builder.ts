@@ -63,11 +63,19 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		network: ipInfo.network,
 	};
 
+	const index = [
+		...Object.entries(location)
+			.filter(([key, value]) => value && !['asn', 'latitude', 'longitude'].includes(key))
+			.map(entries => String(entries[1]).toLowerCase()),
+		`as${location.asn}`,
+	];
+
 	// Todo: add validation and handle missing or partial data
 	return {
 		client: socket.id,
 		version,
 		ipAddress: clientIp,
 		location,
+		index,
 	};
 };

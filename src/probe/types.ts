@@ -15,4 +15,5 @@ export type Probe = {
 	version: string | undefined;
 	ipAddress: string;
 	location: ProbeLocation;
+	index: string[];
 };
