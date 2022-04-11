@@ -14,7 +14,7 @@ export const normalizeNetworkName = (string_: string): string => string_.toLower
 
 const bestMatch = (field: keyof LocationInfo, sources: LocationInfo[]): LocationInfo => {
 	const ranked = Object.values(_.groupBy(sources, field)).sort((a, b) => b.length - a.length).flat();
-	const best = ranked.shift();
+	const best = ranked[0];
 
 	if (!best) {
 		logger.error(`failed to find a correct value for a filed "${field}"`, {field, sources});
