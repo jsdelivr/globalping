@@ -3,6 +3,7 @@ import geoLists from 'countries-list';
 import {regions} from './regions.js';
 import {states} from './states.js';
 import {alpha as countryAlpha} from './countries.js';
+import {aliases as networkAliases} from './networks.js';
 
 const {countries} = geoLists;
 const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [c, r])));
@@ -65,4 +66,10 @@ export const getCountryIso3ByIso2 = (iso: string): string => {
 	}
 
 	return iso3;
+};
+
+export const getNetworkAliases = (key: string): string[] => {
+	const array = networkAliases.find(n => n.includes(key.toLowerCase()));
+
+	return array ?? [];
 };
