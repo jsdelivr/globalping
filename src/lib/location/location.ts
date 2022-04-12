@@ -35,3 +35,13 @@ export const getStateIsoByName = (state: string): string => {
 
 	return String(stateEntries[0]);
 };
+
+export const getStateNameByIso = (iso: string): string => {
+	const state = states[iso as keyof typeof states];
+
+	if (!state) {
+		throw new Error(`state not found ${iso}`);
+	}
+
+	return state;
+};
