@@ -4,7 +4,13 @@ import type {Socket} from 'socket.io';
 import isIpPrivate from 'private-ip';
 import requestIp from 'request-ip';
 import {geoIpLookup} from '../lib/geoip/client.js';
-import {getRegionByCountry} from '../lib/location/location.js';
+import {
+	getRegionByCountry,
+	getStateNameByIso,
+	getCountryByIso,
+	getCountryIso3ByIso2,
+	getNetworkAliases,
+} from '../lib/location/location.js';
 import {InternalError} from '../lib/internal-error.js';
 import type {Probe, ProbeLocation} from './types.js';
 
@@ -66,9 +72,13 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	const index = [
 		...Object.entries(location)
 			.filter(([key, value]) => value && !['asn', 'latitude', 'longitude'].includes(key))
-			.map(entries => String(entries[1]).toLowerCase()),
+			.map(entries => String(entries[1])),
 		`as${location.asn}`,
-	];
+		...(location.state ? [getStateNameByIso(location.state)] : []),
+		getCountryByIso(location.country),
+		getCountryIso3ByIso2(location.country),
+		getNetworkAliases(location.network),
+	].flat().map(s => s.toLowerCase().replace('-', ' '));
 
 	// Todo: add validation and handle missing or partial data
 	return {
