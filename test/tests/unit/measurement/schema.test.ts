@@ -1,7 +1,56 @@
 import {expect} from 'chai';
 import {pingSchema, tracerouteSchema, dnsSchema} from '../../../../src/measurement/schema/command-schema.js';
+import {schema as locationSchema} from '../../../../src/measurement/schema/location-schema.js';
 
 describe('command schema', () => {
+	describe('location', () => {
+		describe('magic', () => {
+			it('should fail (too short)', () => {
+				const input = [
+					{
+						type: 'magic',
+						value: '',
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.error).to.exist;
+				expect(valid.error!.details[0]!.message).to.equal('"[0].value" is not allowed to be empty');
+			});
+
+			it('should fail (not string)', () => {
+				const input = [
+					{
+						type: 'magic',
+						value: 1337,
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.error).to.exist;
+				expect(valid.error!.details[0]!.message).to.equal('"[0].value" must be a string');
+			});
+
+			it('should succeed', () => {
+				const input = [
+					{
+						type: 'magic',
+						value: 'cyprus',
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.error).to.not.exist;
+			});
+		});
+	});
+
 	describe('ping', () => {
 		it('should fail (missing values)', async () => {
 			const input = {
