@@ -4,7 +4,7 @@ import {regions} from './regions.js';
 import {states} from './states.js';
 
 const {countries} = geoLists;
-const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [c, r])));
+const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [c, r.replace('-', ' ')])));
 
 export const getRegionByCountry = (country: string): string => {
 	const region = countryToRegionMap.get(country);

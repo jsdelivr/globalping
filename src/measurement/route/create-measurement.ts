@@ -6,7 +6,7 @@ import geoLists from 'countries-list';
 import {getMeasurementRunner} from '../runner.js';
 import type {MeasurementRequest} from '../types.js';
 import {states} from '../../lib/location/states.js';
-import {regions} from '../../lib/location/regions.js';
+import {regionNames} from '../../lib/location/regions.js';
 import {bodyParser} from '../../lib/http/middleware/body-parser.js';
 import {validate} from '../../lib/http/middleware/validate.js';
 import {dnsSchema, pingSchema, tracerouteSchema} from '../schema/command-schema.js';
@@ -26,7 +26,7 @@ const schema = Joi.object({
 					then: Joi.string().valid(...Object.keys(continents)).insensitive()
 						.messages({'any.only': 'The continent must be a valid two-letter ISO code'}),
 				},
-				{is: 'region', then: Joi.string().valid(...Object.keys(regions)).insensitive()},
+				{is: 'region', then: Joi.string().valid(...regionNames).insensitive()},
 				{
 					is: 'country',
 					then: Joi.string().valid(...Object.keys(countries)).insensitive()
