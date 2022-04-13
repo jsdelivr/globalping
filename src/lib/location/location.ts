@@ -2,7 +2,10 @@ import _ from 'lodash';
 import geoLists from 'countries-list';
 import {regions} from './regions.js';
 import {states} from './states.js';
-import {alpha as countryAlpha} from './countries.js';
+import {
+	alpha as countryAlpha,
+	aliases as countryAliases,
+} from './countries.js';
 import {aliases as networkAliases} from './networks.js';
 
 const {countries} = geoLists;
@@ -66,6 +69,12 @@ export const getCountryIso3ByIso2 = (iso: string): string => {
 	}
 
 	return iso3;
+};
+
+export const getCountryAliases = (key: string): string[] => {
+	const array = countryAliases.find(n => n.includes(key.toLowerCase()));
+
+	return array ?? [];
 };
 
 export const getNetworkAliases = (key: string): string[] => {

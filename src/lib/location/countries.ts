@@ -1,3 +1,7 @@
+export const aliases = [
+	['gb', 'uk', 'united kingdom', 'england', 'northern ireland', 'wales', 'scotland'],
+];
+
 /* eslint @typescript-eslint/naming-convention: 0 */
 export const alpha = {
 	AF: 'AFG',

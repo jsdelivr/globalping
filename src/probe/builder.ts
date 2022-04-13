@@ -9,6 +9,7 @@ import {
 	getStateNameByIso,
 	getCountryByIso,
 	getCountryIso3ByIso2,
+	getCountryAliases,
 	getNetworkAliases,
 } from '../lib/location/location.js';
 import {InternalError} from '../lib/internal-error.js';
@@ -77,6 +78,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		...(location.state ? [getStateNameByIso(location.state)] : []),
 		getCountryByIso(location.country),
 		getCountryIso3ByIso2(location.country),
+		getCountryAliases(location.country),
 		getNetworkAliases(location.network),
 	].flat().map(s => s.toLowerCase().replace('-', ' '));
 
