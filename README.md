@@ -1,7 +1,7 @@
+<img width="1000" alt="Globalping Header" src="https://user-images.githubusercontent.com/1834071/163672078-67600178-79e1-448d-9e80-d1f8df79926b.png">
+
+
 <p align="center">
-    <a href="TODO" target="_blank"><img width="260" height="39" src="LOGO" alt="Globalping Logo"></a>
-    <br />
-    <br />
     <b>A global network of community probes that allows you to measure, debug and monitor your internet services in real-time</b>
     <br/>
        Better understand your network routing, fix anycast issues, monitor your CDN and DNS performance, do uptime monitoring, build your own network tools for personal or public use. 
