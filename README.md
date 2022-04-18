@@ -2,12 +2,20 @@
 
 
 <p align="center">
-    <b>A global network of community probes that allows you to measure, debug and monitor your internet services in real-time</b>
-    <br/>
-       Better understand your network routing, fix anycast issues, monitor your CDN and DNS performance, do uptime monitoring, build your own network tools for personal or public use. 
+    <b>Better understand your network routing, fix anycast issues, monitor your CDN and DNS performance,<br/>
+        do uptime monitoring, build your own network tools for personal or public use. </b>
     <br />
     <br />
 </p>
+
+## Dev Status: BETA
+
+Our project is under active development and not yet ready for production use. But we welcome everyone to contribute:
+- Ideas for new features
+- PRs and fixes for existing problems
+- Quality control and testing of all systems. Report any problems, bugs or bad UX you find
+- Documentation. Our readme and documentation need some polish
+- Tutorials and articles. Consider writing about our project on your blog or twitter
 
 ## The Globalping Platform
 
@@ -18,7 +26,7 @@ But we don't expect most of our users to work with the API directly, instead we 
 Learn more about Globalping on our website [www.jsdelivr.com/globalping](https://www.jsdelivr.com/globalping)
 
 
-## Quick Start - Run your first test
+## Quick Start - Run your first test | WIP
 
 You can begin using the platform in a few different ways:
 
@@ -108,7 +116,7 @@ Notes:
 Read more about the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) in the dedicated repo.
 
 
-## Limits
+## Limits | WIP
 
 Our platform has multiple limits to avoid abusive behaviour and at the same time motivate people to contribute to the sustainability of our platform.
 
