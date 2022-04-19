@@ -20,7 +20,7 @@ Schedules a new measurement.
 
 schema:
 
-below is presented a schema containing all possible input values; some are general, while others are utilised by a specific query type. Please, consult the [SCHEMA GUIDE](https://github.com/jsdelivr/globalping/blob/master/docs/measurement/schema/) for a more detailed description.
+below is presented a schema containing all possible input values; some are general, while others are utilised by a specific query type. Please, consult the [SCHEMA GUIDE](./schema/) for a more detailed description.
 ```
 {
     limit: number

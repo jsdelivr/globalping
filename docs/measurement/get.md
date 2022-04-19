@@ -14,13 +14,13 @@ Get the current state of the measurement.
 - `pretty` (optional) - prettifies the JSON response
 
 **params**:
-- `:Id` - Id of the measurement request. Returned by [POST /v1/measurements](https://github.com/jsdelivr/globalping/blob/master/docs/measurement/post-create.md)
+- `:Id` - Id of the measurement request. Returned by [POST /v1/measurements](./post-create.md)
 
 ## success response
 
 **status code**: `200 OK`
 
-**content**: response will contain the response from all requested probes, alongside some basic metadata of the request, such as `type` of the query, `createdAt/updatedAt` dates, and `status` field - the latter one is especially important to take note of, as the result is asynchronous. For more detailed schema description, please follow the guide on [MEASUREMENT RESPONSE SCHEMA](https://github.com/jsdelivr/globalping/blob/master/docs/measurement/schema/measurement-response.md)
+**content**: response will contain the response from all requested probes, alongside some basic metadata of the request, such as `type` of the query, `createdAt/updatedAt` dates, and `status` field - the latter one is especially important to take note of, as the result is asynchronous. For more detailed schema description, please follow the guide on [MEASUREMENT RESPONSE SCHEMA](./schema/measurement-response.md)
 
 ### schema
 
