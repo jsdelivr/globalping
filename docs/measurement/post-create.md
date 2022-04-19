@@ -53,7 +53,7 @@ example:
     }
 }
 ```
-for `Locations` schema, please see [LOCATION SCHEMA](https://github.com/jsdelivr/globalping/blob/master/docs/measurement/schema/location.md).
+for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 
 ## success response
 
