@@ -22,7 +22,8 @@ supported `type` values:
 `continent` type accepts any value that matches continent name in `ISO-2` format
 
 ### example
-```
+
+```json
 { "type": "continent", "value": "eu" }
 ```
 
@@ -60,7 +61,8 @@ supported `type` values:
 - `micronesia`
 
 ### example
-```
+
+```json
 { "type": "region", "value": "eastern africa" }
 ```
 
@@ -77,7 +79,8 @@ supported `type` values:
 `country` type accepts any value that matches country name in `ISO-2` format
 
 ### example
-```
+
+```json
 { "type": "country", "value": "finland" }
 ```
 
@@ -95,7 +98,8 @@ supported `type` values:
 `state` type accepts any value that matches state name in `ISO-2` format
 
 ### example
-```
+
+```json
 { "type": "state", "value": "tx" }
 ```
 
@@ -109,7 +113,8 @@ supported `type` values:
 - max 128 characters long
 
 ### example
-```
+
+```json
 { "type": "city", "value": "Austin" }
 ```
 
@@ -123,7 +128,8 @@ supported `type` values:
 - max 128 characters long
 
 ### example
-```
+
+```json
 { "type": "network", "value": "virgin media limited" }
 ```
 
@@ -134,7 +140,8 @@ supported `type` values:
 - typeof `number`
 
 ### example
-```
+
+```json
 { "type": "asn", "value": 1337 }
 ```
 

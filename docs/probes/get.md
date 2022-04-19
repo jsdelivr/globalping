@@ -40,7 +40,7 @@ Get list of all probes connected to the server.
 
 ### example
 
-```
+```json
 [
     {
         "version": "0.2.4",
@@ -76,7 +76,7 @@ Get list of all probes connected to the server.
 
 **status code**: `500 Internal Server Error`
 
-```
+```json
 {
     error: {
       "message": "Internal Server Error",

@@ -40,7 +40,7 @@ below is presented a schema containing all possible input values; some are gener
 }
 ```
 example:
-```
+```json
 {
     "limit": 10,
     "locations": [
@@ -72,7 +72,7 @@ for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 
 ### example
 
-```
+```json
 {
     "id": "PY5fMsREMmIq45VR",
     "probesCount": 1
@@ -87,7 +87,7 @@ for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 
 ### schema
 
-```
+```json
 {
     error: {
         message: string
@@ -101,7 +101,7 @@ for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 
 ### example
 
-```
+```json
 {
     "error": {
         "message": "Validation Failed",
@@ -119,9 +119,9 @@ for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 
 **status code**: `500 Internal Server Error`
 
-```
+```json
 {
-    error: {
+    "error": {
       "message": "Internal Server Error",
       "type": "api_error"
     }

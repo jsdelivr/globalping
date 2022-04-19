@@ -39,7 +39,7 @@ Get the current state of the measurement.
 
 ### example
 
-```
+```json
 {
     "id": "tEaUg3vYnOu2exVC",
     "type": "ping",
@@ -102,9 +102,9 @@ Get the current state of the measurement.
 
 **status code**: `500 Internal Server Error`
 
-```
+```json
 {
-    error: {
+    "error": {
       "message": "Internal Server Error",
       "type": "api_error"
     }
