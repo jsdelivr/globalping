@@ -212,6 +212,23 @@ example:
 }
 ```
 
+### target
+
+The final destination of the request.
+
+**key**: `measurement.target`
+
+**required**: `true`
+
+**rules**:
+- typeof `string`
+- `FQDN`
+
+```json
+    "target": "globalping.io"
+```
+
+
 ### type
 
 Specifies the DNS type for which to look for.
