@@ -1,4 +1,4 @@
-# globalping API
+# Globalping API
 
 **API domain**: `api.globalping.io`
 
@@ -7,10 +7,6 @@
 ## Open Endpoints
 
 Open endpoints require no Authentication.
-
-### demo page
-
-- [demo page](https://api.globalping.io/demo/): `GET /demo/`
 
 ### probe
 
