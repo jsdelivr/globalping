@@ -293,5 +293,5 @@ resolver is the name or IP address of the name server to query. This can be an I
 - `FQDN` or `IP Address`
 
 ```json
-    resolver": "1.1.1.1"
+    "resolver": "1.1.1.1"
 ```
