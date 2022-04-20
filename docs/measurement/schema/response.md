@@ -206,3 +206,67 @@ reported ip address.
 **type**: `number[]`
 
 the delay between sending the packet and getting the response.
+
+### DNS
+
+#### server
+
+**key**: `Result.result.server`
+
+**type**: `string`
+
+IP Address of the resolver used.
+
+#### time
+
+**key**: `Result.result.time`
+
+**type**: `number`
+
+time it took to complete the request. Reported by `dig`.
+
+#### answer[]
+
+**key**: `Result.result.answer[]`
+
+**type**: `Object[]`
+
+An array of all returned DNS results.
+
+#### answer[].domain
+
+**key**: `Result.result.answer[].domain`
+
+**type**: `string`
+
+#### answer[].value
+
+**key**: `Result.result.answer[].value`
+
+**type**: `string`
+
+reported record's value. Depending on type, it might be an IP Address, or plain text.
+
+#### answer[].type
+
+**key**: `Result.result.answer[].type`
+
+**type**: `string`
+
+record type.
+
+#### answer[].ttl
+
+**key**: `Result.result.answer[].ttl`
+
+**type**: `string`
+
+record ttl.
+
+#### answer[].class
+
+**key**: `Result.result.answer[].class`
+
+**type**: `string`
+
+record class code.
