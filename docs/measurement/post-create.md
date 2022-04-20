@@ -89,7 +89,7 @@ POST https://api.globalping.io/v1/measurements/
 
 ### schema
 
-```json
+```
 {
     error: {
         message: string
