@@ -165,3 +165,44 @@ An array of all PING iterations before the deadline occured.
 
 stats in millisecond contained within `ping` response footer.
 
+### TRACEROUTE
+
+#### destination
+
+**key**: Result.result.destination`
+
+**type**: `string`
+
+IP Address contained within `traceroute` response header.
+
+#### hops[]
+
+**key**: `hops[]`
+
+**type**: `Object[]`
+
+An array of all traceroute iterations before the deadline occured.
+
+#### hops[].host
+
+**key**: `hops[].host`
+
+**type**: `string`
+
+reported hostame.
+
+#### hops[].resolvedAddress
+
+**key**: `times[].time`
+
+**type**: `string`
+
+reported ip address.
+
+#### hops[].rtt[]
+
+**key**: `times[].rtt[]`
+
+**type**: `number[]`
+
+the delay between sending the packet and getting the response.
