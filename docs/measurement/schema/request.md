@@ -1,5 +1,10 @@
 # Measurement Request Schema
 
+supported `type` values:
+- [`ping`](#ping)
+- [`traceroute`](#traceroute)
+- [`dns`](#dns)
+
 ## shared values
 
 ### target
@@ -72,7 +77,7 @@ Please, see [LOCATION SCHEMA](./location.md) document for more details.
     ]
 ```
 
-## PING
+<h2 id="ping">PING</h2>
 
 **type**: `ping`
 
@@ -116,7 +121,7 @@ Stop after sending count ECHO_REQUEST packets. With deadline option, ping waits 
     "packets": 5
 ```
 
-## TRACEROUTE
+<h2 id="traceroute">TRACEROUTE</h2>
 
 **type**: `traceroute`
 
@@ -178,7 +183,7 @@ For TCP and others specifies just the (constant) destination port to connect.
     "port": 5
 ```
 
-## DNS
+<h2 id="dns">DNS</h2>
 
 **type**: `dns`
 
