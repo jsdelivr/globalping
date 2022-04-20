@@ -20,7 +20,7 @@ Schedules a new measurement.
 
 schema:
 
-below is presented a schema containing all possible input values; some are general, while others are utilised by a specific query type. Please, consult the [SCHEMA GUIDE](./schema/) for a more detailed description.
+below is presented a schema containing all possible input values; some are general, while others are utilised by a specific query type. Please, consult the [SCHEMA GUIDE](./schema/request.md) for a more detailed description.
 ```
 {
     limit: number
