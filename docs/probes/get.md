@@ -1,6 +1,6 @@
 # get probes
 
-Get list of all probes connected to the server.
+Get list of all probes currently online and connected to the API server.
 
 ## request
 
@@ -78,7 +78,7 @@ Get list of all probes connected to the server.
 
 ```json
 {
-    error: {
+    "error": {
       "message": "Internal Server Error",
       "type": "api_error"
     }
