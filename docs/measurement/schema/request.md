@@ -138,3 +138,120 @@ For TCP and others specifies just the (constant) destination port to connect.
     "port": 5
 ```
 
+## DNS
+
+**type**: `dns`
+
+Implementation of the native `dig` command.
+
+Performs DNS lookups and displays the answers that are returned from the name server(s) that were queried.
+
+**warning**:
+DNS specific values have to be contained within `measurements.query` object.
+
+example:
+```json
+{
+    "measurement": {
+        "type": "dns",
+        "target": "google.com",
+        "query": {
+            "protocol": "UDP",
+            "type": "A",
+            "port": 53,
+            "resolver": "1.1.1.1"
+        }
+    },
+    "locations": [],
+    "limit": 1
+}
+```
+
+### type
+
+Specifies the DNS type for which to look for.
+
+**key**: `measurement.query.type`
+
+**default**: `A`
+
+**required**: `false`
+
+**available values**:
+- `A`
+- `AAAA`
+- `ANY`
+- `CNAME`
+- `DNSKEY`
+- `DS`
+- `MX`
+- `NS`
+- `NSEC`
+- `PTR`
+- `RRSIG`
+- `SOA`
+- `TXT`
+- `SRV`
+
+**rules**:
+- typeof `string`
+- must match one of the pre-defined values
+
+### protocol
+
+Specifies the protocol used for DNS lookup.
+
+**key**: `measurement.query.protocol`
+
+**default**: `UDP`
+
+**required**: `false`
+
+**available values**:
+- `TCP`
+- `UDP`
+
+**rules**:
+- typeof `string`
+- must match one of the pre-defined values
+
+### port
+
+Specifies the value of the `-p` flag.
+
+```
+Send the query to a non-standard port on the server, instead of the default port 53.
+```
+
+**key**: `measurement.query.port`
+
+**default**: `53`
+
+**required**: `false`
+
+**rules**:
+- typeof `number`
+
+```json
+    "port": 53
+```
+
+### resolver
+
+Specifies the resolver server used for DNS lookup.
+
+```
+resolver is the name or IP address of the name server to query. This can be an IPv4 address in dotted-decimal notation or an IPv6 address in colon-delimited notation. When the supplied server argument is a hostname, dig resolves that name before querying that name server.
+```
+
+**key**: `measurement.query.resolver`
+
+**required**: `false`
+
+**rules**:
+- typeof `string`
+- `FQDN` or `IP Address`
+
+```json
+    resolver": "1.1.1.1"
+```
