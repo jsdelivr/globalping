@@ -36,6 +36,42 @@ Specifies the `global limit` for probe count.
     "limit": 5
 ```
 
+### locations
+
+Specifies a list of desired locations from which tests should be run. If none is provided, the server assigns probes by random.
+
+Each location filter is non-complementary and defines an individual set of probes. An optional limit key/value allows for more-precise geo queries.
+
+If no match is found - the server skips that geo.
+
+**key**: `locations`
+
+**required**: `false`
+
+**rules**:
+- typeof `Location[]`
+- each `Location` object must match one of the pre-defined types
+
+**Allowed values**:
+
+Please, see [LOCATION SCHEMA](./location.md) document for more details.
+
+
+```json
+    "locations": [
+        {
+            "type": "continent",
+            "value": "eu",
+            "limit": 10
+        },
+        {
+            "type": "network",
+            "value": "virgin media limited",
+            "limit": 1
+        }
+    ]
+```
+
 ## PING
 
 **type**: `ping`
