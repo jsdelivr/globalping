@@ -40,6 +40,8 @@ Get the current state of the measurement.
 ### example
 
 ```json
+GET https://api.globalping.io/v1/measurements/tEaUg3vYnOu2exVC
+
 {
     "id": "tEaUg3vYnOu2exVC",
     "type": "ping",
