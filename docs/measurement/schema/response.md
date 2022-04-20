@@ -1,5 +1,12 @@
 # Measurement Response Schema
 
+Jump to:
+- [`Full success schema`](#success)
+- [`Result schema`](#result)
+- [`Ping Result schema`](#ping)
+- [`Traceroute  Result schema`](#traceroute)
+- [`DNS Result schema`](#dns)
+
 ## Success
 
 ### schema
@@ -100,6 +107,11 @@ An array of all probe responses. Jump to [`RESULT SCHEMA`](#result) for more det
 }
 ```
 ## Result
+
+possible result types:
+- [`ping`](#ping)
+- [`traceroute`](#traceroute)
+- [`dns`](#dns)
 
 ### shared values
 
