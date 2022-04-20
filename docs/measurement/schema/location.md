@@ -19,7 +19,7 @@ supported `type` values:
 
 ### available values
 
-`continent` type accepts any value that matches continent name in `ISO-2` format
+`continent` type accepts any value matching continent name in `ISO-2` format.
 
 ### example
 
@@ -76,7 +76,7 @@ supported `type` values:
 
 ### available values
 
-`country` type accepts any value that matches country name in `ISO-2` format
+`country` type accepts any value matching country name in `ISO-2` format.
 
 ### example
 
@@ -95,7 +95,7 @@ supported `type` values:
 
 ### available values
 
-`state` type accepts any value that matches state name in `ISO-2` format
+`state` type accepts any value matching state name in `ISO-2` format.
 
 ### example
 
