@@ -52,8 +52,6 @@ Learn more about Globalping CLI in the dedicated repo.
 
 If you're building something custom  or simply want to learn more about all the available options and data we provide check out the Globalping REST API.
 
-#TODO
-
 [Read the full API documentation](docs)
 
 
