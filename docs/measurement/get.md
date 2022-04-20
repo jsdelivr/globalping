@@ -20,7 +20,7 @@ Get the current state of the measurement.
 
 **status code**: `200 OK`
 
-**content**: response will contain the response from all requested probes, alongside some basic metadata of the request, such as `type` of the query, `createdAt/updatedAt` dates, and `status` field - the latter one is especially important to take note of, as the result is asynchronous. For more detailed schema description, please follow the guide on [MEASUREMENT RESPONSE SCHEMA](./schema/measurement-response.md)
+**content**: response will contain results from all requested probes, alongside some basic metadata of the request. For more detailed schema description, please follow the guide on [MEASUREMENT RESPONSE SCHEMA](./schema/measurement-response.md)
 
 ### schema
 
