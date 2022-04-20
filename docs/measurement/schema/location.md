@@ -81,7 +81,7 @@ supported `type` values:
 ### example
 
 ```json
-{ "type": "country", "value": "finland" }
+{ "type": "country", "value": "fr" }
 ```
 
 <h2 id="state-query">State</h2>
