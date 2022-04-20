@@ -143,7 +143,7 @@ IP Address contained within `ping` response header.
 
 #### loss
 
-**key**: `loss`
+**key**: `Result.result.loss`
 
 **type**: `number`
 
@@ -151,7 +151,7 @@ total count of lost packets.
 
 #### times[]
 
-**key**: `times[]`
+**key**: `Result.result.times[]`
 
 **type**: `Object[]`
 
@@ -159,19 +159,19 @@ An array of all PING iterations before the deadline occured.
 
 #### times[].ttl
 
-**key**: `times[].ttl`
+**key**: `Result.result.times[].ttl`
 
 **type**: `number`
 
 #### times[].time
 
-**key**: `times[].time`
+**key**: `Result.result.times[].time`
 
 **type**: `number`
 
 #### min / avg / max
 
-**key**: `min` `avg` `max`
+**key**: `Result.result.min` `Result.result.avg` `Result.result.max`
 
 **type**: `number`
 
@@ -181,7 +181,7 @@ stats in millisecond contained within `ping` response footer.
 
 #### destination
 
-**key**: Result.result.destination`
+**key**: `Result.result.destination`
 
 **type**: `string`
 
@@ -189,7 +189,7 @@ IP Address contained within `traceroute` response header.
 
 #### hops[]
 
-**key**: `hops[]`
+**key**: `Result.result.hops[]`
 
 **type**: `Object[]`
 
@@ -197,7 +197,7 @@ An array of all traceroute iterations before the deadline occured.
 
 #### hops[].host
 
-**key**: `hops[].host`
+**key**: `Result.result.hops[].host`
 
 **type**: `string`
 
@@ -205,7 +205,7 @@ reported hostame.
 
 #### hops[].resolvedAddress
 
-**key**: `times[].time`
+**key**: `Result.result.times[].time`
 
 **type**: `string`
 
@@ -213,7 +213,7 @@ reported ip address.
 
 #### hops[].rtt[]
 
-**key**: `times[].rtt[]`
+**key**: `Result.result.times[].rtt[]`
 
 **type**: `number[]`
 
