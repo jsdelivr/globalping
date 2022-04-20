@@ -40,6 +40,8 @@ Specifies the `global limit` for probe count.
 
 **type**: `ping`
 
+Implementation of the native `ping` command.
+
 The `ping` command sends an ICMP ECHO_REQUEST to obtain an ICMP ECHO_RESPONSE from a host or gateway.
 
 example:
@@ -81,6 +83,8 @@ Stop after sending count ECHO_REQUEST packets. With deadline option, ping waits 
 ## TRACEROUTE
 
 **type**: `traceroute`
+
+Implementation of the native `traceroute` command.
 
 traceroute tracks the route packets taken from an IP network on their way to a given host. It utilizes the IP protocol's time to live (TTL) field and attempts to elicit an ICMP TIME_EXCEEDED response from each gateway along the path to the host.
 
