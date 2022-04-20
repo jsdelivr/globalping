@@ -15,7 +15,7 @@ supported `type` values:
 
 - typeof `string`
 - case insensitive
-- must mutch one of the pre-defined values
+- must match one of the pre-defined values
 
 ### available values
 
@@ -33,7 +33,7 @@ supported `type` values:
 
 - typeof string
 - case insensitive
-- must mutch one of the pre-defined values
+- must match one of the pre-defined values
 
 ### available values
 
@@ -72,7 +72,7 @@ supported `type` values:
 
 - typeof `string`
 - case insensitive
-- must mutch one of the pre-defined values
+- must match one of the pre-defined values
 
 ### available values
 
@@ -90,7 +90,7 @@ supported `type` values:
 
 - typeof `string`
 - case insensitive
-- must mutch one of the pre-defined values
+- must match one of the pre-defined values
 - only applicable to USA states
 
 ### available values
