@@ -4,16 +4,17 @@
     <br />
     <b>A global network of community probes that allows you to measure, debug and monitor your internet services in real-time</b>
     <br/>
-       Better understand your network routing, fix anycast issues, monitor your CDN and DNS performance, do uptime monitoring, build your own network tools for personal or public use. 
+        Better understand your network routing, fix anycast issues, and monitor your CDN and DNS performance and the uptime of your apps. Build your own network tools for personal or public use.
     <br />
     <br />
 </p>
 
 ## The Globalping Platform
 
-Globalping is a platform that allows anyone to run networking commands such as ping, traceroute, dig and mtr on distributed probes all around the world. Our goal is to provide a free and simple to use API for everyone out there to build interesting networking tools and services. 
 
-But we don't expect most of our users to work with the API directly, instead we are constally building powerful yet simple tools that take advantage of all the functionality that the Globalping API has to offer. If you're an advanced user then we recommend getting started with the [Globalping CLI](#globalping-cli) or if you prefer a visual representation of the data then visit our tools on our website.
+Globalping is a network troubleshooting platform allowing anybody to remotely run networking commands such as ping, traceroute, dig and mtr on probes distributed worldwide. Our goal is to provide a free and simple API for everyone out there to build interesting networking tools and services.
+
+We don't expect most users to work with the API directly; instead, we constantly expand and improve our powerful yet simple tools to utilise Globalping API. If you're an advanced user, we recommend getting started with the [Globalping CLI](#globalping-cli), or if you prefer to have your data visually represented, then our web-tools might be a better choice.
 
 Learn more about Globalping on our website [www.jsdelivr.com/globalping](https://www.jsdelivr.com/globalping)
 
@@ -61,7 +62,7 @@ Install our Slack App to interact with the Globalping platform without ever leav
 
 <a href="https://slack.com/oauth/v2/authorize?client_id=956881302438.3377623023376&scope=commands&user_scope="><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
 
-It supports a human friendly format of issuing commands. To begin simply type `/globalping`.
+It supports a human friendly interface for issuing commands. To begin simply type `/globalping`.
 
 Examples:
 ```
@@ -70,7 +71,7 @@ ping 8.8.8.8 from Germany
 traceroute jsdelivr.com from South America limit 2
 ```
 
-At the moment only `ping` and `traceroute` commands are supported. The location field can process all kinds of different types of locations, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`
+At the moment only `ping` and `traceroute` commands are supported. The location field can process all kinds of different types of location matching, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`
 
 
 ### GitHub Bot
@@ -83,7 +84,7 @@ Examples:
 @globalping traceroute jsdelivr.com from South America limit 2
 ```
 
-At the moment only `ping` and `traceroute` commands are supported. The location field can process all kinds of different types of locations, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`
+At the moment only `ping` and `traceroute` commands are supported. The location field can process all kinds of different types of location matching, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`
 
 ## Join the Network - Run a probe
 
@@ -99,7 +100,7 @@ And it works for both x86 and ARM architectures.
 
 Notes:
 - The probe doesn't open any ports or accept any incoming connections. It can only establish a connection with our API.
-- We include regularly updated lists and databases of domains and IPs that are associated with malware or potentially dangerous content and completely ban them on the API  level
+- We include regularly updated lists and databases of domains and IPs that are associated with malware or potentially dangerous content and completely ban them on the API level
 - The tests scale to the amount of available CPU cores. Our code is very lightweight and shouldn't use too many of your resources, so in most cases we recommend running our probe as is. But if you're worried you can use `--cpuset-cpus="0-2"` to limit the number of available cores.
 - We rate-limit all users on the API level to avoid the abuse of network
 
@@ -121,9 +122,9 @@ These limits are applied per IP address regardless if an API key supplied or not
 
 #### Un-authenticated users
 
-Anyone can connect to our API and start using without the need to provide any credentials.
+Anybody can connect to our API and start using with no credentials requirement.
 In this case we limit the amount of tests an IP address can run. A single test is defined as a succesful measurement we run and return to the user.
-So a limit of 10 tests means the user can either run 10 measurements with the probes limit set to 1 per measurement. Or run a single measurement with the probes limit set to 10.
+A limit of 10 tests means the user can run either 10 measurements with the probe limit set to 1 per measurement, or a single measurement with the probe limit set to 10.
 
 - 100 tests per hour
 - other?
@@ -134,22 +135,21 @@ So a limit of 10 tests means the user can either run 10 measurements with the pr
 All registered jsDelivr users get an API key they can use to authenticate themselves and get higher limits
 
 - 200 measurements per hour
-  
+
 
 #### GitHub Sponsors - Contribute to the development of the project
 
-By becoming a sponsor of jsDelivr you automatically help us sustain both the jsDelivr CDN and the Globalping platform.
+By becoming a sponsor of jsDelivr you help us sustain both the jsDelivr CDN and the Globalping platform.
 Your contributions will be used to help us continue the development of all projects under the [jsDelivr Organization](https://github.com/jsdelivr)
 
-You can do this by registering on jsdelivr.com and becoming a GitHub sponsor. 
+You can do this by registering on jsdelivr.com and becoming a GitHub sponsor.
 We will then automatically upgrade your account to get a higher limit as defined in each of the available plans.
 
 
 #### Custom limits
 
-Contact us to discuss about getting a custom limit for your API key.
+Feel free to reach out if you need your API limit to be higher.
 We're more than happy to provide higher limits to researchers, non-profits and other open source projects.
-
 
 
 ## Development
