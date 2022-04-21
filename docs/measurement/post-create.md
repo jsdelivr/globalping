@@ -1,6 +1,6 @@
 # post measurement
 
-Schedules a new measurement.
+Creates an on-demand measurement to run immediately.
 
 ## request
 
