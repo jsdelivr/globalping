@@ -9,7 +9,7 @@ supported `type` values:
 
 ### target
 
-The final destination of the request. Depending on query type - its validation rules might differ.
+A public endpoint on which tests should be executed. In most cases, it would be a hostname or IPv4 address. Its validation rules might differ depending on the query type.
 
 **key**: `measurement.target`
 
@@ -26,7 +26,9 @@ The final destination of the request. Depending on query type - its validation r
 
 ### limit
 
-Specifies the `global limit` for probe count.
+Specifies the global limit of probes.
+
+Global limit controls the maximum number of tests the server will perform and doesn't guarantee availability; if there aren't enough probes available in specified locations, the result count might be lower.
 
 **key**: `limit`
 
@@ -43,9 +45,9 @@ Specifies the `global limit` for probe count.
 
 ### locations
 
-Specifies a list of desired locations from which tests should be run. If none is provided, the server assigns probes by random.
+Specifies a list of desired locations from which tests should be run. The server distributes probes based on its preconfigured geo-weight algorithm if none is provided.
 
-Each location filter is non-complementary and defines an individual set of probes. An optional limit key/value allows for more-precise geo queries.
+Each location filter is non-complementary and defines an individual set of probes. An optional `limit` key/value allows for more precise geo-queries.
 
 If no match is found - the server skips that geo.
 
