@@ -80,7 +80,7 @@ export class ProbeRouter {
 
 	private filterGloballyDistributed(sockets: Socket[], limit: number): Socket[] {
 		const distribution = new Map<Location, number>(
-			Object.entries(config.get<Record<string, number>>('measurement.globalDistribution'))
+			_.shuffle(Object.entries(config.get<Record<string, number>>('measurement.globalDistribution')))
 				.map(([value, weight]) => ([{type: 'continent', value}, weight])),
 		);
 
