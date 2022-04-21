@@ -4,6 +4,8 @@ import {joiValidate as joiMalwareValidate} from '../../lib/malware/client.js';
 import {joiValidate as joiMalwareValidateIp} from '../../lib/malware/ip.js';
 import {joiValidate as joiMalwareValidateDomain} from '../../lib/malware/domain.js';
 
+export const validCmdTypes = ['ping', 'dns', 'traceroute'];
+
 export const joiValidateTarget = (type: string) => (value: string): string | Error => {
 	if (['ip', 'any'].includes(type) && isIpPrivate(value)) {
 		throw new Error('ip.private');
