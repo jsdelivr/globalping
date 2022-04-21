@@ -4,7 +4,7 @@
     <br />
     <b>A global network of community probes that allows you to measure, debug and monitor your internet services in real-time</b>
     <br/>
-        Better understand your network routing, fix anycast issues, monitor your CDN and DNS performance and the uptime of your apps. Build your own network tools for personal or public use.
+        Better understand your network routing, fix anycast issues, and monitor your CDN and DNS performance and the uptime of your apps. Build your own network tools for personal or public use.
     <br />
     <br />
 </p>
