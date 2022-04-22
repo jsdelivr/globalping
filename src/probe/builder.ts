@@ -69,5 +69,6 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		version,
 		ipAddress: clientIp,
 		location,
+		ready: false,
 	};
 };
