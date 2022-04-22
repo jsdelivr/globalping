@@ -3,7 +3,7 @@
 
 <p align="center">
     <b>Better understand your network routing, fix anycast issues, monitor your CDN and DNS performance,<br/>
-        do uptime monitoring, build your own network tools for personal or public use. </b>
+        do uptime monitoring and build your own network tools for personal or public use. </b>
     <br />
     <br />
 </p>
@@ -26,18 +26,18 @@ We don't expect most of our users to work with the API directly; instead, we con
 Learn more about Globalping on our website [www.jsdelivr.com/globalping](https://www.jsdelivr.com/globalping)
 
 
-## Quick Start - Run your first test | WIP
+## Quick Start - Run your first test
 
 You can begin using the platform in a few different ways:
 
-### Web Based Tools
+### Web Based Tools | WIP
 
 We keep building more and more web tools to cover all kinds of use-cases.
 
 * TODO
 * TODO
 
-### Globalping CLI
+### Globalping CLI | WIP
 
 Simply install our CLI tool to upgrade your debugging capabilities.
 
@@ -59,11 +59,25 @@ Learn more about Globalping CLI in the dedicated repo.
 ### Globalping REST API
 
 If you're building something custom  or simply want to learn more about all the available options and data we provide check out the Globalping REST API.
+It's as simple as: 
+
+```
+POST https://api.globalping.io/v1/measurements/
+{
+    "limit": 10,
+    "locations": [],
+    "measurement": {
+        "packets": 5,
+        "target": "jsdelivr.com",
+        "type": "ping"
+    }
+}
+```
 
 [Read the full API documentation](docs)
 
 
-### Slack App
+### Slack App  | WIP
 
 Install our Slack App to interact with the Globalping platform without ever leaving Slack. 
 
@@ -110,6 +124,7 @@ Notes:
 - We include regularly updated lists and databases of domains and IPs that are associated with malware or potentially dangerous content and completely ban them on the API  level
 - The tests scale to the amount of available CPU cores. Our code is very lightweight and shouldn't use too many of your resources, so in most cases we recommend running our probe as is. But if you're worried you can use `--cpuset-cpus="0-2"` to limit the number of available cores.
 - We rate-limit all users on the API level to avoid the abuse of network
+- No local network tests are allowed, only public endpoints.
 
 Read more about the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) in the dedicated repo.
 
