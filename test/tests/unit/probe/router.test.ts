@@ -58,6 +58,31 @@ describe('probe router', () => {
 		});
 	});
 
+	describe('probe readiness', () => {
+		it('should find 2 probes', async () => {
+			const sockets: Array<DeepPartial<Socket>> = [
+				buildSocket('socket-1', {continent: 'EU', country: 'GB'}, false),
+				buildSocket('socket-2', {continent: 'EU', country: 'PL'}, false),
+				buildSocket('socket-4', {continent: 'EU', country: 'GB'}),
+				buildSocket('socket-5', {continent: 'EU', country: 'PL'}),
+			];
+
+			wsServerMock.fetchSockets.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes([
+				{type: 'country', value: 'GB', limit: 2},
+				{type: 'country', value: 'PL', limit: 2},
+			]);
+
+			expect(wsServerMock.of.calledOnce).to.be.true;
+			expect(wsServerMock.of.firstCall.firstArg).to.equal(PROBES_NAMESPACE);
+
+			expect(probes.length).to.equal(2);
+			expect(probes.filter(p => p.location.country === 'GB').length).to.equal(1);
+			expect(probes.filter(p => p.location.country === 'PL').length).to.equal(1);
+		});
+	});
+
 	describe('route globally distributed', () => {
 		type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
