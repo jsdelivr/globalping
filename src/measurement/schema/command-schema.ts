@@ -9,9 +9,13 @@ import {joiValidate as joiMalwareValidateDomain} from '../../lib/malware/domain.
 
 export const validCmdTypes = ['ping', 'dns', 'traceroute'];
 
-export const joiValidateTarget = (type: string) => (value: string, helpers: CustomHelpers): string | ErrorReport => {
+export const joiValidateTarget = (type: string) => (value: string, helpers?: CustomHelpers): string | ErrorReport | Error => {
 	if (['ip', 'any'].includes(type) && isIpPrivate(value)) {
-		return helpers.error('ip.private');
+		if (helpers) {
+			return helpers.error('ip.private');
+		}
+
+		throw new Error('ip.private');
 	}
 
 	if (type === 'domain') {
