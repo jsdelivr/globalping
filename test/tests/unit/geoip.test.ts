@@ -44,11 +44,11 @@ describe('geoip service', () => {
 			asn: 61_493,
 			city: 'lagoa do carro',
 			continent: 'SA',
-			country: 'AR',
+			country: 'BR',
 			latitude: -7.7568,
 			longitude: -35.3656,
 			state: undefined,
-			network: 'interbs s.r.l.',
+			network: 'interbs s.r.l. (baehost)',
 		});
 	});
 
@@ -110,7 +110,7 @@ describe('geoip service', () => {
 		const info = await geoIpLookup('100.00.00.02');
 
 		expect(info).to.deep.equal({
-			asn: 40_676,
+			asn: 43_939,
 			city: 'dallas',
 			continent: 'NA',
 			country: 'US',
@@ -134,7 +134,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await geoIpLookup('100.00.01.00').catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
-				asn: 40_676,
+				asn: 123,
 				city: 'dallas',
 				continent: 'NA',
 				country: 'US',
@@ -157,7 +157,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await geoIpLookup('100.00.01.07').catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
-				asn: 40_676,
+				asn: 123,
 				city: 'dallas',
 				continent: 'NA',
 				country: 'US',

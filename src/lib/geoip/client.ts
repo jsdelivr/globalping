@@ -14,7 +14,7 @@ export const normalizeNetworkName = (string_: string): string => string_.toLower
 
 const bestMatch = (field: keyof LocationInfo, sources: LocationInfo[]): LocationInfo => {
 	const ranked = Object.values(_.groupBy(sources, field)).sort((a, b) => b.length - a.length).flat();
-	const best = ranked.shift();
+	const best = ranked[0];
 
 	if (!best) {
 		logger.error(`failed to find a correct value for a filed "${field}"`, {field, sources});
@@ -55,17 +55,19 @@ export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 				throw new InternalError('vpn detected', true);
 			}
 
-			return fulfilled.filter(v => v !== null).flat();
+			return fulfilled.filter(v => v).flat();
 		}) as LocationInfo[];
 
+	const match = bestMatch('city', results);
+
 	return {
-		continent: bestMatch('continent', results).continent,
-		country: bestMatch('country', results).country,
-		state: bestMatch('state', results).state,
-		city: bestMatch('city', results).city,
-		asn: Number(bestMatch('asn', results).asn),
-		latitude: Number(bestMatch('city', results).latitude),
-		longitude: Number(bestMatch('city', results).longitude),
-		network: normalizeNetworkName(bestMatch('network', results).network),
+		continent: match.continent,
+		country: match.country,
+		state: match.state,
+		city: match.city,
+		asn: Number(match.asn),
+		latitude: Number(match.latitude),
+		longitude: Number(match.longitude),
+		network: normalizeNetworkName(match.network),
 	};
 };
