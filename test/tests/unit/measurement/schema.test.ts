@@ -230,6 +230,26 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
+		it('should pass (trace enabled)', async () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				query: {
+					trace: true,
+					type: 'a',
+					protocol: 'tcp',
+				},
+			};
+
+			const valid = dnsSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value.type).to.equal('dns');
+			expect(valid.value.query.trace).to.equal(true);
+			expect(valid.value.query.protocol).to.equal('TCP');
+			expect(valid.value.query.type).to.equal('A');
+		});
+
 		it('should pass and correct values (incorrect caps)', async () => {
 			const input = {
 				type: 'DNS',
@@ -254,6 +274,7 @@ describe('command schema', () => {
 				target: 'abc.com',
 				query: {
 					type: 'A',
+					trace: false,
 					resolver: '1.1.1.1',
 					protocol: 'UDP',
 					port: 53,
