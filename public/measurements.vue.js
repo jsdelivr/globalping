@@ -117,6 +117,10 @@ const app = () => ({
           query.resolver = this.query.query.resolver;
         }
 
+        if (this.query.query.trace) {
+          query.trace = !!this.query.query.trace;
+        }
+
         if (Object.keys(query).length > 0) {
           measurement.query = query;
         }
@@ -248,6 +252,12 @@ const app = () => ({
                 {{ protocol }}
               </option>
             </select>
+          </div>
+        </div>
+        <div v-if="query.type === 'dns'" class="form-group row">
+          <label for="query_dns_type" class="col-sm-2 col-form-label">trace</label>
+          <div class="col-sm-10">
+            <input type="checkbox" v-model="query.query.trace" >
           </div>
         </div>
         <div v-if="query.type === 'dns'" class="form-group row">
