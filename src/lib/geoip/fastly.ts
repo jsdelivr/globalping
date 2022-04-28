@@ -23,11 +23,10 @@ type FastlyResponse = {
 	};
 	client: FastlyClientInfo;
 	'geo-digitalelement': FastlyGeoInfo;
-	'geo-maxmind': FastlyGeoInfo;
 };
 
 type FastlyBundledResponse = {
-	locations: LocationInfo[];
+	location: LocationInfo;
 	client: FastlyClientInfo;
 };
 
@@ -36,25 +35,20 @@ export const fastlyLookup = async (addr: string): Promise<FastlyBundledResponse>
 		timeout: {request: 5000},
 	}).json<FastlyResponse>();
 
-	const locations: LocationInfo[] = [];
-
-	for (const field of ['geo-digitalelement', 'geo-maxmind']) {
-		const data = result[field as keyof FastlyResponse] as FastlyGeoInfo;
-
-		locations.push({
-			continent: data.continent_code,
-			country: data.country_code,
-			state: data.country_code === 'US' ? data.region : undefined,
-			city: normalizeCityName(data.city),
-			asn: result.as.number,
-			latitude: data.latitude,
-			longitude: data.longitude,
-			network: result.as.name,
-		});
-	}
+	const data = result['geo-digitalelement'];
+	const location = {
+		continent: data.continent_code,
+		country: data.country_code,
+		state: data.country_code === 'US' ? data.region : undefined,
+		city: normalizeCityName(data.city),
+		asn: result.as.number,
+		latitude: data.latitude,
+		longitude: data.longitude,
+		network: result.as.name,
+	};
 
 	return {
-		locations,
+		location,
 		client: result.client,
 	};
 };

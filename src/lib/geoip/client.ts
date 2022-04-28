@@ -48,7 +48,7 @@ export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 
 			fulfilled.push(
 				ipinfo.status === 'fulfilled' ? ipinfo.value : null,
-				fastly.status === 'fulfilled' ? fastly.value.locations : null,
+				fastly.status === 'fulfilled' ? fastly.value.location : null,
 			);
 
 			if (fastly.status === 'fulfilled' && isVpn(fastly.value.client)) {
