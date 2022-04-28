@@ -25,6 +25,8 @@ const query = async (addr: string, retryCounter = 0): Promise<City | undefined> 
 				});
 			}
 		}
+
+		return undefined;
 	}
 };
 
