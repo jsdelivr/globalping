@@ -5,6 +5,7 @@ import {scopedLogger} from '../logger.js';
 import {InternalError} from '../internal-error.js';
 import {ipinfoLookup} from './ipinfo.js';
 import {fastlyLookup} from './fastly.js';
+import {maxmindLookup} from './maxmind.js';
 
 const logger = scopedLogger('geoip');
 
@@ -42,13 +43,14 @@ const isVpn = (client: {proxy_desc: string; proxy_type: string}): boolean => {
 
 export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 	const results = await Promise
-		.allSettled([ipinfoLookup(addr), fastlyLookup(addr)])
-		.then(([ipinfo, fastly]) => {
+		.allSettled([ipinfoLookup(addr), fastlyLookup(addr), maxmindLookup(addr)])
+		.then(([ipinfo, fastly, maxmind]) => {
 			const fulfilled = [];
 
 			fulfilled.push(
 				ipinfo.status === 'fulfilled' ? ipinfo.value : null,
 				fastly.status === 'fulfilled' ? fastly.value.location : null,
+				maxmind.status === 'fulfilled' ? maxmind.value : null,
 			);
 
 			if (fastly.status === 'fulfilled' && isVpn(fastly.value.client)) {
