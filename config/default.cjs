@@ -10,6 +10,10 @@ module.exports = {
 		active: false,
 		pushApiKey: '',
 	},
+	maxmind: {
+		accountId: '',
+		licenseKey: '',
+	},
 	ipinfo: {
 		apiKey: '',
 	},
