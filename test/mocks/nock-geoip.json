@@ -1,11 +1,32 @@
 {
-  "100.00.00.00": {
+  "131.255.7.26": {
     "ipinfo": {
       "city": "Lagoa do Carro",
       "region": "Pernambuco",
       "country": "BR",
       "loc": "-7.7568,-35.3656",
       "org": "AS61493 InterBS S.R.L. (BAEHOST)"
+    },
+    "maxmind": {
+      "continent": {
+        "code": "SA"
+      },
+      "country": {
+        "isoCode": "AR"
+      },
+      "city": {
+        "names": {
+          "en": "Buenos Aires"
+        }
+      },
+      "location": {
+        "latitude": -34.602,
+        "longitude": -58.384
+      },
+      "traits": {
+        "autonomousSystemNumber": 61493,
+        "autonomousSystemOrganization": "interbs s.r.l."
+      }
     },
     "fastly": {
       "as": {
@@ -21,16 +42,6 @@
         "latitude": -34.61,
         "longitude": -58.42,
         "region": "C"
-      },
-      "geo-maxmind": {
-        "city": "Buenos Aires",
-        "continent_code": "SA",
-        "country_code": "AR",
-        "country_code3": "ARG",
-        "country_name": "Argentina",
-        "latitude": -34.602,
-        "longitude": -58.384,
-        "region": "07"
       }
     }
   },

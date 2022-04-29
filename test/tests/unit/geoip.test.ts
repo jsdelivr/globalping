@@ -8,14 +8,18 @@ const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toStrin
 describe('geoip service', () => {
 	it('should use maxmind & digitalelement consensus', async () => {
 		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get('/100.00.00.00')
-			.reply(200, mocks['100.00.00.00'].fastly);
+			.get('/131.255.7.26')
+			.reply(200, mocks['131.255.7.26'].fastly);
 
 		nock('https://ipinfo.io')
-			.get('/100.00.00.00')
-			.reply(200, mocks['100.00.00.00'].ipinfo);
+			.get('/131.255.7.26')
+			.reply(200, mocks['131.255.7.26'].ipinfo);
 
-		const info = await geoIpLookup('100.00.00.00');
+		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+			.get('/131.255.7.26')
+			.reply(200, mocks['131.255.7.26'].maxmind);
+
+		const info = await geoIpLookup('131.255.7.26');
 
 		expect(info).to.deep.equal({
 			continent: 'SA',
