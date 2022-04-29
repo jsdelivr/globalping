@@ -6,7 +6,7 @@ import {LocationInfo, normalizeCityName} from './client.js';
 
 const client = new WebServiceClient(config.get('maxmind.accountId'), config.get('maxmind.licenseKey'));
 
-export const isMaxmindError = (error: any): error is WebServiceClientError => (error as WebServiceClientError).code !== undefined;
+export const isMaxmindError = (error: unknown): error is WebServiceClientError => (error as WebServiceClientError).code !== undefined;
 
 const query = async (addr: string, retryCounter = 0): Promise<City | undefined> => {
 	try {
