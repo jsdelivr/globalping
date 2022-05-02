@@ -28,14 +28,14 @@ const findProbeVersion = (socket: Socket) => String(socket.handshake.query['vers
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	const version = findProbeVersion(socket);
 
-	if (!VERSION_REG_EXP.test(version)) {
-		throw new InternalError(`invalid probe version (${version})`, true);
-	}
-
 	const clientIp = requestIp.getClientIp(socket.request);
 
 	if (!clientIp) {
 		throw new Error('failed to detect ip address of connected probe');
+	}
+
+	if (!VERSION_REG_EXP.test(version)) {
+		throw new InternalError(`invalid probe version (${version})`, true);
 	}
 
 	let ipInfo;
