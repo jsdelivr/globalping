@@ -8,10 +8,12 @@ class MockSocket {
 	id: string;
 	isConnected: boolean;
 	store: Array<{type: string; event: string; payload: any}> = [];
+	request: any;
 
 	constructor(id: string) {
 		this.id = id;
 		this.isConnected = true;
+		this.request = {};
 	}
 
 	emit(event: string, payload: string | Record<string, unknown>) {
