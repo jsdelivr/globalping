@@ -20,7 +20,7 @@ io
 
 		const probe = socket.data['probe'] as Probe;
 		socket.emit('api:connect:location', probe.location);
-		logger.info(`ws client ${socket.id} connected from ${probe.location.country}`);
+		logger.info(`ws client ${socket.id} connected from ${probe.location.city}, ${probe.location.country} [${probe.ipAddress} - ${probe.location.network}]`);
 
 		// Handlers
 		socket.on('probe:measurement:ack', handleMeasurementAck(probe));

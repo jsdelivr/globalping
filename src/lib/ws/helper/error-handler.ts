@@ -1,4 +1,5 @@
 import type {Socket} from 'socket.io';
+import requestIp from 'request-ip';
 import {scopedLogger} from '../../logger.js';
 import {WsError} from '../ws-error.js';
 
@@ -20,8 +21,9 @@ export const errorHandler = (next: NextArgument) => async (socket: Socket, mwNex
 		await next(socket, mwNext!);
 	} catch (error: unknown) {
 		if (error instanceof WsError) {
+			const clientIp = requestIp.getClientIp(socket.request) ?? '';
 			socket.emit('api:error', error.toJson());
-			logger.info(`disconnecting client ${error.info.socketId} for (${error.message})`);
+			logger.info(`disconnecting client ${error.info.socketId} for (${error.message}) [${clientIp}]`);
 		}
 
 		if (mwNext) {
