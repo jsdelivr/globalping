@@ -158,7 +158,7 @@ A full list of aliases can be found here:
 
 - typeof `string`
 - inputs are always converted to lowercase
-- `ASN` start with `as` prefix (`as123`)
+- `ASN` starts with `as` prefix (`as123`)
 - `latitude`/`longitude` fields are excluded
 
 ### examples
