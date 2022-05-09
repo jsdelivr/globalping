@@ -8,10 +8,9 @@ const client = new WebServiceClient(config.get('maxmind.accountId'), config.get(
 
 export const isMaxmindError = (error: unknown): error is WebServiceClientError => (error as WebServiceClientError).code !== undefined;
 
-const query = async (addr: string, retryCounter = 0): Promise<City | undefined> => {
+const query = async (addr: string, retryCounter = 0): Promise<City> => {
 	try {
-		const data = await client.city(addr);
-		return data;
+		return await client.city(addr);
 	} catch (error: unknown) {
 		if (isMaxmindError(error)) {
 			if (error.code === 'SERVER_ERROR' && retryCounter < 3) {
@@ -26,16 +25,12 @@ const query = async (addr: string, retryCounter = 0): Promise<City | undefined> 
 			}
 		}
 
-		return undefined;
+		throw new Error('no maxmind data');
 	}
 };
 
 export const maxmindLookup = async (addr: string): Promise<LocationInfo> => {
 	const data = await query(addr);
-
-	if (!data) {
-		throw new Error('no maxmind data');
-	}
 
 	return {
 		continent: data.continent?.code ?? '',
