@@ -1,6 +1,11 @@
 import {expect} from 'chai';
-import {pingSchema, tracerouteSchema, dnsSchema} from '../../../../src/measurement/schema/command-schema.js';
 import {schema as locationSchema} from '../../../../src/measurement/schema/location-schema.js';
+import {
+	pingSchema,
+	tracerouteSchema,
+	dnsSchema,
+	joiValidateTarget,
+} from '../../../../src/measurement/schema/command-schema.js';
 
 describe('command schema', () => {
 	describe('location', () => {
@@ -48,10 +53,68 @@ describe('command schema', () => {
 
 				expect(valid.error).to.not.exist;
 			});
+    })
+  })
+
+	describe('target validator', () => {
+		it('should fail (ip type) (private ip)', async () => {
+			const input = '192.168.0.101';
+
+			let result: string | Error = '';
+			try {
+				result = joiValidateTarget('ip')(input);
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					result = error;
+				}
+			}
+
+			expect(result).to.be.instanceof(Error);
+		});
+
+		it('should fail (any type) (private ip)', async () => {
+			const input = '192.168.0.101';
+
+			let result: string | Error = '';
+			try {
+				result = joiValidateTarget('any')(input);
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					result = error;
+				}
+			}
+
+			expect(result).to.be.instanceof(Error);
+		});
+
+		it('should suceed (any type) (domain)', async () => {
+			const input = '1337.com';
+
+			let result: string | Error = '';
+			try {
+				result = joiValidateTarget('any')(input);
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					result = error;
+				}
+			}
+
+			expect(typeof result).to.equal('string');
 		});
 	});
 
 	describe('ping', () => {
+		it('should fail (private ip)', async () => {
+			const input = {
+				type: 'ping',
+				target: '192.168.0.101',
+			};
+
+			const valid = pingSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
 		it('should fail (missing values)', async () => {
 			const input = {
 				type: 'ping',

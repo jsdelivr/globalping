@@ -4,3 +4,5 @@ node_modules/
 coverage/
 dist/
 config/local.cjs
+DOMAIN_BLACKLIST.json
+IP_BLACKLIST.json

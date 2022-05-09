@@ -22,3 +22,5 @@ export const regions = {
 	melanesia: ['FJ', 'PG', 'SB', 'VU', 'NC'],
 	micronesia: ['KI', 'MH', 'FM', 'NR', 'PW', 'MP', 'GU'],
 };
+
+export const regionNames = Object.keys(regions).map(r => r.replace('-', ' '));

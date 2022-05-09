@@ -1,19 +1,27 @@
+<img width="1000" alt="Globalping Header" src="https://user-images.githubusercontent.com/1834071/163672078-67600178-79e1-448d-9e80-d1f8df79926b.png">
+
+
 <p align="center">
-    <a href="TODO" target="_blank"><img width="260" height="39" src="LOGO" alt="Globalping Logo"></a>
-    <br />
-    <br />
-    <b>A global network of community probes that allows you to measure, debug and monitor your internet services in real-time</b>
-    <br/>
-       Better understand your network routing, fix anycast issues, monitor your CDN and DNS performance, do uptime monitoring, build your own network tools for personal or public use. 
+    <b>Better understand your network routing, fix anycast issues, monitor your CDN and DNS performance,<br/>
+        do uptime monitoring and build your own network tools for personal or public use. </b>
     <br />
     <br />
 </p>
 
+## Dev Status: BETA
+
+Our project is under active development and not yet ready for production use. But we welcome everyone to contribute:
+- Ideas for new features
+- PRs and fixes for existing problems
+- Quality control and testing of all systems. Report any problems, bugs or bad UX you find
+- Documentation. Our readme and documentation need some polish
+- Tutorials and articles. Consider writing about our project on your blog or twitter
+
 ## The Globalping Platform
 
-Globalping is a platform that allows anyone to run networking commands such as ping, traceroute, dig and mtr on distributed probes all around the world. Our goal is to provide a free and simple to use API for everyone out there to build interesting networking tools and services. 
+Globalping is a platform that allows anyone to run networking commands such as ping, traceroute, dig and mtr on probes distributed all around the world. Our goal is to provide a free and simple API for everyone out there to build interesting networking tools and services. 
 
-But we don't expect most of our users to work with the API directly, instead we are constally building powerful yet simple tools that take advantage of all the functionality that the Globalping API has to offer. If you're an advanced user then we recommend getting started with the [Globalping CLI](#globalping-cli) or if you prefer a visual representation of the data then visit our tools on our website.
+We don't expect most of our users to work with the API directly; instead, we constantly expand and improve our powerful yet simple tools that take full advantage of all the functionality that the Globalping API has to offer. If you're an advanced user, we recommend getting started with the [Globalping CLI](#globalping-cli), or if you prefer a visual representation of the data then our [web-tools](#web-based-tools) might be a better place to get started.
 
 Learn more about Globalping on our website [www.jsdelivr.com/globalping](https://www.jsdelivr.com/globalping)
 
@@ -22,14 +30,14 @@ Learn more about Globalping on our website [www.jsdelivr.com/globalping](https:/
 
 You can begin using the platform in a few different ways:
 
-### Web Based Tools
+### Web Based Tools | WIP
 
 We keep building more and more web tools to cover all kinds of use-cases.
 
 * TODO
 * TODO
 
-### Globalping CLI
+### Globalping CLI | WIP
 
 Simply install our CLI tool to upgrade your debugging capabilities.
 
@@ -51,19 +59,31 @@ Learn more about Globalping CLI in the dedicated repo.
 ### Globalping REST API
 
 If you're building something custom  or simply want to learn more about all the available options and data we provide check out the Globalping REST API.
+It's as simple as: 
 
-#TODO
+```
+POST https://api.globalping.io/v1/measurements/
+{
+    "limit": 10,
+    "locations": [],
+    "measurement": {
+        "packets": 5,
+        "target": "jsdelivr.com",
+        "type": "ping"
+    }
+}
+```
 
 [Read the full API documentation](docs)
 
 
-### Slack App
+### Slack App  | WIP
 
 Install our Slack App to interact with the Globalping platform without ever leaving Slack. 
 
 <a href="https://slack.com/oauth/v2/authorize?client_id=956881302438.3377623023376&scope=commands&user_scope="><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
 
-It supports a human friendly format of issuing commands. To begin simply type `/globalping`.
+It supports a human friendly interface for issuing commands. To begin simply type `/globalping`.
 
 Examples:
 ```
@@ -72,7 +92,7 @@ ping 8.8.8.8 from Germany
 traceroute jsdelivr.com from South America limit 2
 ```
 
-At the moment only `ping` and `traceroute` commands are supported. The location field can process all kinds of different types of locations, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`
+At the moment only `ping` and `traceroute` commands are supported. The location field can process all kinds of different types of location matching, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`
 
 
 ### GitHub Bot
@@ -85,7 +105,7 @@ Examples:
 @globalping traceroute jsdelivr.com from South America limit 2
 ```
 
-At the moment only `ping` and `traceroute` commands are supported. The location field can process all kinds of different types of locations, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`
+At the moment only `ping` and `traceroute` commands are supported. The location field can process all kinds of different types of location matching, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`
 
 ## Join the Network - Run a probe
 
@@ -104,11 +124,12 @@ Notes:
 - We include regularly updated lists and databases of domains and IPs that are associated with malware or potentially dangerous content and completely ban them on the API  level
 - The tests scale to the amount of available CPU cores. Our code is very lightweight and shouldn't use too many of your resources, so in most cases we recommend running our probe as is. But if you're worried you can use `--cpuset-cpus="0-2"` to limit the number of available cores.
 - We rate-limit all users on the API level to avoid the abuse of network
+- No local network tests are allowed, only public endpoints.
 
 Read more about the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) in the dedicated repo.
 
 
-## Limits
+## Limits | WIP
 
 Our platform has multiple limits to avoid abusive behaviour and at the same time motivate people to contribute to the sustainability of our platform.
 
@@ -123,9 +144,9 @@ These limits are applied per IP address regardless if an API key supplied or not
 
 #### Un-authenticated users
 
-Anyone can connect to our API and start using without the need to provide any credentials.
+Anybody can connect to our API and start using it with no credentials required.
 In this case we limit the amount of tests an IP address can run. A single test is defined as a succesful measurement we run and return to the user.
-So a limit of 10 tests means the user can either run 10 measurements with the probes limit set to 1 per measurement. Or run a single measurement with the probes limit set to 10.
+A limit of 10 tests means the user can run either 10 measurements with the probe limit set to 1 per measurement, or a single measurement with the probe limit set to 10.
 
 - 100 tests per hour
 - other?
@@ -149,7 +170,7 @@ We will then automatically upgrade your account to get a higher limit as defined
 
 #### Custom limits
 
-Contact us to discuss about getting a custom limit for your API key.
+Feel free to reach out if you need a custom limit for your API key.
 We're more than happy to provide higher limits to researchers, non-profits and other open source projects.
 
 
