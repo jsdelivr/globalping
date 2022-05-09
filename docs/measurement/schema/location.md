@@ -8,6 +8,7 @@ supported `type` values:
 - [`city`](#city-query)
 - [`network`](#network-query)
 - [`asn`](#asn-query)
+- [`magic`](#magic-query)
 
 <h2 id="continent-query">Continent</h2>
 
@@ -145,3 +146,33 @@ supported `type` values:
 { "type": "asn", "value": 1337 }
 ```
 
+<h2 id="magic-query">magic</h2>
+
+unlike other location queries, `magic` query doesn't attempt to match a specific value, but rather a pool of available matches, contained within a pre-defined array. It works by finding a partial string match of any of the above described variables. It also supports country matching based on [`Iso2`/`Iso3`](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes), common `aliases` and their full, official names format. Aliases also apply to `networks`.
+
+A full list of aliases can be found here:
+- [`countries`](https://github.com/jsdelivr/globalping/blob/master/src/lib/location/countries.ts)
+- [`networks`](https://github.com/jsdelivr/globalping/blob/master/src/lib/location/networks.ts)
+
+### rules
+
+- typeof `string`
+- inputs are always converted to lowercase
+- `ASN` start with `as` prefix (`as123`)
+- `latitude`/`longitude` fields are excluded
+
+### examples
+
+the following queries will match `DE`
+
+```json
+{ "type": "magic", "value": "ger" },
+{ "type": "magic", "value": "deu" }
+```
+
+both of the following queries would match `amazon technologies inc.` network
+
+```json
+{ "type": "magic", "value": "aws" },
+{ "type": "magic", "value": "amazon" }
+```
