@@ -71,16 +71,19 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	};
 
 	const index = [
-		...Object.entries(location)
-			.filter(([key, value]) => value && !['asn', 'latitude', 'longitude'].includes(key))
-			.map(entries => String(entries[1])),
+		location.continent,
+		location.region,
+		location.country,
+		location.state ?? [],
+		location.city,
+		location.network,
 		`as${location.asn}`,
 		...(location.state ? [getStateNameByIso(location.state)] : []),
 		getCountryByIso(location.country),
 		getCountryIso3ByIso2(location.country),
 		getCountryAliases(location.country),
 		getNetworkAliases(location.network),
-	].flat().map(s => s.toLowerCase().replace('-', ' '));
+	].flat().filter(s => s).map(s => s.toLowerCase().replace('-', ' '));
 
 	// Todo: add validation and handle missing or partial data
 	return {
