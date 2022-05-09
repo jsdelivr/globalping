@@ -53,8 +53,8 @@ describe('command schema', () => {
 
 				expect(valid.error).to.not.exist;
 			});
-    })
-  })
+		});
+	});
 
 	describe('target validator', () => {
 		it('should fail (ip type) (private ip)', async () => {
