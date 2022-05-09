@@ -11,11 +11,11 @@ import type {Location} from '../../../../src/lib/location/types.js';
 
 type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
-const buildSocket = (id: string, location: Partial<ProbeLocation>, ready?: boolean): DeepPartial<Socket> => ({
+const buildSocket = (id: string, location: Partial<ProbeLocation>, ready = true): DeepPartial<Socket> => ({
 	id,
 	data: {
 		probe: {
-			ready: ready ?? true,
+			ready,
 			location,
 		},
 	},
