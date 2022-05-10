@@ -279,7 +279,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
-				asn: 123,
+				asn: 40_676,
 				city: 'dallas',
 				continent: 'NA',
 				country: 'US',
