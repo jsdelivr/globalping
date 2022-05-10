@@ -61,15 +61,16 @@ export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 		}) as LocationInfo[];
 
 	const match = bestMatch('city', results);
+	const maxmindMatch = results[2];
 
 	return {
 		continent: match.continent,
 		country: match.country,
 		state: match.state,
 		city: match.city,
-		asn: Number(match.asn),
+		asn: Number(maxmindMatch?.asn ?? match.asn),
 		latitude: Number(match.latitude),
 		longitude: Number(match.longitude),
-		network: normalizeNetworkName(match.network),
+		network: normalizeNetworkName(maxmindMatch?.network ?? match.network),
 	};
 };
