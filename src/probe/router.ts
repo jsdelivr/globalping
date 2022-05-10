@@ -29,7 +29,8 @@ export class ProbeRouter {
 	}
 
 	private async fetchSockets(): Promise<Socket[]> {
-		return this.io.of(PROBES_NAMESPACE).fetchSockets();
+		const sockets = await this.io.of(PROBES_NAMESPACE).fetchSockets();
+		return sockets.filter(s => s.data.probe.ready);
 	}
 
 	private findByLocation(sockets: Socket[], location: Location): Socket[] {

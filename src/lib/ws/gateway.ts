@@ -3,6 +3,10 @@ import type {Probe} from '../../probe/types.js';
 import {handleMeasurementAck} from '../../measurement/handler/ack.js';
 import {handleMeasurementResult} from '../../measurement/handler/result.js';
 import {handleMeasurementProgress} from '../../measurement/handler/progress.js';
+import {
+	handleStatusReady,
+	handleStatusNotReady,
+} from '../../probe/handler/status.js';
 import {scopedLogger} from '../logger.js';
 import {getWsServer, PROBES_NAMESPACE} from './server.js';
 import {probeMetadata} from './middleware/probe-metadata.js';
@@ -23,6 +27,8 @@ io
 		logger.info(`ws client ${socket.id} connected from ${probe.location.city}, ${probe.location.country} [${probe.ipAddress} - ${probe.location.network}]`);
 
 		// Handlers
+		socket.on('probe:status:ready', handleStatusReady(probe));
+		socket.on('probe:status:not_ready', handleStatusNotReady(probe));
 		socket.on('probe:measurement:ack', handleMeasurementAck(probe));
 		socket.on('probe:measurement:progress', handleMeasurementProgress);
 		socket.on('probe:measurement:result', handleMeasurementResult);

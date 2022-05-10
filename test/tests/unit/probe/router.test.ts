@@ -11,9 +11,14 @@ import type {Location} from '../../../../src/lib/location/types.js';
 
 type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
-const buildSocket = (id: string, location: Partial<ProbeLocation>): DeepPartial<Socket> => ({
+const buildSocket = (id: string, location: Partial<ProbeLocation>, ready = true): DeepPartial<Socket> => ({
 	id,
-	data: {probe: {location}},
+	data: {
+		probe: {
+			ready,
+			location,
+		},
+	},
 });
 
 describe('probe router', () => {
@@ -50,6 +55,31 @@ describe('probe router', () => {
 			expect(probes.length).to.equal(4);
 			expect(probes.filter(p => p.location.country === 'UA').length).to.equal(2);
 			expect(probes.filter(p => p.location.country === 'PL').length).to.equal(2);
+		});
+	});
+
+	describe('probe readiness', () => {
+		it('should find 2 probes', async () => {
+			const sockets: Array<DeepPartial<Socket>> = [
+				buildSocket('socket-1', {continent: 'EU', country: 'GB'}, false),
+				buildSocket('socket-2', {continent: 'EU', country: 'PL'}, false),
+				buildSocket('socket-4', {continent: 'EU', country: 'GB'}),
+				buildSocket('socket-5', {continent: 'EU', country: 'PL'}),
+			];
+
+			wsServerMock.fetchSockets.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes([
+				{type: 'country', value: 'GB', limit: 2},
+				{type: 'country', value: 'PL', limit: 2},
+			]);
+
+			expect(wsServerMock.of.calledOnce).to.be.true;
+			expect(wsServerMock.of.firstCall.firstArg).to.equal(PROBES_NAMESPACE);
+
+			expect(probes.length).to.equal(2);
+			expect(probes.filter(p => p.location.country === 'GB').length).to.equal(1);
+			expect(probes.filter(p => p.location.country === 'PL').length).to.equal(1);
 		});
 	});
 
