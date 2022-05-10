@@ -161,13 +161,40 @@ describe('geoip service', () => {
 		const info = await geoIpLookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
-			asn: 43_939,
+			asn: 40_676,
 			city: 'dallas',
 			continent: 'NA',
 			country: 'US',
 			latitude: 32.7492,
 			longitude: -96.8389,
 			state: 'TX',
+			network: 'psychz networks',
+		});
+	});
+
+	it('should filter out incomplete results', async () => {
+		nock('https://globalping-geoip.global.ssl.fastly.net')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.03'].fastly);
+
+		nock('https://ipinfo.io')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.03'].ipinfo);
+
+		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.03'].maxmind);
+
+		const info = await geoIpLookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
+			asn: 40_676,
+			city: 'lagoa do carro',
+			continent: 'SA',
+			country: 'BR',
+			state: undefined,
+			latitude: -7.7568,
+			longitude: -35.3656,
 			network: 'psychz networks',
 		});
 	});
@@ -189,7 +216,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
-				asn: 123,
+				asn: 40_676,
 				city: 'dallas',
 				continent: 'NA',
 				country: 'US',
@@ -216,7 +243,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
-				asn: 123,
+				asn: 40_676,
 				city: 'dallas',
 				continent: 'NA',
 				country: 'US',
