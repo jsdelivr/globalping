@@ -10,10 +10,11 @@ import {maxmindLookup} from './maxmind.js';
 const logger = scopedLogger('geoip');
 
 export type LocationInfo = Omit<ProbeLocation, 'region'>;
+export type LocationInfoWithProvider = LocationInfo & {provider: string};
 export const normalizeCityName = (string_: string): string => anyAscii(string_).toLowerCase();
 export const normalizeNetworkName = (string_: string): string => string_.toLowerCase();
 
-const bestMatch = (field: keyof LocationInfo, sources: LocationInfo[]): LocationInfo => {
+const bestMatch = (field: keyof LocationInfo, sources: LocationInfoWithProvider[]): LocationInfo => {
 	const ranked = Object.values(_.groupBy(sources.filter(s => s[field]), field)).sort((a, b) => b.length - a.length).flat();
 	const best = ranked[0];
 
@@ -22,7 +23,7 @@ const bestMatch = (field: keyof LocationInfo, sources: LocationInfo[]): Location
 		throw new Error(`failed to find a correct value for a filed "${field}"`);
 	}
 
-	return best;
+	return _.omit(best, 'provider');
 };
 
 const isVpn = (client: {proxy_desc: string; proxy_type: string}): boolean => {
@@ -48,9 +49,9 @@ export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 			const fulfilled = [];
 
 			fulfilled.push(
-				ipinfo.status === 'fulfilled' ? ipinfo.value : null,
-				fastly.status === 'fulfilled' ? fastly.value.location : null,
-				maxmind.status === 'fulfilled' ? maxmind.value : null,
+				ipinfo.status === 'fulfilled' ? {...ipinfo.value, provider: 'ipinfo'} : null,
+				fastly.status === 'fulfilled' ? {...fastly.value.location, provider: 'fastly'} : null,
+				maxmind.status === 'fulfilled' ? {...maxmind.value, provider: 'maxmind'} : null,
 			);
 
 			if (fastly.status === 'fulfilled' && isVpn(fastly.value.client)) {
@@ -58,10 +59,10 @@ export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 			}
 
 			return fulfilled.filter(v => v).flat();
-		}) as LocationInfo[];
+		}) as LocationInfoWithProvider[];
 
 	const match = bestMatch('city', results);
-	const maxmindMatch = results[2];
+	const maxmindMatch = results.find(result => result.provider === 'maxmind');
 
 	return {
 		continent: match.continent,
