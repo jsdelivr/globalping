@@ -6,6 +6,7 @@ import {InternalError} from '../internal-error.js';
 import {ipinfoLookup} from './ipinfo.js';
 import {fastlyLookup} from './fastly.js';
 import {maxmindLookup} from './maxmind.js';
+import {isAddrWhitelisted} from './whitelist.js';
 
 const logger = scopedLogger('geoip');
 
@@ -43,6 +44,8 @@ const isVpn = (client: {proxy_desc: string; proxy_type: string}): boolean => {
 };
 
 export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
+	const skipVpnCheck = await isAddrWhitelisted(addr);
+
 	const results = await Promise
 		.allSettled([ipinfoLookup(addr), fastlyLookup(addr), maxmindLookup(addr)])
 		.then(([ipinfo, fastly, maxmind]) => {
@@ -54,7 +57,7 @@ export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 				maxmind.status === 'fulfilled' ? {...maxmind.value, provider: 'maxmind'} : null,
 			);
 
-			if (fastly.status === 'fulfilled' && isVpn(fastly.value.client)) {
+			if (fastly.status === 'fulfilled' && isVpn(fastly.value.client) && !skipVpnCheck) {
 				throw new InternalError('vpn detected', true);
 			}
 

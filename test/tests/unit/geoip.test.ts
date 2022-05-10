@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import nock from 'nock';
+import mockFs from 'mock-fs';
 import {expect} from 'chai';
 import {geoIpLookup, LocationInfo} from '../../../src/lib/geoip/client.js';
 
@@ -238,6 +239,42 @@ describe('geoip service', () => {
 			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
 				.get(`/${MOCK_IP}`)
 				.reply(200, mocks['01.07'].maxmind);
+
+			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
+
+			expect(response).to.deep.equal({
+				asn: 40_676,
+				city: 'dallas',
+				continent: 'NA',
+				country: 'US',
+				latitude: 32.7492,
+				longitude: -96.8389,
+				state: 'TX',
+				network: 'psychz networks',
+			});
+		});
+
+		it('should pass - detect VPN (whitelisted)', async () => {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			const MOCK_IP = '5.134.119.43';
+
+			mockFs({
+				config: {
+					'whitelist-ips.txt': `${MOCK_IP}`,
+				},
+			});
+
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['01.01'].fastly);
+
+			nock('https://ipinfo.io')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['01.01'].ipinfo);
+
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['01.01'].maxmind);
 
 			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
 
