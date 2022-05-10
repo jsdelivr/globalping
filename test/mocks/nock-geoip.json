@@ -137,6 +137,50 @@
       "org": "AS43939 Psychz Networks"
     }
   },
+  "00.03": {
+    "maxmind": {
+      "continent": {
+        "code": "NA"
+      },
+      "country": {
+        "isoCode": "US"
+      },
+      "city": {
+        "names": {}
+      },
+      "location": {
+        "latitude": 32.814,
+        "longitude": -96.870
+      },
+      "traits": {
+        "autonomousSystemNumber": 40676,
+        "autonomousSystemOrganization": "psychz networks"
+      }
+    },
+    "fastly": {
+      "as": {
+        "name": "psychz networks",
+        "number": 40676
+      },
+      "geo-digitalelement": {
+        "city": "",
+        "continent_code": "NA",
+        "country_code": "US",
+        "country_code3": "USA",
+        "country_name": "united states",
+        "latitude": 32.810,
+        "longitude": -96.880,
+        "region": "TX"
+      }
+    },
+    "ipinfo": {
+      "city": "Lagoa do Carro",
+      "region": "Pernambuco",
+      "country": "BR",
+      "loc": "-7.7568,-35.3656",
+      "org": "AS61493 InterBS S.R.L. (BAEHOST)"
+    }
+  },
   "01.00": {
     "maxmind": {
       "continent": {
