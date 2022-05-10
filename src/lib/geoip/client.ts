@@ -14,7 +14,7 @@ export const normalizeCityName = (string_: string): string => anyAscii(string_).
 export const normalizeNetworkName = (string_: string): string => string_.toLowerCase();
 
 const bestMatch = (field: keyof LocationInfo, sources: LocationInfo[]): LocationInfo => {
-	const ranked = Object.values(_.groupBy(sources, field)).sort((a, b) => b.length - a.length).flat();
+	const ranked = Object.values(_.groupBy(sources.filter(s => s[field]), field)).sort((a, b) => b.length - a.length).flat();
 	const best = ranked[0];
 
 	if (!best) {
