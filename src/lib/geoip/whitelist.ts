@@ -20,7 +20,7 @@ const getFile = async (): Promise<string> => {
 
 export const isAddrWhitelisted = async (addr: string): Promise<boolean> => {
 	const file = await getFile();
-	const ipList = file.split('\n').map(item => item.trim());
+	const ipList = file.split('/\r?\n/').map(item => item.trim());
 
 	return ipList.includes(addr);
 };
