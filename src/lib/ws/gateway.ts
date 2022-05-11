@@ -32,4 +32,8 @@ io
 		socket.on('probe:measurement:ack', handleMeasurementAck(probe));
 		socket.on('probe:measurement:progress', handleMeasurementProgress);
 		socket.on('probe:measurement:result', handleMeasurementResult);
+
+		socket.on('disconnect', reason => {
+			logger.debug(`Probe disconnected. (reason: ${reason}) [${socket.id}][${probe.ipAddress}]`);
+		});
 	}));
