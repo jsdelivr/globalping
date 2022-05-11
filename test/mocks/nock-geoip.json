@@ -33,6 +33,10 @@
         "name": "interbs s.r.l.",
         "number": 61493
       },
+      "client": {
+        "proxy_desc": "web-browser",
+        "proxy_type": "edu"
+      },
       "geo-digitalelement": {
         "city": "buenos aires",
         "continent_code": "SA",
@@ -79,6 +83,10 @@
         "name": "interbs s.r.l.",
         "number": 61493
       },
+      "client": {
+        "proxy_desc": "web-browser",
+        "proxy_type": "edu"
+      },
       "geo-digitalelement": {
         "city": "Buenos Aires",
         "continent_code": "SA",
@@ -117,6 +125,10 @@
       "as": {
         "name": "psychz networks",
         "number": 40676
+      },
+      "client": {
+        "proxy_desc": "web-browser",
+        "proxy_type": "edu"
       },
       "geo-digitalelement": {
         "city": "dallas",
@@ -161,6 +173,10 @@
       "as": {
         "name": "psychz networks",
         "number": 40676
+      },
+      "client": {
+        "proxy_desc": "web-browser",
+        "proxy_type": "edu"
       },
       "geo-digitalelement": {
         "city": "",
@@ -207,6 +223,10 @@
       "as": {
         "name": "psychz networks",
         "number": 40676
+      },
+      "client": {
+        "proxy_desc": "web-browser",
+        "proxy_type": "edu"
       },
       "geo-digitalelement": {
         "city": "dallas",
