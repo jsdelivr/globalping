@@ -2,7 +2,12 @@ import * as fs from 'node:fs';
 import nock from 'nock';
 import mockFs from 'mock-fs';
 import {expect} from 'chai';
-import {geoIpLookup, LocationInfo} from '../../../src/lib/geoip/client.js';
+import type {LocationInfo} from '../../../src/lib/geoip/types.js';
+import {geoIpLookup} from '../../../src/lib/geoip/client.js';
+import {
+	delClientData as delCachedClientData,
+	delLocation as delCachedLocation,
+} from '../../../src/lib/geoip/cache.js';
 
 const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
@@ -10,6 +15,12 @@ const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toStrin
 const MOCK_IP = '131.255.7.26';
 
 describe('geoip service', () => {
+	beforeEach(async () => {
+		// Clear cache
+		await Promise.all(['ipinfo', 'fastly', 'maxmind'].map(async provider => delCachedLocation(MOCK_IP, provider)));
+		await delCachedClientData(MOCK_IP);
+	});
+
 	it('should use maxmind & digitalelement consensus', async () => {
 		nock('https://globalping-geoip.global.ssl.fastly.net')
 			.get(`/${MOCK_IP}`)
