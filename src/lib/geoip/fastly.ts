@@ -1,5 +1,6 @@
 import got from 'got';
-import {LocationInfo, normalizeCityName} from './client.js';
+import {normalizeCityName} from './client.js';
+import type {LocationInfo} from './types.js';
 
 type FastlyGeoInfo = {
 	continent_code: string;
@@ -11,7 +12,7 @@ type FastlyGeoInfo = {
 	network: string;
 };
 
-type FastlyClientInfo = {
+export type FastlyClientInfo = {
 	proxy_desc: string;
 	proxy_type: string;
 };
@@ -25,10 +26,12 @@ type FastlyResponse = {
 	'geo-digitalelement': FastlyGeoInfo;
 };
 
-type FastlyBundledResponse = {
+export type FastlyBundledResponse = {
 	location: LocationInfo;
 	client: FastlyClientInfo;
 };
+
+export const isFastlyBundledResponse = (response: any): response is FastlyBundledResponse => ('location' in response) && ('client' in response);
 
 export const fastlyLookup = async (addr: string): Promise<FastlyBundledResponse> => {
 	const result = await got(`https://globalping-geoip.global.ssl.fastly.net/${addr}`, {

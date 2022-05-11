@@ -10,6 +10,11 @@ module.exports = {
 		active: false,
 		pushApiKey: '',
 	},
+	geoip: {
+		cache: {
+			ttl: 24 * 60 * 60, // 24hrs
+		},
+	},
 	maxmind: {
 		accountId: '',
 		licenseKey: '',

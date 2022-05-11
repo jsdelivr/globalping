@@ -1,17 +1,24 @@
 import _ from 'lodash';
 import anyAscii from 'any-ascii';
-import type {ProbeLocation} from '../../probe/types.js';
 import {scopedLogger} from '../logger.js';
 import {InternalError} from '../internal-error.js';
 import {ipinfoLookup} from './ipinfo.js';
-import {fastlyLookup} from './fastly.js';
+import {fastlyLookup, FastlyBundledResponse, isFastlyBundledResponse} from './fastly.js';
 import {maxmindLookup} from './maxmind.js';
 import {isAddrWhitelisted} from './whitelist.js';
+import type {
+	LocationInfo,
+	LocationInfoWithProvider,
+} from './types.js';
+import {
+	getLocation as getCachedLocation,
+	setLocation as setCachedLocation,
+	setClientData as setCachedClientData,
+	getLocationWithClient as getCachedLocationWithClient,
+} from './cache.js';
 
 const logger = scopedLogger('geoip');
 
-export type LocationInfo = Omit<ProbeLocation, 'region'>;
-export type LocationInfoWithProvider = LocationInfo & {provider: string};
 export const normalizeCityName = (string_: string): string => anyAscii(string_).toLowerCase();
 export const normalizeNetworkName = (string_: string): string => string_.toLowerCase();
 
@@ -43,11 +50,44 @@ const isVpn = (client: {proxy_desc: string; proxy_type: string}): boolean => {
 	return false;
 };
 
+export const lookupByProvider = async (
+	addr: string,
+	provider: string,
+	fallback: (addr: string) => Promise<LocationInfo | FastlyBundledResponse>,
+): Promise<LocationInfo | FastlyBundledResponse> => {
+	const cached = provider === 'fastly' ? await getCachedLocationWithClient(addr, provider) : await getCachedLocation(addr, provider);
+
+	if (cached) {
+		if (!isFastlyBundledResponse(cached)) {
+			return cached;
+		}
+
+		if (cached.location && cached.client) {
+			return cached;
+		}
+	}
+
+	const result = await fallback(addr);
+
+	if (isFastlyBundledResponse(result)) {
+		await setCachedClientData(addr, result.client);
+		await setCachedLocation(addr, provider, result.location);
+	} else {
+		await setCachedLocation(addr, provider, result);
+	}
+
+	return result;
+};
+
 export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
 	const skipVpnCheck = await isAddrWhitelisted(addr);
 
 	const results = await Promise
-		.allSettled([ipinfoLookup(addr), fastlyLookup(addr), maxmindLookup(addr)])
+		.allSettled([
+			lookupByProvider(addr, 'ipinfo', ipinfoLookup),
+			lookupByProvider(addr, 'fastly', fastlyLookup) as Promise<FastlyBundledResponse>,
+			lookupByProvider(addr, 'maxmind', maxmindLookup),
+		])
 		.then(([ipinfo, fastly, maxmind]) => {
 			const fulfilled = [];
 
