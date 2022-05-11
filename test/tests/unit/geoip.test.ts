@@ -3,11 +3,7 @@ import nock from 'nock';
 import mockFs from 'mock-fs';
 import {expect} from 'chai';
 import type {LocationInfo} from '../../../src/lib/geoip/types.js';
-import {geoIpLookup} from '../../../src/lib/geoip/client.js';
-import {
-	delClientData as delCachedClientData,
-	delLocation as delCachedLocation,
-} from '../../../src/lib/geoip/cache.js';
+import {initRedis} from '../../../src/lib/redis/client.js';
 
 const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
@@ -15,6 +11,23 @@ const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toStrin
 const MOCK_IP = '131.255.7.26';
 
 describe('geoip service', () => {
+	let geoIpLookup: (addr: string) => Promise<LocationInfo>;
+	let delCachedClientData: (addr: string) => Promise<void>;
+	let delCachedLocation: (addr: string, provider: string) => Promise<void>;
+
+	before(async () => {
+		await initRedis();
+
+		// eslint-disable-next-line node/no-unsupported-features/es-syntax
+		const geoIpClient = await import('../../../src/lib/geoip/client.js');
+		geoIpLookup = geoIpClient.geoIpLookup;
+
+		// eslint-disable-next-line node/no-unsupported-features/es-syntax
+		const geoIpCache = await import ('../../../src/lib/geoip/cache.js');
+		delCachedClientData = geoIpCache.delClientData;
+		delCachedLocation = geoIpCache.delLocation;
+	});
+
 	beforeEach(async () => {
 		// Clear cache
 		await Promise.all(['ipinfo', 'fastly', 'maxmind'].map(async provider => delCachedLocation(MOCK_IP, provider)));
