@@ -23,12 +23,12 @@ const buildSocket = (
 	id: string,
 	location: Partial<ProbeLocation>,
 	index: string[] = [],
-  ready = true,
+	ready = true,
 ): DeepPartial<Socket> => ({
 	id,
 	data: {
 		probe: {
-      ready,
+			ready,
 			location,
 			index,
 
