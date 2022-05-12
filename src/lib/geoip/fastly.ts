@@ -25,7 +25,7 @@ type FastlyResponse = {
 	'geo-digitalelement': FastlyGeoInfo;
 };
 
-type FastlyBundledResponse = {
+export type FastlyBundledResponse = {
 	location: LocationInfo;
 	client: FastlyClientInfo;
 };
