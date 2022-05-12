@@ -1,5 +1,6 @@
 import got from 'got';
-import {LocationInfo, normalizeCityName} from './client.js';
+import type {LocationInfo} from '../client.js';
+import {normalizeCityName} from '../utils.js';
 
 type FastlyGeoInfo = {
 	continent_code: string;
