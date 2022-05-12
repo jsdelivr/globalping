@@ -40,6 +40,6 @@ export const maxmindLookup = async (addr: string): Promise<LocationInfo> => {
 		asn: data.traits?.autonomousSystemNumber ?? 0,
 		latitude: data.location?.latitude ?? 0,
 		longitude: data.location?.longitude ?? 0,
-		network: data.traits?.autonomousSystemOrganization ?? '',
+		network: data.traits?.isp ?? '',
 	};
 };

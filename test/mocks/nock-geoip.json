@@ -25,7 +25,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 61493,
-        "autonomousSystemOrganization": "interbs s.r.l."
+        "isp": "interbs s.r.l."
       }
     },
     "fastly": {
@@ -71,7 +71,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 61493,
-        "autonomousSystemOrganization": "interbs s.r.l."
+        "isp": "interbs s.r.l."
       }
     },
     "fastly": {
@@ -110,7 +110,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 40676,
-        "autonomousSystemOrganization": "psychz networks"
+        "isp": "psychz networks"
       }
     },
     "fastly": {
@@ -154,7 +154,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 40676,
-        "autonomousSystemOrganization": "psychz networks"
+        "isp": "psychz networks"
       }
     },
     "fastly": {
@@ -200,7 +200,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 40676,
-        "autonomousSystemOrganization": "psychz networks"
+        "isp": "psychz networks"
       }
     },
     "fastly": {
@@ -250,7 +250,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 40676,
-        "autonomousSystemOrganization": "psychz networks"
+        "isp": "psychz networks"
       }
     },
     "fastly": {
@@ -300,7 +300,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 40676,
-        "autonomousSystemOrganization": "psychz networks"
+        "isp": "psychz networks"
       }
     },
     "fastly": {
@@ -350,7 +350,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 40676,
-        "autonomousSystemOrganization": "psychz networks"
+        "isp": "psychz networks"
       }
     },
     "fastly": {
@@ -400,7 +400,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 40676,
-        "autonomousSystemOrganization": "psychz networks"
+        "isp": "psychz networks"
       }
     },
     "fastly": {
@@ -450,7 +450,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 40676,
-        "autonomousSystemOrganization": "psychz networks"
+        "isp": "psychz networks"
       }
     },
     "fastly": {
@@ -500,7 +500,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 40676,
-        "autonomousSystemOrganization": "psychz networks"
+        "isp": "psychz networks"
       }
     },
     "fastly": {
@@ -550,7 +550,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 40676,
-        "autonomousSystemOrganization": "psychz networks"
+        "isp": "psychz networks"
       }
     },
     "fastly": {
@@ -596,7 +596,7 @@
       },
       "traits": {
         "autonomousSystemNumber": 40676,
-        "autonomousSystemOrganization": "psychz networks"
+        "isp": "psychz networks"
       }
     },
     "fastly": {
