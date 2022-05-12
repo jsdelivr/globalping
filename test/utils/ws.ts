@@ -7,7 +7,12 @@ import {getWsServer, PROBES_NAMESPACE} from '../../src/lib/ws/server.js';
 export const addFakeProbe = async (id: string, probe: DeepPartial<Probe>): Promise<void> => {
 	const nsp = getWsServer().of(PROBES_NAMESPACE);
 	const mockedProbe = createStubInstance(Socket);
-	mockedProbe.data = {probe};
+	mockedProbe.data = {
+		probe: {
+			ready: true,
+			...probe,
+		},
+	};
 
 	nsp.sockets.set(id, mockedProbe);
 	await nsp.adapter.addAll(id, new Set([id]));

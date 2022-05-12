@@ -16,14 +16,20 @@ type NextMwArgument = (
 
 type NextArgument = NextConnectArgument | NextMwArgument;
 
+const isError = (error: unknown): error is Error => Boolean((error as Error).message);
+
 export const errorHandler = (next: NextArgument) => async (socket: Socket, mwNext?: (error?: any) => void | undefined) => {
 	try {
 		await next(socket, mwNext!);
 	} catch (error: unknown) {
+		const clientIp = requestIp.getClientIp(socket.request) ?? '';
+		const reason = isError(error) ? error.message : 'unknown';
+
+		logger.info(`disconnecting client ${socket.id} for (${reason}) [${clientIp}]`);
+		logger.debug(error);
+
 		if (error instanceof WsError) {
-			const clientIp = requestIp.getClientIp(socket.request) ?? '';
 			socket.emit('api:error', error.toJson());
-			logger.info(`disconnecting client ${error.info.socketId} for (${error.message}) [${clientIp}]`);
 		}
 
 		if (mwNext) {

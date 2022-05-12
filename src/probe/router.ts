@@ -29,7 +29,8 @@ export class ProbeRouter {
 	}
 
 	private async fetchSockets(): Promise<Socket[]> {
-		return this.io.of(PROBES_NAMESPACE).fetchSockets();
+		const sockets = await this.io.of(PROBES_NAMESPACE).fetchSockets();
+		return sockets.filter(s => s.data.probe.ready);
 	}
 
 	private findByLocation(sockets: Socket[], location: Location): Socket[] {
@@ -84,7 +85,7 @@ export class ProbeRouter {
 
 	private filterGloballyDistributed(sockets: Socket[], limit: number): Socket[] {
 		const distribution = new Map<Location, number>(
-			Object.entries(config.get<Record<string, number>>('measurement.globalDistribution'))
+			_.shuffle(Object.entries(config.get<Record<string, number>>('measurement.globalDistribution')))
 				.map(([value, weight]) => ([{type: 'continent', value}, weight])),
 		);
 

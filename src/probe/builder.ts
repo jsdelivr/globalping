@@ -92,5 +92,6 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		ipAddress: clientIp,
 		location,
 		index,
+		ready: false,
 	};
 };
