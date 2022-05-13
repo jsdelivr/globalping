@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import config from 'config';
 import type {Logger} from 'winston';
 import type {CacheInterface} from '../cache/cache-interface.js';
 import {InternalError} from '../internal-error.js';
@@ -102,7 +103,7 @@ export default class GeoipClient {
 		}
 
 		const info = await fn();
-		await this.cache.set(key, info, 24 * 60 * 60 * 1000);
+		await this.cache.set(key, info, config.get('geoip.cache.ttl'));
 
 		return info;
 	}

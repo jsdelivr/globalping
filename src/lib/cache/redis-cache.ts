@@ -13,7 +13,7 @@ export default class RedisCache implements CacheInterface {
 		const raw = await this.redis.get(this.buildCacheKey(key));
 
 		if (!raw) {
-			return undefined;
+			return;
 		}
 
 		return JSON.parse(raw) as T;
