@@ -2,6 +2,11 @@ import _ from 'lodash';
 import geoLists from 'countries-list';
 import {regions} from './regions.js';
 import {states} from './states.js';
+import {
+	alpha as countryAlpha,
+	aliases as countryAliases,
+} from './countries.js';
+import {aliases as networkAliases} from './networks.js';
 
 const {countries} = geoLists;
 const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [c, r.replace('-', ' ')])));
@@ -34,4 +39,46 @@ export const getStateIsoByName = (state: string): string => {
 	}
 
 	return String(stateEntries[0]);
+};
+
+export const getStateNameByIso = (iso: string): string => {
+	const state = states[iso as keyof typeof states];
+
+	if (!state) {
+		throw new Error(`state not found ${iso}`);
+	}
+
+	return state;
+};
+
+export const getCountryByIso = (iso: string): string => {
+	const country = countries[iso as keyof typeof countries];
+
+	if (!country) {
+		throw new Error(`country not found ${iso}`);
+	}
+
+	return country.name;
+};
+
+export const getCountryIso3ByIso2 = (iso: string): string => {
+	const iso3 = countryAlpha[iso as keyof typeof countryAlpha];
+
+	if (!iso3) {
+		throw new Error(`country not found ${iso}`);
+	}
+
+	return iso3;
+};
+
+export const getCountryAliases = (key: string): string[] => {
+	const array = countryAliases.find(n => n.includes(key.toLowerCase()));
+
+	return array ?? [];
+};
+
+export const getNetworkAliases = (key: string): string[] => {
+	const array = networkAliases.find(n => n.includes(key.toLowerCase()));
+
+	return array ?? [];
 };

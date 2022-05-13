@@ -1,4 +1,5 @@
 import {expect} from 'chai';
+import {schema as locationSchema} from '../../../../src/measurement/schema/location-schema.js';
 import {
 	pingSchema,
 	tracerouteSchema,
@@ -7,6 +8,54 @@ import {
 } from '../../../../src/measurement/schema/command-schema.js';
 
 describe('command schema', () => {
+	describe('location', () => {
+		describe('magic', () => {
+			it('should fail (too short)', () => {
+				const input = [
+					{
+						type: 'magic',
+						value: '',
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.error).to.exist;
+				expect(valid.error!.details[0]!.message).to.equal('"[0].value" is not allowed to be empty');
+			});
+
+			it('should fail (not string)', () => {
+				const input = [
+					{
+						type: 'magic',
+						value: 1337,
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.error).to.exist;
+				expect(valid.error!.details[0]!.message).to.equal('"[0].value" must be a string');
+			});
+
+			it('should succeed', () => {
+				const input = [
+					{
+						type: 'magic',
+						value: 'cyprus',
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.error).to.not.exist;
+			});
+		});
+	});
+
 	describe('target validator', () => {
 		it('should fail (ip type) (private ip)', async () => {
 			const input = '192.168.0.101';

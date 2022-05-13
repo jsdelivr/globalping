@@ -75,6 +75,16 @@ Please, see [LOCATION SCHEMA](./location.md) document for more details.
             "type": "network",
             "value": "virgin media limited",
             "limit": 1
+        },
+        {
+            "type": "magic",
+            "value": "aws", // alias
+            "limit": 1
+        },
+        {
+            "type": "magic",
+            "value": "pol", // (poland) partial match
+            "limit": 1
         }
     ]
 ```

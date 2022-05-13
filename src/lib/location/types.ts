@@ -28,10 +28,16 @@ type AsnLocation = {
 	value: number;
 };
 
+type MagicLocation = {
+	type: 'magic';
+	value: string;
+};
+
 export type Location =
 	ContinentLocation
 	| RegionLocation
 	| CountryLocation
 	| StateLocation
 	| CityLocation
-	| AsnLocation;
+	| AsnLocation
+	| MagicLocation;
