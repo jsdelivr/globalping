@@ -9,12 +9,12 @@ import type {DeepPartial} from '../../../types.js';
 import type {ProbeLocation} from '../../../../src/probe/types.js';
 import type {Location} from '../../../../src/lib/location/types.js';
 import {
-	getRegionByCountry,
-	getStateNameByIso,
+	getCountryAliases,
 	getCountryByIso,
 	getCountryIso3ByIso2,
-	getCountryAliases,
 	getNetworkAliases,
+	getRegionByCountry,
+	getStateNameByIso,
 } from '../../../../src/lib/location/location.js';
 
 type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
@@ -31,7 +31,6 @@ const buildSocket = (
 			ready,
 			location,
 			index,
-
 		},
 	},
 });
@@ -217,7 +216,7 @@ describe('probe router', () => {
 			state: undefined,
 			city: 'london',
 			asn: 5089,
-			network: 'virgin media',
+			network: 'a-virgin media',
 		};
 
 		const index = [
@@ -231,23 +230,6 @@ describe('probe router', () => {
 			getCountryAliases(location.country),
 			getNetworkAliases(location.network),
 		].flat().map(s => s.toLowerCase().replace('-', ' '));
-
-		it('should return match (network)', async () => {
-			const sockets: DeepPartial<Socket[]> = [
-				buildSocket(String(Date.now()), location, index),
-			];
-
-			const locations: Location[] = [
-				{type: 'magic', value: 'virgin'},
-			];
-
-			wsServerMock.fetchSockets.resolves(sockets as never);
-
-			const probes = await router.findMatchingProbes(locations, 100);
-
-			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.country).to.equal('GB');
-		});
 
 		it('should return match (country alias)', async () => {
 			const sockets: DeepPartial<Socket[]> = [
@@ -266,21 +248,46 @@ describe('probe router', () => {
 			expect(probes[0]!.location.country).to.equal('GB');
 		});
 
-		it('should return match (asn)', async () => {
-			const sockets: DeepPartial<Socket[]> = [
-				buildSocket(String(Date.now()), location, index),
-			];
+		describe('Location type - Network', () => {
+			for (const testCase of ['a-virgin', 'virgin', 'media']) {
+				it(`should match network - ${testCase}`, async () => {
+					const sockets: DeepPartial<Socket[]> = [
+						buildSocket(String(Date.now()), location, index),
+					];
 
-			const locations: Location[] = [
-				{type: 'magic', value: '5089'},
-			];
+					const locations: Location[] = [
+						{type: 'magic', value: testCase},
+					];
 
-			wsServerMock.fetchSockets.resolves(sockets as never);
+					wsServerMock.fetchSockets.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes(locations, 100);
+					const probes = await router.findMatchingProbes(locations, 100);
 
-			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.country).to.equal('GB');
+					expect(probes.length).to.equal(1);
+					expect(probes[0]!.location.country).to.equal('GB');
+				});
+			}
+		});
+
+		describe('Location type - ASN', () => {
+			for (const testCase of ['5089', 'AS5089', 'as5089']) {
+				it(`should match ASN - ${testCase}`, async () => {
+					const sockets: DeepPartial<Socket[]> = [
+						buildSocket(String(Date.now()), location, index),
+					];
+
+					const locations: Location[] = [
+						{type: 'magic', value: testCase},
+					];
+
+					wsServerMock.fetchSockets.resolves(sockets as never);
+
+					const probes = await router.findMatchingProbes(locations, 100);
+
+					expect(probes.length).to.equal(1);
+					expect(probes[0]!.location.country).to.equal('GB');
+				});
+			}
 		});
 	});
 });
