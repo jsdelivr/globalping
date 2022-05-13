@@ -3,7 +3,6 @@ import _ from 'lodash';
 import type {Socket} from 'socket.io';
 import isIpPrivate from 'private-ip';
 import requestIp from 'request-ip';
-import {geoIpLookup} from '../lib/geoip/client.js';
 import {
 	getRegionByCountry,
 	getStateNameByIso,
@@ -13,11 +12,11 @@ import {
 	getNetworkAliases,
 } from '../lib/location/location.js';
 import {InternalError} from '../lib/internal-error.js';
+import {createGeoipClient} from '../lib/geoip/client.js';
 import type {Probe, ProbeLocation} from './types.js';
 
-/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable-next-line @typescript-eslint/naming-convention */
 const VERSION_REG_EXP = /^(?:\d{1,2}\.){2}\d{1,2}$/;
-/* eslint-enable @typescript-eslint/naming-convention */
 
 const fakeIpForDebug = () => _.sample([
 	'95.155.94.127',
@@ -29,6 +28,8 @@ const fakeIpForDebug = () => _.sample([
 	'94.214.253.78',
 	'79.205.97.254',
 ])!;
+
+const geoipClient = createGeoipClient();
 
 const findProbeVersion = (socket: Socket) => String(socket.handshake.query['version']);
 
@@ -49,9 +50,9 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	// Todo: cache results for ip address
 	if (process.env['FAKE_PROBE_IP']) {
-		ipInfo = await geoIpLookup(fakeIpForDebug());
+		ipInfo = await geoipClient.lookup(fakeIpForDebug());
 	} else if (!isIpPrivate(clientIp)) {
-		ipInfo = await geoIpLookup(clientIp);
+		ipInfo = await geoipClient.lookup(clientIp);
 	}
 
 	if (!ipInfo) {

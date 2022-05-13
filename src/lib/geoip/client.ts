@@ -1,80 +1,110 @@
 import _ from 'lodash';
-import anyAscii from 'any-ascii';
-import type {ProbeLocation} from '../../probe/types.js';
-import {scopedLogger} from '../logger.js';
+import config from 'config';
+import type {Logger} from 'winston';
+import type {CacheInterface} from '../cache/cache-interface.js';
 import {InternalError} from '../internal-error.js';
-import {ipinfoLookup} from './ipinfo.js';
-import {fastlyLookup} from './fastly.js';
-import {maxmindLookup} from './maxmind.js';
+import type {ProbeLocation} from '../../probe/types.js';
+import RedisCache from '../cache/redis-cache.js';
+import {getRedisClient} from '../redis/client.js';
+import {scopedLogger} from '../logger.js';
 import {isAddrWhitelisted} from './whitelist.js';
-
-const logger = scopedLogger('geoip');
+import {ipinfoLookup} from './providers/ipinfo.js';
+import {FastlyBundledResponse, fastlyLookup} from './providers/fastly.js';
+import {maxmindLookup} from './providers/maxmind.js';
+import {normalizeNetworkName} from './utils.js';
 
 export type LocationInfo = Omit<ProbeLocation, 'region'>;
 export type LocationInfoWithProvider = LocationInfo & {provider: string};
-export const normalizeCityName = (string_: string): string => anyAscii(string_).toLowerCase();
-export const normalizeNetworkName = (string_: string): string => string_.toLowerCase();
 
-const bestMatch = (field: keyof LocationInfo, sources: LocationInfoWithProvider[]): LocationInfo => {
-	const ranked = Object.values(_.groupBy(sources.filter(s => s[field]), field)).sort((a, b) => b.length - a.length).flat();
-	const best = ranked[0];
+export const createGeoipClient = (): GeoipClient => new GeoipClient(
+	new RedisCache(getRedisClient()),
+	scopedLogger('geoip'),
+);
 
-	if (!best) {
-		logger.error(`failed to find a correct value for a filed "${field}"`, {field, sources});
-		throw new Error(`failed to find a correct value for a filed "${field}"`);
+export default class GeoipClient {
+	constructor(
+		private readonly cache: CacheInterface,
+		private readonly logger: Logger,
+	) {}
+
+	async lookup(addr: string): Promise<LocationInfo> {
+		const skipVpnCheck = await isAddrWhitelisted(addr);
+
+		const results = await Promise
+			.allSettled([
+				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
+				this.lookupWithCache<FastlyBundledResponse>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
+				this.lookupWithCache<LocationInfo>(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
+			])
+			.then(([ipinfo, fastly, maxmind]) => {
+				const fulfilled = [];
+
+				fulfilled.push(
+					ipinfo.status === 'fulfilled' ? {...ipinfo.value, provider: 'ipinfo'} : null,
+					fastly.status === 'fulfilled' ? {...fastly.value.location, provider: 'fastly'} : null,
+					maxmind.status === 'fulfilled' ? {...maxmind.value, provider: 'maxmind'} : null,
+				);
+
+				if (fastly.status === 'fulfilled' && this.isVpn(fastly.value.client) && !skipVpnCheck) {
+					throw new InternalError('vpn detected', true);
+				}
+
+				return fulfilled.filter(v => v).flat();
+			}) as LocationInfoWithProvider[];
+
+		const match = this.bestMatch('city', results);
+		const maxmindMatch = results.find(result => result.provider === 'maxmind');
+
+		return {
+			continent: match.continent,
+			country: match.country,
+			state: match.state,
+			city: match.city,
+			asn: Number(maxmindMatch?.asn ?? match.asn),
+			latitude: Number(match.latitude),
+			longitude: Number(match.longitude),
+			network: normalizeNetworkName(maxmindMatch?.network ?? match.network),
+		};
 	}
 
-	return _.omit(best, 'provider');
-};
+	private isVpn(client: {proxy_desc: string; proxy_type: string}): boolean {
+		if (!client) {
+			return false;
+		}
 
-const isVpn = (client: {proxy_desc: string; proxy_type: string}): boolean => {
-	if (!client) {
+		if (['anonymous', 'aol', 'blackberry', 'corporate'].includes(client.proxy_type)) {
+			return true;
+		}
+
+		if (client.proxy_desc.startsWith('tor-') || client.proxy_desc === 'vpn') {
+			return true;
+		}
+
 		return false;
 	}
 
-	if (['anonymous', 'aol', 'blackberry', 'corporate'].includes(client.proxy_type)) {
-		return true;
+	private bestMatch(field: keyof LocationInfo, sources: LocationInfoWithProvider[]): LocationInfo {
+		const ranked = Object.values(_.groupBy(sources.filter(s => s[field]), field)).sort((a, b) => b.length - a.length).flat();
+		const best = ranked[0];
+
+		if (!best) {
+			this.logger.error(`failed to find a correct value for a filed "${field}"`, {field, sources});
+			throw new Error(`failed to find a correct value for a filed "${field}"`);
+		}
+
+		return _.omit(best, 'provider');
 	}
 
-	if (client.proxy_desc.startsWith('tor-') || client.proxy_desc === 'vpn') {
-		return true;
+	private async lookupWithCache<T>(key: string, fn: () => Promise<T>): Promise<T> {
+		const cached = await this.cache.get<T>(key);
+
+		if (cached) {
+			return cached;
+		}
+
+		const info = await fn();
+		await this.cache.set(key, info, config.get('geoip.cache.ttl'));
+
+		return info;
 	}
-
-	return false;
-};
-
-export const geoIpLookup = async (addr: string): Promise<LocationInfo> => {
-	const skipVpnCheck = await isAddrWhitelisted(addr);
-
-	const results = await Promise
-		.allSettled([ipinfoLookup(addr), fastlyLookup(addr), maxmindLookup(addr)])
-		.then(([ipinfo, fastly, maxmind]) => {
-			const fulfilled = [];
-
-			fulfilled.push(
-				ipinfo.status === 'fulfilled' ? {...ipinfo.value, provider: 'ipinfo'} : null,
-				fastly.status === 'fulfilled' ? {...fastly.value.location, provider: 'fastly'} : null,
-				maxmind.status === 'fulfilled' ? {...maxmind.value, provider: 'maxmind'} : null,
-			);
-
-			if (fastly.status === 'fulfilled' && isVpn(fastly.value.client) && !skipVpnCheck) {
-				throw new InternalError('vpn detected', true);
-			}
-
-			return fulfilled.filter(v => v).flat();
-		}) as LocationInfoWithProvider[];
-
-	const match = bestMatch('city', results);
-	const maxmindMatch = results.find(result => result.provider === 'maxmind');
-
-	return {
-		continent: match.continent,
-		country: match.country,
-		state: match.state,
-		city: match.city,
-		asn: Number(maxmindMatch?.asn ?? match.asn),
-		latitude: Number(match.latitude),
-		longitude: Number(match.longitude),
-		network: normalizeNetworkName(maxmindMatch?.network ?? match.network),
-	};
-};
+}

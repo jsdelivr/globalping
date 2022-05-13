@@ -2,7 +2,10 @@ import * as fs from 'node:fs';
 import nock from 'nock';
 import mockFs from 'mock-fs';
 import {expect} from 'chai';
-import {geoIpLookup, LocationInfo} from '../../../src/lib/geoip/client.js';
+import type {LocationInfo} from '../../../src/lib/geoip/client.js';
+import GeoipClient from '../../../src/lib/geoip/client.js';
+import NullCache from '../../../src/lib/cache/null-cache.js';
+import {scopedLogger} from '../../../src/lib/logger.js';
 
 const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
@@ -10,6 +13,15 @@ const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toStrin
 const MOCK_IP = '131.255.7.26';
 
 describe('geoip service', () => {
+	let client: GeoipClient;
+
+	before(() => {
+		client = new GeoipClient(
+			new NullCache(),
+			scopedLogger('geoip:test'),
+		);
+	});
+
 	it('should use maxmind & digitalelement consensus', async () => {
 		nock('https://globalping-geoip.global.ssl.fastly.net')
 			.get(`/${MOCK_IP}`)
@@ -23,7 +35,7 @@ describe('geoip service', () => {
 			.get(`/${MOCK_IP}`)
 			.reply(200, mocks['00.00'].maxmind);
 
-		const info = await geoIpLookup(MOCK_IP);
+		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
 			continent: 'SA',
@@ -50,7 +62,7 @@ describe('geoip service', () => {
 			.get(`/${MOCK_IP}`)
 			.reply(400);
 
-		const info = await geoIpLookup(MOCK_IP);
+		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
 			asn: 61_493,
@@ -77,7 +89,7 @@ describe('geoip service', () => {
 			.get(`/${MOCK_IP}`)
 			.reply(200, mocks['00.01'].maxmind);
 
-		const info = await geoIpLookup(MOCK_IP);
+		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
 			asn: 61_493,
@@ -104,7 +116,7 @@ describe('geoip service', () => {
 			.get(`/${MOCK_IP}`)
 			.reply(200, mocks['00.01'].maxmind);
 
-		const info = await geoIpLookup(MOCK_IP);
+		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
 			asn: 61_493,
@@ -131,7 +143,7 @@ describe('geoip service', () => {
 			.get(`/${MOCK_IP}`)
 			.reply(400);
 
-		const info = await geoIpLookup(MOCK_IP);
+		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
 			asn: 61_493,
@@ -158,7 +170,7 @@ describe('geoip service', () => {
 			.get(`/${MOCK_IP}`)
 			.reply(200, mocks['00.02'].maxmind);
 
-		const info = await geoIpLookup(MOCK_IP);
+		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
 			asn: 40_676,
@@ -185,7 +197,7 @@ describe('geoip service', () => {
 			.get(`/${MOCK_IP}`)
 			.reply(200, mocks['00.03'].maxmind);
 
-		const info = await geoIpLookup(MOCK_IP);
+		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
 			asn: 40_676,
@@ -213,7 +225,7 @@ describe('geoip service', () => {
 				.get(`/${MOCK_IP}`)
 				.reply(200, mocks['01.00'].maxmind);
 
-			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
 				asn: 40_676,
@@ -240,7 +252,7 @@ describe('geoip service', () => {
 				.get(`/${MOCK_IP}`)
 				.reply(200, mocks['01.07'].maxmind);
 
-			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
 				asn: 40_676,
@@ -276,7 +288,7 @@ describe('geoip service', () => {
 				.get(`/${MOCK_IP}`)
 				.reply(200, mocks['01.01'].maxmind);
 
-			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
 				asn: 40_676,
@@ -303,7 +315,7 @@ describe('geoip service', () => {
 				.get(`/${MOCK_IP}`)
 				.reply(200, mocks['01.01'].maxmind);
 
-			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
 			expect((response as Error).message).to.equal('vpn detected');
@@ -322,7 +334,7 @@ describe('geoip service', () => {
 				.get(`/${MOCK_IP}`)
 				.reply(200, mocks['01.02'].maxmind);
 
-			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
 			expect((response as Error).message).to.equal('vpn detected');
@@ -341,7 +353,7 @@ describe('geoip service', () => {
 				.get(`/${MOCK_IP}`)
 				.reply(200, mocks['01.03'].maxmind);
 
-			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
 			expect((response as Error).message).to.equal('vpn detected');
@@ -360,7 +372,7 @@ describe('geoip service', () => {
 				.get(`/${MOCK_IP}`)
 				.reply(200, mocks['01.03'].maxmind);
 
-			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
 			expect((response as Error).message).to.equal('vpn detected');
@@ -379,7 +391,7 @@ describe('geoip service', () => {
 				.get(`/${MOCK_IP}`)
 				.reply(200, mocks['01.04'].maxmind);
 
-			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
 			expect((response as Error).message).to.equal('vpn detected');
@@ -398,7 +410,7 @@ describe('geoip service', () => {
 				.get(`/${MOCK_IP}`)
 				.reply(200, mocks['01.05'].maxmind);
 
-			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
 			expect((response as Error).message).to.equal('vpn detected');
@@ -417,7 +429,7 @@ describe('geoip service', () => {
 				.get(`/${MOCK_IP}`)
 				.reply(200, mocks['01.06'].maxmind);
 
-			const response: LocationInfo | Error = await geoIpLookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
 			expect((response as Error).message).to.equal('vpn detected');

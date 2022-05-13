@@ -1,8 +1,9 @@
 import config from 'config';
 import {City, WebServiceClient} from '@maxmind/geoip2-node';
 import type {WebServiceClientError} from '@maxmind/geoip2-node/dist/src/types';
-import appsignal from '../appsignal.js';
-import {LocationInfo, normalizeCityName} from './client.js';
+import appsignal from '../../appsignal.js';
+import type {LocationInfo} from '../client.js';
+import {normalizeCityName} from '../utils.js';
 
 const client = new WebServiceClient(config.get('maxmind.accountId'), config.get('maxmind.licenseKey'));
 
