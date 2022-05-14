@@ -8,7 +8,7 @@ module.exports = {
 	},
 	geoip: {
 		cache: {
-			ttl: 24 * 60 * 60, // 24hrs
+			ttl: 24 * 60 * 60 * 1000, // 24hrs
 		},
 	},
 	appsignal: {

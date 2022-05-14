@@ -2,6 +2,8 @@ import * as fs from 'node:fs';
 import nock from 'nock';
 import mockFs from 'mock-fs';
 import {expect} from 'chai';
+import {createStubInstance} from 'sinon';
+import {Appsignal} from '@appsignal/nodejs';
 import type {LocationInfo} from '../../../src/lib/geoip/client.js';
 import GeoipClient from '../../../src/lib/geoip/client.js';
 import NullCache from '../../../src/lib/cache/null-cache.js';
@@ -18,6 +20,7 @@ describe('geoip service', () => {
 	before(() => {
 		client = new GeoipClient(
 			new NullCache(),
+			createStubInstance(Appsignal),
 			scopedLogger('geoip:test'),
 		);
 	});
