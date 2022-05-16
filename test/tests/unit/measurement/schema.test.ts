@@ -1,4 +1,5 @@
 import {expect} from 'chai';
+import {schema as locationSchema} from '../../../../src/measurement/schema/location-schema.js';
 import {
 	pingSchema,
 	tracerouteSchema,
@@ -7,6 +8,54 @@ import {
 } from '../../../../src/measurement/schema/command-schema.js';
 
 describe('command schema', () => {
+	describe('location', () => {
+		describe('magic', () => {
+			it('should fail (too short)', () => {
+				const input = [
+					{
+						type: 'magic',
+						value: '',
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.error).to.exist;
+				expect(valid.error!.details[0]!.message).to.equal('"[0].value" is not allowed to be empty');
+			});
+
+			it('should fail (not string)', () => {
+				const input = [
+					{
+						type: 'magic',
+						value: 1337,
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.error).to.exist;
+				expect(valid.error!.details[0]!.message).to.equal('"[0].value" must be a string');
+			});
+
+			it('should succeed', () => {
+				const input = [
+					{
+						type: 'magic',
+						value: 'cyprus',
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.error).to.not.exist;
+			});
+		});
+	});
+
 	describe('target validator', () => {
 		it('should fail (ip type) (private ip)', async () => {
 			const input = '192.168.0.101';
@@ -230,6 +279,26 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
+		it('should pass (trace enabled)', async () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				query: {
+					trace: true,
+					type: 'a',
+					protocol: 'tcp',
+				},
+			};
+
+			const valid = dnsSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value.type).to.equal('dns');
+			expect(valid.value.query.trace).to.equal(true);
+			expect(valid.value.query.protocol).to.equal('TCP');
+			expect(valid.value.query.type).to.equal('A');
+		});
+
 		it('should pass and correct values (incorrect caps)', async () => {
 			const input = {
 				type: 'DNS',
@@ -254,6 +323,7 @@ describe('command schema', () => {
 				target: 'abc.com',
 				query: {
 					type: 'A',
+					trace: false,
 					resolver: '1.1.1.1',
 					protocol: 'UDP',
 					port: 53,

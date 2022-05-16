@@ -75,6 +75,16 @@ Please, see [LOCATION SCHEMA](./location.md) document for more details.
             "type": "network",
             "value": "virgin media limited",
             "limit": 1
+        },
+        {
+            "type": "magic",
+            "value": "aws", // alias
+            "limit": 1
+        },
+        {
+            "type": "magic",
+            "value": "pol", // (poland) partial match
+            "limit": 1
         }
     ]
 ```
@@ -318,4 +328,18 @@ resolver is the name or IP address of the name server to query. This can be an I
 
 ```json
     "resolver": "1.1.1.1"
+```
+### trace
+
+Toggle tracing of the delegation path from the root name servers for the name being looked up. It will follow referrals from the root servers, showing the answer from each server that was used to resolve the lookup.
+
+**key**: `measurement.query.trace`
+
+**required**: `false`
+
+**rules**:
+- typeof `boolean`
+
+```json
+    "trace": true
 ```

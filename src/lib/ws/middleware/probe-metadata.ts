@@ -20,8 +20,6 @@ export const probeMetadata = errorHandler(async (socket: Socket, next: (error?: 
 		}
 
 		logger.warn(message);
-		const nError = new WsError(message, {socketId: socket.id});
-
-		throw nError;
+		throw new WsError(message, {socketId: socket.id});
 	}
 });
