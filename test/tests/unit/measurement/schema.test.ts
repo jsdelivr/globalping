@@ -9,6 +9,38 @@ import {
 
 describe('command schema', () => {
 	describe('location', () => {
+		describe('input case', () => {
+			it('should correct network name', () => {
+				const input = [
+					{
+						type: 'network',
+						value: 'VIRGIN MEDIA',
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.value[0]!.value).to.equal(input[0]!.value.toLowerCase());
+				expect(valid.value[0]!.value).to.not.equal(input[0]!.value);
+			});
+
+			it('should correct city value', () => {
+				const input = [
+					{
+						type: 'city',
+						value: 'LONDON',
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.value[0]!.value).to.equal(input[0]!.value.toLowerCase());
+				expect(valid.value[0]!.value).to.not.equal(input[0]!.value);
+			});
+		});
+
 		describe('magic', () => {
 			it('should fail (too short)', () => {
 				const input = [
