@@ -28,8 +28,8 @@ export const schema = Joi.array().items(Joi.object({
 				then: Joi.string().valid(...Object.keys(states)).insensitive()
 					.messages({'any.only': 'The US state must be a valid two-letter code, e.g. CA'}),
 			},
-			{is: 'city', then: Joi.string().min(1).max(128).insensitive()},
-			{is: 'network', then: Joi.string().min(1).max(128).insensitive()},
+			{is: 'city', then: Joi.string().min(1).max(128).lowercase().insensitive()},
+			{is: 'network', then: Joi.string().min(1).max(128).lowercase().insensitive()},
 			{is: 'asn', then: Joi.number()},
 			{is: 'magic', then: Joi.string().min(1).insensitive()},
 		],
