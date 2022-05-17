@@ -20,6 +20,20 @@ export const joiValidateTarget = (type: string) => (value: string): string | Err
 	return joiMalwareValidate(value);
 };
 
+const allowedHttpProtocols = ['http', 'https', 'http2'];
+const allowedHttpMethods = ['get', 'head'];
+export const httpSchema = Joi.object({
+	type: Joi.string().valid('http').insensitive().required(),
+	method: Joi.string().valid(...allowedHttpMethods).insensitive().default('head'),
+	target: Joi.alternatives().try(Joi.string().ip(), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
+	resolver: Joi.string().ip().custom(joiMalwareValidateIp),
+	host: Joi.string().domain().custom(joiValidateTarget('domain')).optional(),
+	path: Joi.string().optional().default('/'),
+	protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default('https'),
+	port: Joi.number().default(443),
+	headers: Joi.object().default({}),
+});
+
 export const pingSchema = Joi.object({
 	type: Joi.string().valid('ping').insensitive().required(),
 	target: Joi.alternatives().try(Joi.string().ip(), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
