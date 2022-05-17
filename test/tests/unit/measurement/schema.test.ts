@@ -426,6 +426,34 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
+		it('should pass (empty port)', () => {
+			const input = {
+				type: 'http',
+				method: 'GET',
+				target: 'elocast.com',
+				host: 'elocast.com',
+				protocol: 'https',
+				headers: {
+					test: 'abc',
+				},
+			};
+
+			const desiredOutput = {
+				type: 'http',
+				method: 'get',
+				target: 'elocast.com',
+				host: 'elocast.com',
+				protocol: 'https',
+				path: '/',
+				headers: {test: 'abc'},
+			};
+
+			const valid = httpSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
 		it('should pass', () => {
 			const input = {
 				type: 'http',

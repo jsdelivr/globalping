@@ -30,7 +30,7 @@ export const httpSchema = Joi.object({
 	host: Joi.string().domain().custom(joiValidateTarget('domain')).optional(),
 	path: Joi.string().optional().default('/'),
 	protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default('https'),
-	port: Joi.number().default(443),
+	port: Joi.number(),
 	headers: Joi.object().default({}),
 });
 
