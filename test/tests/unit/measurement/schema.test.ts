@@ -375,14 +375,16 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				host: '',
-				resolver: 'abc',
-				protocol: 'https',
-				port: 443,
-				headers: {
-					test: 'abc',
+				query: {
+					host: '',
+					resolver: 'abc',
+					protocol: 'https',
+					port: 443,
+					headers: {
+						test: 'abc',
+					},
+					method: 'GET',
 				},
-				method: 'POST',
 			};
 
 			const valid = httpSchema.validate(input);
@@ -394,13 +396,15 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				host: '',
-				protocol: 'https',
-				port: 443,
-				headers: {
-					test: 'abc',
+				query: {
+					host: '',
+					protocol: 'https',
+					port: 443,
+					headers: {
+						test: 'abc',
+					},
+					method: 'POST',
 				},
-				method: 'POST',
 			};
 
 			const valid = httpSchema.validate(input);
@@ -411,14 +415,16 @@ describe('command schema', () => {
 		it('should fail (unsupported protocol)', () => {
 			const input = {
 				type: 'http',
-				method: 'GET',
 				target: 'elocast.com',
-				host: '',
-				port: 443,
-				headers: {
-					test: 'abc',
+				query: {
+					method: 'GET',
+					host: '',
+					port: 443,
+					headers: {
+						test: 'abc',
+					},
+					protocol: 'rtmp',
 				},
-				protocol: 'rtmp',
 			};
 
 			const valid = httpSchema.validate(input);
@@ -429,23 +435,27 @@ describe('command schema', () => {
 		it('should pass (empty port)', () => {
 			const input = {
 				type: 'http',
-				method: 'GET',
 				target: 'elocast.com',
-				host: 'elocast.com',
-				protocol: 'https',
-				headers: {
-					test: 'abc',
+				query: {
+					method: 'GET',
+					host: 'elocast.com',
+					protocol: 'https',
+					headers: {
+						test: 'abc',
+					},
 				},
 			};
 
 			const desiredOutput = {
 				type: 'http',
-				method: 'get',
 				target: 'elocast.com',
-				host: 'elocast.com',
-				protocol: 'https',
-				path: '/',
-				headers: {test: 'abc'},
+				query: {
+					method: 'get',
+					host: 'elocast.com',
+					protocol: 'https',
+					path: '/',
+					headers: {test: 'abc'},
+				},
 			};
 
 			const valid = httpSchema.validate(input);
@@ -457,25 +467,29 @@ describe('command schema', () => {
 		it('should pass', () => {
 			const input = {
 				type: 'http',
-				method: 'GET',
 				target: 'elocast.com',
-				host: 'elocast.com',
-				protocol: 'https',
-				port: 443,
-				headers: {
-					test: 'abc',
+				query: {
+					method: 'GET',
+					host: 'elocast.com',
+					protocol: 'https',
+					port: 443,
+					headers: {
+						test: 'abc',
+					},
 				},
 			};
 
 			const desiredOutput = {
 				type: 'http',
-				method: 'get',
 				target: 'elocast.com',
-				host: 'elocast.com',
-				protocol: 'https',
-				path: '/',
-				port: 443,
-				headers: {test: 'abc'},
+				query: {
+					method: 'get',
+					host: 'elocast.com',
+					protocol: 'https',
+					path: '/',
+					port: 443,
+					headers: {test: 'abc'},
+				},
 			};
 
 			const valid = httpSchema.validate(input);
