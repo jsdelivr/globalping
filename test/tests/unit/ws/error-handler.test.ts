@@ -5,16 +5,15 @@ import {WsError} from '../../../../src/lib/ws/ws-error.js';
 import {errorHandler} from '../../../../src/lib/ws/helper/error-handler.js';
 
 class MockSocket {
-	id: string;
-	isConnected: boolean;
-	store: Array<{type: string; event: string; payload: any}> = [];
-	request: any;
+	public isConnected = true;
 
-	constructor(id: string) {
-		this.id = id;
-		this.isConnected = true;
-		this.request = {};
-	}
+	public store: Array<{type: string; event: string; payload: any}> = [];
+
+	public request: any = {};
+
+	constructor(
+		public id: string,
+	) {}
 
 	emit(event: string, payload: string | Record<string, unknown>) {
 		this.store.push({type: 'emit', event, payload});

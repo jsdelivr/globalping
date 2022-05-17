@@ -53,7 +53,7 @@ export default class GeoipClient {
 					throw new InternalError('vpn detected', true);
 				}
 
-				return fulfilled.filter(v => v).flat();
+				return fulfilled.filter(Boolean).flat();
 			}) as LocationInfoWithProvider[];
 
 		const match = this.bestMatch('city', results);

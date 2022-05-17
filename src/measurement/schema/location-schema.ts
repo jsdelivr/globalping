@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+
 import Joi from 'joi';
 import config from 'config';
 

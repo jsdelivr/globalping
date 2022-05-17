@@ -84,7 +84,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		getCountryIso3ByIso2(location.country),
 		getCountryAliases(location.country),
 		getNetworkAliases(location.network),
-	].flat().filter(s => s).map(s => s.toLowerCase().replace('-', ' '));
+	].flat().filter(Boolean).map(s => s.toLowerCase().replace('-', ' '));
 
 	// Todo: add validation and handle missing or partial data
 	return {
