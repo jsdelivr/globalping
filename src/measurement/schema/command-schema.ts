@@ -27,7 +27,7 @@ export const httpSchema = Joi.object({
 	target: Joi.alternatives().try(Joi.string().ip(), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
 	query: Joi.object({
 		method: Joi.string().valid(...allowedHttpMethods).insensitive().default('head'),
-		resolver: Joi.string().ip().custom(joiMalwareValidateIp),
+		resolver: Joi.string().ip().custom(joiMalwareValidateIp).custom(joiValidateTarget('ip')),
 		host: Joi.string().domain().custom(joiValidateTarget('domain')).optional(),
 		path: Joi.string().optional().default('/'),
 		protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default('https'),
