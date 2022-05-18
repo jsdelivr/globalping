@@ -139,9 +139,12 @@ const app = () => ({
           protocol: this.query.query.protocol,
           host: this.query.query.host,
           port: this.query.query.port,
-          headers: Object.fromEntries(this.query.query.headers.map(h => [h.title, h.value])),
           resolver: this.query.query.resolver,
         };
+
+        if (this.query.query.headers) {
+          query.headers = Object.fromEntries(this.query.query.headers.map(h => [h.title, h.value]));
+        }
 
         measurement.query = Object.fromEntries(Object.entries(query).filter(entry => entry[1]))
       }
