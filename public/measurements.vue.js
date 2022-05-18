@@ -139,7 +139,8 @@ const app = () => ({
           protocol: this.query.query.protocol,
           host: this.query.query.host,
           port: this.query.query.port,
-          headers: Object.fromEntries(this.query.query.headers.map(h => [h.title, h.value]))
+          headers: Object.fromEntries(this.query.query.headers.map(h => [h.title, h.value])),
+          resolver: this.query.query.resolver,
         };
 
         measurement.query = Object.fromEntries(Object.entries(query).filter(entry => entry[1]))
@@ -304,6 +305,12 @@ const app = () => ({
                 {{ protocol }}
               </option>
             </select>
+          </div>
+        </div>
+        <div v-if="query.type === 'http'" class="form-group row">
+          <label for="query_http_resolver" class="col-sm-2 col-form-label">resolver</label>
+          <div class="col-sm-10">
+            <input type="text" v-model="query.query.resolver" id="query_http_resolver" name="query_http_resolver" placeholder="resolver" />
           </div>
         </div>
         <div v-if="query.type === 'traceroute'" class="form-group row">
