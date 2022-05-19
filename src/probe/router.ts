@@ -35,6 +35,10 @@ export class ProbeRouter {
 
 	private findByLocation(sockets: Socket[], location: Location): Socket[] {
 		if (location.type === 'magic') {
+			if (location.value === 'world') {
+				return this.filterGloballyDistributed(sockets, sockets.length);
+			}
+
 			return sockets.filter(s => s.data.probe.index.find(v => v.includes(location.value.replace('-', ' ').toLowerCase())));
 		}
 
