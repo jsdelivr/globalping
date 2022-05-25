@@ -99,5 +99,22 @@ describe('Create measurement', function () {
 					expect(body.probesCount).to.equal(1);
 				});
 		});
+
+		it('should create measurement with "magic: world" location', async () => {
+			await requestAgent.post('/v1/measurements')
+				.send({
+					locations: [{type: 'magic', value: 'world', limit: 2}],
+					measurement: {
+						type: 'ping',
+						target: 'example.com',
+						packets: 4,
+					},
+				})
+				.expect(200)
+				.expect(({body}) => {
+					expect(body.id).to.exist;
+					expect(body.probesCount).to.equal(1);
+				});
+		});
 	});
 });

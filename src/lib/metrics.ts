@@ -1,20 +1,19 @@
 import type {Server as SocketServer} from 'socket.io';
 import type {Metrics} from '@appsignal/nodejs';
 
-import {getRedisClient, RedisClient} from '../lib/redis/client.js';
+import {getRedisClient, RedisClient} from './redis/client.js';
 import {getWsServer, PROBES_NAMESPACE} from './ws/server.js';
 import Appsignal from './appsignal.js';
 
 export class MetricsAgent {
 	private readonly metrics: Metrics;
-	private readonly io: SocketServer;
-	private readonly redis: RedisClient;
 
 	private interval: NodeJS.Timer | undefined;
 
-	constructor(io: SocketServer, redis: RedisClient) {
-		this.io = io;
-		this.redis = redis;
+	constructor(
+		private readonly io: SocketServer,
+		private readonly redis: RedisClient,
+	) {
 		this.metrics = Appsignal.metrics();
 	}
 

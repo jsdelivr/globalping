@@ -1,7 +1,13 @@
 import config from 'config';
-import {createClient, RedisClientType, RedisDefaultModules, RedisScripts, RedisClientOptions} from 'redis';
+import {
+	createClient,
+	RedisClientType,
+	RedisDefaultModules,
+	RedisClientOptions,
+	RedisFunctions, RedisScripts,
+} from 'redis';
 
-export type RedisClient = RedisClientType<RedisDefaultModules, RedisScripts>;
+export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts>;
 
 let redis: RedisClient;
 

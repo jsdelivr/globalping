@@ -1,8 +1,8 @@
 import got from 'got';
 import config from 'config';
-import {getContinentByCountry, getStateIsoByName} from '../location/location.js';
-
-import {LocationInfo, normalizeCityName} from './client.js';
+import {getContinentByCountry, getStateIsoByName} from '../../location/location.js';
+import type {LocationInfo} from '../client.js';
+import {normalizeCityName} from '../utils.js';
 
 type IpinfoResponse = {
 	country: string;
