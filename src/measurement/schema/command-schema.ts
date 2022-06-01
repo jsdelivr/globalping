@@ -29,10 +29,12 @@ export const joiValidateTarget = (type: string) => (value: string, helpers?: Cus
 	return joiMalwareValidate(value, helpers);
 };
 
+/* eslint-disable @typescript-eslint/naming-convention */
 export const schemaErrorMessages = {
 	...joiMalwareSchemaErrorMessage(),
 	'ip.private': 'Private hostnames are not allowed.',
 };
+/* eslint-enable @typescript-eslint/naming-convention */
 
 export const pingSchema = Joi.object({
 	type: Joi.string().valid('ping').insensitive().required(),
