@@ -4,6 +4,9 @@ import {validCmdTypes} from '../../../measurement/schema/command-schema.js';
 
 type DeepFieldDetails = {
 	message: string;
+	context: {
+		message: string;
+	};
 	path: string[];
 };
 
@@ -14,12 +17,10 @@ export const validate = (schema: Schema) => async (ctx: Context, next: Next) => 
 		const deepErrorMatch = valid.error.details
 			.filter(field => field?.context!['details'])
 			.flatMap(field => (field.context!['details'] as DeepFieldDetails))
-			.filter(item => item && !(
-				item.path.includes('type') && validCmdTypes.includes(valid.error._original.measurement.type,
-				)));
+			.filter(item => item && !(item.path.includes('type') && validCmdTypes.includes(valid.error._original.measurement.type)));
 
 		const finalError = deepErrorMatch.length > 0 ? deepErrorMatch : valid.error.details;
-		const fields = finalError.map(field => ([field.path.join('.'), field.message]));
+		const fields = finalError.map(field => ([field.path.join('.'), String(field.context?.message || field.message)]));
 
 		ctx.status = 422;
 		ctx.body = {
