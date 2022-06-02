@@ -119,5 +119,6 @@ export type MeasurementAckMessage = {
 export type MeasurementResultMessage = {
 	testId: string;
 	measurementId: string;
+	overwrite?: boolean;
 	result: MeasurementResult;
 };
