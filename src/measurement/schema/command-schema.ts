@@ -20,6 +20,14 @@ export const joiValidateTarget = (type: string) => (value: string): string | Err
 	return joiMalwareValidate(value);
 };
 
+export const mtrSchema = Joi.object({
+	type: Joi.string().valid('mtr'),
+	target: Joi.string(),
+	protocol: Joi.string().lowercase().insensitive(),
+	packets: Joi.number().min(1).max(16).default(3),
+	port: Joi.number(),
+});
+
 export const pingSchema = Joi.object({
 	type: Joi.string().valid('ping').insensitive().required(),
 	target: Joi.alternatives().try(Joi.string().ip(), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
