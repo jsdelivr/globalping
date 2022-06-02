@@ -4,6 +4,7 @@ import {
 	pingSchema,
 	tracerouteSchema,
 	dnsSchema,
+	mtrSchema,
 	joiValidateTarget,
 } from '../../../../src/measurement/schema/command-schema.js';
 
@@ -363,6 +364,80 @@ describe('command schema', () => {
 			};
 
 			const valid = dnsSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(input);
+		});
+	});
+
+	describe('mtr', () => {
+		it('should fail (missing values)', async () => {
+			const input = {
+				type: 'mtr',
+			};
+
+			const valid = mtrSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should pass (target domain)', async () => {
+			const input = {
+				type: 'mtr',
+				target: 'abc.com',
+			};
+
+			const valid = mtrSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should pass (target ip)', async () => {
+			const input = {
+				type: 'mtr',
+				target: '1.1.1.1',
+			};
+
+			const valid = mtrSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should fail (target: invalid ip format)', async () => {
+			const input = {
+				type: 'mtr',
+				target: '300.300.300.300',
+			};
+
+			const valid = mtrSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should pass and correct values (incorrect caps)', async () => {
+			const input = {
+				type: 'MtR',
+				target: 'abc.com',
+				protocol: 'udp',
+			};
+
+			const valid = mtrSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value.type).to.equal('mtr');
+			expect(valid.value.protocol).to.equal('UDP');
+		});
+
+		it('should pass (deep equal)', async () => {
+			const input = {
+				type: 'mtr',
+				target: 'abc.com',
+				protocol: 'TCP',
+				packets: 10,
+				port: 80,
+			};
+
+			const valid = mtrSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(input);
