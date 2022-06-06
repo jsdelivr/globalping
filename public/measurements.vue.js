@@ -20,6 +20,7 @@ const app = () => ({
     measurementId(nId, oId) {
       // prevent loop on empty value
       if (nId) {
+        clearInterval(this.resultInterval);
         this.resultInterval = setInterval(this.fetchMeasurement.bind(this), 500);
       }
     },
