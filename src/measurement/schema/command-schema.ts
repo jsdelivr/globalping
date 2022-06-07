@@ -36,6 +36,22 @@ export const schemaErrorMessages = {
 };
 /* eslint-enable @typescript-eslint/naming-convention */
 
+const allowedHttpProtocols = ['http', 'https', 'http2'];
+const allowedHttpMethods = ['get', 'head'];
+export const httpSchema = Joi.object({
+	type: Joi.string().valid('http').insensitive().required(),
+	target: Joi.alternatives().try(Joi.string().ip(), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
+	query: Joi.object({
+		method: Joi.string().valid(...allowedHttpMethods).insensitive().default('head'),
+		resolver: Joi.string().ip().custom(joiMalwareValidateIp).custom(joiValidateTarget('ip')),
+		host: Joi.string().domain().custom(joiValidateTarget('domain')).optional(),
+		path: Joi.string().optional().default('/'),
+		protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default('https'),
+		port: Joi.number(),
+		headers: Joi.object().default({}),
+	}),
+});
+
 export const pingSchema = Joi.object({
 	type: Joi.string().valid('ping').insensitive().required(),
 	target: Joi.alternatives().try(Joi.string().ip(), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
