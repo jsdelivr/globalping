@@ -5,6 +5,7 @@ import {
 	tracerouteSchema,
 	dnsSchema,
 	mtrSchema,
+	httpSchema,
 	joiValidateTarget,
 } from '../../../../src/measurement/schema/command-schema.js';
 
@@ -441,6 +442,135 @@ describe('command schema', () => {
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(input);
+		});
+	});
+
+	describe('http schema', () => {
+		it('should fail (unsupported resolver format)', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				query: {
+					host: '',
+					resolver: 'abc',
+					protocol: 'https',
+					port: 443,
+					headers: {
+						test: 'abc',
+					},
+					method: 'GET',
+				},
+			};
+
+			const valid = httpSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (unsupported method)', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				query: {
+					host: '',
+					protocol: 'https',
+					port: 443,
+					headers: {
+						test: 'abc',
+					},
+					method: 'POST',
+				},
+			};
+
+			const valid = httpSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (unsupported protocol)', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				query: {
+					method: 'GET',
+					host: '',
+					port: 443,
+					headers: {
+						test: 'abc',
+					},
+					protocol: 'rtmp',
+				},
+			};
+
+			const valid = httpSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should pass (empty port)', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				query: {
+					method: 'GET',
+					host: 'elocast.com',
+					protocol: 'https',
+					headers: {
+						test: 'abc',
+					},
+				},
+			};
+
+			const desiredOutput = {
+				type: 'http',
+				target: 'elocast.com',
+				query: {
+					method: 'get',
+					host: 'elocast.com',
+					protocol: 'https',
+					path: '/',
+					headers: {test: 'abc'},
+				},
+			};
+
+			const valid = httpSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should pass', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				query: {
+					method: 'GET',
+					host: 'elocast.com',
+					protocol: 'https',
+					port: 443,
+					headers: {
+						test: 'abc',
+					},
+				},
+			};
+
+			const desiredOutput = {
+				type: 'http',
+				target: 'elocast.com',
+				query: {
+					method: 'get',
+					host: 'elocast.com',
+					protocol: 'https',
+					path: '/',
+					port: 443,
+					headers: {test: 'abc'},
+				},
+			};
+
+			const valid = httpSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
 		});
 	});
 });

@@ -6,7 +6,7 @@ import {getMeasurementRunner} from '../runner.js';
 import type {MeasurementRequest} from '../types.js';
 import {bodyParser} from '../../lib/http/middleware/body-parser.js';
 import {validate} from '../../lib/http/middleware/validate.js';
-import {dnsSchema, pingSchema, tracerouteSchema, mtrSchema} from '../schema/command-schema.js';
+import {dnsSchema, pingSchema, tracerouteSchema, mtrSchema, httpSchema} from '../schema/command-schema.js';
 import {schema as locationSchema} from '../schema/location-schema.js';
 
 const runner = getMeasurementRunner();
@@ -14,7 +14,7 @@ const measurementConfig = config.get<{limits: {global: number; location: number}
 
 export const schema = Joi.object({
 	locations: locationSchema,
-	measurement: Joi.alternatives().try(pingSchema, tracerouteSchema, dnsSchema, mtrSchema).required(),
+	measurement: Joi.alternatives().try(pingSchema, tracerouteSchema, dnsSchema, mtrSchema, httpSchema).required(),
 	limit: Joi.number().min(1).max(measurementConfig.limits.global),
 });
 
