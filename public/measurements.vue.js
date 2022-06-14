@@ -74,6 +74,9 @@ const app = () => ({
     getTraceProtocolArray() {
       return ALLOWED_TRACE_PROTOCOLS;
     },
+    getMtrProtocolArray() {
+      return ALLOWED_MTR_PROTOCOLS;
+    },
     getQueryTypeArray() {
       return ALLOWED_QUERY_TYPES;
     },
@@ -93,6 +96,20 @@ const app = () => ({
 
       if (this.query.type === 'ping' && this.query.packets) {
         measurement.packets = this.query.packets;
+      }
+
+      if (this.query.type === 'mtr') {
+        if (this.query.packets) {
+          measurement.packets = this.query.packets;
+        }
+
+        if (this.query.port) {
+          measurement.port = this.query.port;
+        }
+
+        if (this.query.protocol) {
+          measurement.protocol = this.query.protocol;
+        }
       }
 
       if (this.query.type === 'traceroute') {
@@ -265,7 +282,7 @@ const app = () => ({
             <input type="number" v-model="query.limit" id="query_global_limit" name="query_global_limit" placeholder="global limit" />
           </div>
         </div>
-        <div v-if="query.type === 'ping'" class="form-group row">
+        <div v-if="['ping', 'mtr'].includes(query.type)" class="form-group row">
           <label for="query_packets" class="col-sm-2 col-form-label">packets</label>
           <div class="col-sm-10">
             <input type="number" v-model="query.packets" id="query_packets" name="query_packets" placeholder="packets" />
@@ -317,7 +334,7 @@ const app = () => ({
             <input type="text" v-model="query.query.resolver" id="query_http_resolver" name="query_http_resolver" placeholder="resolver" />
           </div>
         </div>
-        <div v-if="query.type === 'traceroute'" class="form-group row">
+        <div v-if="['traceroute', 'mtr'].includes(query.type)" class="form-group row">
           <label for="query_port" class="col-sm-2 col-form-label">port</label>
           <div class="col-sm-10">
             <input type="number" v-model="query.port" id="query_port" name="query_port" placeholder="port" />
@@ -329,6 +346,17 @@ const app = () => ({
             <select v-model="query.protocol" name="query_protocol" id="query_protocol" class="custom-select my-1 mr-sm-2">
               <option disabled value="">Please select one</option>
               <option v-for="protocol in getTraceProtocolArray()" :value="protocol">
+                {{ protocol }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div v-if="query.type === 'mtr'" class="form-group row">
+          <label for="query_protocol" class="col-sm-2 col-form-label">protocol</label>
+          <div class="col-sm-10">
+            <select v-model="query.protocol" name="query_protocol" id="query_protocol" class="custom-select my-1 mr-sm-2">
+              <option disabled value="">Please select one</option>
+              <option v-for="protocol in getMtrProtocolArray()" :value="protocol">
                 {{ protocol }}
               </option>
             </select>
