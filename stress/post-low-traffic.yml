@@ -1,0 +1,59 @@
+config:
+  target: 'http://0.0.0.0:3000'
+  phases:
+    - duration: 10
+      arrivalRate: 1
+    - pause: 10
+    - duration: 10
+      arrivalRate: 1
+    - pause: 10
+    - duration: 10
+      arrivalRate: 1
+    - pause: 10
+    - duration: 10
+      arrivalRate: 1
+    - pause: 10
+
+scenarios:
+  - name: 'ping'
+    flow:
+      - post:
+          url: '/v1/measurements/'
+          json:
+            measurement:
+              type: 'ping'
+              target: 'google.com'
+            locations: []
+            limit: 1
+          capture:
+            json: '$'
+            as: 'response'
+      - log: '{{ response }}'
+  - name: 'dns'
+    flow:
+      - post:
+          url: '/v1/measurements/'
+          json:
+            measurement:
+              type: 'dns'
+              target: 'google.com'
+            locations: []
+            limit: 1
+          capture:
+            json: '$'
+            as: 'response'
+      - log: '{{ response }}'
+  - name: 'traceroute'
+    flow:
+      - post:
+          url: '/v1/measurements/'
+          json:
+            measurement:
+              type: 'traceroute'
+              target: 'google.com'
+            locations: []
+            limit: 1
+          capture:
+            json: '$'
+            as: 'response'
+      - log: '{{ response }}'
