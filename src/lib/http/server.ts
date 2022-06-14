@@ -9,7 +9,7 @@ import {registerGetMeasurementRoute} from '../../measurement/route/get-measureme
 import {registerCreateMeasurementRoute} from '../../measurement/route/create-measurement.js';
 import {registerDemoRoute} from '../../demo/route/get.js';
 import {errorHandler} from './error-handler.js';
-import {rateLimitHandler} from './middleware/ratelimit.js';
+// Import {rateLimitHandler} from './middleware/ratelimit.js';
 import {errorHandlerMw} from './middleware/error-handler.js';
 
 const app = new Koa();
@@ -49,7 +49,7 @@ app
 	.use(demoRouter.routes())
 	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 	.use(errorHandlerMw)
-	.use(rateLimitHandler())
+	// .use(rateLimitHandler())
 	.use(responseTime())
 	.use(cors())
 	.use(json({pretty: false, param: 'pretty'}))
