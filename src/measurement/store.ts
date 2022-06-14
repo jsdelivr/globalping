@@ -85,11 +85,12 @@ export class MeasurementStore {
 		});
 	}
 
-	async markFinished(id: string): Promise<void> {
+	async markFinished(id: string, isCancelled = false): Promise<void> {
 		const key = getMeasurementKey(id);
 
 		await this.redis.executeIsolated(async client => {
 			await client.json.set(key, '$.status', 'finished');
+			await client.json.set(key, '$.completed', !isCancelled);
 			await client.json.set(key, '$.updatedAt', Date.now());
 		});
 	}

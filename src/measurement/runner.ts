@@ -81,7 +81,7 @@ export class MeasurementRunner {
 
 		const timer = setTimeout(() => {
 			this.timers.delete(id);
-			this.store.markFinished(id).catch(error => logger.error(error));
+			this.store.markFinished(id, true).catch(error => logger.error(error));
 		}, timeout);
 
 		this.timers.set(id, timer);

@@ -94,6 +94,7 @@ export type MeasurementRecord = {
 	id: string;
 	type: NetworkTest['type'];
 	status: MeasurementStatus;
+	completed?: boolean;
 	createdAt: number;
 	updatedAt: number;
 	results: Record<string, (PingResult | TracerouteResult | DnsResult)>;
