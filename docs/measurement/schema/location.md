@@ -148,7 +148,7 @@ supported `type` values:
 
 <h2 id="magic-query">magic</h2>
 
-unlike other location queries, `magic` query doesn't attempt to match a specific value, but rather a pool of available matches, contained within a pre-defined array. It works by finding a partial string match of any of the above described variables. It also supports country matching based on [`Iso2`/`Iso3`](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes), common `aliases` and their full, official names format. Aliases also apply to `networks`.
+unlike other location queries, `magic` query doesn't attempt to match a specific value, but rather a pool of available matches, contained within a pre-defined array. It works by finding a partial string match of any of the above described variables. It also supports country matching based on [`Iso2`/`Iso3`](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes), common `aliases` and their full, official names format. Aliases also apply to `networks`, as well as combined matches.
 
 A full list of aliases can be found here:
 - [`countries`](https://github.com/jsdelivr/globalping/blob/master/src/lib/location/countries.ts)
@@ -160,6 +160,7 @@ A full list of aliases can be found here:
 - inputs are always converted to lowercase
 - `ASN` starts with `as` prefix (`as123`)
 - `latitude`/`longitude` fields are excluded
+- combined matches have to be joined with `+` sign
 
 ### examples
 
@@ -175,4 +176,9 @@ both of the following queries would match `amazon technologies inc.` network
 ```json
 { "type": "magic", "value": "aws" },
 { "type": "magic", "value": "amazon" }
+```
+
+magic queries can be combined. The following query will match `London, Ohio, USA`
+```
+{ "type": "magic", "value", "london+ohio+usa" }
 ```
