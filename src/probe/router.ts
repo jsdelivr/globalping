@@ -41,7 +41,7 @@ export class ProbeRouter {
 
 			const locationList = location.value.split('+').map(l => l.replace('-', ' ').toLowerCase());
 
-			return sockets.filter(s => locationList.every(l => s.data.probe.index.includes(l)));
+			return sockets.filter(s => locationList.every(l => s.data.probe.index.find(v => v.includes(l))));
 		}
 
 		return sockets.filter(s => s.data.probe.location[location.type] === location.value);
