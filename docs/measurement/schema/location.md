@@ -179,6 +179,7 @@ both of the following queries would match `amazon technologies inc.` network
 ```
 
 magic queries can be combined. The following query will match `London, Ohio, USA`
-```
-{ "type": "magic", "value", "london+ohio+usa" }
+
+```json
+{ "type": "magic", "value": "london+ohio+usa" }
 ```
