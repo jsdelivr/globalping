@@ -10,17 +10,25 @@ import type {Probe} from './types.js';
 
 type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
+export type NestedLocation = {type: 'nested'; value: Location[]};
+
+const findMagicMatch = (index: string[], location: Location) => index.find(v => v.includes(String(location.value).replace('-', ' ').toLowerCase()));
+
 export class ProbeRouter {
 	constructor(
 		private readonly io: WsServer,
 	) {}
 
-	async findMatchingProbes(locations: LocationWithLimit[] = [], globalLimit: number | undefined = undefined): Promise<Probe[]> {
+	async findMatchingProbes(
+		locations: LocationWithLimit[] = [],
+		globalLimit: number | undefined = undefined,
+		isNested = false,
+	): Promise<Probe[]> {
 		const sockets = await this.fetchSockets();
 		let filtered: Socket[] = [];
 
 		if (globalLimit) {
-			filtered = locations.length > 0 ? this.filterWithGlobalLimit(sockets, locations, globalLimit) : this.filterGloballyDistributed(sockets, globalLimit);
+			filtered = locations.length > 0 ? this.filterWithGlobalLimit(sockets, locations, globalLimit, isNested) : this.filterGloballyDistributed(sockets, globalLimit);
 		} else if (locations.length > 0) {
 			filtered = this.filterWithLocationLimit(sockets, locations);
 		}
@@ -33,20 +41,34 @@ export class ProbeRouter {
 		return sockets.filter(s => s.data.probe.ready);
 	}
 
-	private findByLocation(sockets: Socket[], location: Location): Socket[] {
+	private findByLocation(sockets: Socket[], location: Location | NestedLocation): Socket[] {
 		if (location.type === 'magic') {
 			if (location.value === 'world') {
 				return this.filterGloballyDistributed(sockets, sockets.length);
 			}
 
-			return sockets.filter(s => s.data.probe.index.find(v => v.includes(location.value.replace('-', ' ').toLowerCase())));
+			return sockets.filter(s => findMagicMatch(s.data.probe.index, location));
+		}
+
+		if (location.type === 'nested') {
+			return sockets.filter(s => location.value.every(l => {
+				if (l.type === 'magic') {
+					if (l.value === 'world') {
+						return true;
+					}
+
+					return Boolean(findMagicMatch(s.data.probe.index, l));
+				}
+
+				return l.value === s.data.probe.location[l.type];
+			}));
 		}
 
 		return sockets.filter(s => s.data.probe.location[location.type] === location.value);
 	}
 
-	private findByLocationAndWeight(sockets: Socket[], distribution: Map<Location, number>, limit: number): Socket[] {
-		const grouped: Map<Location, Socket[]> = new Map();
+	private findByLocationAndWeight(sockets: Socket[], distribution: Map<Location | NestedLocation, number>, limit: number): Socket[] {
+		const grouped: Map<Location | NestedLocation, Socket[]> = new Map();
 
 		for (const [location] of distribution) {
 			const found = _.shuffle(this.findByLocation(sockets, location));
@@ -96,9 +118,10 @@ export class ProbeRouter {
 		return this.findByLocationAndWeight(sockets, distribution, limit);
 	}
 
-	private filterWithGlobalLimit(sockets: Socket[], locations: Location[], limit: number): Socket[] {
+	private filterWithGlobalLimit(sockets: Socket[], locations: Location[], limit: number, isNested = false): Socket[] {
+		const locationList = isNested ? [{type: 'nested', value: locations}] as NestedLocation[] : locations;
 		const weight = Math.floor(100 / locations.length);
-		const distribution = new Map(locations.map(l => [l, weight]));
+		const distribution = new Map(locationList.map(l => [l, weight]));
 
 		return this.findByLocationAndWeight(sockets, distribution, limit);
 	}
