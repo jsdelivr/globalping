@@ -10,6 +10,8 @@ import {regions} from '../../lib/location/regions.js';
 const {continents, countries} = geoLists;
 const measurementConfig = config.get<{limits: {global: number; location: number}}>('measurement');
 
+export const filterSchema = Joi.string().valid('combined', 'default').insensitive().default('default');
+
 export const schema = Joi.array().items(Joi.object({
 	type: Joi.string().valid('continent', 'region', 'country', 'state', 'city', 'network', 'asn', 'magic').insensitive().required(),
 	value: Joi.alternatives().conditional('type', {
@@ -42,5 +44,8 @@ export const schema = Joi.array().items(Joi.object({
 		is: Joi.exist(),
 		then: Joi.forbidden().messages({'any.unknown': 'limit per location is not allowed when a global limit is set'}),
 		otherwise: Joi.required().messages({'any.required': 'limit per location required when no global limit is set'}),
+	}).when(Joi.ref('/filter'), {
+		is: 'combined',
+		then: Joi.forbidden().messages({'any.unknown': 'limit per location can not be used with combined filter type'}),
 	}),
 })).default([]);
