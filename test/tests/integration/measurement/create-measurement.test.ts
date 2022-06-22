@@ -5,7 +5,7 @@ import {getTestServer} from '../../../utils/http.js';
 import {addFakeProbe, deleteFakeProbe} from '../../../utils/ws.js';
 
 describe('Create measurement', function () {
-	this.timeout(5000);
+	this.timeout(15_000);
 
 	let app: Server;
 	let requestAgent: SuperTest<Test>;

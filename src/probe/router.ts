@@ -39,7 +39,9 @@ export class ProbeRouter {
 				return this.filterGloballyDistributed(sockets, sockets.length);
 			}
 
-			return sockets.filter(s => s.data.probe.index.find(v => v.includes(location.value.replace('-', ' ').toLowerCase())));
+			const locationList = location.value.split('+').map(l => l.replace('-', ' ').trim().toLowerCase());
+
+			return sockets.filter(s => locationList.every(l => s.data.probe.index.find(v => v.includes(l))));
 		}
 
 		return sockets.filter(s => s.data.probe.location[location.type] === location.value);
