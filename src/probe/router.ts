@@ -12,7 +12,10 @@ type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
 export type NestedLocation = {type: 'nested'; value: Location[]};
 
-const findMagicMatch = (index: string[], location: Location) => index.find(v => v.includes(String(location.value).replace('-', ' ').toLowerCase()));
+const findMagicMatch = (index: string[], location: Location) => {
+	const locationList = String(location.value).split('+').map(l => l.replace('-', ' ').trim().toLowerCase());
+	return locationList.every(l => index.find(v => v.includes(l)));
+};
 
 export class ProbeRouter {
 	constructor(

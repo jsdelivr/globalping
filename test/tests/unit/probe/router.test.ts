@@ -251,6 +251,23 @@ describe('probe router', () => {
 			expect(probes[0]!.location.country).to.equal('GB');
 		});
 
+		it('should return match (magic nested)', async () => {
+			const sockets: DeepPartial<Socket[]> = [
+				buildSocket(String(Date.now()), location),
+			];
+
+			const locations: Location[] = [
+				{type: 'magic', value: 'england+as5089'},
+			];
+
+			wsServerMock.fetchSockets.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes(locations, 100);
+
+			expect(probes.length).to.equal(1);
+			expect(probes[0]!.location.country).to.equal('GB');
+		});
+
 		describe('Location type - Network', () => {
 			for (const testCase of ['a-virgin', 'virgin', 'media']) {
 				it(`should match network - ${testCase}`, async () => {
