@@ -178,8 +178,8 @@ both of the following queries would match `amazon technologies inc.` network
 { "type": "magic", "value": "amazon" }
 ```
 
-magic queries can be combined. The following query will match `London, Ohio, USA`
+magic queries can be combined. The following query will match server in `Belgium` hosted at `Google Cloud` DC.
 
 ```json
-{ "type": "magic", "value": "london+ohio+usa" }
+{ "type": "magic", "value": "google+belgium" }
 ```
