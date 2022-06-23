@@ -20,7 +20,7 @@ type StateLocation = {
 
 type CityLocation = {
 	type: 'city';
-	value: number;
+	value: string;
 };
 
 type AsnLocation = {

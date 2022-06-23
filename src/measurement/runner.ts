@@ -26,7 +26,7 @@ export class MeasurementRunner {
 	) {}
 
 	async run(request: MeasurementRequest): Promise<MeasurementConfig> {
-		const probes = await this.router.findMatchingProbes(request.locations, request.limit);
+		const probes = await this.router.findMatchingProbes(request.locations, request.limit, request.filter === 'combined');
 
 		if (probes.length === 0) {
 			throw createHttpError(400, 'No suitable probes found');

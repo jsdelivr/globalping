@@ -6,6 +6,7 @@ const app = () => ({
         locations: [],
         target: 'google.com',
         limit: 1,
+        combineFilters: false,
         query: {}
       },
       response: {
@@ -172,7 +173,7 @@ const app = () => ({
         ...(limit ? { limit } : {})
       }))
 
-      this.postMeasurement(this.query.limit, measurement, locations);
+      this.postMeasurement(this.query.limit, measurement, locations, this.query.combineFilters);
     },
     addNewLocation(e) {
       e.preventDefault();
@@ -200,7 +201,7 @@ const app = () => ({
         ...this.query.locations.slice(index + 1)
       ];
     },
-    async postMeasurement(limit = 1, measurement = {}, locations = []) {
+    async postMeasurement(limit = 1, measurement = {}, locations = [], combineFilters) {
       const url = '/v1/measurements';
 
       const body = {
@@ -210,6 +211,10 @@ const app = () => ({
 
       if (!locations.find(l => l.limit)) {
         body.limit = limit;
+      }
+
+      if (combineFilters) {
+        body.filter = 'combined';
       }
 
       const response = await fetch(url, {
@@ -274,6 +279,12 @@ const app = () => ({
           <label for="query_target" class="col-sm-2 col-form-label">target</label>
           <div class="col-sm-10">
             <input v-model="query.target" name="query_target" id="query_target" placeholder="target" />
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="query_filter_combine" class="col-sm-2 col-form-label">combine filters</label>
+          <div class="col-sm-10">
+            <input type="checkbox" v-model="query.combineFilters" >
           </div>
         </div>
         <div class="form-group row">

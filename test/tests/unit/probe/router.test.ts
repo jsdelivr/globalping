@@ -8,6 +8,7 @@ import {PROBES_NAMESPACE, SocketData} from '../../../../src/lib/ws/server.js';
 import type {DeepPartial} from '../../../types.js';
 import type {ProbeLocation} from '../../../../src/probe/types.js';
 import type {Location} from '../../../../src/lib/location/types.js';
+import type {LocationWithLimit} from '../../../../src/measurement/types.js';
 import {
 	getCountryAliases,
 	getCountryByIso,
@@ -19,10 +20,24 @@ import {
 
 type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
+const buildLocationIndexes = (location: Partial<ProbeLocation>) => [
+	...Object.entries(location)
+		.filter(([key, value]) => value && !['asn', 'latitude', 'longitude'].includes(key))
+		.map(entries => String(entries[1])),
+	...(location.asn ? [`as${location.asn}`] : []),
+	...(location.state ? [getStateNameByIso(location.state)] : []),
+	...(location.country ? [
+		getCountryByIso(location.country),
+		getCountryIso3ByIso2(location.country),
+		getCountryAliases(location.country),
+	] : []),
+	...(location.network ? [getNetworkAliases(location.network)] : []),
+].flat().filter(Boolean).map(s => s.toLowerCase().replace('-', ' '));
+
 const buildSocket = (
 	id: string,
 	location: Partial<ProbeLocation>,
-	index: string[] = [],
+	index: string[] = buildLocationIndexes(location),
 	ready = true,
 ): DeepPartial<Socket> => ({
 	id,
@@ -219,21 +234,9 @@ describe('probe router', () => {
 			network: 'a-virgin media',
 		};
 
-		const index = [
-			...Object.entries(location)
-				.filter(([key, value]) => value && !['asn', 'latitude', 'longitude'].includes(key))
-				.map(entries => String(entries[1])),
-			`as${location.asn}`,
-			...(location.state ? [getStateNameByIso(location.state)] : []),
-			getCountryByIso(location.country),
-			getCountryIso3ByIso2(location.country),
-			getCountryAliases(location.country),
-			getNetworkAliases(location.network),
-		].flat().map(s => s.toLowerCase().replace('-', ' '));
-
 		it('should return match (country alias)', async () => {
 			const sockets: DeepPartial<Socket[]> = [
-				buildSocket(String(Date.now()), location, index),
+				buildSocket(String(Date.now()), location),
 			];
 
 			const locations: Location[] = [
@@ -250,7 +253,7 @@ describe('probe router', () => {
 
 		it('should return match (magic nested)', async () => {
 			const sockets: DeepPartial<Socket[]> = [
-				buildSocket(String(Date.now()), location, index),
+				buildSocket(String(Date.now()), location),
 			];
 
 			const locations: Location[] = [
@@ -269,7 +272,7 @@ describe('probe router', () => {
 			for (const testCase of ['a-virgin', 'virgin', 'media']) {
 				it(`should match network - ${testCase}`, async () => {
 					const sockets: DeepPartial<Socket[]> = [
-						buildSocket(String(Date.now()), location, index),
+						buildSocket(String(Date.now()), location),
 					];
 
 					const locations: Location[] = [
@@ -290,7 +293,7 @@ describe('probe router', () => {
 			for (const testCase of ['5089', 'AS5089', 'as5089']) {
 				it(`should match ASN - ${testCase}`, async () => {
 					const sockets: DeepPartial<Socket[]> = [
-						buildSocket(String(Date.now()), location, index),
+						buildSocket(String(Date.now()), location),
 					];
 
 					const locations: Location[] = [
@@ -305,6 +308,44 @@ describe('probe router', () => {
 					expect(probes[0]!.location.country).to.equal('GB');
 				});
 			}
+		});
+	});
+
+	describe('sticky filters', () => {
+		const sockets: DeepPartial<Socket[]> = [
+			buildSocket('GB-1', {continent: 'EU', country: 'GB', city: 'london', asn: 100}),
+			buildSocket('FI-1', {continent: 'EU', country: 'FI', city: 'london', asn: 222}),
+			buildSocket('US-1', {continent: 'NA', country: 'US', city: 'london', state: 'OH', asn: 999}),
+			buildSocket('US-3', {continent: 'NA', country: 'US', city: 'london', state: 'AR', asn: 555}),
+			buildSocket('CA-1', {continent: 'NA', country: 'CA', city: 'london', asn: 888}),
+		];
+
+		it('should combine filters', async () => {
+			const locations: LocationWithLimit[] = [
+				{type: 'city', value: 'london'},
+				{type: 'country', value: 'US'},
+			];
+
+			wsServerMock.fetchSockets.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes(locations, 100, true);
+			const grouped = _.groupBy(probes, 'location.country');
+
+			expect(grouped['US']?.length).to.equal(2);
+		});
+
+		it('should combine filters - use magic', async () => {
+			const locations: LocationWithLimit[] = [
+				{type: 'city', value: 'london'},
+				{type: 'magic', value: 'uk'},
+			];
+
+			wsServerMock.fetchSockets.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes(locations, 100, true);
+			const grouped = _.groupBy(probes, 'location.country');
+
+			expect(grouped['GB']?.length).to.equal(1);
 		});
 	});
 });
