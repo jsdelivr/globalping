@@ -14,6 +14,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 
 	ctx.body = socketList.map((socket: Socket) => ({
 		version: socket.data.probe.version,
+		ready: socket.data.probe.ready,
 		location: socket.data.probe.location,
 	}));
 };
