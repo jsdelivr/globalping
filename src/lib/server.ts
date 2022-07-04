@@ -2,8 +2,12 @@ import type {Server} from 'node:http';
 import {initRedis} from './redis/client.js';
 import {initWsServer} from './ws/server.js';
 import {getMetricsAgent} from './metrics.js';
+import {populateMemList as populateMemMalwareList} from './malware/client.js';
 
 export const createServer = async (): Promise<Server> => {
+	// PopulateMem malware list before opening HTTP server
+	await populateMemMalwareList();
+
 	await initRedis();
 	await initWsServer();
 
