@@ -6,6 +6,7 @@ Jump to:
 - [`Ping Result schema`](#ping)
 - [`Traceroute  Result schema`](#traceroute)
 - [`DNS Result schema`](#dns)
+- [`MTR Result schema`](#mtr)
 
 ## Success
 
@@ -31,6 +32,7 @@ The type of measurement. For more details about measurement type, please see [`M
 - `ping`
 - `dns`
 - `traceroute`
+- `mtr`
 
 #### status
 
@@ -390,3 +392,599 @@ record ttl.
 **type**: `string`
 
 record class code.
+
+### MTR
+
+example:
+
+```json
+{
+    "id": "aAizKkYaSuXyUx0r",
+    "type": "mtr",
+    "status": "finished",
+    "createdAt": 1657082414223,
+    "updatedAt": 1657082419515,
+    "results":
+    [
+        {
+            "probe":
+            {
+                "continent": "AF",
+                "region": "western africa",
+                "country": "NG",
+                "state": null,
+                "city": "lagos",
+                "asn": 56655,
+                "longitude": 3.41,
+                "latitude": 6.49,
+                "network": "terrahost"
+            },
+            "result":
+            {
+                "hops":
+                [
+                    {
+                        "stats":
+                        {
+                            "min": 0.199,
+                            "max": 0.294,
+                            "avg": 0.2,
+                            "total": 3,
+                            "rcv": 3,
+                            "drop": 0,
+                            "stDev": 0.1,
+                            "jMin": 0.1,
+                            "jMax": 0.2,
+                            "jAvg": 0.2
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33000",
+                                "time": 0.294
+                            },
+                            {
+                                "seq": "33013",
+                                "time": 0.199
+                            },
+                            {
+                                "seq": "33023",
+                                "time": 0.227
+                            }
+                        ],
+                        "host": "195.16.73.1",
+                        "duplicate": false,
+                        "asn": "56655",
+                        "resolvedHost": "static.195.16.73.1.terrahost.com"
+                    },
+                    {
+                        "stats":
+                        {
+                            "min": 0.873,
+                            "max": 1.043,
+                            "avg": 1,
+                            "total": 3,
+                            "rcv": 3,
+                            "drop": 0,
+                            "stDev": 0.1,
+                            "jMin": 0.1,
+                            "jMax": 0.9,
+                            "jAvg": 0.5
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33001",
+                                "time": 0.954
+                            },
+                            {
+                                "seq": "33014",
+                                "time": 1.043
+                            },
+                            {
+                                "seq": "33024",
+                                "time": 0.873
+                            }
+                        ],
+                        "host": "196.216.148.25",
+                        "duplicate": false
+                    },
+                    {
+                        "stats":
+                        {
+                            "min": 1.205,
+                            "max": 1.313,
+                            "avg": 1.3,
+                            "total": 3,
+                            "rcv": 3,
+                            "drop": 0,
+                            "stDev": 0.1,
+                            "jMin": 0,
+                            "jMax": 1.2,
+                            "jAvg": 0.6
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33002",
+                                "time": 1.313
+                            },
+                            {
+                                "seq": "33015",
+                                "time": 1.269
+                            },
+                            {
+                                "seq": "33025",
+                                "time": 1.205
+                            }
+                        ],
+                        "host": "108.170.240.34",
+                        "duplicate": false,
+                        "asn": "15169",
+                        "resolvedHost": "108.170.240.34"
+                    },
+                    {
+                        "stats":
+                        {
+                            "min": 76.561,
+                            "max": 76.779,
+                            "avg": 76.7,
+                            "total": 3,
+                            "rcv": 3,
+                            "drop": 0,
+                            "stDev": 0.1,
+                            "jMin": 0.1,
+                            "jMax": 76.8,
+                            "jAvg": 38.4
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33003",
+                                "time": 76.621
+                            },
+                            {
+                                "seq": "33016",
+                                "time": 76.561
+                            },
+                            {
+                                "seq": "33026",
+                                "time": 76.779
+                            }
+                        ],
+                        "host": "142.251.50.69",
+                        "duplicate": false,
+                        "asn": "15169",
+                        "resolvedHost": "142.251.50.69"
+                    },
+                    {
+                        "stats":
+                        {
+                            "min": 94.791,
+                            "max": 95.724,
+                            "avg": 95.2,
+                            "total": 3,
+                            "rcv": 3,
+                            "drop": 0,
+                            "stDev": 0.4,
+                            "jMin": 0.7,
+                            "jMax": 94.8,
+                            "jAvg": 47.7
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33004",
+                                "time": 95.724
+                            },
+                            {
+                                "seq": "33017",
+                                "time": 95.031
+                            },
+                            {
+                                "seq": "33027",
+                                "time": 94.791
+                            }
+                        ],
+                        "host": "142.251.226.177",
+                        "duplicate": false,
+                        "asn": "15169",
+                        "resolvedHost": "142.251.226.177"
+                    },
+                    {
+                        "stats":
+                        {
+                            "min": 104.574,
+                            "max": 104.771,
+                            "avg": 104.7,
+                            "total": 3,
+                            "rcv": 3,
+                            "drop": 0,
+                            "stDev": 0.1,
+                            "jMin": 0,
+                            "jMax": 104.6,
+                            "jAvg": 52.3
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33005",
+                                "time": 104.771
+                            },
+                            {
+                                "seq": "33018",
+                                "time": 104.731
+                            },
+                            {
+                                "seq": "33028",
+                                "time": 104.574
+                            }
+                        ],
+                        "host": "142.251.232.224",
+                        "duplicate": false,
+                        "asn": "15169",
+                        "resolvedHost": "142.251.232.224"
+                    },
+                    {
+                        "stats":
+                        {
+                            "min": 105.795,
+                            "max": 105.823,
+                            "avg": 105.8,
+                            "total": 3,
+                            "rcv": 3,
+                            "drop": 0,
+                            "stDev": 0,
+                            "jMin": 0,
+                            "jMax": 105.8,
+                            "jAvg": 52.9
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33006",
+                                "time": 105.823
+                            },
+                            {
+                                "seq": "33019",
+                                "time": 105.802
+                            },
+                            {
+                                "seq": "33029",
+                                "time": 105.795
+                            }
+                        ],
+                        "host": "142.251.232.223",
+                        "duplicate": false,
+                        "asn": "15169",
+                        "resolvedHost": "142.251.232.223"
+                    },
+                    {
+                        "stats":
+                        {
+                            "min": 102.795,
+                            "max": 102.862,
+                            "avg": 102.8,
+                            "total": 3,
+                            "rcv": 3,
+                            "drop": 0,
+                            "stDev": 0,
+                            "jMin": 0,
+                            "jMax": 102.9,
+                            "jAvg": 51.4
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33007",
+                                "time": 102.795
+                            },
+                            {
+                                "seq": "33020",
+                                "time": 102.828
+                            },
+                            {
+                                "seq": "33030",
+                                "time": 102.862
+                            }
+                        ],
+                        "host": "74.125.242.97",
+                        "duplicate": false,
+                        "asn": "15169",
+                        "resolvedHost": "74.125.242.97"
+                    },
+                    {
+                        "stats":
+                        {
+                            "min": 101.633,
+                            "max": 101.756,
+                            "avg": 101.7,
+                            "total": 3,
+                            "rcv": 3,
+                            "drop": 0,
+                            "stDev": 0.1,
+                            "jMin": 0.1,
+                            "jMax": 101.6,
+                            "jAvg": 50.9
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33008",
+                                "time": 101.645
+                            },
+                            {
+                                "seq": "33021",
+                                "time": 101.756
+                            },
+                            {
+                                "seq": "33031",
+                                "time": 101.633
+                            }
+                        ],
+                        "host": "108.170.234.231",
+                        "duplicate": false,
+                        "asn": "15169",
+                        "resolvedHost": "108.170.234.231"
+                    },
+                    {
+                        "stats":
+                        {
+                            "min": 101.957,
+                            "max": 101.981,
+                            "avg": 102,
+                            "total": 3,
+                            "rcv": 3,
+                            "drop": 0,
+                            "stDev": 0,
+                            "jMin": 0,
+                            "jMax": 102,
+                            "jAvg": 51
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33009",
+                                "time": 101.965
+                            },
+                            {
+                                "seq": "33022",
+                                "time": 101.957
+                            },
+                            {
+                                "seq": "33032",
+                                "time": 101.981
+                            }
+                        ],
+                        "host": "142.250.200.14",
+                        "duplicate": false,
+                        "resolvedHost": "lhr48s29-in-f14.1e100.net",
+                        "asn": "15169"
+                    },
+                    {
+                        "stats":
+                        {
+                            "min": 101.953,
+                            "max": 101.953,
+                            "avg": 102,
+                            "total": 1,
+                            "rcv": 1,
+                            "drop": 0,
+                            "stDev": 0,
+                            "jMin": 102,
+                            "jMax": 102,
+                            "jAvg": 102
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33010",
+                                "time": 101.953
+                            }
+                        ],
+                        "host": "142.250.200.14",
+                        "duplicate": true,
+                        "resolvedHost": "lhr48s29-in-f14.1e100.net",
+                        "asn": "15169"
+                    },
+                    {
+                        "stats":
+                        {
+                            "min": 101.945,
+                            "max": 101.945,
+                            "avg": 101.9,
+                            "total": 1,
+                            "rcv": 1,
+                            "drop": 0,
+                            "stDev": 0,
+                            "jMin": 101.9,
+                            "jMax": 101.9,
+                            "jAvg": 101.9
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33011",
+                                "time": 101.945
+                            }
+                        ],
+                        "host": "142.250.200.14",
+                        "duplicate": true,
+                        "resolvedHost": "lhr48s29-in-f14.1e100.net",
+                        "asn": "15169"
+                    },
+                    {
+                        "stats":
+                        {
+                            "min": 101.961,
+                            "max": 101.961,
+                            "avg": 102,
+                            "total": 1,
+                            "rcv": 1,
+                            "drop": 0,
+                            "stDev": 0,
+                            "jMin": 102,
+                            "jMax": 102,
+                            "jAvg": 102
+                        },
+                        "times":
+                        [
+                            {
+                                "seq": "33012",
+                                "time": 101.961
+                            }
+                        ],
+                        "host": "142.250.200.14",
+                        "duplicate": true,
+                        "resolvedHost": "lhr48s29-in-f14.1e100.net",
+                        "asn": "15169"
+                    }
+                ],
+                "rawOutput": "Host                                                             Loss% Drop Rcv   Avg  StDev  Javg \n 1. AS56655 _gateway (195.16.73.1)                                0.0%    0   3   0.2    0.1   0.2\n 2. AS???   196.216.148.25 (196.216.148.25)                       0.0%    0   3   1.0    0.1   0.5\n 3. AS15169 108.170.240.34 (108.170.240.34)                       0.0%    0   3   1.3    0.1   0.6\n 4. AS15169 142.251.50.69 (142.251.50.69)                         0.0%    0   3  76.7    0.1  38.4\n 5. AS15169 142.251.226.177 (142.251.226.177)                     0.0%    0   3  95.2    0.4  47.7\n 6. AS15169 142.251.232.224 (142.251.232.224)                     0.0%    0   3 104.7    0.1  52.3\n 7. AS15169 142.251.232.223 (142.251.232.223)                     0.0%    0   3 105.8    0.0  52.9\n 8. AS15169 74.125.242.97 (74.125.242.97)                         0.0%    0   3 102.8    0.0  51.4\n 9. AS15169 108.170.234.231 (108.170.234.231)                     0.0%    0   3 101.7    0.1  50.9\n10. AS15169 lhr48s29-in-f14.1e100.net (142.250.200.14)            0.0%    0   3 102.0    0.0  51.0\n",
+
+            }
+        }
+    ]
+}
+```
+#### hops[]
+
+**key**: `Result.result.hops[]`
+
+**type**: `Object[]`
+
+An array of all returned MTR results.
+
+#### hops[].resolvedHost
+
+**key**: `Result.result.hops[].resolvedHost`
+
+**type**: `string`
+
+#### hops[].host
+
+**key**: `Result.result.hops[].host`
+
+**type**: `string`
+
+Server's IP Address.
+
+#### hops[].asn
+
+**key**: `Result.result.hops[].asn`
+
+**type**: `string`
+
+AS number of the hop server.
+
+#### hops[].times[]
+
+**key**: `Result.result.hops[].times[]`
+
+**type**: `Object[]`
+
+An array of all ping records.
+
+#### hops[].times[].seq
+
+**key**: `Result.result.hops[].times[].seq`
+
+**type**: `number`
+
+MTR Ping sequence ID.
+
+#### hops[].times[].time
+
+**key**: `Result.result.hops[].times[].time`
+
+**type**: `number|undefined`
+
+Ping response time.
+
+#### hops[].stats
+
+**key**: `Result.result.hops[].stats`
+
+**type**: `Object`
+
+A stats summary of ping responses.
+
+#### hops[].stats.min
+
+**key**: `Result.result.hops[].stats.min`
+
+**type**: `float`
+
+The lowest response time.
+
+#### hops[].stats.max
+
+**key**: `Result.result.hops[].stats.max`
+
+**type**: `float`
+
+The longest response time.
+
+#### hops[].stats.avg
+
+**key**: `Result.result.hops[].stats.avg`
+
+**type**: `float`
+
+The average response time.
+
+#### hops[].stats.total
+
+**key**: `Result.result.hops[].stats.total`
+
+**type**: `number`
+
+The total count of PING packets sent.
+
+#### hops[].stats.rcv
+
+**key**: `Result.result.hops[].stats.rcv`
+
+**type**: `number`
+
+The total count of PING responses.
+
+#### hops[].stats.drop
+
+**key**: `Result.result.hops[].stats.drop`
+
+**type**: `number`
+
+The total count of PING packets, to which response never came.
+
+#### hops[].stats.stDev
+
+**key**: `Result.result.hops[].stats.stDev`
+
+**type**: `float`
+
+standard deviation
+
+#### hops[].stats.jMin
+
+**key**: `Result.result.hops[].stats.jMin`
+
+**type**: `float`
+
+The lowest jitter between response times.
+
+#### hops[].stats.jMax
+
+**key**: `Result.result.hops[].stats.jMax`
+
+**type**: `float`
+
+The largest jitter between response times.
+
+#### hops[].stats.jAvg
+
+**key**: `Result.result.hops[].stats.jAvg`
+
+**type**: `float`
+
+The average jitter between response times.
