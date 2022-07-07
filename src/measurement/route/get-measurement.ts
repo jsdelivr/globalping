@@ -23,6 +23,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		id: result.id,
 		type: result.type,
 		status: result.status,
+		completed: result.completed,
 		createdAt: result.createdAt,
 		updatedAt: result.updatedAt,
 		results: Object.values(result.results).map(r => r),
