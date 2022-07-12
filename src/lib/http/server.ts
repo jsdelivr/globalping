@@ -3,6 +3,9 @@ import Koa from 'koa';
 import json from 'koa-json';
 import cors from '@koa/cors';
 import Router from '@koa/router';
+import conditionalGet from 'koa-conditional-get';
+import compress from 'koa-compress';
+import etag from 'koa-etag';
 import responseTime from 'koa-response-time';
 import {registerGetProbesRoute} from '../../probe/route/get-probes.js';
 import {registerGetMeasurementRoute} from '../../measurement/route/get-measurement.js';
@@ -44,6 +47,9 @@ demoRouter.prefix('/demo');
 registerDemoRoute(demoRouter);
 
 app
+	.use(compress())
+	.use(conditionalGet())
+	.use(etag({weak: true}))
 // Exclude root + demo routers from any checks
 	.use(rootRouter.routes())
 	.use(demoRouter.routes())
