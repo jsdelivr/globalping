@@ -17,9 +17,9 @@ import {errorHandlerMw} from './middleware/error-handler.js';
 
 const app = new Koa();
 
-const rootRouter = new Router();
+const rootRouter = new Router({strict: true, sensitive: true});
 rootRouter.prefix('/');
-
+// GET /
 rootRouter.get('/', ctx => {
 	ctx.status = 404;
 	ctx.body = {
@@ -28,21 +28,17 @@ rootRouter.get('/', ctx => {
 	};
 });
 
-const apiRouter = new Router();
+const apiRouter = new Router({strict: true, sensitive: true});
 apiRouter.prefix('/v1');
-
 // POST /measurements
 registerCreateMeasurementRoute(apiRouter);
 // GET /measurements/:id
 registerGetMeasurementRoute(apiRouter);
-
 // GET /probes
 registerGetProbesRoute(apiRouter);
 
-const demoRouter = new Router();
-
+const demoRouter = new Router({strict: true, sensitive: true});
 demoRouter.prefix('/demo');
-
 // GET /demo
 registerDemoRoute(demoRouter);
 

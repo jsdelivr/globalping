@@ -33,7 +33,7 @@ describe('compression', function () {
 		it('should include compression headers', async () => {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			const response = await requestAgent
-				.get('/v1/probes/')
+				.get('/v1/probes')
 				.set('accept-encoding', '*')
 				.send() as Response;
 
