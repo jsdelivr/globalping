@@ -11,6 +11,7 @@ import {schema as locationSchema, filterSchema} from '../schema/location-schema.
 
 const runner = getMeasurementRunner();
 const measurementConfig = config.get<{limits: {global: number; location: number}}>('measurement');
+const hostConfig = config.get<string>('host');
 
 export const schema = Joi.object({
 	locations: locationSchema,
@@ -21,11 +22,13 @@ export const schema = Joi.object({
 
 const handle = async (ctx: Context): Promise<void> => {
 	const request = ctx.request.body as MeasurementRequest;
-	const config = await runner.run(request);
+	const result = await runner.run(request);
 
+	ctx.status = 202;
 	ctx.body = {
-		id: config.id,
-		probesCount: config.probes.length,
+		id: result.id,
+		probesCount: result.probes.length,
+		uri: `${hostConfig}/v1/measurements/${result.id}`,
 	};
 };
 
