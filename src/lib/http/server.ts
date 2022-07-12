@@ -1,7 +1,6 @@
 import {createServer} from 'node:http';
 import Koa from 'koa';
 import json from 'koa-json';
-import cors from '@koa/cors';
 import Router from '@koa/router';
 import conditionalGet from 'koa-conditional-get';
 import compress from 'koa-compress';
@@ -14,6 +13,7 @@ import {registerDemoRoute} from '../../demo/route/get.js';
 import {errorHandler} from './error-handler.js';
 import {rateLimitHandler} from './middleware/ratelimit.js';
 import {errorHandlerMw} from './middleware/error-handler.js';
+import {corsHandler} from './middleware/cors.js';
 
 const app = new Koa();
 
@@ -53,7 +53,7 @@ app
 	.use(errorHandlerMw)
 	.use(rateLimitHandler())
 	.use(responseTime())
-	.use(cors())
+	.use(corsHandler())
 	.use(json({pretty: true, spaces: 2}))
 	.use(apiRouter.routes())
 	.use(apiRouter.allowedMethods());
