@@ -97,6 +97,7 @@ export type MeasurementRecord = {
 	status: MeasurementStatus;
 	createdAt: number;
 	updatedAt: number;
+	probesCount: number;
 	results: Record<string, (PingResult | TracerouteResult | DnsResult)>;
 };
 
