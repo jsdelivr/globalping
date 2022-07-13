@@ -19,7 +19,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		return;
 	}
 
-	ctx.set('last-modified', (new Date(result.createdAt)).toISOString());
+	ctx.set('last-modified', (new Date(result.createdAt)).toUTCString());
 
 	ctx.body = {
 		id: result.id,
