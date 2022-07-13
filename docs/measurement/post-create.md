@@ -56,16 +56,17 @@ for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 
 ## success response
 
-**status code**: `200 OK`
+**status code**: `202 Accepted`
 
-**content**: response will contain an Id number of your measurement, and total number of probes assigned to your query. The count of assigned probes might vary from what you requested.
+**content**: response will contain an Id number of your measurement, an absolute URI to the measurement status, and total number of probes assigned to your query. The count of assigned probes might vary from what you requested.
 
 ### schema
 
 ```
 {
     id: string,
-    probesCount: number
+    probesCount: number,
+    uri: string
 }
 ```
 
@@ -75,7 +76,8 @@ for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 POST https://api.globalping.io/v1/measurements/
 {
     "id": "PY5fMsREMmIq45VR",
-    "probesCount": 1
+    "probesCount": 1,
+    "uri": "https://api.globalping.io/v1/measurements/PY5fMsREMmIq45VR"
 }
 ```
 
