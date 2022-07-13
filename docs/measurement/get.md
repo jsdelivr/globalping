@@ -10,9 +10,6 @@ Get the current state of the measurement.
 
 ### parameters
 
-**query**: 
-- `pretty` (optional) - prettifies the JSON response
-
 **params**:
 - `:Id` - Id of the measurement request. Returned by [POST /v1/measurements](./post-create.md)
 

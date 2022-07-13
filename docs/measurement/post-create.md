@@ -13,9 +13,6 @@ Creates an on-demand measurement to run immediately.
 **headers**:
 - `content-type: application/json` (required)
 
-**query**: 
-- `pretty` (optional) - prettifies the JSON response
-
 **body**:
 
 schema:
