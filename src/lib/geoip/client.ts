@@ -37,16 +37,16 @@ export default class GeoipClient {
 		const results = await Promise
 			.allSettled([
 				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
-				this.lookupWithCache<FastlyBundledResponse>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 				this.lookupWithCache<LocationInfo>(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
+				this.lookupWithCache<FastlyBundledResponse>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
-			.then(([ipinfo, fastly, maxmind]) => {
+			.then(([ipinfo, maxmind, fastly]) => {
 				const fulfilled = [];
 
 				fulfilled.push(
 					ipinfo.status === 'fulfilled' ? {...ipinfo.value, provider: 'ipinfo'} : null,
-					fastly.status === 'fulfilled' ? {...fastly.value.location, provider: 'fastly'} : null,
 					maxmind.status === 'fulfilled' ? {...maxmind.value, provider: 'maxmind'} : null,
+					fastly.status === 'fulfilled' ? {...fastly.value.location, provider: 'fastly'} : null,
 				);
 
 				if (fastly.status === 'fulfilled' && this.isVpn(fastly.value.client) && !skipVpnCheck) {
@@ -55,6 +55,12 @@ export default class GeoipClient {
 
 				return fulfilled.filter(Boolean).flat();
 			}) as LocationInfoWithProvider[];
+
+		const resultsWithCities = results.filter(s => s.city);
+
+		if (resultsWithCities.length < 2 && resultsWithCities[0]?.provider === 'fastly') {
+			throw new InternalError('unresolvable geoip', true);
+		}
 
 		const match = this.bestMatch('city', results);
 		const maxmindMatch = results.find(result => result.provider === 'maxmind');
@@ -88,8 +94,9 @@ export default class GeoipClient {
 	}
 
 	private bestMatch(field: keyof LocationInfo, sources: LocationInfoWithProvider[]): LocationInfo {
-		const ranked = Object.values(_.groupBy(sources.filter(s => s[field]), field)).sort((a, b) => b.length - a.length).flat();
-		const best = ranked[0];
+		const grouped = Object.values(_.groupBy(sources.filter(s => s[field]), field));
+		const ranked = grouped.sort((a, b) => b.length - a.length).flat();
+		const best = grouped.length === sources.length ? sources.find(s => s.provider === 'ipinfo') : ranked[0];
 
 		if (!best) {
 			this.logger.error(`failed to find a correct value for a filed "${field}"`, {field, sources});
