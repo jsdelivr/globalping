@@ -25,10 +25,10 @@ const handle = async (ctx: Context): Promise<void> => {
 	const result = await runner.run(request);
 
 	ctx.status = 202;
+	ctx.set('Location', `${hostConfig}/v1/measurements/${result.id}`);
 	ctx.body = {
 		id: result.id,
 		probesCount: result.probes.length,
-		uri: `${hostConfig}/v1/measurements/${result.id}`,
 	};
 };
 
