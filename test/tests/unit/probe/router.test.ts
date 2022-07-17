@@ -222,6 +222,36 @@ describe('probe router', () => {
 		});
 	});
 
+	describe('normalized fields', () => {
+		const location = {
+			continent: 'NA',
+			region: getRegionByCountry('US'),
+			country: 'US',
+			state: 'NY',
+			city: 'The New York City',
+			normalizedCity: 'new york',
+			asn: 5089,
+			network: 'abc',
+		};
+
+		it('should find probe by normalizedCity value', async () => {
+			const sockets: DeepPartial<Socket[]> = [
+				buildSocket(String(Date.now), location),
+			];
+
+			const locations: Location[] = [
+				{city: 'new york'},
+			];
+
+			wsServerMock.fetchSockets.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes(locations, 100);
+
+			expect(probes.length).to.equal(1);
+			expect(probes[0]!.location.country).to.equal('US');
+		});
+	});
+
 	describe('route with magic location', () => {
 		const location = {
 			continent: 'EU',
