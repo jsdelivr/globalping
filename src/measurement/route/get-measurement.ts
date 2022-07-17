@@ -25,8 +25,8 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		id: result.id,
 		type: result.type,
 		status: result.status,
-		createdAt: result.createdAt,
-		updatedAt: result.updatedAt,
+		createdAt: new Date(result.createdAt).toISOString(),
+		updatedAt: new Date(result.updatedAt).toISOString(),
 		probesCount: result.probesCount,
 		results: Object.values(result.results),
 	};
