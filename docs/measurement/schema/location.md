@@ -10,6 +10,14 @@ supported `type` values:
 - [`asn`](#asn-query)
 - [`magic`](#magic-query)
 
+Location filters can be joined, for more accurate queries. Consider the following example:
+
+```json
+  { "country": "gb", "city": "london", "magic": "virgin" }
+```
+
+it will match a probe located in `London, England`, running on `Virgin Media Limited` network.
+
 <h2 id="continent-query">Continent</h2>
 
 ### rules
