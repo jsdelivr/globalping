@@ -19,7 +19,7 @@ describe('Create measurement', function () {
 		it('should respond with error', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
-					locations: [{type: 'country', value: 'US'}],
+					locations: [{country: 'US'}],
 					measurement: {
 						type: 'ping',
 						target: 'example.com',
@@ -51,7 +51,7 @@ describe('Create measurement', function () {
 		it('should create measurement with global limit', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
-					locations: [{type: 'country', value: 'US'}],
+					locations: [{country: 'US'}],
 					measurement: {
 						type: 'ping',
 						target: 'example.com',
@@ -69,7 +69,7 @@ describe('Create measurement', function () {
 		it('should create measurement with location limit', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
-					locations: [{type: 'country', value: 'US', limit: 2}],
+					locations: [{country: 'US', limit: 2}],
 					measurement: {
 						type: 'ping',
 						target: 'example.com',
@@ -103,7 +103,7 @@ describe('Create measurement', function () {
 		it('should create measurement with "magic: world" location', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
-					locations: [{type: 'magic', value: 'world', limit: 2}],
+					locations: [{magic: 'world', limit: 2}],
 					measurement: {
 						type: 'ping',
 						target: 'example.com',
