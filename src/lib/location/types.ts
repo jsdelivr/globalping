@@ -3,7 +3,7 @@ export type Location = {
 	region?: string;
 	country?: string;
 	state?: string;
-	ciry?: string;
+	city?: string;
 	asn?: number;
 	magic?: string;
 };

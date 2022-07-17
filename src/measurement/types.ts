@@ -82,7 +82,6 @@ export type MeasurementRequest = {
 	measurement: NetworkTest;
 	locations: LocationWithLimit[];
 	limit?: number;
-	filter?: 'combined' | 'default';
 };
 
 export type MeasurementConfig = {
