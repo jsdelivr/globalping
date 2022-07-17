@@ -8,7 +8,6 @@ import {PROBES_NAMESPACE, SocketData} from '../../../../src/lib/ws/server.js';
 import type {DeepPartial} from '../../../types.js';
 import type {ProbeLocation} from '../../../../src/probe/types.js';
 import type {Location} from '../../../../src/lib/location/types.js';
-import type {LocationWithLimit} from '../../../../src/measurement/types.js';
 import {
 	getCountryAliases,
 	getCountryByIso,
