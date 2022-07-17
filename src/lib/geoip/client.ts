@@ -36,16 +36,16 @@ export default class GeoipClient {
 		const results = await Promise
 			.allSettled([
 				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
-				this.lookupWithCache<FastlyBundledResponse>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 				this.lookupWithCache<LocationInfo>(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
+				this.lookupWithCache<FastlyBundledResponse>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
-			.then(([ipinfo, fastly, maxmind]) => {
+			.then(([ipinfo, maxmind, fastly]) => {
 				const fulfilled = [];
 
 				fulfilled.push(
 					ipinfo.status === 'fulfilled' ? {...ipinfo.value, provider: 'ipinfo'} : null,
-					fastly.status === 'fulfilled' ? {...fastly.value.location, provider: 'fastly'} : null,
 					maxmind.status === 'fulfilled' ? {...maxmind.value, provider: 'maxmind'} : null,
+					fastly.status === 'fulfilled' ? {...fastly.value.location, provider: 'fastly'} : null,
 				);
 
 				if (fastly.status === 'fulfilled' && this.isVpn(fastly.value.client) && !skipVpnCheck) {
@@ -55,7 +55,7 @@ export default class GeoipClient {
 				return fulfilled.filter(Boolean).flat();
 			}) as LocationInfoWithProvider[];
 
-		const match = this.bestMatch('city', results);
+		const match = this.bestMatch('normalizedCity', results);
 		const maxmindMatch = results.find(result => result.provider === 'maxmind');
 
 		return {
