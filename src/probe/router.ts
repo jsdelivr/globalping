@@ -10,11 +10,6 @@ import type {Probe, ProbeLocation} from './types.js';
 
 type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
-const findMagicMatch = (index: string[], magic: string) => {
-	const locationList = String(magic).split('+').map(l => l.replace('-', ' ').trim().toLowerCase());
-	return locationList.every(l => index.find(v => v.includes(l)));
-};
-
 export class ProbeRouter {
 	constructor(
 		private readonly io: WsServer,
@@ -42,15 +37,19 @@ export class ProbeRouter {
 	}
 
 	private findByLocation(sockets: Socket[], location: Location): Socket[] {
-		if ('magic' in location) {
-			if (location.magic === 'world') {
-				return this.filterGloballyDistributed(sockets, sockets.length);
-			}
-
-			return sockets.filter(s => findMagicMatch(s.data.probe.index, location.magic!));
+		if (location.magic === 'world') {
+			return this.filterGloballyDistributed(sockets, sockets.length);
 		}
 
-		return sockets.filter(s => Object.keys(location).every(k => location[k as keyof Location] === s.data.probe.location[k as keyof ProbeLocation]));
+		return sockets.filter(s => Object.keys(location).every(k => {
+			if (k === 'magic') {
+				const {index} = s.data.probe;
+				const locationList = String(location[k]).split('+').map(l => l.replace('-', ' ').trim().toLowerCase());
+				return locationList.every(l => index.find(v => v.includes(l)));
+			}
+
+			return location[k as keyof Location] === s.data.probe.location[k as keyof ProbeLocation];
+		}));
 	}
 
 	private findByLocationAndWeight(sockets: Socket[], distribution: Map<Location, number>, limit: number): Socket[] {
