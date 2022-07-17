@@ -256,141 +256,113 @@ the delay between sending the packet and getting the response.
 
 ### DNS
 
-***warning!***: In case the measurement was requested with `toggle` enabled, the `Reasult.result` will be of type `Object[]`. This is because each trace path is returned individually by the probe.
+***warning!***: In case the measurement was requested with `toggle` enabled, the `Reasult.hops` will be of type `Object[]`. This is because each trace path is returned individually by the probe.
 
 example:
 ```json
 {
-    "id": "tEaUg3vYnOu2exVC",
-    "type": "ping",
-    "status": "finished",
-    "createdAt": "2022-07-17T16:19:52.909Z",
-    "updatedAt": "2022-07-17T16:19:52.909Z",
-    "results": [
-      {
-          "probe": {
-              "continent": "AF",
-              "region": "southern africa",
-              "country": "ZA",
-              "state": null,
-              "city": "cape town",
-              "asn": 16509,
-              "longitude": 18.4232,
-              "latitude": -33.9258,
-              "network": "amazon.com inc."
+  "id": "RelHRYGX9yAYtI0b",
+  "type": "dns",
+  "status": "finished",
+  "createdAt": "2022-07-17T16:19:52.909Z",
+  "updatedAt": "2022-07-17T16:19:52.909Z",
+  "results": [
+    {
+      "probe": {
+        "continent": "EU",
+        "region": "western europe",
+        "country": "NL",
+        "state": null,
+        "city": "naarden",
+        "asn": 33915,
+        "longitude": 5.1563,
+        "latitude": 52.285,
+        "network": "ziggo"
+      },
+      "result": {
+        "hops": [
+          {
+            "answers": [
+              {
+                "name": ".",
+                "type": "NS",
+                "ttl": 362800,
+                "class": "IN",
+                "value": "a.root-servers.net."
+              },
+              ...
+              {
+                "name": ".",
+                "type": "NS",
+                "ttl": 362800,
+                "class": "IN",
+                "value": "m.root-servers.net."
+              }
+            ],
+            "timings": {
+              "total": 0
+            },
+            "resolver": "192.168.0.49"
           },
-          "result": [
-            {
-              "time": 4,
-              "server": "127.0.0.53",
-              "answer": [
-                {
-                  "domain": ".",
-                  "type": "NS",
-                  "ttl": "6593",
-                  "class": "IN",
-                  "value": "c.root-servers.net."
-                },
-                ...
-                {
-                  "domain": ".",
-                  "type": "NS",
-                  "ttl": "6593",
-                  "class": "IN",
-                  "value": "h.root-servers.net."
-                }
-              ]
+          ...
+          {
+            "answers": [
+              {
+                "name": "google.com.",
+                "type": "A",
+                "ttl": 300,
+                "class": "IN",
+                "value": "142.250.178.14"
+              }
+            ],
+            "timings": {
+              "total": 28
             },
-            {
-              "time": 24,
-              "server": "d.root-servers.net",
-              "answer": [
-                {
-                  "domain": "net.",
-                  "type": "NS",
-                  "ttl": "172800",
-                  "class": "IN",
-                  "value": "a.gtld-servers.net."
-                },
-                ...
-                {
-                  "domain": "net.",
-                  "type": "RRSIG",
-                  "ttl": "86400",
-                  "class": "IN",
-                  "value": "nStNJg=="
-                }
-              ]
-            },
-            {
-              "time": 32,
-              "server": "c.gtld-servers.net",
-              "answer": [
-                {
-                  "domain": "jsdelivr.net.",
-                  "type": "NS",
-                  "ttl": "172800",
-                  "class": "IN",
-                  "value": "dns1.p03.nsone.net."
-                },
-                ...
-                {
-                  "domain": "GBMGFDMMHIENHS2RNSDAQ541H88GB5IO.net.",
-                  "type": "RRSIG",
-                  "ttl": "86400",
-                  "class": "IN",
-                  "value": "NO9LoUolBGhvxHSQfhwCyAi0slPURsAkC4DBUS1WrpipCQ=="
-                }
-              ]
-            },
-            {
-              "time": 28,
-              "server": "gns3.cloudns.net",
-              "answer": [
-                {
-                  "domain": "cdn.jsdelivr.net.",
-                  "type": "CNAME",
-                  "ttl": "900",
-                  "class": "IN",
-                  "value": "jsdelivr.map.fastly.net."
-                }
-              ]
-            }
-          ],
-          "rawOutput": "; <<>> DiG 9.18.1-1ubuntu1-Ubuntu <<>> +trace +nocookie +tries +timeout cdn.jsdelivr.net\n;; global options: +cmd\n.\t\t\t6593\tIN\tNS\tj.root-servers.net.\n.\t\t\t6593\tIN\tNS\tc.root-servers.net.\n.\t\t\t6593\tIN\tNS\tg.root-servers.net.\n.\t\t\t6593\tIN\tNS\tb.root-servers.net.\n.\t\t\t6593\tIN\tNS\ti.root-servers.net.\n.\t\t\t6593\tIN\tNS\ta.root-servers.net.\n.\t\t\t6593\tIN\tNS\te.root-servers.net.\n.\t\t\t6593\tIN\tNS\tl.root-servers.net.\n.\t\t\t6593\tIN\tNS\tk.root-servers.net.\n.\t\t\t6593\tIN\tNS\tf.root-servers.net.\n.\t\t\t6593\tIN\tNS\tm.root-servers.net.\n.\t\t\t6593\tIN\tNS\td.root-servers.net.\n.\t\t\t6593\tIN\tNS\th.root-servers.net.\n;; Received 811 bytes from 127.0.0.53#53(127.0.0.53) in 4 ms\n\nnet.\t\t\t172800\tIN\tNS\ta.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tb.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tc.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\td.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\te.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tf.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tg.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\th.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\ti.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tj.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tk.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tl.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tm.gtld-servers.net.\nnet.\t\t\t86400\tIN\tDS\t35886 8 2 7862B27F5F516EBE19680444D4CE5E762981931842C465F00236401D 8BD973EE\nnet.\t\t\t86400\tIN\tRRSIG\tDS 8 1 86400 20220509170000 20220426160000 47671 . IbbmgURsOFU02lEF33VZIt90+xd+DSAy6n+LowQlVMbxAxB6BsF5nNi1 n0Xsfixgxk06JOsQOLeMnTSX6xGZ5baCHa8pWGlS2CZ3wpmWt9Fg5Y/r Vqpneq9sBXuvcyLZ4OOzxqY8Xvqnj5EBqx2wegOxqOzbw4I2MLPeFWS4 hRvHcodnVkAHaWbDWLi3olY+8nIdWMLRdMxA1VkzliQn0MOPNn6mhKeG HTh3uOo7FSm+adbefRhC6X8QDoSFQ6VKYhd3mVJ7HGJ2JsvpVsJlG5Ff WNBztAw7W5Tg9aIVxPwfl3tNvlkpyvDqgurJLXVqmB7F+t3f3+8QKDMb nStNJg==\n;; Received 1173 bytes from 199.7.91.13#53(d.root-servers.net) in 24 ms\n\njsdelivr.net.\t\t172800\tIN\tNS\tdns1.p03.nsone.net.\njsdelivr.net.\t\t172800\tIN\tNS\tdns2.p03.nsone.net.\njsdelivr.net.\t\t172800\tIN\tNS\tdns3.p03.nsone.net.\njsdelivr.net.\t\t172800\tIN\tNS\tdns4.p03.nsone.net.\njsdelivr.net.\t\t172800\tIN\tNS\tgns1.cloudns.net.\njsdelivr.net.\t\t172800\tIN\tNS\tgns2.cloudns.net.\njsdelivr.net.\t\t172800\tIN\tNS\tgns3.cloudns.net.\njsdelivr.net.\t\t172800\tIN\tNS\tgns4.cloudns.net.\nA1RT98BS5QGC9NFI51S9HCI47ULJG6JH.net. 86400 IN NSEC3 1 1 0 - A1RTLNPGULOGN7B9A62SHJE1U3TTP8DR NS SOA RRSIG DNSKEY NSEC3PARAM\nA1RT98BS5QGC9NFI51S9HCI47ULJG6JH.net. 86400 IN RRSIG NSEC3 8 2 86400 20220503055829 20220426044829 45728 net. kqtegTsTwSJ9OJ/4UpoKnOzaSfaEaSxd03SERi2nhwhL1Dd/xjXF+Oy+ gB2NxI8IHBdT0Za1PadKRYefjjI+phvYB2Z2s7LqLE5iLju+2R6mVMQu TfkTO8GJWxBDMcXdcX2cjTxSan7y8m4kbzeGvqFHwiWtodDnT2lFQBvg QKqFhOv3D/NZtRua5mWeuy78rB3MIZQmGQ7rwapaz4h4eg==\nGBMGFDMMHIENHS2RNSDAQ541H88GB5IO.net. 86400 IN NSEC3 1 1 0 - GBMKRB78QIII3C3NIFGFSK27G1IBHMM0 NS DS RRSIG\nGBMGFDMMHIENHS2RNSDAQ541H88GB5IO.net. 86400 IN RRSIG NSEC3 8 2 86400 20220430055643 20220423044643 45728 net. JIFFMnHeaG97gcZYao5JGWkTJ4zGKDAKrfLOi9KrKVmBroFmnjfOytBo NgTxIl17GlLW2kaq1doKHpDHUu8y4u/56OdJmeBgL+OYqGbQjmICztpK dU+p9eoXUPLMkDFTqrwFhN1dm51Q9sle4MiDHMeLHBrs76jlpBcR+PQn NO9LoUolBGhvxHSQfhwCyAi0slPURsAkC4DBUS1WrpipCQ==\n;; Received 1116 bytes from 192.26.92.30#53(c.gtld-servers.net) in 32 ms\n\ncdn.jsdelivr.net.\t900\tIN\tCNAME\tjsdelivr.map.fastly.net.\n;; Received 79 bytes from 185.136.98.122#53(gns3.cloudns.net) in 28 ms\n"
-        }
+            "resolver": "ns1.google.com"
+          }
+        ],
+        "rawOutput": "\n; <<>> DiG 9.16.1-Ubuntu <<>> google.com -t A -p 53 -4 +timeout=3 +tries=2 +nocookie +trace\n;; global options: +cmd\n.\t\t\t362800\tIN\tNS\ta.root-servers.net.\n.\t\t\t362800\tIN\tNS\tb.root-servers.net.\n.\t\t\t362800\tIN\tNS\tc.root-servers.net.\n.\t\t\t362800\tIN\tNS\td.root-servers.net.\n.\t\t\t362800\tIN\tNS\te.root-servers.net.\n.\t\t\t362800\tIN\tNS\tf.root-servers.net.\n.\t\t\t362800\tIN\tNS\tg.root-servers.net.\n.\t\t\t362800\tIN\tNS\th.root-servers.net.\n.\t\t\t362800\tIN\tNS\ti.root-servers.net.\n.\t\t\t362800\tIN\tNS\tj.root-servers.net.\n.\t\t\t362800\tIN\tNS\tk.root-servers.net.\n.\t\t\t362800\tIN\tNS\tl.root-servers.net.\n.\t\t\t362800\tIN\tNS\tm.root-servers.net.\n;; Received 492 bytes from 192.168.0.49#53(192.168.0.49) in 0 ms\n\ncom.\t\t\t172800\tIN\tNS\te.gtld-servers.net.\ncom.\t\t\t172800\tIN\tNS\tb.gtld-servers.net.\ncom.\t\t\t172800\tIN\tNS\tj.gtld-servers.net.\ncom.\t\t\t172800\tIN\tNS\tm.gtld-servers.net.\ncom.\t\t\t172800\tIN\tNS\ti.gtld-servers.net.\ncom.\t\t\t172800\tIN\tNS\tf.gtld-servers.net.\ncom.\t\t\t172800\tIN\tNS\ta.gtld-servers.net.\ncom.\t\t\t172800\tIN\tNS\tg.gtld-servers.net.\ncom.\t\t\t172800\tIN\tNS\th.gtld-servers.net.\ncom.\t\t\t172800\tIN\tNS\tl.gtld-servers.net.\ncom.\t\t\t172800\tIN\tNS\tk.gtld-servers.net.\ncom.\t\t\t172800\tIN\tNS\tc.gtld-servers.net.\ncom.\t\t\t172800\tIN\tNS\td.gtld-servers.net.\ncom.\t\t\t86400\tIN\tDS\t30909 8 2 E2D3C916F6DEEAC73294E8268FB5885044A833FC5459588F4A9184CF C41A5766\ncom.\t\t\t86400\tIN\tRRSIG\tDS 8 1 86400 20220730050000 20220717040000 20826 . EioIIaaJd6MrRl24dvoN/uEZeTC99lAcUkOw8N2V0xYLvpzgjEqCTrav NL/hsoesQaqV4oEHAhaGLN3CqeD67/H3486F/qvsgzUr44+A3snPuSEY MII2V1pvqpoSS/CRFp/WeocdKNLvG8mJ3ZAj5940WkZz7kctpvjuUTU3 mrlNbNZ5L711Jfg+7cClnEwH4S0zYXIO2GKQ4ODJNu6AGqXJmnhAV/Kr V9eqgnlN0Jephc2yPyQOsuDLEaZktgQDKyJZdhVXOaKPyJ2kXjiEP54M jHPJSKsnhvm5Yzp3yZ0vs1/nUplwtot4EmBEspr8IURoopRmBKgTrpR7 jNBobg==\n;; Received 1170 bytes from 198.41.0.4#53(a.root-servers.net) in 16 ms\n\ngoogle.com.\t\t172800\tIN\tNS\tns2.google.com.\ngoogle.com.\t\t172800\tIN\tNS\tns1.google.com.\ngoogle.com.\t\t172800\tIN\tNS\tns3.google.com.\ngoogle.com.\t\t172800\tIN\tNS\tns4.google.com.\nCK0POJMG874LJREF7EFN8430QVIT8BSM.com. 86400 IN NSEC3 1 1 0 - CK0Q2D6NI4I7EQH8NA30NS61O48UL8G5 NS SOA RRSIG DNSKEY NSEC3PARAM\nCK0POJMG874LJREF7EFN8430QVIT8BSM.com. 86400 IN RRSIG NSEC3 8 2 86400 20220722042351 20220715031351 37269 com. CGDG1OnS2M4TfifTOQPoDPkONkkSyrgg/J0R9YJMr2DoNwWKDtAlkFCC w6Zudqnhww+ueLqL9JMXgveLaD9yz+DVWUG0bVQrjwXeOETE77TP2o1n Y0gI+grgHq2RnbCQQYwrQCP+y5uW60umtQjNJ5Jrn79GcF71310gEyqP ssKDXc+larXUFTX4ioVjhaNJmxAJ+1HMNOEx0mExixJSfA==\nS84BKCIBC38P58340AKVNFN5KR9O59QC.com. 86400 IN NSEC3 1 1 0 - S84BUO64GQCVN69RJFUO6LVC7FSLUNJ5 NS DS RRSIG\nS84BKCIBC38P58340AKVNFN5KR9O59QC.com. 86400 IN RRSIG NSEC3 8 2 86400 20220723051421 20220716040421 32298 com. Sa83wfjljiKv2sIWRuo38q0SO8Awm6Qeb1b5imsCWJFtKGi0O9peJOZH yeGkl83IhLXdNNpxIHDl4FylvNHtUK1lLouSLZ6mEArRSTHftmyVsCX4 QXnmgIRsnYxNkdT73ROC0XJKwDY7yugRu+atn3sxKgWT2Ix6akhxVYfZ 0hATnASS1+vgRlgI577xRFkwaz2bKk/uq6P+PghDiSox+Q==\n;; Received 836 bytes from 192.26.92.30#53(c.gtld-servers.net) in 104 ms\n\ngoogle.com.\t\t300\tIN\tA\t142.250.178.14\n;; Received 55 bytes from 216.239.32.10#53(ns1.google.com) in 28 ms\n"
       }
-  ]
+    }
+  ]}
 }
 ```
 
-#### server
+#### resolver
 
-**key**: `Result.result.server`
+**key**: `Result.result.resolver`
 
 **type**: `string`
 
 IP Address of the resolver used.
 
-#### time
+#### timings
 
-**key**: `Result.result.time`
+**key**: `Result.result.timings`
+
+**type**: `Object`
+
+stats container object, containing all timings details.
+
+#### timings.total
+
+**key**: `Result.result.timings.total`
 
 **type**: `number`
 
 time it took to complete the request. Reported by `dig`.
 
-#### answer[]
+#### answers[]
 
-**key**: `Result.result.answer[]`
+**key**: `Result.result.answers[]`
 
 **type**: `Object[]`
 
 An array of all returned DNS results.
 
-#### answer[].domain
+#### answer[].name
 
-**key**: `Result.result.answer[].domain`
+**key**: `Result.result.answer[].name`
 
 **type**: `string`
 
