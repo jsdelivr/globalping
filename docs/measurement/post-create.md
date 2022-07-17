@@ -66,7 +66,6 @@ for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 {
     id: string,
     probesCount: number,
-    uri: string
 }
 ```
 
@@ -77,8 +76,13 @@ POST https://api.globalping.io/v1/measurements/
 {
     "id": "PY5fMsREMmIq45VR",
     "probesCount": 1,
-    "uri": "https://api.globalping.io/v1/measurements/PY5fMsREMmIq45VR"
 }
+```
+
+headers:
+
+```
+  Location: https://api.globalping.io/v1/measurements/PY5fMsREMmIq45VR
 ```
 
 ## error response (validation failed)
