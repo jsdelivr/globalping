@@ -13,7 +13,6 @@ import {isAddrWhitelisted} from './whitelist.js';
 import {ipinfoLookup} from './providers/ipinfo.js';
 import {FastlyBundledResponse, fastlyLookup} from './providers/fastly.js';
 import {maxmindLookup} from './providers/maxmind.js';
-import {normalizeNetworkName} from './utils.js';
 
 export type LocationInfo = Omit<ProbeLocation, 'region'>;
 export type LocationInfoWithProvider = LocationInfo & {provider: string};
@@ -64,10 +63,12 @@ export default class GeoipClient {
 			country: match.country,
 			state: match.state,
 			city: match.city,
+			normalizedCity: match.normalizedCity,
 			asn: Number(maxmindMatch?.asn ?? match.asn),
 			latitude: Number(match.latitude),
 			longitude: Number(match.longitude),
-			network: normalizeNetworkName(maxmindMatch?.network ?? match.network),
+			network: maxmindMatch?.network ?? match.network,
+			normalizedNetwork: maxmindMatch?.normalizedNetwork ?? match.normalizedNetwork,
 		};
 	}
 

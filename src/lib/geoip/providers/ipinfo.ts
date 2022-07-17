@@ -2,7 +2,10 @@ import got from 'got';
 import config from 'config';
 import {getContinentByCountry, getStateIsoByName} from '../../location/location.js';
 import type {LocationInfo} from '../client.js';
-import {normalizeCityName} from '../utils.js';
+import {
+	normalizeCityName,
+	normalizeNetworkName,
+} from '../utils.js';
 
 type IpinfoResponse = {
 	country: string;
@@ -27,10 +30,12 @@ export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 		continent: getContinentByCountry(result.country),
 		state: result.country === 'US' ? getStateIsoByName(result.region) : undefined,
 		country: result.country,
-		city: normalizeCityName(result.city),
+		city: result.city,
+		normalizedCity: normalizeCityName(result.city),
 		asn: parsedAsn!,
 		latitude: Number(lat),
 		longitude: Number(lon),
 		network,
+		normalizedNetwork: normalizeNetworkName(network),
 	};
 };

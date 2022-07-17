@@ -10,6 +10,17 @@ import type {Probe, ProbeLocation} from './types.js';
 
 type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
+/*
+ * [
+ *    [ public key, internal key]
+ * ]
+ *
+ * */
+const locationKeyMap = [
+	['network', 'normalizedNetwork'],
+	['city', 'normalizedCity'],
+];
+
 export class ProbeRouter {
 	constructor(
 		private readonly io: WsServer,
@@ -48,7 +59,9 @@ export class ProbeRouter {
 				return locationList.every(l => index.find(v => v.includes(l)));
 			}
 
-			return location[k as keyof Location] === s.data.probe.location[k as keyof ProbeLocation];
+			const key = locationKeyMap.find(m => m.includes(k))?.[1] ?? k;
+
+			return location[k as keyof Location] === s.data.probe.location[key as keyof ProbeLocation];
 		}));
 	}
 
