@@ -200,13 +200,21 @@ An array of all PING iterations before the deadline occured.
 
 ### TRACEROUTE
 
-#### destination
+#### resolvedAddress
 
-**key**: `Result.result.destination`
+**key**: Result.result.resolvedAddress`
 
 **type**: `string`
 
 IP Address contained within `traceroute` response header.
+
+#### resolvedHostname
+
+**key**: Result.result.resolvedHostname`
+
+**type**: `string`
+
+Hostname address contained within `traceroute` response header.
 
 #### hops[]
 
@@ -216,9 +224,9 @@ IP Address contained within `traceroute` response header.
 
 An array of all traceroute iterations before the deadline occured.
 
-#### hops[].host
+#### hops[].resolvedHostname
 
-**key**: `Result.result.hops[].host`
+**key**: `Result.result.hops[].resolvedHostname`
 
 **type**: `string`
 
@@ -226,17 +234,23 @@ reported hostame.
 
 #### hops[].resolvedAddress
 
-**key**: `Result.result.times[].time`
+**key**: `Result.result.hops[].resolvedAddress`
 
 **type**: `string`
 
 reported ip address.
 
-#### hops[].rtt[]
+#### hops[].timings[]
 
-**key**: `Result.result.times[].rtt[]`
+**key**: `Result.result.hops[].timings[]`
 
-**type**: `number[]`
+**type**: `Object[]`
+
+#### hops[].timings[].rtt
+
+**key**: `Result.result.times[].rtt`
+
+**type**: `number`
 
 the delay between sending the packet and getting the response.
 
