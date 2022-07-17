@@ -84,25 +84,28 @@ An array of all probe responses. Jump to [`RESULT SCHEMA`](#result) for more det
             },
             "result": {
                 "resolvedAddress": "172.217.170.14",
-                "times": [
+                "resolvedHostname": "lhr25s33-in-f14.1e100.net",
+                "timings": [
                     {
                         "ttl": 108,
-                        "time": 16.5
+                        "rtt": 16.5
                     },
                     {
                         "ttl": 108,
-                        "time": 16.5
+                        "rtt": 16.5
                     },
                     {
                         "ttl": 108,
-                        "time": 16.5
+                        "rtt": 16.5
                     }
                 ],
-                "min": 16.474,
-                "avg": 16.504,
-                "max": 16.543,
-                "loss": 0,
-                "rawOutput": "PING google.com (172.217.170.14) 56(84) bytes of data.\n64 bytes from 172.217.170.14: icmp_seq=1 ttl=108 time=16.5 ms\n64 bytes from 172.217.170.14: icmp_seq=2 ttl=108 time=16.5 ms\n64 bytes from 172.217.170.14: icmp_seq=3 ttl=108 time=16.5 ms\n\n--- google.com ping statistics ---\n3 packets transmitted, 3 received, 0% packet loss, time 402ms\nrtt min/avg/max/mdev = 16.474/16.504/16.543/0.028 ms"
+                "stats": {
+                  "min": 16.474,
+                  "avg": 16.504,
+                  "max": 16.543,
+                  "loss": 0,
+                },
+                "rawOutput": "PING google.com (172.217.170.14) 56(84) bytes of data.\n64 bytes from lhr25s33-in-f14.1e100.net (172.217.170.14): icmp_seq=1 ttl=108 time=16.5 ms\n64 bytes from lhr25s33-in-f14.1e100.net (172.217.170.14): icmp_seq=2 ttl=108 time=16.5 ms\n64 bytes from lhr25s33-in-f14.1e100.net (172.217.170.14): icmp_seq=3 ttl=108 time=16.5 ms\n\n--- google.com ping statistics ---\n3 packets transmitted, 3 received, 0% packet loss, time 402ms\nrtt min/avg/max/mdev = 16.474/16.504/16.543/0.028 ms"
             }
         }
     ]
@@ -143,41 +146,57 @@ The raw, unparsed stdout output from the native command.
 
 IP Address contained within `ping` response header.
 
-#### loss
+#### resolvedHostname
 
-**key**: `Result.result.loss`
+**key**: Result.result.resolvedHostname`
+
+**type**: `string`
+
+Hostname address contained within `ping` response header.
+
+#### stats
+
+A container object for test stats.
+
+**key**: `Result.result.stats`
+
+**type**: `Object`
+
+#### stats.loss
+
+**key**: `Result.result.stats.loss`
 
 **type**: `number`
 
 total count of lost packets.
 
-#### times[]
+#### stats.min / stats.avg / stats.max
 
-**key**: `Result.result.times[]`
+**key**: `Result.result.stats.min` `Result.result.stats.avg` `Result.result.stats.max`
+
+**type**: `number`
+
+stats in millisecond contained within `ping` response footer.
+
+#### timings[]
+
+**key**: `Result.result.timings[]`
 
 **type**: `Object[]`
 
 An array of all PING iterations before the deadline occured.
 
-#### times[].ttl
+#### timings[].ttl
 
-**key**: `Result.result.times[].ttl`
-
-**type**: `number`
-
-#### times[].time
-
-**key**: `Result.result.times[].time`
+**key**: `Result.result.timings[].ttl`
 
 **type**: `number`
 
-#### min / avg / max
+#### timings[].time
 
-**key**: `Result.result.min` `Result.result.avg` `Result.result.max`
+**key**: `Result.result.timings[].time`
 
 **type**: `number`
-
-stats in millisecond contained within `ping` response footer.
 
 ### TRACEROUTE
 
