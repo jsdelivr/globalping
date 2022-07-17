@@ -48,7 +48,7 @@ Measurement's current status. Communication between server and probes is asynchr
 
 **key**: `createdAt` `updatedAt`
 
-**type**: `number`
+**type**: `string` (ISO)
 
 #### results[]
 
@@ -65,8 +65,8 @@ An array of all probe responses. Jump to [`RESULT SCHEMA`](#result) for more det
     "id": "tEaUg3vYnOu2exVC",
     "type": "ping",
     "status": "finished",
-    "createdAt": 1650384403719,
-    "updatedAt": 1650384404482,
+    "createdAt": "2022-07-17T16:19:52.909Z",
+    "updatedAt": "2022-07-17T16:19:52.909Z",
     "results": [
         {
             "probe": {
@@ -229,8 +229,8 @@ example:
     "id": "tEaUg3vYnOu2exVC",
     "type": "ping",
     "status": "finished",
-    "createdAt": 1650384403719,
-    "updatedAt": 1650384404482,
+    "createdAt": "2022-07-17T16:19:52.909Z",
+    "updatedAt": "2022-07-17T16:19:52.909Z",
     "results": [
       {
           "probe": {
