@@ -50,7 +50,7 @@ Measurement's current status. Communication between server and probes is asynchr
 
 **key**: `createdAt` `updatedAt`
 
-**type**: `number`
+**type**: `string` (ISO)
 
 #### results[]
 
