@@ -310,40 +310,4 @@ describe('probe router', () => {
 			}
 		});
 	});
-
-	describe('sticky filters', () => {
-		const sockets: DeepPartial<Socket[]> = [
-			buildSocket('GB-1', {continent: 'EU', country: 'GB', city: 'london', asn: 100}),
-			buildSocket('FI-1', {continent: 'EU', country: 'FI', city: 'london', asn: 222}),
-			buildSocket('US-1', {continent: 'NA', country: 'US', city: 'london', state: 'OH', asn: 999}),
-			buildSocket('US-3', {continent: 'NA', country: 'US', city: 'london', state: 'AR', asn: 555}),
-			buildSocket('CA-1', {continent: 'NA', country: 'CA', city: 'london', asn: 888}),
-		];
-
-		it('should combine filters', async () => {
-			const locations: LocationWithLimit[] = [
-				{city: 'london', country: 'US'},
-			];
-
-			wsServerMock.fetchSockets.resolves(sockets as never);
-
-			const probes = await router.findMatchingProbes(locations, 100);
-			const grouped = _.groupBy(probes, 'location.country');
-
-			expect(grouped['US']?.length).to.equal(2);
-		});
-
-		it('should combine filters - use magic', async () => {
-			const locations: LocationWithLimit[] = [
-				{city: 'london', magic: 'uk'},
-			];
-
-			wsServerMock.fetchSockets.resolves(sockets as never);
-
-			const probes = await router.findMatchingProbes(locations, 100);
-			const grouped = _.groupBy(probes, 'location.country');
-
-			expect(grouped['GB']?.length).to.equal(1);
-		});
-	});
 });
