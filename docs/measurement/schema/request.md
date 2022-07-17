@@ -67,23 +67,19 @@ Please, see [LOCATION SCHEMA](./location.md) document for more details.
 ```json
     "locations": [
         {
-            "type": "continent",
-            "value": "eu",
+            "continent": "eu",
             "limit": 10
         },
         {
-            "type": "network",
-            "value": "virgin media limited",
+            "network": "virgin media limited",
             "limit": 1
         },
         {
-            "type": "magic",
-            "value": "aws", // alias
+            "magic": "aws", // alias
             "limit": 1
         },
         {
-            "type": "magic",
-            "value": "pol", // (poland) partial match
+            "magic": "pol", // (poland) partial match
             "limit": 1
         }
     ]
