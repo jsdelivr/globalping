@@ -15,31 +15,29 @@ describe('command schema', () => {
 			it('should correct network name', () => {
 				const input = [
 					{
-						type: 'network',
-						value: 'VIRGIN MEDIA',
+						network: 'VIRGIN MEDIA',
 						limit: 1,
 					},
 				];
 
 				const valid = locationSchema.validate(input);
 
-				expect(valid.value[0]!.value).to.equal(input[0]!.value.toLowerCase());
-				expect(valid.value[0]!.value).to.not.equal(input[0]!.value);
+				expect(valid.value[0]!.network).to.equal(input[0]!.network.toLowerCase());
+				expect(valid.value[0]!.network).to.not.equal(input[0]!.network);
 			});
 
 			it('should correct city value', () => {
 				const input = [
 					{
-						type: 'city',
-						value: 'LONDON',
+						city: 'LONDON',
 						limit: 1,
 					},
 				];
 
 				const valid = locationSchema.validate(input);
 
-				expect(valid.value[0]!.value).to.equal(input[0]!.value.toLowerCase());
-				expect(valid.value[0]!.value).to.not.equal(input[0]!.value);
+				expect(valid.value[0]!.city).to.equal(input[0]!.city.toLowerCase());
+				expect(valid.value[0]!.city).to.not.equal(input[0]!.city);
 			});
 		});
 
@@ -47,8 +45,7 @@ describe('command schema', () => {
 			it('should fail (too short)', () => {
 				const input = [
 					{
-						type: 'magic',
-						value: '',
+						magic: '',
 						limit: 1,
 					},
 				];
@@ -56,14 +53,13 @@ describe('command schema', () => {
 				const valid = locationSchema.validate(input);
 
 				expect(valid.error).to.exist;
-				expect(valid.error!.details[0]!.message).to.equal('"[0].value" is not allowed to be empty');
+				expect(valid.error!.details[0]!.message).to.equal('"[0].magic" is not allowed to be empty');
 			});
 
 			it('should fail (not string)', () => {
 				const input = [
 					{
-						type: 'magic',
-						value: 1337,
+						magic: 1337,
 						limit: 1,
 					},
 				];
@@ -71,14 +67,13 @@ describe('command schema', () => {
 				const valid = locationSchema.validate(input);
 
 				expect(valid.error).to.exist;
-				expect(valid.error!.details[0]!.message).to.equal('"[0].value" must be a string');
+				expect(valid.error!.details[0]!.message).to.equal('"[0].magic" must be a string');
 			});
 
 			it('should succeed', () => {
 				const input = [
 					{
-						type: 'magic',
-						value: 'cyprus',
+						magic: 'cyprus',
 						limit: 1,
 					},
 				];
