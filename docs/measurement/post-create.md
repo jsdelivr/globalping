@@ -58,7 +58,7 @@ for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 
 **status code**: `202 Accepted`
 
-**content**: response will contain an Id number of your measurement, an absolute URI to the measurement status, and total number of probes assigned to your query. The count of assigned probes might vary from what you requested.
+**content**: response will contain an Id number of your measurement, and total number of probes assigned to your query. The count of assigned probes might vary from what you requested. A URL pointing to the measurement status is sent in the `Location` header.
 
 ### schema
 
