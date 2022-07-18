@@ -10,7 +10,7 @@ import {regions} from '../../lib/location/regions.js';
 const {continents, countries} = geoLists;
 const measurementConfig = config.get<{limits: {global: number; location: number}}>('measurement');
 
-export const schema = Joi.array().items(Joi.object({
+export const schema = Joi.array().items(Joi.object().keys({
 	continent: Joi.string().valid(...Object.keys(continents)).insensitive()
 		.messages({'any.only': 'The continent must be a valid two-letter ISO code'}),
 	region: Joi.string().valid(...Object.keys(regions)).insensitive(),
@@ -27,4 +27,4 @@ export const schema = Joi.array().items(Joi.object({
 		then: Joi.forbidden().messages({'any.unknown': 'limit per location is not allowed when a global limit is set'}),
 		otherwise: Joi.required().messages({'any.required': 'limit per location required when no global limit is set'}),
 	}),
-})).default([]);
+}).or('continent', 'region', 'country', 'state', 'city', 'network', 'asn', 'magic')).default([]);
