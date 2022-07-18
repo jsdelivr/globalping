@@ -12,7 +12,7 @@ const measurementConfig = config.get<{limits: {global: number; location: number}
 
 export const schema = Joi.array().items(Joi.object().keys({
 	continent: Joi.string().valid(...Object.keys(continents)).insensitive()
-		.messages({'any.only': 'The continent must be a valid two-letter ISO code'}),
+		.messages({'any.only': 'The continent must be a valid two-letter continent code'}),
 	region: Joi.string().valid(...Object.keys(regions)).insensitive(),
 	country: Joi.string().valid(...Object.keys(countries)).insensitive()
 		.messages({'any.only': 'The country must be a valid two-letter ISO code'}),
