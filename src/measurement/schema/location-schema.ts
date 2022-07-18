@@ -20,7 +20,7 @@ export const schema = Joi.array().items(Joi.object().keys({
 		.messages({'any.only': 'The US state must be a valid two-letter code, e.g. CA'}),
 	city: Joi.string().min(1).max(128).lowercase().insensitive(),
 	network: Joi.string().min(1).max(128).lowercase().insensitive(),
-	asn: Joi.number(),
+	asn: Joi.number().integer().positive(),
 	magic: Joi.string().min(1).insensitive(),
 	limit: Joi.number().min(1).max(measurementConfig.limits.location).when(Joi.ref('/limit'), {
 		is: Joi.exist(),
