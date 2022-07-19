@@ -149,6 +149,17 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
+		it('should fail (ipv6)', async () => {
+			const input = {
+				type: 'ping',
+				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+			};
+
+			const valid = pingSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
 		it('should fail (missing values)', async () => {
 			const input = {
 				type: 'ping',
@@ -222,6 +233,17 @@ describe('command schema', () => {
 		it('should fail (missing values)', async () => {
 			const input = {
 				type: 'traceroute',
+			};
+
+			const valid = tracerouteSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (ipv6)', async () => {
+			const input = {
+				type: 'traceroute',
+				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 			};
 
 			const valid = tracerouteSchema.validate(input);
@@ -313,6 +335,20 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
+		it('should fail (ipv6 resolver)', async () => {
+			const input = {
+				type: 'dns',
+				target: '1.1.1.1',
+				query: {
+					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+				},
+			};
+
+			const valid = dnsSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
 		it('should pass (trace enabled)', async () => {
 			const input = {
 				type: 'dns',
@@ -375,6 +411,17 @@ describe('command schema', () => {
 		it('should fail (missing values)', async () => {
 			const input = {
 				type: 'mtr',
+			};
+
+			const valid = mtrSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (ipv6 target)', async () => {
+			const input = {
+				type: 'mtr',
+				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 			};
 
 			const valid = mtrSchema.validate(input);
@@ -453,6 +500,27 @@ describe('command schema', () => {
 				query: {
 					host: '',
 					resolver: 'abc',
+					protocol: 'https',
+					port: 443,
+					headers: {
+						test: 'abc',
+					},
+					method: 'GET',
+				},
+			};
+
+			const valid = httpSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (ipv6 resolver)', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				query: {
+					host: '',
+					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 					protocol: 'https',
 					port: 443,
 					headers: {
