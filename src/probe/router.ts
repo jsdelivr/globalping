@@ -28,15 +28,15 @@ export class ProbeRouter {
 
 	async findMatchingProbes(
 		locations: LocationWithLimit[] = [],
-		globalLimit: number | undefined = undefined,
+		globalLimit = 1,
 	): Promise<Probe[]> {
 		const sockets = await this.fetchSockets();
 		let filtered: Socket[] = [];
 
-		if (globalLimit) {
-			filtered = locations.length > 0 ? this.filterWithGlobalLimit(sockets, locations, globalLimit) : this.filterGloballyDistributed(sockets, globalLimit);
-		} else if (locations.length > 0) {
+		if (locations.some(l => l.limit)) {
 			filtered = this.filterWithLocationLimit(sockets, locations);
+		} else {
+			filtered = locations.length > 0 ? this.filterWithGlobalLimit(sockets, locations, globalLimit) : this.filterGloballyDistributed(sockets, globalLimit);
 		}
 
 		return filtered.map(s => s.data.probe);

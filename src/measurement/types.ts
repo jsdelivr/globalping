@@ -81,7 +81,7 @@ type MeasurementStatus = 'in-progress' | 'finished';
 export type MeasurementRequest = {
 	measurement: NetworkTest;
 	locations: LocationWithLimit[];
-	limit?: number;
+	limit: number;
 };
 
 export type MeasurementConfig = {

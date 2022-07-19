@@ -15,7 +15,7 @@ const measurementConfig = config.get<{limits: {global: number; location: number}
 export const schema = Joi.object({
 	locations: locationSchema,
 	measurement: Joi.alternatives().try(pingSchema, tracerouteSchema, dnsSchema, mtrSchema, httpSchema).required(),
-	limit: Joi.number().min(1).max(measurementConfig.limits.global),
+	limit: Joi.number().min(1).max(measurementConfig.limits.global).default(1),
 });
 
 const handle = async (ctx: Context): Promise<void> => {
