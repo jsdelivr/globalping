@@ -1,4 +1,4 @@
-import Joi, {CustomHelpers, ErrorReport} from 'joi';
+import Joi, {CustomHelpers, ErrorReport, PresenceMode} from 'joi';
 import isIpPrivate from 'private-ip';
 import {
 	joiValidate as joiMalwareValidate,
@@ -36,14 +36,16 @@ export const schemaErrorMessages = {
 };
 /* eslint-enable @typescript-eslint/naming-convention */
 
+const globalIpOptions: {version: string[]; cidr: PresenceMode} = {version: ['ipv4'], cidr: 'forbidden'};
+
 const allowedHttpProtocols = ['http', 'https', 'http2'];
 const allowedHttpMethods = ['get', 'head'];
 export const httpSchema = Joi.object({
 	type: Joi.string().valid('http').insensitive().required(),
-	target: Joi.alternatives().try(Joi.string().ip(), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
+	target: Joi.alternatives().try(Joi.string().ip(globalIpOptions), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
 	query: Joi.object({
 		method: Joi.string().valid(...allowedHttpMethods).insensitive().default('head'),
-		resolver: Joi.string().ip().custom(joiMalwareValidateIp).custom(joiValidateTarget('ip')),
+		resolver: Joi.string().ip(globalIpOptions).custom(joiMalwareValidateIp).custom(joiValidateTarget('ip')),
 		host: Joi.string().domain().custom(joiValidateTarget('domain')).optional(),
 		path: Joi.string().optional().default('/'),
 		protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default('https'),
@@ -55,7 +57,7 @@ export const httpSchema = Joi.object({
 const allowedMtrProtocols = ['UDP', 'TCP', 'ICMP'];
 export const mtrSchema = Joi.object({
 	type: Joi.string().valid('mtr').insensitive().required(),
-	target: Joi.alternatives().try(Joi.string().ip(), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
+	target: Joi.alternatives().try(Joi.string().ip(globalIpOptions), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
 	protocol: Joi.string().valid(...allowedMtrProtocols).insensitive().default('ICMP'),
 	packets: Joi.number().min(1).max(16).default(3),
 	port: Joi.number().port().default(80),
@@ -63,13 +65,13 @@ export const mtrSchema = Joi.object({
 
 export const pingSchema = Joi.object({
 	type: Joi.string().valid('ping').insensitive().required(),
-	target: Joi.alternatives().try(Joi.string().ip(), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
+	target: Joi.alternatives().try(Joi.string().ip(globalIpOptions), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
 	packets: Joi.number().min(1).max(16).default(3),
 }).messages(schemaErrorMessages);
 
 export const tracerouteSchema = Joi.object({
 	type: Joi.string().valid('traceroute').insensitive().required(),
-	target: Joi.alternatives().try(Joi.string().ip(), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
+	target: Joi.alternatives().try(Joi.string().ip(globalIpOptions), Joi.string().domain()).custom(joiValidateTarget('any')).required(),
 	protocol: Joi.string().valid('TCP', 'UDP', 'ICMP').insensitive().default('ICMP'),
 	port: Joi.number().port().default(80),
 }).messages(schemaErrorMessages);
@@ -82,7 +84,7 @@ export const dnsSchema = Joi.object({
 	target: Joi.string().domain().custom(joiValidateTarget('domain')).required(),
 	query: Joi.object({
 		type: Joi.string().valid(...allowedDnsTypes).insensitive().default('A'),
-		resolver: Joi.string().ip().custom(joiMalwareValidateIp),
+		resolver: Joi.string().ip(globalIpOptions).custom(joiMalwareValidateIp),
 		protocol: Joi.string().valid(...allowedDnsProtocols).insensitive().default('UDP'),
 		port: Joi.number().default('53'),
 		trace: Joi.boolean().default(false),
