@@ -1,5 +1,10 @@
 import {expect} from 'chai';
-import {schema as locationSchema} from '../../../../src/measurement/schema/location-schema.js';
+import {
+	schema as globalSchema,
+} from '../../../../src/measurement/schema/global-schema.js';
+import {
+	schema as locationSchema,
+} from '../../../../src/measurement/schema/location-schema.js';
 import {
 	pingSchema,
 	tracerouteSchema,
@@ -10,6 +15,22 @@ import {
 } from '../../../../src/measurement/schema/command-schema.js';
 
 describe('command schema', () => {
+	describe('global', () => {
+		it('should correct limit (1 by default)', () => {
+			const input = {
+				locations: [],
+				measurement: {
+					type: 'ping',
+					target: 'abc.com',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.value.limit).to.equal(1);
+		});
+	});
+
 	describe('location', () => {
 		describe('input case', () => {
 			it('should correct network name', () => {
