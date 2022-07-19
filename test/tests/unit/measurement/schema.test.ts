@@ -29,6 +29,39 @@ describe('command schema', () => {
 
 			expect(valid.value.limit).to.equal(1);
 		});
+
+		it('should return an error (global + local limit)', () => {
+			const input = {
+				locations: [
+					{city: 'milan', limit: 1},
+				],
+				measurement: {
+					type: 'ping',
+					target: 'abc.com',
+				},
+				limit: 1,
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid?.error?.details?.[0]?.message).to.equal('limit per location is not allowed when a global limit is set');
+		});
+
+		it('should pass - correct the global limit (location - no limit)', () => {
+			const input = {
+				locations: [
+					{city: 'milan'},
+				],
+				measurement: {
+					type: 'ping',
+					target: 'abc.com',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.value.limit).to.equal(1);
+		});
 	});
 
 	describe('location', () => {
