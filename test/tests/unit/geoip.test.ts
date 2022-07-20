@@ -289,6 +289,33 @@ describe('geoip service', () => {
 			});
 		});
 
+		it('should pick ipinfo data + maxmind network (undefined network data)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.10'].fastly);
+
+			nock('https://ipinfo.io')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.10'].ipinfo);
+
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.10'].maxmind);
+
+			const info = await client.lookup(MOCK_IP);
+
+			expect(info).to.deep.equal({
+				continent: 'NA',
+				country: 'US',
+				state: 'TX',
+				city: 'dallas',
+				asn: 40_676,
+				latitude: 32.7492,
+				longitude: -96.8389,
+				network: 'psychz networks',
+			});
+		});
+
 		it('should fail (missing network data + city mismatch)', async () => {
 			nock('https://globalping-geoip.global.ssl.fastly.net')
 				.get(`/${MOCK_IP}`)

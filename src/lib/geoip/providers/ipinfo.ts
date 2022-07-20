@@ -8,7 +8,7 @@ type IpinfoResponse = {
 	country: string;
 	city: string;
 	region: string;
-	org: string;
+	org: string | undefined;
 	loc: string;
 };
 
@@ -18,10 +18,10 @@ export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 		timeout: {request: 5000},
 	}).json<IpinfoResponse>();
 
-	const [lat, lon] = result.loc.split(',');
-	const match = /^AS(\d+)/.exec(result.org);
+	const [lat, lon] = (result.loc || ',').split(',');
+	const match = /^AS(\d+)/.exec(result.org ?? '');
 	const parsedAsn = match?.[1] ? Number(match[1]) : null;
-	const network = result.org.split(' ').slice(1).join(' ');
+	const network = (result.org ?? '').split(' ').slice(1).join(' ');
 
 	return {
 		continent: getContinentByCountry(result.country),
