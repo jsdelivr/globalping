@@ -17,6 +17,10 @@ import {normalizeNetworkName} from './utils.js';
 
 export type LocationInfo = Omit<ProbeLocation, 'region'>;
 export type LocationInfoWithProvider = LocationInfo & {provider: string};
+export type NetworkInfo = {
+	network: string;
+	asn: number;
+};
 
 export const createGeoipClient = (): GeoipClient => new GeoipClient(
 	new RedisCache(getRedisClient()),
@@ -63,17 +67,21 @@ export default class GeoipClient {
 		}
 
 		const match = this.bestMatch('city', results);
-		const maxmindMatch = results.find(result => result.provider === 'maxmind');
+		const networkMatch = this.matchNetwork(match, results);
+
+		if (!networkMatch) {
+			throw new InternalError('unresolvable geoip', true);
+		}
 
 		return {
 			continent: match.continent,
 			country: match.country,
 			state: match.state,
 			city: match.city,
-			asn: Number(maxmindMatch?.asn ?? match.asn),
+			asn: Number(networkMatch.asn),
 			latitude: Number(match.latitude),
 			longitude: Number(match.longitude),
-			network: normalizeNetworkName(maxmindMatch?.network ?? match.network),
+			network: normalizeNetworkName(networkMatch.network),
 		};
 	}
 
@@ -91,6 +99,25 @@ export default class GeoipClient {
 		}
 
 		return false;
+	}
+
+	private matchNetwork(best: LocationInfo, sources: LocationInfoWithProvider[]): NetworkInfo | undefined {
+		if (best.asn && best.network) {
+			return {
+				asn: best.asn,
+				network: best.network,
+			};
+		}
+
+		const maxmind = sources.find(s => s.provider === 'maxmind');
+		if (maxmind?.asn && maxmind?.network) {
+			return {
+				asn: maxmind.asn,
+				network: maxmind.network,
+			};
+		}
+
+		return undefined;
 	}
 
 	private bestMatch(field: keyof LocationInfo, sources: LocationInfoWithProvider[]): LocationInfo {

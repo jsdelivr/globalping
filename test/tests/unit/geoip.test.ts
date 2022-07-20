@@ -149,7 +149,7 @@ describe('geoip service', () => {
 			latitude: -7.7568,
 			longitude: -35.3656,
 			state: undefined,
-			network: 'interbs s.r.l.',
+			network: 'interbs s.r.l. (baehost)',
 		});
 	});
 
@@ -196,7 +196,7 @@ describe('geoip service', () => {
 		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
-			asn: 40_676,
+			asn: 43_939,
 			city: 'dallas',
 			continent: 'NA',
 			country: 'US',
@@ -223,14 +223,14 @@ describe('geoip service', () => {
 		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
-			asn: 40_676,
+			asn: 61_493,
 			city: 'lagoa do carro',
 			continent: 'SA',
 			country: 'BR',
 			state: undefined,
 			latitude: -7.7568,
 			longitude: -35.3656,
-			network: 'psychz networks',
+			network: 'interbs s.r.l. (baehost)',
 		});
 	});
 
@@ -258,6 +258,33 @@ describe('geoip service', () => {
 			latitude: -34.602,
 			longitude: -58.384,
 			network: 'interbs s.r.l.',
+		});
+	});
+
+	it('should pick ipinfo data + maxmind network (missing network data)', async () => {
+		nock('https://globalping-geoip.global.ssl.fastly.net')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.08'].fastly);
+
+		nock('https://ipinfo.io')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.08'].ipinfo);
+
+		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.08'].maxmind);
+
+		const info = await client.lookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
+			continent: 'SA',
+			country: 'BR',
+			state: undefined,
+			city: 'lagoa do carro',
+			asn: 40_676,
+			latitude: -7.7568,
+			longitude: -35.3656,
+			network: 'psychz networks',
 		});
 	});
 
@@ -326,7 +353,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
-				asn: 40_676,
+				asn: 123,
 				city: 'dallas',
 				continent: 'NA',
 				country: 'US',
@@ -353,7 +380,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
-				asn: 40_676,
+				asn: 123,
 				city: 'dallas',
 				continent: 'NA',
 				country: 'US',
@@ -389,7 +416,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
-				asn: 40_676,
+				asn: 123,
 				city: 'dallas',
 				continent: 'NA',
 				country: 'US',
