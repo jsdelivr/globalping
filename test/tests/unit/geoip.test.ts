@@ -5,6 +5,7 @@ import {expect} from 'chai';
 import {createStubInstance} from 'sinon';
 import {Appsignal} from '@appsignal/nodejs';
 import type {LocationInfo} from '../../../src/lib/geoip/client.js';
+import {fastlyLookup} from '../../../src/lib/geoip/providers/fastly.js';
 import GeoipClient from '../../../src/lib/geoip/client.js';
 import NullCache from '../../../src/lib/cache/null-cache.js';
 import {scopedLogger} from '../../../src/lib/logger.js';
@@ -46,8 +47,8 @@ describe('geoip service', () => {
 			state: undefined,
 			city: 'buenos aires',
 			asn: 61_493,
-			latitude: -34.61,
-			longitude: -58.42,
+			latitude: -34.602,
+			longitude: -58.384,
 			network: 'interbs s.r.l.',
 		});
 	});
@@ -79,7 +80,7 @@ describe('geoip service', () => {
 		});
 	});
 
-	it('should work when ipinfo is down', async () => {
+	it('should work when ipinfo is down (prioritize maxmind)', async () => {
 		nock('https://globalping-geoip.global.ssl.fastly.net')
 			.get(`/${MOCK_IP}`)
 			.reply(200, mocks['00.01'].fastly);
@@ -99,11 +100,30 @@ describe('geoip service', () => {
 			city: 'buenos aires',
 			continent: 'SA',
 			country: 'AR',
-			latitude: -34.61,
-			longitude: -58.42,
+			latitude: -34.602,
+			longitude: -58.384,
 			state: undefined,
 			network: 'interbs s.r.l.',
 		});
+	});
+
+	it('should fail when only fastly reports', async () => {
+		nock('https://globalping-geoip.global.ssl.fastly.net')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.01'].fastly);
+
+		nock('https://ipinfo.io')
+			.get(`/${MOCK_IP}`)
+			.reply(400);
+
+		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+			.get(`/${MOCK_IP}`)
+			.reply(500);
+
+		const info = await client.lookup(MOCK_IP).catch((error: Error) => error);
+
+		expect(info).to.be.an.instanceof(Error);
+		expect((info as Error).message).to.equal('unresolvable geoip');
 	});
 
 	it('should work when fastly is down', async () => {
@@ -129,7 +149,7 @@ describe('geoip service', () => {
 			latitude: -7.7568,
 			longitude: -35.3656,
 			state: undefined,
-			network: 'interbs s.r.l.',
+			network: 'interbs s.r.l. (baehost)',
 		});
 	});
 
@@ -176,7 +196,7 @@ describe('geoip service', () => {
 		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
-			asn: 40_676,
+			asn: 43_939,
 			city: 'dallas',
 			continent: 'NA',
 			country: 'US',
@@ -203,14 +223,163 @@ describe('geoip service', () => {
 		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
-			asn: 40_676,
+			asn: 61_493,
 			city: 'lagoa do carro',
 			continent: 'SA',
 			country: 'BR',
 			state: undefined,
 			latitude: -7.7568,
 			longitude: -35.3656,
-			network: 'psychz networks',
+			network: 'interbs s.r.l. (baehost)',
+		});
+	});
+
+	it('should pick maxmind, if ipinfo has no city', async () => {
+		nock('https://globalping-geoip.global.ssl.fastly.net')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.05'].fastly);
+
+		nock('https://ipinfo.io')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.05'].ipinfo);
+
+		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.05'].maxmind);
+
+		const info = await client.lookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
+			continent: 'SA',
+			country: 'AR',
+			state: undefined,
+			city: 'buenos aires',
+			asn: 61_493,
+			latitude: -34.602,
+			longitude: -58.384,
+			network: 'interbs s.r.l.',
+		});
+	});
+
+	describe('network match', () => {
+		it('should pick ipinfo data + maxmind network (missing network data)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.08'].fastly);
+
+			nock('https://ipinfo.io')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.08'].ipinfo);
+
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.08'].maxmind);
+
+			const info = await client.lookup(MOCK_IP);
+
+			expect(info).to.deep.equal({
+				continent: 'NA',
+				country: 'US',
+				state: 'TX',
+				city: 'dallas',
+				asn: 40_676,
+				latitude: 32.7492,
+				longitude: -96.8389,
+				network: 'psychz networks',
+			});
+		});
+
+		it('should pick ipinfo data + maxmind network (undefined network data)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.10'].fastly);
+
+			nock('https://ipinfo.io')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.10'].ipinfo);
+
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.10'].maxmind);
+
+			const info = await client.lookup(MOCK_IP);
+
+			expect(info).to.deep.equal({
+				continent: 'NA',
+				country: 'US',
+				state: 'TX',
+				city: 'dallas',
+				asn: 40_676,
+				latitude: 32.7492,
+				longitude: -96.8389,
+				network: 'psychz networks',
+			});
+		});
+
+		it('should fail (missing network data + city mismatch)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.09'].fastly);
+
+			nock('https://ipinfo.io')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.09'].ipinfo);
+
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.09'].maxmind);
+
+			const info: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
+
+			expect(info).to.be.instanceof(Error);
+		});
+	});
+
+	describe('provider parsing', () => {
+		describe('fastly', () => {
+			it('should filter out "reserved" city name', async () => {
+				nock('https://globalping-geoip.global.ssl.fastly.net')
+					.get(`/${MOCK_IP}`)
+					.reply(200, mocks['00.06'].fastly);
+
+				const result = await fastlyLookup(MOCK_IP);
+
+				expect(result).to.deep.equal({
+					client: undefined,
+					location: {
+						asn: 61_493,
+						city: '',
+						continent: 'SA',
+						country: 'AR',
+						latitude: -34.61,
+						longitude: -58.42,
+						network: 'interbs s.r.l.',
+						state: undefined,
+					},
+				});
+			});
+
+			it('should filter out "private" city name', async () => {
+				nock('https://globalping-geoip.global.ssl.fastly.net')
+					.get(`/${MOCK_IP}`)
+					.reply(200, mocks['00.07'].fastly);
+
+				const result = await fastlyLookup(MOCK_IP);
+
+				expect(result).to.deep.equal({
+					client: undefined,
+					location: {
+						asn: 61_493,
+						city: '',
+						continent: 'SA',
+						country: 'AR',
+						latitude: -34.61,
+						longitude: -58.42,
+						network: 'interbs s.r.l.',
+						state: undefined,
+					},
+				});
+			});
 		});
 	});
 
@@ -231,7 +400,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
-				asn: 40_676,
+				asn: 123,
 				city: 'dallas',
 				continent: 'NA',
 				country: 'US',
@@ -258,7 +427,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
-				asn: 40_676,
+				asn: 123,
 				city: 'dallas',
 				continent: 'NA',
 				country: 'US',
@@ -294,7 +463,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.deep.equal({
-				asn: 40_676,
+				asn: 123,
 				city: 'dallas',
 				continent: 'NA',
 				country: 'US',

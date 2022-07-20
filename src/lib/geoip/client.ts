@@ -17,6 +17,10 @@ import {normalizeNetworkName} from './utils.js';
 
 export type LocationInfo = Omit<ProbeLocation, 'region'>;
 export type LocationInfoWithProvider = LocationInfo & {provider: string};
+export type NetworkInfo = {
+	network: string;
+	asn: number;
+};
 
 export const createGeoipClient = (): GeoipClient => new GeoipClient(
 	new RedisCache(getRedisClient()),
@@ -37,16 +41,16 @@ export default class GeoipClient {
 		const results = await Promise
 			.allSettled([
 				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
-				this.lookupWithCache<FastlyBundledResponse>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 				this.lookupWithCache<LocationInfo>(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
+				this.lookupWithCache<FastlyBundledResponse>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
-			.then(([ipinfo, fastly, maxmind]) => {
+			.then(([ipinfo, maxmind, fastly]) => {
 				const fulfilled = [];
 
 				fulfilled.push(
 					ipinfo.status === 'fulfilled' ? {...ipinfo.value, provider: 'ipinfo'} : null,
-					fastly.status === 'fulfilled' ? {...fastly.value.location, provider: 'fastly'} : null,
 					maxmind.status === 'fulfilled' ? {...maxmind.value, provider: 'maxmind'} : null,
+					fastly.status === 'fulfilled' ? {...fastly.value.location, provider: 'fastly'} : null,
 				);
 
 				if (fastly.status === 'fulfilled' && this.isVpn(fastly.value.client) && !skipVpnCheck) {
@@ -56,18 +60,28 @@ export default class GeoipClient {
 				return fulfilled.filter(Boolean).flat();
 			}) as LocationInfoWithProvider[];
 
+		const resultsWithCities = results.filter(s => s.city);
+
+		if (resultsWithCities.length < 2 && resultsWithCities[0]?.provider === 'fastly') {
+			throw new InternalError('unresolvable geoip', true);
+		}
+
 		const match = this.bestMatch('city', results);
-		const maxmindMatch = results.find(result => result.provider === 'maxmind');
+		const networkMatch = this.matchNetwork(match, results);
+
+		if (!networkMatch) {
+			throw new InternalError('unresolvable geoip', true);
+		}
 
 		return {
 			continent: match.continent,
 			country: match.country,
 			state: match.state,
 			city: match.city,
-			asn: Number(maxmindMatch?.asn ?? match.asn),
+			asn: Number(networkMatch.asn),
 			latitude: Number(match.latitude),
 			longitude: Number(match.longitude),
-			network: normalizeNetworkName(maxmindMatch?.network ?? match.network),
+			network: normalizeNetworkName(networkMatch.network),
 		};
 	}
 
@@ -87,11 +101,38 @@ export default class GeoipClient {
 		return false;
 	}
 
-	private bestMatch(field: keyof LocationInfo, sources: LocationInfoWithProvider[]): LocationInfo {
-		const ranked = Object.values(_.groupBy(sources.filter(s => s[field]), field)).sort((a, b) => b.length - a.length).flat();
-		const best = ranked[0];
+	private matchNetwork(best: LocationInfo, sources: LocationInfoWithProvider[]): NetworkInfo | undefined {
+		if (best.asn && best.network) {
+			return {
+				asn: best.asn,
+				network: best.network,
+			};
+		}
 
-		if (!best) {
+		const maxmind = sources.find(s => s.provider === 'maxmind' && s.city === best.city);
+		if (maxmind?.asn && maxmind?.network) {
+			return {
+				asn: maxmind.asn,
+				network: maxmind.network,
+			};
+		}
+
+		return undefined;
+	}
+
+	private bestMatch(field: keyof LocationInfo, sources: LocationInfoWithProvider[]): LocationInfo {
+		const filtered = sources.filter(s => s[field]);
+		const grouped = Object.values(_.groupBy(filtered, field));
+		const ranked = grouped.sort((a, b) => b.length - a.length).flat();
+
+		let best = ranked[0];
+
+		if (grouped.length === filtered.length) {
+			const sourcesObject = Object.fromEntries(filtered.map(s => [s.provider, s]));
+			best = sourcesObject['ipinfo'] ?? sourcesObject['maxmind'];
+		}
+
+		if (!best || best.provider === 'fastly') {
 			this.logger.error(`failed to find a correct value for a filed "${field}"`, {field, sources});
 			throw new Error(`failed to find a correct value for a filed "${field}"`);
 		}

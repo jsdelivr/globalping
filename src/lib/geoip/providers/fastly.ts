@@ -41,7 +41,7 @@ export const fastlyLookup = async (addr: string): Promise<FastlyBundledResponse>
 		continent: data.continent_code,
 		country: data.country_code,
 		state: data.country_code === 'US' ? data.region : undefined,
-		city: normalizeCityName(data.city),
+		city: normalizeCityName(data.city).replace(/^(private|reserved)/, ''),
 		asn: result.as.number,
 		latitude: data.latitude,
 		longitude: data.longitude,
