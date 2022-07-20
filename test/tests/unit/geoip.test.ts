@@ -233,6 +233,33 @@ describe('geoip service', () => {
 		});
 	});
 
+	it('should pick maxmind, if ipinfo has no city', async () => {
+		nock('https://globalping-geoip.global.ssl.fastly.net')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.05'].fastly);
+
+		nock('https://ipinfo.io')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.05'].ipinfo);
+
+		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.05'].maxmind);
+
+		const info = await client.lookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
+			continent: 'SA',
+			country: 'AR',
+			state: undefined,
+			city: 'buenos aires',
+			asn: 61_493,
+			latitude: -34.602,
+			longitude: -58.384,
+			network: 'interbs s.r.l.',
+		});
+	});
+
 	describe('limit vpn/tor connection', () => {
 		it('should pass - non-vpn', async () => {
 			nock('https://globalping-geoip.global.ssl.fastly.net')

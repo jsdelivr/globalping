@@ -94,11 +94,18 @@ export default class GeoipClient {
 	}
 
 	private bestMatch(field: keyof LocationInfo, sources: LocationInfoWithProvider[]): LocationInfo {
-		const grouped = Object.values(_.groupBy(sources.filter(s => s[field]), field));
+		const filtered = sources.filter(s => s[field]);
+		const grouped = Object.values(_.groupBy(filtered, field));
 		const ranked = grouped.sort((a, b) => b.length - a.length).flat();
-		const best = grouped.length === sources.length ? sources.find(s => s.provider === 'ipinfo') : ranked[0];
 
-		if (!best) {
+		let best = ranked[0];
+
+		if (grouped.length === filtered.length) {
+			const sourcesObject = Object.fromEntries(filtered.map(s => [s.provider, s]));
+			best = sourcesObject['ipinfo'] ?? sourcesObject['maxmind'];
+		}
+
+		if (!best || best.provider === 'fastly') {
 			this.logger.error(`failed to find a correct value for a filed "${field}"`, {field, sources});
 			throw new Error(`failed to find a correct value for a filed "${field}"`);
 		}
