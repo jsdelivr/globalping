@@ -109,7 +109,7 @@ export default class GeoipClient {
 			};
 		}
 
-		const maxmind = sources.find(s => s.provider === 'maxmind');
+		const maxmind = sources.find(s => s.provider === 'maxmind' && s.city === best.city);
 		if (maxmind?.asn && maxmind?.network) {
 			return {
 				asn: maxmind.asn,

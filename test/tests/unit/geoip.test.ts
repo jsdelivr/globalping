@@ -261,30 +261,50 @@ describe('geoip service', () => {
 		});
 	});
 
-	it('should pick ipinfo data + maxmind network (missing network data)', async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.08'].fastly);
+	describe('network match', () => {
+		it('should pick ipinfo data + maxmind network (missing network data)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.08'].fastly);
 
-		nock('https://ipinfo.io')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.08'].ipinfo);
+			nock('https://ipinfo.io')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.08'].ipinfo);
 
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.08'].maxmind);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.08'].maxmind);
 
-		const info = await client.lookup(MOCK_IP);
+			const info = await client.lookup(MOCK_IP);
 
-		expect(info).to.deep.equal({
-			continent: 'SA',
-			country: 'BR',
-			state: undefined,
-			city: 'lagoa do carro',
-			asn: 40_676,
-			latitude: -7.7568,
-			longitude: -35.3656,
-			network: 'psychz networks',
+			expect(info).to.deep.equal({
+				continent: 'NA',
+				country: 'US',
+				state: 'TX',
+				city: 'dallas',
+				asn: 40_676,
+				latitude: 32.7492,
+				longitude: -96.8389,
+				network: 'psychz networks',
+			});
+		});
+
+		it('should fail (missing network data + city mismatch)', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.09'].fastly);
+
+			nock('https://ipinfo.io')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.09'].ipinfo);
+
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.09'].maxmind);
+
+			const info: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
+
+			expect(info).to.be.instanceof(Error);
 		});
 	});
 
