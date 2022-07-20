@@ -227,6 +227,42 @@
       }
     }
   },
+  "00.06": {
+    "fastly": {
+      "as": {
+        "name": "interbs s.r.l.",
+        "number": 61493
+      },
+      "geo-digitalelement": {
+        "city": "reserved",
+        "continent_code": "SA",
+        "country_code": "AR",
+        "country_code3": "ARG",
+        "country_name": "argentina",
+        "latitude": -34.61,
+        "longitude": -58.42,
+        "region": "C"
+      }
+    }
+  },
+  "00.07": {
+    "fastly": {
+      "as": {
+        "name": "interbs s.r.l.",
+        "number": 61493
+      },
+      "geo-digitalelement": {
+        "city": "private",
+        "continent_code": "SA",
+        "country_code": "AR",
+        "country_code3": "ARG",
+        "country_name": "argentina",
+        "latitude": -34.61,
+        "longitude": -58.42,
+        "region": "C"
+      }
+    }
+  },
   "01.00": {
     "maxmind": {
       "continent": {

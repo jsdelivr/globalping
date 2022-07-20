@@ -5,6 +5,7 @@ import {expect} from 'chai';
 import {createStubInstance} from 'sinon';
 import {Appsignal} from '@appsignal/nodejs';
 import type {LocationInfo} from '../../../src/lib/geoip/client.js';
+import {fastlyLookup} from '../../../src/lib/geoip/providers/fastly.js';
 import GeoipClient from '../../../src/lib/geoip/client.js';
 import NullCache from '../../../src/lib/cache/null-cache.js';
 import {scopedLogger} from '../../../src/lib/logger.js';
@@ -257,6 +258,54 @@ describe('geoip service', () => {
 			latitude: -34.602,
 			longitude: -58.384,
 			network: 'interbs s.r.l.',
+		});
+	});
+
+	describe('provider parsing', () => {
+		describe('fastly', () => {
+			it('should filter out "reserved" city name', async () => {
+				nock('https://globalping-geoip.global.ssl.fastly.net')
+					.get(`/${MOCK_IP}`)
+					.reply(200, mocks['00.06'].fastly);
+
+				const result = await fastlyLookup(MOCK_IP);
+
+				expect(result).to.deep.equal({
+					client: undefined,
+					location: {
+						asn: 61_493,
+						city: '',
+						continent: 'SA',
+						country: 'AR',
+						latitude: -34.61,
+						longitude: -58.42,
+						network: 'interbs s.r.l.',
+						state: undefined,
+					},
+				});
+			});
+
+			it('should filter out "private" city name', async () => {
+				nock('https://globalping-geoip.global.ssl.fastly.net')
+					.get(`/${MOCK_IP}`)
+					.reply(200, mocks['00.07'].fastly);
+
+				const result = await fastlyLookup(MOCK_IP);
+
+				expect(result).to.deep.equal({
+					client: undefined,
+					location: {
+						asn: 61_493,
+						city: '',
+						continent: 'SA',
+						country: 'AR',
+						latitude: -34.61,
+						longitude: -58.42,
+						network: 'interbs s.r.l.',
+						state: undefined,
+					},
+				});
+			});
 		});
 	});
 
