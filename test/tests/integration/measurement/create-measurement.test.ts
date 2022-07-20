@@ -59,9 +59,10 @@ describe('Create measurement', function () {
 					},
 					limit: 2,
 				})
-				.expect(200)
-				.expect(({body}) => {
+				.expect(202)
+				.expect(({body, header}) => {
 					expect(body.id).to.exist;
+					expect(header.location).to.exist;
 					expect(body.probesCount).to.equal(1);
 				});
 		});
@@ -76,9 +77,10 @@ describe('Create measurement', function () {
 						packets: 4,
 					},
 				})
-				.expect(200)
-				.expect(({body}) => {
+				.expect(202)
+				.expect(({body, header}) => {
 					expect(body.id).to.exist;
+					expect(header.location).to.exist;
 					expect(body.probesCount).to.equal(1);
 				});
 		});
@@ -93,9 +95,10 @@ describe('Create measurement', function () {
 					},
 					limit: 2,
 				})
-				.expect(200)
-				.expect(({body}) => {
+				.expect(202)
+				.expect(({body, header}) => {
 					expect(body.id).to.exist;
+					expect(header.location).to.exist;
 					expect(body.probesCount).to.equal(1);
 				});
 		});
@@ -110,9 +113,10 @@ describe('Create measurement', function () {
 						packets: 4,
 					},
 				})
-				.expect(200)
-				.expect(({body}) => {
+				.expect(202)
+				.expect(({body, header}) => {
 					expect(body.id).to.exist;
+					expect(header.location).to.exist;
 					expect(body.probesCount).to.equal(1);
 				});
 		});

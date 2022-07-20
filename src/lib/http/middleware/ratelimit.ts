@@ -5,12 +5,9 @@ import type {RateLimiterRes} from 'rate-limiter-flexible';
 import rateLimiter from '../../ratelimiter.js';
 
 const setResponseHeaders = (ctx: Context, response: RateLimiterRes) => {
-	const resetDate = new Date(Date.now() + response.msBeforeNext);
-
-	ctx.set('X-RateLimit-Reset-After', `${response.msBeforeNext / 1000}s`);
+	ctx.set('X-RateLimit-Reset', `${Math.round(response.msBeforeNext / 1000)}`);
 	ctx.set('X-RateLimit-Limit', `${rateLimiter.points}`);
 	ctx.set('X-RateLimit-Remaining', `${response.remainingPoints}`);
-	ctx.set('X-RateLimit-Reset', `${resetDate.toISOString()}`);
 };
 
 // eslint-disable-next-line unicorn/prevent-abbreviations
