@@ -10,11 +10,13 @@ const runner = getMeasurementRunner();
 
 const handle = async (ctx: Context): Promise<void> => {
 	const request = ctx.request.body as MeasurementRequest;
-	const config = await runner.run(request);
+	const result = await runner.run(request);
 
+	ctx.status = 202;
+	ctx.set('Location', `${hostConfig}/v1/measurements/${result.id}`);
 	ctx.body = {
-		id: config.id,
-		probesCount: config.probes.length,
+		id: result.id,
+		probesCount: result.probes.length,
 	};
 };
 

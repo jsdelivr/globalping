@@ -1,4 +1,5 @@
 module.exports = {
+	host: 'https://api.globalping.io',
 	redis: {
 		url: 'redis://localhost:6379',
 		socket: {

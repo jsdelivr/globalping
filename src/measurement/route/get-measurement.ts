@@ -19,13 +19,16 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		return;
 	}
 
+	ctx.set('last-modified', (new Date(result.createdAt)).toUTCString());
+
 	ctx.body = {
 		id: result.id,
 		type: result.type,
 		status: result.status,
-		createdAt: result.createdAt,
-		updatedAt: result.updatedAt,
-		results: Object.values(result.results).map(r => r),
+		createdAt: new Date(result.createdAt).toISOString(),
+		updatedAt: new Date(result.updatedAt).toISOString(),
+		probesCount: result.probesCount,
+		results: Object.values(result.results),
 	};
 };
 

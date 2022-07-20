@@ -17,7 +17,7 @@ A public endpoint on which tests should be executed. In most cases, it would be 
 
 **rules**:
 - typeof `string`
-- `FQDN` or `IP Address`
+- `FQDN` or `IPv4/noCIDR Address`
 - public address
 
 ```json
@@ -311,7 +311,7 @@ Send the query to a non-standard port on the server, instead of the default port
 Specifies the resolver server used for DNS lookup.
 
 ```
-resolver is the name or IP address of the name server to query. This can be an IPv4 address in dotted-decimal notation or an IPv6 address in colon-delimited notation. When the supplied server argument is a hostname, dig resolves that name before querying that name server.
+resolver is the name or IP address of the name server to query. This can be an IPv4 address in dotted-decimal [...]. When the supplied server argument is a hostname, dig resolves that name before querying that name server.
 ```
 
 **key**: `measurement.query.resolver`
@@ -320,7 +320,7 @@ resolver is the name or IP address of the name server to query. This can be an I
 
 **rules**:
 - typeof `string`
-- `FQDN` or `IP Address`
+- `FQDN` or `IPv4/noCIDR Address`
 
 ```json
     "resolver": "1.1.1.1"
