@@ -61,7 +61,7 @@ describe('command schema', () => {
 
 			const valid = globalSchema.validate(input);
 
-			expect(valid.value.limit).to.equal(1);
+			expect(valid.value.limit).to.equal(input.locations.length);
 			expect(valid.error).to.not.exist;
 		});
 
