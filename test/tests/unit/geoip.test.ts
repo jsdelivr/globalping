@@ -45,11 +45,13 @@ describe('geoip service', () => {
 			continent: 'SA',
 			country: 'AR',
 			state: undefined,
-			city: 'buenos aires',
+			city: 'Buenos Aires',
+			normalizedCity: 'buenos aires',
 			asn: 61_493,
 			latitude: -34.602,
 			longitude: -58.384,
 			network: 'interbs s.r.l.',
+			normalizedNetwork: 'interbs s.r.l.',
 		});
 	});
 
@@ -70,13 +72,15 @@ describe('geoip service', () => {
 
 		expect(info).to.deep.equal({
 			asn: 61_493,
-			city: 'lagoa do carro',
+			city: 'Lagoa do Carro',
+			normalizedCity: 'lagoa do carro',
 			continent: 'SA',
 			country: 'BR',
 			latitude: -7.7568,
 			longitude: -35.3656,
 			state: undefined,
-			network: 'interbs s.r.l. (baehost)',
+			network: 'InterBS S.R.L. (BAEHOST)',
+			normalizedNetwork: 'interbs s.r.l. (baehost)',
 		});
 	});
 
@@ -97,13 +101,15 @@ describe('geoip service', () => {
 
 		expect(info).to.deep.equal({
 			asn: 61_493,
-			city: 'buenos aires',
+			city: 'Buenos Aires',
+			normalizedCity: 'buenos aires',
 			continent: 'SA',
 			country: 'AR',
 			latitude: -34.602,
 			longitude: -58.384,
 			state: undefined,
 			network: 'interbs s.r.l.',
+			normalizedNetwork: 'interbs s.r.l.',
 		});
 	});
 
@@ -143,13 +149,15 @@ describe('geoip service', () => {
 
 		expect(info).to.deep.equal({
 			asn: 61_493,
-			city: 'lagoa do carro',
+			city: 'Lagoa do Carro',
+			normalizedCity: 'lagoa do carro',
 			continent: 'SA',
 			country: 'BR',
 			latitude: -7.7568,
 			longitude: -35.3656,
 			state: undefined,
-			network: 'interbs s.r.l. (baehost)',
+			network: 'InterBS S.R.L. (BAEHOST)',
+			normalizedNetwork: 'interbs s.r.l. (baehost)',
 		});
 	});
 
@@ -170,13 +178,15 @@ describe('geoip service', () => {
 
 		expect(info).to.deep.equal({
 			asn: 61_493,
-			city: 'lagoa do carro',
+			city: 'Lagoa do Carro',
+			normalizedCity: 'lagoa do carro',
 			continent: 'SA',
 			country: 'BR',
 			latitude: -7.7568,
 			longitude: -35.3656,
 			state: undefined,
-			network: 'interbs s.r.l. (baehost)',
+			network: 'InterBS S.R.L. (BAEHOST)',
+			normalizedNetwork: 'interbs s.r.l. (baehost)',
 		});
 	});
 
@@ -197,13 +207,15 @@ describe('geoip service', () => {
 
 		expect(info).to.deep.equal({
 			asn: 43_939,
-			city: 'dallas',
+			city: 'Dallas',
+			normalizedCity: 'dallas',
 			continent: 'NA',
 			country: 'US',
 			latitude: 32.7492,
 			longitude: -96.8389,
 			state: 'TX',
-			network: 'psychz networks',
+			network: 'Psychz Networks',
+			normalizedNetwork: 'psychz networks',
 		});
 	});
 
@@ -224,13 +236,44 @@ describe('geoip service', () => {
 
 		expect(info).to.deep.equal({
 			asn: 61_493,
-			city: 'lagoa do carro',
+			normalizedCity: 'lagoa do carro',
+			city: 'Lagoa do Carro',
 			continent: 'SA',
 			country: 'BR',
 			state: undefined,
 			latitude: -7.7568,
 			longitude: -35.3656,
-			network: 'interbs s.r.l. (baehost)',
+			network: 'InterBS S.R.L. (BAEHOST)',
+			normalizedNetwork: 'interbs s.r.l. (baehost)',
+		});
+	});
+
+	it('should query normalized city field', async () => {
+		nock('https://globalping-geoip.global.ssl.fastly.net')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.04'].fastly);
+
+		nock('https://ipinfo.io')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.04'].ipinfo);
+
+		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+			.get(`/${MOCK_IP}`)
+			.reply(200, mocks['00.04'].maxmind);
+
+		const info = await client.lookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
+			asn: 61_493,
+			normalizedCity: 'new york',
+			city: 'The New York City',
+			continent: 'NA',
+			country: 'US',
+			state: 'NY',
+			latitude: -7.7568,
+			longitude: -35.3656,
+			network: 'InterBS S.R.L. (BAEHOST)',
+			normalizedNetwork: 'interbs s.r.l. (baehost)',
 		});
 	});
 
@@ -253,11 +296,13 @@ describe('geoip service', () => {
 			continent: 'SA',
 			country: 'AR',
 			state: undefined,
-			city: 'buenos aires',
+			city: 'Buenos Aires',
+			normalizedCity: 'buenos aires',
 			asn: 61_493,
 			latitude: -34.602,
 			longitude: -58.384,
 			network: 'interbs s.r.l.',
+			normalizedNetwork: 'interbs s.r.l.',
 		});
 	});
 
@@ -281,11 +326,13 @@ describe('geoip service', () => {
 				continent: 'NA',
 				country: 'US',
 				state: 'TX',
-				city: 'dallas',
+				city: 'Dallas',
+				normalizedCity: 'dallas',
 				asn: 40_676,
 				latitude: 32.7492,
 				longitude: -96.8389,
 				network: 'psychz networks',
+				normalizedNetwork: 'psychz networks',
 			});
 		});
 
@@ -308,11 +355,13 @@ describe('geoip service', () => {
 				continent: 'NA',
 				country: 'US',
 				state: 'TX',
-				city: 'dallas',
+				city: 'Dallas',
+				normalizedCity: 'dallas',
 				asn: 40_676,
 				latitude: 32.7492,
 				longitude: -96.8389,
 				network: 'psychz networks',
+				normalizedNetwork: 'psychz networks',
 			});
 		});
 
@@ -349,11 +398,13 @@ describe('geoip service', () => {
 					location: {
 						asn: 61_493,
 						city: '',
+						normalizedCity: '',
 						continent: 'SA',
 						country: 'AR',
 						latitude: -34.61,
 						longitude: -58.42,
 						network: 'interbs s.r.l.',
+						normalizedNetwork: 'interbs s.r.l.',
 						state: undefined,
 					},
 				});
@@ -371,11 +422,13 @@ describe('geoip service', () => {
 					location: {
 						asn: 61_493,
 						city: '',
+						normalizedCity: '',
 						continent: 'SA',
 						country: 'AR',
 						latitude: -34.61,
 						longitude: -58.42,
 						network: 'interbs s.r.l.',
+						normalizedNetwork: 'interbs s.r.l.',
 						state: undefined,
 					},
 				});
@@ -401,13 +454,15 @@ describe('geoip service', () => {
 
 			expect(response).to.deep.equal({
 				asn: 123,
-				city: 'dallas',
+				city: 'Dallas',
+				normalizedCity: 'dallas',
 				continent: 'NA',
 				country: 'US',
 				latitude: 32.7492,
 				longitude: -96.8389,
 				state: 'TX',
-				network: 'psychz networks',
+				network: 'Psychz Networks',
+				normalizedNetwork: 'psychz networks',
 			});
 		});
 
@@ -428,13 +483,15 @@ describe('geoip service', () => {
 
 			expect(response).to.deep.equal({
 				asn: 123,
-				city: 'dallas',
+				city: 'Dallas',
+				normalizedCity: 'dallas',
 				continent: 'NA',
 				country: 'US',
 				latitude: 32.7492,
 				longitude: -96.8389,
 				state: 'TX',
-				network: 'psychz networks',
+				network: 'Psychz Networks',
+				normalizedNetwork: 'psychz networks',
 			});
 		});
 
@@ -464,13 +521,15 @@ describe('geoip service', () => {
 
 			expect(response).to.deep.equal({
 				asn: 123,
-				city: 'dallas',
+				city: 'Dallas',
+				normalizedCity: 'dallas',
 				continent: 'NA',
 				country: 'US',
 				latitude: 32.7492,
 				longitude: -96.8389,
 				state: 'TX',
-				network: 'psychz networks',
+				network: 'Psychz Networks',
+				normalizedNetwork: 'psychz networks',
 			});
 		});
 

@@ -13,12 +13,12 @@ import {isAddrWhitelisted} from './whitelist.js';
 import {ipinfoLookup} from './providers/ipinfo.js';
 import {FastlyBundledResponse, fastlyLookup} from './providers/fastly.js';
 import {maxmindLookup} from './providers/maxmind.js';
-import {normalizeNetworkName} from './utils.js';
 
 export type LocationInfo = Omit<ProbeLocation, 'region'>;
 export type LocationInfoWithProvider = LocationInfo & {provider: string};
 export type NetworkInfo = {
 	network: string;
+	normalizedNetwork: string;
 	asn: number;
 };
 
@@ -66,7 +66,7 @@ export default class GeoipClient {
 			throw new InternalError('unresolvable geoip', true);
 		}
 
-		const match = this.bestMatch('city', results);
+		const match = this.bestMatch('normalizedCity', results);
 		const networkMatch = this.matchNetwork(match, results);
 
 		if (!networkMatch) {
@@ -78,10 +78,12 @@ export default class GeoipClient {
 			country: match.country,
 			state: match.state,
 			city: match.city,
+			normalizedCity: match.normalizedCity,
 			asn: Number(networkMatch.asn),
 			latitude: Number(match.latitude),
 			longitude: Number(match.longitude),
-			network: normalizeNetworkName(networkMatch.network),
+			network: networkMatch.network,
+			normalizedNetwork: networkMatch.normalizedNetwork,
 		};
 	}
 
@@ -106,6 +108,7 @@ export default class GeoipClient {
 			return {
 				asn: best.asn,
 				network: best.network,
+				normalizedNetwork: best.normalizedNetwork,
 			};
 		}
 
@@ -114,6 +117,7 @@ export default class GeoipClient {
 			return {
 				asn: maxmind.asn,
 				network: maxmind.network,
+				normalizedNetwork: maxmind.normalizedNetwork,
 			};
 		}
 

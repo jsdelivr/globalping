@@ -43,26 +43,6 @@ Global limit controls the maximum number of tests the server will perform and do
     "limit": 5
 ```
 
-### filter
-
-Defines which filter mechanism should be used.
-
-`combined` tells the API to match probes based on all supplied values, while `default` will select the first probe in order, based on one of the matches. Runs in `default` mode, when not specified.
-
-**key**: `filter`
-
-**required**: `false`
-
-**rules**:
-- `default` or `combined`
-- `default` when not specified
-- location limits can't be defined, when running in `combined` mode
-- typeof `string`
-
-```json
-    "filter": "combined"
-```
-
 ### locations
 
 Specifies a list of desired locations from which tests should be run. The server distributes probes based on its preconfigured geo-weight algorithm if none is provided.
@@ -87,23 +67,19 @@ Please, see [LOCATION SCHEMA](./location.md) document for more details.
 ```json
     "locations": [
         {
-            "type": "continent",
-            "value": "eu",
+            "continent": "eu",
             "limit": 10
         },
         {
-            "type": "network",
-            "value": "virgin media limited",
+            "network": "virgin media limited",
             "limit": 1
         },
         {
-            "type": "magic",
-            "value": "aws", // alias
+            "magic": "aws", // alias
             "limit": 1
         },
         {
-            "type": "magic",
-            "value": "pol", // (poland) partial match
+            "magic": "pol", // (poland) partial match
             "limit": 1
         }
     ]
