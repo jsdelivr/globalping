@@ -19,7 +19,7 @@ describe('Create measurement', function () {
 		it('should respond with error', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
-					locations: [{type: 'country', value: 'US'}],
+					locations: [{country: 'US'}],
 					measurement: {
 						type: 'ping',
 						target: 'example.com',
@@ -51,7 +51,7 @@ describe('Create measurement', function () {
 		it('should create measurement with global limit', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
-					locations: [{type: 'country', value: 'US'}],
+					locations: [{country: 'US'}],
 					measurement: {
 						type: 'ping',
 						target: 'example.com',
@@ -59,9 +59,10 @@ describe('Create measurement', function () {
 					},
 					limit: 2,
 				})
-				.expect(200)
-				.expect(({body}) => {
+				.expect(202)
+				.expect(({body, header}) => {
 					expect(body.id).to.exist;
+					expect(header.location).to.exist;
 					expect(body.probesCount).to.equal(1);
 				});
 		});
@@ -69,16 +70,17 @@ describe('Create measurement', function () {
 		it('should create measurement with location limit', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
-					locations: [{type: 'country', value: 'US', limit: 2}],
+					locations: [{country: 'US', limit: 2}],
 					measurement: {
 						type: 'ping',
 						target: 'example.com',
 						packets: 4,
 					},
 				})
-				.expect(200)
-				.expect(({body}) => {
+				.expect(202)
+				.expect(({body, header}) => {
 					expect(body.id).to.exist;
+					expect(header.location).to.exist;
 					expect(body.probesCount).to.equal(1);
 				});
 		});
@@ -93,9 +95,10 @@ describe('Create measurement', function () {
 					},
 					limit: 2,
 				})
-				.expect(200)
-				.expect(({body}) => {
+				.expect(202)
+				.expect(({body, header}) => {
 					expect(body.id).to.exist;
+					expect(header.location).to.exist;
 					expect(body.probesCount).to.equal(1);
 				});
 		});
@@ -103,16 +106,17 @@ describe('Create measurement', function () {
 		it('should create measurement with "magic: world" location', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
-					locations: [{type: 'magic', value: 'world', limit: 2}],
+					locations: [{magic: 'world', limit: 2}],
 					measurement: {
 						type: 'ping',
 						target: 'example.com',
 						packets: 4,
 					},
 				})
-				.expect(200)
-				.expect(({body}) => {
+				.expect(202)
+				.expect(({body, header}) => {
 					expect(body.id).to.exist;
+					expect(header.location).to.exist;
 					expect(body.probesCount).to.equal(1);
 				});
 		});

@@ -1,43 +1,9 @@
-type ContinentLocation = {
-	type: 'continent';
-	value: string;
+export type Location = {
+	continent?: string;
+	region?: string;
+	country?: string;
+	state?: string;
+	city?: string;
+	asn?: number;
+	magic?: string;
 };
-
-type RegionLocation = {
-	type: 'region';
-	value: string;
-};
-
-type CountryLocation = {
-	type: 'country';
-	value: string;
-};
-
-type StateLocation = {
-	type: 'state';
-	value: string;
-};
-
-type CityLocation = {
-	type: 'city';
-	value: string;
-};
-
-type AsnLocation = {
-	type: 'asn';
-	value: number;
-};
-
-type MagicLocation = {
-	type: 'magic';
-	value: string;
-};
-
-export type Location =
-	ContinentLocation
-	| RegionLocation
-	| CountryLocation
-	| StateLocation
-	| CityLocation
-	| AsnLocation
-	| MagicLocation;

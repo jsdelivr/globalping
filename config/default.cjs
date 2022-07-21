@@ -1,4 +1,5 @@
 module.exports = {
+	host: 'https://api.globalping.io',
 	redis: {
 		url: 'redis://localhost:6379',
 		socket: {
@@ -8,7 +9,7 @@ module.exports = {
 	},
 	geoip: {
 		cache: {
-			ttl: 24 * 60 * 60 * 1000, // 24hrs
+			ttl: 3 * 24 * 60 * 60 * 1000, // 24hrs
 		},
 	},
 	appsignal: {

@@ -39,7 +39,6 @@ describe('rate limiter', () => {
 
 			expect(response.headers['x-ratelimit-limit']).to.not.exist;
 			expect(response.headers['x-ratelimit-remaining']).to.not.exist;
-			expect(response.headers['x-ratelimit-reset-after']).to.not.exist;
 			expect(response.headers['x-ratelimit-reset']).to.not.exist;
 		});
 
@@ -49,7 +48,6 @@ describe('rate limiter', () => {
 
 			expect(response.headers['x-ratelimit-limit']).to.exist;
 			expect(response.headers['x-ratelimit-remaining']).to.exist;
-			expect(response.headers['x-ratelimit-reset-after']).to.exist;
 			expect(response.headers['x-ratelimit-reset']).to.exist;
 		});
 

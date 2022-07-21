@@ -8,7 +8,6 @@ import {PROBES_NAMESPACE, SocketData} from '../../../../src/lib/ws/server.js';
 import type {DeepPartial} from '../../../types.js';
 import type {ProbeLocation} from '../../../../src/probe/types.js';
 import type {Location} from '../../../../src/lib/location/types.js';
-import type {LocationWithLimit} from '../../../../src/measurement/types.js';
 import {
 	getCountryAliases,
 	getCountryByIso,
@@ -74,8 +73,8 @@ describe('probe router', () => {
 			wsServerMock.fetchSockets.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes([
-				{type: 'country', value: 'UA', limit: 2},
-				{type: 'country', value: 'PL', limit: 2},
+				{country: 'UA', limit: 2},
+				{country: 'PL', limit: 2},
 			]);
 
 			expect(wsServerMock.of.calledOnce).to.be.true;
@@ -99,8 +98,8 @@ describe('probe router', () => {
 			wsServerMock.fetchSockets.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes([
-				{type: 'country', value: 'GB', limit: 2},
-				{type: 'country', value: 'PL', limit: 2},
+				{country: 'GB', limit: 2},
+				{country: 'PL', limit: 2},
 			]);
 
 			expect(wsServerMock.of.calledOnce).to.be.true;
@@ -185,8 +184,8 @@ describe('probe router', () => {
 				...(_.range(1).map(i => buildSocket(`UA-${i}`, {continent: 'EU', country: 'UA'}))),
 			];
 			const locations: Location[] = [
-				{type: 'continent', value: 'EU'},
-				{type: 'country', value: 'UA'},
+				{continent: 'EU'},
+				{country: 'UA'},
 			];
 
 			wsServerMock.fetchSockets.resolves(sockets as never);
@@ -206,9 +205,9 @@ describe('probe router', () => {
 				...(_.range(100).map(i => buildSocket(`NL-${i}`, {country: 'NL'}))),
 			];
 			const locations: Location[] = [
-				{type: 'country', value: 'PL'},
-				{type: 'country', value: 'UA'},
-				{type: 'country', value: 'NL'},
+				{country: 'PL'},
+				{country: 'UA'},
+				{country: 'NL'},
 			];
 
 			wsServerMock.fetchSockets.resolves(sockets as never);
@@ -220,6 +219,36 @@ describe('probe router', () => {
 			expect(grouped['PL']?.length).to.equal(34);
 			expect(grouped['UA']?.length).to.equal(33);
 			expect(grouped['NL']?.length).to.equal(33);
+		});
+	});
+
+	describe('normalized fields', () => {
+		const location = {
+			continent: 'NA',
+			region: getRegionByCountry('US'),
+			country: 'US',
+			state: 'NY',
+			city: 'The New York City',
+			normalizedCity: 'new york',
+			asn: 5089,
+			network: 'abc',
+		};
+
+		it('should find probe by normalizedCity value', async () => {
+			const sockets: DeepPartial<Socket[]> = [
+				buildSocket(String(Date.now), location),
+			];
+
+			const locations: Location[] = [
+				{city: 'new york'},
+			];
+
+			wsServerMock.fetchSockets.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes(locations, 100);
+
+			expect(probes.length).to.equal(1);
+			expect(probes[0]!.location.country).to.equal('US');
 		});
 	});
 
@@ -240,7 +269,7 @@ describe('probe router', () => {
 			];
 
 			const locations: Location[] = [
-				{type: 'magic', value: 'england'},
+				{magic: 'england'},
 			];
 
 			wsServerMock.fetchSockets.resolves(sockets as never);
@@ -257,7 +286,7 @@ describe('probe router', () => {
 			];
 
 			const locations: Location[] = [
-				{type: 'magic', value: 'england+as5089'},
+				{magic: 'england+as5089'},
 			];
 
 			wsServerMock.fetchSockets.resolves(sockets as never);
@@ -276,7 +305,7 @@ describe('probe router', () => {
 					];
 
 					const locations: Location[] = [
-						{type: 'magic', value: testCase},
+						{magic: testCase},
 					];
 
 					wsServerMock.fetchSockets.resolves(sockets as never);
@@ -297,7 +326,7 @@ describe('probe router', () => {
 					];
 
 					const locations: Location[] = [
-						{type: 'magic', value: testCase},
+						{magic: testCase},
 					];
 
 					wsServerMock.fetchSockets.resolves(sockets as never);
@@ -308,44 +337,6 @@ describe('probe router', () => {
 					expect(probes[0]!.location.country).to.equal('GB');
 				});
 			}
-		});
-	});
-
-	describe('sticky filters', () => {
-		const sockets: DeepPartial<Socket[]> = [
-			buildSocket('GB-1', {continent: 'EU', country: 'GB', city: 'london', asn: 100}),
-			buildSocket('FI-1', {continent: 'EU', country: 'FI', city: 'london', asn: 222}),
-			buildSocket('US-1', {continent: 'NA', country: 'US', city: 'london', state: 'OH', asn: 999}),
-			buildSocket('US-3', {continent: 'NA', country: 'US', city: 'london', state: 'AR', asn: 555}),
-			buildSocket('CA-1', {continent: 'NA', country: 'CA', city: 'london', asn: 888}),
-		];
-
-		it('should combine filters', async () => {
-			const locations: LocationWithLimit[] = [
-				{type: 'city', value: 'london'},
-				{type: 'country', value: 'US'},
-			];
-
-			wsServerMock.fetchSockets.resolves(sockets as never);
-
-			const probes = await router.findMatchingProbes(locations, 100, true);
-			const grouped = _.groupBy(probes, 'location.country');
-
-			expect(grouped['US']?.length).to.equal(2);
-		});
-
-		it('should combine filters - use magic', async () => {
-			const locations: LocationWithLimit[] = [
-				{type: 'city', value: 'london'},
-				{type: 'magic', value: 'uk'},
-			];
-
-			wsServerMock.fetchSockets.resolves(sockets as never);
-
-			const probes = await router.findMatchingProbes(locations, 100, true);
-			const grouped = _.groupBy(probes, 'location.country');
-
-			expect(grouped['GB']?.length).to.equal(1);
 		});
 	});
 });

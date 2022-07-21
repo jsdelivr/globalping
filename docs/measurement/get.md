@@ -10,9 +10,6 @@ Get the current state of the measurement.
 
 ### parameters
 
-**query**: 
-- `pretty` (optional) - prettifies the JSON response
-
 **params**:
 - `:Id` - Id of the measurement request. Returned by [POST /v1/measurements](./post-create.md)
 
@@ -32,6 +29,7 @@ Get the current state of the measurement.
         status: string
         createdAt: number
         updatedAt: number
+        probesCount: number
         results: Result[]
     }
 ]
@@ -48,6 +46,7 @@ GET https://api.globalping.io/v1/measurements/tEaUg3vYnOu2exVC
     "status": "finished",
     "createdAt": 1650384403719,
     "updatedAt": 1650384404482,
+    "probesCount": 1,
     "results": [
         {
             "probe": {
