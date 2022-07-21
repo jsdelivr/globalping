@@ -40,12 +40,14 @@ export const fastlyLookup = async (addr: string): Promise<FastlyBundledResponse>
 	}).json<FastlyResponse>();
 
 	const data = result['geo-digitalelement'];
+	const city = data.city.replace(/^(private|reserved)/, '');
+
 	const location = {
 		continent: data.continent_code,
 		country: data.country_code,
 		state: data.country_code === 'US' ? data.region : undefined,
-		city: data.city,
-		normalizedCity: normalizeCityName(data.city),
+		city,
+		normalizedCity: normalizeCityName(city),
 		asn: result.as.number,
 		latitude: data.latitude,
 		longitude: data.longitude,
