@@ -6,16 +6,20 @@ import type {SocketData, WsServer} from '../lib/ws/server.js';
 import {getWsServer, PROBES_NAMESPACE} from '../lib/ws/server.js';
 import type {LocationWithLimit} from '../measurement/types.js';
 import type {Location} from '../lib/location/types.js';
-import type {Probe} from './types.js';
+import type {Probe, ProbeLocation} from './types.js';
 
 type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
-export type NestedLocation = {type: 'nested'; value: Location[]};
-
-const findMagicMatch = (index: string[], location: Location) => {
-	const locationList = String(location.value).split('+').map(l => l.replace('-', ' ').trim().toLowerCase());
-	return locationList.every(l => index.find(v => v.includes(l)));
-};
+/*
+ * [
+ *    [ public key, internal key]
+ * ]
+ *
+ * */
+const locationKeyMap = [
+	['network', 'normalizedNetwork'],
+	['city', 'normalizedCity'],
+];
 
 export class ProbeRouter {
 	constructor(
@@ -24,16 +28,15 @@ export class ProbeRouter {
 
 	async findMatchingProbes(
 		locations: LocationWithLimit[] = [],
-		globalLimit: number | undefined = undefined,
-		isNested = false,
+		globalLimit = 1,
 	): Promise<Probe[]> {
 		const sockets = await this.fetchSockets();
 		let filtered: Socket[] = [];
 
-		if (globalLimit) {
-			filtered = locations.length > 0 ? this.filterWithGlobalLimit(sockets, locations, globalLimit, isNested) : this.filterGloballyDistributed(sockets, globalLimit);
-		} else if (locations.length > 0) {
+		if (locations.some(l => l.limit)) {
 			filtered = this.filterWithLocationLimit(sockets, locations);
+		} else {
+			filtered = locations.length > 0 ? this.filterWithGlobalLimit(sockets, locations, globalLimit) : this.filterGloballyDistributed(sockets, globalLimit);
 		}
 
 		return filtered.map(s => s.data.probe);
@@ -44,34 +47,26 @@ export class ProbeRouter {
 		return sockets.filter(s => s.data.probe.ready);
 	}
 
-	private findByLocation(sockets: Socket[], location: Location | NestedLocation): Socket[] {
-		if (location.type === 'magic') {
-			if (location.value === 'world') {
-				return this.filterGloballyDistributed(sockets, sockets.length);
+	private findByLocation(sockets: Socket[], location: Location): Socket[] {
+		if (location.magic === 'world') {
+			return this.filterGloballyDistributed(sockets, sockets.length);
+		}
+
+		return sockets.filter(s => Object.keys(location).every(k => {
+			if (k === 'magic') {
+				const {index} = s.data.probe;
+				const locationList = String(location[k]).split('+').map(l => l.replace('-', ' ').trim().toLowerCase());
+				return locationList.every(l => index.find(v => v.includes(l)));
 			}
 
-			return sockets.filter(s => findMagicMatch(s.data.probe.index, location));
-		}
+			const key = locationKeyMap.find(m => m.includes(k))?.[1] ?? k;
 
-		if (location.type === 'nested') {
-			return sockets.filter(s => location.value.every(l => {
-				if (l.type === 'magic') {
-					if (l.value === 'world') {
-						return true;
-					}
-
-					return Boolean(findMagicMatch(s.data.probe.index, l));
-				}
-
-				return l.value === s.data.probe.location[l.type];
-			}));
-		}
-
-		return sockets.filter(s => s.data.probe.location[location.type] === location.value);
+			return location[k as keyof Location] === s.data.probe.location[key as keyof ProbeLocation];
+		}));
 	}
 
-	private findByLocationAndWeight(sockets: Socket[], distribution: Map<Location | NestedLocation, number>, limit: number): Socket[] {
-		const grouped: Map<Location | NestedLocation, Socket[]> = new Map();
+	private findByLocationAndWeight(sockets: Socket[], distribution: Map<Location, number>, limit: number): Socket[] {
+		const grouped: Map<Location, Socket[]> = new Map();
 
 		for (const [location] of distribution) {
 			const found = _.shuffle(this.findByLocation(sockets, location));
@@ -115,16 +110,15 @@ export class ProbeRouter {
 	private filterGloballyDistributed(sockets: Socket[], limit: number): Socket[] {
 		const distribution = new Map<Location, number>(
 			_.shuffle(Object.entries(config.get<Record<string, number>>('measurement.globalDistribution')))
-				.map(([value, weight]) => ([{type: 'continent', value}, weight])),
+				.map(([value, weight]) => ([{continent: value}, weight])),
 		);
 
 		return this.findByLocationAndWeight(sockets, distribution, limit);
 	}
 
-	private filterWithGlobalLimit(sockets: Socket[], locations: Location[], limit: number, isNested = false): Socket[] {
-		const locationList = isNested ? [{type: 'nested', value: locations}] as NestedLocation[] : locations;
+	private filterWithGlobalLimit(sockets: Socket[], locations: Location[], limit: number): Socket[] {
 		const weight = Math.floor(100 / locations.length);
-		const distribution = new Map(locationList.map(l => [l, weight]));
+		const distribution = new Map(locations.map(l => [l, weight]));
 
 		return this.findByLocationAndWeight(sockets, distribution, limit);
 	}
@@ -133,7 +127,8 @@ export class ProbeRouter {
 		const grouped: Map<LocationWithLimit, Socket[]> = new Map();
 
 		for (const location of locations) {
-			const found = this.findByLocation(sockets, location);
+			const {limit, ...l} = location;
+			const found = this.findByLocation(sockets, l);
 			if (found.length > 0) {
 				grouped.set(location, found);
 			}

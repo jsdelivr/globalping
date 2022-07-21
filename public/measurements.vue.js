@@ -175,12 +175,6 @@ const app = () => ({
 
       this.postMeasurement(this.query.limit, measurement, locations, this.query.combineFilters);
     },
-    addNewLocation(e) {
-      e.preventDefault();
-
-      const loc = { id: Date.now(), type: '', value: '', limit: 1 };
-      this.query.locations.push(loc);
-    },
     addNewHttpHeader(e) {
       e.preventDefault();
 
@@ -190,6 +184,20 @@ const app = () => ({
 
       const header = { id: Date.now(), title: '', value: '' };
       this.query.query.headers.push(header);
+    },
+    addNewLocation(e) {
+      e.preventDefault();
+
+      const loc = {
+        id: Date.now(),
+        limit: 1,
+        fields: [{
+          id: Date.now(),
+          type: '',
+          value: ''
+        }]
+      };
+      this.query.locations.push(loc);
     },
     removeLocation(e) {
       e.preventDefault();
@@ -201,12 +209,21 @@ const app = () => ({
         ...this.query.locations.slice(index + 1)
       ];
     },
+    addLocationField(e) {
+      e.preventDefault();
+
+      const index = +e.target.value;
+      this.query.locations[index].fields.push({ id: Date.now(), type: '', value: '' })
+    },
     async postMeasurement(limit = 1, measurement = {}, locations = [], combineFilters) {
       const url = '/v1/measurements';
 
       const body = {
         measurement,
-        locations
+        locations: locations.map(l => ({
+          ...Object.fromEntries(l.fields.map(f => [f.type, f.value])),
+          limit: l.limit
+        }))
       };
 
       if (!locations.find(l => l.limit)) {
@@ -436,16 +453,25 @@ const app = () => ({
             location filters
           </h3>
           <ul>
-            <li v-for="(m, index) in query.locations" :key="m.id">
-              <select v-model="query.locations[index].type">
-                <option disabled value="">Please select one</option>
-                <option v-for="type in getLocationTypeArray()" :value="type">
-                  {{ type }}
-                </option>
-              </select>
-              <input v-model="query.locations[index].value" placeholder="value" />
-              <input type="number" v-model="query.locations[index].limit" placeholder="global limit" />
-              <button @click="removeLocation" :value="index">remove</button>
+            <li v-for="(l, lIndex) in query.locations" :key="l.id">
+              <div>
+                <div v-for="(f, fIndex) in query.locations[lIndex].fields" :key="f.id">
+                  <select v-model="query.locations[lIndex].fields[fIndex].type">
+                    <option disabled value="">Please select one</option>
+                    <option v-for="type in getLocationTypeArray()" :value="type">
+                      {{ type }}
+                    </option>
+                  </select>
+                  <input v-model="query.locations[lIndex].fields[fIndex].value" placeholder="value" />
+                </div>
+              </div>
+              <div>
+                <input type="number" v-model="query.locations[lIndex].limit" placeholder="global limit" />
+              </div>
+              <div>
+                <button @click="addLocationField" :value="lIndex">add field</button>
+                <button @click="removeLocation" :value="lIndex">remove</button>
+              </div>
             </li>
           </ul>
         </div>

@@ -3,7 +3,10 @@ import {City, WebServiceClient} from '@maxmind/geoip2-node';
 import type {WebServiceClientError} from '@maxmind/geoip2-node/dist/src/types';
 import appsignal from '../../appsignal.js';
 import type {LocationInfo} from '../client.js';
-import {normalizeCityName} from '../utils.js';
+import {
+	normalizeCityName,
+	normalizeNetworkName,
+} from '../utils.js';
 
 const client = new WebServiceClient(config.get('maxmind.accountId'), config.get('maxmind.licenseKey'));
 
@@ -37,10 +40,12 @@ export const maxmindLookup = async (addr: string): Promise<LocationInfo> => {
 		continent: data.continent?.code ?? '',
 		country: data.country?.isoCode ?? '',
 		state: data.country?.isoCode === 'US' ? data.subdivisions?.map(s => s.isoCode)[0] ?? '' : undefined,
-		city: normalizeCityName(data.city?.names?.en ?? ''),
+		city: data.city?.names?.en ?? '',
+		normalizedCity: normalizeCityName(data.city?.names?.en ?? ''),
 		asn: data.traits?.autonomousSystemNumber ?? 0,
 		latitude: data.location?.latitude ?? 0,
 		longitude: data.location?.longitude ?? 0,
 		network: data.traits?.isp ?? '',
+		normalizedNetwork: normalizeNetworkName(data.traits?.isp ?? ''),
 	};
 };

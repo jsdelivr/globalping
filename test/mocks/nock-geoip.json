@@ -181,6 +181,52 @@
       "org": "AS61493 InterBS S.R.L. (BAEHOST)"
     }
   },
+  "00.04": {
+    "maxmind": {
+      "continent": {
+        "code": "NA"
+      },
+      "country": {
+        "isoCode": "US"
+      },
+      "city": {
+        "names": {
+          "en": "The New York City"
+        }
+      },
+      "location": {
+        "latitude": 32.814,
+        "longitude": -96.870
+      },
+      "traits": {
+        "autonomousSystemNumber": 40676,
+        "isp": "psychz networks"
+      }
+    },
+    "fastly": {
+      "as": {
+        "name": "psychz networks",
+        "number": 40676
+      },
+      "geo-digitalelement": {
+        "city": "New York City",
+        "continent_code": "NA",
+        "country_code": "US",
+        "country_code3": "USA",
+        "country_name": "united states",
+        "latitude": 32.810,
+        "longitude": -96.880,
+        "region": "NY"
+      }
+    },
+    "ipinfo": {
+      "city": "The New York City",
+      "region": "New York",
+      "country": "US",
+      "loc": "-7.7568,-35.3656",
+      "org": "AS61493 InterBS S.R.L. (BAEHOST)"
+    }
+  },
   "00.05": {
     "ipinfo": {
       "city": "",

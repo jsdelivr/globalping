@@ -65,10 +65,12 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		country: ipInfo.country,
 		state: ipInfo.state,
 		city: ipInfo.city,
+		normalizedCity: ipInfo.normalizedCity,
 		asn: ipInfo.asn,
 		latitude: ipInfo.latitude,
 		longitude: ipInfo.longitude,
 		network: ipInfo.network,
+		normalizedNetwork: ipInfo.normalizedNetwork,
 	};
 
 	const index = [
@@ -76,14 +78,14 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		location.region,
 		location.country,
 		location.state ?? [],
-		location.city,
-		location.network,
+		location.normalizedCity,
+		location.normalizedNetwork,
 		`as${location.asn}`,
 		...(location.state ? [getStateNameByIso(location.state)] : []),
 		getCountryByIso(location.country),
 		getCountryIso3ByIso2(location.country),
 		getCountryAliases(location.country),
-		getNetworkAliases(location.network),
+		getNetworkAliases(location.normalizedNetwork),
 	].flat().filter(Boolean).map(s => s.toLowerCase().replace('-', ' '));
 
 	// Todo: add validation and handle missing or partial data
