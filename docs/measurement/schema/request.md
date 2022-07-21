@@ -5,6 +5,7 @@ supported `type` values:
 - [`traceroute`](#traceroute)
 - [`dns`](#dns)
 - [`mtr`](#mtr)
+- [`http`](#http)
 
 ## shared values
 
@@ -451,4 +452,140 @@ Use this option to set the number of pings sent to determine both the machines o
     "packets": 5
 ```
 
+<h2 id="http">HTTP</h2>
 
+**type**: `http`
+
+example:
+
+```json
+{
+    "type": "http",
+    "target": "google.com",
+    "query": {
+        "path": "/",
+        "method": "GET",
+        "protocol": "HTTPS",
+        "host": "jsdelivr.com",
+        "port": 443,
+        "headers": {
+            "Referer": "https://example.com/"
+        }
+    }
+}
+```
+
+### path
+
+A URL pathname.
+
+**key**: `measurement.query.path`
+
+**default**: `/`
+
+**required**: `false`
+
+**rules**:
+- typeof `string`
+
+## host
+
+Specifies the `Host` header, which is going to be added to the request.
+
+```
+  Host: example.com
+```
+
+**key**: `measurement.query.host`
+
+**default**: Host defined in `target`
+
+**required**: `false`
+
+**rules**:
+- typeof `string`
+
+### port
+
+**key**: `measurement.query.port`
+
+**default**: `80`
+
+**required**: `false`
+
+**rules**:
+- typeof `number`
+
+### protocol
+
+Specifies the query protocol.
+
+**key**: `measurement.query.protocol`
+
+**default**: `HTTP`
+
+**required**: `false`
+
+**available values**:
+- `HTTP` (default)
+- `HTTPS`
+- `HTTP2`
+
+**rules**:
+- typeof `string`
+- must match one of the pre-defined values
+
+### method
+
+Specifies the HTTP method.
+
+**key**: `measurement.query.method`
+
+**default**: `HEAD`
+
+**required**: `false`
+
+**available values**:
+- `HEAD` (default)
+- `GET`
+
+**rules**:
+- typeof `string`
+- must match one of the pre-defined values
+
+### resolver
+
+Specifies the resolver server used for DNS lookup.
+
+**key**: `measurement.query.resolver`
+
+**required**: `false`
+
+**rules**:
+- typeof `string`
+- `FQDN` or `IP Address`
+
+
+### headers
+
+**key**: `measurement.query.headers`
+
+**default**: `{}`
+
+**required**: `false`
+
+**rules**:
+- typeof `Object<string, string>`
+- key `User-Agent` is overridden
+- key `Host` is overridden
+
+example:
+
+```json
+{
+    ...
+    "headers": {
+        "Referer": "https://example.com/"
+    }
+}
+```
