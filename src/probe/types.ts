@@ -19,4 +19,5 @@ export type Probe = {
 	ipAddress: string;
 	location: ProbeLocation;
 	index: string[];
+	resolvers: string[];
 };

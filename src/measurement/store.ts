@@ -60,6 +60,7 @@ export class MeasurementStore {
 					longitude: probe.location.longitude,
 					latitude: probe.location.latitude,
 					network: probe.location.network,
+					resolvers: probe.resolvers,
 				},
 				result: {rawOutput: ''},
 			});
