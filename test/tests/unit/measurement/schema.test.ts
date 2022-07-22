@@ -111,11 +111,11 @@ describe('command schema', () => {
 						measurement: {
 							query: {
 								type: 'A',
-								trace: false,
-								resolver: '1.1.1.1',
-								protocol: 'UDP',
-								port: 53,
 							},
+							trace: false,
+							resolver: '1.1.1.1',
+							protocol: 'UDP',
+							port: 53,
 						},
 					};
 
@@ -509,7 +509,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'dns',
 				target: '1.1.1.1',
-				query: {
+				measurement: {
 					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 				},
 			};
@@ -524,10 +524,10 @@ describe('command schema', () => {
 				type: 'dns',
 				target: 'abc.com',
 				measurement: {
+					trace: true,
+					protocol: 'tcp',
 					query: {
-						trace: true,
 						type: 'a',
-						protocol: 'tcp',
 					},
 				},
 			};
@@ -536,8 +536,8 @@ describe('command schema', () => {
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('dns');
-			expect(valid.value.measurement.query.trace).to.equal(true);
-			expect(valid.value.measurement.query.protocol).to.equal('TCP');
+			expect(valid.value.measurement.trace).to.equal(true);
+			expect(valid.value.measurement.protocol).to.equal('TCP');
 			expect(valid.value.measurement.query.type).to.equal('A');
 		});
 
@@ -546,9 +546,9 @@ describe('command schema', () => {
 				type: 'DNS',
 				target: 'abc.com',
 				measurement: {
+					protocol: 'tcp',
 					query: {
 						type: 'a',
-						protocol: 'tcp',
 					},
 				},
 			};
@@ -557,7 +557,7 @@ describe('command schema', () => {
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('dns');
-			expect(valid.value.measurement.query.protocol).to.equal('TCP');
+			expect(valid.value.measurement.protocol).to.equal('TCP');
 			expect(valid.value.measurement.query.type).to.equal('A');
 		});
 
@@ -566,12 +566,12 @@ describe('command schema', () => {
 				type: 'dns',
 				target: 'abc.com',
 				measurement: {
+					trace: false,
+					resolver: '1.1.1.1',
+					protocol: 'UDP',
+					port: 53,
 					query: {
 						type: 'A',
-						trace: false,
-						resolver: '1.1.1.1',
-						protocol: 'UDP',
-						port: 53,
 					},
 				},
 			};

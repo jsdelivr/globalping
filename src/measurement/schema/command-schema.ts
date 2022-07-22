@@ -60,11 +60,11 @@ const dnsTargetSchema = Joi.string().domain().custom(joiValidateTarget('domain')
 export const dnsSchema = Joi.object({
 	query: Joi.object({
 		type: Joi.string().valid(...allowedDnsTypes).insensitive().default('A'),
-		resolver: Joi.string().ip(globalIpOptions).custom(joiMalwareValidateIp),
-		protocol: Joi.string().valid(...allowedDnsProtocols).insensitive().default('UDP'),
-		port: Joi.number().default('53'),
-		trace: Joi.boolean().default(false),
 	}).default({}),
+	resolver: Joi.string().ip(globalIpOptions).custom(joiMalwareValidateIp),
+	protocol: Joi.string().valid(...allowedDnsProtocols).insensitive().default('UDP'),
+	port: Joi.number().default('53'),
+	trace: Joi.boolean().default(false),
 }).messages(schemaErrorMessages);
 
 /* eslint-disable unicorn/prefer-spread */
