@@ -13,12 +13,20 @@ type PingTest = {
 	packets: number;
 };
 
+type PingTiming = {
+	rtt: number;
+	ttl: number;
+};
+
 type PingResult = TestResult & {
-	min: number;
-	avg: number;
-	max: number;
-	stddev: number;
-	packetLoss: number;
+	timings: PingTiming[];
+	stats: {
+		min: number;
+		avg: number;
+		max: number;
+		stddev: number;
+		packetLoss: number;
+	};
 };
 
 type TracerouteTest = {
