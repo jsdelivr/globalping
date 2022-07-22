@@ -207,14 +207,14 @@ DNS specific values have to be contained within `measurements.query` object.
 example:
 ```json
 {
+    "type": "dns",
+    "target": "google.com",
     "measurement": {
-        "type": "dns",
-        "target": "google.com",
+        "protocol": "UDP",
+        "port": 53,
+        "resolver": "1.1.1.1"
         "query": {
-            "protocol": "UDP",
             "type": "A",
-            "port": 53,
-            "resolver": "1.1.1.1"
         }
     },
     "locations": [],
@@ -226,7 +226,7 @@ example:
 
 The final destination of the request.
 
-**key**: `measurement.target`
+**key**: `target`
 
 **required**: `true`
 
@@ -273,7 +273,7 @@ Specifies the DNS type for which to look for.
 
 Specifies the protocol used for DNS lookup.
 
-**key**: `measurement.query.protocol`
+**key**: `measurement.protocol`
 
 **default**: `UDP`
 
@@ -295,7 +295,7 @@ Specifies the value of the `-p` flag.
 Send the query to a non-standard port on the server, instead of the default port 53.
 ```
 
-**key**: `measurement.query.port`
+**key**: `measurement.port`
 
 **default**: `53`
 
@@ -316,7 +316,7 @@ Specifies the resolver server used for DNS lookup.
 resolver is the name or IP address of the name server to query. This can be an IPv4 address in dotted-decimal [...]. When the supplied server argument is a hostname, dig resolves that name before querying that name server.
 ```
 
-**key**: `measurement.query.resolver`
+**key**: `measurement.resolver`
 
 **required**: `false`
 
@@ -331,7 +331,7 @@ resolver is the name or IP address of the name server to query. This can be an I
 
 Toggle tracing of the delegation path from the root name servers for the name being looked up. It will follow referrals from the root servers, showing the answer from each server that was used to resolve the lookup.
 
-**key**: `measurement.query.trace`
+**key**: `measurement.trace`
 
 **required**: `false`
 
