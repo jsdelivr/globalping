@@ -36,6 +36,42 @@ type TracerouteResult = TestResult & {
 	hops: TraceHopResult[];
 };
 
+type MtrTest = {
+	protocol: 'ICMP' | 'TCP' | 'UDP';
+	packets: number;
+	port: number;
+};
+
+type MtrResultHopTiming = {
+	rtt: number;
+};
+
+type MtrResultHop = {
+	stats: {
+		min: number;
+		max: number;
+		avg: number;
+		total: number;
+		rcv: number;
+		drop: number;
+		stDev: number;
+		jMin: number;
+		jMax: number;
+		jAvg: number;
+	};
+	asn: number[];
+	timings: MtrResultHopTiming[];
+	resolvedAddres: string;
+	resolvedHostname: string;
+	duplicate: boolean;
+};
+
+type MtrResult = TestResult & {
+	resolvedAddress: string;
+	resolvedHostname: string;
+	hops: MtrResultHop[];
+};
+
 type DnsQueryTypes = 'A' | 'AAAA' | 'ANY' | 'CNAME' | 'DNSKEY' | 'DS' | 'MX' | 'NS' | 'NSEC' | 'PTR' | 'RRSIG' | 'SOA' | 'TXT' | 'SRV';
 
 type DnsTest = {
@@ -94,9 +130,9 @@ type HttpResult = TestResult & {
 
 export type RequestType = 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 
-export type MeasurementOptions = PingTest | TracerouteTest | DnsTest | HttpTest;
+export type MeasurementOptions = PingTest | TracerouteTest | MtrTest | DnsTest | HttpTest;
 export type NetworkTest = MeasurementOptions & {type: RequestType; target: string};
-export type MeasurementResult = PingResult | TracerouteResult | DnsResult | HttpResult;
+export type MeasurementResult = PingResult | TracerouteResult | MtrResult | DnsResult | HttpResult;
 export type LocationWithLimit = Location & {limit?: number};
 
 /**
