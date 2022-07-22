@@ -46,7 +46,7 @@ POST https://api.globalping.io/v1/measurements/
 {
     "limit": 10,
     "locations": [
-        { "type": "country", "value": "gb" }
+        { "country": "gb" }
     ],
     "measurement": {
         "packets": 10,
