@@ -438,12 +438,12 @@ example:
 {
     "type": "http",
     "target": "google.com",
+    "protocol": "HTTPS",
+    "port": 443,
     "query": {
         "path": "/",
         "method": "GET",
-        "protocol": "HTTPS",
         "host": "jsdelivr.com",
-        "port": 443,
         "headers": {
             "Referer": "https://example.com/"
         }
@@ -481,36 +481,6 @@ Specifies the `Host` header, which is going to be added to the request.
 **rules**:
 - typeof `string`
 
-### port
-
-**key**: `measurement.query.port`
-
-**default**: `80`
-
-**required**: `false`
-
-**rules**:
-- typeof `number`
-
-### protocol
-
-Specifies the query protocol.
-
-**key**: `measurement.query.protocol`
-
-**default**: `HTTP`
-
-**required**: `false`
-
-**available values**:
-- `HTTP` (default)
-- `HTTPS`
-- `HTTP2`
-
-**rules**:
-- typeof `string`
-- must match one of the pre-defined values
-
 ### method
 
 Specifies the HTTP method.
@@ -528,19 +498,6 @@ Specifies the HTTP method.
 **rules**:
 - typeof `string`
 - must match one of the pre-defined values
-
-### resolver
-
-Specifies the resolver server used for DNS lookup.
-
-**key**: `measurement.query.resolver`
-
-**required**: `false`
-
-**rules**:
-- typeof `string`
-- `FQDN` or `IP Address`
-
 
 ### headers
 
@@ -565,3 +522,45 @@ example:
     }
 }
 ```
+
+### port
+
+**key**: `measurement.port`
+
+**default**: `80`
+
+**required**: `false`
+
+**rules**:
+- typeof `number`
+
+### protocol
+
+Specifies the query protocol.
+
+**key**: `measurement.protocol`
+
+**default**: `HTTP`
+
+**required**: `false`
+
+**available values**:
+- `HTTP` (default)
+- `HTTPS`
+- `HTTP2`
+
+**rules**:
+- typeof `string`
+- must match one of the pre-defined values
+
+### resolver
+
+Specifies the resolver server used for DNS lookup.
+
+**key**: `measurement.resolver`
+
+**required**: `false`
+
+**rules**:
+- typeof `string`
+- `FQDN` or `IP Address`
