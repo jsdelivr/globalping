@@ -25,13 +25,13 @@ const httpTargetSchema = Joi.alternatives().try(Joi.string().ip(globalIpOptions)
 export const httpSchema = Joi.object({
 	query: Joi.object({
 		method: Joi.string().valid(...allowedHttpMethods).insensitive().default('head'),
-		resolver: Joi.string().ip(globalIpOptions).custom(joiMalwareValidateIp).custom(joiValidateTarget('ip')),
 		host: Joi.string().domain().custom(joiValidateTarget('domain')).optional(),
 		path: Joi.string().optional().default('/'),
-		protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default('https'),
-		port: Joi.number(),
 		headers: Joi.object().default({}),
-	}),
+	}).default({}),
+	resolver: Joi.string().ip(globalIpOptions).custom(joiMalwareValidateIp).custom(joiValidateTarget('ip')),
+	protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default('https'),
+	port: Joi.number(),
 });
 
 const mtrTargetSchema = Joi.alternatives().try(Joi.string().ip(globalIpOptions), Joi.string().domain()).custom(joiValidateTarget('any')).required();

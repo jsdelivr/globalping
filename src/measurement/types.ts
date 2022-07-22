@@ -62,11 +62,41 @@ type DnsResult = TestResult & {
 	server: string;
 };
 
+type HttpTest = {
+	query: {
+		method: 'head' | 'get';
+		host?: string;
+		path?: string;
+		headers: Record<string, string>;
+	};
+	port: number;
+	protocol: 'https' | 'http' | 'http2';
+	resolver?: string;
+};
+
+type HttpResult = TestResult & {
+	resolvedAddress: string;
+	headers: Record<string, string>;
+	rawHeaders: string;
+	rawBody: string;
+	statusCode: number;
+	timings: Record<string, number>;
+	tls: {
+		[key: string]: any;
+		authorized: boolean;
+		authorizationError?: string;
+		createdAt: string;
+		expiresAt: string;
+		issuer: Record<string, string>;
+		subject: Record<string, string>;
+	};
+};
+
 export type RequestType = 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 
-export type MeasurementOptions = PingTest | TracerouteTest | DnsTest;
+export type MeasurementOptions = PingTest | TracerouteTest | DnsTest | HttpTest;
 export type NetworkTest = MeasurementOptions & {type: RequestType; target: string};
-export type MeasurementResult = PingResult | TracerouteResult | DnsResult;
+export type MeasurementResult = PingResult | TracerouteResult | DnsResult | HttpResult;
 export type LocationWithLimit = Location & {limit?: number};
 
 /**

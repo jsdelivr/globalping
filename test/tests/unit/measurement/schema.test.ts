@@ -145,11 +145,11 @@ describe('command schema', () => {
 						type: 'http',
 						target: 'elocast.com',
 						measurement: {
+							protocol: 'https',
+							port: 443,
 							query: {
 								method: 'GET',
 								host: 'elocast.com',
-								protocol: 'https',
-								port: 443,
 								headers: {
 									test: 'abc',
 								},
@@ -690,11 +690,11 @@ describe('command schema', () => {
 				type: 'http',
 				target: 'elocast.com',
 				measurement: {
+					protocol: 'https',
+					port: 443,
+					resolver: 'abc',
 					query: {
 						host: '',
-						resolver: 'abc',
-						protocol: 'https',
-						port: 443,
 						headers: {
 							test: 'abc',
 						},
@@ -713,11 +713,11 @@ describe('command schema', () => {
 				type: 'http',
 				target: 'elocast.com',
 				measurement: {
+					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+					protocol: 'https',
+					port: 443,
 					query: {
 						host: '',
-						resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
-						protocol: 'https',
-						port: 443,
 						headers: {
 							test: 'abc',
 						},
@@ -736,10 +736,10 @@ describe('command schema', () => {
 				type: 'http',
 				target: 'elocast.com',
 				measurement: {
+					protocol: 'https',
+					port: 443,
 					query: {
 						host: '',
-						protocol: 'https',
-						port: 443,
 						headers: {
 							test: 'abc',
 						},
@@ -758,14 +758,14 @@ describe('command schema', () => {
 				type: 'http',
 				target: 'elocast.com',
 				measurement: {
+					port: 443,
+					protocol: 'rtmp',
 					query: {
 						method: 'GET',
 						host: '',
-						port: 443,
 						headers: {
 							test: 'abc',
 						},
-						protocol: 'rtmp',
 					},
 				},
 			};
@@ -780,10 +780,10 @@ describe('command schema', () => {
 				type: 'http',
 				target: 'elocast.com',
 				measurement: {
+					protocol: 'https',
 					query: {
 						method: 'GET',
 						host: 'elocast.com',
-						protocol: 'https',
 						headers: {
 							test: 'abc',
 						},
@@ -795,10 +795,10 @@ describe('command schema', () => {
 				type: 'http',
 				target: 'elocast.com',
 				measurement: {
+					protocol: 'https',
 					query: {
 						method: 'get',
 						host: 'elocast.com',
-						protocol: 'https',
 						path: '/',
 						headers: {test: 'abc'},
 					},
@@ -818,11 +818,11 @@ describe('command schema', () => {
 				type: 'http',
 				target: 'elocast.com',
 				measurement: {
+					protocol: 'https',
+					port: 443,
 					query: {
 						method: 'GET',
 						host: 'elocast.com',
-						protocol: 'https',
-						port: 443,
 						headers: {
 							test: 'abc',
 						},
@@ -834,12 +834,12 @@ describe('command schema', () => {
 				type: 'http',
 				target: 'elocast.com',
 				measurement: {
+					protocol: 'https',
+					port: 443,
 					query: {
 						method: 'get',
 						host: 'elocast.com',
-						protocol: 'https',
 						path: '/',
-						port: 443,
 						headers: {test: 'abc'},
 					},
 				},
