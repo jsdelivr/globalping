@@ -16,7 +16,7 @@ describe('command schema', () => {
 					type: 'ping',
 					target: 'abc.com',
 					locations: [],
-					measurement: {},
+					measurementOptions: {},
 				};
 
 				const valid = globalSchema.validate(input);
@@ -31,7 +31,7 @@ describe('command schema', () => {
 					locations: [
 						{city: 'milan', limit: 1},
 					],
-					measurement: {},
+					measurementOptions: {},
 					limit: 1,
 				};
 
@@ -48,7 +48,7 @@ describe('command schema', () => {
 						{city: 'milan'},
 						{city: 'london'},
 					],
-					measurement: {},
+					measurementOptions: {},
 				};
 
 				const valid = globalSchema.validate(input);
@@ -64,7 +64,7 @@ describe('command schema', () => {
 					locations: [
 						{city: 'milan'},
 					],
-					measurement: {},
+					measurementOptions: {},
 				};
 
 				const valid = globalSchema.validate(input);
@@ -79,7 +79,7 @@ describe('command schema', () => {
 					const input = {
 						type: 'ping',
 						target: 'abc.com',
-						measurement: {
+						measurementOptions: {
 							packets: 1,
 						},
 					};
@@ -93,7 +93,7 @@ describe('command schema', () => {
 					const input = {
 						type: 'traceroute',
 						target: 'abc.com',
-						measurement: {
+						measurementOptions: {
 							protocol: 'TCP',
 							port: 80,
 						},
@@ -108,7 +108,7 @@ describe('command schema', () => {
 					const input = {
 						type: 'dns',
 						target: 'abc.com',
-						measurement: {
+						measurementOptions: {
 							query: {
 								type: 'A',
 							},
@@ -128,7 +128,7 @@ describe('command schema', () => {
 					const input = {
 						type: 'mtr',
 						target: 'abc.com',
-						measurement: {
+						measurementOptions: {
 							protocol: 'TCP',
 							packets: 10,
 							port: 80,
@@ -144,7 +144,7 @@ describe('command schema', () => {
 					const input = {
 						type: 'http',
 						target: 'elocast.com',
-						measurement: {
+						measurementOptions: {
 							protocol: 'https',
 							port: 443,
 							query: {
@@ -292,7 +292,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'ping',
 				target: '192.168.0.101',
-				measurement: {},
+				measurementOptions: {},
 			};
 
 			const valid = globalSchema.validate(input);
@@ -304,7 +304,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'ping',
 				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
-				measurement: {},
+				measurementOptions: {},
 			};
 
 			const valid = globalSchema.validate(input);
@@ -371,7 +371,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'ping',
 				target: 'abc.com',
-				measurement: {
+				measurementOptions: {
 					packets: 1,
 				},
 			};
@@ -448,7 +448,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'TRACEroute',
 				target: 'abc.com',
-				measurement: {
+				measurementOptions: {
 					protocol: 'udp',
 				},
 			};
@@ -457,14 +457,14 @@ describe('command schema', () => {
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('traceroute');
-			expect(valid.value.measurement.protocol).to.equal('UDP');
+			expect(valid.value.measurementOptions.protocol).to.equal('UDP');
 		});
 
 		it('should pass (deep equal)', async () => {
 			const input = {
 				type: 'traceroute',
 				target: 'abc.com',
-				measurement: {
+				measurementOptions: {
 					protocol: 'TCP',
 					port: 80,
 				},
@@ -509,7 +509,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'dns',
 				target: '1.1.1.1',
-				measurement: {
+				measurementOptions: {
 					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 				},
 			};
@@ -523,7 +523,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'dns',
 				target: 'abc.com',
-				measurement: {
+				measurementOptions: {
 					trace: true,
 					protocol: 'tcp',
 					query: {
@@ -536,16 +536,16 @@ describe('command schema', () => {
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('dns');
-			expect(valid.value.measurement.trace).to.equal(true);
-			expect(valid.value.measurement.protocol).to.equal('TCP');
-			expect(valid.value.measurement.query.type).to.equal('A');
+			expect(valid.value.measurementOptions.trace).to.equal(true);
+			expect(valid.value.measurementOptions.protocol).to.equal('TCP');
+			expect(valid.value.measurementOptions.query.type).to.equal('A');
 		});
 
 		it('should pass and correct values (incorrect caps)', async () => {
 			const input = {
 				type: 'DNS',
 				target: 'abc.com',
-				measurement: {
+				measurementOptions: {
 					protocol: 'tcp',
 					query: {
 						type: 'a',
@@ -557,15 +557,15 @@ describe('command schema', () => {
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('dns');
-			expect(valid.value.measurement.protocol).to.equal('TCP');
-			expect(valid.value.measurement.query.type).to.equal('A');
+			expect(valid.value.measurementOptions.protocol).to.equal('TCP');
+			expect(valid.value.measurementOptions.query.type).to.equal('A');
 		});
 
 		it('should pass (deep equal)', async () => {
 			const input = {
 				type: 'dns',
 				target: 'abc.com',
-				measurement: {
+				measurementOptions: {
 					trace: false,
 					resolver: '1.1.1.1',
 					protocol: 'UDP',
@@ -648,7 +648,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'MtR',
 				target: 'abc.com',
-				measurement: {
+				measurementOptions: {
 					protocol: 'udp',
 				},
 			};
@@ -657,14 +657,14 @@ describe('command schema', () => {
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('mtr');
-			expect(valid.value.measurement.protocol).to.equal('UDP');
+			expect(valid.value.measurementOptions.protocol).to.equal('UDP');
 		});
 
 		it('should pass (deep equal)', async () => {
 			const input = {
 				type: 'mtr',
 				target: 'abc.com',
-				measurement: {
+				measurementOptions: {
 					protocol: 'TCP',
 					packets: 10,
 					port: 80,
@@ -689,7 +689,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				measurement: {
+				measurementOptions: {
 					protocol: 'https',
 					port: 443,
 					resolver: 'abc',
@@ -712,7 +712,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				measurement: {
+				measurementOptions: {
 					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 					protocol: 'https',
 					port: 443,
@@ -735,7 +735,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				measurement: {
+				measurementOptions: {
 					protocol: 'https',
 					port: 443,
 					query: {
@@ -757,7 +757,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				measurement: {
+				measurementOptions: {
 					port: 443,
 					protocol: 'rtmp',
 					query: {
@@ -779,7 +779,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				measurement: {
+				measurementOptions: {
 					protocol: 'https',
 					query: {
 						method: 'GET',
@@ -794,7 +794,7 @@ describe('command schema', () => {
 			const desiredOutput = {
 				type: 'http',
 				target: 'elocast.com',
-				measurement: {
+				measurementOptions: {
 					protocol: 'https',
 					query: {
 						method: 'get',
@@ -817,7 +817,7 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				measurement: {
+				measurementOptions: {
 					protocol: 'https',
 					port: 443,
 					query: {
@@ -833,7 +833,7 @@ describe('command schema', () => {
 			const desiredOutput = {
 				type: 'http',
 				target: 'elocast.com',
-				measurement: {
+				measurementOptions: {
 					protocol: 'https',
 					port: 443,
 					query: {

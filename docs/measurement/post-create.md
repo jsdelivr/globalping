@@ -24,7 +24,7 @@ below is presented a schema containing all possible input values; some are gener
     locations: Locations[]
     type: string
     target: string
-    measurement: {
+    measurementOptions: {
         query?: {
             type?: string
             headers?: Object<string, string>
@@ -47,7 +47,7 @@ POST https://api.globalping.io/v1/measurements/
 {
     "target": "jsdelivr.com",
     "type": "ping"
-    "measurement": {
+    "measurementOptions": {
         "packets": 10,
     },
     "limit": 10,

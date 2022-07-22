@@ -15,7 +15,7 @@ const limitDefaultHandler = (parent: {locations: LocationWithLimit[]}) => parent
 export const schema = Joi.object({
 	type: Joi.string().valid('ping', 'traceroute', 'dns', 'mtr', 'http').insensitive().required(),
 	target: targetSchema,
-	measurement: measurementSchema,
+	measurementOptions: measurementSchema,
 	locations: locationSchema,
 	limit: Joi.number().min(1).max(measurementConfig.limits.global).default(limitDefaultHandler),
 });

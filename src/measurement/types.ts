@@ -165,14 +165,14 @@ type MeasurementStatus = 'in-progress' | 'finished';
 export type MeasurementRequest = {
 	type: 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 	target: string;
-	measurement: NetworkTest;
+	measurementOptions: NetworkTest;
 	locations: LocationWithLimit[];
 	limit: number;
 };
 
 export type MeasurementConfig = {
 	id: string;
-	measurement: MeasurementOptions;
+	measurementOptions: MeasurementOptions;
 	probes: Probe[];
 };
 

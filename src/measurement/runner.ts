@@ -39,13 +39,13 @@ export class MeasurementRunner {
 		}
 
 		const measurement: NetworkTest = {
-			...request.measurement,
+			...request.measurementOptions,
 			type: request.type,
 			target: request.target,
 		};
 
 		const id = await this.store.createMeasurement(measurement, probes.length);
-		const config: MeasurementConfig = {id, probes, measurement};
+		const config: MeasurementConfig = {id, probes, measurementOptions: measurement};
 
 		this.sendToProbes(config);
 		this.setTimeout(config.id);
@@ -83,7 +83,7 @@ export class MeasurementRunner {
 		for (const probe of config.probes) {
 			this.io.of('probes').to(probe.client).emit('probe:measurement:request', {
 				id: config.id,
-				measurement: config.measurement,
+				measurement: config.measurementOptions,
 			});
 		}
 	}

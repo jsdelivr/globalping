@@ -22,7 +22,7 @@ describe('Create measurement', function () {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{country: 'US'}],
-					measurement: {
+					measurementOptions: {
 						packets: 4,
 					},
 					limit: 2,
@@ -54,7 +54,7 @@ describe('Create measurement', function () {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{country: 'US'}],
-					measurement: {
+					measurementOptions: {
 						packets: 4,
 					},
 					limit: 2,
@@ -73,7 +73,7 @@ describe('Create measurement', function () {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{country: 'US', limit: 2}],
-					measurement: {
+					measurementOptions: {
 						packets: 4,
 					},
 				})
@@ -90,7 +90,7 @@ describe('Create measurement', function () {
 				.send({
 					type: 'ping',
 					target: 'example.com',
-					measurement: {
+					measurementOptions: {
 						packets: 4,
 					},
 					limit: 2,
@@ -109,7 +109,7 @@ describe('Create measurement', function () {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{magic: 'world', limit: 2}],
-					measurement: {
+					measurementOptions: {
 						packets: 4,
 					},
 				})
