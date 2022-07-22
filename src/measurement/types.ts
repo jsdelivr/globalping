@@ -84,19 +84,26 @@ type DnsTest = {
 };
 
 type DnsAnswer = {
-	domain: string;
+	name: string;
 	type: DnsQueryTypes;
 	ttl: number;
 	class: string;
 	value: string;
 };
 
-// Todo: fix: dns result doesnt have rawOutput value
-type DnsResult = TestResult & {
-	answer: DnsAnswer[];
-	time: number;
-	server: string;
+type DnsRegularResult = {
+	answers: DnsAnswer[];
+	timings: {
+		total: number;
+	};
+	resolver: string;
 };
+
+type DnsTraceResult = {
+	hops: DnsRegularResult;
+};
+
+type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);
 
 type HttpTest = {
 	query: {
