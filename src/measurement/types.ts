@@ -10,8 +10,6 @@ type TestResult = {
 };
 
 type PingTest = {
-	type: 'ping';
-	target: string;
 	packets: number;
 };
 
@@ -24,8 +22,6 @@ type PingResult = TestResult & {
 };
 
 type TracerouteTest = {
-	type: 'traceroute';
-	target: string;
 	protocol: 'ICMP' | 'TCP' | 'UDP';
 	port: number;
 };
@@ -43,8 +39,6 @@ type TracerouteResult = TestResult & {
 type DnsQueryTypes = 'A' | 'AAAA' | 'ANY' | 'CNAME' | 'DNSKEY' | 'DS' | 'MX' | 'NS' | 'NSEC' | 'PTR' | 'RRSIG' | 'SOA' | 'TXT' | 'SRV';
 
 type DnsTest = {
-	type: 'dns';
-	target: string;
 	query?: {
 		type: DnsQueryTypes;
 		resolver: string;
@@ -68,7 +62,10 @@ type DnsResult = TestResult & {
 	server: string;
 };
 
-export type NetworkTest = PingTest | TracerouteTest | DnsTest;
+export type RequestType = 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
+
+export type MeasurementOptions = PingTest | TracerouteTest | DnsTest;
+export type NetworkTest = MeasurementOptions & {type: RequestType; target: string};
 export type MeasurementResult = PingResult | TracerouteResult | DnsResult;
 export type LocationWithLimit = Location & {limit?: number};
 
@@ -79,6 +76,8 @@ export type LocationWithLimit = Location & {limit?: number};
 type MeasurementStatus = 'in-progress' | 'finished';
 
 export type MeasurementRequest = {
+	type: 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
+	target: string;
 	measurement: NetworkTest;
 	locations: LocationWithLimit[];
 	limit: number;
@@ -86,13 +85,13 @@ export type MeasurementRequest = {
 
 export type MeasurementConfig = {
 	id: string;
-	measurement: NetworkTest;
+	measurement: MeasurementOptions;
 	probes: Probe[];
 };
 
 export type MeasurementRecord = {
 	id: string;
-	type: NetworkTest['type'];
+	type: MeasurementRequest['type'];
 	status: MeasurementStatus;
 	createdAt: number;
 	updatedAt: number;
@@ -102,7 +101,7 @@ export type MeasurementRecord = {
 
 export type MeasurementResponse = {
 	id: string;
-	type: NetworkTest['type'];
+	type: MeasurementRequest['type'];
 	status: MeasurementStatus;
 	created_at: number;
 	updated_at: number;
