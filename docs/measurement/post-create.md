@@ -21,23 +21,23 @@ below is presented a schema containing all possible input values; some are gener
 ```
 {
     limit: number
-    locations: Locations[],
+    locations: Locations[]
+    type: string
+    target: string
     measurement: {
         query?: {
-            protocol?: string
             type?: string
-            resolver?: string
-            trace?: boolean
+            headers?: Object<string, string>
+            path?: string
+            host?: string
+            method?: string
         }
-        type: string
+        protocol?: string
         port?: number
-        target: string
+        resolver?: string
+        trace?: boolean
         protocol?: string
         packets?: number
-        path?: string
-        host?: string
-        headers?: Object<string, string>
-        method?: string
     }
 }
 ```
@@ -45,15 +45,15 @@ example:
 ```json
 POST https://api.globalping.io/v1/measurements/
 {
+    "target": "jsdelivr.com",
+    "type": "ping"
+    "measurement": {
+        "packets": 10,
+    },
     "limit": 10,
     "locations": [
         { "country": "gb" }
-    ],
-    "measurement": {
-        "packets": 10,
-        "target": "jsdelivr.com",
-        "type": "ping"
-    }
+    ]
 }
 ```
 for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
