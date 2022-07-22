@@ -126,24 +126,25 @@ const app = () => ({
       if (this.query.type === 'dns') {
         const query = {};
 
-        if (this.query.query.protocol) {
-          query.protocol = this.query.query.protocol;
-        }
-
         if (this.query.query.type) {
           query.type = this.query.query.type;
         }
 
+        if (this.query.query.protocol) {
+          measurement.protocol = this.query.query.protocol;
+        }
+
+
         if (this.query.query.port) {
-          query.port = this.query.query.port;
+          measurement.port = this.query.query.port;
         }
 
         if (this.query.query.resolver) {
-          query.resolver = this.query.query.resolver;
+          measurement.resolver = this.query.query.resolver;
         }
 
         if (this.query.query.trace) {
-          query.trace = !!this.query.query.trace;
+          measurement.trace = !!this.query.query.trace;
         }
 
         if (Object.keys(query).length > 0) {
@@ -152,13 +153,14 @@ const app = () => ({
       }
 
       if (this.query.type === 'http') {
+        measurement.protocol = this.query.query.protocol;
+        measurement.port = this.query.query.port;
+        measurement.resolver = this.query.query.resolver;
+
         const query = {
           method: this.query.query.method,
           path: this.query.query.path,
-          protocol: this.query.query.protocol,
           host: this.query.query.host,
-          port: this.query.query.port,
-          resolver: this.query.query.resolver,
         };
 
         if (this.query.query.headers) {
@@ -218,8 +220,12 @@ const app = () => ({
     async postMeasurement(limit = 1, measurement = {}, locations = [], combineFilters) {
       const url = '/v1/measurements';
 
+      const { type, target, ...measurementOptions} = measurement;
+
       const body = {
-        measurement,
+        type,
+        target,
+        measurementOptions,
         locations: locations.map(l => ({
           ...Object.fromEntries(l.fields.map(f => [f.type, f.value])),
           limit: l.limit
@@ -228,10 +234,6 @@ const app = () => ({
 
       if (!locations.find(l => l.limit)) {
         body.limit = limit;
-      }
-
-      if (combineFilters) {
-        body.filter = 'combined';
       }
 
       const response = await fetch(url, {
