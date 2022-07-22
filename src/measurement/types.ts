@@ -41,10 +41,10 @@ type DnsQueryTypes = 'A' | 'AAAA' | 'ANY' | 'CNAME' | 'DNSKEY' | 'DS' | 'MX' | '
 type DnsTest = {
 	query?: {
 		type: DnsQueryTypes;
-		resolver: string;
-		protocol: 'TCP' | 'UDP';
-		port: number;
 	};
+	resolver: string;
+	protocol: 'TCP' | 'UDP';
+	port: number;
 };
 
 type DnsAnswer = {
