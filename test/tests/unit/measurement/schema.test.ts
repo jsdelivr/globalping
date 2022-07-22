@@ -1,5 +1,10 @@
 import {expect} from 'chai';
-import {schema as locationSchema} from '../../../../src/measurement/schema/location-schema.js';
+import {
+	schema as globalSchema,
+} from '../../../../src/measurement/schema/global-schema.js';
+import {
+	schema as locationSchema,
+} from '../../../../src/measurement/schema/location-schema.js';
 import {
 	pingSchema,
 	tracerouteSchema,
@@ -10,36 +15,101 @@ import {
 } from '../../../../src/measurement/schema/command-schema.js';
 
 describe('command schema', () => {
+	describe('global', () => {
+		it('should correct limit (1 by default)', () => {
+			const input = {
+				locations: [],
+				measurement: {
+					type: 'ping',
+					target: 'abc.com',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.value.limit).to.equal(1);
+		});
+
+		it('should return an error (global + local limit)', () => {
+			const input = {
+				locations: [
+					{city: 'milan', limit: 1},
+				],
+				measurement: {
+					type: 'ping',
+					target: 'abc.com',
+				},
+				limit: 1,
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid?.error?.details?.[0]?.message).to.equal('limit per location is not allowed when a global limit is set');
+		});
+
+		it('should pass (2 locations - no limit)', () => {
+			const input = {
+				locations: [
+					{city: 'milan'},
+					{city: 'london'},
+				],
+				measurement: {
+					type: 'ping',
+					target: 'abc.com',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.value.limit).to.equal(input.locations.length);
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should pass - correct the global limit (location - no limit)', () => {
+			const input = {
+				locations: [
+					{city: 'milan'},
+				],
+				measurement: {
+					type: 'ping',
+					target: 'abc.com',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.value.limit).to.equal(1);
+		});
+	});
+
 	describe('location', () => {
 		describe('input case', () => {
 			it('should correct network name', () => {
 				const input = [
 					{
-						type: 'network',
-						value: 'VIRGIN MEDIA',
+						network: 'VIRGIN MEDIA',
 						limit: 1,
 					},
 				];
 
 				const valid = locationSchema.validate(input);
 
-				expect(valid.value[0]!.value).to.equal(input[0]!.value.toLowerCase());
-				expect(valid.value[0]!.value).to.not.equal(input[0]!.value);
+				expect(valid.value[0]!.network).to.equal(input[0]!.network.toLowerCase());
+				expect(valid.value[0]!.network).to.not.equal(input[0]!.network);
 			});
 
 			it('should correct city value', () => {
 				const input = [
 					{
-						type: 'city',
-						value: 'LONDON',
+						city: 'LONDON',
 						limit: 1,
 					},
 				];
 
 				const valid = locationSchema.validate(input);
 
-				expect(valid.value[0]!.value).to.equal(input[0]!.value.toLowerCase());
-				expect(valid.value[0]!.value).to.not.equal(input[0]!.value);
+				expect(valid.value[0]!.city).to.equal(input[0]!.city.toLowerCase());
+				expect(valid.value[0]!.city).to.not.equal(input[0]!.city);
 			});
 		});
 
@@ -47,8 +117,7 @@ describe('command schema', () => {
 			it('should fail (too short)', () => {
 				const input = [
 					{
-						type: 'magic',
-						value: '',
+						magic: '',
 						limit: 1,
 					},
 				];
@@ -56,14 +125,13 @@ describe('command schema', () => {
 				const valid = locationSchema.validate(input);
 
 				expect(valid.error).to.exist;
-				expect(valid.error!.details[0]!.message).to.equal('"[0].value" is not allowed to be empty');
+				expect(valid.error!.details[0]!.message).to.equal('"[0].magic" is not allowed to be empty');
 			});
 
 			it('should fail (not string)', () => {
 				const input = [
 					{
-						type: 'magic',
-						value: 1337,
+						magic: 1337,
 						limit: 1,
 					},
 				];
@@ -71,14 +139,13 @@ describe('command schema', () => {
 				const valid = locationSchema.validate(input);
 
 				expect(valid.error).to.exist;
-				expect(valid.error!.details[0]!.message).to.equal('"[0].value" must be a string');
+				expect(valid.error!.details[0]!.message).to.equal('"[0].magic" must be a string');
 			});
 
 			it('should succeed', () => {
 				const input = [
 					{
-						type: 'magic',
-						value: 'cyprus',
+						magic: 'cyprus',
 						limit: 1,
 					},
 				];
@@ -142,6 +209,17 @@ describe('command schema', () => {
 			const input = {
 				type: 'ping',
 				target: '192.168.0.101',
+			};
+
+			const valid = pingSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (ipv6)', async () => {
+			const input = {
+				type: 'ping',
+				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 			};
 
 			const valid = pingSchema.validate(input);
@@ -222,6 +300,17 @@ describe('command schema', () => {
 		it('should fail (missing values)', async () => {
 			const input = {
 				type: 'traceroute',
+			};
+
+			const valid = tracerouteSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (ipv6)', async () => {
+			const input = {
+				type: 'traceroute',
+				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 			};
 
 			const valid = tracerouteSchema.validate(input);
@@ -313,6 +402,20 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
+		it('should fail (ipv6 resolver)', async () => {
+			const input = {
+				type: 'dns',
+				target: '1.1.1.1',
+				query: {
+					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+				},
+			};
+
+			const valid = dnsSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
 		it('should pass (trace enabled)', async () => {
 			const input = {
 				type: 'dns',
@@ -375,6 +478,17 @@ describe('command schema', () => {
 		it('should fail (missing values)', async () => {
 			const input = {
 				type: 'mtr',
+			};
+
+			const valid = mtrSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (ipv6 target)', async () => {
+			const input = {
+				type: 'mtr',
+				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 			};
 
 			const valid = mtrSchema.validate(input);
@@ -453,6 +567,27 @@ describe('command schema', () => {
 				query: {
 					host: '',
 					resolver: 'abc',
+					protocol: 'https',
+					port: 443,
+					headers: {
+						test: 'abc',
+					},
+					method: 'GET',
+				},
+			};
+
+			const valid = httpSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (ipv6 resolver)', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				query: {
+					host: '',
+					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 					protocol: 'https',
 					port: 443,
 					headers: {

@@ -19,7 +19,7 @@ A public endpoint on which tests should be executed. In most cases, it would be 
 
 **rules**:
 - typeof `string`
-- `FQDN` or `IP Address`
+- `FQDN` or `IPv4/noCIDR Address`
 - public address
 
 ```json
@@ -43,26 +43,6 @@ Global limit controls the maximum number of tests the server will perform and do
 
 ```json
     "limit": 5
-```
-
-### filter
-
-Defines which filter mechanism should be used.
-
-`combined` tells the API to match probes based on all supplied values, while `default` will select the first probe in order, based on one of the matches. Runs in `default` mode, when not specified.
-
-**key**: `filter`
-
-**required**: `false`
-
-**rules**:
-- `default` or `combined`
-- `default` when not specified
-- location limits can't be defined, when running in `combined` mode
-- typeof `string`
-
-```json
-    "filter": "combined"
 ```
 
 ### locations
@@ -89,23 +69,19 @@ Please, see [LOCATION SCHEMA](./location.md) document for more details.
 ```json
     "locations": [
         {
-            "type": "continent",
-            "value": "eu",
+            "continent": "eu",
             "limit": 10
         },
         {
-            "type": "network",
-            "value": "virgin media limited",
+            "network": "virgin media limited",
             "limit": 1
         },
         {
-            "type": "magic",
-            "value": "aws", // alias
+            "magic": "aws", // alias
             "limit": 1
         },
         {
-            "type": "magic",
-            "value": "pol", // (poland) partial match
+            "magic": "pol", // (poland) partial match
             "limit": 1
         }
     ]
@@ -337,7 +313,7 @@ Send the query to a non-standard port on the server, instead of the default port
 Specifies the resolver server used for DNS lookup.
 
 ```
-resolver is the name or IP address of the name server to query. This can be an IPv4 address in dotted-decimal notation or an IPv6 address in colon-delimited notation. When the supplied server argument is a hostname, dig resolves that name before querying that name server.
+resolver is the name or IP address of the name server to query. This can be an IPv4 address in dotted-decimal [...]. When the supplied server argument is a hostname, dig resolves that name before querying that name server.
 ```
 
 **key**: `measurement.query.resolver`
@@ -346,7 +322,7 @@ resolver is the name or IP address of the name server to query. This can be an I
 
 **rules**:
 - typeof `string`
-- `FQDN` or `IP Address`
+- `FQDN` or `IPv4/noCIDR Address`
 
 ```json
     "resolver": "1.1.1.1"

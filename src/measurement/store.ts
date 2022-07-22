@@ -37,6 +37,7 @@ export class MeasurementStore {
 				status: 'in-progress',
 				createdAt: Date.now(),
 				updatedAt: Date.now(),
+				probesCount,
 				results: {},
 			});
 			await client.expire(key, config.get<number>('measurement.resultTTL'));
@@ -59,6 +60,7 @@ export class MeasurementStore {
 					longitude: probe.location.longitude,
 					latitude: probe.location.latitude,
 					network: probe.location.network,
+					resolvers: probe.resolvers,
 				},
 				result: {rawOutput: ''},
 			});

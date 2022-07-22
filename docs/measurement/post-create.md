@@ -13,9 +13,6 @@ Creates an on-demand measurement to run immediately.
 **headers**:
 - `content-type: application/json` (required)
 
-**query**: 
-- `pretty` (optional) - prettifies the JSON response
-
 **body**:
 
 schema:
@@ -63,16 +60,16 @@ for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 
 ## success response
 
-**status code**: `200 OK`
+**status code**: `202 Accepted`
 
-**content**: response will contain an Id number of your measurement, and total number of probes assigned to your query. The count of assigned probes might vary from what you requested.
+**content**: response will contain an Id number of your measurement, and total number of probes assigned to your query. The count of assigned probes might vary from what you requested. A URL pointing to the measurement status is sent in the `Location` header.
 
 ### schema
 
 ```
 {
     id: string,
-    probesCount: number
+    probesCount: number,
 }
 ```
 
@@ -82,8 +79,14 @@ for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 POST https://api.globalping.io/v1/measurements/
 {
     "id": "PY5fMsREMmIq45VR",
-    "probesCount": 1
+    "probesCount": 1,
 }
+```
+
+headers:
+
+```
+  Location: https://api.globalping.io/v1/measurements/PY5fMsREMmIq45VR
 ```
 
 ## error response (validation failed)

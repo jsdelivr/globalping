@@ -1,6 +1,9 @@
 import got from 'got';
 import type {LocationInfo} from '../client.js';
-import {normalizeCityName} from '../utils.js';
+import {
+	normalizeCityName,
+	normalizeNetworkName,
+} from '../utils.js';
 
 type FastlyGeoInfo = {
 	continent_code: string;
@@ -37,15 +40,19 @@ export const fastlyLookup = async (addr: string): Promise<FastlyBundledResponse>
 	}).json<FastlyResponse>();
 
 	const data = result['geo-digitalelement'];
+	const city = data.city.replace(/^(private|reserved)/, '');
+
 	const location = {
 		continent: data.continent_code,
 		country: data.country_code,
 		state: data.country_code === 'US' ? data.region : undefined,
-		city: normalizeCityName(data.city),
+		city,
+		normalizedCity: normalizeCityName(city),
 		asn: result.as.number,
 		latitude: data.latitude,
 		longitude: data.longitude,
 		network: result.as.name,
+		normalizedNetwork: normalizeNetworkName(result.as.name),
 	};
 
 	return {

@@ -81,8 +81,7 @@ type MeasurementStatus = 'in-progress' | 'finished';
 export type MeasurementRequest = {
 	measurement: NetworkTest;
 	locations: LocationWithLimit[];
-	limit?: number;
-	filter?: 'combined' | 'default';
+	limit: number;
 };
 
 export type MeasurementConfig = {
@@ -97,6 +96,7 @@ export type MeasurementRecord = {
 	status: MeasurementStatus;
 	createdAt: number;
 	updatedAt: number;
+	probesCount: number;
 	results: Record<string, (PingResult | TracerouteResult | DnsResult)>;
 };
 

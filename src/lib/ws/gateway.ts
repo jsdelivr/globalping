@@ -7,6 +7,7 @@ import {
 	handleStatusReady,
 	handleStatusNotReady,
 } from '../../probe/handler/status.js';
+import {handleDnsUpdate} from '../../probe/handler/dns.js';
 import {scopedLogger} from '../logger.js';
 import {getWsServer, PROBES_NAMESPACE} from './server.js';
 import {probeMetadata} from './middleware/probe-metadata.js';
@@ -29,6 +30,7 @@ io
 		// Handlers
 		socket.on('probe:status:ready', handleStatusReady(probe));
 		socket.on('probe:status:not_ready', handleStatusNotReady(probe));
+		socket.on('probe:dns:update', handleDnsUpdate(probe));
 		socket.on('probe:measurement:ack', handleMeasurementAck(probe));
 		socket.on('probe:measurement:progress', handleMeasurementProgress);
 		socket.on('probe:measurement:result', handleMeasurementResult);
