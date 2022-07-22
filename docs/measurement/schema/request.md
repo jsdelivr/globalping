@@ -4,6 +4,8 @@ supported `type` values:
 - [`ping`](#ping)
 - [`traceroute`](#traceroute)
 - [`dns`](#dns)
+- [`mtr`](#mtr)
+- [`http`](#http)
 
 ## shared values
 
@@ -338,4 +340,228 @@ Toggle tracing of the delegation path from the root name servers for the name be
 
 ```json
     "trace": true
+```
+
+<h2 id="mtr">MTR</h2>
+
+**type**: `mtr`
+
+Implementation of the native `mtr` command.
+
+mtr combines the functionality of the traceroute and ping programs in a single network diagnostic tool.
+
+example:
+```json
+{
+    "measurement": {
+        "type": "mtr",
+        "target": "google.com",
+        "protocol": "ICMP",
+        "port": 53,
+        "packets": 10
+    },
+    "locations": [],
+    "limit": 1
+}
+```
+
+### protocol
+
+Specifies the query protocol.
+
+**key**: `measurement.protocol`
+
+**default**: `ICMP`
+
+**required**: `false`
+
+**available values**:
+- `ICMP` (default)
+- `TCP`
+- `UDP`
+
+**rules**:
+- typeof `string`
+- must match one of the pre-defined values
+
+### port
+
+Specifies the value of the `-P` flag.
+
+```
+The target port number for TCP/SCTP/UDP traces.
+```
+
+**key**: `measurement.port`
+
+**default**: `80`
+
+**required**: `false`
+
+**rules**:
+- typeof `number`
+
+```json
+    "port": 53
+```
+
+### packets
+
+Specifies the desired amount of `ECHO_REQUEST` packets to be sent.
+
+```
+Use this option to set the number of pings sent to determine both the machines on the network and the reliability of those machines.  Each cycle lasts one second.
+```
+
+**key**: `measurement.packets`
+
+**default**: `3`
+
+**required**: `false`
+
+**rules**:
+- typeof `number`
+- min `1`
+- max `16`
+
+```json
+    "packets": 5
+```
+
+<h2 id="http">HTTP</h2>
+
+**type**: `http`
+
+example:
+
+```json
+{
+    "type": "http",
+    "target": "google.com",
+    "query": {
+        "path": "/",
+        "method": "GET",
+        "protocol": "HTTPS",
+        "host": "jsdelivr.com",
+        "port": 443,
+        "headers": {
+            "Referer": "https://example.com/"
+        }
+    }
+}
+```
+
+### path
+
+A URL pathname.
+
+**key**: `measurement.query.path`
+
+**default**: `/`
+
+**required**: `false`
+
+**rules**:
+- typeof `string`
+
+## host
+
+Specifies the `Host` header, which is going to be added to the request.
+
+```
+  Host: example.com
+```
+
+**key**: `measurement.query.host`
+
+**default**: Host defined in `target`
+
+**required**: `false`
+
+**rules**:
+- typeof `string`
+
+### port
+
+**key**: `measurement.query.port`
+
+**default**: `80`
+
+**required**: `false`
+
+**rules**:
+- typeof `number`
+
+### protocol
+
+Specifies the query protocol.
+
+**key**: `measurement.query.protocol`
+
+**default**: `HTTP`
+
+**required**: `false`
+
+**available values**:
+- `HTTP` (default)
+- `HTTPS`
+- `HTTP2`
+
+**rules**:
+- typeof `string`
+- must match one of the pre-defined values
+
+### method
+
+Specifies the HTTP method.
+
+**key**: `measurement.query.method`
+
+**default**: `HEAD`
+
+**required**: `false`
+
+**available values**:
+- `HEAD` (default)
+- `GET`
+
+**rules**:
+- typeof `string`
+- must match one of the pre-defined values
+
+### resolver
+
+Specifies the resolver server used for DNS lookup.
+
+**key**: `measurement.query.resolver`
+
+**required**: `false`
+
+**rules**:
+- typeof `string`
+- `FQDN` or `IP Address`
+
+
+### headers
+
+**key**: `measurement.query.headers`
+
+**default**: `{}`
+
+**required**: `false`
+
+**rules**:
+- typeof `Object<string, string>`
+- key `User-Agent` is overridden
+- key `Host` is overridden
+
+example:
+
+```json
+{
+    ...
+    "headers": {
+        "Referer": "https://example.com/"
+    }
+}
 ```
