@@ -7,6 +7,7 @@ Jump to:
 - [`Traceroute  Result schema`](#traceroute)
 - [`DNS Result schema`](#dns)
 - [`MTR Result schema`](#mtr)
+- [`HTTP Result schema`](#http)
 
 ## Success
 
@@ -600,3 +601,248 @@ The largest jitter between response times.
 **type**: `float`
 
 The average jitter between response times.
+
+### HTTP
+
+example:
+
+```json
+{
+  "id": "EXrIBBoduJUCcJRa",
+  "type": "http",
+  "status": "finished",
+  "createdAt": 1658480890820,
+  "updatedAt": 1658480891219,
+  "results": [
+    {
+      "probe": {
+        "continent": "NA",
+        "region": "northern america",
+        "country": "CA",
+        "state": null,
+        "city": "toronto",
+        "asn": 396982,
+        "longitude": -79.4163,
+        "latitude": 43.7001,
+        "network": "google cloud"
+      },
+      "result": {
+        "headers": {
+          "location": "https://www.google.com/",
+          "content-type": "text/html; charset=UTF-8",
+          "date": "Fri, 22 Jul 2022 09:08:11 GMT",
+          "expires": "Sun, 21 Aug 2022 09:08:11 GMT",
+          "cache-control": "public, max-age=2592000",
+          "server": "gws",
+          "content-length": "220",
+          "x-xss-protection": "0",
+          "x-frame-options": "SAMEORIGIN",
+          "connection": "close"
+        },
+        "rawHeaders": "Location: https://www.google.com/\nContent-Type: text/html; charset=UTF-8\nDate: Fri, 22 Jul 2022 09:08:11 GMT\nExpires: Sun, 21 Aug 2022 09:08:11 GMT\nCache-Control: public, max-age=2592000\nServer: gws\nContent-Length: 220\nX-XSS-Protection: 0\nX-Frame-Options: SAMEORIGIN\nConnection: close",
+        "rawBody": "",
+        "statusCode": 301,
+        "timings": {
+          "firstByte": 131,
+          "dns": 3,
+          "tls": 27,
+          "tcp": 1,
+          "total": 163,
+          "download": 1
+        },
+        "tls": {
+          "authorized": true,
+          "createdAt": "Jun 27 08:17:39 2022 GMT",
+          "expireAt": "Sep 19 08:17:38 2022 GMT",
+          "issuer": {
+            "C": "US",
+            "O": "Google Trust Services LLC",
+            "CN": "GTS CA 1C3"
+          },
+          "subject": {
+            "CN": "*.google.com",
+            "alt": "DNS:*.google.com, DNS:*.appengine.google.com, DNS:*.bdn.dev, DNS:*.cloud.google.com, DNS:*.crowdsource.google.com, DNS:*.datacompute.google.com, DNS:*.google.ca, DNS:*.google.cl, DNS:*.google.co.in, DNS:*.google.co.jp, DNS:*.google.co.uk, DNS:*.google.com.ar, DNS:*.google.com.au, DNS:*.google.com.br, DNS:*.google.com.co, DNS:*.google.com.mx, DNS:*.google.com.tr, DNS:*.google.com.vn, DNS:*.google.de, DNS:*.google.es, DNS:*.google.fr, DNS:*.google.hu, DNS:*.google.it, DNS:*.google.nl, DNS:*.google.pl, DNS:*.google.pt, DNS:*.googleadapis.com, DNS:*.googleapis.cn, DNS:*.googlevideo.com, DNS:*.gstatic.cn, DNS:*.gstatic-cn.com, DNS:googlecnapps.cn, DNS:*.googlecnapps.cn, DNS:googleapps-cn.com, DNS:*.googleapps-cn.com, DNS:gkecnapps.cn, DNS:*.gkecnapps.cn, DNS:googledownloads.cn, DNS:*.googledownloads.cn, DNS:recaptcha.net.cn, DNS:*.recaptcha.net.cn, DNS:recaptcha-cn.net, DNS:*.recaptcha-cn.net, DNS:widevine.cn, DNS:*.widevine.cn, DNS:ampproject.org.cn, DNS:*.ampproject.org.cn, DNS:ampproject.net.cn, DNS:*.ampproject.net.cn, DNS:google-analytics-cn.com, DNS:*.google-analytics-cn.com, DNS:googleadservices-cn.com, DNS:*.googleadservices-cn.com, DNS:googlevads-cn.com, DNS:*.googlevads-cn.com, DNS:googleapis-cn.com, DNS:*.googleapis-cn.com, DNS:googleoptimize-cn.com, DNS:*.googleoptimize-cn.com, DNS:doubleclick-cn.net, DNS:*.doubleclick-cn.net, DNS:*.fls.doubleclick-cn.net, DNS:*.g.doubleclick-cn.net, DNS:doubleclick.cn, DNS:*.doubleclick.cn, DNS:*.fls.doubleclick.cn, DNS:*.g.doubleclick.cn, DNS:dartsearch-cn.net, DNS:*.dartsearch-cn.net, DNS:googletraveladservices-cn.com, DNS:*.googletraveladservices-cn.com, DNS:googletagservices-cn.com, DNS:*.googletagservices-cn.com, DNS:googletagmanager-cn.com, DNS:*.googletagmanager-cn.com, DNS:googlesyndication-cn.com, DNS:*.googlesyndication-cn.com, DNS:*.safeframe.googlesyndication-cn.com, DNS:app-measurement-cn.com, DNS:*.app-measurement-cn.com, DNS:gvt1-cn.com, DNS:*.gvt1-cn.com, DNS:gvt2-cn.com, DNS:*.gvt2-cn.com, DNS:2mdn-cn.net, DNS:*.2mdn-cn.net, DNS:googleflights-cn.net, DNS:*.googleflights-cn.net, DNS:admob-cn.com, DNS:*.admob-cn.com, DNS:*.gstatic.com, DNS:*.metric.gstatic.com, DNS:*.gvt1.com, DNS:*.gcpcdn.gvt1.com, DNS:*.gvt2.com, DNS:*.gcp.gvt2.com, DNS:*.url.google.com, DNS:*.youtube-nocookie.com, DNS:*.ytimg.com, DNS:android.com, DNS:*.android.com, DNS:*.flash.android.com, DNS:g.cn, DNS:*.g.cn, DNS:g.co, DNS:*.g.co, DNS:goo.gl, DNS:www.goo.gl, DNS:google-analytics.com, DNS:*.google-analytics.com, DNS:google.com, DNS:googlecommerce.com, DNS:*.googlecommerce.com, DNS:ggpht.cn, DNS:*.ggpht.cn, DNS:urchin.com, DNS:*.urchin.com, DNS:youtu.be, DNS:youtube.com, DNS:*.youtube.com, DNS:youtubeeducation.com, DNS:*.youtubeeducation.com, DNS:youtubekids.com, DNS:*.youtubekids.com, DNS:yt.be, DNS:*.yt.be, DNS:android.clients.google.com, DNS:developer.android.google.cn, DNS:developers.android.google.cn, DNS:source.android.google.cn"
+          }
+        },
+        "rawOutput": "HTTP/1.1 301\nLocation: https://www.google.com/\nContent-Type: text/html; charset=UTF-8\nDate: Fri, 22 Jul 2022 09:08:11 GMT\nExpires: Sun, 21 Aug 2022 09:08:11 GMT\nCache-Control: public, max-age=2592000\nServer: gws\nContent-Length: 220\nX-XSS-Protection: 0\nX-Frame-Options: SAMEORIGIN\nConnection: close"
+      }
+    }
+  ]
+}
+```
+
+#### rawHeaders
+
+**key**: `Result.result.rawHeaders`
+
+**type**: `string`
+
+Unparsed response headers.
+
+#### Headers
+
+**key**: `Result.result.headers`
+
+**type**: `Object<string, string>`
+
+JSON parsed resposne headers.
+
+#### rawBody
+
+**key**: `Result.result.rawBody`
+
+**type**: `string`
+
+Unparsed response body.
+
+#### statusCode
+
+**key**: `Result.result.statusCode`
+
+**type**: `integer`
+
+#### timings
+
+**key**: `Result.result.timings`
+
+**type**: `Object<string, integer>`
+
+A full breakdown of how long it took to complete the request.
+
+#### timings.firstByte / timings.dns / timings.tls / timings.tcp / timings.download / timings.total
+
+**key**:
+`Result.result.timings.firstByte` `Result.result.timings.dns` `Result.result.timings.tls` `Result.result.timings.tcp` `Result.result.timings.download` `Result.result.timings.total`
+
+**type**: `integer`
+
+**warning**:
+HTTP2 requests might be lacknig `dns`, `tls` and `tcp` data.
+
+#### tls
+
+**key**: `Result.result.tls`
+
+**type**: `Object<string, any>`
+
+#### tls.authorized
+
+**key**: `Result.result.tls.authorized`
+
+**type**: `boolean`
+
+#### tls.authorizationError
+
+**key**: `Result.result.tls.authorizationError`
+
+**type**: `string`
+
+An error message describing the unsuccessful TLS authorization.
+
+#### tls.createdAt / tls.updatedAt
+
+**key**: `Result.result.tls.createdAt` `Result.result.tls.updatedAt`
+
+**type**: `string` (ISO)
+
+#### issuer
+
+**key**: `Result.result.tls.issuer`
+
+**type**: `Object<string, string>`
+
+#### issuer.C
+
+**key**: `Result.result.tls.issuer.C`
+
+**type**: `string`
+
+Issuer's registration country
+
+#### issuer.ST
+
+**key**: `Result.result.tls.issuer.ST`
+
+**type**: `string`
+
+Issuer's registration state (US)
+
+#### issuer.L
+
+**key**: `Result.result.tls.issuer.L`
+
+**type**: `string`
+
+Issuer's registration city
+
+#### issuer.O
+
+**key**: `Result.result.tls.issuer.O`
+
+**type**: `string`
+
+Issuer's registration organization
+
+#### issuer.CN
+
+**key**: `Result.result.tls.issuer.CN`
+
+**type**: `string`
+
+Issuer's organization common name
+
+#### subject
+
+**key**: `Result.result.tls.suject`
+
+**type**: `Object<string, string>`
+
+#### subject.C
+
+**key**: `Result.result.tls.suject.C`
+
+**type**: `string`
+
+Subject's registration country
+
+#### subject.ST
+
+**key**: `Result.result.tls.suject.ST`
+
+**type**: `string`
+
+Subject's registration state (US)
+
+#### subject.L
+
+**key**: `Result.result.tls.suject.L`
+
+**type**: `string`
+
+Subject's registration city
+
+#### subjects.O
+
+**key**: `Result.result.tls.subject.O`
+
+**type**: `string`
+
+Subjects's registration organization
+
+
+#### subject.CN
+
+**key**: `Result.result.tls.subject.CN`
+
+**type**: `string`
+
+Subject's name (FQDN)
+
+#### subject.alt
+
+**key**: `Result.result.tls.subject.alt`
+
+**type**: `string`
+
+A list of alternative names (FQDN) associated with this certificate. Each record is prefixed with `DNS:`, and seperated with comma (`,`).
+
