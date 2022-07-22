@@ -29,11 +29,15 @@ below is presented a schema containing all possible input values; some are gener
             resolver?: string
             trace?: boolean
         }
+        type: string
         port?: number
+        target: string
         protocol?: string
         packets?: number
-        target: string
-        type: string
+        path?: string
+        host?: string
+        headers?: Object<string, string>
+        method?: string
     }
 }
 ```
@@ -43,7 +47,7 @@ POST https://api.globalping.io/v1/measurements/
 {
     "limit": 10,
     "locations": [
-        { "type": "country", "value": "gb" }
+        { "country": "gb" }
     ],
     "measurement": {
         "packets": 10,
