@@ -26,13 +26,19 @@ type TracerouteTest = {
 	port: number;
 };
 
-type TraceHopResult = {
-	host: string;
-	resolvedAddress: string;
-	rtt: number[];
+type TraceHopTiming = {
+	rtt: number;
 };
+
+type TraceHopResult = {
+	resolvedHostname: string;
+	resolvedAddress: string;
+	timings: TraceHopTiming[];
+};
+
 type TracerouteResult = TestResult & {
-	destination: string;
+	resolvedHostname: string;
+	resolvedAddress: string;
 	hops: TraceHopResult[];
 };
 
