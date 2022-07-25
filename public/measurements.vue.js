@@ -7,7 +7,7 @@ const app = () => ({
         target: 'google.com',
         limit: 1,
         combineFilters: false,
-        query: {}
+        request: {}
       },
       response: {
         data: null,
@@ -124,50 +124,51 @@ const app = () => ({
       }
 
       if (this.query.type === 'dns') {
-        const query = {};
+        const request = {};
 
-        if (this.query.query.type) {
-          query.type = this.query.query.type;
+        if (this.query.request.type) {
+          request.type = this.query.request.type;
         }
 
-        if (this.query.query.protocol) {
-          measurement.protocol = this.query.query.protocol;
+        if (this.query.protocol) {
+          measurement.protocol = this.query.protocol;
         }
 
 
-        if (this.query.query.port) {
-          measurement.port = this.query.query.port;
+        if (this.query.port) {
+          measurement.port = this.query.port;
         }
 
-        if (this.query.query.resolver) {
-          measurement.resolver = this.query.query.resolver;
+        if (this.query.resolver) {
+          measurement.resolver = this.query.resolver;
         }
 
-        if (this.query.query.trace) {
-          measurement.trace = !!this.query.query.trace;
+        if (this.query.trace) {
+          measurement.trace = !!this.query.trace;
         }
 
-        if (Object.keys(query).length > 0) {
-          measurement.query = query;
+        if (Object.keys(request).length > 0) {
+          measurement.request = request;
         }
       }
 
       if (this.query.type === 'http') {
-        measurement.protocol = this.query.query.protocol;
-        measurement.port = this.query.query.port;
-        measurement.resolver = this.query.query.resolver;
+        measurement.protocol = this.query.protocol;
+        measurement.port = this.query.port;
+        measurement.resolver = this.query.resolver;
 
-        const query = {
-          method: this.query.query.method,
-          path: this.query.query.path,
-          host: this.query.query.host,
+        const request = {
+          method: this.query.request.method,
+          path: this.query.request.path,
+          query: this.query.request.query,
+          host: this.query.request.host,
         };
 
-        if (this.query.query.headers) {
-          query.headers = Object.fromEntries(this.query.query.headers.map(h => [h.title, h.value]));
+        if (this.query.request.headers) {
+          request.headers = Object.fromEntries(this.query.request.headers.map(h => [h.title, h.value]));
         }
 
-        measurement.query = Object.fromEntries(Object.entries(query).filter(entry => entry[1]))
+        measurement.request = Object.fromEntries(Object.entries(request).filter(entry => entry[1]))
       }
 
       const locations = this.query.locations.map(({ id, limit, ...l}) => ({
@@ -180,12 +181,12 @@ const app = () => ({
     addNewHttpHeader(e) {
       e.preventDefault();
 
-      if (!this.query.query.headers) {
-        this.query.query.headers = []
+      if (!this.query.request.headers) {
+        this.query.request.headers = []
       }
 
       const header = { id: Date.now(), title: '', value: '' };
-      this.query.query.headers.push(header);
+      this.query.request.headers.push(header);
     },
     addNewLocation(e) {
       e.preventDefault();
@@ -321,25 +322,31 @@ const app = () => ({
         <div v-if="query.type === 'http'" class="form-group row">
           <label for="query_http_host" class="col-sm-2 col-form-label">host</label>
           <div class="col-sm-10">
-            <input v-model="query.query.host" name="query_http_host" id="query_http_host" placeholder="target" />
+            <input v-model="query.request.host" name="query_http_host" id="query_http_host" placeholder="target" />
           </div>
         </div>
         <div v-if="query.type === 'http'" class="form-group row">
           <label for="query_http_path" class="col-sm-2 col-form-label">path</label>
           <div class="col-sm-10">
-            <input v-model="query.query.path" name="query_http_path" id="query_http_path" placeholder="target" />
+            <input v-model="query.request.path" name="query_http_path" id="query_http_path" placeholder="target" />
+          </div>
+        </div>
+        <div v-if="query.type === 'http'" class="form-group row">
+          <label for="query_http_query" class="col-sm-2 col-form-label">query string</label>
+          <div class="col-sm-10">
+            <input v-model="query.request.query" name="query_http_query" id="query_http_query" placeholder="target" />
           </div>
         </div>
         <div v-if="query.type === 'http'" class="form-group row">
           <label for="query_http_port" class="col-sm-2 col-form-label">port</label>
           <div class="col-sm-10">
-            <input type="number" v-model="query.query.port" id="query_http_port" name="query_http_port" placeholder="port" />
+            <input type="number" v-model="query.port" id="query_http_port" name="query_http_port" placeholder="port" />
           </div>
         </div>
         <div v-if="query.type === 'http'" class="form-group row">
           <label for="query_http_protocol" class="col-sm-2 col-form-label">protocol</label>
           <div class="col-sm-10">
-            <select v-model="query.query.protocol" name="query_http_protocol" id="query_http_protocol" class="custom-select my-1 mr-sm-2">
+            <select v-model="query.protocol" name="query_http_protocol" id="query_http_protocol" class="custom-select my-1 mr-sm-2">
               <option disabled value="">Please select one</option>
               <option v-for="protocol in getHttpProtocolArray()" :value="protocol">
                 {{ protocol }}
@@ -350,7 +357,7 @@ const app = () => ({
         <div v-if="query.type === 'http'" class="form-group row">
           <label for="query_http_method" class="col-sm-2 col-form-label">method</label>
           <div class="col-sm-10">
-            <select v-model="query.query.method" name="query_http_method" id="query_http_method" class="custom-select my-1 mr-sm-2">
+            <select v-model="query.request.method" name="query_http_method" id="query_http_method" class="custom-select my-1 mr-sm-2">
               <option disabled value="">Please select one</option>
               <option v-for="protocol in getHttpMethodArray()" :value="protocol">
                 {{ protocol }}
@@ -361,7 +368,7 @@ const app = () => ({
         <div v-if="query.type === 'http'" class="form-group row">
           <label for="query_http_resolver" class="col-sm-2 col-form-label">resolver</label>
           <div class="col-sm-10">
-            <input type="text" v-model="query.query.resolver" id="query_http_resolver" name="query_http_resolver" placeholder="resolver" />
+            <input type="text" v-model="query.resolver" id="query_http_resolver" name="query_http_resolver" placeholder="resolver" />
           </div>
         </div>
         <div v-if="['traceroute', 'mtr'].includes(query.type)" class="form-group row">
@@ -395,13 +402,13 @@ const app = () => ({
         <div v-if="query.type === 'dns'" class="form-group row">
           <label for="query_dns_type" class="col-sm-2 col-form-label">trace</label>
           <div class="col-sm-10">
-            <input type="checkbox" v-model="query.query.trace" >
+            <input type="checkbox" v-model="query.trace" >
           </div>
         </div>
         <div v-if="query.type === 'dns'" class="form-group row">
           <label for="query_dns_type" class="col-sm-2 col-form-label">dns type</label>
           <div class="col-sm-10">
-            <select v-model="query.query.type" name="query_dns_type" id="query_dns_type" class="custom-select my-1 mr-sm-2">
+            <select v-model="query.request.type" name="query_dns_type" id="query_dns_type" class="custom-select my-1 mr-sm-2">
               <option disabled value="">Please select one</option>
               <option v-for="type in getDnsTypeArray()" :value="type">
                 {{ type }}
@@ -412,7 +419,7 @@ const app = () => ({
         <div v-if="query.type === 'dns'" class="form-group row">
           <label for="query_protocol" class="col-sm-2 col-form-label">protocol</label>
           <div class="col-sm-10">
-            <select v-model="query.query.protocol" name="query_protocol" id="query_protocol" class="custom-select my-1 mr-sm-2">
+            <select v-model="query.protocol" name="query_protocol" id="query_protocol" class="custom-select my-1 mr-sm-2">
               <option disabled value="">Please select one</option>
               <option v-for="protocol in getDnsProtocolArray()" :value="protocol">
                 {{ protocol }}
@@ -423,13 +430,13 @@ const app = () => ({
         <div v-if="query.type === 'dns'" class="form-group row">
           <label for="query_dns_port" class="col-sm-2 col-form-label">port</label>
           <div class="col-sm-10">
-            <input type="number" v-model="query.query.port" id="query_dns_port" name="query_dns_port" placeholder="port" />
+            <input type="number" v-model="query.port" id="query_dns_port" name="query_dns_port" placeholder="port" />
           </div>
         </div>
         <div v-if="query.type === 'dns'" class="form-group row">
           <label for="query_dns_resolver" class="col-sm-2 col-form-label">resolver</label>
           <div class="col-sm-10">
-            <input type="text" v-model="query.query.resolver" id="query_dns_resolver" name="query_dns_resolver" placeholder="resolver" />
+            <input type="text" v-model="query.resolver" id="query_dns_resolver" name="query_dns_resolver" placeholder="resolver" />
           </div>
         </div>
 
@@ -439,9 +446,9 @@ const app = () => ({
               http headers
             </h3>
             <ul>
-              <li v-for="(m, index) in query.query.headers" :key="m.id">
-                <input v-model="query.query.headers[index].title" placeholder="title" />
-                <input v-model="query.query.headers[index].value" placeholder="value" />
+              <li v-for="(m, index) in query.request.headers" :key="m.id">
+                <input v-model="query.request.headers[index].title" placeholder="title" />
+                <input v-model="query.request.headers[index].value" placeholder="value" />
               </li>
             </ul>
           </div>
