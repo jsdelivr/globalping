@@ -438,8 +438,9 @@ example:
 ```json
 {
     "type": "http",
-    "protocol": "HTTPS",
+    "target": "jsdelivr.com",
     "port": 443,
+    "protocol": "HTTPS",
     "request": {
         "path": "/",
         "query": "?a=abc",
