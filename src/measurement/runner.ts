@@ -10,7 +10,13 @@ import type {Probe} from '../probe/types.js';
 import {getMetricsAgent, MetricsAgent} from '../lib/metrics.js';
 import type {MeasurementStore} from './store.js';
 import {getMeasurementKey, getMeasurementStore} from './store.js';
-import type {MeasurementConfig, MeasurementRequest, MeasurementResultMessage, MeasurementRecord} from './types.js';
+import type {
+	NetworkTest,
+	MeasurementConfig,
+	MeasurementRequest,
+	MeasurementResultMessage,
+	MeasurementRecord,
+} from './types.js';
 
 const logger = scopedLogger('measurement');
 
@@ -32,12 +38,18 @@ export class MeasurementRunner {
 			throw createHttpError(400, 'No suitable probes found');
 		}
 
-		const id = await this.store.createMeasurement(request.measurement, probes.length);
-		const config: MeasurementConfig = {id, probes, measurement: request.measurement};
+		const measurement: NetworkTest = {
+			...request.measurementOptions,
+			type: request.type,
+			target: request.target,
+		};
+
+		const id = await this.store.createMeasurement(measurement, probes.length);
+		const config: MeasurementConfig = {id, probes, measurementOptions: measurement};
 
 		this.sendToProbes(config);
 		this.setTimeout(config.id);
-		this.metrics.recordMeasurement(request.measurement.type);
+		this.metrics.recordMeasurement(request.type);
 
 		return config;
 	}
@@ -71,7 +83,7 @@ export class MeasurementRunner {
 		for (const probe of config.probes) {
 			this.io.of('probes').to(probe.client).emit('probe:measurement:request', {
 				id: config.id,
-				measurement: config.measurement,
+				measurement: config.measurementOptions,
 			});
 		}
 	}

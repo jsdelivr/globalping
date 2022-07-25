@@ -13,7 +13,7 @@ supported `type` values:
 
 A public endpoint on which tests should be executed. In most cases, it would be a hostname or IPv4 address. Its validation rules might differ depending on the query type.
 
-**key**: `measurement.target`
+**key**: `target`
 
 **required**: `true`
 
@@ -116,7 +116,7 @@ Specifies the desired amount of `ECHO_REQUEST` packets to be sent.
 Stop after sending count ECHO_REQUEST packets. With deadline option, ping waits for count ECHO_REPLY packets, until the timeout expires.
 ```
 
-**key**: `measurement.packets`
+**key**: `measurementOptions.packets`
 
 **default**: `3`
 
@@ -157,7 +157,7 @@ example:
 
 Specifies the protocol used for tracerouting.
 
-**key**: `measurement.protocol`
+**key**: `measurementOptions.protocol`
 
 **default**: `ICMP`
 
@@ -180,7 +180,7 @@ Specifies the value of the `-p` flag. Only applicable for `TCP` protocol.
 For TCP and others specifies just the (constant) destination port to connect.
 ```
 
-**key**: `measurement.port`
+**key**: `measurementOptions.port`
 
 **default**: `80`
 
@@ -207,14 +207,14 @@ DNS specific values have to be contained within `measurements.query` object.
 example:
 ```json
 {
+    "type": "dns",
+    "target": "google.com",
     "measurement": {
-        "type": "dns",
-        "target": "google.com",
+        "protocol": "UDP",
+        "port": 53,
+        "resolver": "1.1.1.1"
         "query": {
-            "protocol": "UDP",
             "type": "A",
-            "port": 53,
-            "resolver": "1.1.1.1"
         }
     },
     "locations": [],
@@ -226,7 +226,7 @@ example:
 
 The final destination of the request.
 
-**key**: `measurement.target`
+**key**: `target`
 
 **required**: `true`
 
@@ -243,7 +243,7 @@ The final destination of the request.
 
 Specifies the DNS type for which to look for.
 
-**key**: `measurement.query.type`
+**key**: `measurementOptions.query.type`
 
 **default**: `A`
 
@@ -273,7 +273,7 @@ Specifies the DNS type for which to look for.
 
 Specifies the protocol used for DNS lookup.
 
-**key**: `measurement.query.protocol`
+**key**: `measurementOptions.protocol`
 
 **default**: `UDP`
 
@@ -295,7 +295,7 @@ Specifies the value of the `-p` flag.
 Send the query to a non-standard port on the server, instead of the default port 53.
 ```
 
-**key**: `measurement.query.port`
+**key**: `measurementOptions.port`
 
 **default**: `53`
 
@@ -316,7 +316,7 @@ Specifies the resolver server used for DNS lookup.
 resolver is the name or IP address of the name server to query. This can be an IPv4 address in dotted-decimal [...]. When the supplied server argument is a hostname, dig resolves that name before querying that name server.
 ```
 
-**key**: `measurement.query.resolver`
+**key**: `measurementOptions.resolver`
 
 **required**: `false`
 
@@ -331,7 +331,7 @@ resolver is the name or IP address of the name server to query. This can be an I
 
 Toggle tracing of the delegation path from the root name servers for the name being looked up. It will follow referrals from the root servers, showing the answer from each server that was used to resolve the lookup.
 
-**key**: `measurement.query.trace`
+**key**: `measurementOptions.trace`
 
 **required**: `false`
 
@@ -369,7 +369,7 @@ example:
 
 Specifies the query protocol.
 
-**key**: `measurement.protocol`
+**key**: `measurementOptions.protocol`
 
 **default**: `ICMP`
 
@@ -392,7 +392,7 @@ Specifies the value of the `-P` flag.
 The target port number for TCP/SCTP/UDP traces.
 ```
 
-**key**: `measurement.port`
+**key**: `measurementOptions.port`
 
 **default**: `80`
 
@@ -413,7 +413,7 @@ Specifies the desired amount of `ECHO_REQUEST` packets to be sent.
 Use this option to set the number of pings sent to determine both the machines on the network and the reliability of those machines.  Each cycle lasts one second.
 ```
 
-**key**: `measurement.packets`
+**key**: `measurementOptions.packets`
 
 **default**: `3`
 
@@ -438,12 +438,12 @@ example:
 {
     "type": "http",
     "target": "google.com",
+    "protocol": "HTTPS",
+    "port": 443,
     "query": {
         "path": "/",
         "method": "GET",
-        "protocol": "HTTPS",
         "host": "jsdelivr.com",
-        "port": 443,
         "headers": {
             "Referer": "https://example.com/"
         }
@@ -455,7 +455,7 @@ example:
 
 A URL pathname.
 
-**key**: `measurement.query.path`
+**key**: `measurementOptions.query.path`
 
 **default**: `/`
 
@@ -472,7 +472,7 @@ Specifies the `Host` header, which is going to be added to the request.
   Host: example.com
 ```
 
-**key**: `measurement.query.host`
+**key**: `measurementOptions.query.host`
 
 **default**: Host defined in `target`
 
@@ -481,41 +481,11 @@ Specifies the `Host` header, which is going to be added to the request.
 **rules**:
 - typeof `string`
 
-### port
-
-**key**: `measurement.query.port`
-
-**default**: `80`
-
-**required**: `false`
-
-**rules**:
-- typeof `number`
-
-### protocol
-
-Specifies the query protocol.
-
-**key**: `measurement.query.protocol`
-
-**default**: `HTTP`
-
-**required**: `false`
-
-**available values**:
-- `HTTP` (default)
-- `HTTPS`
-- `HTTP2`
-
-**rules**:
-- typeof `string`
-- must match one of the pre-defined values
-
 ### method
 
 Specifies the HTTP method.
 
-**key**: `measurement.query.method`
+**key**: `measurementOptions.query.method`
 
 **default**: `HEAD`
 
@@ -529,22 +499,9 @@ Specifies the HTTP method.
 - typeof `string`
 - must match one of the pre-defined values
 
-### resolver
-
-Specifies the resolver server used for DNS lookup.
-
-**key**: `measurement.query.resolver`
-
-**required**: `false`
-
-**rules**:
-- typeof `string`
-- `FQDN` or `IP Address`
-
-
 ### headers
 
-**key**: `measurement.query.headers`
+**key**: `measurementOptions.query.headers`
 
 **default**: `{}`
 
@@ -565,3 +522,45 @@ example:
     }
 }
 ```
+
+### port
+
+**key**: `measurementOptions.port`
+
+**default**: `80`
+
+**required**: `false`
+
+**rules**:
+- typeof `number`
+
+### protocol
+
+Specifies the query protocol.
+
+**key**: `measurementOptions.protocol`
+
+**default**: `HTTP`
+
+**required**: `false`
+
+**available values**:
+- `HTTP` (default)
+- `HTTPS`
+- `HTTP2`
+
+**rules**:
+- typeof `string`
+- must match one of the pre-defined values
+
+### resolver
+
+Specifies the resolver server used for DNS lookup.
+
+**key**: `measurementOptions.resolver`
+
+**required**: `false`
+
+**rules**:
+- typeof `string`
+- `FQDN` or `IP Address`
