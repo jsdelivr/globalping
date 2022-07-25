@@ -147,7 +147,7 @@ describe('command schema', () => {
 						measurementOptions: {
 							protocol: 'https',
 							port: 443,
-							query: {
+							request: {
 								method: 'GET',
 								host: 'elocast.com',
 								headers: {
