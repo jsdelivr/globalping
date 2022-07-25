@@ -99,9 +99,10 @@ example:
 
 ```json
 {
-    "measurement": {
-        "type": "ping",
-        "target": "google.com"
+    "type": "ping",
+    "target": "google.com"
+    "measurementOptions": {
+        "packets": 6
     },
     "locations": [],
     "limit": 5
@@ -142,9 +143,9 @@ traceroute tracks the route packets taken from an IP network on their way to a g
 example:
 ```json
 {
-    "measurement": {
-        "type": "traceroute",
-        "target": "google.com",
+    "type": "traceroute",
+    "target": "google.com",
+    "measurementOptions": {
         "protocol": "TCP",
         "port": 80
     },
@@ -202,19 +203,19 @@ Implementation of the native `dig` command.
 Performs DNS lookups and displays the answers that are returned from the name server(s) that were queried.
 
 **warning**:
-DNS specific values have to be contained within `measurements.query` object.
+DNS specific values have to be contained within `measurementOptions.query` object.
 
 example:
 ```json
 {
     "type": "dns",
     "target": "google.com",
-    "measurement": {
+    "measurementOptions": {
         "protocol": "UDP",
         "port": 53,
-        "resolver": "1.1.1.1"
+        "resolver": "1.1.1.1",
         "query": {
-            "type": "A",
+            "type": "A"
         }
     },
     "locations": [],
@@ -353,9 +354,9 @@ mtr combines the functionality of the traceroute and ping programs in a single n
 example:
 ```json
 {
-    "measurement": {
-        "type": "mtr",
-        "target": "google.com",
+    "type": "mtr",
+    "target": "google.com",
+    "measurementOptions": {
         "protocol": "ICMP",
         "port": 53,
         "packets": 10
@@ -437,11 +438,11 @@ example:
 ```json
 {
     "type": "http",
-    "target": "google.com",
     "protocol": "HTTPS",
     "port": 443,
-    "query": {
+    "request": {
         "path": "/",
+        "query": "?a=abc",
         "method": "GET",
         "host": "jsdelivr.com",
         "headers": {
@@ -455,9 +456,22 @@ example:
 
 A URL pathname.
 
-**key**: `measurementOptions.query.path`
+**key**: `measurementOptions.request.path`
 
 **default**: `/`
+
+**required**: `false`
+
+**rules**:
+- typeof `string`
+
+### query
+
+A query-string.
+
+**key**: `measurementOptions.request.query`
+
+**default**: `''` (empty string)
 
 **required**: `false`
 
@@ -472,7 +486,7 @@ Specifies the `Host` header, which is going to be added to the request.
   Host: example.com
 ```
 
-**key**: `measurementOptions.query.host`
+**key**: `measurementOptions.request.host`
 
 **default**: Host defined in `target`
 
@@ -485,7 +499,7 @@ Specifies the `Host` header, which is going to be added to the request.
 
 Specifies the HTTP method.
 
-**key**: `measurementOptions.query.method`
+**key**: `measurementOptions.request.method`
 
 **default**: `HEAD`
 
@@ -501,7 +515,7 @@ Specifies the HTTP method.
 
 ### headers
 
-**key**: `measurementOptions.query.headers`
+**key**: `measurementOptions.request.headers`
 
 **default**: `{}`
 
@@ -527,7 +541,7 @@ example:
 
 **key**: `measurementOptions.port`
 
-**default**: `80`
+**default**: `80` or `443` (depending on protocol)
 
 **required**: `false`
 
