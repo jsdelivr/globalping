@@ -109,7 +109,7 @@ describe('command schema', () => {
 						type: 'dns',
 						target: 'abc.com',
 						measurementOptions: {
-							request: {
+							query: {
 								type: 'A',
 							},
 							trace: false,
@@ -147,7 +147,7 @@ describe('command schema', () => {
 						measurementOptions: {
 							protocol: 'https',
 							port: 443,
-							request: {
+							query: {
 								method: 'GET',
 								host: 'elocast.com',
 								headers: {
@@ -526,7 +526,7 @@ describe('command schema', () => {
 				measurementOptions: {
 					trace: true,
 					protocol: 'tcp',
-					request: {
+					query: {
 						type: 'a',
 					},
 				},
@@ -538,7 +538,7 @@ describe('command schema', () => {
 			expect(valid.value.type).to.equal('dns');
 			expect(valid.value.measurementOptions.trace).to.equal(true);
 			expect(valid.value.measurementOptions.protocol).to.equal('TCP');
-			expect(valid.value.measurementOptions.request.type).to.equal('A');
+			expect(valid.value.measurementOptions.query.type).to.equal('A');
 		});
 
 		it('should pass and correct values (incorrect caps)', async () => {
@@ -547,7 +547,7 @@ describe('command schema', () => {
 				target: 'abc.com',
 				measurementOptions: {
 					protocol: 'tcp',
-					request: {
+					query: {
 						type: 'a',
 					},
 				},
@@ -558,7 +558,7 @@ describe('command schema', () => {
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('dns');
 			expect(valid.value.measurementOptions.protocol).to.equal('TCP');
-			expect(valid.value.measurementOptions.request.type).to.equal('A');
+			expect(valid.value.measurementOptions.query.type).to.equal('A');
 		});
 
 		it('should pass (deep equal)', async () => {
@@ -570,7 +570,7 @@ describe('command schema', () => {
 					resolver: '1.1.1.1',
 					protocol: 'UDP',
 					port: 53,
-					request: {
+					query: {
 						type: 'A',
 					},
 				},

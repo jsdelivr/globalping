@@ -59,7 +59,7 @@ const allowedDnsProtocols = ['UDP', 'TCP'];
 
 const dnsTargetSchema = Joi.string().domain().custom(joiValidateTarget('domain')).required();
 export const dnsSchema = Joi.object({
-	request: Joi.object({
+	query: Joi.object({
 		type: Joi.string().valid(...allowedDnsTypes).insensitive().default('A'),
 	}).default({}),
 	resolver: Joi.string().ip(globalIpOptions).custom(joiMalwareValidateIp),
