@@ -7,6 +7,7 @@ const app = () => ({
         target: 'google.com',
         limit: 1,
         combineFilters: false,
+        query: {},
         request: {}
       },
       response: {
@@ -124,10 +125,10 @@ const app = () => ({
       }
 
       if (this.query.type === 'dns') {
-        const request = {};
+        const query = {};
 
-        if (this.query.request.type) {
-          request.type = this.query.request.type;
+        if (this.query.query.type) {
+          query.type = this.query.query.type;
         }
 
         if (this.query.protocol) {
@@ -147,8 +148,8 @@ const app = () => ({
           measurement.trace = !!this.query.trace;
         }
 
-        if (Object.keys(request).length > 0) {
-          measurement.request = request;
+        if (Object.keys(query).length > 0) {
+          measurement.query = query;
         }
       }
 
@@ -408,7 +409,7 @@ const app = () => ({
         <div v-if="query.type === 'dns'" class="form-group row">
           <label for="query_dns_type" class="col-sm-2 col-form-label">dns type</label>
           <div class="col-sm-10">
-            <select v-model="query.request.type" name="query_dns_type" id="query_dns_type" class="custom-select my-1 mr-sm-2">
+            <select v-model="query.query.type" name="query_dns_type" id="query_dns_type" class="custom-select my-1 mr-sm-2">
               <option disabled value="">Please select one</option>
               <option v-for="type in getDnsTypeArray()" :value="type">
                 {{ type }}
