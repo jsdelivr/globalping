@@ -27,9 +27,12 @@ below is presented a schema containing all possible input values; some are gener
     measurementOptions: {
         query?: {
             type?: string
+        }
+        request?: {
             headers?: Object<string, string>
             path?: string
             host?: string
+            query?: string
             method?: string
         }
         protocol?: string

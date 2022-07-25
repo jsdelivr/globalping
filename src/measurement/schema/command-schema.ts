@@ -23,10 +23,11 @@ const allowedHttpMethods = ['get', 'head'];
 
 const httpTargetSchema = Joi.alternatives().try(Joi.string().ip(globalIpOptions), Joi.string().domain()).custom(joiValidateTarget('any')).required();
 export const httpSchema = Joi.object({
-	query: Joi.object({
+	request: Joi.object({
 		method: Joi.string().valid(...allowedHttpMethods).insensitive().default('head'),
 		host: Joi.string().domain().custom(joiValidateTarget('domain')).optional(),
 		path: Joi.string().optional().default('/'),
+		query: Joi.string().optional().default(''),
 		headers: Joi.object().default({}),
 	}).default({}),
 	resolver: Joi.string().ip(globalIpOptions).custom(joiMalwareValidateIp).custom(joiValidateTarget('ip')),
