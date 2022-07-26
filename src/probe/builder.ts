@@ -3,6 +3,7 @@ import _ from 'lodash';
 import type {Socket} from 'socket.io';
 import isIpPrivate from 'private-ip';
 import requestIp from 'request-ip';
+import semver from 'semver';
 import {
 	getRegionByCountry,
 	getStateNameByIso,
@@ -42,7 +43,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		throw new Error('failed to detect ip address of connected probe');
 	}
 
-	if (!VERSION_REG_EXP.test(version)) {
+	if (!VERSION_REG_EXP.test(version) || !semver.satisfies(version, '^0.8.1')) {
 		throw new InternalError(`invalid probe version (${version})`, true);
 	}
 
