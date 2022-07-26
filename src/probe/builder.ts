@@ -16,9 +16,6 @@ import {InternalError} from '../lib/internal-error.js';
 import {createGeoipClient} from '../lib/geoip/client.js';
 import type {Probe, ProbeLocation} from './types.js';
 
-/* eslint-disable-next-line @typescript-eslint/naming-convention */
-const VERSION_REG_EXP = /^(?:\d{1,2}\.){2}\d{1,2}$/;
-
 const fakeIpForDebug = () => _.sample([
 	'95.155.94.127',
 	'65.49.22.66',
@@ -43,7 +40,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		throw new Error('failed to detect ip address of connected probe');
 	}
 
-	if (!VERSION_REG_EXP.test(version) || !semver.satisfies(version, '^0.8.1')) {
+	if (!semver.satisfies(version, '^0.8.1')) {
 		throw new InternalError(`invalid probe version (${version})`, true);
 	}
 
