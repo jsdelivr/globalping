@@ -118,6 +118,8 @@ possible result types:
 - [`ping`](#ping)
 - [`traceroute`](#traceroute)
 - [`dns`](#dns)
+- [`mtr`](#mtr)
+- [`http`](#http)
 
 ### shared values
 
@@ -627,6 +629,7 @@ example:
         "network": "google cloud"
       },
       "result": {
+        "resolvedAddress": "142.250.178.14",
         "headers": {
           "location": "https://www.google.com/",
           "content-type": "text/html; charset=UTF-8",
@@ -670,6 +673,11 @@ example:
   ]
 }
 ```
+#### resolvedAddress
+
+**key**: `Result.result.resolvedAddress`
+
+**type**: `string`
 
 #### rawHeaders
 
