@@ -40,7 +40,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		throw new Error('failed to detect ip address of connected probe');
 	}
 
-	if (!semver.satisfies(version, '^0.8.1')) {
+	if (!semver.satisfies(version, '^0.9.0')) {
 		throw new InternalError(`invalid probe version (${version})`, true);
 	}
 
