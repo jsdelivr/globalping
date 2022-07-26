@@ -147,7 +147,7 @@ describe('command schema', () => {
 						measurementOptions: {
 							protocol: 'https',
 							port: 443,
-							query: {
+							request: {
 								method: 'GET',
 								host: 'elocast.com',
 								headers: {
@@ -693,7 +693,7 @@ describe('command schema', () => {
 					protocol: 'https',
 					port: 443,
 					resolver: 'abc',
-					query: {
+					request: {
 						host: '',
 						headers: {
 							test: 'abc',
@@ -716,7 +716,7 @@ describe('command schema', () => {
 					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 					protocol: 'https',
 					port: 443,
-					query: {
+					request: {
 						host: '',
 						headers: {
 							test: 'abc',
@@ -738,7 +738,7 @@ describe('command schema', () => {
 				measurementOptions: {
 					protocol: 'https',
 					port: 443,
-					query: {
+					request: {
 						host: '',
 						headers: {
 							test: 'abc',
@@ -760,7 +760,7 @@ describe('command schema', () => {
 				measurementOptions: {
 					port: 443,
 					protocol: 'rtmp',
-					query: {
+					request: {
 						method: 'GET',
 						host: '',
 						headers: {
@@ -781,7 +781,7 @@ describe('command schema', () => {
 				target: 'elocast.com',
 				measurementOptions: {
 					protocol: 'https',
-					query: {
+					request: {
 						method: 'GET',
 						host: 'elocast.com',
 						headers: {
@@ -796,10 +796,11 @@ describe('command schema', () => {
 				target: 'elocast.com',
 				measurementOptions: {
 					protocol: 'https',
-					query: {
+					request: {
 						method: 'get',
 						host: 'elocast.com',
 						path: '/',
+						query: '',
 						headers: {test: 'abc'},
 					},
 				},
@@ -820,7 +821,7 @@ describe('command schema', () => {
 				measurementOptions: {
 					protocol: 'https',
 					port: 443,
-					query: {
+					request: {
 						method: 'GET',
 						host: 'elocast.com',
 						headers: {
@@ -836,10 +837,11 @@ describe('command schema', () => {
 				measurementOptions: {
 					protocol: 'https',
 					port: 443,
-					query: {
+					request: {
 						method: 'get',
 						host: 'elocast.com',
 						path: '/',
+						query: '',
 						headers: {test: 'abc'},
 					},
 				},
