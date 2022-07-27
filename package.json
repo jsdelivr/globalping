@@ -72,6 +72,7 @@
     "sinon": "^14.0.0",
     "supertest": "^6.2.2",
     "ts-node": "^10.7.0",
+    "tsx": "^3.8.0",
     "typescript": "^4.6.4",
     "xo": "^0.49.0"
   },
@@ -83,6 +84,7 @@
     "build": "tsc && npm run blacklist",
     "start": "NODE_ENV=production node dist/index.js",
     "dev": "NODE_ENV=development node dist/index.js",
+    "tsx": "NODE_ENV=development tsx src/index.ts",
     "lint": "xo",
     "lint:fix": "xo --fix",
     "blacklist": "node dist/lib/malware/download.js",
