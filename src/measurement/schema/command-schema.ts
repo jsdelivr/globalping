@@ -57,7 +57,9 @@ export const tracerouteSchema = Joi.object({
 const allowedDnsTypes = ['A', 'AAAA', 'ANY', 'CNAME', 'DNSKEY', 'DS', 'MX', 'NS', 'NSEC', 'PTR', 'RRSIG', 'SOA', 'TXT', 'SRV'];
 const allowedDnsProtocols = ['UDP', 'TCP'];
 
-const dnsTargetSchema = Joi.string().domain().custom(joiValidateTarget('domain')).required();
+const dnsDefaultTargetSchema = Joi.string().domain().custom(joiValidateTarget('domain')).required();
+const dnsPtrTargetSchema = Joi.string().ip(globalIpOptions).custom(joiValidateTarget('ip')).required();
+const dnsTargetSchema = Joi.when(Joi.ref('.measurementOptions.query.type'), {is: Joi.string().insensitive().valid('PTR'), then: dnsPtrTargetSchema, otherwise: dnsDefaultTargetSchema});
 export const dnsSchema = Joi.object({
 	query: Joi.object({
 		type: Joi.string().valid(...allowedDnsTypes).insensitive().default('A'),
