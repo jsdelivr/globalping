@@ -71,7 +71,6 @@
     "rimraf": "^3.0.2",
     "sinon": "^14.0.0",
     "supertest": "^6.2.2",
-    "ts-node": "^10.7.0",
     "tsx": "^3.8.0",
     "typescript": "^4.6.4",
     "xo": "^0.49.0"
@@ -87,8 +86,10 @@
     "dev:tsx": "NODE_ENV=development tsx src/index.ts",
     "lint": "xo",
     "lint:fix": "xo --fix",
+    "lint:types": "tsc --noEmit",
     "blacklist": "node dist/lib/malware/download.js",
-    "test": "NODE_ENV=test mocha",
+    "test": "npm run lint:types && npm run test:src",
+    "test:src": "NODE_ENV=test mocha",
     "clean": "rimraf coverage",
     "test:coverage": "npm run clean && c8 mocha",
     "init:hooks": "husky install"
