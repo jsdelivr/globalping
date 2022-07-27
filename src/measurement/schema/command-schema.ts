@@ -59,7 +59,7 @@ const allowedDnsProtocols = ['UDP', 'TCP'];
 
 const dnsDefaultTargetSchema = Joi.string().domain().custom(joiValidateTarget('domain')).required();
 const dnsPtrTargetSchema = Joi.string().ip(globalIpOptions).custom(joiValidateTarget('ip')).required();
-const dnsTargetSchema = Joi.when(Joi.ref('.measurementOptions.query.type'), {is: Joi.string().insensitive().valid('PTR'), then: dnsPtrTargetSchema, otherwise: dnsDefaultTargetSchema});
+const dnsTargetSchema = Joi.when(Joi.ref('..measurementOptions.query.type'), {is: Joi.string().insensitive().valid('PTR'), then: dnsPtrTargetSchema, otherwise: dnsDefaultTargetSchema});
 export const dnsSchema = Joi.object({
 	query: Joi.object({
 		type: Joi.string().valid(...allowedDnsTypes).insensitive().default('A'),
