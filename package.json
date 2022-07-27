@@ -84,7 +84,7 @@
     "build": "tsc && npm run blacklist",
     "start": "NODE_ENV=production node dist/index.js",
     "dev": "NODE_ENV=development node dist/index.js",
-    "tsx": "NODE_ENV=development tsx src/index.ts",
+    "dev:tsx": "NODE_ENV=development tsx src/index.ts",
     "lint": "xo",
     "lint:fix": "xo --fix",
     "blacklist": "node dist/lib/malware/download.js",
