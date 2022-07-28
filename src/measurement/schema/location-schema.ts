@@ -5,7 +5,7 @@ import config from 'config';
 
 import geoLists from 'countries-list';
 import {states} from '../../lib/location/states.js';
-import {regions} from '../../lib/location/regions.js';
+import {regionNames} from '../../lib/location/regions.js';
 
 const {continents, countries} = geoLists;
 const measurementConfig = config.get<{limits: {global: number; location: number}}>('measurement');
@@ -13,7 +13,7 @@ const measurementConfig = config.get<{limits: {global: number; location: number}
 export const schema = Joi.array().items(Joi.object().keys({
 	continent: Joi.string().valid(...Object.keys(continents)).insensitive()
 		.messages({'any.only': 'The continent must be a valid two-letter continent code'}),
-	region: Joi.string().valid(...Object.keys(regions)).insensitive(),
+	region: Joi.string().valid(...regionNames).insensitive(),
 	country: Joi.string().valid(...Object.keys(countries)).insensitive()
 		.messages({'any.only': 'The country must be a valid two-letter ISO code'}),
 	state: Joi.string().valid(...Object.keys(states)).insensitive()

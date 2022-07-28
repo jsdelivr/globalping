@@ -5,7 +5,6 @@ import isIpPrivate from 'private-ip';
 import requestIp from 'request-ip';
 import semver from 'semver';
 import {
-	getRegionByCountry,
 	getStateNameByIso,
 	getCountryByIso,
 	getCountryIso3ByIso2,
@@ -59,7 +58,8 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const location: ProbeLocation = {
 		continent: ipInfo.continent,
-		region: getRegionByCountry(ipInfo.country),
+		region: ipInfo.region,
+		normalizedRegion: ipInfo.normalizedRegion,
 		country: ipInfo.country,
 		state: ipInfo.state,
 		city: ipInfo.city,
@@ -73,7 +73,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const index = [
 		location.continent,
-		location.region,
+		location.normalizedRegion,
 		location.country,
 		location.state ?? [],
 		location.normalizedCity,

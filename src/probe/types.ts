@@ -1,6 +1,7 @@
 export type ProbeLocation = {
 	continent: string;
 	region: string;
+	normalizedRegion: string;
 	country: string;
 	city: string;
 	normalizedCity: string;
