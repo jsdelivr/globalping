@@ -9,13 +9,19 @@ import RedisCache from '../cache/redis-cache.js';
 import {getRedisClient} from '../redis/client.js';
 import {scopedLogger} from '../logger.js';
 import appsignal from '../appsignal.js';
+import {getRegionByCountry} from '../location/location.js';
 import {isAddrWhitelisted} from './whitelist.js';
 import {ipinfoLookup} from './providers/ipinfo.js';
 import {FastlyBundledResponse, fastlyLookup} from './providers/fastly.js';
 import {maxmindLookup} from './providers/maxmind.js';
+import {prettifyRegionName} from './utils.js';
 
-export type LocationInfo = Omit<ProbeLocation, 'region'>;
+export type LocationInfo = Omit<ProbeLocation, 'region' | 'normalizedRegion'>;
 export type LocationInfoWithProvider = LocationInfo & {provider: string};
+export type RegionInfo = {
+	region: string;
+	normalizedRegion: string;
+};
 export type NetworkInfo = {
 	network: string;
 	normalizedNetwork: string;
@@ -35,7 +41,7 @@ export default class GeoipClient {
 		private readonly logger: Logger,
 	) {}
 
-	async lookup(addr: string): Promise<LocationInfo> {
+	async lookup(addr: string): Promise<ProbeLocation> {
 		const skipVpnCheck = await isAddrWhitelisted(addr);
 
 		const results = await Promise
@@ -73,11 +79,15 @@ export default class GeoipClient {
 			throw new InternalError('unresolvable geoip', true);
 		}
 
+		const region = this.matchRegion(match);
+
 		return {
 			continent: match.continent,
 			country: match.country,
 			state: match.state,
 			city: match.city,
+			region: region.region,
+			normalizedRegion: region.normalizedRegion,
 			normalizedCity: match.normalizedCity,
 			asn: Number(networkMatch.asn),
 			latitude: Number(match.latitude),
@@ -101,6 +111,15 @@ export default class GeoipClient {
 		}
 
 		return false;
+	}
+
+	private matchRegion(best: LocationInfo): RegionInfo {
+		const region = getRegionByCountry(best.country);
+
+		return {
+			region: prettifyRegionName(region),
+			normalizedRegion: region,
+		};
 	}
 
 	private matchNetwork(best: LocationInfo, sources: LocationInfoWithProvider[]): NetworkInfo | undefined {

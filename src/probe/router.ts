@@ -17,6 +17,7 @@ type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
  *
  * */
 const locationKeyMap = [
+	['region', 'normalizedRegion'],
 	['network', 'normalizedNetwork'],
 	['city', 'normalizedCity'],
 ];
