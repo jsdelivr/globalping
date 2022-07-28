@@ -15,7 +15,17 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 	ctx.body = socketList.map((socket: Socket) => ({
 		version: socket.data.probe.version,
 		ready: socket.data.probe.ready,
-		location: socket.data.probe.location,
+		location: {
+			continent: socket.data.probe.location.continent,
+			region: socket.data.probe.location.region,
+			country: socket.data.probe.location.country,
+			state: socket.data.probe.location.state,
+			city: socket.data.probe.location.city,
+			asn: socket.data.probe.location.asn,
+			latitute: socket.data.probe.location.latitude,
+			longitude: socket.data.probe.location.longitude,
+			network: socket.data.probe.location.network,
+		},
 		resolvers: socket.data.probe.resolvers,
 	}));
 };
