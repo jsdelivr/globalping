@@ -9,7 +9,7 @@ import {
 import {aliases as networkAliases} from './networks.js';
 
 const {countries} = geoLists;
-const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [c, r.replace('-', ' ')])));
+const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [c, r.replace(/-/g, ' ')])));
 
 export const getRegionByCountry = (country: string): string => {
 	const region = countryToRegionMap.get(country);
