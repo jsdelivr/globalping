@@ -589,6 +589,60 @@ describe('command schema', () => {
 		});
 	});
 
+	describe('dns ptr', () => {
+		it('should fail (uses domain for target)', async () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					query: {
+						type: 'PTR',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should pass (uses ip for target)', async () => {
+			const input = {
+				type: 'dns',
+				target: '1.1.1.1',
+				measurementOptions: {
+					query: {
+						type: 'PTR',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).not.to.exist;
+			expect(valid.value.type).to.equal('dns');
+			expect(valid.value.measurementOptions.query.type).to.equal('PTR');
+		});
+
+		it('should pass (uses ip for target incorrect caps for type)', async () => {
+			const input = {
+				type: 'dns',
+				target: '1.1.1.1',
+				measurementOptions: {
+					query: {
+						type: 'ptr',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).not.to.exist;
+			expect(valid.value.type).to.equal('dns');
+			expect(valid.value.measurementOptions.query.type).to.equal('PTR');
+		});
+	});
+
 	describe('mtr', () => {
 		it('should fail (missing values)', async () => {
 			const input = {
