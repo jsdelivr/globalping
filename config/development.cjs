@@ -1,7 +1,7 @@
 module.exports = {
 	redis: {
 		socket: {
-			tls: true,
+			tls: false,
 		},
 	},
 };
