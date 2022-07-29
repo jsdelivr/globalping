@@ -13,9 +13,6 @@ Creates an on-demand measurement to run immediately.
 **headers**:
 - `content-type: application/json` (required)
 
-**query**: 
-- `pretty` (optional) - prettifies the JSON response
-
 **body**:
 
 schema:
@@ -24,19 +21,26 @@ below is presented a schema containing all possible input values; some are gener
 ```
 {
     limit: number
-    locations: Locations[],
-    measurement: {
+    locations: Locations[]
+    type: string
+    target: string
+    measurementOptions: {
         query?: {
-            protocol?: string
             type?: string
-            resolver?: string
-            trace?: boolean
         }
+        request?: {
+            headers?: Object<string, string>
+            path?: string
+            host?: string
+            query?: string
+            method?: string
+        }
+        protocol?: string
         port?: number
+        resolver?: string
+        trace?: boolean
         protocol?: string
         packets?: number
-        target: string
-        type: string
     }
 }
 ```
@@ -44,31 +48,31 @@ example:
 ```json
 POST https://api.globalping.io/v1/measurements/
 {
+    "target": "jsdelivr.com",
+    "type": "ping"
+    "measurementOptions": {
+        "packets": 10,
+    },
     "limit": 10,
     "locations": [
-        { "type": "country", "value": "gb" }
-    ],
-    "measurement": {
-        "packets": 10,
-        "target": "jsdelivr.com",
-        "type": "ping"
-    }
+        { "country": "gb" }
+    ]
 }
 ```
 for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 
 ## success response
 
-**status code**: `200 OK`
+**status code**: `202 Accepted`
 
-**content**: response will contain an Id number of your measurement, and total number of probes assigned to your query. The count of assigned probes might vary from what you requested.
+**content**: response will contain an Id number of your measurement, and total number of probes assigned to your query. The count of assigned probes might vary from what you requested. A URL pointing to the measurement status is sent in the `Location` header.
 
 ### schema
 
 ```
 {
     id: string,
-    probesCount: number
+    probesCount: number,
 }
 ```
 
@@ -78,8 +82,14 @@ for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 POST https://api.globalping.io/v1/measurements/
 {
     "id": "PY5fMsREMmIq45VR",
-    "probesCount": 1
+    "probesCount": 1,
 }
+```
+
+headers:
+
+```
+  Location: https://api.globalping.io/v1/measurements/PY5fMsREMmIq45VR
 ```
 
 ## error response (validation failed)

@@ -1,0 +1,64 @@
+{
+  "as-jakarta-01": {
+    "version": "0.9.1",
+    "ready": true,
+    "location": {
+      "continent": "AS",
+      "region": "south eastern asia",
+      "normalizedRegion": "south eastern asia",
+      "country": "ID",
+      "city": "Jakarta",
+      "normalizedCity": "jakarta",
+      "asn": 58404,
+      "latitude": -6.2146,
+      "longitude": 106.8451,
+      "network": "PT Qwords Company International",
+      "normalizedNetwork": "pt qwords company international"
+    },
+    "resolvers": [
+      "103.28.12.13",
+      "103.28.14.15"
+    ]
+  },
+  "sa-sao-paulo-01": {
+    "version": "0.9.1",
+    "ready": true,
+    "location": {
+      "continent": "SA",
+      "region": "Southern America",
+      "normalizedRegion": "southern america",
+      "country": "BR",
+      "city": "São Paulo",
+      "normalizedCity": "sao paulo",
+      "asn": 202422,
+      "latitude": -23.5475,
+      "longitude": -46.6361,
+      "network": "G-Core Labs S.A.",
+      "normalizedNetwork": "g-core labs s.a."
+    },
+    "resolvers": [
+      "8.8.8.8",
+      "8.8.4.4"
+    ]
+  },
+  "eu-moscow-01": {
+    "version": "0.9.1",
+    "ready": true,
+    "location": {
+      "continent": "EU",
+      "region": "Eastern Europe",
+      "normalizedRegion": "eastern europe",
+      "country": "RU",
+      "city": "Moscow",
+      "normalizedCity": "moscow",
+      "asn": 59504,
+      "latitude": 55.7522,
+      "longitude": 37.6156,
+      "network": "LLC Vpsville",
+      "normalizedNetwork": "llc vpsville"
+    },
+    "resolvers": [
+      "private"
+    ]
+  }
+}

@@ -1,44 +1,198 @@
 import {expect} from 'chai';
-import {schema as locationSchema} from '../../../../src/measurement/schema/location-schema.js';
 import {
-	pingSchema,
-	tracerouteSchema,
-	dnsSchema,
-	httpSchema,
-	joiValidateTarget,
-} from '../../../../src/measurement/schema/command-schema.js';
+	schema as globalSchema,
+} from '../../../../src/measurement/schema/global-schema.js';
+import {
+	schema as locationSchema,
+} from '../../../../src/measurement/schema/location-schema.js';
+
+import {joiValidateTarget} from '../../../../src/measurement/schema/utils.js';
 
 describe('command schema', () => {
+	describe('global', () => {
+		describe('limits', () => {
+			it('should correct limit (1 by default)', () => {
+				const input = {
+					type: 'ping',
+					target: 'abc.com',
+					locations: [],
+					measurementOptions: {},
+				};
+
+				const valid = globalSchema.validate(input);
+
+				expect(valid.value.limit).to.equal(1);
+			});
+
+			it('should return an error (global + local limit)', () => {
+				const input = {
+					type: 'ping',
+					target: 'abc.com',
+					locations: [
+						{city: 'milan', limit: 1},
+					],
+					measurementOptions: {},
+					limit: 1,
+				};
+
+				const valid = globalSchema.validate(input);
+
+				expect(valid?.error?.details?.[0]?.message).to.equal('limit per location is not allowed when a global limit is set');
+			});
+
+			it('should pass (2 locations - no limit)', () => {
+				const input = {
+					type: 'ping',
+					target: 'abc.com',
+					locations: [
+						{city: 'milan'},
+						{city: 'london'},
+					],
+					measurementOptions: {},
+				};
+
+				const valid = globalSchema.validate(input);
+
+				expect(valid.value.limit).to.equal(input.locations.length);
+				expect(valid.error).to.not.exist;
+			});
+
+			it('should pass - correct the global limit (location - no limit)', () => {
+				const input = {
+					type: 'ping',
+					target: 'abc.com',
+					locations: [
+						{city: 'milan'},
+					],
+					measurementOptions: {},
+				};
+
+				const valid = globalSchema.validate(input);
+
+				expect(valid.value.limit).to.equal(1);
+			});
+		});
+
+		describe('type matching', () => {
+			describe('measurement options', () => {
+				it('ping', () => {
+					const input = {
+						type: 'ping',
+						target: 'abc.com',
+						measurementOptions: {
+							packets: 1,
+						},
+					};
+
+					const valid = globalSchema.validate(input);
+
+					expect(valid.error).to.not.exist;
+				});
+
+				it('traceroute', async () => {
+					const input = {
+						type: 'traceroute',
+						target: 'abc.com',
+						measurementOptions: {
+							protocol: 'TCP',
+							port: 80,
+						},
+					};
+
+					const valid = globalSchema.validate(input);
+
+					expect(valid.error).to.not.exist;
+				});
+
+				it('dns', async () => {
+					const input = {
+						type: 'dns',
+						target: 'abc.com',
+						measurementOptions: {
+							query: {
+								type: 'A',
+							},
+							trace: false,
+							resolver: '1.1.1.1',
+							protocol: 'UDP',
+							port: 53,
+						},
+					};
+
+					const valid = globalSchema.validate(input);
+
+					expect(valid.error).to.not.exist;
+				});
+
+				it('mtr', async () => {
+					const input = {
+						type: 'mtr',
+						target: 'abc.com',
+						measurementOptions: {
+							protocol: 'TCP',
+							packets: 10,
+							port: 80,
+						},
+					};
+
+					const valid = globalSchema.validate(input);
+
+					expect(valid.error).to.not.exist;
+				});
+
+				it('http', () => {
+					const input = {
+						type: 'http',
+						target: 'elocast.com',
+						measurementOptions: {
+							protocol: 'https',
+							port: 443,
+							request: {
+								method: 'GET',
+								host: 'elocast.com',
+								headers: {
+									test: 'abc',
+								},
+							},
+						},
+					};
+
+					const valid = globalSchema.validate(input);
+
+					expect(valid.error).to.not.exist;
+				});
+			});
+		});
+	});
+
 	describe('location', () => {
 		describe('input case', () => {
 			it('should correct network name', () => {
 				const input = [
 					{
-						type: 'network',
-						value: 'VIRGIN MEDIA',
+						network: 'VIRGIN MEDIA',
 						limit: 1,
 					},
 				];
 
 				const valid = locationSchema.validate(input);
 
-				expect(valid.value[0]!.value).to.equal(input[0]!.value.toLowerCase());
-				expect(valid.value[0]!.value).to.not.equal(input[0]!.value);
+				expect(valid.value[0]!.network).to.equal(input[0]!.network.toLowerCase());
+				expect(valid.value[0]!.network).to.not.equal(input[0]!.network);
 			});
 
 			it('should correct city value', () => {
 				const input = [
 					{
-						type: 'city',
-						value: 'LONDON',
+						city: 'LONDON',
 						limit: 1,
 					},
 				];
 
 				const valid = locationSchema.validate(input);
 
-				expect(valid.value[0]!.value).to.equal(input[0]!.value.toLowerCase());
-				expect(valid.value[0]!.value).to.not.equal(input[0]!.value);
+				expect(valid.value[0]!.city).to.equal(input[0]!.city.toLowerCase());
+				expect(valid.value[0]!.city).to.not.equal(input[0]!.city);
 			});
 		});
 
@@ -46,8 +200,7 @@ describe('command schema', () => {
 			it('should fail (too short)', () => {
 				const input = [
 					{
-						type: 'magic',
-						value: '',
+						magic: '',
 						limit: 1,
 					},
 				];
@@ -55,14 +208,13 @@ describe('command schema', () => {
 				const valid = locationSchema.validate(input);
 
 				expect(valid.error).to.exist;
-				expect(valid.error!.details[0]!.message).to.equal('"[0].value" is not allowed to be empty');
+				expect(valid.error!.details[0]!.message).to.equal('"[0].magic" is not allowed to be empty');
 			});
 
 			it('should fail (not string)', () => {
 				const input = [
 					{
-						type: 'magic',
-						value: 1337,
+						magic: 1337,
 						limit: 1,
 					},
 				];
@@ -70,14 +222,13 @@ describe('command schema', () => {
 				const valid = locationSchema.validate(input);
 
 				expect(valid.error).to.exist;
-				expect(valid.error!.details[0]!.message).to.equal('"[0].value" must be a string');
+				expect(valid.error!.details[0]!.message).to.equal('"[0].magic" must be a string');
 			});
 
 			it('should succeed', () => {
 				const input = [
 					{
-						type: 'magic',
-						value: 'cyprus',
+						magic: 'cyprus',
 						limit: 1,
 					},
 				];
@@ -141,9 +292,22 @@ describe('command schema', () => {
 			const input = {
 				type: 'ping',
 				target: '192.168.0.101',
+				measurementOptions: {},
 			};
 
-			const valid = pingSchema.validate(input);
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (ipv6)', async () => {
+			const input = {
+				type: 'ping',
+				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+				measurementOptions: {},
+			};
+
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
 		});
@@ -153,7 +317,7 @@ describe('command schema', () => {
 				type: 'ping',
 			};
 
-			const valid = pingSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
 		});
@@ -164,7 +328,7 @@ describe('command schema', () => {
 				target: 'abc.com',
 			};
 
-			const valid = pingSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
 		});
@@ -175,7 +339,7 @@ describe('command schema', () => {
 				target: '1.1.1.1',
 			};
 
-			const valid = pingSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
 		});
@@ -186,7 +350,7 @@ describe('command schema', () => {
 				target: '300.300.300.300',
 			};
 
-			const valid = pingSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
 		});
@@ -197,7 +361,7 @@ describe('command schema', () => {
 				target: 'abc.com',
 			};
 
-			const valid = pingSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('ping');
@@ -207,13 +371,21 @@ describe('command schema', () => {
 			const input = {
 				type: 'ping',
 				target: 'abc.com',
-				packets: 1,
+				measurementOptions: {
+					packets: 1,
+				},
 			};
 
-			const valid = pingSchema.validate(input);
+			const desiredOutput = {
+				...input,
+				locations: [],
+				limit: 1,
+			};
+
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal(input);
+			expect(valid.value).to.deep.equal(desiredOutput);
 		});
 	});
 
@@ -223,7 +395,18 @@ describe('command schema', () => {
 				type: 'traceroute',
 			};
 
-			const valid = tracerouteSchema.validate(input);
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (ipv6)', async () => {
+			const input = {
+				type: 'traceroute',
+				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+			};
+
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
 		});
@@ -234,7 +417,7 @@ describe('command schema', () => {
 				target: 'abc.com',
 			};
 
-			const valid = tracerouteSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
 		});
@@ -245,7 +428,7 @@ describe('command schema', () => {
 				target: '1.1.1.1',
 			};
 
-			const valid = tracerouteSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
 		});
@@ -256,7 +439,7 @@ describe('command schema', () => {
 				target: '300.300.300.300',
 			};
 
-			const valid = tracerouteSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
 		});
@@ -265,28 +448,38 @@ describe('command schema', () => {
 			const input = {
 				type: 'TRACEroute',
 				target: 'abc.com',
-				protocol: 'udp',
+				measurementOptions: {
+					protocol: 'udp',
+				},
 			};
 
-			const valid = tracerouteSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('traceroute');
-			expect(valid.value.protocol).to.equal('UDP');
+			expect(valid.value.measurementOptions.protocol).to.equal('UDP');
 		});
 
 		it('should pass (deep equal)', async () => {
 			const input = {
 				type: 'traceroute',
 				target: 'abc.com',
-				protocol: 'TCP',
-				port: 80,
+				measurementOptions: {
+					protocol: 'TCP',
+					port: 80,
+				},
 			};
 
-			const valid = tracerouteSchema.validate(input);
+			const desiredOutput = {
+				...input,
+				limit: 1,
+				locations: [],
+			};
+
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal(input);
+			expect(valid.value).to.deep.equal(desiredOutput);
 		});
 	});
 
@@ -296,7 +489,7 @@ describe('command schema', () => {
 				type: 'dns',
 			};
 
-			const valid = dnsSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
 		});
@@ -307,7 +500,21 @@ describe('command schema', () => {
 				target: '1.1.1.1',
 			};
 
-			const valid = dnsSchema.validate(input);
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (ipv6 resolver)', async () => {
+			const input = {
+				type: 'dns',
+				target: '1.1.1.1',
+				measurementOptions: {
+					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
 		});
@@ -316,57 +523,218 @@ describe('command schema', () => {
 			const input = {
 				type: 'dns',
 				target: 'abc.com',
-				query: {
+				measurementOptions: {
 					trace: true,
-					type: 'a',
 					protocol: 'tcp',
+					query: {
+						type: 'a',
+					},
 				},
 			};
 
-			const valid = dnsSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('dns');
-			expect(valid.value.query.trace).to.equal(true);
-			expect(valid.value.query.protocol).to.equal('TCP');
-			expect(valid.value.query.type).to.equal('A');
+			expect(valid.value.measurementOptions.trace).to.equal(true);
+			expect(valid.value.measurementOptions.protocol).to.equal('TCP');
+			expect(valid.value.measurementOptions.query.type).to.equal('A');
 		});
 
 		it('should pass and correct values (incorrect caps)', async () => {
 			const input = {
 				type: 'DNS',
 				target: 'abc.com',
-				query: {
-					type: 'a',
+				measurementOptions: {
 					protocol: 'tcp',
+					query: {
+						type: 'a',
+					},
 				},
 			};
 
-			const valid = dnsSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('dns');
-			expect(valid.value.query.protocol).to.equal('TCP');
-			expect(valid.value.query.type).to.equal('A');
+			expect(valid.value.measurementOptions.protocol).to.equal('TCP');
+			expect(valid.value.measurementOptions.query.type).to.equal('A');
 		});
 
 		it('should pass (deep equal)', async () => {
 			const input = {
 				type: 'dns',
 				target: 'abc.com',
-				query: {
-					type: 'A',
+				measurementOptions: {
 					trace: false,
 					resolver: '1.1.1.1',
 					protocol: 'UDP',
 					port: 53,
+					query: {
+						type: 'A',
+					},
 				},
 			};
 
-			const valid = dnsSchema.validate(input);
+			const desiredOutput = {
+				...input,
+				limit: 1,
+				locations: [],
+			};
+
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal(input);
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+	});
+
+	describe('dns ptr', () => {
+		it('should fail (uses domain for target)', async () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					query: {
+						type: 'PTR',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should pass (uses ip for target)', async () => {
+			const input = {
+				type: 'dns',
+				target: '1.1.1.1',
+				measurementOptions: {
+					query: {
+						type: 'PTR',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).not.to.exist;
+			expect(valid.value.type).to.equal('dns');
+			expect(valid.value.measurementOptions.query.type).to.equal('PTR');
+		});
+
+		it('should pass (uses ip for target incorrect caps for type)', async () => {
+			const input = {
+				type: 'dns',
+				target: '1.1.1.1',
+				measurementOptions: {
+					query: {
+						type: 'ptr',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).not.to.exist;
+			expect(valid.value.type).to.equal('dns');
+			expect(valid.value.measurementOptions.query.type).to.equal('PTR');
+		});
+	});
+
+	describe('mtr', () => {
+		it('should fail (missing values)', async () => {
+			const input = {
+				type: 'mtr',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (ipv6 target)', async () => {
+			const input = {
+				type: 'mtr',
+				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should pass (target domain)', async () => {
+			const input = {
+				type: 'mtr',
+				target: 'abc.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should pass (target ip)', async () => {
+			const input = {
+				type: 'mtr',
+				target: '1.1.1.1',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should fail (target: invalid ip format)', async () => {
+			const input = {
+				type: 'mtr',
+				target: '300.300.300.300',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should pass and correct values (incorrect caps)', async () => {
+			const input = {
+				type: 'MtR',
+				target: 'abc.com',
+				measurementOptions: {
+					protocol: 'udp',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value.type).to.equal('mtr');
+			expect(valid.value.measurementOptions.protocol).to.equal('UDP');
+		});
+
+		it('should pass (deep equal)', async () => {
+			const input = {
+				type: 'mtr',
+				target: 'abc.com',
+				measurementOptions: {
+					protocol: 'TCP',
+					packets: 10,
+					port: 80,
+				},
+			};
+
+			const desiredOutput = {
+				...input,
+				limit: 1,
+				locations: [],
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
 		});
 	});
 
@@ -375,19 +743,44 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				query: {
-					host: '',
-					resolver: 'abc',
+				measurementOptions: {
 					protocol: 'https',
 					port: 443,
-					headers: {
-						test: 'abc',
+					resolver: 'abc',
+					request: {
+						host: '',
+						headers: {
+							test: 'abc',
+						},
+						method: 'GET',
 					},
-					method: 'GET',
 				},
 			};
 
-			const valid = httpSchema.validate(input);
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (ipv6 resolver)', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				measurementOptions: {
+					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+					protocol: 'https',
+					port: 443,
+					request: {
+						host: '',
+						headers: {
+							test: 'abc',
+						},
+						method: 'GET',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
 		});
@@ -396,18 +789,20 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				query: {
-					host: '',
+				measurementOptions: {
 					protocol: 'https',
 					port: 443,
-					headers: {
-						test: 'abc',
+					request: {
+						host: '',
+						headers: {
+							test: 'abc',
+						},
+						method: 'POST',
 					},
-					method: 'POST',
 				},
 			};
 
-			const valid = httpSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
 		});
@@ -416,18 +811,20 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				query: {
-					method: 'GET',
-					host: '',
+				measurementOptions: {
 					port: 443,
-					headers: {
-						test: 'abc',
-					},
 					protocol: 'rtmp',
+					request: {
+						method: 'GET',
+						host: '',
+						headers: {
+							test: 'abc',
+						},
+					},
 				},
 			};
 
-			const valid = httpSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
 		});
@@ -436,12 +833,14 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				query: {
-					method: 'GET',
-					host: 'elocast.com',
+				measurementOptions: {
 					protocol: 'https',
-					headers: {
-						test: 'abc',
+					request: {
+						method: 'GET',
+						host: 'elocast.com',
+						headers: {
+							test: 'abc',
+						},
 					},
 				},
 			};
@@ -449,16 +848,21 @@ describe('command schema', () => {
 			const desiredOutput = {
 				type: 'http',
 				target: 'elocast.com',
-				query: {
-					method: 'get',
-					host: 'elocast.com',
+				measurementOptions: {
 					protocol: 'https',
-					path: '/',
-					headers: {test: 'abc'},
+					request: {
+						method: 'get',
+						host: 'elocast.com',
+						path: '/',
+						query: '',
+						headers: {test: 'abc'},
+					},
 				},
+				locations: [],
+				limit: 1,
 			};
 
-			const valid = httpSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
@@ -468,13 +872,15 @@ describe('command schema', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
-				query: {
-					method: 'GET',
-					host: 'elocast.com',
+				measurementOptions: {
 					protocol: 'https',
 					port: 443,
-					headers: {
-						test: 'abc',
+					request: {
+						method: 'GET',
+						host: 'elocast.com',
+						headers: {
+							test: 'abc',
+						},
 					},
 				},
 			};
@@ -482,17 +888,22 @@ describe('command schema', () => {
 			const desiredOutput = {
 				type: 'http',
 				target: 'elocast.com',
-				query: {
-					method: 'get',
-					host: 'elocast.com',
+				measurementOptions: {
 					protocol: 'https',
-					path: '/',
 					port: 443,
-					headers: {test: 'abc'},
+					request: {
+						method: 'get',
+						host: 'elocast.com',
+						path: '/',
+						query: '',
+						headers: {test: 'abc'},
+					},
 				},
+				locations: [],
+				limit: 1,
 			};
 
-			const valid = httpSchema.validate(input);
+			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);

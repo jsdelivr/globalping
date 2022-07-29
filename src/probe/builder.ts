@@ -3,8 +3,8 @@ import _ from 'lodash';
 import type {Socket} from 'socket.io';
 import isIpPrivate from 'private-ip';
 import requestIp from 'request-ip';
+import semver from 'semver';
 import {
-	getRegionByCountry,
 	getStateNameByIso,
 	getCountryByIso,
 	getCountryIso3ByIso2,
@@ -14,9 +14,6 @@ import {
 import {InternalError} from '../lib/internal-error.js';
 import {createGeoipClient} from '../lib/geoip/client.js';
 import type {Probe, ProbeLocation} from './types.js';
-
-/* eslint-disable-next-line @typescript-eslint/naming-convention */
-const VERSION_REG_EXP = /^(?:\d{1,2}\.){2}\d{1,2}$/;
 
 const fakeIpForDebug = () => _.sample([
 	'95.155.94.127',
@@ -42,7 +39,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		throw new Error('failed to detect ip address of connected probe');
 	}
 
-	if (!VERSION_REG_EXP.test(version)) {
+	if (!semver.satisfies(version, '>=0.9.0')) {
 		throw new InternalError(`invalid probe version (${version})`, true);
 	}
 
@@ -61,29 +58,32 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const location: ProbeLocation = {
 		continent: ipInfo.continent,
-		region: getRegionByCountry(ipInfo.country),
+		region: ipInfo.region,
+		normalizedRegion: ipInfo.normalizedRegion,
 		country: ipInfo.country,
 		state: ipInfo.state,
 		city: ipInfo.city,
+		normalizedCity: ipInfo.normalizedCity,
 		asn: ipInfo.asn,
 		latitude: ipInfo.latitude,
 		longitude: ipInfo.longitude,
 		network: ipInfo.network,
+		normalizedNetwork: ipInfo.normalizedNetwork,
 	};
 
 	const index = [
 		location.continent,
-		location.region,
+		location.normalizedRegion,
 		location.country,
 		location.state ?? [],
-		location.city,
-		location.network,
+		location.normalizedCity,
+		location.normalizedNetwork,
 		`as${location.asn}`,
 		...(location.state ? [getStateNameByIso(location.state)] : []),
 		getCountryByIso(location.country),
 		getCountryIso3ByIso2(location.country),
 		getCountryAliases(location.country),
-		getNetworkAliases(location.network),
+		getNetworkAliases(location.normalizedNetwork),
 	].flat().filter(Boolean).map(s => s.toLowerCase().replace('-', ' '));
 
 	// Todo: add validation and handle missing or partial data
@@ -93,6 +93,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		ipAddress: clientIp,
 		location,
 		index,
-		ready: false,
+		resolvers: [],
+		ready: true,
 	};
 };

@@ -37,6 +37,7 @@ export class MeasurementStore {
 				status: 'in-progress',
 				createdAt: Date.now(),
 				updatedAt: Date.now(),
+				probesCount,
 				results: {},
 			});
 			await client.expire(key, config.get<number>('measurement.resultTTL'));
@@ -59,6 +60,7 @@ export class MeasurementStore {
 					longitude: probe.location.longitude,
 					latitude: probe.location.latitude,
 					network: probe.location.network,
+					resolvers: probe.resolvers,
 				},
 				result: {rawOutput: ''},
 			});
@@ -70,7 +72,10 @@ export class MeasurementStore {
 		const key = getMeasurementKey(data.measurementId);
 
 		await this.redis.executeIsolated(async client => {
-			await client.json.strAppend(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput);
+			data.overwrite
+				? await client.json.set(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput)
+				: await client.json.strAppend(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput);
+
 			await client.json.set(key, '$.updatedAt', Date.now());
 		});
 	}

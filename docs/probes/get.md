@@ -8,11 +8,6 @@ Get list of all probes currently online and connected to the API server.
 
 **url**: `/v1/probes`
 
-### parameters
-
-**query**: 
-- `pretty` (optional) - prettifies the JSON response
-
 ## success response
 
 **status code**: `200 OK`

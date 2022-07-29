@@ -10,66 +10,150 @@ type TestResult = {
 };
 
 type PingTest = {
-	type: 'ping';
-	target: string;
 	packets: number;
 };
 
+type PingTiming = {
+	rtt: number;
+	ttl: number;
+};
+
 type PingResult = TestResult & {
-	min: number;
-	avg: number;
-	max: number;
-	stddev: number;
-	packetLoss: number;
+	timings: PingTiming[];
+	stats: {
+		min: number;
+		avg: number;
+		max: number;
+		stddev: number;
+		packetLoss: number;
+	};
 };
 
 type TracerouteTest = {
-	type: 'traceroute';
-	target: string;
 	protocol: 'ICMP' | 'TCP' | 'UDP';
 	port: number;
 };
 
-type TraceHopResult = {
-	host: string;
-	resolvedAddress: string;
-	rtt: number[];
+type TraceHopTiming = {
+	rtt: number;
 };
+
+type TraceHopResult = {
+	resolvedHostname: string;
+	resolvedAddress: string;
+	timings: TraceHopTiming[];
+};
+
 type TracerouteResult = TestResult & {
-	destination: string;
+	resolvedHostname: string;
+	resolvedAddress: string;
 	hops: TraceHopResult[];
+};
+
+type MtrTest = {
+	protocol: 'ICMP' | 'TCP' | 'UDP';
+	packets: number;
+	port: number;
+};
+
+type MtrResultHopTiming = {
+	rtt: number;
+};
+
+type MtrResultHop = {
+	stats: {
+		min: number;
+		max: number;
+		avg: number;
+		total: number;
+		rcv: number;
+		drop: number;
+		stDev: number;
+		jMin: number;
+		jMax: number;
+		jAvg: number;
+	};
+	asn: number[];
+	timings: MtrResultHopTiming[];
+	resolvedAddres: string;
+	resolvedHostname: string;
+	duplicate: boolean;
+};
+
+type MtrResult = TestResult & {
+	resolvedAddress: string;
+	resolvedHostname: string;
+	hops: MtrResultHop[];
 };
 
 type DnsQueryTypes = 'A' | 'AAAA' | 'ANY' | 'CNAME' | 'DNSKEY' | 'DS' | 'MX' | 'NS' | 'NSEC' | 'PTR' | 'RRSIG' | 'SOA' | 'TXT' | 'SRV';
 
 type DnsTest = {
-	type: 'dns';
-	target: string;
 	query?: {
 		type: DnsQueryTypes;
-		resolver: string;
-		protocol: 'TCP' | 'UDP';
-		port: number;
 	};
+	resolver: string;
+	protocol: 'TCP' | 'UDP';
+	port: number;
 };
 
 type DnsAnswer = {
-	domain: string;
+	name: string;
 	type: DnsQueryTypes;
 	ttl: number;
 	class: string;
 	value: string;
 };
 
-// Todo: fix: dns result doesnt have rawOutput value
-type DnsResult = TestResult & {
-	answer: DnsAnswer[];
-	time: number;
-	server: string;
+type DnsRegularResult = {
+	answers: DnsAnswer[];
+	timings: {
+		total: number;
+	};
+	resolver: string;
 };
 
-export type NetworkTest = PingTest | TracerouteTest | DnsTest;
-export type MeasurementResult = PingResult | TracerouteResult | DnsResult;
+type DnsTraceResult = {
+	hops: DnsRegularResult;
+};
+
+type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);
+
+type HttpTest = {
+	query: {
+		method: 'head' | 'get';
+		host?: string;
+		path?: string;
+		headers: Record<string, string>;
+	};
+	port: number;
+	protocol: 'https' | 'http' | 'http2';
+	resolver?: string;
+};
+
+type HttpResult = TestResult & {
+	resolvedAddress: string;
+	headers: Record<string, string>;
+	rawHeaders: string;
+	rawBody: string;
+	statusCode: number;
+	timings: Record<string, number>;
+	tls: {
+		[key: string]: any;
+		authorized: boolean;
+		authorizationError?: string;
+		createdAt: string;
+		expiresAt: string;
+		issuer: Record<string, string>;
+		subject: Record<string, string>;
+	};
+};
+
+export type RequestType = 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
+
+export type MeasurementOptions = PingTest | TracerouteTest | MtrTest | DnsTest | HttpTest;
+export type NetworkTest = MeasurementOptions & {type: RequestType; target: string};
+export type MeasurementResult = PingResult | TracerouteResult | MtrResult | DnsResult | HttpResult;
 export type LocationWithLimit = Location & {limit?: number};
 
 /**
@@ -79,30 +163,33 @@ export type LocationWithLimit = Location & {limit?: number};
 type MeasurementStatus = 'in-progress' | 'finished';
 
 export type MeasurementRequest = {
-	measurement: NetworkTest;
+	type: 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
+	target: string;
+	measurementOptions: NetworkTest;
 	locations: LocationWithLimit[];
-	limit?: number;
+	limit: number;
 };
 
 export type MeasurementConfig = {
 	id: string;
-	measurement: NetworkTest;
+	measurementOptions: MeasurementOptions;
 	probes: Probe[];
 };
 
 export type MeasurementRecord = {
 	id: string;
-	type: NetworkTest['type'];
+	type: MeasurementRequest['type'];
 	status: MeasurementStatus;
 	completed?: boolean;
 	createdAt: number;
 	updatedAt: number;
+	probesCount: number;
 	results: Record<string, (PingResult | TracerouteResult | DnsResult)>;
 };
 
 export type MeasurementResponse = {
 	id: string;
-	type: NetworkTest['type'];
+	type: MeasurementRequest['type'];
 	status: MeasurementStatus;
 	created_at: number;
 	updated_at: number;
@@ -120,5 +207,6 @@ export type MeasurementAckMessage = {
 export type MeasurementResultMessage = {
 	testId: string;
 	measurementId: string;
+	overwrite?: boolean;
 	result: MeasurementResult;
 };

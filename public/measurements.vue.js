@@ -6,7 +6,9 @@ const app = () => ({
         locations: [],
         target: 'google.com',
         limit: 1,
-        query: {}
+        combineFilters: false,
+        query: {},
+        request: {}
       },
       response: {
         data: null,
@@ -74,6 +76,9 @@ const app = () => ({
     getTraceProtocolArray() {
       return ALLOWED_TRACE_PROTOCOLS;
     },
+    getMtrProtocolArray() {
+      return ALLOWED_MTR_PROTOCOLS;
+    },
     getQueryTypeArray() {
       return ALLOWED_QUERY_TYPES;
     },
@@ -95,6 +100,20 @@ const app = () => ({
         measurement.packets = this.query.packets;
       }
 
+      if (this.query.type === 'mtr') {
+        if (this.query.packets) {
+          measurement.packets = this.query.packets;
+        }
+
+        if (this.query.port) {
+          measurement.port = this.query.port;
+        }
+
+        if (this.query.protocol) {
+          measurement.protocol = this.query.protocol;
+        }
+      }
+
       if (this.query.type === 'traceroute') {
         if (this.query.protocol) {
           measurement.protocol = this.query.protocol;
@@ -108,24 +127,25 @@ const app = () => ({
       if (this.query.type === 'dns') {
         const query = {};
 
-        if (this.query.query.protocol) {
-          query.protocol = this.query.query.protocol;
-        }
-
         if (this.query.query.type) {
           query.type = this.query.query.type;
         }
 
-        if (this.query.query.port) {
-          query.port = this.query.query.port;
+        if (this.query.protocol) {
+          measurement.protocol = this.query.protocol;
         }
 
-        if (this.query.query.resolver) {
-          query.resolver = this.query.query.resolver;
+
+        if (this.query.port) {
+          measurement.port = this.query.port;
         }
 
-        if (this.query.query.trace) {
-          query.trace = !!this.query.query.trace;
+        if (this.query.resolver) {
+          measurement.resolver = this.query.resolver;
+        }
+
+        if (this.query.trace) {
+          measurement.trace = !!this.query.trace;
         }
 
         if (Object.keys(query).length > 0) {
@@ -134,20 +154,22 @@ const app = () => ({
       }
 
       if (this.query.type === 'http') {
-        const query = {
-          method: this.query.query.method,
-          path: this.query.query.path,
-          protocol: this.query.query.protocol,
-          host: this.query.query.host,
-          port: this.query.query.port,
-          resolver: this.query.query.resolver,
+        measurement.protocol = this.query.protocol;
+        measurement.port = this.query.port;
+        measurement.resolver = this.query.resolver;
+
+        const request = {
+          method: this.query.request.method,
+          path: this.query.request.path,
+          query: this.query.request.query,
+          host: this.query.request.host,
         };
 
-        if (this.query.query.headers) {
-          query.headers = Object.fromEntries(this.query.query.headers.map(h => [h.title, h.value]));
+        if (this.query.request.headers) {
+          request.headers = Object.fromEntries(this.query.request.headers.map(h => [h.title, h.value]));
         }
 
-        measurement.query = Object.fromEntries(Object.entries(query).filter(entry => entry[1]))
+        measurement.request = Object.fromEntries(Object.entries(request).filter(entry => entry[1]))
       }
 
       const locations = this.query.locations.map(({ id, limit, ...l}) => ({
@@ -155,23 +177,31 @@ const app = () => ({
         ...(limit ? { limit } : {})
       }))
 
-      this.postMeasurement(this.query.limit, measurement, locations);
-    },
-    addNewLocation(e) {
-      e.preventDefault();
-
-      const loc = { id: Date.now(), type: '', value: '', limit: 1 };
-      this.query.locations.push(loc);
+      this.postMeasurement(this.query.limit, measurement, locations, this.query.combineFilters);
     },
     addNewHttpHeader(e) {
       e.preventDefault();
 
-      if (!this.query.query.headers) {
-        this.query.query.headers = []
+      if (!this.query.request.headers) {
+        this.query.request.headers = []
       }
 
       const header = { id: Date.now(), title: '', value: '' };
-      this.query.query.headers.push(header);
+      this.query.request.headers.push(header);
+    },
+    addNewLocation(e) {
+      e.preventDefault();
+
+      const loc = {
+        id: Date.now(),
+        limit: 1,
+        fields: [{
+          id: Date.now(),
+          type: '',
+          value: ''
+        }]
+      };
+      this.query.locations.push(loc);
     },
     removeLocation(e) {
       e.preventDefault();
@@ -183,12 +213,25 @@ const app = () => ({
         ...this.query.locations.slice(index + 1)
       ];
     },
-    async postMeasurement(limit = 1, measurement = {}, locations = []) {
+    addLocationField(e) {
+      e.preventDefault();
+
+      const index = +e.target.value;
+      this.query.locations[index].fields.push({ id: Date.now(), type: '', value: '' })
+    },
+    async postMeasurement(limit = 1, measurement = {}, locations = [], combineFilters) {
       const url = '/v1/measurements';
 
+      const { type, target, ...measurementOptions} = measurement;
+
       const body = {
-        measurement,
-        locations
+        type,
+        target,
+        measurementOptions,
+        locations: locations.map(l => ({
+          ...Object.fromEntries(l.fields.map(f => [f.type, f.value])),
+          limit: l.limit
+        }))
       };
 
       if (!locations.find(l => l.limit)) {
@@ -260,12 +303,18 @@ const app = () => ({
           </div>
         </div>
         <div class="form-group row">
+          <label for="query_filter_combine" class="col-sm-2 col-form-label">combine filters</label>
+          <div class="col-sm-10">
+            <input type="checkbox" v-model="query.combineFilters" >
+          </div>
+        </div>
+        <div class="form-group row">
           <label for="query_global_limit" class="col-sm-2 col-form-label">limit</label>
           <div class="col-sm-10">
             <input type="number" v-model="query.limit" id="query_global_limit" name="query_global_limit" placeholder="global limit" />
           </div>
         </div>
-        <div v-if="query.type === 'ping'" class="form-group row">
+        <div v-if="['ping', 'mtr'].includes(query.type)" class="form-group row">
           <label for="query_packets" class="col-sm-2 col-form-label">packets</label>
           <div class="col-sm-10">
             <input type="number" v-model="query.packets" id="query_packets" name="query_packets" placeholder="packets" />
@@ -274,25 +323,31 @@ const app = () => ({
         <div v-if="query.type === 'http'" class="form-group row">
           <label for="query_http_host" class="col-sm-2 col-form-label">host</label>
           <div class="col-sm-10">
-            <input v-model="query.query.host" name="query_http_host" id="query_http_host" placeholder="target" />
+            <input v-model="query.request.host" name="query_http_host" id="query_http_host" placeholder="target" />
           </div>
         </div>
         <div v-if="query.type === 'http'" class="form-group row">
           <label for="query_http_path" class="col-sm-2 col-form-label">path</label>
           <div class="col-sm-10">
-            <input v-model="query.query.path" name="query_http_path" id="query_http_path" placeholder="target" />
+            <input v-model="query.request.path" name="query_http_path" id="query_http_path" placeholder="target" />
+          </div>
+        </div>
+        <div v-if="query.type === 'http'" class="form-group row">
+          <label for="query_http_query" class="col-sm-2 col-form-label">query string</label>
+          <div class="col-sm-10">
+            <input v-model="query.request.query" name="query_http_query" id="query_http_query" placeholder="target" />
           </div>
         </div>
         <div v-if="query.type === 'http'" class="form-group row">
           <label for="query_http_port" class="col-sm-2 col-form-label">port</label>
           <div class="col-sm-10">
-            <input type="number" v-model="query.query.port" id="query_http_port" name="query_http_port" placeholder="port" />
+            <input type="number" v-model="query.port" id="query_http_port" name="query_http_port" placeholder="port" />
           </div>
         </div>
         <div v-if="query.type === 'http'" class="form-group row">
           <label for="query_http_protocol" class="col-sm-2 col-form-label">protocol</label>
           <div class="col-sm-10">
-            <select v-model="query.query.protocol" name="query_http_protocol" id="query_http_protocol" class="custom-select my-1 mr-sm-2">
+            <select v-model="query.protocol" name="query_http_protocol" id="query_http_protocol" class="custom-select my-1 mr-sm-2">
               <option disabled value="">Please select one</option>
               <option v-for="protocol in getHttpProtocolArray()" :value="protocol">
                 {{ protocol }}
@@ -303,7 +358,7 @@ const app = () => ({
         <div v-if="query.type === 'http'" class="form-group row">
           <label for="query_http_method" class="col-sm-2 col-form-label">method</label>
           <div class="col-sm-10">
-            <select v-model="query.query.method" name="query_http_method" id="query_http_method" class="custom-select my-1 mr-sm-2">
+            <select v-model="query.request.method" name="query_http_method" id="query_http_method" class="custom-select my-1 mr-sm-2">
               <option disabled value="">Please select one</option>
               <option v-for="protocol in getHttpMethodArray()" :value="protocol">
                 {{ protocol }}
@@ -314,10 +369,10 @@ const app = () => ({
         <div v-if="query.type === 'http'" class="form-group row">
           <label for="query_http_resolver" class="col-sm-2 col-form-label">resolver</label>
           <div class="col-sm-10">
-            <input type="text" v-model="query.query.resolver" id="query_http_resolver" name="query_http_resolver" placeholder="resolver" />
+            <input type="text" v-model="query.resolver" id="query_http_resolver" name="query_http_resolver" placeholder="resolver" />
           </div>
         </div>
-        <div v-if="query.type === 'traceroute'" class="form-group row">
+        <div v-if="['traceroute', 'mtr'].includes(query.type)" class="form-group row">
           <label for="query_port" class="col-sm-2 col-form-label">port</label>
           <div class="col-sm-10">
             <input type="number" v-model="query.port" id="query_port" name="query_port" placeholder="port" />
@@ -334,10 +389,21 @@ const app = () => ({
             </select>
           </div>
         </div>
+        <div v-if="query.type === 'mtr'" class="form-group row">
+          <label for="query_protocol" class="col-sm-2 col-form-label">protocol</label>
+          <div class="col-sm-10">
+            <select v-model="query.protocol" name="query_protocol" id="query_protocol" class="custom-select my-1 mr-sm-2">
+              <option disabled value="">Please select one</option>
+              <option v-for="protocol in getMtrProtocolArray()" :value="protocol">
+                {{ protocol }}
+              </option>
+            </select>
+          </div>
+        </div>
         <div v-if="query.type === 'dns'" class="form-group row">
           <label for="query_dns_type" class="col-sm-2 col-form-label">trace</label>
           <div class="col-sm-10">
-            <input type="checkbox" v-model="query.query.trace" >
+            <input type="checkbox" v-model="query.trace" >
           </div>
         </div>
         <div v-if="query.type === 'dns'" class="form-group row">
@@ -354,7 +420,7 @@ const app = () => ({
         <div v-if="query.type === 'dns'" class="form-group row">
           <label for="query_protocol" class="col-sm-2 col-form-label">protocol</label>
           <div class="col-sm-10">
-            <select v-model="query.query.protocol" name="query_protocol" id="query_protocol" class="custom-select my-1 mr-sm-2">
+            <select v-model="query.protocol" name="query_protocol" id="query_protocol" class="custom-select my-1 mr-sm-2">
               <option disabled value="">Please select one</option>
               <option v-for="protocol in getDnsProtocolArray()" :value="protocol">
                 {{ protocol }}
@@ -365,13 +431,13 @@ const app = () => ({
         <div v-if="query.type === 'dns'" class="form-group row">
           <label for="query_dns_port" class="col-sm-2 col-form-label">port</label>
           <div class="col-sm-10">
-            <input type="number" v-model="query.query.port" id="query_dns_port" name="query_dns_port" placeholder="port" />
+            <input type="number" v-model="query.port" id="query_dns_port" name="query_dns_port" placeholder="port" />
           </div>
         </div>
         <div v-if="query.type === 'dns'" class="form-group row">
           <label for="query_dns_resolver" class="col-sm-2 col-form-label">resolver</label>
           <div class="col-sm-10">
-            <input type="text" v-model="query.query.resolver" id="query_dns_resolver" name="query_dns_resolver" placeholder="resolver" />
+            <input type="text" v-model="query.resolver" id="query_dns_resolver" name="query_dns_resolver" placeholder="resolver" />
           </div>
         </div>
 
@@ -381,9 +447,9 @@ const app = () => ({
               http headers
             </h3>
             <ul>
-              <li v-for="(m, index) in query.query.headers" :key="m.id">
-                <input v-model="query.query.headers[index].title" placeholder="title" />
-                <input v-model="query.query.headers[index].value" placeholder="value" />
+              <li v-for="(m, index) in query.request.headers" :key="m.id">
+                <input v-model="query.request.headers[index].title" placeholder="title" />
+                <input v-model="query.request.headers[index].value" placeholder="value" />
               </li>
             </ul>
           </div>
@@ -397,16 +463,25 @@ const app = () => ({
             location filters
           </h3>
           <ul>
-            <li v-for="(m, index) in query.locations" :key="m.id">
-              <select v-model="query.locations[index].type">
-                <option disabled value="">Please select one</option>
-                <option v-for="type in getLocationTypeArray()" :value="type">
-                  {{ type }}
-                </option>
-              </select>
-              <input v-model="query.locations[index].value" placeholder="value" />
-              <input type="number" v-model="query.locations[index].limit" placeholder="global limit" />
-              <button @click="removeLocation" :value="index">remove</button>
+            <li v-for="(l, lIndex) in query.locations" :key="l.id">
+              <div>
+                <div v-for="(f, fIndex) in query.locations[lIndex].fields" :key="f.id">
+                  <select v-model="query.locations[lIndex].fields[fIndex].type">
+                    <option disabled value="">Please select one</option>
+                    <option v-for="type in getLocationTypeArray()" :value="type">
+                      {{ type }}
+                    </option>
+                  </select>
+                  <input v-model="query.locations[lIndex].fields[fIndex].value" placeholder="value" />
+                </div>
+              </div>
+              <div>
+                <input type="number" v-model="query.locations[lIndex].limit" placeholder="global limit" />
+              </div>
+              <div>
+                <button @click="addLocationField" :value="lIndex">add field</button>
+                <button @click="removeLocation" :value="lIndex">remove</button>
+              </div>
             </li>
           </ul>
         </div>

@@ -10,6 +10,14 @@ supported `type` values:
 - [`asn`](#asn-query)
 - [`magic`](#magic-query)
 
+Location filters can be joined, for more accurate queries. Consider the following example:
+
+```json
+  { "country": "gb", "city": "london", "magic": "virgin" }
+```
+
+it will match a probe located in `London, England`, running on `Virgin Media Limited` network.
+
 <h2 id="continent-query">Continent</h2>
 
 ### rules
@@ -25,7 +33,7 @@ supported `type` values:
 ### example
 
 ```json
-{ "type": "continent", "value": "eu" }
+{ "continent": "eu" }
 ```
 
 <h2 id="region-query">Region</h2>
@@ -64,7 +72,7 @@ supported `type` values:
 ### example
 
 ```json
-{ "type": "region", "value": "eastern africa" }
+{ "region": "eastern africa" }
 ```
 
 <h2 id="country-query">Country</h2>
@@ -82,7 +90,7 @@ supported `type` values:
 ### example
 
 ```json
-{ "type": "country", "value": "fr" }
+{ "country": "fr" }
 ```
 
 <h2 id="state-query">State</h2>
@@ -101,7 +109,7 @@ supported `type` values:
 ### example
 
 ```json
-{ "type": "state", "value": "tx" }
+{ "state": "tx" }
 ```
 
 <h2 id="city-query">City</h2>
@@ -116,7 +124,7 @@ supported `type` values:
 ### example
 
 ```json
-{ "type": "city", "value": "Austin" }
+{ "city": "Austin" }
 ```
 
 <h2 id="network-query">Network</h2>
@@ -131,7 +139,7 @@ supported `type` values:
 ### example
 
 ```json
-{ "type": "network", "value": "virgin media limited" }
+{ "network": "virgin media limited" }
 ```
 
 <h2 id="asn-query">ASN</h2>
@@ -143,12 +151,12 @@ supported `type` values:
 ### example
 
 ```json
-{ "type": "asn", "value": 1337 }
+{ "asn": 1337 }
 ```
 
 <h2 id="magic-query">magic</h2>
 
-unlike other location queries, `magic` query doesn't attempt to match a specific value, but rather a pool of available matches, contained within a pre-defined array. It works by finding a partial string match of any of the above described variables. It also supports country matching based on [`Iso2`/`Iso3`](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes), common `aliases` and their full, official names format. Aliases also apply to `networks`.
+unlike other location queries, `magic` query doesn't attempt to match a specific value, but rather a pool of available matches, contained within a pre-defined array. It works by finding a partial string match of any of the above described variables. It also supports country matching based on [`Iso2`/`Iso3`](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes), common `aliases` and their full, official names format. Aliases also apply to `networks`, as well as combined matches.
 
 A full list of aliases can be found here:
 - [`countries`](https://github.com/jsdelivr/globalping/blob/master/src/lib/location/countries.ts)
@@ -160,19 +168,26 @@ A full list of aliases can be found here:
 - inputs are always converted to lowercase
 - `ASN` starts with `as` prefix (`as123`)
 - `latitude`/`longitude` fields are excluded
+- combined matches have to be joined with `+` sign
 
 ### examples
 
-the following queries will match `DE`
+Both of the following queries will match `DE`
 
 ```json
-{ "type": "magic", "value": "ger" },
-{ "type": "magic", "value": "deu" }
+{ "magic": "ger" },
+{ "magic": "deu" }
 ```
 
 both of the following queries would match `amazon technologies inc.` network
 
 ```json
-{ "type": "magic", "value": "aws" },
-{ "type": "magic", "value": "amazon" }
+{ "magic": "aws" },
+{ "magic": "amazon" }
+```
+
+magic queries can be combined. The following query will match server in `Belgium` hosted at `Google Cloud` DC.
+
+```json
+{ "magic": "google+belgium" }
 ```

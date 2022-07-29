@@ -1,13 +1,16 @@
 export type ProbeLocation = {
 	continent: string;
 	region: string;
+	normalizedRegion: string;
 	country: string;
 	city: string;
+	normalizedCity: string;
 	asn: number;
 	latitude: number;
 	longitude: number;
 	state: string | undefined;
 	network: string;
+	normalizedNetwork: string;
 };
 
 export type Probe = {
@@ -17,4 +20,5 @@ export type Probe = {
 	ipAddress: string;
 	location: ProbeLocation;
 	index: string[];
+	resolvers: string[];
 };
