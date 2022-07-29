@@ -1,1 +1,7 @@
-module.exports = {};
+module.exports = {
+	redis: {
+		socket: {
+			tls: false,
+		},
+	},
+};
