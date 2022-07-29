@@ -181,7 +181,7 @@ describe('command schema', () => {
 				expect(valid.value[0]!.network).to.not.equal(input[0]!.network);
 			});
 
-			it('should correct city value', () => {
+			it('should correct city value (upper case)', () => {
 				const input = [
 					{
 						city: 'LONDON',
@@ -193,6 +193,33 @@ describe('command schema', () => {
 
 				expect(valid.value[0]!.city).to.equal(input[0]!.city.toLowerCase());
 				expect(valid.value[0]!.city).to.not.equal(input[0]!.city);
+			});
+
+			it('should correct the city value (non-ASCII)', () => {
+				const input = [
+					{
+						city: 'České Budějovice',
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.value[0]!.city).to.not.equal(input[0]!.city);
+				expect(valid.value[0]!.city).to.equal('ceske budejovice');
+			});
+
+			it('should correct the magic value (non-ASCII)', () => {
+				const input = [
+					{
+						magic: 'Petaẖ Tiqva',
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.value[0]!.magic).to.equal('petah tiqva');
 			});
 		});
 
