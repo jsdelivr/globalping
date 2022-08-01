@@ -10,7 +10,7 @@ The main production API that all probes and users connect to.
 - Hosted on Heroku in Europe 
 - Manually triggered deployments from GitHub `master` branch
 - Integrated into GitHub
-- Single Dyno "Standard 2X"
+- Single Dyno "Standard 2X" - 1GB RAM and 4 CPU Cores
 - $50/month
 
 
