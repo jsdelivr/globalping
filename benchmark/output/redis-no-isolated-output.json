@@ -1,0 +1,475 @@
+[
+  {
+    "request": {
+      "path": "/v1/measurements",
+      "method": "POST",
+      "body": {
+        "type": "mtr",
+        "target": "zonefiles.io",
+        "limit": 4,
+        "locations": [
+          {
+            "city": "krakow"
+          }
+        ]
+      }
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "97 MB",
+        "heapTotal": "32 MB",
+        "heapUsed": "29 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "99 MB",
+        "heapTotal": "33 MB",
+        "heapUsed": "31 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "98 MB",
+        "heapTotal": "32 MB",
+        "heapUsed": "30 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 7726,
+        "system": 9
+      },
+      "max": {
+        "user": 48129,
+        "system": 4978
+      },
+      "avg": {
+        "user": 22306,
+        "system": 2816.5
+      }
+    },
+    "duration": {
+      "min": 0.01,
+      "max": 0.053,
+      "avg": 0.02616666666666667
+    }
+  },
+  {
+    "request": {
+      "path": "/v1/measurements",
+      "method": "POST",
+      "body": {
+        "type": "mtr",
+        "target": "zonefiles.io",
+        "limit": 1,
+        "measurementOptions": {
+          "packets": 16,
+          "protocol": "ICMP",
+          "port": 80
+        },
+        "locations": []
+      }
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "101 MB",
+        "heapTotal": "34 MB",
+        "heapUsed": "31 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "104 MB",
+        "heapTotal": "35 MB",
+        "heapUsed": "32 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "103 MB",
+        "heapTotal": "35 MB",
+        "heapUsed": "32 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 2842,
+        "system": 17
+      },
+      "max": {
+        "user": 9957,
+        "system": 3720
+      },
+      "avg": {
+        "user": 6460.833333333333,
+        "system": 971.8333333333334
+      }
+    },
+    "duration": {
+      "min": 0.006,
+      "max": 0.012,
+      "avg": 0.008666666666666666
+    }
+  },
+  {
+    "request": {
+      "path": "/v1/measurements",
+      "method": "POST",
+      "body": {
+        "type": "ping",
+        "target": "zonefiles.io",
+        "limit": 1,
+        "locations": []
+      }
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "106 MB",
+        "heapTotal": "35 MB",
+        "heapUsed": "32 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "109 MB",
+        "heapTotal": "38 MB",
+        "heapUsed": "34 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "107 MB",
+        "heapTotal": "36 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 4877,
+        "system": 11
+      },
+      "max": {
+        "user": 20084,
+        "system": 468
+      },
+      "avg": {
+        "user": 8840.333333333334,
+        "system": 131.83333333333334
+      }
+    },
+    "duration": {
+      "min": 0.005,
+      "max": 0.022,
+      "avg": 0.009833333333333333
+    }
+  },
+  {
+    "request": {
+      "path": "/v1/measurements",
+      "method": "POST",
+      "body": {
+        "type": "ping",
+        "target": "zonefiles.io",
+        "limit": 1,
+        "measurementOptions": {
+          "packets": 16
+        },
+        "locations": []
+      }
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "106 MB",
+        "heapTotal": "35 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "109 MB",
+        "heapTotal": "38 MB",
+        "heapUsed": "34 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "107 MB",
+        "heapTotal": "36 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 5035,
+        "system": 14
+      },
+      "max": {
+        "user": 6936,
+        "system": 848
+      },
+      "avg": {
+        "user": 5686.5,
+        "system": 362.8333333333333
+      }
+    },
+    "duration": {
+      "min": 0.006,
+      "max": 0.009,
+      "avg": 0.007166666666666666
+    }
+  },
+  {
+    "request": {
+      "path": "/v1/measurements",
+      "method": "POST",
+      "body": {
+        "type": "traceroute",
+        "target": "zonefiles.io",
+        "limit": 1,
+        "measurementOptions": {
+          "protocol": "ICMP",
+          "port": 80
+        },
+        "locations": []
+      }
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "107 MB",
+        "heapTotal": "35 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "109 MB",
+        "heapTotal": "37 MB",
+        "heapUsed": "34 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "108 MB",
+        "heapTotal": "36 MB",
+        "heapUsed": "34 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 4483,
+        "system": 16
+      },
+      "max": {
+        "user": 8295,
+        "system": 3941
+      },
+      "avg": {
+        "user": 6041.666666666667,
+        "system": 796.8333333333334
+      }
+    },
+    "duration": {
+      "min": 0.005,
+      "max": 0.013,
+      "avg": 0.008
+    }
+  },
+  {
+    "request": {
+      "path": "/v1/measurements",
+      "method": "POST",
+      "body": {
+        "type": "traceroute",
+        "target": "zonefiles.io",
+        "limit": 1,
+        "measurementOptions": {
+          "protocol": "TCP",
+          "port": 80
+        },
+        "locations": []
+      }
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "107 MB",
+        "heapTotal": "36 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "108 MB",
+        "heapTotal": "36 MB",
+        "heapUsed": "34 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "107 MB",
+        "heapTotal": "36 MB",
+        "heapUsed": "34 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 867,
+        "system": 0
+      },
+      "max": {
+        "user": 7246,
+        "system": 4042
+      },
+      "avg": {
+        "user": 4854,
+        "system": 764.5
+      }
+    },
+    "duration": {
+      "min": 0.005,
+      "max": 0.009,
+      "avg": 0.006333333333333333
+    }
+  },
+  {
+    "request": {
+      "path": "/v1/measurements",
+      "method": "POST",
+      "body": {
+        "type": "http",
+        "target": "zonefiles.io",
+        "limit": 1,
+        "measurementOptions": {
+          "request": {},
+          "protocol": "https"
+        },
+        "locations": []
+      }
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "108 MB",
+        "heapTotal": "36 MB",
+        "heapUsed": "34 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "109 MB",
+        "heapTotal": "37 MB",
+        "heapUsed": "35 MB",
+        "external": "4 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "108 MB",
+        "heapTotal": "36 MB",
+        "heapUsed": "34 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 2581,
+        "system": 0
+      },
+      "max": {
+        "user": 14377,
+        "system": 2396
+      },
+      "avg": {
+        "user": 6505,
+        "system": 464
+      }
+    },
+    "duration": {
+      "min": 0.006,
+      "max": 0.014,
+      "avg": 0.008166666666666668
+    }
+  },
+  {
+    "request": {
+      "path": "/v1/measurements",
+      "method": "POST",
+      "body": {
+        "type": "http",
+        "target": "zonefiles.io",
+        "limit": 1,
+        "measurementOptions": {
+          "protocol": "https",
+          "request": {
+            "method": "head",
+            "path": "/",
+            "query": "",
+            "headers": {}
+          }
+        },
+        "locations": []
+      }
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "108 MB",
+        "heapTotal": "36 MB",
+        "heapUsed": "34 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "112 MB",
+        "heapTotal": "39 MB",
+        "heapUsed": "35 MB",
+        "external": "4 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "109 MB",
+        "heapTotal": "37 MB",
+        "heapUsed": "35 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 4556,
+        "system": 0
+      },
+      "max": {
+        "user": 8746,
+        "system": 965
+      },
+      "avg": {
+        "user": 6559.333333333333,
+        "system": 273.8333333333333
+      }
+    },
+    "duration": {
+      "min": 0.005,
+      "max": 0.01,
+      "avg": 0.007333333333333333
+    }
+  }
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "request": {
+      "path": "/v1/measurements/K9kow1sfekr2Dpgr",
+      "method": "GET"
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "107 MB",
+        "heapTotal": "37 MB",
+        "heapUsed": "32 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "108 MB",
+        "heapTotal": "37 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "107 MB",
+        "heapTotal": "37 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 1099,
+        "system": 0
+      },
+      "max": {
+        "user": 4049,
+        "system": 319
+      },
+      "avg": {
+        "user": 1851.5,
+        "system": 106.83333333333333
+      }
+    },
+    "duration": {
+      "min": 0.002,
+      "max": 0.004,
+      "avg": 0.0023333333333333335
+    }
+  }
+]
