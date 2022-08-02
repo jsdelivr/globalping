@@ -14,6 +14,7 @@ import {errorHandler} from './error-handler.js';
 // Import {rateLimitHandler} from './middleware/ratelimit.js';
 import {errorHandlerMw} from './middleware/error-handler.js';
 import {corsHandler} from './middleware/cors.js';
+import {benchmark} from './middleware/benchmark.js';
 
 const app = new Koa();
 
@@ -43,6 +44,7 @@ demoRouter.prefix('/demo');
 registerDemoRoute(demoRouter);
 
 app
+	.use(benchmark())
 	.use(compress())
 	.use(conditionalGet())
 	.use(etag({weak: true}))
