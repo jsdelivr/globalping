@@ -17,13 +17,6 @@ import type {Probe, ProbeLocation} from './types.js';
 
 const fakeIpForDebug = () => _.sample([
 	'95.155.94.127',
-	'65.49.22.66',
-	'185.229.226.83',
-	'51.158.22.211',
-	'131.255.7.26',
-	'213.136.174.80',
-	'94.214.253.78',
-	'79.205.97.254',
 ])!;
 
 const geoipClient = createGeoipClient();
