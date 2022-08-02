@@ -1,0 +1,51 @@
+[
+  {
+    "request": {
+      "path": "/v1/probes",
+      "method": "GET"
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "122 MB",
+        "heapTotal": "43 MB",
+        "heapUsed": "32 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "122 MB",
+        "heapTotal": "43 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "122 MB",
+        "heapTotal": "43 MB",
+        "heapUsed": "32 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 65,
+        "system": 0
+      },
+      "max": {
+        "user": 4431,
+        "system": 1450
+      },
+      "avg": {
+        "user": 1939.3333333333333,
+        "system": 528.8333333333334
+      }
+    },
+    "duration": {
+      "min": 0.001,
+      "max": 0.005,
+      "avg": 0.0025
+    }
+  }
+]

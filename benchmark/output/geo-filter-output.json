@@ -1,0 +1,61 @@
+[
+  {
+    "request": {
+      "path": "/v1/measurements",
+      "method": "POST",
+      "body": {
+        "type": "mtr",
+        "target": "zonefiles.io",
+        "limit": 4,
+        "locations": [
+          {
+            "city": "krakow"
+          }
+        ]
+      }
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "119 MB",
+        "heapTotal": "40 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "122 MB",
+        "heapTotal": "43 MB",
+        "heapUsed": "35 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "121 MB",
+        "heapTotal": "42 MB",
+        "heapUsed": "34 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 2665,
+        "system": 13
+      },
+      "max": {
+        "user": 11795,
+        "system": 4181
+      },
+      "avg": {
+        "user": 7631,
+        "system": 2460
+      }
+    },
+    "duration": {
+      "min": 0.008,
+      "max": 0.016,
+      "avg": 0.011833333333333333
+    }
+  }
+]

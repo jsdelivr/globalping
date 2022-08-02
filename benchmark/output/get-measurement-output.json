@@ -1,0 +1,149 @@
+[
+  {
+    "request": {
+      "path": "/v1/measurements/wicNT21MZ2WfRlYj",
+      "method": "GET"
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "119 MB",
+        "heapTotal": "40 MB",
+        "heapUsed": "32 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "122 MB",
+        "heapTotal": "43 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "120 MB",
+        "heapTotal": "41 MB",
+        "heapUsed": "32 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 1264,
+        "system": 0
+      },
+      "max": {
+        "user": 5006,
+        "system": 3212
+      },
+      "avg": {
+        "user": 3020.5,
+        "system": 701.3333333333334
+      }
+    },
+    "duration": {
+      "min": 0.003,
+      "max": 0.005,
+      "avg": 0.004333333333333334
+    }
+  },
+  {
+    "request": {
+      "path": "/v1/measurements/eXe2x2gTpAGqsDwW",
+      "method": "GET"
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "119 MB",
+        "heapTotal": "40 MB",
+        "heapUsed": "32 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "120 MB",
+        "heapTotal": "41 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "119 MB",
+        "heapTotal": "40 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 1214,
+        "system": 0
+      },
+      "max": {
+        "user": 1825,
+        "system": 397
+      },
+      "avg": {
+        "user": 1509.1666666666667,
+        "system": 129.5
+      }
+    },
+    "duration": {
+      "min": 0.001,
+      "max": 0.003,
+      "avg": 0.002
+    }
+  },
+  {
+    "request": {
+      "path": "/v1/measurements/K9kow1sfekr2Dpgr",
+      "method": "GET"
+    },
+    "samples": 6,
+    "memory": {
+      "min": {
+        "rss": "122 MB",
+        "heapTotal": "43 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "max": {
+        "rss": "122 MB",
+        "heapTotal": "43 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      },
+      "avg": {
+        "rss": "122 MB",
+        "heapTotal": "43 MB",
+        "heapUsed": "33 MB",
+        "external": "3 MB",
+        "arrayBuffers": "0 MB"
+      }
+    },
+    "cpu": {
+      "min": {
+        "user": 576,
+        "system": 0
+      },
+      "max": {
+        "user": 1658,
+        "system": 915
+      },
+      "avg": {
+        "user": 1323.3333333333333,
+        "system": 211.16666666666666
+      }
+    },
+    "duration": {
+      "min": 0.002,
+      "max": 0.002,
+      "avg": 0.002
+    }
+  }
+]
