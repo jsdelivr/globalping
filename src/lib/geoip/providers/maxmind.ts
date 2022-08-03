@@ -5,6 +5,7 @@ import appsignal from '../../appsignal.js';
 import type {LocationInfo} from '../client.js';
 import {
 	normalizeCityName,
+	normalizeCityNamePublic,
 	normalizeNetworkName,
 } from '../utils.js';
 
@@ -40,7 +41,7 @@ export const maxmindLookup = async (addr: string): Promise<LocationInfo> => {
 		continent: data.continent?.code ?? '',
 		country: data.country?.isoCode ?? '',
 		state: data.country?.isoCode === 'US' ? data.subdivisions?.map(s => s.isoCode)[0] ?? '' : undefined,
-		city: data.city?.names?.en ?? '',
+		city: normalizeCityNamePublic(data.city?.names?.en ?? ''),
 		normalizedCity: normalizeCityName(data.city?.names?.en ?? ''),
 		asn: data.traits?.autonomousSystemNumber ?? 0,
 		latitude: data.location?.latitude ?? 0,
