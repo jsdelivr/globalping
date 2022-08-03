@@ -73,9 +73,11 @@ export class MeasurementRunner {
 		await this.store.markFinished(data.measurementId);
 		this.clearTimeout(data.measurementId);
 
-		const record = (await this.redis.json.get(getMeasurementKey(data.measurementId))) as MeasurementRecord;
-		if (record) {
-			this.metrics.recordMeasurementTime(record.type, (Date.now() - (new Date(record.createdAt)).getTime()));
+		const record = (await this.redis.call('JSON.GET', getMeasurementKey(data.measurementId))) as string;
+		const measurement = JSON.parse(record) as MeasurementRecord;
+
+		if (measurement) {
+			this.metrics.recordMeasurementTime(measurement.type, (Date.now() - (new Date(measurement.createdAt)).getTime()));
 		}
 	}
 

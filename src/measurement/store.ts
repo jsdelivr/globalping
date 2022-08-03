@@ -19,7 +19,8 @@ export class MeasurementStore {
 	constructor(private readonly redis: RedisClient) {}
 
 	async getMeasurementResults(id: string): Promise<MeasurementRecord> {
-		return await this.redis.json.get(getMeasurementKey(id)) as never;
+		const result = await this.redis.call('JSON.GET', getMeasurementKey(id)) as string;
+		return JSON.parse(result) as MeasurementRecord;
 	}
 
 	async createMeasurement(test: NetworkTest, probesCount: number): Promise<string> {
@@ -28,10 +29,9 @@ export class MeasurementStore {
 
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
 
-		await this.redis.executeIsolated(async client => {
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			await client.set(getMeasurementKey(id, 'probes_awaiting'), probesCount, {EX: probesAwaitingTtl});
-			await client.json.set(key, '$', {
+		await Promise.all([
+			await this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probesCount, 'EX', probesAwaitingTtl),
+			await this.redis.call('JSON.SET', key, '$', JSON.stringify({
 				id,
 				type: test.type,
 				status: 'in-progress',
@@ -39,17 +39,19 @@ export class MeasurementStore {
 				updatedAt: Date.now(),
 				probesCount,
 				results: {},
-			});
-			await client.expire(key, config.get<number>('measurement.resultTTL'));
-		});
+			})),
+		]);
+
+    // you cant set expire on non-existing record
+    await this.redis.expire(key, config.get<number>('measurement.resultTTL')),
 
 		return id;
 	}
 
 	async storeMeasurementProbe(measurementId: string, probeId: string, probe: Probe): Promise<void> {
 		const key = getMeasurementKey(measurementId);
-		await this.redis.executeIsolated(async client => {
-			await client.json.set(key, `$.results.${probeId}`, {
+		await Promise.all([
+			this.redis.call('JSON.SET', key, `$.results.${probeId}`, JSON.stringify({
 				probe: {
 					continent: probe.location.continent,
 					region: probe.location.region,
@@ -63,40 +65,39 @@ export class MeasurementStore {
 					resolvers: probe.resolvers,
 				},
 				result: {rawOutput: ''},
-			});
-			await client.json.set(key, '$.updatedAt', Date.now());
-		});
+			})),
+			this.redis.call('JSON.SET', key, '$.updatedAt', Date.now()),
+		]);
 	}
 
 	async storeMeasurementProgress(data: MeasurementResultMessage): Promise<void> {
 		const key = getMeasurementKey(data.measurementId);
 
-		await this.redis.executeIsolated(async client => {
-			data.overwrite
-				? await client.json.set(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput)
-				: await client.json.strAppend(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput);
+		const rawOutputCmd = data.overwrite ? 'JSON.SET' : 'JSON.STRAPPEND';
 
-			await client.json.set(key, '$.updatedAt', Date.now());
-		});
+		await Promise.all([
+			this.redis.call(rawOutputCmd, key, `$.results.${data.testId}.result.rawOutput`, JSON.stringify(data.result.rawOutput)),
+			this.redis.call('JSON.SET', key, '$.updatedAt', Date.now()),
+		]);
 	}
 
 	async storeMeasurementResult(data: MeasurementResultMessage): Promise<void> {
 		const key = getMeasurementKey(data.measurementId);
 
-		await this.redis.executeIsolated(async client => {
-			await client.json.set(key, `$.results.${data.testId}.result`, data.result);
-			await client.json.set(key, '$.updatedAt', Date.now());
-			await client.decr(`${key}:probes_awaiting`);
-		});
+		await Promise.all([
+			this.redis.call('JSON.SET', key, `$.results.${data.testId}.result`, JSON.stringify(data.result)),
+			this.redis.call('JSON.SET', key, '$.updatedAt', Date.now()),
+			this.redis.decr(`${key}:probes_awaiting`),
+		]);
 	}
 
 	async markFinished(id: string): Promise<void> {
 		const key = getMeasurementKey(id);
 
-		await this.redis.executeIsolated(async client => {
-			await client.json.set(key, '$.status', 'finished');
-			await client.json.set(key, '$.updatedAt', Date.now());
-		});
+		await Promise.all([
+			this.redis.call('JSON.SET', key, '$.status', JSON.stringify('finished')),
+			this.redis.call('JSON.SET', key, '$.updatedAt', Date.now()),
+		]);
 	}
 }
 
