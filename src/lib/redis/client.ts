@@ -1,7 +1,7 @@
 import config from 'config';
-import Redis from 'ioredis';
+import GPRedis from './gp-redis.js';
 
-export type RedisClient = Redis;
+export type RedisClient = GPRedis;
 
 let redis: RedisClient;
 
@@ -10,7 +10,7 @@ export const initRedis = async () => {
 };
 
 export const createRedisClient = async (options?: Record<string, any>): Promise<RedisClient> => {
-	const client = new Redis({
+	const client = new GPRedis({
 		...config.util.toObject(config.get('redis')),
 		...options,
 	});

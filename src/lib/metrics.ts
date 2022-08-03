@@ -49,8 +49,8 @@ export class MetricsAgent {
 	private async updateMeasurementCount(): Promise<void> {
 		let count = 0;
 
-		// eslint-disable-next-line @typescript-eslint/naming-convention, no-empty-pattern
-		for await ({} of this.redis.scanIterator({MATCH: 'gp:measurement:*'})) {
+		// eslint-disable-next-line no-empty-pattern
+		for await ({} of this.redis.scanIterator('gp:measurement:*')) {
 			count++;
 		}
 
