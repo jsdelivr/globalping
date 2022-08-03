@@ -42,8 +42,8 @@ export class MeasurementStore {
 			})),
 		]);
 
-    // you cant set expire on non-existing record
-    await this.redis.expire(key, config.get<number>('measurement.resultTTL')),
+		// You cant set expire on non-existing record
+		await this.redis.expire(key, config.get<number>('measurement.resultTTL'));
 
 		return id;
 	}
