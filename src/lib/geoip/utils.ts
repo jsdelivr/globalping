@@ -1,12 +1,5 @@
 import anyAscii from 'any-ascii';
-
-/* eslint-disable @typescript-eslint/naming-convention */
-const altNames: Record<string, string> = {
-	Geneve: 'Geneva',
-	'Frankfurt am Main': 'Frankfurt',
-	'New York City': 'New York',
-};
-/* eslint-enable @typescript-eslint/naming-convention */
+import {altNames} from './altnames.js';
 
 export const normalizeCityNamePublic = (name: string): string => {
 	// We don't add city to the regex as there are valid names like 'Mexico City' or 'Kansas City'
