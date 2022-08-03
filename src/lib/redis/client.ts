@@ -1,13 +1,7 @@
 import config from 'config';
-import {
-	createClient,
-	RedisClientType,
-	RedisDefaultModules,
-	RedisClientOptions,
-	RedisFunctions, RedisScripts,
-} from 'redis';
+import Redis from 'ioredis';
 
-export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts>;
+export type RedisClient = Redis;
 
 let redis: RedisClient;
 
@@ -15,12 +9,11 @@ export const initRedis = async () => {
 	redis = await createRedisClient();
 };
 
-export const createRedisClient = async (options?: RedisClientOptions): Promise<RedisClient> => {
-	const client = createClient({
+export const createRedisClient = async (options?: Record<string, any>): Promise<RedisClient> => {
+	const client = new Redis({
 		...config.util.toObject(config.get('redis')),
 		...options,
 	});
-	await client.connect();
 
 	return client;
 };
