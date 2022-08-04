@@ -15,13 +15,21 @@ const saveResult = data => {
 	fs.writeFileSync(filePath, JSON.stringify(data, 0, 2));
 };
 
+const arrayMinMax = array =>
+// eslint-disable-next-line unicorn/no-array-reduce
+	array.reduce(([min, max], value) => [Math.min(min, value), Math.max(max, value)], [
+		Number.POSITIVE_INFINITY,
+		Number.NEGATIVE_INFINITY,
+	]);
+
 const calcPerGroup = (data, duration) => {
 	let durationObject = {};
 
 	if (duration) {
+		const [min, max] = arrayMinMax(duration);
 		durationObject = {
-			min: `${Math.min(...duration)} ms`,
-			max: `${Math.max(...duration)} ms`,
+			min: `${min} ms`,
+			max: `${max} ms`,
 
 			avg: `${duration.reduce((total, item) => total + item, 0) / duration.length} ms`,
 		};
@@ -31,8 +39,7 @@ const calcPerGroup = (data, duration) => {
 		samples: data.length,
 		// eslint-disable-next-line unicorn/no-array-reduce
 		memory: Object.keys(data[0].mem).reduce((acc, key) => {
-			const min = Math.min(...data.map(item => item.mem[key]));
-			const max = Math.max(...data.map(item => item.mem[key]));
+			const [min, max] = arrayMinMax(data.map(item => item.mem[key]));
 
 			const avg = data.reduce((total, item) => total + item.mem[key], 0) / data.length;
 
@@ -53,22 +60,26 @@ const calcPerGroup = (data, duration) => {
 			};
 		}, {}),
 		// eslint-disable-next-line unicorn/no-array-reduce
-		cpu: Object.keys(data[0].cpu).reduce((acc, key) => ({
-			...acc,
-			min: {
-				...acc.min,
-				[key]: Math.min(...data.map(item => item.cpu[key])),
-			},
-			max: {
-				...acc.max,
-				[key]: Math.max(...data.map(item => item.cpu[key])),
-			},
-			avg: {
-				...acc.avg,
+		cpu: Object.keys(data[0].cpu).reduce((acc, key) => {
+			const [min, max] = arrayMinMax(data.map(item => item.cpu[key]));
 
-				[key]: Math.round(data.reduce((total, item) => total + item.cpu[key], 0) / data.length),
-			},
-		}), {}),
+			return {
+				...acc,
+				min: {
+					...acc.min,
+					[key]: min,
+				},
+				max: {
+					...acc.max,
+					[key]: max,
+				},
+				avg: {
+					...acc.avg,
+
+					[key]: Math.round(data.reduce((total, item) => total + item.cpu[key], 0) / data.length),
+				},
+			};
+		}, {}),
 		...(duration ? {duration: durationObject} : {}),
 	};
 };
