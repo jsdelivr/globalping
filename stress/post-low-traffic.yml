@@ -28,6 +28,32 @@ scenarios:
             json: '$'
             as: 'response'
       - log: '{{ response }}'
+  - name: 'http'
+    flow:
+      - post:
+          url: '/v1/measurements'
+          json:
+            type: 'http'
+            target: 'google.com'
+            locations: []
+            limit: 1
+          capture:
+            json: '$'
+            as: 'response'
+      - log: '{{ response }}'
+  - name: 'mtr'
+    flow:
+      - post:
+          url: '/v1/measurements'
+          json:
+            type: 'mtr'
+            target: 'google.com'
+            locations: []
+            limit: 1
+          capture:
+            json: '$'
+            as: 'response'
+      - log: '{{ response }}'
   - name: 'dns'
     flow:
       - post:
