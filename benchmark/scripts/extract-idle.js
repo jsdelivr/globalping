@@ -23,6 +23,10 @@ const arrayMinMax = array =>
 	]);
 
 const calcPerGroup = (data, duration) => {
+	if (data.length < 1) {
+		return {}
+	}
+
 	let durationObject = {};
 
 	if (duration) {
