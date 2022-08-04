@@ -1,6 +1,7 @@
 import config from 'config';
 import type {Server} from 'socket.io';
 import createHttpError from 'http-errors';
+import cryptoRandomString from 'crypto-random-string';
 import {scopedLogger} from '../lib/logger.js';
 import {getWsServer} from '../lib/ws/server.js';
 import type {RedisClient} from '../lib/redis/client.js';
@@ -8,6 +9,7 @@ import {getRedisClient} from '../lib/redis/client.js';
 import {getProbeRouter, ProbeRouter} from '../probe/router.js';
 import type {Probe} from '../probe/types.js';
 import {getMetricsAgent, MetricsAgent} from '../lib/metrics.js';
+import {recordOnBenchmark} from '../lib/benchmark/index.js';
 import type {MeasurementStore} from './store.js';
 import {getMeasurementKey, getMeasurementStore} from './store.js';
 import type {
@@ -59,10 +61,17 @@ export class MeasurementRunner {
 	}
 
 	async recordProgress(data: MeasurementResultMessage): Promise<void> {
+		const id = cryptoRandomString({length: 16, type: 'alphanumeric'});
+		recordOnBenchmark({id, type: 'record_progress', action: 'start'});
+
 		await this.store.storeMeasurementProgress(data);
+
+		recordOnBenchmark({id, type: 'record_progress', action: 'end'});
 	}
 
 	async recordResult(data: MeasurementResultMessage): Promise<void> {
+		const id = cryptoRandomString({length: 16, type: 'alphanumeric'});
+		recordOnBenchmark({id, type: 'record_result', action: 'start'});
 		await this.store.storeMeasurementResult(data);
 		const probesAwaiting = await this.redis.get(getMeasurementKey(data.measurementId, 'probes_awaiting'));
 
@@ -77,6 +86,8 @@ export class MeasurementRunner {
 		if (record) {
 			this.metrics.recordMeasurementTime(record.type, (Date.now() - (new Date(record.createdAt)).getTime()));
 		}
+
+		recordOnBenchmark({id, type: 'record_result', action: 'end'});
 	}
 
 	private sendToProbes(config: MeasurementConfig) {

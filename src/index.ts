@@ -2,8 +2,12 @@
 import './lib/appsignal.js';
 
 import process from 'node:process';
+import {start as startBenchmark} from './lib/benchmark/index.js';
+
 import {scopedLogger} from './lib/logger.js';
 import {createServer} from './lib/server.js';
+
+startBenchmark();
 
 const logger = scopedLogger('global');
 const port = process.env['PORT'] ?? 3000;
