@@ -66,7 +66,7 @@ export const dnsSchema = Joi.object({
 	}).default(),
 	resolver: Joi.string().ip(globalIpOptions).custom(joiMalwareValidateIp),
 	protocol: Joi.string().valid(...allowedDnsProtocols).insensitive().default('UDP'),
-	port: Joi.number().default('53'),
+	port: Joi.number().default(53),
 	trace: Joi.boolean().default(false),
 }).default().messages(schemaErrorMessages);
 

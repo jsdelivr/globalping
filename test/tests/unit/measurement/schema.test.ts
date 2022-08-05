@@ -414,6 +414,27 @@ describe('command schema', () => {
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
 		});
+
+		it('should populate with default values (no measurementOptions)', async () => {
+			const input = {
+				type: 'ping',
+				target: 'abc.com',
+			};
+
+			const desiredOutput = {
+				...input,
+				locations: [],
+				measurementOptions: {
+					packets: 3,
+				},
+				limit: 1,
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
 	});
 
 	describe('traceroute', () => {
@@ -501,6 +522,28 @@ describe('command schema', () => {
 				...input,
 				limit: 1,
 				locations: [],
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should populate body with default values (no measurementOptions)', async () => {
+			const input = {
+				type: 'traceroute',
+				target: 'abc.com',
+			};
+
+			const desiredOutput = {
+				...input,
+				limit: 1,
+				locations: [],
+				measurementOptions: {
+					protocol: 'ICMP',
+					port: 80,
+				},
 			};
 
 			const valid = globalSchema.validate(input);
@@ -607,6 +650,32 @@ describe('command schema', () => {
 				...input,
 				limit: 1,
 				locations: [],
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should populate body with default values (no measurementOptions)', async () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+			};
+
+			const desiredOutput = {
+				...input,
+				limit: 1,
+				locations: [],
+				measurementOptions: {
+					trace: false,
+					protocol: 'UDP',
+					port: 53,
+					query: {
+						type: 'A',
+					},
+				},
 			};
 
 			const valid = globalSchema.validate(input);
@@ -756,6 +825,29 @@ describe('command schema', () => {
 				...input,
 				limit: 1,
 				locations: [],
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should populate body with default values (no measurementOptions)', async () => {
+			const input = {
+				type: 'mtr',
+				target: 'abc.com',
+			};
+
+			const desiredOutput = {
+				...input,
+				limit: 1,
+				locations: [],
+				measurementOptions: {
+					protocol: 'ICMP',
+					packets: 3,
+					port: 80,
+				},
 			};
 
 			const valid = globalSchema.validate(input);
@@ -924,6 +1016,34 @@ describe('command schema', () => {
 						path: '/',
 						query: '',
 						headers: {test: 'abc'},
+					},
+				},
+				locations: [],
+				limit: 1,
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should populate body with default values (no measurementOptions)', async () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+			};
+
+			const desiredOutput = {
+				type: 'http',
+				target: 'elocast.com',
+				measurementOptions: {
+					protocol: 'https',
+					request: {
+						method: 'head',
+						path: '/',
+						query: '',
+						headers: {},
 					},
 				},
 				locations: [],
