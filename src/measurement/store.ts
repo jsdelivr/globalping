@@ -28,10 +28,10 @@ export class MeasurementStore {
 
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
 
-		await this.redis.executeIsolated(async client => {
+		await Promise.all([
 			// eslint-disable-next-line @typescript-eslint/naming-convention
-			await client.set(getMeasurementKey(id, 'probes_awaiting'), probesCount, {EX: probesAwaitingTtl});
-			await client.json.set(key, '$', {
+			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probesCount, {EX: probesAwaitingTtl}),
+			this.redis.json.set(key, '$', {
 				id,
 				type: test.type,
 				status: 'in-progress',
@@ -39,17 +39,17 @@ export class MeasurementStore {
 				updatedAt: Date.now(),
 				probesCount,
 				results: {},
-			});
-			await client.expire(key, config.get<number>('measurement.resultTTL'));
-		});
+			}),
+			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
+		]);
 
 		return id;
 	}
 
 	async storeMeasurementProbe(measurementId: string, probeId: string, probe: Probe): Promise<void> {
 		const key = getMeasurementKey(measurementId);
-		await this.redis.executeIsolated(async client => {
-			await client.json.set(key, `$.results.${probeId}`, {
+		await Promise.all([
+			this.redis.json.set(key, `$.results.${probeId}`, {
 				probe: {
 					continent: probe.location.continent,
 					region: probe.location.region,
@@ -63,40 +63,40 @@ export class MeasurementStore {
 					resolvers: probe.resolvers,
 				},
 				result: {rawOutput: ''},
-			});
-			await client.json.set(key, '$.updatedAt', Date.now());
-		});
+			}),
+			this.redis.json.set(key, '$.updatedAt', Date.now()),
+		]);
 	}
 
 	async storeMeasurementProgress(data: MeasurementResultMessage): Promise<void> {
 		const key = getMeasurementKey(data.measurementId);
 
-		await this.redis.executeIsolated(async client => {
+		await Promise.all([
 			data.overwrite
-				? await client.json.set(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput)
-				: await client.json.strAppend(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput);
+				? this.redis.json.set(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput)
+				: this.redis.json.strAppend(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput),
 
-			await client.json.set(key, '$.updatedAt', Date.now());
-		});
+			this.redis.json.set(key, '$.updatedAt', Date.now()),
+		]);
 	}
 
 	async storeMeasurementResult(data: MeasurementResultMessage): Promise<void> {
 		const key = getMeasurementKey(data.measurementId);
 
-		await this.redis.executeIsolated(async client => {
-			await client.json.set(key, `$.results.${data.testId}.result`, data.result);
-			await client.json.set(key, '$.updatedAt', Date.now());
-			await client.decr(`${key}:probes_awaiting`);
-		});
+		await Promise.all([
+			this.redis.json.set(key, `$.results.${data.testId}.result`, data.result),
+			this.redis.json.set(key, '$.updatedAt', Date.now()),
+			this.redis.decr(`${key}:probes_awaiting`),
+		]);
 	}
 
 	async markFinished(id: string): Promise<void> {
 		const key = getMeasurementKey(id);
 
-		await this.redis.executeIsolated(async client => {
-			await client.json.set(key, '$.status', 'finished');
-			await client.json.set(key, '$.updatedAt', Date.now());
-		});
+		await Promise.all([
+			this.redis.json.set(key, '$.status', 'finished'),
+			this.redis.json.set(key, '$.updatedAt', Date.now()),
+		]);
 	}
 }
 
