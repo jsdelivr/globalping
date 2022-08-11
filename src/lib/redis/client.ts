@@ -6,6 +6,9 @@ import {
 	RedisClientOptions,
 	RedisFunctions, RedisScripts,
 } from 'redis';
+import {scopedLogger} from '../logger.js';
+
+const logger = scopedLogger('redis');
 
 export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts>;
 
@@ -20,6 +23,12 @@ export const createRedisClient = async (options?: RedisClientOptions): Promise<R
 		...config.util.toObject(config.get('redis')),
 		...options,
 	});
+
+	client
+		.on('error', (error: Error) => logger.error('connection error', error))
+		.on('ready', () => logger.info('connection ready'))
+		.on('reconnecting', () => logger.info('reconnecting'));
+
 	await client.connect();
 
 	return client;
