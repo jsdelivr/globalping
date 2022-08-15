@@ -27,6 +27,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 			network: socket.data.probe.location.network,
 		},
 		resolvers: socket.data.probe.resolvers,
+		stats: socket.data.probe.stats,
 	}));
 };
 

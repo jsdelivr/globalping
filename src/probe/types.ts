@@ -13,6 +13,19 @@ export type ProbeLocation = {
 	normalizedNetwork: string;
 };
 
+export type ProbeStats = {
+	cpu: {
+		count: number;
+		load: Array<{
+			idle: number;
+			usage: number;
+		}>;
+	};
+	jobs: {
+		count: number;
+	};
+};
+
 export type Probe = {
 	ready: boolean;
 	client: string;
@@ -21,4 +34,5 @@ export type Probe = {
 	location: ProbeLocation;
 	index: string[];
 	resolvers: string[];
+	stats: ProbeStats;
 };

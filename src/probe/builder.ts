@@ -94,6 +94,13 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		location,
 		index,
 		resolvers: [],
+		stats: {
+			cpu: {
+				count: 0,
+				load: [],
+			},
+			jobs: {count: 0},
+		},
 		ready: true,
 	};
 };
