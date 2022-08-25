@@ -1,14 +1,14 @@
 import type {Socket} from 'socket.io';
+import requestIp from 'request-ip';
 import type {ExtendedError} from 'socket.io/dist/namespace.js';
 import {WsError} from '../ws-error.js';
 import {buildProbe} from '../../../probe/builder.js';
-import {scopedLogger} from '../../logger.js';
 import {InternalError} from '../../internal-error.js';
 import {errorHandler} from '../helper/error-handler.js';
 
-const logger = scopedLogger('ws');
-
 export const probeMetadata = errorHandler(async (socket: Socket, next: (error?: ExtendedError) => void) => {
+	const clientIp = requestIp.getClientIp(socket.request);
+
 	try {
 		socket.data['probe'] = await buildProbe(socket);
 		next();
@@ -19,7 +19,9 @@ export const probeMetadata = errorHandler(async (socket: Socket, next: (error?: 
 			message = error.message;
 		}
 
-		logger.warn(message);
-		throw new WsError(message, {socketId: socket.id});
+		throw new WsError(message, {
+			socketId: socket.id,
+			ipAddress: clientIp!,
+		});
 	}
 });

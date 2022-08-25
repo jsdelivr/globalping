@@ -2,6 +2,7 @@ import type {Probe} from '../../probe/types.js';
 
 type Info = {
 	socketId: string;
+	ipAddress: string;
 	// A string used for message parsing
 	code?: string;
 	probe?: Probe;
