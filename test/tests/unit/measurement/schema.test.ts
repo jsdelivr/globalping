@@ -1,4 +1,5 @@
 import {expect} from 'chai';
+import Joi from 'joi';
 import {
 	schema as globalSchema,
 } from '../../../../src/measurement/schema/global-schema.js';
@@ -6,7 +7,10 @@ import {
 	schema as locationSchema,
 } from '../../../../src/measurement/schema/location-schema.js';
 
-import {joiValidateTarget} from '../../../../src/measurement/schema/utils.js';
+import {
+	joiValidateTarget,
+	joiValidateDomain,
+} from '../../../../src/measurement/schema/utils.js';
 
 describe('command schema', () => {
 	describe('global', () => {
@@ -297,20 +301,23 @@ describe('command schema', () => {
 
 			expect(result).to.be.instanceof(Error);
 		});
+	});
 
-		it('should suceed (any type) (domain)', async () => {
-			const input = '1337.com';
+	describe('domain validator', () => {
+		const schema = Joi.custom(joiValidateDomain());
 
-			let result: string | Error = '';
-			try {
-				result = joiValidateTarget('any')(input);
-			} catch (error: unknown) {
-				if (error instanceof Error) {
-					result = error;
-				}
-			}
+		it('should succeed (_acme-challenge.1337.com)', async () => {
+			const input = '_acme-challenge.1337.com';
+			const valid = schema.validate(input);
 
-			expect(typeof result).to.equal('string');
+			expect(valid.value).to.equal(input);
+		});
+
+		it('should succeed (example.com)', async () => {
+			const input = 'example.com';
+			const valid = schema.validate(input);
+
+			expect(valid.value).to.equal(input);
 		});
 	});
 
@@ -353,6 +360,17 @@ describe('command schema', () => {
 			const input = {
 				type: 'ping',
 				target: 'abc.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should pass (target domain) (_acme-challenge.abc.com)', async () => {
+			const input = {
+				type: 'ping',
+				target: '_acme-challenge.abc.com',
 			};
 
 			const valid = globalSchema.validate(input);
@@ -463,6 +481,17 @@ describe('command schema', () => {
 			const input = {
 				type: 'traceroute',
 				target: 'abc.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should pass (target domain) (_acme-challenge.abc.com)', async () => {
+			const input = {
+				type: 'traceroute',
+				target: '_acme-challenge.abc.com',
 			};
 
 			const valid = globalSchema.validate(input);
@@ -587,6 +616,18 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+		});
+
+		it('should pass (target domain) (_acme-challenge.abc.com)', async () => {
+			const input = {
+				type: 'dns',
+				target: '_acme-challenge.abc.com',
+				measurementOptions: {},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
 		});
 
 		it('should pass (trace enabled)', async () => {
@@ -772,6 +813,17 @@ describe('command schema', () => {
 			expect(valid.error).to.not.exist;
 		});
 
+		it('should pass (target domain) (_acme-challenge.abc.com)', async () => {
+			const input = {
+				type: 'mtr',
+				target: '_acme-challenge.abc.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
 		it('should pass (target ip)', async () => {
 			const input = {
 				type: 'mtr',
@@ -946,6 +998,18 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+		});
+
+		it('should pass (target domain) (_sub.domain.com)', () => {
+			const input = {
+				type: 'http',
+				target: '_sub.domani.com',
+				measurementOptions: {},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
 		});
 
 		it('should pass (empty port)', () => {
