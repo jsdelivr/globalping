@@ -93,7 +93,7 @@ describe('command schema', () => {
 					expect(valid.error).to.not.exist;
 				});
 
-				it('traceroute', async () => {
+				it('traceroute', () => {
 					const input = {
 						type: 'traceroute',
 						target: 'abc.com',
@@ -108,7 +108,7 @@ describe('command schema', () => {
 					expect(valid.error).to.not.exist;
 				});
 
-				it('dns', async () => {
+				it('dns', () => {
 					const input = {
 						type: 'dns',
 						target: 'abc.com',
@@ -128,7 +128,7 @@ describe('command schema', () => {
 					expect(valid.error).to.not.exist;
 				});
 
-				it('mtr', async () => {
+				it('mtr', () => {
 					const input = {
 						type: 'mtr',
 						target: 'abc.com',
