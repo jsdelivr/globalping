@@ -66,10 +66,10 @@ POST https://api.globalping.io/v1/measurements/
 {
     "limit": 10,
     "locations": [],
-    "measurement": {
-        "packets": 5,
-        "target": "jsdelivr.com",
-        "type": "ping"
+    "target": "jsdelivr.com",
+    "type": "ping",
+    "measurementOptions": {
+        "packets": 5
     }
 }
 ```
