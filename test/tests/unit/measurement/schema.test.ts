@@ -1,4 +1,5 @@
 import {expect} from 'chai';
+import Joi from 'joi';
 import {
 	schema as globalSchema,
 } from '../../../../src/measurement/schema/global-schema.js';
@@ -6,7 +7,10 @@ import {
 	schema as locationSchema,
 } from '../../../../src/measurement/schema/location-schema.js';
 
-import {joiValidateTarget} from '../../../../src/measurement/schema/utils.js';
+import {
+	joiValidateTarget,
+	joiValidateDomain,
+} from '../../../../src/measurement/schema/utils.js';
 
 describe('command schema', () => {
 	describe('global', () => {
@@ -89,7 +93,7 @@ describe('command schema', () => {
 					expect(valid.error).to.not.exist;
 				});
 
-				it('traceroute', async () => {
+				it('traceroute', () => {
 					const input = {
 						type: 'traceroute',
 						target: 'abc.com',
@@ -104,7 +108,7 @@ describe('command schema', () => {
 					expect(valid.error).to.not.exist;
 				});
 
-				it('dns', async () => {
+				it('dns', () => {
 					const input = {
 						type: 'dns',
 						target: 'abc.com',
@@ -124,7 +128,7 @@ describe('command schema', () => {
 					expect(valid.error).to.not.exist;
 				});
 
-				it('mtr', async () => {
+				it('mtr', () => {
 					const input = {
 						type: 'mtr',
 						target: 'abc.com',
@@ -268,7 +272,7 @@ describe('command schema', () => {
 	});
 
 	describe('target validator', () => {
-		it('should fail (ip type) (private ip)', async () => {
+		it('should fail (ip type) (private ip)', () => {
 			const input = '192.168.0.101';
 
 			let result: string | Error = '';
@@ -283,7 +287,7 @@ describe('command schema', () => {
 			expect(result).to.be.instanceof(Error);
 		});
 
-		it('should fail (any type) (private ip)', async () => {
+		it('should fail (any type) (private ip)', () => {
 			const input = '192.168.0.101';
 
 			let result: string | Error = '';
@@ -297,25 +301,28 @@ describe('command schema', () => {
 
 			expect(result).to.be.instanceof(Error);
 		});
+	});
 
-		it('should suceed (any type) (domain)', async () => {
-			const input = '1337.com';
+	describe('domain validator', () => {
+		const schema = Joi.custom(joiValidateDomain());
 
-			let result: string | Error = '';
-			try {
-				result = joiValidateTarget('any')(input);
-			} catch (error: unknown) {
-				if (error instanceof Error) {
-					result = error;
-				}
-			}
+		it('should succeed (_acme-challenge.1337.com)', () => {
+			const input = '_acme-challenge.1337.com';
+			const valid = schema.validate(input);
 
-			expect(typeof result).to.equal('string');
+			expect(valid.value).to.equal(input);
+		});
+
+		it('should succeed (example.com)', () => {
+			const input = 'example.com';
+			const valid = schema.validate(input);
+
+			expect(valid.value).to.equal(input);
 		});
 	});
 
 	describe('ping', () => {
-		it('should fail (private ip)', async () => {
+		it('should fail (private ip)', () => {
 			const input = {
 				type: 'ping',
 				target: '192.168.0.101',
@@ -327,7 +334,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should fail (ipv6)', async () => {
+		it('should fail (ipv6)', () => {
 			const input = {
 				type: 'ping',
 				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
@@ -339,7 +346,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should fail (missing values)', async () => {
+		it('should fail (missing values)', () => {
 			const input = {
 				type: 'ping',
 			};
@@ -349,7 +356,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should pass (target domain)', async () => {
+		it('should pass (target domain)', () => {
 			const input = {
 				type: 'ping',
 				target: 'abc.com',
@@ -360,7 +367,18 @@ describe('command schema', () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should pass (target ip)', async () => {
+		it('should pass (target domain) (_acme-challenge.abc.com)', () => {
+			const input = {
+				type: 'ping',
+				target: '_acme-challenge.abc.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should pass (target ip)', () => {
 			const input = {
 				type: 'ping',
 				target: '1.1.1.1',
@@ -371,7 +389,7 @@ describe('command schema', () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should fail (target: invalid ip format)', async () => {
+		it('should fail (target: invalid ip format)', () => {
 			const input = {
 				type: 'ping',
 				target: '300.300.300.300',
@@ -382,7 +400,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should pass and correct values (incorrect capitalization)', async () => {
+		it('should pass and correct values (incorrect capitalization)', () => {
 			const input = {
 				type: 'PING',
 				target: 'abc.com',
@@ -394,7 +412,7 @@ describe('command schema', () => {
 			expect(valid.value.type).to.equal('ping');
 		});
 
-		it('should pass (deep equal)', async () => {
+		it('should pass (deep equal)', () => {
 			const input = {
 				type: 'ping',
 				target: 'abc.com',
@@ -415,7 +433,7 @@ describe('command schema', () => {
 			expect(valid.value).to.deep.equal(desiredOutput);
 		});
 
-		it('should populate with default values (no measurementOptions)', async () => {
+		it('should populate with default values (no measurementOptions)', () => {
 			const input = {
 				type: 'ping',
 				target: 'abc.com',
@@ -438,7 +456,7 @@ describe('command schema', () => {
 	});
 
 	describe('traceroute', () => {
-		it('should fail (missing values)', async () => {
+		it('should fail (missing values)', () => {
 			const input = {
 				type: 'traceroute',
 			};
@@ -448,7 +466,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should fail (ipv6)', async () => {
+		it('should fail (ipv6)', () => {
 			const input = {
 				type: 'traceroute',
 				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
@@ -459,7 +477,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should pass (target domain)', async () => {
+		it('should pass (target domain)', () => {
 			const input = {
 				type: 'traceroute',
 				target: 'abc.com',
@@ -470,7 +488,18 @@ describe('command schema', () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should pass (target ip)', async () => {
+		it('should pass (target domain) (_acme-challenge.abc.com)', () => {
+			const input = {
+				type: 'traceroute',
+				target: '_acme-challenge.abc.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should pass (target ip)', () => {
 			const input = {
 				type: 'traceroute',
 				target: '1.1.1.1',
@@ -481,7 +510,7 @@ describe('command schema', () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should fail (target: invalid ip format)', async () => {
+		it('should fail (target: invalid ip format)', () => {
 			const input = {
 				type: 'traceroute',
 				target: '300.300.300.300',
@@ -492,7 +521,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should pass and correct values (incorrect caps)', async () => {
+		it('should pass and correct values (incorrect caps)', () => {
 			const input = {
 				type: 'TRACEroute',
 				target: 'abc.com',
@@ -508,7 +537,7 @@ describe('command schema', () => {
 			expect(valid.value.measurementOptions.protocol).to.equal('UDP');
 		});
 
-		it('should pass (deep equal)', async () => {
+		it('should pass (deep equal)', () => {
 			const input = {
 				type: 'traceroute',
 				target: 'abc.com',
@@ -530,7 +559,7 @@ describe('command schema', () => {
 			expect(valid.value).to.deep.equal(desiredOutput);
 		});
 
-		it('should populate body with default values (no measurementOptions)', async () => {
+		it('should populate body with default values (no measurementOptions)', () => {
 			const input = {
 				type: 'traceroute',
 				target: 'abc.com',
@@ -554,7 +583,7 @@ describe('command schema', () => {
 	});
 
 	describe('dns', () => {
-		it('should fail (missing values)', async () => {
+		it('should fail (missing values)', () => {
 			const input = {
 				type: 'dns',
 			};
@@ -564,7 +593,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should fail (invalid target format)', async () => {
+		it('should fail (invalid target format)', () => {
 			const input = {
 				type: 'dns',
 				target: '1.1.1.1',
@@ -575,7 +604,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should fail (ipv6 resolver)', async () => {
+		it('should fail (ipv6 resolver)', () => {
 			const input = {
 				type: 'dns',
 				target: '1.1.1.1',
@@ -589,7 +618,19 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should pass (trace enabled)', async () => {
+		it('should pass (target domain) (_acme-challenge.abc.com)', () => {
+			const input = {
+				type: 'dns',
+				target: '_acme-challenge.abc.com',
+				measurementOptions: {},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should pass (trace enabled)', () => {
 			const input = {
 				type: 'dns',
 				target: 'abc.com',
@@ -611,7 +652,7 @@ describe('command schema', () => {
 			expect(valid.value.measurementOptions.query.type).to.equal('A');
 		});
 
-		it('should pass and correct values (incorrect caps)', async () => {
+		it('should pass and correct values (incorrect caps)', () => {
 			const input = {
 				type: 'DNS',
 				target: 'abc.com',
@@ -631,7 +672,7 @@ describe('command schema', () => {
 			expect(valid.value.measurementOptions.query.type).to.equal('A');
 		});
 
-		it('should pass (deep equal)', async () => {
+		it('should pass (deep equal)', () => {
 			const input = {
 				type: 'dns',
 				target: 'abc.com',
@@ -658,7 +699,7 @@ describe('command schema', () => {
 			expect(valid.value).to.deep.equal(desiredOutput);
 		});
 
-		it('should populate body with default values (no measurementOptions)', async () => {
+		it('should populate body with default values (no measurementOptions)', () => {
 			const input = {
 				type: 'dns',
 				target: 'abc.com',
@@ -686,7 +727,7 @@ describe('command schema', () => {
 	});
 
 	describe('dns ptr', () => {
-		it('should fail (uses domain for target)', async () => {
+		it('should fail (uses domain for target)', () => {
 			const input = {
 				type: 'dns',
 				target: 'abc.com',
@@ -702,7 +743,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should pass (uses ip for target)', async () => {
+		it('should pass (uses ip for target)', () => {
 			const input = {
 				type: 'dns',
 				target: '1.1.1.1',
@@ -720,7 +761,7 @@ describe('command schema', () => {
 			expect(valid.value.measurementOptions.query.type).to.equal('PTR');
 		});
 
-		it('should pass (uses ip for target incorrect caps for type)', async () => {
+		it('should pass (uses ip for target incorrect caps for type)', () => {
 			const input = {
 				type: 'dns',
 				target: '1.1.1.1',
@@ -740,7 +781,7 @@ describe('command schema', () => {
 	});
 
 	describe('mtr', () => {
-		it('should fail (missing values)', async () => {
+		it('should fail (missing values)', () => {
 			const input = {
 				type: 'mtr',
 			};
@@ -750,7 +791,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should fail (ipv6 target)', async () => {
+		it('should fail (ipv6 target)', () => {
 			const input = {
 				type: 'mtr',
 				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
@@ -761,7 +802,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should pass (target domain)', async () => {
+		it('should pass (target domain)', () => {
 			const input = {
 				type: 'mtr',
 				target: 'abc.com',
@@ -772,7 +813,18 @@ describe('command schema', () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should pass (target ip)', async () => {
+		it('should pass (target domain) (_acme-challenge.abc.com)', () => {
+			const input = {
+				type: 'mtr',
+				target: '_acme-challenge.abc.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should pass (target ip)', () => {
 			const input = {
 				type: 'mtr',
 				target: '1.1.1.1',
@@ -783,7 +835,7 @@ describe('command schema', () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should fail (target: invalid ip format)', async () => {
+		it('should fail (target: invalid ip format)', () => {
 			const input = {
 				type: 'mtr',
 				target: '300.300.300.300',
@@ -794,7 +846,7 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
-		it('should pass and correct values (incorrect caps)', async () => {
+		it('should pass and correct values (incorrect caps)', () => {
 			const input = {
 				type: 'MtR',
 				target: 'abc.com',
@@ -810,7 +862,7 @@ describe('command schema', () => {
 			expect(valid.value.measurementOptions.protocol).to.equal('UDP');
 		});
 
-		it('should pass (deep equal)', async () => {
+		it('should pass (deep equal)', () => {
 			const input = {
 				type: 'mtr',
 				target: 'abc.com',
@@ -833,7 +885,7 @@ describe('command schema', () => {
 			expect(valid.value).to.deep.equal(desiredOutput);
 		});
 
-		it('should populate body with default values (no measurementOptions)', async () => {
+		it('should populate body with default values (no measurementOptions)', () => {
 			const input = {
 				type: 'mtr',
 				target: 'abc.com',
@@ -948,6 +1000,18 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
+		it('should pass (target domain) (_sub.domain.com)', () => {
+			const input = {
+				type: 'http',
+				target: '_sub.domani.com',
+				measurementOptions: {},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
 		it('should pass (empty port)', () => {
 			const input = {
 				type: 'http',
@@ -1028,7 +1092,7 @@ describe('command schema', () => {
 			expect(valid.value).to.deep.equal(desiredOutput);
 		});
 
-		it('should populate body with default values (no measurementOptions)', async () => {
+		it('should populate body with default values (no measurementOptions)', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
