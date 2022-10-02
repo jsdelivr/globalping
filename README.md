@@ -66,10 +66,10 @@ POST https://api.globalping.io/v1/measurements/
 {
     "limit": 10,
     "locations": [],
-    "measurement": {
-        "packets": 5,
-        "target": "jsdelivr.com",
-        "type": "ping"
+    "target": "jsdelivr.com",
+    "type": "ping",
+    "measurementOptions": {
+        "packets": 5
     }
 }
 ```
@@ -77,22 +77,25 @@ POST https://api.globalping.io/v1/measurements/
 [Read the full API documentation](docs)
 
 
-### Slack App  | WIP
+### Slack App
 
-Install our Slack App to interact with the Globalping platform without ever leaving Slack. 
+Install our Slack App to interact with the Globalping platform without ever leaving Slack. Allow your NOC, OPS and Support teams to quickly debug networking issues and discuss the results.
 
-<a href="https://slack.com/oauth/v2/authorize?client_id=956881302438.3377623023376&scope=commands&user_scope="><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
+<a href="https://bots.globalping.io/slack/install"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
 
-It supports a human friendly interface for issuing commands. To begin simply type `/globalping`.
+It supports a human friendly interface for issuing commands. To begin simply type `/globalping help`.
 
 Examples:
 ```
-{command} {target} from {location} limit {number of probes}
-ping 8.8.8.8 from Germany
-traceroute jsdelivr.com from South America limit 2
+/globalping {command} {target} from {location} --limit {number of probes}
+/globalping ping 8.8.8.8 from Germany
+/globalping traceroute jsdelivr.com from South America --limit 2
+/globalping help
 ```
 
-At the moment only `ping` and `traceroute` commands are supported. The location field can process all kinds of different types of location matching, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`
+The location field can process all kinds of different types of location matching, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`. 
+You can also combine filters, e.g. `from hetzner+Finland` will ensure the results come from a probe that matches both parameters.
+Providing no location will default to "world" which will match a probe from a random location in the world.
 
 
 ### GitHub Bot

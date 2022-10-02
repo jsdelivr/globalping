@@ -10,6 +10,7 @@ type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 const io = getWsServer();
 
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
+	const {isAdmin} = ctx;
 	const socketList: Socket[] = await io.of(PROBES_NAMESPACE).fetchSockets();
 
 	ctx.body = socketList.map((socket: Socket) => ({
@@ -27,6 +28,8 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 			network: socket.data.probe.location.network,
 		},
 		resolvers: socket.data.probe.resolvers,
+		stats: isAdmin ? socket.data.probe.stats : undefined,
+		ipAddress: isAdmin ? socket.data.probe.ipAddress : undefined,
 	}));
 };
 

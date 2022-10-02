@@ -92,6 +92,21 @@ headers:
   Location: https://api.globalping.io/v1/measurements/PY5fMsREMmIq45VR
 ```
 
+## error response (no probes found)
+
+**condition**: if provided location doesn't have probes - e.g. `{ locations: [ 'magic': 'not a real place' ] }`
+
+**status code**: `400 Bad Request`
+
+```json
+{
+    "error": {
+      "message": "No suitable probes found",
+      "type": "api_error"
+    }
+}
+```
+
 ## error response (validation failed)
 
 **condition**: if provided data doesn't match the schema - e.g. mismatching `target` format.

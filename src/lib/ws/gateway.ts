@@ -8,11 +8,13 @@ import {
 	handleStatusNotReady,
 } from '../../probe/handler/status.js';
 import {handleDnsUpdate} from '../../probe/handler/dns.js';
+import {handleStatsReport} from '../../probe/handler/stats.js';
 import {scopedLogger} from '../logger.js';
 import {getWsServer, PROBES_NAMESPACE} from './server.js';
 import {probeMetadata} from './middleware/probe-metadata.js';
 import {verifyIpLimit} from './helper/probe-ip-limit.js';
 import {errorHandler} from './helper/error-handler.js';
+import {subscribeWithHandler} from './helper/subscribe-handler.js';
 
 const io = getWsServer();
 const logger = scopedLogger('gateway');
@@ -31,9 +33,10 @@ io
 		socket.on('probe:status:ready', handleStatusReady(probe));
 		socket.on('probe:status:not_ready', handleStatusNotReady(probe));
 		socket.on('probe:dns:update', handleDnsUpdate(probe));
-		socket.on('probe:measurement:ack', handleMeasurementAck(probe));
-		socket.on('probe:measurement:progress', handleMeasurementProgress);
-		socket.on('probe:measurement:result', handleMeasurementResult);
+		socket.on('probe:stats:report', handleStatsReport(probe));
+		subscribeWithHandler(socket, 'probe:measurement:ack', handleMeasurementAck(probe));
+		subscribeWithHandler(socket, 'probe:measurement:progress', handleMeasurementProgress);
+		subscribeWithHandler(socket, 'probe:measurement:result', handleMeasurementResult);
 
 		socket.on('disconnect', reason => {
 			logger.debug(`Probe disconnected. (reason: ${reason}) [${socket.id}][${probe.ipAddress}]`);

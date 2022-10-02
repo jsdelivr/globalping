@@ -14,6 +14,7 @@ import {errorHandler} from './error-handler.js';
 import {rateLimitHandler} from './middleware/ratelimit.js';
 import {errorHandlerMw} from './middleware/error-handler.js';
 import {corsHandler} from './middleware/cors.js';
+import {isAdminMw} from './middleware/is-admin.js';
 
 const app = new Koa();
 
@@ -51,6 +52,7 @@ app
 	.use(demoRouter.routes())
 	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 	.use(errorHandlerMw)
+	.use(isAdminMw)
 	.use(rateLimitHandler())
 	.use(responseTime())
 	.use(corsHandler())
