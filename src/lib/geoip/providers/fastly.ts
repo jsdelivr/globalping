@@ -2,6 +2,7 @@ import got from 'got';
 import type {LocationInfo} from '../client.js';
 import {
 	normalizeCityName,
+	normalizeCityNamePublic,
 	normalizeNetworkName,
 } from '../utils.js';
 
@@ -46,7 +47,7 @@ export const fastlyLookup = async (addr: string): Promise<FastlyBundledResponse>
 		continent: data.continent_code,
 		country: data.country_code,
 		state: data.country_code === 'US' ? data.region : undefined,
-		city,
+		city: normalizeCityNamePublic(city),
 		normalizedCity: normalizeCityName(city),
 		asn: result.as.number,
 		latitude: data.latitude,

@@ -280,7 +280,7 @@ describe('geoip service', () => {
 		expect(info).to.deep.equal({
 			asn: 61_493,
 			normalizedCity: 'new york',
-			city: 'The New York City',
+			city: 'New York',
 			normalizedRegion: 'northern america',
 			region: 'Northern America',
 			continent: 'NA',
