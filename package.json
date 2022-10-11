@@ -102,7 +102,8 @@
       "import/no-unassigned-import": "off",
       "unicorn/no-thenable": "off",
       "@typescript-eslint/class-literal-property-style": "off",
-      "@typescript-eslint/no-unused-expressions": "off"
+      "@typescript-eslint/no-unused-expressions": "off",
+      "@typescript-eslint/promise-function-async": "off"
     }
   },
   "engines": {
