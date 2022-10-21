@@ -5,7 +5,7 @@ ENV NODE_ENV production
 
 COPY . /app
 WORKDIR /app
-RUN npm ci --only=production
+RUN npm ci
 RUN npm run build
 
 EXPOSE 8080
