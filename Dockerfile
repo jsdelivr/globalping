@@ -1,5 +1,5 @@
 FROM node:16-bullseye-slim
-RUN apt-get update -y && apt-get install tini util-linux -y
+RUN apt-get update -y && apt-get install tini util-linux curl -y
 
 ENV NODE_ENV production
 
