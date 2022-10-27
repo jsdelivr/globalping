@@ -1,5 +1,5 @@
 exports.config = {
-  app_name: ['gp3'],
+  app_name: [''],
   license_key: '',
   logging: {
     level: 'warn',
