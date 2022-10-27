@@ -1,12 +1,12 @@
 import type {Server as SocketServer} from 'socket.io';
-import type {Metrics} from '@appsignal/nodejs';
+// import type {Metrics} from '@appsignal/nodejs';
 
 import {getRedisClient, RedisClient} from './redis/client.js';
 import {getWsServer, PROBES_NAMESPACE} from './ws/server.js';
-import Appsignal from './appsignal.js';
+// import Appsignal from './appsignal.js';
 
 export class MetricsAgent {
-	private readonly metrics: Metrics;
+	// private readonly metrics: Metrics;
 
 	private interval: NodeJS.Timer | undefined;
 
@@ -14,7 +14,7 @@ export class MetricsAgent {
 		private readonly io: SocketServer,
 		private readonly redis: RedisClient,
 	) {
-		this.metrics = Appsignal.metrics();
+		// this.metrics = Appsignal.metrics();
 	}
 
 	run(): void {
@@ -28,11 +28,11 @@ export class MetricsAgent {
 	}
 
 	recordMeasurementTime(type: string, time: number): void {
-		this.metrics.addDistributionValue('measurement.time', time, {type});
+		// this.metrics.addDistributionValue('measurement.time', time, {type});
 	}
 
 	recordMeasurement(type: string): void {
-		this.metrics.incrementCounter('measurement.count', 1, {type});
+		// this.metrics.incrementCounter('measurement.count', 1, {type});
 		this.recordMeasurementTotal();
 	}
 
@@ -43,7 +43,7 @@ export class MetricsAgent {
 
 	private async updateProbeCount(): Promise<void> {
 		const socketList = await this.io.of(PROBES_NAMESPACE).fetchSockets();
-		this.metrics.setGauge('probe.count', socketList.length, {group: 'total'});
+		// this.metrics.setGauge('probe.count', socketList.length, {group: 'total'});
 	}
 
 	private async updateMeasurementCount(): Promise<void> {
@@ -54,11 +54,11 @@ export class MetricsAgent {
 			count++;
 		}
 
-		this.metrics.setGauge('measurement.record.count', count, {type: 'total'});
+		// this.metrics.setGauge('measurement.record.count', count, {type: 'total'});
 	}
 
 	private recordMeasurementTotal(): void {
-		this.metrics.incrementCounter('measurement.count', 1, {type: 'total'});
+		// this.metrics.incrementCounter('measurement.count', 1, {type: 'total'});
 	}
 }
 
