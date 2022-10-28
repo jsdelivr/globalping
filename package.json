@@ -82,9 +82,9 @@
   },
   "scripts": {
     "build": "tsc && npm run blacklist",
-    "start": "NODE_ENV=production node -r newrelic --experimental-loader newrelic/esm-loader.mjs dist/index.js",
-    "dev": "NODE_ENV=development FAKE_IP=1 node -r newrelic --experimental-loader newrelic/esm-loader.mjs dist/index.js",
-    "dev:tsx": "NODE_ENV=development FAKE_IP=1 tsx -r newrelic --experimental-loader newrelic/esm-loader.mjs src/index.ts",
+    "start": "NODE_ENV=production node --experimental-loader newrelic/esm-loader.mjs dist/index.js",
+    "dev": "NODE_ENV=development FAKE_IP=1 node --experimental-loader newrelic/esm-loader.mjs dist/index.js",
+    "dev:tsx": "NODE_ENV=development FAKE_IP=1 tsx --experimental-loader newrelic/esm-loader.mjs src/index.ts",
     "lint": "xo",
     "lint:fix": "xo --fix",
     "lint:types": "tsc --noEmit",

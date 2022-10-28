@@ -1,22 +1,16 @@
-// import type {Server as SocketServer} from 'socket.io';
-// import type {Metrics} from '@appsignal/nodejs';
+import type {Server as SocketServer} from 'socket.io';
 import newrelic from 'newrelic';
 
-// import {getRedisClient, RedisClient} from './redis/client.js';
-// import {getWsServer} from './ws/server.js';
-// import Appsignal from './appsignal.js';
+import {getRedisClient, RedisClient} from './redis/client.js';
+import {getWsServer, PROBES_NAMESPACE} from './ws/server.js';
 
 export class MetricsAgent {
-	// private readonly metrics: Metrics;
-
 	private interval: NodeJS.Timer | undefined;
 
 	constructor(
-		// private readonly io: SocketServer,
-		// private readonly redis: RedisClient,
-	) {
-		// this.metrics = Appsignal.metrics();
-	}
+		private readonly io: SocketServer,
+		private readonly redis: RedisClient,
+	) {}
 
 	run(): void {
 		this.interval = setInterval(this.intervalHandler.bind(this), 60 * 1000);
@@ -33,8 +27,8 @@ export class MetricsAgent {
 	}
 
 	recordMeasurement(type: string): void {
-		newrelic.incrementMetric(`measurement_count_${type}`);
-		newrelic.incrementMetric('measurement_count_total');
+		newrelic.incrementMetric(`measurement_count_${type}`, 1);
+		newrelic.incrementMetric('measurement_count_total', 1);
 	}
 
 	private async intervalHandler(): Promise<void> {
@@ -43,19 +37,17 @@ export class MetricsAgent {
 	}
 
 	private async updateProbeCount(): Promise<void> {
-		// const socketList = await this.io.of(PROBES_NAMESPACE).fetchSockets();
-		// this.metrics.setGauge('probe.count', socketList.length, {group: 'total'});
+		const socketList = await this.io.of(PROBES_NAMESPACE).fetchSockets();
+		newrelic.recordMetric('probe_count', socketList.length);
 	}
 
 	private async updateMeasurementCount(): Promise<void> {
-		// let count = 0;
-
+		let count = 0;
 		// eslint-disable-next-line @typescript-eslint/naming-convention, no-empty-pattern
-		// for await ({} of this.redis.scanIterator({MATCH: 'gp:measurement:*'})) {
-		// 	count++;
-		// }
-
-		// this.metrics.setGauge('measurement.record.count', count, {type: 'total'});
+		for await ({} of this.redis.scanIterator({MATCH: 'gp:measurement:*'})) {
+			count++;
+		}
+		newrelic.recordMetric('measurement_record_count', count);
 	}
 }
 
@@ -63,7 +55,7 @@ let agent: MetricsAgent;
 
 export const getMetricsAgent = () => {
 	if (!agent) {
-		agent = new MetricsAgent();
+		agent = new MetricsAgent(getWsServer(), getRedisClient());
 	}
 
 	return agent;
