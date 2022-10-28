@@ -1,6 +1,9 @@
 import type {Context, Next} from 'koa';
 import createHttpError from 'http-errors';
-import appsignal from '../../appsignal.js';
+// import appsignal from '../../appsignal.js';
+import { scopedLogger } from '../../logger.js';
+
+const logger = scopedLogger('error-handler');
 
 export const errorHandlerMw = async (ctx: Context, next: Next) => {
 	try {
@@ -19,7 +22,8 @@ export const errorHandlerMw = async (ctx: Context, next: Next) => {
 		}
 
 		if (error instanceof Error) {
-			appsignal.tracer().setError(error);
+			// appsignal.tracer().setError(error);
+			logger.error(error);
 		}
 
 		ctx.status = 500;
