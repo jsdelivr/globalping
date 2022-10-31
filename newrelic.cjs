@@ -2,17 +2,17 @@ exports.config = {
   app_name: [''],
   license_key: '',
   logging: {
-    level: 'warn',
-    filepath: 'stdout'
+    level: 'info',
+    filepath: 'stdout',
   },
   application_logging: {
-    enabled: false,
+    enabled: true,
     forwarding: {
-      enabled: false
-    }
+      enabled: true,
+    },
   },
   distributed_tracing: {
-    enabled: true
+    enabled: true,
   },
   allow_all_headers: true,
   attributes: {
@@ -26,7 +26,7 @@ exports.config = {
       'response.headers.authorization',
       'response.headers.proxyAuthorization',
       'response.headers.setCookie*',
-      'response.headers.x*'
-    ]
-  }
-}
+      'response.headers.x*',
+    ],
+  },
+};

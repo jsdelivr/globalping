@@ -1,7 +1,7 @@
 import type {Context, Next} from 'koa';
 import createHttpError from 'http-errors';
 import newrelic from 'newrelic';
-import { scopedLogger } from '../../logger.js';
+import {scopedLogger} from '../../logger.js';
 
 const logger = scopedLogger('error-handler-mw');
 
@@ -22,8 +22,9 @@ export const errorHandlerMw = async (ctx: Context, next: Next) => {
 		}
 
 		if (error instanceof Error) {
-				newrelic.noticeError(error);
+			newrelic.noticeError(error);
 		}
+
 		logger.error(error);
 
 		ctx.status = 500;

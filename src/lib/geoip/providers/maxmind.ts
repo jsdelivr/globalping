@@ -23,7 +23,7 @@ const query = async (addr: string, retryCounter = 0): Promise<City> => {
 			}
 
 			if (error.code === 'ACCOUNT_ID_REQUIRED') {
-				newrelic.noticeError(new Error(error.error), { client: 'maxmind' });
+				newrelic.noticeError(new Error(error.error), {client: 'maxmind'});
 			}
 		}
 

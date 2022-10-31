@@ -47,6 +47,7 @@ export class MetricsAgent {
 		for await ({} of this.redis.scanIterator({MATCH: 'gp:measurement:*'})) {
 			count++;
 		}
+
 		newrelic.recordMetric('measurement_record_count', count);
 	}
 }
