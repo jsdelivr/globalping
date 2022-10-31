@@ -1,5 +1,5 @@
 import {createServer} from 'node:http';
-import Koa from 'koa';
+import { Koa } from '../../cjs-dependencies.cjs';
 import json from 'koa-json';
 import Router from '@koa/router';
 import conditionalGet from 'koa-conditional-get';

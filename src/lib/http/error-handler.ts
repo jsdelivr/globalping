@@ -1,5 +1,3 @@
-// import appsignal from '../appsignal.js';
+import newrelic from 'newrelic';
 
-// export const errorHandler = (error: Error) => appsignal.tracer().setError(error);
-
-export const errorHandler = () => {};
+export const errorHandler = (error: any) => newrelic.noticeError(error, { stack: error.stack }); 
