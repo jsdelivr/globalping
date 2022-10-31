@@ -20,9 +20,6 @@ services:
       - 1.1.1.1
     env_file:
       - globalping.env
- #logging enables log stream to systemd for newrelic agent to read. To enable create /etc/newrelic-infra/logging.d/systemd.yml with content https://gist.github.com/jimaek/14dfee57b982bd2344ad586a87c6526f
-    logging:
-      driver: journald
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/v1/probes"]
       interval: 6s
