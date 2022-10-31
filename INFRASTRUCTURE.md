@@ -26,12 +26,9 @@ Redis is used to cache GeoIP information from our 3 IP databases, to store all m
 - $11/month
 
 
-### API - APM Service AppSignal
+### API - APM Service New Relic
 
-We have basic integration with AppSignal that unfortunately doesn't meet our needs and we plan to replace it.
-
-- Free
-
+TBD
 
 ### Probes - Seeded datacenter network
 
