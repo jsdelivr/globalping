@@ -28,14 +28,17 @@ Redis is used to cache GeoIP information from our 3 IP databases, to store all m
 
 ### API - APM Service New Relic
 
-TBD
+- We use New Relic in our API to monitor it's performance and stablity as well as to collect production logs
+- Addionally we use it to monitor the servers running the API and our self-hosted Redis database
+- EU account
+- Free plan
 
 ### Probes - Seeded datacenter network
 
 We seeded the network with ~110 probes that we purchased from providers like Google Cloud, AWS, DigitalOcean, Vultr, OVH and Tencent.
 Help us by [running our probe on your servers](https://github.com/jsdelivr/globalping-probe#readme) with spare capacity or by [becoming a GitHub Sponsor](https://github.com/sponsors/jsdelivr).
 
-- ~$700/month
+- ~$750/month
 
 ### DNS for *.globalping.io
 
