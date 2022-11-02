@@ -6,7 +6,7 @@ services:
     stop_signal: SIGTERM
     deploy:
       mode: global
-      endpoint_mode: vip
+      endpoint_mode: dnsrr
       update_config:
         parallelism: 1
         delay: 5s
@@ -21,13 +21,12 @@ services:
     env_file:
       - globalping.env
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/v1/probes"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1/v1/probes"]
       interval: 6s
       timeout: 6s
       retries: 2
       start_period: 3s
-    ports:
-      - target: 8080
-        published: 80
-        protocol: tcp
-        mode: ingress
+networks:
+  hostnet:
+    external: true
+    name: host
