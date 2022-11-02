@@ -202,3 +202,5 @@ Once the API is live, you can spin up a probe instance by running the following 
 
 `FAKE_PROBE_IP=1` environment variable can be used to make debug easier. When defined, every Probe 
 that connects to the API will get an IP address from the list of predefined "real" addresses.
+`NEW_RELIC_LICENSE_KEY={value}` environment variable should be used in production to send APM metrics to new relic
+`NEW_RELIC_APP_NAME={value}` environment variable should be used in production to send APM mentrics to new relic

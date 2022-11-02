@@ -1,5 +1,12 @@
 import newrelic from 'newrelic';
+import {scopedLogger} from '../logger.js';
 
-export const errorHandler = (error: any) => {
-	newrelic.noticeError(error);
+const logger = scopedLogger('error-handler-http');
+
+export const errorHandler = (error: unknown) => {
+	if (error instanceof Error) {
+		newrelic.noticeError(error);
+	} else {
+		logger.error(error);
+	}
 };

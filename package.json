@@ -96,8 +96,7 @@
   },
   "xo": {
     "ignores": [
-      "public",
-      "newrelic.cjs"
+      "public"
     ],
     "rules": {
       "import/no-unassigned-import": "off",

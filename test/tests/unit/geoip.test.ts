@@ -2,7 +2,6 @@ import * as fs from 'node:fs';
 import nock from 'nock';
 import mockFs from 'mock-fs';
 import {expect} from 'chai';
-import {createStubInstance} from 'sinon';
 import type {LocationInfo} from '../../../src/lib/geoip/client.js';
 import {fastlyLookup} from '../../../src/lib/geoip/providers/fastly.js';
 import GeoipClient from '../../../src/lib/geoip/client.js';
