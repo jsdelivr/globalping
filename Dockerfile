@@ -8,6 +8,7 @@ WORKDIR /app
 RUN npm ci --include=dev
 RUN npm run build
 
-EXPOSE 8080
+ENV PORT=80
+EXPOSE 80
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD [ "npm", "start" ]
