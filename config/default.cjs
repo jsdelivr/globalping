@@ -15,10 +15,6 @@ module.exports = {
 			ttl: 3 * 24 * 60 * 60 * 1000, // 24hrs
 		},
 	},
-	appsignal: {
-		active: false,
-		pushApiKey: '',
-	},
 	maxmind: {
 		accountId: '',
 		licenseKey: '',

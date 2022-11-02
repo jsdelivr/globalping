@@ -10,4 +10,4 @@ RUN npm run build
 
 EXPOSE 8080
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD [ "node", "dist/index.js" ]
+CMD [ "npm", "start" ]

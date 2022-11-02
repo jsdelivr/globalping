@@ -1,3 +1,12 @@
-import appsignal from '../appsignal.js';
+import newrelic from 'newrelic';
+import {scopedLogger} from '../logger.js';
 
-export const errorHandler = (error: Error) => appsignal.tracer().setError(error);
+const logger = scopedLogger('error-handler-http');
+
+export const errorHandler = (error: unknown) => {
+	if (error instanceof Error) {
+		newrelic.noticeError(error);
+	} else {
+		logger.error(error);
+	}
+};
