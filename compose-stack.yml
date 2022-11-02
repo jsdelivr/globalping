@@ -4,6 +4,8 @@ services:
     image: jimaek/globalping-api:latest
     stop_grace_period: 30s
     stop_signal: SIGTERM
+    networks:
+      - hostnet
     deploy:
       mode: global
       endpoint_mode: dnsrr
