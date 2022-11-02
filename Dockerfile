@@ -11,4 +11,4 @@ RUN npm run build
 ENV PORT=80
 EXPOSE 80
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD [ "node", "dist/index.js" ]
+CMD [ "npm", "start" ]

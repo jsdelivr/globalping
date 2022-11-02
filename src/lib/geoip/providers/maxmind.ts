@@ -1,7 +1,7 @@
 import config from 'config';
+import newrelic from 'newrelic';
 import {City, WebServiceClient} from '@maxmind/geoip2-node';
 import type {WebServiceClientError} from '@maxmind/geoip2-node/dist/src/types';
-import appsignal from '../../appsignal.js';
 import type {LocationInfo} from '../client.js';
 import {
 	normalizeCityName,
@@ -23,10 +23,7 @@ const query = async (addr: string, retryCounter = 0): Promise<City> => {
 			}
 
 			if (error.code === 'ACCOUNT_ID_REQUIRED') {
-				appsignal.tracer().sendError(new Error(error.error), span => {
-					span.setName('geoip.lookup');
-					span.set('client', 'maxmind');
-				});
+				newrelic.noticeError(new Error(error.error), {client: 'maxmind'});
 			}
 		}
 
