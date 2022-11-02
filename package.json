@@ -88,10 +88,10 @@
     "lint:fix": "xo --fix",
     "lint:types": "tsc --noEmit",
     "blacklist": "node dist/lib/malware/download.js",
-    "test": "npm run lint:types && npm run test:src",
-    "test:src": "NODE_ENV=test mocha",
+    "test": "NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false npm run lint:types && npm run test:src",
+    "test:src": "NODE_ENV=test NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false mocha",
     "clean": "rimraf coverage",
-    "test:coverage": "npm run clean && c8 mocha",
+    "test:coverage": "NEW_RELIC_ENABLED=false npm run clean && c8 mocha",
     "init:hooks": "husky install"
   },
   "xo": {
