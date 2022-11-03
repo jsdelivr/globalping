@@ -6,7 +6,7 @@ const logger = scopedLogger('error-handler-http');
 export const errorHandler = (error: unknown) => {
 	if (error instanceof Error) {
 		newrelic.noticeError(error);
-	} else {
-		logger.error(error);
 	}
+
+	logger.error(error);
 };
