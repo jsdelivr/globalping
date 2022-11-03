@@ -1,5 +1,4 @@
 import type {Socket} from 'socket.io';
-import requestIp from 'request-ip';
 import {scopedLogger} from '../../logger.js';
 
 const logger = scopedLogger('ws:handler:error');
@@ -12,7 +11,7 @@ export const subscribeWithHandler = (socket: Socket, event: string, method: Hand
 		try {
 			await method(...args as never[]);
 		} catch (error: unknown) {
-			const clientIp = requestIp.getClientIp(socket.request) ?? '';
+			const clientIp = socket.data['probe'].ipAddress as string;
 			const reason = isError(error) ? error.message : 'unknown';
 
 			logger.info(`event "${event}" failed to handle. ${socket.id} for (${reason}) [${clientIp}]`);

@@ -2,7 +2,6 @@ import * as process from 'node:process';
 import _ from 'lodash';
 import type {Socket} from 'socket.io';
 import isIpPrivate from 'private-ip';
-import requestIp from 'request-ip';
 import semver from 'semver';
 import {
 	getStateNameByIso,
@@ -13,6 +12,7 @@ import {
 } from '../lib/location/location.js';
 import {InternalError} from '../lib/internal-error.js';
 import {createGeoipClient} from '../lib/geoip/client.js';
+import getProbeIp from '../lib/get-probe-ip.js';
 import type {Probe, ProbeLocation} from './types.js';
 
 const fakeIpForDebug = () => _.sample([
@@ -33,7 +33,7 @@ const findProbeVersion = (socket: Socket) => String(socket.handshake.query['vers
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	const version = findProbeVersion(socket);
 
-	const clientIp = requestIp.getClientIp(socket.request);
+	const clientIp = getProbeIp(socket.request);
 
 	if (!clientIp) {
 		throw new Error('failed to detect ip address of connected probe');
