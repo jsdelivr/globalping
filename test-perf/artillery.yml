@@ -1,0 +1,22 @@
+config:
+  target: "http://78.46.40.15/v1"
+  http:
+    timeout: 240
+
+  phases:
+    - name: "POST measurement"
+      duration: "{{ $processEnvironment.DURATION }}"
+      arrivalRate: "{{ $processEnvironment.RPS }}"
+
+scenarios:
+  - name: "Ping 100 probes"
+    flow:
+      - post:
+          url: "/measurements"
+          json:
+            target: "google.com"
+            type: "ping"
+            measurementOptions:
+              packets: 16
+            limit: "{{ $processEnvironment.LIMIT }}"
+            locations: []
