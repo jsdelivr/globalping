@@ -3,8 +3,7 @@ module.exports = {
 	redis: {
 		url: 'redis://localhost:6379',
 		socket: {
-			tls: true,
-			rejectUnauthorized: false,
+			tls: false,
 		},
 	},
 	admin: {
