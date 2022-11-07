@@ -51,9 +51,6 @@ interface Measurement {
 	timings: {
 		min: number;
 		median: number;
-		p75: number;
-		p90: number;
-		p99: number;
 		max: number;
 	};
 }
@@ -90,9 +87,6 @@ const readResults = async (fileName: string): Promise<Measurement> => {
 	const timings = {
 		min: json.aggregate.summaries['http.response_time'].min,
 		median: json.aggregate.summaries['http.response_time'].median,
-		p75: json.aggregate.summaries['http.response_time'].p75,
-		p90: json.aggregate.summaries['http.response_time'].p90,
-		p99: json.aggregate.summaries['http.response_time'].p99,
 		max: json.aggregate.summaries['http.response_time'].max,
 	};
 	return {
@@ -113,7 +107,7 @@ const getResultsFromJsons = async () => {
 };
 
 const generateCsv = (results: Record<string, Measurement>, startDate: string) => {
-	let resultString = 'Measurement,N of Requests,N of 202,N of 400,N of Errors,min T,median T,p75 T,p90 T,p99 T,max T\n';
+	let resultString = 'Measurement,N of Requests,N of 202,N of 400,N of Errors,min T,median T,max T\n';
 	// eslint-disable-next-line guard-for-in
 	for (const name in results) {
 		const result = results[name];
