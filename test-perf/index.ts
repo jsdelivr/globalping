@@ -7,7 +7,7 @@ import path from 'node:path';
 // Config
 
 const config = {
-	delay: 300,
+	delay: 300, // Time to wait between measurements
 	measurements: [
 		{probes: 100, rps: 1, duration: 240},
 		{probes: 100, rps: 2, duration: 240},
@@ -68,10 +68,8 @@ const wait = secs => new Promise(resolve => {
 const clearDirs = () => {
 	const dirs = ['test-perf/jsons', 'test-perf/htmls'];
 	for (const dir of dirs) {
-		const fileNames = fs.readdirSync(dir);
-		for (const fileName of fileNames) {
-			fs.unlinkSync(path.join(dir, fileName));
-		}
+		fs.rmSync(dir, {recursive: true, force: true});
+		fs.mkdirSync(dir);
 	}
 };
 
@@ -109,14 +107,14 @@ const getResultsFromJsons = async () => {
 	const results: Record<string, Measurement> = {};
 	for (const fileName of fileNames) {
 		const result = await readResults(fileName);
-		results[fileName] = result;
+		results[fileName.slice(0, -5)] = result;
 	}
 
 	return results;
 };
 
 const generateCsv = (results: Record<string, Measurement>, startDate: string) => {
-	let resultString = 'RPS,N of Requests,N of 202,N of 400,N of Errors,min T,median T,p75 T,p90 T,p99 T,max T\n';
+	let resultString = 'Measurement,N of Requests,N of 202,N of 400,N of Errors,min T,median T,p75 T,p90 T,p99 T,max T\n';
 	// eslint-disable-next-line guard-for-in
 	for (const name in results) {
 		const result = results[name];
@@ -136,9 +134,9 @@ const run = async () => {
 
 	for (const {probes, rps, duration} of config.measurements) {
 		measure(probes, rps, duration);
-		await wait(config.delay);
 		const results = await getResultsFromJsons();
 		generateCsv(results, startDate);
+		await wait(config.delay);
 	}
 
 	console.log('MEASUREMENTS END', new Date().toISOString());
