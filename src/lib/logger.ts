@@ -11,7 +11,7 @@ const logger = winston.createLogger({
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const {timestamp, level, scope, message, ...meta} = info;
 			const data = Object.keys(meta).map(k => `\n  ${k} -> ${metaEntryToString(meta[k])}`).join('');
-			return `[${timestamp as string}] [${level.toUpperCase()}] [${process.pid}] [${scope as string}] ${info.message as string}${data}`;
+			return `[${timestamp as string}] [${level.toUpperCase()}] [${process.pid}] [${scope as string}] ${message as string}${data}`;
 		}),
 	),
 	transports: [

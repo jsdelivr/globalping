@@ -2,7 +2,6 @@
 
 import {execSync} from 'node:child_process';
 import fs from 'node:fs';
-import path from 'node:path';
 
 // Config
 
@@ -136,6 +135,7 @@ const run = async () => {
 		measure(probes, rps, duration);
 		const results = await getResultsFromJsons();
 		generateCsv(results, startDate);
+		console.log(`PAUSING FOR ${config.delay} SECS`);
 		await wait(config.delay);
 	}
 
