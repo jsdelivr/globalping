@@ -8,9 +8,10 @@ const logger = winston.createLogger({
 	format: winston.format.combine(
 		winston.format.timestamp({format: 'YYYY-MM-DD HH:mm:ss'}),
 		winston.format.printf(info => {
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 			const {timestamp, level, scope, message, ...meta} = info;
 			const data = Object.keys(meta).map(k => `\n  ${k} -> ${metaEntryToString(meta[k])}`).join('');
-			return `[${timestamp as string}] [${level.toUpperCase()}] [${process.pid}] [${scope as string}] ${message}${data}`;
+			return `[${timestamp as string}] [${level.toUpperCase()}] [${process.pid}] [${scope as string}] ${message as string}${data}`;
 		}),
 	),
 	transports: [

@@ -62,6 +62,7 @@
     "@types/supertest": "^2.0.11",
     "@types/throng": "^5.0.3",
     "@types/validator": "^13.7.2",
+    "artillery": "^2.0.0-26",
     "c8": "^7.11.0",
     "chai": "^4.3.6",
     "husky": "^8.0.1",
@@ -90,6 +91,7 @@
     "blacklist": "node dist/lib/malware/download.js",
     "test": "NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false npm run lint:types && npm run test:src",
     "test:src": "NODE_ENV=test NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false mocha",
+    "test:perf": "tsx test-perf/index.ts",
     "clean": "rimraf coverage",
     "test:coverage": "NEW_RELIC_ENABLED=false npm run clean && c8 mocha",
     "init:hooks": "husky install"
