@@ -7,23 +7,23 @@ The purpose is to document everything for ourselves as well as allow everyone el
 
 The main production API that all probes and users connect to.
 
-- Hosted on Heroku in Europe 
-- Manually triggered deployments from GitHub `master` branch
-- Integrated into GitHub
-- Single Dyno "Standard 2X" - 1GB RAM and 4 CPU Cores
-- $50/month
+- Hosted on Hetzner in Falkenstein
+- 2xVMs with 4 threads and 8GB RAM per VM
+- 1 Load-balancer with health-checks and TLS termination
+- Master branch is compiled into a Docker container automatically
+- Manually triggered deployments using Docker Swarm (Network host mode)
+- $33/month
 
 
-### API - Redis 6.x
+### API - Redis 7.x
 
 Redis is used to cache GeoIP information from our 3 IP databases, to store all measurement results and to sync connected probes between multiple API instances. 
 
-- Hosted with RedisLabs in Europe 
-- 100MB RAM instance with multi-zone high-availability and data persistence
-- Eviction policy `volatile-ttl`
-- Max 256 connections
+- Hosted with Hetzner in Falkenstein
+- Dedicated server with 8 threads and 64GB RAM 
+- Redis config can be found in this repo under /redis
 - RedisJSON 2.x module enabled
-- $11/month
+- $46/month
 
 
 ### API - APM Service New Relic
@@ -42,5 +42,5 @@ Help us by [running our probe on your servers](https://github.com/jsdelivr/globa
 
 ### DNS for *.globalping.io
 
-- Hosted with Cloudflare without any CDN functionality
+- Hosted with Hetzner DNS
 - Free plan
