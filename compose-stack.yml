@@ -24,8 +24,8 @@ services:
       - globalping.env
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1/v1/probes"]
-      interval: 6s
-      timeout: 6s
+      interval: 10s
+      timeout: 8s
       retries: 2
       start_period: 3s
 networks:
