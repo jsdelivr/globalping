@@ -9,8 +9,8 @@ The main production API that all probes and users connect to.
 
 - Hosted on Hetzner in Falkenstein
 - 2xVMs with 4 threads and 8GB RAM per VM
-- 1 Load-balancer with health-checks and TLS termination
-- Master branch is compiled into a Docker container automatically
+- 1 Load-balancer with health-checks and TLS termination and automated LetsEncrypt certs
+- Master branch is compiled into a Docker container automatically by Docker Hub.
 - Manually triggered deployments using Docker Swarm (Network host mode)
 - $33/month
 
@@ -21,6 +21,7 @@ Redis is used to cache GeoIP information from our 3 IP databases, to store all m
 
 - Hosted with Hetzner in Falkenstein
 - Dedicated server with 8 threads and 64GB RAM 
+- `maxmemory-policy allkeys-lru` Evict any key using approximated LRU.
 - Redis config can be found in this repo under /redis
 - RedisJSON 2.x module enabled
 - $46/month
@@ -30,17 +31,17 @@ Redis is used to cache GeoIP information from our 3 IP databases, to store all m
 
 - We use New Relic in our API to monitor it's performance and stablity as well as to collect production logs
 - Addionally we use it to monitor the servers running the API and our self-hosted Redis database
-- EU account
+- EU region account
 - Free plan
-
-### Probes - Seeded datacenter network
-
-We seeded the network with ~110 probes that we purchased from providers like Google Cloud, AWS, DigitalOcean, Vultr, OVH and Tencent.
-Help us by [running our probe on your servers](https://github.com/jsdelivr/globalping-probe#readme) with spare capacity or by [becoming a GitHub Sponsor](https://github.com/sponsors/jsdelivr).
-
-- ~$750/month
 
 ### DNS for *.globalping.io
 
 - Hosted with Hetzner DNS
 - Free plan
+
+### Probes - Seeded datacenter network
+
+We seeded the network with ~130 probes that we purchased from providers like Google Cloud, AWS, DigitalOcean, Vultr, OVH, Fly.io and Tencent.
+Help us by [running our probe on your servers](https://github.com/jsdelivr/globalping-probe#readme) with spare capacity or by [becoming a GitHub Sponsor](https://github.com/sponsors/jsdelivr).
+
+- ~$790/month
