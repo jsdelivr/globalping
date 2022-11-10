@@ -20,9 +20,8 @@ The main production API that all probes and users connect to.
 Redis is used to cache GeoIP information from our 3 IP databases, to store all measurement results and to sync connected probes between multiple API instances. 
 
 - Hosted with Hetzner in Falkenstein
-- Dedicated server with 8 threads and 64GB RAM 
+- Dedicated server with 12 threads and 64GB RAM 
 - `maxmemory-policy allkeys-lru` Evict any key using approximated LRU.
-- Redis config can be found in this repo under /redis
 - RedisJSON 2.x module enabled
 - $46/month
 
