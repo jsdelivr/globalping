@@ -5,7 +5,7 @@ import conditionalGet from 'koa-conditional-get';
 import compress from 'koa-compress';
 import etag from 'koa-etag';
 import responseTime from 'koa-response-time';
-import {Koa} from '../../cjs-dependencies.cjs';
+import cjsDependencies from '../../cjs-dependencies.cjs';
 import {registerGetProbesRoute} from '../../probe/route/get-probes.js';
 import {registerGetMeasurementRoute} from '../../measurement/route/get-measurement.js';
 import {registerCreateMeasurementRoute} from '../../measurement/route/create-measurement.js';
@@ -16,7 +16,7 @@ import {errorHandlerMw} from './middleware/error-handler.js';
 import {corsHandler} from './middleware/cors.js';
 import {isAdminMw} from './middleware/is-admin.js';
 
-const app = new Koa();
+const app = new cjsDependencies.Koa();
 
 const rootRouter = new Router({strict: true, sensitive: true});
 rootRouter.prefix('/');
