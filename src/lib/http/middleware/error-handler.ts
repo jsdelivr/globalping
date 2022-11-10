@@ -1,6 +1,9 @@
 import type {Context, Next} from 'koa';
 import createHttpError from 'http-errors';
-import appsignal from '../../appsignal.js';
+import newrelic from 'newrelic';
+import {scopedLogger} from '../../logger.js';
+
+const logger = scopedLogger('error-handler-mw');
 
 export const errorHandlerMw = async (ctx: Context, next: Next) => {
 	try {
@@ -19,8 +22,10 @@ export const errorHandlerMw = async (ctx: Context, next: Next) => {
 		}
 
 		if (error instanceof Error) {
-			appsignal.tracer().setError(error);
+			newrelic.noticeError(error);
 		}
+
+		logger.error(error);
 
 		ctx.status = 500;
 		ctx.body = {

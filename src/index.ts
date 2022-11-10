@@ -1,6 +1,3 @@
-/* Appsignal MUST be called before any other imports */
-import './lib/appsignal.js';
-
 import process from 'node:process';
 import {scopedLogger} from './lib/logger.js';
 import {createServer} from './lib/server.js';

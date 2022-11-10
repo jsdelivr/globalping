@@ -1,5 +1,5 @@
 import type {Socket} from 'socket.io';
-import requestIp from 'request-ip';
+import getProbeIp from '../../get-probe-ip.js';
 import {scopedLogger} from '../../logger.js';
 import {WsError} from '../ws-error.js';
 
@@ -22,7 +22,7 @@ export const errorHandler = (next: NextArgument) => async (socket: Socket, mwNex
 	try {
 		await next(socket, mwNext!);
 	} catch (error: unknown) {
-		const clientIp = requestIp.getClientIp(socket.request) ?? '';
+		const clientIp = getProbeIp(socket.request) ?? '';
 		const reason = isError(error) ? error.message : 'unknown';
 
 		logger.info(`disconnecting client ${socket.id} for (${reason}) [${clientIp}]`);

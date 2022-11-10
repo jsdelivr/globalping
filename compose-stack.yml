@@ -1,0 +1,34 @@
+version: "3.8"
+services:
+  globalping-api:
+    image: jimaek/globalping-api:latest
+    stop_grace_period: 30s
+    stop_signal: SIGTERM
+    networks:
+      - hostnet
+    deploy:
+      mode: global
+      endpoint_mode: dnsrr
+      update_config:
+        parallelism: 1
+        delay: 5s
+        failure_action: rollback
+        monitor: 10s
+      restart_policy:
+        condition: any
+        delay: 3s
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    env_file:
+      - globalping.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1/v1/probes"]
+      interval: 10s
+      timeout: 8s
+      retries: 2
+      start_period: 3s
+networks:
+  hostnet:
+    external: true
+    name: host
