@@ -10,6 +10,7 @@ import {registerGetProbesRoute} from '../../probe/route/get-probes.js';
 import {registerGetMeasurementRoute} from '../../measurement/route/get-measurement.js';
 import {registerCreateMeasurementRoute} from '../../measurement/route/create-measurement.js';
 import {registerDemoRoute} from '../../demo/route/get.js';
+import {registerHealthRoute} from '../../health/route/get.js';
 import {errorHandler} from './error-handler.js';
 import {rateLimitHandler} from './middleware/ratelimit.js';
 import {errorHandlerMw} from './middleware/error-handler.js';
@@ -43,6 +44,10 @@ demoRouter.prefix('/demo');
 // GET /demo
 registerDemoRoute(demoRouter);
 
+const healthRouter = new Router({strict: true, sensitive: true});
+// GET /health
+registerHealthRoute(healthRouter);
+
 app
 	.use(compress())
 	.use(conditionalGet())
@@ -50,6 +55,7 @@ app
 // Exclude root + demo routers from any checks
 	.use(rootRouter.routes())
 	.use(demoRouter.routes())
+	.use(healthRouter.routes())
 	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 	.use(errorHandlerMw)
 	.use(isAdminMw)
