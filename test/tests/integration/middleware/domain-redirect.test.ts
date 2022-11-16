@@ -1,5 +1,5 @@
 import type {Server} from 'node:http';
-import request, {Response} from 'supertest';
+import request from 'supertest';
 import {expect} from 'chai';
 
 import {getTestServer} from '../../../utils/http.js';
