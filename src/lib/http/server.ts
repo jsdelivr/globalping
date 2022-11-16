@@ -16,6 +16,7 @@ import {rateLimitHandler} from './middleware/ratelimit.js';
 import {errorHandlerMw} from './middleware/error-handler.js';
 import {corsHandler} from './middleware/cors.js';
 import {isAdminMw} from './middleware/is-admin.js';
+import domainRedirect from './middleware/domain-redirect.js';
 
 const app = new cjsDependencies.Koa();
 
@@ -49,6 +50,7 @@ const healthRouter = new Router({strict: true, sensitive: true});
 registerHealthRoute(healthRouter);
 
 app
+	.use(domainRedirect())
 	.use(compress())
 	.use(conditionalGet())
 	.use(etag({weak: true}))
