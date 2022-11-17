@@ -37,7 +37,7 @@ export class MetricsAgent {
 	}
 
 	private async updateProbeCount(): Promise<void> {
-		const socketList = await this.io.of(PROBES_NAMESPACE).fetchSockets();
+		const socketList = await this.io.of(PROBES_NAMESPACE).local.fetchSockets();
 		newrelic.recordMetric('probe_count', socketList.length);
 	}
 
