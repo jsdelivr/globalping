@@ -31,6 +31,7 @@ export type Probe = {
 	client: string;
 	version: string | undefined;
 	ipAddress: string;
+	host: string;
 	location: ProbeLocation;
 	index: string[];
 	resolvers: string[];

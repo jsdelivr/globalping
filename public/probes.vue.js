@@ -16,6 +16,14 @@ const probes = () => ({
       const probe = this.probes[index];
       return probe.ready ? '[READY]' : '[NOT READY]';
     },
+    getHost(index) {
+      const probe = this.probes[index];
+      return probe.host ? `[${probe.host}]` : '';
+    },
+    getIpAddress(index) {
+      const probe = this.probes[index];
+      return probe.ipAddress ? `[${probe.ipAddress}]` : '';
+    },
     parsedLocation(index) {
       const probe = this.probes[index];
       if (!probe) {
@@ -27,7 +35,8 @@ const probes = () => ({
       return `${city}, ${probe.location.country}, ${probe.location.continent}, ${probe.location.asn}`;
     },
     async fetchProbes() {
-      const url = '/v1/probes';
+      const adminKey = new URLSearchParams(window.location.search).get('adminkey');
+      const url = `/v1/probes?adminkey=${adminKey}`;
       this.probes = await (await fetch(url)).json();
     },
   },
@@ -39,8 +48,8 @@ const probes = () => ({
       <ul>
         <li v-for="(probe, index) in probes">
           <div :style="{ color: getReadyColor(index) }">
-            [{{ probe.version }}] {{ getReadyStatus(index) }} {{ parsedLocation(index) }} -- {{ probe.location.network }}
-            </div>
+            [{{ probe.version }}] {{ getReadyStatus(index) }} {{ getHost(index) }} {{ getIpAddress(index) }} {{ parsedLocation(index) }} -- {{ probe.location.network }}
+          </div>
         </li>
       </ul>
     </div>
