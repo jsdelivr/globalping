@@ -1,4 +1,3 @@
-import process from 'node:process';
 import type {DefaultContext, DefaultState, ParameterizedContext} from 'koa';
 import type Router from '@koa/router';
 import type {RemoteSocket} from 'socket.io';
@@ -30,7 +29,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		},
 		resolvers: socket.data.probe.resolvers,
 		ipAddress: isAdmin ? socket.data.probe.ipAddress : undefined,
-		host: isAdmin ? process.env['HOSTNAME'] : undefined,
+		host: isAdmin ? socket.data.probe.host : undefined,
 		stats: isAdmin ? socket.data.probe.stats : undefined,
 	}));
 };

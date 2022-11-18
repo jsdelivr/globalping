@@ -33,6 +33,8 @@ const findProbeVersion = (socket: Socket) => String(socket.handshake.query['vers
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	const version = findProbeVersion(socket);
 
+	const host = process.env['HOSTNAME'] ?? '';
+
 	const clientIp = getProbeIp(socket.request);
 
 	if (!clientIp) {
@@ -91,6 +93,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		client: socket.id,
 		version,
 		ipAddress: clientIp,
+		host,
 		location,
 		index,
 		resolvers: [],
