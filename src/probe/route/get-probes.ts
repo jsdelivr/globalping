@@ -1,3 +1,4 @@
+import process from 'node:process';
 import type {DefaultContext, DefaultState, ParameterizedContext} from 'koa';
 import type Router from '@koa/router';
 import type {RemoteSocket} from 'socket.io';
@@ -28,8 +29,9 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 			network: socket.data.probe.location.network,
 		},
 		resolvers: socket.data.probe.resolvers,
-		stats: isAdmin ? socket.data.probe.stats : undefined,
 		ipAddress: isAdmin ? socket.data.probe.ipAddress : undefined,
+		host: isAdmin ? process.env['HOSTNAME'] : undefined,
+		stats: isAdmin ? socket.data.probe.stats : undefined,
 	}));
 };
 
