@@ -1,5 +1,5 @@
 config:
-  target: "http://78.46.40.15/v1"
+  target: "{{ $processEnvironment.HOST }}"
   http:
     timeout: 240
 
