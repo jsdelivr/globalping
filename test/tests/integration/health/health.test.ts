@@ -48,7 +48,7 @@ describe('Get health', function () {
 				sandbox.clock.tick(15_000 + 10);
 				sinon.assert.calledOnce(exitStub);
 			});
-			process.kill(process.pid, 'SIGTERM');
+			process.emit('SIGTERM');
 			await requestAgent.get('/health')
 				.send()
 				.expect(200)
