@@ -556,6 +556,8 @@ describe('geoip service', () => {
 				network: 'Psychz Networks',
 				normalizedNetwork: 'psychz networks',
 			});
+
+			mockFs.restore();
 		});
 
 		it('should detect VPN (proxy_desc)', async () => {
