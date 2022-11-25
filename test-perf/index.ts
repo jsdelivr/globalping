@@ -6,6 +6,7 @@ import fs from 'node:fs';
 // Config
 
 const config = {
+	host: 'https://api.globalping.io/v1',
 	delay: 300, // Time to wait between measurements
 	measurements: [
 		{probes: 100, rps: 1, duration: 240},
@@ -71,7 +72,7 @@ const clearDirs = () => {
 
 const measure = (probes: number, rps: number, duration: number) => {
 	const name = `${probes}-probes-${rps}-rps-${duration}-duration`;
-	execSync(`DURATION=${duration} RPS=${rps} LIMIT=${probes} artillery run -o test-perf/jsons/${name}.json test-perf/artillery.yml`, {stdio: 'inherit'});
+	execSync(`HOST=${config.host} DURATION=${duration} RPS=${rps} LIMIT=${probes} artillery run -o test-perf/jsons/${name}.json test-perf/artillery.yml`, {stdio: 'inherit'});
 	execSync(`artillery report -o test-perf/htmls/${name}.html test-perf/jsons/${name}.json`, {stdio: 'inherit'});
 };
 

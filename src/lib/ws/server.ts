@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import {Server} from 'socket.io';
 import {createAdapter} from '@socket.io/redis-adapter';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
 import type {Probe} from '../../probe/types.js';
 import {getRedisClient} from '../redis/client.js';
+import {reconnectProbes} from './helper/reconnect-probes.js';
 
 export type SocketData = {
 	probe: Probe;
@@ -10,8 +12,8 @@ export type SocketData = {
 
 export type WsServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const PROBES_NAMESPACE = '/probes';
+const TIME_UNTIL_VM_BECOMES_HEALTHY = 8000;
 
 let io: WsServer;
 
@@ -29,6 +31,8 @@ export const initWsServer = async () => {
 	});
 
 	io.adapter(createAdapter(pubClient, subClient));
+
+	setTimeout(() => reconnectProbes(io), TIME_UNTIL_VM_BECOMES_HEALTHY);
 };
 
 export const getWsServer = (): WsServer => {
