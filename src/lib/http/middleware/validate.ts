@@ -7,7 +7,7 @@ export const validate = (schema: Schema) => async (ctx: Context, next: Next) => 
 	if (valid.error) {
 		const fields = valid.error.details.map(field => ([field.path.join('.'), String(field?.message)]));
 
-		ctx.status = 422;
+		ctx.status = 400;
 		ctx.body = {
 			error: {
 				message: 'Validation Failed',

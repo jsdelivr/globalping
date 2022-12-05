@@ -30,7 +30,7 @@ describe('Validate middleware', () => {
 
 		expect(nextMock.notCalled).to.be.true;
 
-		expect(ctx.status).to.equal(422);
+		expect(ctx.status).to.equal(400);
 		expect(ctx.body).to.deep.equal({
 			error: {
 				message: 'Validation Failed',

@@ -35,7 +35,7 @@ export class MeasurementRunner {
 		const probes = await this.router.findMatchingProbes(request.locations, request.limit);
 
 		if (probes.length === 0) {
-			throw createHttpError(400, 'No suitable probes found');
+			throw createHttpError(422, 'No suitable probes found');
 		}
 
 		const measurement: NetworkTest = {
