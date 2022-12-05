@@ -45,13 +45,13 @@ export class MeasurementRunner {
 		};
 
 		const id = await this.store.createMeasurement(measurement, probes.length);
-		const config: MeasurementConfig = {id, probes, measurementOptions: measurement};
+		const measurementConfig: MeasurementConfig = {id, probes, measurementOptions: measurement};
 
-		this.sendToProbes(config);
-		this.setTimeout(config.id);
+		this.sendToProbes(measurementConfig);
+		this.setTimeout(measurementConfig.id);
 		this.metrics.recordMeasurement(request.type);
 
-		return config;
+		return measurementConfig;
 	}
 
 	async addProbe(measurementId: string, resultId: string, probe: Probe): Promise<void> {
@@ -79,11 +79,11 @@ export class MeasurementRunner {
 		}
 	}
 
-	private sendToProbes(config: MeasurementConfig) {
-		for (const probe of config.probes) {
+	private sendToProbes(measurementConfig: MeasurementConfig) {
+		for (const probe of measurementConfig.probes) {
 			this.io.of('probes').to(probe.client).emit('probe:measurement:request', {
-				id: config.id,
-				measurement: config.measurementOptions,
+				id: measurementConfig.id,
+				measurement: measurementConfig.measurementOptions,
 			});
 		}
 	}
