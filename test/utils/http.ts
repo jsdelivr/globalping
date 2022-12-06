@@ -1,4 +1,6 @@
 import type {Server} from 'node:http';
+import _ from 'lodash';
+
 import {createServer} from '../../src/lib/server.js';
 import {
 	populateIpList,
@@ -8,6 +10,8 @@ import {
 let app: Server;
 
 export const getTestServer = async (): Promise<Server> => {
+	// eslint-disable-next-line @typescript-eslint/ban-types
+	_.throttle = ((func: Function) => func) as unknown as typeof _.throttle;
 	await populateIpList();
 	await populateDomainList();
 

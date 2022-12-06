@@ -1,10 +1,10 @@
 import * as sinon from 'sinon';
 import _ from 'lodash';
 import {expect} from 'chai';
-import {RemoteSocket, Server} from 'socket.io';
+import {RemoteSocket} from 'socket.io';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events.js';
 import {ProbeRouter} from '../../../../src/probe/router.js';
-import {PROBES_NAMESPACE, SocketData} from '../../../../src/lib/ws/server.js';
+import {SocketData} from '../../../../src/lib/ws/server.js';
 import type {DeepPartial} from '../../../types.js';
 import type {ProbeLocation} from '../../../../src/probe/types.js';
 import type {Location} from '../../../../src/lib/location/types.js';
@@ -51,13 +51,15 @@ const buildSocket = (
 
 describe('probe router', () => {
 	const sandbox = sinon.createSandbox();
-	const wsServerMock = sandbox.createStubInstance(Server);
-	const router = new ProbeRouter(wsServerMock);
+	const fetchSocketsMock = sinon.stub();
+	const router = new ProbeRouter(fetchSocketsMock);
 
 	beforeEach(() => {
 		sandbox.reset();
+	});
 
-		wsServerMock.of.returnsThis();
+	afterEach(() => {
+		fetchSocketsMock.reset();
 	});
 
 	describe('route with location limit', () => {
@@ -70,15 +72,15 @@ describe('probe router', () => {
 				buildSocket('socket-5', {continent: 'EU', country: 'PL'}),
 			];
 
-			wsServerMock.fetchSockets.resolves(sockets as never);
+			fetchSocketsMock.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes([
 				{country: 'UA', limit: 2},
 				{country: 'PL', limit: 2},
 			]);
 
-			expect(wsServerMock.of.calledOnce).to.be.true;
-			expect(wsServerMock.of.firstCall.firstArg).to.equal(PROBES_NAMESPACE);
+			expect(fetchSocketsMock.calledOnce).to.be.true;
+			expect(fetchSocketsMock.firstCall.args).to.deep.equal([]);
 
 			expect(probes.length).to.equal(4);
 			expect(probes.filter(p => p.location.country === 'UA').length).to.equal(2);
@@ -95,15 +97,15 @@ describe('probe router', () => {
 				buildSocket('socket-5', {continent: 'EU', country: 'PL'}),
 			];
 
-			wsServerMock.fetchSockets.resolves(sockets as never);
+			fetchSocketsMock.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes([
 				{country: 'GB', limit: 2},
 				{country: 'PL', limit: 2},
 			]);
 
-			expect(wsServerMock.of.calledOnce).to.be.true;
-			expect(wsServerMock.of.firstCall.firstArg).to.equal(PROBES_NAMESPACE);
+			expect(fetchSocketsMock.calledOnce).to.be.true;
+			expect(fetchSocketsMock.firstCall.args).to.deep.equal([]);
 
 			expect(probes.length).to.equal(2);
 			expect(probes.filter(p => p.location.country === 'GB').length).to.equal(1);
@@ -118,7 +120,7 @@ describe('probe router', () => {
 			const sockets = ['AF', 'AS', 'EU', 'OC', 'NA', 'SA']
 				.flatMap(continent => _.range(50).map(i => buildSocket(`${continent}-${i}`, {continent})));
 
-			wsServerMock.fetchSockets.resolves(sockets as never);
+			fetchSocketsMock.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes([], 100);
 			const grouped = _.groupBy(probes, 'location.continent');
@@ -142,7 +144,7 @@ describe('probe router', () => {
 				...(_.range(30).map(i => buildSocket(`SA-${i}`, {continent: 'SA'}))),
 			];
 
-			wsServerMock.fetchSockets.resolves(sockets as never);
+			fetchSocketsMock.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes([], 100);
 			const grouped = _.groupBy(probes, 'location.continent');
@@ -164,7 +166,7 @@ describe('probe router', () => {
 				...(_.range(20).map(i => buildSocket(`NA-${i}`, {continent: 'NA'}))),
 			];
 
-			wsServerMock.fetchSockets.resolves(sockets as never);
+			fetchSocketsMock.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes([], 100);
 			const grouped = _.groupBy(probes, 'location.continent');
@@ -188,7 +190,7 @@ describe('probe router', () => {
 				{country: 'UA'},
 			];
 
-			wsServerMock.fetchSockets.resolves(sockets as never);
+			fetchSocketsMock.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes(locations, 100);
 			const grouped = _.groupBy(probes, 'location.country');
@@ -210,7 +212,7 @@ describe('probe router', () => {
 				{country: 'NL'},
 			];
 
-			wsServerMock.fetchSockets.resolves(sockets as never);
+			fetchSocketsMock.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes(locations, 100);
 			const grouped = _.groupBy(probes, 'location.country');
@@ -243,7 +245,7 @@ describe('probe router', () => {
 				{city: 'new york'},
 			];
 
-			wsServerMock.fetchSockets.resolves(sockets as never);
+			fetchSocketsMock.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes(locations, 100);
 
@@ -272,7 +274,7 @@ describe('probe router', () => {
 				{magic: 'england'},
 			];
 
-			wsServerMock.fetchSockets.resolves(sockets as never);
+			fetchSocketsMock.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes(locations, 100);
 
@@ -289,7 +291,7 @@ describe('probe router', () => {
 				{magic: 'england+as5089'},
 			];
 
-			wsServerMock.fetchSockets.resolves(sockets as never);
+			fetchSocketsMock.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes(locations, 100);
 
@@ -308,7 +310,7 @@ describe('probe router', () => {
 						{magic: testCase},
 					];
 
-					wsServerMock.fetchSockets.resolves(sockets as never);
+					fetchSocketsMock.resolves(sockets as never);
 
 					const probes = await router.findMatchingProbes(locations, 100);
 
@@ -329,7 +331,7 @@ describe('probe router', () => {
 						{magic: testCase},
 					];
 
-					wsServerMock.fetchSockets.resolves(sockets as never);
+					fetchSocketsMock.resolves(sockets as never);
 
 					const probes = await router.findMatchingProbes(locations, 100);
 
