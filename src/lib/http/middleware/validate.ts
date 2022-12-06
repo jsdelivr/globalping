@@ -11,7 +11,7 @@ export const validate = (schema: Schema) => async (ctx: Context, next: Next) => 
 		ctx.body = {
 			error: {
 				message: 'Validation Failed',
-				type: 'invalid_request_error',
+				type: 'validation_error',
 				params: Object.fromEntries(fields) as never,
 			},
 		};
