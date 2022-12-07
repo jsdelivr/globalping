@@ -14,7 +14,7 @@ export const errorHandlerMw = async (ctx: Context, next: Next) => {
 			ctx.body = {
 				error: {
 					message: error.expose ? error.message : createHttpError(error.status).message,
-					type: 'api_error',
+					type: error['type'] as string ?? 'api_error',
 				},
 			};
 
