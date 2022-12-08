@@ -54,16 +54,32 @@ export class ProbeRouter {
 		}
 
 		return sockets.filter(s => Object.keys(location).every(k => {
+			if (k === 'tags') {
+				const tags = location[k]!;
+				return tags.every(tag => this.hasTagStrict(s, tag));
+			}
+
 			if (k === 'magic') {
-				const {index} = s.data.probe;
-				const locationList = String(location[k]).split('+').map(l => l.replace('-', ' ').trim().toLowerCase());
-				return locationList.every(l => index.find(v => v.includes(l)));
+				const keywords = String(location[k]).split('+');
+				return keywords.every(keyword => this.hasIndex(s, keyword) || this.hasTag(s, keyword));
 			}
 
 			const key = locationKeyMap.find(m => m.includes(k))?.[1] ?? k;
 
 			return location[k as keyof Location] === s.data.probe.location[key as keyof ProbeLocation];
 		}));
+	}
+
+	private hasIndex(socket: Socket, index: string) {
+		return socket.data.probe.index.some(v => v.includes(index.replace('-', ' ').trim().toLowerCase()));
+	}
+
+	private hasTag(socket: Socket, tag: string) {
+		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value.includes(tag));
+	}
+
+	private hasTagStrict(socket: Socket, tag: string) {
+		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value === tag);
 	}
 
 	private findByLocationAndWeight(sockets: Socket[], distribution: Map<Location, number>, limit: number): Socket[] {

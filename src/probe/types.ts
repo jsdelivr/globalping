@@ -26,6 +26,11 @@ export type ProbeStats = {
 	};
 };
 
+export type Tag = {
+	type: 'system' | 'admin' | 'user';
+	value: string;
+};
+
 export type Probe = {
 	ready: boolean;
 	client: string;
@@ -35,5 +40,6 @@ export type Probe = {
 	location: ProbeLocation;
 	index: string[];
 	resolvers: string[];
+	tags: Tag[];
 	stats: ProbeStats;
 };

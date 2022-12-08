@@ -13,9 +13,12 @@ import {
 import {InternalError} from '../lib/internal-error.js';
 import {createGeoipClient} from '../lib/geoip/client.js';
 import getProbeIp from '../lib/get-probe-ip.js';
-import type {Probe, ProbeLocation} from './types.js';
+import {getRegion} from '../lib/ip-ranges.js';
+import type {Probe, ProbeLocation, Tag} from './types.js';
 
 const fakeIpForDebug = () => _.sample([
+	// '15.230.221.10', // AWS us-east-1
+	// '34.140.0.10', // GCP europe-west1
 	'95.155.94.127',
 	'65.49.22.66',
 	'185.229.226.83',
@@ -35,7 +38,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const host = process.env['HOSTNAME'] ?? '';
 
-	const clientIp = getProbeIp(socket.request);
+	const clientIp = process.env['FAKE_PROBE_IP'] ? fakeIpForDebug() : getProbeIp(socket.request);
 
 	if (!clientIp) {
 		throw new Error('failed to detect ip address of connected probe');
@@ -48,9 +51,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	let ipInfo;
 
 	// Todo: cache results for ip address
-	if (process.env['FAKE_PROBE_IP']) {
-		ipInfo = await geoipClient.lookup(fakeIpForDebug());
-	} else if (!isIpPrivate(clientIp)) {
+	if (!isIpPrivate(clientIp)) {
 		ipInfo = await geoipClient.lookup(clientIp);
 	}
 
@@ -88,6 +89,17 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		getNetworkAliases(location.normalizedNetwork),
 	].flat().filter(Boolean).map(s => s.toLowerCase().replace('-', ' '));
 
+	const tags: Tag[] = [];
+
+	const cloudRegion = getRegion(clientIp);
+
+	if (cloudRegion) {
+		tags.push({
+			type: 'system',
+			value: cloudRegion,
+		});
+	}
+
 	// Todo: add validation and handle missing or partial data
 	return {
 		client: socket.id,
@@ -97,6 +109,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		location,
 		index,
 		resolvers: [],
+		tags,
 		stats: {
 			cpu: {
 				count: 0,

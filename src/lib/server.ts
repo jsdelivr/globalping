@@ -3,10 +3,14 @@ import {initRedis} from './redis/client.js';
 import {initWsServer} from './ws/server.js';
 import {getMetricsAgent} from './metrics.js';
 import {populateMemList as populateMemMalwareList} from './malware/client.js';
+import {populateMemList as populateMemIpRangesList} from './ip-ranges.js';
 
 export const createServer = async (): Promise<Server> => {
-	// PopulateMem malware list before opening HTTP server
+	// Populate memory malware list before opening HTTP server
 	await populateMemMalwareList();
+
+	// Populate memory cloud regions list before opening HTTP server
+	await populateMemIpRangesList();
 
 	await initRedis();
 	await initWsServer();
