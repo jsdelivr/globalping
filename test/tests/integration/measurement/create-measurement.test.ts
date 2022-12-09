@@ -42,7 +42,11 @@ describe('Create measurement', function () {
 
 	describe('probes connected', () => {
 		before(async () => {
-			await addFakeProbe('fake-probe-US', {location: {continent: 'NA', country: 'US'}});
+			await addFakeProbe('fake-probe-US', {
+				location: {continent: 'NA', country: 'US'},
+				tags: [{type: 'system', value: 'tag-value'}],
+				index: ['NA', 'US'],
+			});
 		});
 
 		after(() => {
@@ -110,6 +114,63 @@ describe('Create measurement', function () {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{magic: 'world', limit: 2}],
+					measurementOptions: {
+						packets: 4,
+					},
+				})
+				.expect(202)
+				.expect(({body, header}) => {
+					expect(body.id).to.exist;
+					expect(header.location).to.exist;
+					expect(body.probesCount).to.equal(1);
+				});
+		});
+
+		it('should create measurement with partial tag value "magic: tag" location', async () => {
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{magic: 'tag-v', limit: 2}],
+					measurementOptions: {
+						packets: 4,
+					},
+				})
+				.expect(202)
+				.expect(({body, header}) => {
+					expect(body.id).to.exist;
+					expect(header.location).to.exist;
+					expect(body.probesCount).to.equal(1);
+				});
+		});
+
+		it('shouldn\'t create measurement with "magic: non-existing-tag" location', async () => {
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{magic: 'non-existing-tag', limit: 2}],
+					measurementOptions: {
+						packets: 4,
+					},
+				})
+				.expect(422)
+				.expect(response => {
+					expect(response.body).to.deep.equal({
+						error: {
+							message: 'No suitable probes found',
+							type: 'no_probes_found',
+						},
+					});
+				});
+		});
+
+		it('should create measurement with "tags: [tag-value]" location', async () => {
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{tags: ['tag-value'], limit: 2}],
 					measurementOptions: {
 						packets: 4,
 					},

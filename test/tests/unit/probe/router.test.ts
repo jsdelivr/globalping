@@ -6,7 +6,7 @@ import type {DefaultEventsMap} from 'socket.io/dist/typed-events.js';
 import {ProbeRouter} from '../../../../src/probe/router.js';
 import {SocketData} from '../../../../src/lib/ws/server.js';
 import type {DeepPartial} from '../../../types.js';
-import type {ProbeLocation} from '../../../../src/probe/types.js';
+import type {ProbeLocation, Tag} from '../../../../src/probe/types.js';
 import type {Location} from '../../../../src/lib/location/types.js';
 import {
 	getCountryAliases,
@@ -38,6 +38,7 @@ const buildSocket = (
 	location: Partial<ProbeLocation>,
 	index: string[] = buildLocationIndexes(location),
 	ready = true,
+	tags: Tag[] = [],
 ): DeepPartial<Socket> => ({
 	id,
 	data: {
@@ -45,6 +46,7 @@ const buildSocket = (
 			ready,
 			location,
 			index,
+			tags,
 		},
 	},
 });
@@ -339,6 +341,72 @@ describe('probe router', () => {
 					expect(probes[0]!.location.country).to.equal('GB');
 				});
 			}
+		});
+
+		describe('Location type - tag', () => {
+			for (const testCase of ['tag-value', 'tag-v']) {
+				it(`should match tag - ${testCase}`, async () => {
+					const sockets: DeepPartial<Socket[]> = [
+						buildSocket(String(Date.now()), location, buildLocationIndexes(location), true, [{type: 'system', value: 'tag-value'}]),
+					];
+
+					const locations: Location[] = [
+						{magic: testCase},
+					];
+
+					fetchSocketsMock.resolves(sockets as never);
+
+					const probes = await router.findMatchingProbes(locations, 100);
+
+					expect(probes.length).to.equal(1);
+					expect(probes[0]!.location.country).to.equal('GB');
+				});
+			}
+		});
+	});
+
+	describe('route with tags location', () => {
+		const location = {
+			continent: 'EU',
+			region: getRegionByCountry('GB'),
+			country: 'GB',
+			state: undefined,
+			city: 'london',
+			asn: 5089,
+			network: 'a-virgin media',
+		};
+
+		it('should return match for existing tag', async () => {
+			const sockets: DeepPartial<Socket[]> = [
+				buildSocket(String(Date.now()), location, buildLocationIndexes(location), true, [{type: 'system', value: 'tag-value'}]),
+			];
+
+			const locations: Location[] = [
+				{tags: ['tag-value']},
+			];
+
+			fetchSocketsMock.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes(locations, 100);
+
+			expect(probes.length).to.equal(1);
+			expect(probes[0]!.location.country).to.equal('GB');
+		});
+
+		it('should return 0 matches for partial tag value', async () => {
+			const sockets: DeepPartial<Socket[]> = [
+				buildSocket(String(Date.now()), location, buildLocationIndexes(location), true, [{type: 'system', value: 'tag-value'}]),
+			];
+
+			const locations: Location[] = [
+				{tags: ['tag-v']},
+			];
+
+			fetchSocketsMock.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes(locations, 100);
+
+			expect(probes.length).to.equal(0);
 		});
 	});
 });

@@ -48,5 +48,10 @@ describe('cloud ip ranges', () => {
 			const region = getRegion('3.2.34.1');
 			expect(region).to.equal('aws-af-south-1');
 		});
+
+		it('should return region for IPv6 ips', () => {
+			const region = getRegion('2600:1900:4180::0001');
+			expect(region).to.equal('gcp-us-west4');
+		});
 	});
 });
