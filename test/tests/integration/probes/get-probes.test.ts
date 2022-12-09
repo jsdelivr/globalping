@@ -2,15 +2,14 @@ import fs from 'node:fs';
 import type {Server} from 'node:http';
 import {expect} from 'chai';
 import request, {SuperTest, Test} from 'supertest';
-import type {Probe} from '../../../../src/probes/types.js';
+import type {Probe} from '../../../../src/probe/types.js';
 import {getTestServer} from '../../../utils/http.js';
 import {addFakeProbe, deleteFakeProbe} from '../../../utils/ws.js';
 
 const mocks = JSON.parse(fs.readFileSync('./test/mocks/probes.json').toString()) as Record<string, Probe>;
 
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 const probeToPublicProbe = (probe: Probe) => {
-	const {version, ready, resolvers, location} = probe;
+	const {version, ready, resolvers, location, tags} = probe;
 
 	return {
 		version,
@@ -27,9 +26,9 @@ const probeToPublicProbe = (probe: Probe) => {
 			longitude: location.longitude,
 			network: location.network,
 		},
+		tags: tags.map(({value}) => value),
 	};
 };
-/* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
 describe('Get Probes', function () {
 	this.timeout(15_000);
