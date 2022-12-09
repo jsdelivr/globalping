@@ -23,7 +23,7 @@ const probeToPublicProbe = (probe: Probe) => {
 			...(location.state ? {state: location.state} : {}),
 			city: location.city,
 			asn: location.asn,
-			latitute: location.latitude,
+			latitude: location.latitude,
 			longitude: location.longitude,
 			network: location.network,
 		},

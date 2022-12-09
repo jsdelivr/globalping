@@ -20,7 +20,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 			state: socket.data.probe.location.state,
 			city: socket.data.probe.location.city,
 			asn: socket.data.probe.location.asn,
-			latitute: socket.data.probe.location.latitude,
+			latitude: socket.data.probe.location.latitude,
 			longitude: socket.data.probe.location.longitude,
 			network: socket.data.probe.location.network,
 		},
