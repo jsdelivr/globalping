@@ -13,7 +13,7 @@ interface Source {
 const ipV4Ranges: Map<ParsedIpRange, string> = new Map();
 const ipV6Ranges: Map<ParsedIpRange, string> = new Map();
 
-const sources: Record<'gcp' | 'aws', Source> = {
+export const sources: Record<'gcp' | 'aws', Source> = {
 	gcp: {
 		url: 'https://www.gstatic.com/ipranges/cloud.json',
 		file: 'GCP_IP_RANGES.json',
@@ -84,7 +84,7 @@ export const populateMemList = async (): Promise<void> => {
 	]);
 };
 
-export const updateIpRangesList = async (): Promise<void> => {
+export const updateIpRangeFiles = async (): Promise<void> => {
 	await Promise.all(Object.values(sources).map(async source => {
 		const response = await query(source.url);
 		const filePath = path.join(path.resolve(), source.file);
