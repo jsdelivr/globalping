@@ -23,11 +23,23 @@ const locationKeyMap = [
 ];
 
 export class ProbeRouter {
+	static hasIndex(socket: Socket, index: string) {
+		return socket.data.probe.index.some(v => v.includes(index.replace('-', ' ').trim().toLowerCase()));
+	}
+
+	static hasTag(socket: Socket, tag: string) {
+		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value.includes(tag));
+	}
+
+	static hasTagStrict(socket: Socket, tag: string) {
+		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value === tag);
+	}
+
 	constructor(
 		private readonly fetchWsSockets: typeof fetchSockets,
 	) {}
 
-	async findMatchingProbes(
+	public async findMatchingProbes(
 		locations: LocationWithLimit[] = [],
 		globalLimit = 1,
 	): Promise<Probe[]> {
@@ -56,30 +68,18 @@ export class ProbeRouter {
 		return sockets.filter(s => Object.keys(location).every(k => {
 			if (k === 'tags') {
 				const tags = location[k]!;
-				return tags.every(tag => this.hasTagStrict(s, tag));
+				return tags.every(tag => ProbeRouter.hasTagStrict(s, tag));
 			}
 
 			if (k === 'magic') {
 				const keywords = String(location[k]).split('+');
-				return keywords.every(keyword => this.hasIndex(s, keyword) || this.hasTag(s, keyword));
+				return keywords.every(keyword => ProbeRouter.hasIndex(s, keyword) || ProbeRouter.hasTag(s, keyword));
 			}
 
 			const key = locationKeyMap.find(m => m.includes(k))?.[1] ?? k;
 
 			return location[k as keyof Location] === s.data.probe.location[key as keyof ProbeLocation];
 		}));
-	}
-
-	private hasIndex(socket: Socket, index: string) {
-		return socket.data.probe.index.some(v => v.includes(index.replace('-', ' ').trim().toLowerCase()));
-	}
-
-	private hasTag(socket: Socket, tag: string) {
-		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value.includes(tag));
-	}
-
-	private hasTagStrict(socket: Socket, tag: string) {
-		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value === tag);
 	}
 
 	private findByLocationAndWeight(sockets: Socket[], distribution: Map<Location, number>, limit: number): Socket[] {
