@@ -2,8 +2,8 @@ import _ from 'lodash';
 import config from 'config';
 import type {RemoteSocket} from 'socket.io';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
-import type {SocketData, WsServer} from '../lib/ws/server.js';
-import {getWsServer, PROBES_NAMESPACE} from '../lib/ws/server.js';
+import type {SocketData} from '../lib/ws/server.js';
+import {fetchSockets} from '../lib/ws/server.js';
 import type {LocationWithLimit} from '../measurement/types.js';
 import type {Location} from '../lib/location/types.js';
 import type {Probe, ProbeLocation} from './types.js';
@@ -24,7 +24,7 @@ const locationKeyMap = [
 
 export class ProbeRouter {
 	constructor(
-		private readonly io: WsServer,
+		private readonly fetchWsSockets: typeof fetchSockets,
 	) {}
 
 	async findMatchingProbes(
@@ -44,7 +44,7 @@ export class ProbeRouter {
 	}
 
 	private async fetchSockets(): Promise<Socket[]> {
-		const sockets = await this.io.of(PROBES_NAMESPACE).fetchSockets();
+		const sockets = await this.fetchWsSockets();
 		return sockets.filter(s => s.data.probe.ready);
 	}
 
@@ -153,7 +153,7 @@ let router: ProbeRouter;
 
 export const getProbeRouter = () => {
 	if (!router) {
-		router = new ProbeRouter(getWsServer());
+		router = new ProbeRouter(fetchSockets);
 	}
 
 	return router;

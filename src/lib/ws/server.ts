@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import {Server} from 'socket.io';
+import _ from 'lodash';
+import {RemoteSocket, Server} from 'socket.io';
 import {createAdapter} from '@socket.io/redis-adapter';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
 import type {Probe} from '../../probe/types.js';
@@ -14,8 +15,10 @@ export type WsServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsM
 
 export const PROBES_NAMESPACE = '/probes';
 const TIME_UNTIL_VM_BECOMES_HEALTHY = 8000;
+const TIME_TO_CACHE_FETCH_SOCKETS = 200;
 
 let io: WsServer;
+let throttledFetchSockets: _.DebouncedFunc<() => Promise<Array<RemoteSocket<DefaultEventsMap, SocketData>>>>;
 
 export const initWsServer = async () => {
 	const pubClient = getRedisClient().duplicate();
@@ -32,6 +35,8 @@ export const initWsServer = async () => {
 
 	io.adapter(createAdapter(pubClient, subClient));
 
+	throttledFetchSockets = _.throttle(io.of(PROBES_NAMESPACE).fetchSockets.bind(io.of(PROBES_NAMESPACE)), TIME_TO_CACHE_FETCH_SOCKETS);
+
 	setTimeout(() => reconnectProbes(io), TIME_UNTIL_VM_BECOMES_HEALTHY);
 };
 
@@ -41,4 +46,18 @@ export const getWsServer = (): WsServer => {
 	}
 
 	return io;
+};
+
+export const fetchSockets = () => {
+	if (!io || !throttledFetchSockets) {
+		throw new Error('WS server not initialized yet');
+	}
+
+	const sockets = throttledFetchSockets();
+
+	if (sockets === undefined) {
+		throw new Error('undefined, the debounced function was not invoked yet');
+	}
+
+	return sockets;
 };
