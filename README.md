@@ -30,13 +30,13 @@ Learn more about Globalping on our website [www.jsdelivr.com/globalping](https:/
 
 You can begin using the platform in a few different ways:
 
-### Web Based Tools
+### Web Based Tools | WIP
 
 We keep building more and more web tools to cover all kinds of use-cases.
 
 * https://api.globalping.io/demo/
 
-### Globalping CLI
+### Globalping CLI | WIP
 
 Simply install our CLI tool to upgrade your debugging capabilities.
 
@@ -130,7 +130,7 @@ Notes:
 Read more about the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) in the dedicated repo.
 
 
-## Limits
+## Limits | WIP
 
 Our platform has multiple limits to avoid abusive behaviour and at the same time motivate people to contribute to the sustainability of our platform.
 
