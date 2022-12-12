@@ -6,12 +6,12 @@ Get the current state of the measurement.
 
 **method**: `GET`
 
-**url**: `/v1/measurements/:Id`
+**url**: `/v1/measurements/:id`
 
 ### parameters
 
 **params**:
-- `:Id` - Id of the measurement request. Returned by [POST /v1/measurements](./post-create.md)
+- `:id` - Id of the measurement request. Returned by [POST /v1/measurements](./post-create.md)
 
 ## success response
 
@@ -58,7 +58,8 @@ GET https://api.globalping.io/v1/measurements/tEaUg3vYnOu2exVC
                 "asn": 16509,
                 "longitude": 18.4232,
                 "latitude": -33.9258,
-                "network": "amazon.com inc."
+                "network": "amazon.com inc.",
+                "tags": ["af-south-1"]
             },
             "result": {
                 "resolvedAddress": "172.217.170.14",

@@ -18,6 +18,7 @@ Get list of all probes currently online and connected to the API server.
 [
     {
         version: string
+        ready: boolean
         location: {
             continent: string
             region: string
@@ -29,6 +30,8 @@ Get list of all probes currently online and connected to the API server.
             longtitude: decimal
             network: string
         }
+        tags: string[]
+        resolvers: string[]
     }
 ]
 ```
@@ -39,31 +42,44 @@ Get list of all probes currently online and connected to the API server.
 GET https://api.globalping.io/v1/probes/
 [
     {
-        "version": "0.2.4",
+        "version": "0.10.1",
+        "ready": true,
         "location": {
-            "continent": "NA",
-            "region": "northern america",
-            "country": "US",
-            "state": "UT",
-            "city": "salt lake city",
+            "continent": "EU",
+            "region": "Western Europe",
+            "country": "BE",
+            "city": "Brussels",
             "asn": 396982,
-            "latitude": 40.7608,
-            "longitude": -111.8911,
-            "network": "google llc"
-        }
+            "latitude": 50.8505,
+            "longitude": 4.3488,
+            "network": "Google LLC"
+        },
+        "tags": [
+            "gcp-europe-west1"
+        ],
+        "resolvers": [
+            "private"
+        ]
     },
     {
-        "version": "0.2.4",
+        "version": "0.10.1",
+        "ready": true,
         "location": {
-            "continent": "AS",
-            "region": "south eastern-asia",
-            "country": "TH",
-            "city": "bangkok",
-            "asn": 45102,
-            "latitude": 13.754,
-            "longitude": 100.5014,
-            "network": "alibaba china technology co. ltd."
-        }
+            "continent": "EU",
+            "region": "Northern Europe",
+            "country": "IE",
+            "city": "Dublin",
+            "asn": 16509,
+            "latitude": 53.3331,
+            "longitude": -6.2489,
+            "network": "Amazon.com, Inc."
+        },
+        "tags": [
+            "aws-eu-west-1"
+        ],
+        "resolvers": [
+            "private"
+        ]
     }
 ]
 ```

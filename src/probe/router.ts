@@ -28,7 +28,7 @@ export class ProbeRouter {
 	}
 
 	static hasTag(socket: Socket, tag: string) {
-		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value.includes(tag));
+		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value.includes(tag.trim().toLowerCase()));
 	}
 
 	static hasTagStrict(socket: Socket, tag: string) {

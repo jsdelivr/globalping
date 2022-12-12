@@ -81,7 +81,8 @@ An array of all probe responses. Jump to [`RESULT SCHEMA`](#result) for more det
                 "asn": 16509,
                 "longitude": 18.4232,
                 "latitude": -33.9258,
-                "network": "amazon.com inc."
+                "network": "amazon.com inc.",
+                "tags": []
             },
             "result": {
                 "resolvedAddress": "172.217.170.14",
@@ -280,7 +281,8 @@ example:
         "asn": 33915,
         "longitude": 5.1563,
         "latitude": 52.285,
-        "network": "ziggo"
+        "network": "ziggo",
+        "tags": []
       },
       "result": {
         "hops": [
@@ -425,7 +427,8 @@ example:
                 "asn": 56655,
                 "longitude": 3.41,
                 "latitude": 6.49,
-                "network": "terrahost"
+                "network": "terrahost",
+                "tags": []
             },
             "result":
             {
@@ -626,7 +629,8 @@ example:
         "asn": 396982,
         "longitude": -79.4163,
         "latitude": 43.7001,
-        "network": "google cloud"
+        "network": "google cloud",
+        "tags": [],
       },
       "result": {
         "resolvedAddress": "142.250.178.14",

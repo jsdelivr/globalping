@@ -25,7 +25,7 @@ export const schema = Joi.array().items(Joi.object().keys({
 	network: Joi.string().min(1).max(128).lowercase().custom(normalizeValue).insensitive(),
 	asn: Joi.number().integer().positive(),
 	magic: Joi.string().min(1).lowercase().custom(normalizeValue).insensitive(),
-	tags: Joi.array().items(Joi.string().min(1).lowercase().custom(normalizeValue).insensitive()),
+	tags: Joi.array().items(Joi.string().min(1).max(128).lowercase().custom(normalizeValue).insensitive()),
 	limit: Joi.number().min(1).max(measurementConfig.limits.location).when(Joi.ref('/limit'), {
 		is: Joi.exist(),
 		then: Joi.forbidden().messages({'any.unknown': 'limit per location is not allowed when a global limit is set'}),

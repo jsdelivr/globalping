@@ -96,13 +96,13 @@ headers:
 
 **condition**: if provided location doesn't have probes - e.g. `{ locations: [ 'magic': 'not a real place' ] }`
 
-**status code**: `400 Bad Request`
+**status code**: `422 Unprocessable Entity`
 
 ```json
 {
     "error": {
       "message": "No suitable probes found",
-      "type": "api_error"
+      "type": "no_probes_found"
     }
 }
 ```
@@ -111,7 +111,7 @@ headers:
 
 **condition**: if provided data doesn't match the schema - e.g. mismatching `target` format.
 
-**status code**: `422 Unprocessable Entity`
+**status code**: `400 Bad Request`
 
 ### schema
 
@@ -133,7 +133,7 @@ headers:
 {
     "error": {
         "message": "Validation Failed",
-        "type": "invalid_request_error",
+        "type": "validation_error",
         "params": {
             "measurement": "\"measurement\" does not match any of the allowed types"
         }

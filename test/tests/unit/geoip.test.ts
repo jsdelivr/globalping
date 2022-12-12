@@ -132,7 +132,7 @@ describe('geoip service', () => {
 		const info = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 		expect(info).to.be.an.instanceof(Error);
-		expect((info as Error).message).to.equal('unresolvable geoip');
+		expect((info as Error).message).to.equal(`unresolvable geoip: ${MOCK_IP}`);
 	});
 
 	it('should work when fastly is down', async () => {

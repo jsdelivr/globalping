@@ -8,6 +8,7 @@ supported `type` values:
 - [`city`](#city-query)
 - [`network`](#network-query)
 - [`asn`](#asn-query)
+- [`tags`](#-tags-query)
 - [`magic`](#magic-query)
 
 Location filters can be joined, for more accurate queries. Consider the following example:
@@ -142,6 +143,21 @@ it will match a probe located in `London, England`, running on `Virgin Media Lim
 { "network": "virgin media limited" }
 ```
 
+<h2 id="tags-query">Tags</h2>
+
+### rules
+
+- typeof: array of `string`s
+- case insensitive
+- at least 1 character long
+- max 128 characters long
+
+### example
+
+```json
+{ "tags": ["us-east-1"] }
+```
+
 <h2 id="asn-query">ASN</h2>
 
 ### rules
@@ -154,7 +170,7 @@ it will match a probe located in `London, England`, running on `Virgin Media Lim
 { "asn": 1337 }
 ```
 
-<h2 id="magic-query">magic</h2>
+<h2 id="magic-query">Magic</h2>
 
 unlike other location queries, `magic` query doesn't attempt to match a specific value, but rather a pool of available matches, contained within a pre-defined array. It works by finding a partial string match of any of the above described variables. It also supports country matching based on [`Iso2`/`Iso3`](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes), common `aliases` and their full, official names format. Aliases also apply to `networks`, as well as combined matches.
 
@@ -190,4 +206,43 @@ magic queries can be combined. The following query will match server in `Belgium
 
 ```json
 { "magic": "google+belgium" }
+```
+
+you can also query tags in magic field
+
+```json
+{ "magic": "gcp-europe-west1+belgium" }
+```
+
+## Multiple locations
+
+Note that you can pass multiple `location` objects inside `locations` array to achieve `OR` behaviour.
+
+### examples
+This query will match probes either from `gb` or `de`.
+
+```json
+{
+    "target": "jsdelivr.com",
+    "type": "ping",
+    "locations": [{
+      "country": "gb"
+    }, {
+      "country": "de"
+    }]
+}
+```
+
+This query will match probes either tagged with `aws-eu-west-2` or `gcp-europe-west2`
+
+```json
+{
+    "target": "jsdelivr.com",
+    "type": "ping",
+    "locations": [{
+      "tags": ["aws-eu-west-2"]
+    }, {
+      "tags": ["gcp-europe-west2"]
+    }]
+}
 ```
