@@ -66,14 +66,14 @@ export default class GeoipClient {
 		const resultsWithCities = results.filter(s => s.city);
 
 		if (resultsWithCities.length < 2 && resultsWithCities[0]?.provider === 'fastly') {
-			throw new InternalError('unresolvable geoip', true);
+			throw new InternalError(`unresolvable geoip: ${addr}`, true);
 		}
 
 		const match = this.bestMatch('normalizedCity', results);
 		const networkMatch = this.matchNetwork(match, results);
 
 		if (!networkMatch) {
-			throw new InternalError('unresolvable geoip', true);
+			throw new InternalError(`unresolvable geoip: ${addr}`, true);
 		}
 
 		const region = this.matchRegion(match);

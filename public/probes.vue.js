@@ -34,6 +34,10 @@ const probes = () => ({
 
       return `${city}, ${probe.location.country}, ${probe.location.continent}, ${probe.location.asn}`;
     },
+    getTags(index) {
+      const probe = this.probes[index];
+      return probe.tags.length ? `(${probe.tags.join(', ')})` : '';
+    },
     async fetchProbes() {
       const adminKey = new URLSearchParams(window.location.search).get('adminkey');
       const url = `/v1/probes?adminkey=${adminKey}`;
@@ -48,7 +52,7 @@ const probes = () => ({
       <ul>
         <li v-for="(probe, index) in probes">
           <div :style="{ color: getReadyColor(index) }">
-            [{{ probe.version }}] {{ getReadyStatus(index) }} {{ getHost(index) }} {{ getIpAddress(index) }} {{ parsedLocation(index) }} -- {{ probe.location.network }}
+            [{{ probe.version }}] {{ getReadyStatus(index) }} {{ getHost(index) }} {{ getIpAddress(index) }} {{ parsedLocation(index) }} -- {{ probe.location.network }} {{ getTags(index) }}
           </div>
         </li>
       </ul>
