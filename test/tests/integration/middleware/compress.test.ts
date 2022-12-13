@@ -20,7 +20,7 @@ describe('compression', function () {
 		before(async () => {
 			for (const i of Array.from({length: 10}).keys()) {
 				// eslint-disable-next-line no-await-in-loop
-				await addFakeProbe(`us-${i}`, {location: {continent: 'NA', country: 'US', city: 'dallas', state: 'TX'}});
+				await addFakeProbe(`us-${i}`, {location: {continent: 'NA', country: 'US', city: 'dallas', state: 'TX'}, tags: []});
 			}
 		});
 

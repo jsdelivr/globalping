@@ -15,6 +15,7 @@
       "network": "PT Qwords Company International",
       "normalizedNetwork": "pt qwords company international"
     },
+    "tags": [],
     "resolvers": [
       "103.28.12.13",
       "103.28.14.15"
@@ -36,6 +37,7 @@
       "network": "G-Core Labs S.A.",
       "normalizedNetwork": "g-core labs s.a."
     },
+    "tags": [],
     "resolvers": [
       "8.8.8.8",
       "8.8.4.4"
@@ -57,6 +59,7 @@
       "network": "LLC Vpsville",
       "normalizedNetwork": "llc vpsville"
     },
+    "tags": [{ "type": "system", "value": "aws-eu-west-1"}],
     "resolvers": [
       "private"
     ]

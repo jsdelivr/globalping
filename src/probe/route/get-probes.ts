@@ -24,6 +24,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 			longitude: socket.data.probe.location.longitude,
 			network: socket.data.probe.location.network,
 		},
+		tags: socket.data.probe.tags.map(({value}) => value),
 		resolvers: socket.data.probe.resolvers,
 		ipAddress: isAdmin ? socket.data.probe.ipAddress : undefined,
 		host: isAdmin ? socket.data.probe.host : undefined,

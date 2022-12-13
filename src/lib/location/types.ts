@@ -6,4 +6,5 @@ export type Location = {
 	city?: string;
 	asn?: number;
 	magic?: string;
+	tags?: string[];
 };

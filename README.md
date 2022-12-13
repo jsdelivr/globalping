@@ -34,8 +34,7 @@ You can begin using the platform in a few different ways:
 
 We keep building more and more web tools to cover all kinds of use-cases.
 
-* TODO
-* TODO
+* https://api.globalping.io/demo/
 
 ### Globalping CLI | WIP
 
@@ -54,7 +53,6 @@ globalping traceroute google.com --from "Western Europe" --limit "10"
 ```
 
 Learn more about Globalping CLI in the dedicated repo.
-
 
 ### Globalping REST API
 
@@ -180,8 +178,7 @@ We're more than happy to provide higher limits to researchers, non-profits and o
 
 ## Development
 
-In order to run the Globalping API locally you will need Node.js 16 
-and Redis with [RedisJSON](https://oss.redis.com/redisjson/) module. You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
+In order to run the Globalping API locally you will need Node.js 16 and Redis with [RedisJSON](https://oss.redis.com/redisjson/) module (included in docker-compose.yml file). You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
 
 API uses 3000 port by default. This can be overridden by `PORT` environment variable.
 
@@ -190,16 +187,16 @@ API uses 3000 port by default. This can be overridden by `PORT` environment vari
 1. Clone this repository.
 2. `docker-compose up -d` - Run Redis
 3. `npm install && npm run init:hooks`
-4. Either `npm run build && FAKE_PROBE_IP=1 npm run dev` or `FAKE_PROBE_IP=1 npm run dev:tsx` (no type-checking)
+4. Either `npm run build && npm run dev` or `npm run dev:tsx` (no type-checking)
 
 Once the API is live, you can spin up a probe instance by running the following in the probe repository:
 
 1. Clone [Globalping Probe](https://github.com/jsdelivr/globalping-probe) repository.
 2. `npm install && npm run init:hooks`
-3. `npm run build && NODE_ENV=development node dist/index.js`
+3. Either `npm run build && npm run dev` or `npm run dev:tsx` (no type-checking)
 
 ### Environment Variables
-
+- `PORT=3000` environment variable can start the API on another port (default is 3000)
 - `FAKE_PROBE_IP=1` environment variable can be used to make debug easier. When defined, every Probe 
 that connects to the API will get an IP address from the list of predefined "real" addresses.
 - `NEW_RELIC_LICENSE_KEY={value}` environment variable should be used in production to send APM metrics to new relic
