@@ -323,7 +323,7 @@ describe('probe router', () => {
 		});
 
 		describe('Location type - ASN', () => {
-			for (const testCase of ['5089', 'AS5089', 'as5089']) {
+			for (const testCase of ['5089', 'as5089']) {
 				it(`should match ASN - ${testCase}`, async () => {
 					const sockets: DeepPartial<Socket[]> = [
 						buildSocket(String(Date.now()), location),
