@@ -196,7 +196,7 @@ Once the API is live, you can spin up a probe instance by running the following 
 3. Either `npm run build && npm run dev` or `npm run dev:tsx` (no type-checking)
 
 ### Environment Variables
-- `PORT=3000` environment variable can be start the API on antoher port (default is 3000)
+- `PORT=3000` environment variable can start the API on another port (default is 3000)
 - `FAKE_PROBE_IP=1` environment variable can be used to make debug easier. When defined, every Probe 
 that connects to the API will get an IP address from the list of predefined "real" addresses.
 - `NEW_RELIC_LICENSE_KEY={value}` environment variable should be used in production to send APM metrics to new relic
