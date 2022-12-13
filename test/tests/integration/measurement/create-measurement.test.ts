@@ -45,7 +45,7 @@ describe('Create measurement', function () {
 			await addFakeProbe('fake-probe-US', {
 				location: {continent: 'NA', country: 'US'},
 				tags: [{type: 'system', value: 'tag-value'}],
-				index: ['NA', 'US'],
+				index: ['na', 'us'],
 			});
 		});
 
@@ -126,12 +126,12 @@ describe('Create measurement', function () {
 				});
 		});
 
-		it('should create measurement with partial tag value "magic: tag" location', async () => {
+		it('should create measurement with "magic" value in any case', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
 					target: 'example.com',
-					locations: [{magic: 'tag-v', limit: 2}],
+					locations: [{magic: 'Na'}],
 					measurementOptions: {
 						packets: 4,
 					},
@@ -144,7 +144,25 @@ describe('Create measurement', function () {
 				});
 		});
 
-		it('shouldn\'t create measurement with "magic: non-existing-tag" location', async () => {
+		it('should create measurement with partial tag value "magic: TaG-v" location', async () => {
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{magic: 'TaG-v', limit: 2}],
+					measurementOptions: {
+						packets: 4,
+					},
+				})
+				.expect(202)
+				.expect(({body, header}) => {
+					expect(body.id).to.exist;
+					expect(header.location).to.exist;
+					expect(body.probesCount).to.equal(1);
+				});
+		});
+
+		it('should not create measurement with "magic: non-existing-tag" location', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
