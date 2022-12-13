@@ -1,26 +1,22 @@
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
-import {scopedLogger} from '../logger.js';
 
-const logger = scopedLogger('geoip.whitelist');
+/* eslint-disable-next-line @typescript-eslint/naming-convention */
+const WHITELIST_FILE_PATH = 'config/whitelist-ips.txt';
 
-const listFilePath = path.join(path.resolve(), 'config/whitelist-ips.txt');
+let whiteListIps: Set<string>;
 
-const getFile = async (): Promise<string> => {
-	let file = '';
-
-	try {
-		file = await readFile(listFilePath, 'utf8');
-	} catch (error: unknown) {
-		logger.debug('Whitelist fetch failed', error);
-	}
-
-	return file;
+export const populateMemList = async () => {
+	const listFilePath = path.join(path.resolve(), WHITELIST_FILE_PATH);
+	const file = await readFile(listFilePath, 'utf8');
+	const ipList = file.split(/\r?\n/).map(item => item.trim()).filter(item => item.length > 0);
+	whiteListIps = new Set(ipList);
 };
 
-export const isAddrWhitelisted = async (addr: string): Promise<boolean> => {
-	const file = await getFile();
-	const ipList = file.split(/\r?\n/).map(item => item.trim());
+export const isAddrWhitelisted = (addr: string) => {
+	if (!whiteListIps) {
+		throw new Error('Whitelist ips are not initialized');
+	}
 
-	return ipList.includes(addr);
+	return whiteListIps.has(addr);
 };
