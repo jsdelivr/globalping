@@ -19,7 +19,7 @@ export const schema = Joi.array().items(Joi.object().keys({
 	region: Joi.string().valid(...regionNames).custom(normalizeValue).insensitive(),
 	country: Joi.string().valid(...Object.keys(countries)).custom(normalizeValue).insensitive()
 		.messages({'any.only': 'The country must be a valid two-letter ISO code'}),
-	state: Joi.string().valid(...Object.keys(states)).custom(normalizeValue).insensitive()
+	state: Joi.string().valid(...Object.values(states)).custom(normalizeValue).insensitive()
 		.messages({'any.only': 'The US state must be a valid two-letter code, e.g. CA'}),
 	city: Joi.string().min(1).max(128).lowercase().custom(normalizeValue).insensitive(),
 	network: Joi.string().min(1).max(128).lowercase().custom(normalizeValue).insensitive(),
