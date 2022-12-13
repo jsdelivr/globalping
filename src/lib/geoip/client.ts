@@ -39,8 +39,6 @@ export default class GeoipClient {
 	) {}
 
 	async lookup(addr: string): Promise<ProbeLocation> {
-		const skipVpnCheck = await isAddrWhitelisted(addr);
-
 		const results = await Promise
 			.allSettled([
 				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
@@ -56,7 +54,7 @@ export default class GeoipClient {
 					fastly.status === 'fulfilled' ? {...fastly.value.location, provider: 'fastly'} : null,
 				);
 
-				if (fastly.status === 'fulfilled' && this.isVpn(fastly.value.client) && !skipVpnCheck) {
+				if (fastly.status === 'fulfilled' && this.isVpn(fastly.value.client) && !isAddrWhitelisted(addr)) {
 					throw new InternalError('vpn detected', true);
 				}
 
@@ -142,19 +140,22 @@ export default class GeoipClient {
 
 	private bestMatch(field: keyof LocationInfo, sources: LocationInfoWithProvider[]): LocationInfo {
 		const filtered = sources.filter(s => s[field]);
+		// Group by the same field value
 		const grouped = Object.values(_.groupBy(filtered, field));
+		// Move items with the same values to the beginning
 		const ranked = grouped.sort((a, b) => b.length - a.length).flat();
 
 		let best = ranked[0];
 
+		// If all values are different
 		if (grouped.length === filtered.length) {
 			const sourcesObject = Object.fromEntries(filtered.map(s => [s.provider, s]));
 			best = sourcesObject['ipinfo'] ?? sourcesObject['maxmind'];
 		}
 
 		if (!best || best.provider === 'fastly') {
-			this.logger.error(`failed to find a correct value for a filed "${field}"`, {field, sources});
-			throw new Error(`failed to find a correct value for a filed "${field}"`);
+			this.logger.error(`failed to find a correct value for a field "${field}"`, {field, sources});
+			throw new Error(`failed to find a correct value for a field "${field}"`);
 		}
 
 		return _.omit(best, 'provider');

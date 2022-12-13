@@ -4,13 +4,15 @@ import {initWsServer} from './ws/server.js';
 import {getMetricsAgent} from './metrics.js';
 import {populateMemList as populateMemMalwareList} from './malware/client.js';
 import {populateMemList as populateMemIpRangesList} from './ip-ranges.js';
+import {populateMemList as populateIpWhiteList} from './geoip/whitelist.js';
 
 export const createServer = async (): Promise<Server> => {
-	// Populate memory malware list before opening HTTP server
+	// Populate memory malware list
 	await populateMemMalwareList();
-
-	// Populate memory cloud regions list before opening HTTP server
+	// Populate memory cloud regions list
 	await populateMemIpRangesList();
+	// Populate ip whiltelist
+	await populateIpWhiteList();
 
 	await initRedis();
 	await initWsServer();
