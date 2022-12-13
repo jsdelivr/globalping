@@ -24,11 +24,11 @@ const locationKeyMap = [
 
 export class ProbeRouter {
 	static hasIndex(socket: Socket, index: string) {
-		return socket.data.probe.index.some(v => v.includes(index.replace('-', ' ').trim().toLowerCase()));
+		return socket.data.probe.index.some(v => v.includes(index.replace('-', ' ').trim()));
 	}
 
 	static hasTag(socket: Socket, tag: string) {
-		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value.includes(tag.trim().toLowerCase()));
+		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value.includes(tag.trim()));
 	}
 
 	static hasTagStrict(socket: Socket, tag: string) {
