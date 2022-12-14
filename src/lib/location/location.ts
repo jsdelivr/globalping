@@ -32,17 +32,17 @@ export const getContinentByCountry = (country: string): string => {
 };
 
 export const getStateIsoByName = (state: string): string => {
-	const stateEntries = Object.entries(states).find(s => s[1] === state);
+	const iso = states[state];
 
-	if (!stateEntries) {
-		throw new Error(`state not found ${state}`);
+	if (!iso) {
+		throw new Error(`iso not found ${state}`);
 	}
 
-	return String(stateEntries[0]);
+	return iso;
 };
 
 export const getStateNameByIso = (iso: string): string => {
-	const state = states[iso as keyof typeof states];
+	const state = _.invert(states)[iso];
 
 	if (!state) {
 		throw new Error(`state not found ${iso}`);
@@ -65,7 +65,7 @@ export const getCountryIso3ByIso2 = (iso: string): string => {
 	const iso3 = countryAlpha[iso as keyof typeof countryAlpha];
 
 	if (!iso3) {
-		throw new Error(`country not found ${iso}`);
+		throw new Error(`iso3 not found ${iso}`);
 	}
 
 	return iso3;
