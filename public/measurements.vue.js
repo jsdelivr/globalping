@@ -172,8 +172,11 @@ const app = () => ({
         measurement.request = Object.fromEntries(Object.entries(request).filter(entry => entry[1]))
       }
 
-      const locations = this.query.locations.map(({ id, limit, ...l}) => ({
-        ...l,
+      const locations = this.query.locations.map(({ limit, fields }) => ({
+        fields: fields.map(field => ({
+          ...field,
+          value: field.type === 'tags' ? field.value.split(',') : field.value
+        })),
         ...(limit ? { limit } : {})
       }))
 
@@ -474,7 +477,7 @@ const app = () => ({
                   </select>
                 </div>
                 <div class="col-sm-9">
-                  <input v-model="query.locations[lIndex].fields[fIndex].value" placeholder="value" />
+                  <input v-model="query.locations[lIndex].fields[fIndex].value" :placeholder="query.locations[lIndex].fields[fIndex].type === 'tags' ? 'comma-separated values' : 'value'" />
                 </div>
               </div>
               <div class="row">
