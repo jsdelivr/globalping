@@ -343,6 +343,37 @@ describe('probe router', () => {
 			}
 		});
 
+		describe('Location type - State', () => {
+			for (const testCase of ['dc', 'district of columbia', 'district']) {
+				it(`should match state value - ${testCase}`, async () => {
+					const location = {
+						continent: 'NA',
+						region: getRegionByCountry('US'),
+						country: 'US',
+						state: 'DC',
+						city: 'Washington',
+						asn: 3969,
+						network: 'Google Cloud',
+					};
+
+					const sockets: DeepPartial<Socket[]> = [
+						buildSocket(String(Date.now()), location),
+					];
+
+					const locations: Location[] = [
+						{magic: testCase},
+					];
+
+					fetchSocketsMock.resolves(sockets as never);
+
+					const probes = await router.findMatchingProbes(locations, 100);
+
+					expect(probes.length).to.equal(1);
+					expect(probes[0]!.location.country).to.equal('US');
+				});
+			}
+		});
+
 		describe('Location type - tag', () => {
 			for (const testCase of ['tag-value', 'tag-v']) {
 				it(`should match tag - ${testCase}`, async () => {
