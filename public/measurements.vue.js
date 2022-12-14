@@ -464,19 +464,24 @@ const app = () => ({
           </h3>
           <ul>
             <li v-for="(l, lIndex) in query.locations" :key="l.id">
-              <div>
-                <div v-for="(f, fIndex) in query.locations[lIndex].fields" :key="f.id">
+              <div class="row" v-for="(f, fIndex) in query.locations[lIndex].fields" :key="f.id">
+                <div class="col-sm-3">
                   <select v-model="query.locations[lIndex].fields[fIndex].type">
                     <option disabled value="">Please select one</option>
                     <option v-for="type in getLocationTypeArray()" :value="type">
                       {{ type }}
                     </option>
                   </select>
+                </div>
+                <div class="col-sm-9">
                   <input v-model="query.locations[lIndex].fields[fIndex].value" placeholder="value" />
                 </div>
               </div>
-              <div>
-                <input type="number" v-model="query.locations[lIndex].limit" placeholder="global limit" />
+              <div class="row">
+                  <label :for="lIndex" class="col-sm-3 col-form-label">location limit</label>
+                  <div class="col-sm-9">
+                    <input :id="lIndex" type="number" v-model="query.locations[lIndex].limit" placeholder="location limit" />
+                  </div>
               </div>
               <div>
                 <button @click="addLocationField" :value="lIndex">add field</button>
