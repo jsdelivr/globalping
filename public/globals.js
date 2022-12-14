@@ -2,7 +2,7 @@
 const ALLOWED_QUERY_TYPES = ['ping', 'traceroute', 'dns', 'mtr', 'http'];
 
 // filters
-const ALLOWED_LOCATION_TYPES = ['continent', 'region', 'country', 'state', 'city', 'asn', 'network', 'magic'];
+const ALLOWED_LOCATION_TYPES = ['continent', 'region', 'country', 'state', 'city', 'asn', 'network', 'tags', 'magic'];
 
 // traceroute
 const ALLOWED_TRACE_PROTOCOLS = ['TCP', 'UDP', 'ICMP'];
