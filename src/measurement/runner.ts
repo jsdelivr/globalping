@@ -63,19 +63,21 @@ export class MeasurementRunner {
 	}
 
 	async recordResult(data: MeasurementResultMessage): Promise<void> {
-		await this.store.storeMeasurementResult(data);
 		const probesAwaiting = await this.redis.get(getMeasurementKey(data.measurementId, 'probes_awaiting'));
 
-		if (probesAwaiting !== null && Number(probesAwaiting) > 0) {
+		if (probesAwaiting === null) {
 			return;
 		}
 
-		await this.store.markFinished(data.measurementId);
-		this.clearTimeout(data.measurementId);
+		const remainingProbes = await this.store.storeMeasurementResult(data);
 
-		const record = (await this.redis.json.get(getMeasurementKey(data.measurementId))) as MeasurementRecord;
-		if (record) {
-			this.metrics.recordMeasurementTime(record.type, (Date.now() - (new Date(record.createdAt)).getTime()));
+		if (remainingProbes === 0) {
+			await this.store.markFinished(data.measurementId);
+			this.clearTimeout(data.measurementId);
+			const record = (await this.redis.json.get(getMeasurementKey(data.measurementId))) as MeasurementRecord;
+			if (record) {
+				this.metrics.recordMeasurementTime(record.type, (Date.now() - (new Date(record.createdAt)).getTime()));
+			}
 		}
 	}
 

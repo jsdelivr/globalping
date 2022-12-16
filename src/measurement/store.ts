@@ -81,20 +81,23 @@ export class MeasurementStore {
 		]);
 	}
 
-	async storeMeasurementResult(data: MeasurementResultMessage): Promise<void> {
+	async storeMeasurementResult(data: MeasurementResultMessage): Promise<number> {
 		const key = getMeasurementKey(data.measurementId);
 
-		await Promise.all([
+		const [remainingProbes] = await Promise.all([
+			this.redis.decr(`${key}:probes_awaiting`),
 			this.redis.json.set(key, `$.results.${data.testId}.result`, data.result),
 			this.redis.json.set(key, '$.updatedAt', Date.now()),
-			this.redis.decr(`${key}:probes_awaiting`),
 		]);
+
+		return remainingProbes;
 	}
 
 	async markFinished(id: string): Promise<void> {
 		const key = getMeasurementKey(id);
 
 		await Promise.all([
+			this.redis.del(`${key}:probes_awaiting`),
 			this.redis.json.set(key, '$.status', 'finished'),
 			this.redis.json.set(key, '$.updatedAt', Date.now()),
 		]);
