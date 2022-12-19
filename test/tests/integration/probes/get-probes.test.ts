@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import type {Server} from 'node:http';
 import {expect} from 'chai';
-import request, {SuperTest, Test} from 'supertest';
+import request, {type SuperTest, type Test} from 'supertest';
 import type {Probe} from '../../../../src/probe/types.js';
 import {getTestServer} from '../../../utils/http.js';
 import {addFakeProbe, deleteFakeProbe} from '../../../utils/ws.js';

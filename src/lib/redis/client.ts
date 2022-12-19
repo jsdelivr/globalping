@@ -1,10 +1,11 @@
 import config from 'config';
 import {
 	createClient,
-	RedisClientType,
-	RedisDefaultModules,
-	RedisClientOptions,
-	RedisFunctions, RedisScripts,
+	type RedisClientType,
+	type RedisDefaultModules,
+	type RedisClientOptions,
+	type RedisFunctions,
+	type RedisScripts,
 } from 'redis';
 import {scopedLogger} from '../logger.js';
 

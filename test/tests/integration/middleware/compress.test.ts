@@ -1,5 +1,5 @@
 import type {Server} from 'node:http';
-import request, {Response} from 'supertest';
+import request, {type Response} from 'supertest';
 import {expect} from 'chai';
 import {addFakeProbe, deleteFakeProbe} from '../../../utils/ws.js';
 

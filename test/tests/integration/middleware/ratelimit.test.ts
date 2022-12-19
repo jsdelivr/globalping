@@ -1,5 +1,5 @@
 import type {Server} from 'node:http';
-import request, {Response} from 'supertest';
+import request, {type Response} from 'supertest';
 import requestIp from 'request-ip';
 import type {RateLimiterRedis} from 'rate-limiter-flexible';
 import {expect} from 'chai';
@@ -23,7 +23,6 @@ describe('rate limiter', () => {
 		// Koa sees ipv6-ipv4 monster
 		clientIpv6 = `::ffff:${clientIp ?? ''}`;
 
-		// eslint-disable-next-line node/no-unsupported-features/es-syntax
 		const rateLimiter = await import('../../../../src/lib/ratelimiter.js');
 		rateLimiterInstance = rateLimiter.default;
 	});

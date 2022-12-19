@@ -83,7 +83,7 @@ export class ProbeRouter {
 	}
 
 	private findByLocationAndWeight(sockets: Socket[], distribution: Map<Location, number>, limit: number): Socket[] {
-		const grouped: Map<Location, Socket[]> = new Map();
+		const grouped = new Map<Location, Socket[]>();
 
 		for (const [location] of distribution) {
 			const found = _.shuffle(this.findByLocation(sockets, location));
@@ -92,7 +92,7 @@ export class ProbeRouter {
 			}
 		}
 
-		const picked: Set<Socket> = new Set();
+		const picked = new Set<Socket>();
 
 		while (grouped.size > 0 && picked.size < limit) {
 			const selectedCount = picked.size;
@@ -141,7 +141,7 @@ export class ProbeRouter {
 	}
 
 	private filterWithLocationLimit(sockets: Socket[], locations: LocationWithLimit[]): Socket[] {
-		const grouped: Map<LocationWithLimit, Socket[]> = new Map();
+		const grouped = new Map<LocationWithLimit, Socket[]>();
 
 		for (const location of locations) {
 			const {limit, ...l} = location;
@@ -151,7 +151,7 @@ export class ProbeRouter {
 			}
 		}
 
-		const picked: Set<Socket> = new Set();
+		const picked = new Set<Socket>();
 
 		for (const [loc, soc] of grouped) {
 			for (const s of _.sampleSize(soc, loc.limit)) {
