@@ -178,7 +178,7 @@ We're more than happy to provide higher limits to researchers, non-profits and o
 
 ## Development
 
-In order to run the Globalping API locally you will need Node.js 16 and Redis with [RedisJSON](https://oss.redis.com/redisjson/) module (included in docker-compose.yml file). You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
+In order to run the Globalping API locally you will need Node.js 18 and Redis with [RedisJSON](https://oss.redis.com/redisjson/) module (included in docker-compose.yml file). You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
 
 API uses 3000 port by default. This can be overridden by `PORT` environment variable.
 

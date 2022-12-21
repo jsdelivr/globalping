@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import _ from 'lodash';
-import {RemoteSocket, Server} from 'socket.io';
+import {type RemoteSocket, Server} from 'socket.io';
 import {createAdapter} from '@socket.io/redis-adapter';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
 import type {Probe} from '../../probe/types.js';

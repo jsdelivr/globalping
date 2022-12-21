@@ -1,10 +1,10 @@
 import * as sinon from 'sinon';
 import _ from 'lodash';
 import {expect} from 'chai';
-import {RemoteSocket} from 'socket.io';
+import {type RemoteSocket} from 'socket.io';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events.js';
 import {ProbeRouter} from '../../../../src/probe/router.js';
-import {SocketData} from '../../../../src/lib/ws/server.js';
+import {type SocketData} from '../../../../src/lib/ws/server.js';
 import type {DeepPartial} from '../../../types.js';
 import type {ProbeLocation, Tag} from '../../../../src/probe/types.js';
 import type {Location} from '../../../../src/lib/location/types.js';

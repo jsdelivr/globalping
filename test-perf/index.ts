@@ -17,7 +17,7 @@ const config = {
 
 // Types
 
-interface JsonResult {
+type JsonResult = {
 	aggregate: {
 		counters: {
 			'http.requests': number;
@@ -40,9 +40,9 @@ interface JsonResult {
 			};
 		};
 	};
-}
+};
 
-interface Measurement {
+type Measurement = {
 	requests: {
 		sent: number;
 		codes202: number;
@@ -54,7 +54,7 @@ interface Measurement {
 		median: number;
 		max: number;
 	};
-}
+};
 
 // Utils
 
@@ -77,7 +77,6 @@ const measure = (probes: number, rps: number, duration: number) => {
 };
 
 const readResults = async (fileName: string): Promise<Measurement> => {
-	// eslint-disable-next-line node/no-unsupported-features/es-syntax
 	const json = await import(`./jsons/${fileName}`, {assert: {type: 'json'}}).then(module => module.default as JsonResult);
 	const requests = {
 		sent: json.aggregate.counters['http.requests'] || 0,

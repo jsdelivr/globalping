@@ -5,13 +5,13 @@ import ipaddr from 'ipaddr.js';
 
 type ParsedIpRange = [ipaddr.IPv4 | ipaddr.IPv6, number];
 
-interface Source {
+type Source = {
 	url: string;
 	file: string;
-}
+};
 
-const ipV4Ranges: Map<ParsedIpRange, string> = new Map();
-const ipV6Ranges: Map<ParsedIpRange, string> = new Map();
+const ipV4Ranges = new Map<ParsedIpRange, string>();
+const ipV6Ranges = new Map<ParsedIpRange, string>();
 
 export const sources: Record<'gcp' | 'aws', Source> = {
 	gcp: {

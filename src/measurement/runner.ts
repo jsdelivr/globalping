@@ -5,9 +5,9 @@ import {scopedLogger} from '../lib/logger.js';
 import {getWsServer} from '../lib/ws/server.js';
 import type {RedisClient} from '../lib/redis/client.js';
 import {getRedisClient} from '../lib/redis/client.js';
-import {getProbeRouter, ProbeRouter} from '../probe/router.js';
+import {getProbeRouter, type ProbeRouter} from '../probe/router.js';
 import type {Probe} from '../probe/types.js';
-import {getMetricsAgent, MetricsAgent} from '../lib/metrics.js';
+import {getMetricsAgent, type MetricsAgent} from '../lib/metrics.js';
 import type {MeasurementStore} from './store.js';
 import {getMeasurementKey, getMeasurementStore} from './store.js';
 import type {

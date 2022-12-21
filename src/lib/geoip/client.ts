@@ -11,7 +11,7 @@ import {scopedLogger} from '../logger.js';
 import {getRegionByCountry} from '../location/location.js';
 import {isAddrWhitelisted} from './whitelist.js';
 import {ipinfoLookup} from './providers/ipinfo.js';
-import {FastlyBundledResponse, fastlyLookup} from './providers/fastly.js';
+import {type FastlyBundledResponse, fastlyLookup} from './providers/fastly.js';
 import {maxmindLookup} from './providers/maxmind.js';
 import {prettifyRegionName} from './utils.js';
 

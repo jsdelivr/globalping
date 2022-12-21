@@ -2,7 +2,7 @@ import type {Server} from 'node:http';
 import process from 'node:process';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
-import request, {SuperTest, Test} from 'supertest';
+import request, {type SuperTest, type Test} from 'supertest';
 import {getTestServer} from '../../../utils/http.js';
 
 after(() => {

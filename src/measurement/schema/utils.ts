@@ -1,4 +1,9 @@
-import Joi, {AnySchema, CustomHelpers, ErrorReport, PresenceMode} from 'joi';
+import Joi, {
+	type AnySchema,
+	type CustomHelpers,
+	type ErrorReport,
+	type PresenceMode,
+} from 'joi';
 import validator from 'validator';
 import isIpPrivate from 'private-ip';
 import {

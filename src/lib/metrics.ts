@@ -1,7 +1,7 @@
 import type {Server as SocketServer} from 'socket.io';
 import newrelic from 'newrelic';
 
-import {getRedisClient, RedisClient} from './redis/client.js';
+import {getRedisClient, type RedisClient} from './redis/client.js';
 import {getWsServer, PROBES_NAMESPACE} from './ws/server.js';
 
 export class MetricsAgent {
