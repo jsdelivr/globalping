@@ -17,7 +17,7 @@ Get the current state of the measurement.
 
 **status code**: `200 OK`
 
-**content**: response will contain results from all requested probes, alongside some basic metadata of the request. For more detailed schema description, please follow the guide on [MEASUREMENT RESPONSE SCHEMA](./schema/measurement-response.md)
+**content**: response will contain results from all requested probes, alongside some basic metadata of the request. For more detailed schema description, please follow the guide on [MEASUREMENT RESPONSE SCHEMA](./schema/response.md)
 
 ### schema
 
