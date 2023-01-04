@@ -143,7 +143,7 @@ headers:
 
 ## error response (500)
 
-**condition**: unknown or internal error occured
+**condition**: unknown or internal error occurred
 
 **status code**: `500 Internal Server Error`
 
