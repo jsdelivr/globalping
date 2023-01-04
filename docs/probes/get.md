@@ -39,7 +39,7 @@ Get list of all probes currently online and connected to the API server.
 ### example
 
 ```json
-GET https://api.globalping.io/v1/probes/
+GET https://api.globalping.io/v1/probes
 [
     {
         "version": "0.10.1",

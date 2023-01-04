@@ -19,7 +19,7 @@ Jump to:
 
 **type**: `string`
 
-Measurement Id number, obtained from [`POST /v1/measurements/`](../post-create.md) request.
+Measurement Id number, obtained from [`POST /v1/measurements`](../post-create.md) request.
 
 #### type
 

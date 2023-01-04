@@ -14,7 +14,7 @@ Open endpoints require no Authentication.
 
 ### measurement
 
-- [post measurement](measurement/post-create.md): `POST /v1/measurements/`
+- [post measurement](measurement/post-create.md): `POST /v1/measurements`
 - [get measurement](measurement/get.md): `GET /v1/measurements/:id`
 
 ### schemas
