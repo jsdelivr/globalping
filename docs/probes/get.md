@@ -27,7 +27,7 @@ Get list of all probes currently online and connected to the API server.
             city: string
             asn: number
             latitude: decimal
-            longtitude: decimal
+            longitude: decimal
             network: string
         }
         tags: string[]

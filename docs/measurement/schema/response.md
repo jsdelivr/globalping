@@ -188,7 +188,7 @@ stats in millisecond contained within `ping` response footer.
 
 **type**: `Object[]`
 
-An array of all PING iterations before the deadline occured.
+An array of all PING iterations before the deadline occurred.
 
 #### timings[].ttl
 
@@ -226,7 +226,7 @@ Hostname address contained within `traceroute` response header.
 
 **type**: `Object[]`
 
-An array of all traceroute iterations before the deadline occured.
+An array of all traceroute iterations before the deadline occurred.
 
 #### hops[].resolvedHostname
 
@@ -234,7 +234,7 @@ An array of all traceroute iterations before the deadline occured.
 
 **type**: `string`
 
-reported hostame.
+reported hostname.
 
 #### hops[].resolvedAddress
 
@@ -260,7 +260,7 @@ the delay between sending the packet and getting the response.
 
 ### DNS
 
-***warning!***: In case the measurement was requested with `toggle` enabled, the `Reasult.hops` will be of type `Object[]`. This is because each trace path is returned individually by the probe.
+***warning!***: In case the measurement was requested with `toggle` enabled, the `Result.hops` will be of type `Object[]`. This is because each trace path is returned individually by the probe.
 
 example:
 ```json
@@ -501,7 +501,7 @@ An array of all returned MTR results.
 
 **type**: `number[]`
 
-An array, containig AS numbers assinged to this IP Address.
+An array, containing AS numbers assigned to this IP Address.
 
 #### hops[].timings[]
 
