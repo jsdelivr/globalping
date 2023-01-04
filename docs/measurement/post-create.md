@@ -46,7 +46,7 @@ below is presented a schema containing all possible input values; some are gener
 ```
 example:
 ```json
-POST https://api.globalping.io/v1/measurements/
+POST https://api.globalping.io/v1/measurements
 {
     "target": "jsdelivr.com",
     "type": "ping"
@@ -79,7 +79,7 @@ for `Locations` schema, please see [LOCATION SCHEMA](./schema/location.md).
 ### example
 
 ```json
-POST https://api.globalping.io/v1/measurements/
+POST https://api.globalping.io/v1/measurements
 {
     "id": "PY5fMsREMmIq45VR",
     "probesCount": 1,

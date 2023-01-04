@@ -60,7 +60,7 @@ If you're building something custom  or simply want to learn more about all the 
 It's as simple as: 
 
 ```
-POST https://api.globalping.io/v1/measurements/
+POST https://api.globalping.io/v1/measurements
 {
     "limit": 10,
     "locations": [],
