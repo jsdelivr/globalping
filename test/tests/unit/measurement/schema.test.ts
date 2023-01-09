@@ -400,6 +400,28 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
+		it('should fail (blacklisted target domain)', () => {
+			const input = {
+				type: 'ping',
+				target: '00517985.widget.windsorbongvape.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (blacklisted target ip)', () => {
+			const input = {
+				type: 'ping',
+				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
 		it('should pass and correct values (incorrect capitalization)', () => {
 			const input = {
 				type: 'PING',
@@ -470,6 +492,28 @@ describe('command schema', () => {
 			const input = {
 				type: 'traceroute',
 				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (blacklisted target domain)', () => {
+			const input = {
+				type: 'traceroute',
+				target: '00517985.widget.windsorbongvape.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (blacklisted target ip)', () => {
+			const input = {
+				type: 'traceroute',
+				target: '100.0.41.228',
 			};
 
 			const valid = globalSchema.validate(input);
@@ -604,10 +648,32 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
+		it('should fail (blacklisted target domain)', () => {
+			const input = {
+				type: 'dns',
+				target: '00517985.widget.windsorbongvape.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (blacklisted target ip)', () => {
+			const input = {
+				type: 'dns',
+				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
 		it('should fail (ipv6 resolver)', () => {
 			const input = {
 				type: 'dns',
-				target: '1.1.1.1',
+				target: 'abc.com',
 				measurementOptions: {
 					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 				},
@@ -616,6 +682,48 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+		});
+
+		it('should fail (blacklisted domain resolver)', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					resolver: '00517985.widget.windsorbongvape.com',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (blacklisted ip resolver)', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					resolver: '100.0.41.228',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should pass (hostname resolver)', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					resolver: 'gns1.cloudns.net',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
 		});
 
 		it('should pass (target domain) (_acme-challenge.abc.com)', () => {
@@ -743,6 +851,22 @@ describe('command schema', () => {
 			expect(valid.error).to.exist;
 		});
 
+		it('should fail (uses blacklisted ip for target)', () => {
+			const input = {
+				type: 'dns',
+				target: '100.0.41.228',
+				measurementOptions: {
+					query: {
+						type: 'PTR',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
 		it('should pass (uses ip for target)', () => {
 			const input = {
 				type: 'dns',
@@ -795,6 +919,28 @@ describe('command schema', () => {
 			const input = {
 				type: 'mtr',
 				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (blacklisted target domain)', () => {
+			const input = {
+				type: 'mtr',
+				target: '00517985.widget.windsorbongvape.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (blacklisted target ip)', () => {
+			const input = {
+				type: 'mtr',
+				target: '100.0.41.228',
 			};
 
 			const valid = globalSchema.validate(input);
@@ -993,6 +1139,28 @@ describe('command schema', () => {
 						},
 					},
 				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (blacklisted target domain)', () => {
+			const input = {
+				type: 'http',
+				target: '00517985.widget.windsorbongvape.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+		});
+
+		it('should fail (blacklisted target ip)', () => {
+			const input = {
+				type: 'http',
+				target: '100.0.41.228',
 			};
 
 			const valid = globalSchema.validate(input);

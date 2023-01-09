@@ -1,5 +1,4 @@
 import Joi from 'joi';
-import {joiValidate as joiMalwareValidateIp} from '../../lib/malware/ip.js';
 import {
 	joiSchemaErrorMessage as joiMalwareSchemaErrorMessage,
 } from '../../lib/malware/client.js';
@@ -38,7 +37,7 @@ export const httpSchema = Joi.object({
 		query: Joi.string().optional().default(''),
 		headers: Joi.object().default({}),
 	}).default(),
-	resolver: Joi.string().ip(globalIpOptions).custom(joiMalwareValidateIp).custom(joiValidateTarget('ip')),
+	resolver: Joi.string().ip(globalIpOptions).custom(joiValidateTarget('ip')),
 	protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default('https'),
 	port: Joi.number(),
 }).default();
@@ -91,7 +90,9 @@ export const dnsSchema = Joi.object({
 	query: Joi.object({
 		type: Joi.string().valid(...allowedDnsTypes).insensitive().default('A'),
 	}).default(),
-	resolver: Joi.string().ip(globalIpOptions).custom(joiMalwareValidateIp),
+	resolver: Joi.alternatives()
+		.try(Joi.string().ip(globalIpOptions), Joi.custom(joiValidateDomain()))
+		.custom(joiValidateTarget('any')),
 	protocol: Joi.string().valid(...allowedDnsProtocols).insensitive().default('UDP'),
 	port: Joi.number().default(53),
 	trace: Joi.boolean().default(false),
