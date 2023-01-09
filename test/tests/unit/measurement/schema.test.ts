@@ -6,13 +6,18 @@ import {
 import {
 	schema as locationSchema,
 } from '../../../../src/measurement/schema/location-schema.js';
-
 import {
 	joiValidateTarget,
 	joiValidateDomain,
 } from '../../../../src/measurement/schema/utils.js';
+import {populateDomainList, populateIpList} from '../../../utils/malware.js';
 
-describe('command schema', () => {
+describe('command schema', async () => {
+	before(async () => {
+		await populateIpList();
+		await populateDomainList();
+	});
+
 	describe('global', () => {
 		describe('limits', () => {
 			it('should correct limit (1 by default)', () => {
@@ -239,7 +244,7 @@ describe('command schema', () => {
 				const valid = locationSchema.validate(input);
 
 				expect(valid.error).to.exist;
-				expect(valid.error!.details[0]!.message).to.equal('"[0].magic" is not allowed to be empty');
+				expect(valid.error!.message).to.equal('"[0].magic" is not allowed to be empty');
 			});
 
 			it('should fail (not string)', () => {
@@ -253,7 +258,7 @@ describe('command schema', () => {
 				const valid = locationSchema.validate(input);
 
 				expect(valid.error).to.exist;
-				expect(valid.error!.details[0]!.message).to.equal('"[0].magic" must be a string');
+				expect(valid.error!.message).to.equal('"[0].magic" must be a string');
 			});
 
 			it('should succeed', () => {
@@ -332,6 +337,7 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Private hostnames are not allowed.');
 		});
 
 		it('should fail (ipv6)', () => {
@@ -344,6 +350,7 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
 		});
 
 		it('should fail (missing values)', () => {
@@ -354,6 +361,7 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" is required');
 		});
 
 		it('should pass (target domain)', () => {
@@ -398,6 +406,31 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
+		});
+
+		it('should fail (blacklisted target domain)', () => {
+			const input = {
+				type: 'ping',
+				target: '00517985.widget.windsorbongvape.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted target ip)', () => {
+			const input = {
+				type: 'ping',
+				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
 		it('should pass and correct values (incorrect capitalization)', () => {
@@ -464,6 +497,7 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" is required');
 		});
 
 		it('should fail (ipv6)', () => {
@@ -475,6 +509,31 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
+		});
+
+		it('should fail (blacklisted target domain)', () => {
+			const input = {
+				type: 'traceroute',
+				target: '00517985.widget.windsorbongvape.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted target ip)', () => {
+			const input = {
+				type: 'traceroute',
+				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
 		it('should pass (target domain)', () => {
@@ -519,6 +578,7 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
 		});
 
 		it('should pass and correct values (incorrect caps)', () => {
@@ -591,6 +651,7 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" is required');
 		});
 
 		it('should fail (invalid target format)', () => {
@@ -602,12 +663,25 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided target is not a valid domain name');
+		});
+
+		it('should fail (blacklisted target domain)', () => {
+			const input = {
+				type: 'dns',
+				target: '00517985.widget.windsorbongvape.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
 		it('should fail (ipv6 resolver)', () => {
 			const input = {
 				type: 'dns',
-				target: '1.1.1.1',
+				target: 'abc.com',
 				measurementOptions: {
 					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 				},
@@ -616,6 +690,51 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"measurementOptions.resolver" does not match any of the allowed types');
+		});
+
+		it('should fail (blacklisted domain resolver)', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					resolver: '00517985.widget.windsorbongvape.com',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted ip resolver)', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					resolver: '100.0.41.228',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should pass (hostname resolver)', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					resolver: 'gns1.cloudns.net',
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
 		});
 
 		it('should pass (target domain) (_acme-challenge.abc.com)', () => {
@@ -741,6 +860,24 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" must be a valid ip address of one of the following versions [ipv4] with a forbidden CIDR');
+		});
+
+		it('should fail (uses blacklisted ip for target)', () => {
+			const input = {
+				type: 'dns',
+				target: '100.0.41.228',
+				measurementOptions: {
+					query: {
+						type: 'PTR',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
 		it('should pass (uses ip for target)', () => {
@@ -789,6 +926,7 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" is required');
 		});
 
 		it('should fail (ipv6 target)', () => {
@@ -800,6 +938,31 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
+		});
+
+		it('should fail (blacklisted target domain)', () => {
+			const input = {
+				type: 'mtr',
+				target: '00517985.widget.windsorbongvape.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted target ip)', () => {
+			const input = {
+				type: 'mtr',
+				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
 		it('should pass (target domain)', () => {
@@ -844,6 +1007,7 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
 		});
 
 		it('should pass and correct values (incorrect caps)', () => {
@@ -919,7 +1083,7 @@ describe('command schema', () => {
 					port: 443,
 					resolver: 'abc',
 					request: {
-						host: '',
+						host: 'abc.com',
 						headers: {
 							test: 'abc',
 						},
@@ -931,6 +1095,7 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"measurementOptions.resolver" must be a valid ip address of one of the following versions [ipv4] with a forbidden CIDR');
 		});
 
 		it('should fail (ipv6 resolver)', () => {
@@ -942,7 +1107,7 @@ describe('command schema', () => {
 					protocol: 'https',
 					port: 443,
 					request: {
-						host: '',
+						host: 'abc.com',
 						headers: {
 							test: 'abc',
 						},
@@ -952,8 +1117,31 @@ describe('command schema', () => {
 			};
 
 			const valid = globalSchema.validate(input);
-
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"measurementOptions.resolver" must be a valid ip address of one of the following versions [ipv4] with a forbidden CIDR');
+		});
+
+		it('should fail (blacklisted resolver)', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				measurementOptions: {
+					resolver: '100.0.41.228',
+					protocol: 'https',
+					port: 443,
+					request: {
+						host: 'abc.com',
+						headers: {
+							test: 'abc',
+						},
+						method: 'GET',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
 		it('should fail (unsupported method)', () => {
@@ -976,6 +1164,7 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"measurementOptions.request.method" must be one of [get, head]');
 		});
 
 		it('should fail (unsupported protocol)', () => {
@@ -987,7 +1176,7 @@ describe('command schema', () => {
 					protocol: 'rtmp',
 					request: {
 						method: 'GET',
-						host: '',
+						host: 'abc.com',
 						headers: {
 							test: 'abc',
 						},
@@ -998,6 +1187,31 @@ describe('command schema', () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"measurementOptions.protocol" must be one of [http, https, http2]');
+		});
+
+		it('should fail (blacklisted target domain)', () => {
+			const input = {
+				type: 'http',
+				target: '00517985.widget.windsorbongvape.com',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted target ip)', () => {
+			const input = {
+				type: 'http',
+				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
 		it('should pass (target domain) (_sub.domain.com)', () => {
