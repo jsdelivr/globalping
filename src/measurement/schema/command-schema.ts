@@ -40,7 +40,7 @@ export const httpSchema = Joi.object({
 	resolver: Joi.string().ip(globalIpOptions).custom(joiValidateTarget('ip')),
 	protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default('https'),
 	port: Joi.number(),
-}).default();
+}).default().messages(schemaErrorMessages);
 
 // Mtr
 const mtrTargetSchema = Joi.alternatives()
