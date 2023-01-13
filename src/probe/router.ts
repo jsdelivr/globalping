@@ -48,8 +48,10 @@ export class ProbeRouter {
 
 		if (locations.some(l => l.limit)) {
 			filtered = this.filterWithLocationLimit(sockets, locations);
+		} else if (locations.length > 0) {
+			filtered = this.filterWithGlobalLimit(sockets, locations, globalLimit);
 		} else {
-			filtered = locations.length > 0 ? this.filterWithGlobalLimit(sockets, locations, globalLimit) : this.filterGloballyDistributed(sockets, globalLimit);
+			filtered = this.filterGloballyDistributed(sockets, globalLimit);
 		}
 
 		return filtered.map(s => s.data.probe);
@@ -83,45 +85,44 @@ export class ProbeRouter {
 	}
 
 	private findByLocationAndWeight(sockets: Socket[], distribution: Map<Location, number>, limit: number): Socket[] {
-		const grouped = new Map<Location, Socket[]>();
+		const groupedByLocation = new Map<Location, Socket[]>();
 
 		for (const [location] of distribution) {
-			const found = _.shuffle(this.findByLocation(sockets, location));
-			if (found.length > 0) {
-				grouped.set(location, found);
+			const foundSockets = _.shuffle(this.findByLocation(sockets, location));
+			if (foundSockets.length > 0) {
+				groupedByLocation.set(location, foundSockets);
 			}
 		}
 
-		const picked = new Set<Socket>();
+		const pickedSockets = new Set<Socket>();
 
-		while (grouped.size > 0 && picked.size < limit) {
-			const selectedCount = picked.size;
+		while (groupedByLocation.size > 0 && pickedSockets.size < limit) {
+			const selectedCount = pickedSockets.size;
 
-			for (const [k, v] of grouped) {
-				// Circuit-breaker - we don't want to get more probes than was requested
-				if (picked.size === limit) {
+			for (const [location, locationSockets] of groupedByLocation) {
+				if (pickedSockets.size === limit) {
 					break;
 				}
 
-				const weight = distribution.get(k);
+				const locationWeight = distribution.get(location);
 
-				if (!weight) {
+				if (!locationWeight) {
 					continue;
 				}
 
-				const count = Math.ceil((limit - selectedCount) * weight / 100);
+				const count = Math.ceil((limit - selectedCount) * locationWeight / 100);
 
-				for (const s of v.splice(0, count)) {
-					picked.add(s);
+				for (const s of locationSockets.splice(0, count)) {
+					pickedSockets.add(s);
 				}
 
-				if (v.length === 0) {
-					grouped.delete(k);
+				if (locationSockets.length === 0) {
+					groupedByLocation.delete(location);
 				}
 			}
 		}
 
-		return [...picked];
+		return [...pickedSockets];
 	}
 
 	private filterGloballyDistributed(sockets: Socket[], limit: number): Socket[] {
@@ -145,7 +146,7 @@ export class ProbeRouter {
 
 		for (const location of locations) {
 			const {limit, ...l} = location;
-			const found = this.findByLocation(sockets, l);
+			const found = _.shuffle(this.findByLocation(sockets, l));
 			if (found.length > 0) {
 				grouped.set(location, found);
 			}
