@@ -45,7 +45,7 @@ describe('Create measurement', function () {
 			await addFakeProbe('fake-probe-US', {
 				location: {continent: 'NA', country: 'US'},
 				tags: [{type: 'system', value: 'tag-value'}],
-				index: ['na', 'us'],
+				index: ['na', 'us', 'tag value'],
 			});
 		});
 

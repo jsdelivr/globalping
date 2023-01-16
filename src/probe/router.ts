@@ -55,7 +55,7 @@ export class ProbeRouter {
 
 		for (const location of locations) {
 			const {limit, ...l} = location;
-			const found = _.shuffle(this.socketsFilter.filterByLocation(sockets, l));
+			const found = this.socketsFilter.filterByLocation(sockets, l);
 			if (found.length > 0) {
 				grouped.set(location, found);
 			}
@@ -64,7 +64,7 @@ export class ProbeRouter {
 		const picked = new Set<Socket>();
 
 		for (const [loc, soc] of grouped) {
-			for (const s of _.sampleSize(soc, loc.limit)) {
+			for (const s of soc.slice(0, loc.limit)) {
 				picked.add(s);
 			}
 		}
