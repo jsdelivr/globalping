@@ -64,7 +64,7 @@ export class ProbeRouter {
 		const picked = new Set<Socket>();
 
 		for (const [loc, soc] of grouped) {
-			for (const s of soc.slice(0, loc.limit)) {
+			for (const s of _.take(soc, loc.limit)) {
 				picked.add(s);
 			}
 		}

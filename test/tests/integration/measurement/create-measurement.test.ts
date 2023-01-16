@@ -183,7 +183,7 @@ describe('Create measurement', function () {
 				});
 		});
 
-		it('should create measurement with "tags: [tag-value]" location', async () => {
+		it('should create measurement with "tags: ["tag-value"]" location', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',

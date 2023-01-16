@@ -103,7 +103,7 @@ export class SocketsLocationFilter {
 			const closestIndexPosition = keywords.reduce((smallesIndex, keyword) => {
 				const indexPosition = SocketsLocationFilter.getIndexPosition(socket, keyword);
 				return indexPosition < smallesIndex ? indexPosition : smallesIndex;
-			}, -1);
+			}, Number.POSITIVE_INFINITY);
 			return closestIndexPosition;
 		};
 
