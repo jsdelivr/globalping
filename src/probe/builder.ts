@@ -76,7 +76,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		tags.filter(tag => tag.type === 'system').map(tag => tag.value),
 		location.normalizedNetwork,
 		getNetworkAliases(location.normalizedNetwork),
-	].flat().filter(Boolean).map(s => s.toLowerCase().replace('-', ' '));
+	].flat().filter(Boolean).map(s => s.toLowerCase().replaceAll('-', ' '));
 
 	// Todo: add validation and handle missing or partial data
 	return {
