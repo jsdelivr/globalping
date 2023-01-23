@@ -45,7 +45,7 @@ describe('Create measurement', function () {
 			await addFakeProbe('fake-probe-US', {
 				location: {continent: 'NA', country: 'US'},
 				tags: [{type: 'system', value: 'tag-value'}],
-				index: ['na', 'us'],
+				index: ['na', 'us', 'tag value'],
 			});
 		});
 
@@ -183,7 +183,7 @@ describe('Create measurement', function () {
 				});
 		});
 
-		it('should create measurement with "tags: [tag-value]" location', async () => {
+		it('should create measurement with "tags: ["tag-value"]" location', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',

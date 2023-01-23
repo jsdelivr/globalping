@@ -1,42 +1,19 @@
 import _ from 'lodash';
-import config from 'config';
 import type {RemoteSocket} from 'socket.io';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
 import type {SocketData} from '../lib/ws/server.js';
 import {fetchSockets} from '../lib/ws/server.js';
 import type {LocationWithLimit} from '../measurement/types.js';
 import type {Location} from '../lib/location/types.js';
-import type {Probe, ProbeLocation} from './types.js';
+import type {Probe} from './types.js';
+import {SocketsLocationFilter} from './sockets-location-filter.js';
 
-type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
-
-/*
- * [
- *    [ public key, internal key]
- * ]
- *
- * */
-const locationKeyMap = [
-	['region', 'normalizedRegion'],
-	['network', 'normalizedNetwork'],
-	['city', 'normalizedCity'],
-];
+export type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
 export class ProbeRouter {
-	static hasIndex(socket: Socket, index: string) {
-		return socket.data.probe.index.some(v => v.includes(index.replace('-', ' ').trim()));
-	}
-
-	static hasTag(socket: Socket, tag: string) {
-		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value.includes(tag.trim()));
-	}
-
-	static hasTagStrict(socket: Socket, tag: string) {
-		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value === tag);
-	}
-
 	constructor(
 		private readonly fetchWsSockets: typeof fetchSockets,
+		private readonly socketsFilter = new SocketsLocationFilter(),
 	) {}
 
 	public async findMatchingProbes(
@@ -47,9 +24,11 @@ export class ProbeRouter {
 		let filtered: Socket[] = [];
 
 		if (locations.some(l => l.limit)) {
-			filtered = this.filterWithLocationLimit(sockets, locations);
+			filtered = this.findWithLocationLimit(sockets, locations);
+		} else if (locations.length > 0) {
+			filtered = this.findWithGlobalLimit(sockets, locations, globalLimit);
 		} else {
-			filtered = locations.length > 0 ? this.filterWithGlobalLimit(sockets, locations, globalLimit) : this.filterGloballyDistributed(sockets, globalLimit);
+			filtered = this.findGloballyDistributed(sockets, globalLimit);
 		}
 
 		return filtered.map(s => s.data.probe);
@@ -60,92 +39,23 @@ export class ProbeRouter {
 		return sockets.filter(s => s.data.probe.ready);
 	}
 
-	private findByLocation(sockets: Socket[], location: Location): Socket[] {
-		if (location.magic === 'world') {
-			return this.filterGloballyDistributed(sockets, sockets.length);
-		}
-
-		return sockets.filter(s => Object.keys(location).every(k => {
-			if (k === 'tags') {
-				const tags = location[k]!;
-				return tags.every(tag => ProbeRouter.hasTagStrict(s, tag));
-			}
-
-			if (k === 'magic') {
-				const keywords = String(location[k]).split('+');
-				return keywords.every(keyword => ProbeRouter.hasIndex(s, keyword) || ProbeRouter.hasTag(s, keyword));
-			}
-
-			const key = locationKeyMap.find(m => m.includes(k))?.[1] ?? k;
-
-			return location[k as keyof Location] === s.data.probe.location[key as keyof ProbeLocation];
-		}));
+	private findGloballyDistributed(sockets: Socket[], limit: number): Socket[] {
+		return this.socketsFilter.filterGloballyDistibuted(sockets, limit);
 	}
 
-	private findByLocationAndWeight(sockets: Socket[], distribution: Map<Location, number>, limit: number): Socket[] {
-		const grouped = new Map<Location, Socket[]>();
-
-		for (const [location] of distribution) {
-			const found = _.shuffle(this.findByLocation(sockets, location));
-			if (found.length > 0) {
-				grouped.set(location, found);
-			}
-		}
-
-		const picked = new Set<Socket>();
-
-		while (grouped.size > 0 && picked.size < limit) {
-			const selectedCount = picked.size;
-
-			for (const [k, v] of grouped) {
-				// Circuit-breaker - we don't want to get more probes than was requested
-				if (picked.size === limit) {
-					break;
-				}
-
-				const weight = distribution.get(k);
-
-				if (!weight) {
-					continue;
-				}
-
-				const count = Math.ceil((limit - selectedCount) * weight / 100);
-
-				for (const s of v.splice(0, count)) {
-					picked.add(s);
-				}
-
-				if (v.length === 0) {
-					grouped.delete(k);
-				}
-			}
-		}
-
-		return [...picked];
-	}
-
-	private filterGloballyDistributed(sockets: Socket[], limit: number): Socket[] {
-		const distribution = new Map<Location, number>(
-			_.shuffle(Object.entries(config.get<Record<string, number>>('measurement.globalDistribution')))
-				.map(([value, weight]) => ([{continent: value}, weight])),
-		);
-
-		return this.findByLocationAndWeight(sockets, distribution, limit);
-	}
-
-	private filterWithGlobalLimit(sockets: Socket[], locations: Location[], limit: number): Socket[] {
+	private findWithGlobalLimit(sockets: Socket[], locations: Location[], limit: number): Socket[] {
 		const weight = Math.floor(100 / locations.length);
 		const distribution = new Map(locations.map(l => [l, weight]));
 
-		return this.findByLocationAndWeight(sockets, distribution, limit);
+		return this.socketsFilter.filterByLocationAndWeight(sockets, distribution, limit);
 	}
 
-	private filterWithLocationLimit(sockets: Socket[], locations: LocationWithLimit[]): Socket[] {
+	private findWithLocationLimit(sockets: Socket[], locations: LocationWithLimit[]): Socket[] {
 		const grouped = new Map<LocationWithLimit, Socket[]>();
 
 		for (const location of locations) {
 			const {limit, ...l} = location;
-			const found = this.findByLocation(sockets, l);
+			const found = this.socketsFilter.filterByLocation(sockets, l);
 			if (found.length > 0) {
 				grouped.set(location, found);
 			}
@@ -154,7 +64,7 @@ export class ProbeRouter {
 		const picked = new Set<Socket>();
 
 		for (const [loc, soc] of grouped) {
-			for (const s of _.sampleSize(soc, loc.limit)) {
+			for (const s of _.take(soc, loc.limit)) {
 				picked.add(s);
 			}
 		}

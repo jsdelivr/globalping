@@ -50,7 +50,6 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	let ipInfo;
 
-	// Todo: cache results for ip address
 	if (!isIpPrivate(clientIp)) {
 		ipInfo = await geoipClient.lookup(clientIp);
 	}
@@ -59,46 +58,25 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		throw new Error(`couldn't detect probe location for ip ${clientIp}`);
 	}
 
-	const location: ProbeLocation = {
-		continent: ipInfo.continent,
-		region: ipInfo.region,
-		normalizedRegion: ipInfo.normalizedRegion,
-		country: ipInfo.country,
-		state: ipInfo.state,
-		city: ipInfo.city,
-		normalizedCity: ipInfo.normalizedCity,
-		asn: ipInfo.asn,
-		latitude: ipInfo.latitude,
-		longitude: ipInfo.longitude,
-		network: ipInfo.network,
-		normalizedNetwork: ipInfo.normalizedNetwork,
-	};
+	const location = getLocation(ipInfo);
+
+	const tags = getTags(clientIp);
 
 	const index = [
+		location.country,
+		getCountryIso3ByIso2(location.country),
+		getCountryByIso(location.country),
+		getCountryAliases(location.country),
+		location.normalizedCity,
+		location.state ?? [],
+		...(location.state ? [getStateNameByIso(location.state)] : []),
 		location.continent,
 		location.normalizedRegion,
-		location.country,
-		location.state ?? [],
-		location.normalizedCity,
-		location.normalizedNetwork,
 		`as${location.asn}`,
-		...(location.state ? [getStateNameByIso(location.state)] : []),
-		getCountryByIso(location.country),
-		getCountryIso3ByIso2(location.country),
-		getCountryAliases(location.country),
+		tags.filter(tag => tag.type === 'system').map(tag => tag.value),
+		location.normalizedNetwork,
 		getNetworkAliases(location.normalizedNetwork),
-	].flat().filter(Boolean).map(s => s.toLowerCase().replace('-', ' '));
-
-	const tags: Tag[] = [];
-
-	const cloudRegion = getRegion(clientIp);
-
-	if (cloudRegion) {
-		tags.push({
-			type: 'system',
-			value: cloudRegion,
-		});
-	}
+	].flat().filter(Boolean).map(s => s.toLowerCase().replaceAll('-', ' '));
 
 	// Todo: add validation and handle missing or partial data
 	return {
@@ -119,4 +97,32 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		},
 		ready: true,
 	};
+};
+
+const getLocation = (ipInfo: ProbeLocation): ProbeLocation => ({
+	continent: ipInfo.continent,
+	region: ipInfo.region,
+	normalizedRegion: ipInfo.normalizedRegion,
+	country: ipInfo.country,
+	state: ipInfo.state,
+	city: ipInfo.city,
+	normalizedCity: ipInfo.normalizedCity,
+	asn: ipInfo.asn,
+	latitude: ipInfo.latitude,
+	longitude: ipInfo.longitude,
+	network: ipInfo.network,
+	normalizedNetwork: ipInfo.normalizedNetwork,
+});
+
+const getTags = (clientIp: string) => {
+	const tags: Tag[] = [];
+	const cloudRegion = getRegion(clientIp);
+	if (cloudRegion) {
+		tags.push({
+			type: 'system',
+			value: cloudRegion,
+		});
+	}
+
+	return tags;
 };
