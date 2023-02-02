@@ -7,7 +7,7 @@ import type {Location} from '../lib/location/types.js';
 
 type TestResult = {
 	rawOutput: string;
-	status: 'in-progress' | 'success' | 'failed';
+	status: 'in-progress' | 'finished' | 'failed';
 };
 
 type PingTest = {
