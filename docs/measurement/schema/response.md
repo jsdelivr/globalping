@@ -85,6 +85,7 @@ An array of all probe responses. Jump to [`RESULT SCHEMA`](#result) for more det
                 "tags": []
             },
             "result": {
+                "status": "finished",
                 "resolvedAddress": "172.217.170.14",
                 "resolvedHostname": "lhr25s33-in-f14.1e100.net",
                 "timings": [
@@ -131,6 +132,19 @@ possible result types:
 **type**: `Object`
 
 Probe metadata, containing its precise geo location.
+
+#### status
+
+**key**: `Result.result.status`
+
+**type**: `string`
+
+Measurement's current status for the specific probe. Communication between server and probe is asynchronious, thus the response should not be considered final, until this field returns `finished` or `failed`.
+
+**available values**:
+- `in-progress`
+- `finished`
+- `failed`
 
 #### rawOutput
 

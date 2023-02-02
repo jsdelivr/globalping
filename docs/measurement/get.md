@@ -62,6 +62,7 @@ GET https://api.globalping.io/v1/measurements/tEaUg3vYnOu2exVC
                 "tags": ["af-south-1"]
             },
             "result": {
+                "status": "finished",
                 "resolvedAddress": "172.217.170.14",
                 "times": [
                     {
