@@ -3,7 +3,7 @@ import cryptoRandomString from 'crypto-random-string';
 import type {Probe} from '../probe/types.js';
 import type {RedisClient} from '../lib/redis/client.js';
 import {getRedisClient} from '../lib/redis/client.js';
-import type {MeasurementRecord, MeasurementResultMessage, NetworkTest} from './types.js';
+import type {MeasurementRecord, MeasurementResultMessage, MeasurementResult, NetworkTest} from './types.js';
 
 export const getMeasurementKey = (id: string, suffix: 'probes_awaiting' | undefined = undefined): string => {
 	let key = `gp:measurement:${id}`;
@@ -19,7 +19,7 @@ export class MeasurementStore {
 	constructor(private readonly redis: RedisClient) {}
 
 	async getMeasurementResults(id: string): Promise<MeasurementRecord> {
-		return await this.redis.json.get(getMeasurementKey(id)) as never;
+		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord;
 	}
 
 	async createMeasurement(test: NetworkTest, probesCount: number): Promise<string> {
@@ -63,8 +63,11 @@ export class MeasurementStore {
 					tags: probe.tags.map(({value}) => value),
 					resolvers: probe.resolvers,
 				},
-				result: {rawOutput: ''},
-			}),
+				result: {
+					status: 'in-progress',
+					rawOutput: '',
+				},
+			} as MeasurementResult),
 			this.redis.json.set(key, '$.updatedAt', Date.now()),
 		]);
 	}
@@ -101,6 +104,20 @@ export class MeasurementStore {
 			this.redis.json.set(key, '$.status', 'finished'),
 			this.redis.json.set(key, '$.updatedAt', Date.now()),
 		]);
+	}
+
+	async markFinishedByTimeout(id: string): Promise<void> {
+		const measurement = await this.getMeasurementResults(id);
+		measurement.status = 'finished';
+		measurement.updatedAt = Date.now();
+		const inProgressResults = Object.values(measurement.results).filter(resultObject => resultObject.result.status === 'in-progress');
+		for (const resultObject of inProgressResults) {
+			resultObject.result.status = 'failed';
+			resultObject.result.rawOutput += '\n\nThe measurement timed out';
+		}
+
+		const key = getMeasurementKey(id);
+		await this.redis.json.set(key, '$', measurement);
 	}
 }
 

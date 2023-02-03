@@ -7,6 +7,7 @@ import type {Location} from '../lib/location/types.js';
 
 type TestResult = {
 	rawOutput: string;
+	status: 'in-progress' | 'finished' | 'failed';
 };
 
 type PingTest = {
@@ -153,7 +154,6 @@ export type RequestType = 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 
 export type MeasurementOptions = PingTest | TracerouteTest | MtrTest | DnsTest | HttpTest;
 export type NetworkTest = MeasurementOptions & {type: RequestType; target: string};
-export type MeasurementResult = PingResult | TracerouteResult | MtrResult | DnsResult | HttpResult;
 export type LocationWithLimit = Location & {limit?: number};
 
 /**
@@ -176,6 +176,23 @@ export type MeasurementConfig = {
 	probes: Probe[];
 };
 
+export type MeasurementResult = {
+	probe: {
+		continent: string;
+		region: string;
+		country: string;
+		state: string | null; // eslint-disable-line @typescript-eslint/ban-types
+		city: string;
+		asn: number;
+		longitude: number;
+		latitude: number;
+		network: string;
+		tags: string[];
+		resolvers: string[];
+	};
+	result: PingResult | TracerouteResult | DnsResult | MtrResult | HttpResult;
+};
+
 export type MeasurementRecord = {
 	id: string;
 	type: MeasurementRequest['type'];
@@ -183,16 +200,7 @@ export type MeasurementRecord = {
 	createdAt: number;
 	updatedAt: number;
 	probesCount: number;
-	results: Record<string, (PingResult | TracerouteResult | DnsResult)>;
-};
-
-export type MeasurementResponse = {
-	id: string;
-	type: MeasurementRequest['type'];
-	status: MeasurementStatus;
-	created_at: number;
-	updated_at: number;
-	results: MeasurementResult[];
+	results: Record<string, MeasurementResult>;
 };
 
 /**
@@ -207,5 +215,5 @@ export type MeasurementResultMessage = {
 	testId: string;
 	measurementId: string;
 	overwrite?: boolean;
-	result: MeasurementResult;
+	result: PingResult | TracerouteResult | DnsResult | MtrResult | HttpResult;
 };
