@@ -36,23 +36,45 @@ We keep building more and more web tools to cover all kinds of use-cases.
 
 * https://api.globalping.io/demo/
 
-### Globalping CLI | WIP
+### [Globalping CLI](https://github.com/jsdelivr/globalping-cli)
 
-Simply install our CLI tool to upgrade your debugging capabilities.
+Install our CLI tool to upgrade your network debugging capabilities. Get access to a global network of probes without leaving your command line!
 
 ```
-#add repo
-yum install globalping-cli
+#Ubuntu
+curl -s https://packagecloud.io/install/repositories/jsdelivr/globalping/script.deb.sh | sudo bash
+apt install globalping
+
+#RHEL
+curl -s https://packagecloud.io/install/repositories/jsdelivr/globalping/script.rpm.sh | sudo bash
+dnf install globalping
+
+#MacOS
+brew tap jsdelivr/globalping
+brew install globalping
 ```
 
 And then run your tests in a familiar way:
 
 ```
-globalping traceroute google.com --from "Western Europe" --limit "10"
-#output
+$ globalping traceroute google.com --from "Western Europe" --limit 2
+> EU, DE, Frankfurt, ASN:210546
+traceroute to google.com (142.250.185.78), 20 hops max, 60 byte packets
+ 1  10.0.0.1 (10.0.0.1)  0.747 ms  0.714 ms
+ 2  10.2.0.97 (10.2.0.97)  5.482 ms  5.511 ms
+ 3  10.10.0.1 (10.10.0.1)  613.232 ms  613.268 ms
+ 4  ae6-ffm21.core2.ffm3.de (45.138.175.101)  9.150 ms  9.188 ms
+ 5  ae1-core2.core3.ffm3.de (45.138.175.105)  6.027 ms  6.030 ms
+ 6  142.250.171.196 (142.250.171.196)  5.562 ms  5.749 ms
+ 7  209.85.244.249 (209.85.244.249)  48.691 ms  48.812 ms
+ 8  142.250.209.243 (142.250.209.243)  5.742 ms  5.743 ms
+ 9  fra16s48-in-f14.1e100.net (142.250.185.78)  5.716 ms  5.717 ms
+
+> EU, NL, Zwolle, ASN:50673
+...
 ```
 
-Learn more about Globalping CLI in the dedicated repo.
+[Learn more about Globalping CLI in the dedicated repo](https://github.com/jsdelivr/globalping-cli)
 
 ### Globalping REST API
 
