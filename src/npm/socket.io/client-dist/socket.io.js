@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*!
  * Socket.IO v4.5.4
  * (c) 2014-2022 Guillermo Rauch

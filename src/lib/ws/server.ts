@@ -3,7 +3,8 @@ import _ from 'lodash';
 import type {RemoteSocket} from 'socket.io';
 import {createAdapter} from '@socket.io/redis-adapter';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
-import {Server} from '../../npm/socket.io/dist';
+// @ts-ignore
+import {Server} from '../../npm/socket.io/dist/index';
 import type {Probe} from '../../probe/types.js';
 import {getRedisClient} from '../redis/client.js';
 import {reconnectProbes} from './helper/reconnect-probes.js';

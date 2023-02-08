@@ -14,7 +14,9 @@ export const verifyIpLimit = async (socket: Socket): Promise<void> => {
 	}
 
 	const socketList = await io.of(PROBES_NAMESPACE).fetchSockets();
+	// @ts-ignore
 	const previousSocket = socketList.find(s =>
+	// @ts-ignore
 		s.data.probe.ipAddress === socket.data['probe'].ipAddress && s.id !== socket.id,
 	);
 

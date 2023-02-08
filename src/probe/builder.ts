@@ -1,6 +1,6 @@
 import * as process from 'node:process';
 import _ from 'lodash';
-import type {Socket} from '../npm/socket.io/dist';
+import type {Socket} from 'socket.io/dist';
 import isIpPrivate from 'private-ip';
 import semver from 'semver';
 import {

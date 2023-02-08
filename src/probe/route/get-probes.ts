@@ -1,6 +1,6 @@
 import type {DefaultContext, DefaultState, ParameterizedContext} from 'koa';
 import type Router from '@koa/router';
-import type {RemoteSocket} from '../../npm/socket.io/dist';
+import type {RemoteSocket} from 'socket.io/dist';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
 import {fetchSockets, type SocketData} from '../../lib/ws/server.js';
 
@@ -25,6 +25,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 			longitude: socket.data.probe.location.longitude,
 			network: socket.data.probe.location.network,
 		},
+	// @ts-ignore
 		tags: socket.data.probe.tags.map(({value}) => value),
 		resolvers: socket.data.probe.resolvers,
 		ipAddress: isAdmin ? socket.data.probe.ipAddress : undefined,
