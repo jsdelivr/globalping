@@ -56,6 +56,7 @@ let agent: MetricsAgent;
 
 export const getMetricsAgent = () => {
 	if (!agent) {
+	// @ts-ignore
 		agent = new MetricsAgent(getWsServer(), getRedisClient());
 	}
 

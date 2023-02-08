@@ -1,6 +1,6 @@
 import type {DefaultContext, DefaultState, ParameterizedContext} from 'koa';
 import type Router from '@koa/router';
-import type {RemoteSocket} from 'socket.io';
+import type {RemoteSocket} from '../../npm/socket.io/dist';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
 import {fetchSockets, type SocketData} from '../../lib/ws/server.js';
 
@@ -10,6 +10,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 	const {isAdmin} = ctx;
 	const socketList = await fetchSockets();
 
+	// @ts-ignore
 	ctx.body = socketList.map((socket: Socket) => ({
 		version: socket.data.probe.version,
 		ready: socket.data.probe.ready,

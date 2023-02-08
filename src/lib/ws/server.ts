@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import _ from 'lodash';
-import {type RemoteSocket, Server} from 'socket.io';
+import type {RemoteSocket} from 'socket.io';
 import {createAdapter} from '@socket.io/redis-adapter';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
+import {Server} from '../../npm/socket.io/dist';
 import type {Probe} from '../../probe/types.js';
 import {getRedisClient} from '../redis/client.js';
 import {reconnectProbes} from './helper/reconnect-probes.js';
@@ -35,6 +36,7 @@ export const initWsServer = async () => {
 
 	io.adapter(createAdapter(pubClient, subClient));
 
+	// @ts-ignore
 	throttledFetchSockets = _.throttle(io.of(PROBES_NAMESPACE).fetchSockets.bind(io.of(PROBES_NAMESPACE)), TIME_TO_CACHE_FETCH_SOCKETS);
 
 	setTimeout(() => reconnectProbes(io), TIME_UNTIL_VM_BECOMES_HEALTHY);

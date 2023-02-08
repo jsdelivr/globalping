@@ -21,7 +21,9 @@ const logger = scopedLogger('gateway');
 
 io
 	.of(PROBES_NAMESPACE)
+	// @ts-ignore
 	.use(probeMetadata)
+	// @ts-ignore
 	.on('connect', errorHandler(async (socket: Socket) => {
 		await verifyIpLimit(socket);
 

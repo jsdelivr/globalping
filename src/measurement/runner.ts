@@ -117,6 +117,7 @@ let runner: MeasurementRunner;
 
 export const getMeasurementRunner = () => {
 	if (!runner) {
+	// @ts-ignore
 		runner = new MeasurementRunner(getWsServer(), getRedisClient(), getMeasurementStore(), getProbeRouter(), getMetricsAgent());
 	}
 

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import type {RemoteSocket} from 'socket.io';
+import type {RemoteSocket} from 'socket.io/dist';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
 import type {SocketData} from '../lib/ws/server.js';
 import {fetchSockets} from '../lib/ws/server.js';

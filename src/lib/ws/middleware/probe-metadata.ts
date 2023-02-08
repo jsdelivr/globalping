@@ -13,6 +13,7 @@ export const probeMetadata = errorHandler(async (socket: Socket, next: (error?: 
 	const clientIp = getProbeIp(socket.request);
 
 	try {
+	// @ts-ignore
 		socket.data['probe'] = await buildProbe(socket);
 		next();
 	} catch (error: unknown) {
