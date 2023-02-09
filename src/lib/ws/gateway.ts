@@ -1,4 +1,5 @@
 import type {Socket} from 'socket.io';
+import {getMetricsAgent} from '../metrics.js';
 import type {Probe} from '../../probe/types.js';
 import {handleMeasurementAck} from '../../measurement/handler/ack.js';
 import {handleMeasurementResult} from '../../measurement/handler/result.js';
@@ -18,6 +19,7 @@ import {subscribeWithHandler} from './helper/subscribe-handler.js';
 
 const io = getWsServer();
 const logger = scopedLogger('gateway');
+const metricsAgent = getMetricsAgent();
 
 io
 	.of(PROBES_NAMESPACE)
@@ -40,5 +42,10 @@ io
 
 		socket.on('disconnect', reason => {
 			logger.debug(`Probe disconnected. (reason: ${reason}) [${socket.id}][${probe.ipAddress}]`);
+			if (reason === 'server namespace disconnect') {
+				return; // Probe was disconnected by the .disconnect() call from the API, no need to record that
+			}
+
+			metricsAgent.recordDisconnect(reason);
 		});
 	}));

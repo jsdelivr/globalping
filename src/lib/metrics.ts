@@ -31,6 +31,10 @@ export class MetricsAgent {
 		newrelic.incrementMetric('measurement_count_total', 1);
 	}
 
+	recordDisconnect(type: string): void {
+		newrelic.incrementMetric(`probe_disconnect_${type.replaceAll(' ', '_')}`, 1);
+	}
+
 	private async intervalHandler(): Promise<void> {
 		await this.updateProbeCount();
 		await this.updateMeasurementCount();
