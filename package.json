@@ -83,7 +83,7 @@
     "utf-8-validate": "^5.0.10"
   },
   "scripts": {
-    "build": "tsc && npm run download-jsons",
+    "build": "tsc && npm run download-jsons && cp -r src/npm dist/",
     "start": "NODE_ENV=production node --max_old_space_size=6656 --max-semi-space-size=128 --experimental-loader newrelic/esm-loader.mjs dist/index.js",
     "dev": "NODE_ENV=development FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false node dist/index.js",
     "dev:tsx": "NODE_ENV=development FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false tsx src/index.ts",
