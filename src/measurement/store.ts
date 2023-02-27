@@ -1,9 +1,13 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import config from 'config';
 import cryptoRandomString from 'crypto-random-string';
 import type {Probe} from '../probe/types.js';
 import type {RedisClient} from '../lib/redis/client.js';
 import {getRedisClient} from '../lib/redis/client.js';
+import {scopedLogger} from '../lib/logger.js';
 import type {MeasurementRecord, MeasurementResultMessage, MeasurementResult, NetworkTest} from './types.js';
+
+const logger = scopedLogger('store');
 
 export const getMeasurementKey = (id: string, suffix: 'probes_awaiting' | undefined = undefined): string => {
 	let key = `gp:measurement:${id}`;
@@ -27,16 +31,17 @@ export class MeasurementStore {
 		const key = getMeasurementKey(id);
 
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
+		const startTime = Date.now();
 
 		await Promise.all([
-			// eslint-disable-next-line @typescript-eslint/naming-convention
+			this.redis.hSet('gp:in-progress', id, startTime),
 			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probesCount, {EX: probesAwaitingTtl}),
 			this.redis.json.set(key, '$', {
 				id,
 				type: test.type,
 				status: 'in-progress',
-				createdAt: Date.now(),
-				updatedAt: Date.now(),
+				createdAt: startTime,
+				updatedAt: startTime,
 				probesCount,
 				results: {},
 			}),
@@ -100,24 +105,62 @@ export class MeasurementStore {
 		const key = getMeasurementKey(id);
 
 		await Promise.all([
+			this.redis.hDel('gp:in-progress', id),
 			this.redis.del(`${key}:probes_awaiting`),
 			this.redis.json.set(key, '$.status', 'finished'),
 			this.redis.json.set(key, '$.updatedAt', Date.now()),
 		]);
 	}
 
-	async markFinishedByTimeout(id: string): Promise<void> {
-		const measurement = await this.getMeasurementResults(id);
-		measurement.status = 'finished';
-		measurement.updatedAt = Date.now();
-		const inProgressResults = Object.values(measurement.results).filter(resultObject => resultObject.result.status === 'in-progress');
-		for (const resultObject of inProgressResults) {
-			resultObject.result.status = 'failed';
-			resultObject.result.rawOutput += '\n\nThe measurement timed out';
+	async markFinishedByTimeout(ids: string[]): Promise<void> {
+		if (ids.length === 0) {
+			return;
 		}
 
-		const key = getMeasurementKey(id);
-		await this.redis.json.set(key, '$', measurement);
+		const keys = ids.map(id => getMeasurementKey(id));
+		// eslint-disable-next-line @typescript-eslint/ban-types
+		const measurements = await this.redis.json.mGet(keys, '.') as Array<MeasurementRecord | null>;
+		// eslint-disable-next-line unicorn/prefer-native-coercion-functions
+		const existingMeasurements = measurements.filter((measurement): measurement is MeasurementRecord => Boolean(measurement));
+
+		for (const measurement of existingMeasurements) {
+			measurement.status = 'finished';
+			measurement.updatedAt = Date.now();
+			const inProgressResults = Object.values(measurement.results).filter(resultObject => resultObject.result.status === 'in-progress');
+			for (const resultObject of inProgressResults) {
+				resultObject.result.status = 'failed';
+				resultObject.result.rawOutput += '\n\nThe measurement timed out';
+			}
+		}
+
+		const updateMeasurementPromises = existingMeasurements.map(measurement => this.redis.json.set(getMeasurementKey(measurement.id), '$', measurement));
+
+		await Promise.all([
+			this.redis.hDel('gp:in-progress', ids),
+			...updateMeasurementPromises,
+		]);
+	}
+
+	scheduleCleanup() {
+		const SCAN_INTERVAL_TIME = 15_000;
+		const SCAN_BATCH_SIZE = 5000;
+		const timeoutTime = config.get<number>('measurement.timeout') * 1000;
+		const intervalTime = Math.round(Math.random() * SCAN_INTERVAL_TIME);
+
+		setTimeout(async () => {
+			const {cursor, tuples} = await this.redis.hScan('gp:in-progress', 0, {COUNT: SCAN_BATCH_SIZE});
+
+			if (cursor !== 0) {
+				logger.warn(`There are more than ${SCAN_BATCH_SIZE} "in-progress" elements in db`);
+			}
+
+			const timedOutIds = tuples
+				.filter(({value: time}) => Date.now() - Number(time) >= timeoutTime)
+				.map(({field: id}) => id);
+
+			await this.markFinishedByTimeout(timedOutIds);
+			this.scheduleCleanup();
+		}, intervalTime);
 	}
 }
 
@@ -126,6 +169,7 @@ let store: MeasurementStore;
 export const getMeasurementStore = () => {
 	if (!store) {
 		store = new MeasurementStore(getRedisClient());
+		store.scheduleCleanup();
 	}
 
 	return store;

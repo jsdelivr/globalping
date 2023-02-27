@@ -100,7 +100,7 @@ example:
 ```json
 {
     "type": "ping",
-    "target": "google.com"
+    "target": "google.com",
     "measurementOptions": {
         "packets": 6
     },
@@ -439,15 +439,17 @@ example:
 {
     "type": "http",
     "target": "jsdelivr.com",
-    "port": 443,
-    "protocol": "HTTPS",
-    "request": {
-        "path": "/",
-        "query": "?a=abc",
-        "method": "GET",
-        "host": "jsdelivr.com",
-        "headers": {
-            "Referer": "https://example.com/"
+    "measurementOptions": {
+        "port": 443,
+        "protocol": "HTTPS",
+        "request": {
+            "path": "/",
+            "query": "?a=abc",
+            "method": "GET",
+            "host": "jsdelivr.com",
+            "headers": {
+                "Referer": "https://example.com/"
+            }
         }
     }
 }
