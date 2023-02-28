@@ -8,9 +8,9 @@
     <br />
 </p>
 
-## Dev Status: BETA
+## Invitation to contribute!
 
-Our project is under active development and not yet ready for production use. But we welcome everyone to contribute:
+Everyone is welcome to contribute. Some suggestions:
 - Ideas for new features
 - PRs and fixes for existing problems
 - Quality control and testing of all systems. Report any problems, bugs or bad UX you find
