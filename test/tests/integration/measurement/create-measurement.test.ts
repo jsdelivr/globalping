@@ -1,19 +1,27 @@
-import type {Server} from 'node:http';
 import {expect} from 'chai';
 import request, {type SuperTest, type Test} from 'supertest';
-
-import {getTestServer} from '../../../utils/http.js';
-import {addFakeProbe, deleteFakeProbe} from '../../../utils/ws.js';
+import * as td from 'testdouble';
+import nock from 'nock';
+import RedisCacheMock from '../../../mocks/redis-cache.js';
 
 describe('Create measurement', function () {
 	this.timeout(15_000);
 
-	let app: Server;
+	let addFakeProbe;
+	let deleteFakeProbe;
+	let getTestServer;
 	let requestAgent: SuperTest<Test>;
 
 	before(async () => {
-		app = await getTestServer();
+		await td.replaceEsm('../../../../src/lib/cache/redis-cache.ts', {}, RedisCacheMock);
+		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', {getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve()});
+		({getTestServer, addFakeProbe, deleteFakeProbe} = await import('../../../utils/http.js'));
+		const app = await getTestServer();
 		requestAgent = request(app);
+	});
+
+	after(() => {
+		td.reset();
 	});
 
 	describe('probes not connected', () => {
@@ -40,17 +48,63 @@ describe('Create measurement', function () {
 		});
 	});
 
+	let probe;
+
 	describe('probes connected', () => {
 		before(async () => {
-			await addFakeProbe('fake-probe-US', {
-				location: {continent: 'NA', country: 'US'},
-				tags: [{type: 'system', value: 'tag-value'}],
-				index: ['na', 'us', 'tag value'],
+			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, {
+				as: {
+					name: "psychz networks",
+					number: 40676
+				},
+				"geo-digitalelement": {
+					city: "dallas",
+					continent_code: "NA",
+					country_code: "US",
+					country_code3: "USA",
+					country_name: "united states",
+					latitude: 32.810,
+					longitude: -96.880,
+					region: "TX"
+				},
+				client: {
+					proxy_desc: "web-browser",
+					proxy_type: "edu"
+				}
 			});
+			nock('https://ipinfo.io').get(/.*/).reply(200, {
+				city: "Dallas",
+				region: "Texas",
+				country: "US",
+				loc: "32.7492,-96.8389",
+				org: "AS123 Psychz Networks"
+			});
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, {
+				continent: {
+					code: "NA"
+				},
+				country: {
+					isoCode: "US"
+				},
+				city: {
+					names: {
+						en: "Dallas"
+					}
+				},
+				location: {
+					latitude: 32.814,
+					longitude: -96.870
+				},
+				traits: {
+					autonomousSystemNumber: 40676,
+					isp: "psychz networks"
+				}
+			});
+			probe = await addFakeProbe();
 		});
 
 		after(() => {
-			deleteFakeProbe('fake-probe-US');
+			deleteFakeProbe(probe);
 		});
 
 		it('should create measurement with global limit', async () => {
@@ -149,7 +203,7 @@ describe('Create measurement', function () {
 				.send({
 					type: 'ping',
 					target: 'example.com',
-					locations: [{magic: 'TaG-v', limit: 2}],
+					locations: [{magic: 'Us-WeSt4', limit: 2}],
 					measurementOptions: {
 						packets: 4,
 					},
@@ -188,7 +242,7 @@ describe('Create measurement', function () {
 				.send({
 					type: 'ping',
 					target: 'example.com',
-					locations: [{tags: ['tag-value'], limit: 2}],
+					locations: [{tags: ['gcp-us-west4'], limit: 2}],
 					measurementOptions: {
 						packets: 4,
 					},

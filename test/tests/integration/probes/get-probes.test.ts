@@ -1,44 +1,30 @@
 import fs from 'node:fs';
-import type {Server} from 'node:http';
+import nock from 'nock';
 import {expect} from 'chai';
 import request, {type SuperTest, type Test} from 'supertest';
-import type {Probe} from '../../../../src/probe/types.js';
-import {getTestServer} from '../../../utils/http.js';
-import {addFakeProbe, deleteFakeProbe} from '../../../utils/ws.js';
+import * as td from 'testdouble';
+import RedisCacheMock from '../../../mocks/redis-cache.js';
 
-const mocks = JSON.parse(fs.readFileSync('./test/mocks/probes.json').toString()) as Record<string, Probe>;
-
-const probeToPublicProbe = (probe: Probe) => {
-	const {version, ready, resolvers, location, tags} = probe;
-
-	return {
-		version,
-		ready,
-		resolvers,
-		location: {
-			continent: location.continent,
-			region: location.region,
-			country: location.country,
-			...(location.state ? {state: location.state} : {}),
-			city: location.city,
-			asn: location.asn,
-			latitude: location.latitude,
-			longitude: location.longitude,
-			network: location.network,
-		},
-		tags: tags.map(({value}) => value),
-	};
-};
+const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
 describe('Get Probes', function () {
 	this.timeout(15_000);
 
-	let app: Server;
+	let addFakeProbe;
+	let deleteFakeProbe;
 	let requestAgent: SuperTest<Test>;
 
 	before(async () => {
-		app = await getTestServer();
+		await td.replaceEsm('../../../../src/lib/cache/redis-cache.ts', {}, RedisCacheMock);
+		const http = await import('../../../utils/http.js');
+		addFakeProbe = http.addFakeProbe;
+		deleteFakeProbe = http.deleteFakeProbe;
+		const app = await http.getTestServer();
 		requestAgent = request(app);
+	});
+
+	after(() => {
+		td.reset();
 	});
 
 	describe('probes not connected', () => {
@@ -54,57 +40,173 @@ describe('Get Probes', function () {
 
 	describe('probes connected', () => {
 		it('should detect 1 probe', async () => {
-			const probeId = 'as-jakarta-01';
-			await addFakeProbe(probeId, mocks[probeId]);
+			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['00.00'].fastly);
+			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['00.00'].ipinfo);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['00.00'].maxmind);
+
+			const probe = await addFakeProbe();
 
 			await requestAgent.get('/v1/probes')
 				.send()
 				.expect(200)
 				.expect(response => {
-					expect(response.body).to.deep.equal([
-						probeToPublicProbe(mocks[probeId]),
-					]);
+					expect(response.body).to.deep.equal([{
+							version: '0.14.0',
+							ready: true,
+							location: {
+								continent: 'SA',
+								region: 'Southern America',
+								country: 'AR',
+								city: 'Buenos Aires',
+								asn: 61493,
+								latitude: -34.602,
+								longitude: -58.384,
+								network: 'interbs s.r.l.'
+							},
+							tags: [],
+							resolvers: []
+						}]);
 				});
 
-			deleteFakeProbe(probeId);
+			await deleteFakeProbe(probe);
 		});
 
 		it('should detect 2 probes', async () => {
-			const probeIds = ['as-jakarta-01', 'sa-sao-paulo-01'];
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
+				.get(/.*/).reply(200, nockMocks['01.00'].fastly);
+			nock('https://ipinfo.io')
+				.get(/.*/).reply(200, nockMocks['00.00'].ipinfo)
+				.get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+				.get(/.*/).reply(200, nockMocks['00.00'].maxmind)
+				.get(/.*/).reply(200, nockMocks['01.00'].maxmind);
 
-			await Promise.all(probeIds.map(async k => addFakeProbe(k, mocks[k])));
+			const probe1 = await addFakeProbe();
+			const probe2 = await addFakeProbe();
 
 			await requestAgent.get('/v1/probes')
 				.send()
 				.expect(200)
 				.expect(response => {
-					expect(response.body).to.deep.equal([
-						...probeIds.map(k => probeToPublicProbe(mocks[k])),
-					]);
+					expect(response.body).to.deep.equal([{
+							version: '0.14.0',
+							ready: true,
+							location: {
+								continent: 'SA',
+								region: 'Southern America',
+								country: 'AR',
+								city: 'Buenos Aires',
+								asn: 61493,
+								latitude: -34.602,
+								longitude: -58.384,
+								network: 'interbs s.r.l.'
+							},
+							tags: [],
+							resolvers: []
+						},
+						{
+							version: '0.14.0',
+							ready: true,
+							location: {
+								continent: 'NA',
+								region: 'Northern America',
+								country: 'US',
+								state: 'TX',
+								city: 'Dallas',
+								asn: 123,
+								latitude: 32.7492,
+								longitude: -96.8389,
+								network: 'Psychz Networks'
+							},
+							tags: [],
+							resolvers: []
+						}]);
 				});
 
-			for (const key of probeIds) {
-				deleteFakeProbe(key);
-			}
+				await deleteFakeProbe(probe1);
+				await deleteFakeProbe(probe2);
 		});
 
 		it('should detect 3 probes', async () => {
-			const probeIds = ['as-jakarta-01', 'sa-sao-paulo-01', 'eu-moscow-01'];
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
+				.get(/.*/).reply(200, nockMocks['01.00'].fastly)
+				.get(/.*/).reply(200, nockMocks['00.04'].fastly);
+			nock('https://ipinfo.io')
+				.get(/.*/).reply(200, nockMocks['00.00'].ipinfo)
+				.get(/.*/).reply(200, nockMocks['01.00'].ipinfo)
+				.get(/.*/).reply(200, nockMocks['00.04'].ipinfo);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+				.get(/.*/).reply(200, nockMocks['00.00'].maxmind)
+				.get(/.*/).reply(200, nockMocks['01.00'].maxmind)
+				.get(/.*/).reply(200, nockMocks['00.04'].maxmind);
 
-			await Promise.all(probeIds.map(async k => addFakeProbe(k, mocks[k])));
+			const probe1 = await addFakeProbe();
+			const probe2 = await addFakeProbe();
+			const probe3 = await addFakeProbe();
 
 			await requestAgent.get('/v1/probes')
 				.send()
 				.expect(200)
 				.expect(response => {
 					expect(response.body).to.deep.equal([
-						...probeIds.map(k => probeToPublicProbe(mocks[k])),
+						{
+							version: '0.14.0',
+							ready: true,
+							location: {
+								continent: 'SA',
+								region: 'Southern America',
+								country: 'AR',
+								city: 'Buenos Aires',
+								asn: 61493,
+								latitude: -34.602,
+								longitude: -58.384,
+								network: 'interbs s.r.l.'
+							},
+							tags: [],
+							resolvers: []
+						},
+						{
+							version: '0.14.0',
+							ready: true,
+							location: {
+								continent: 'NA',
+								region: 'Northern America',
+								country: 'US',
+								state: 'TX',
+								city: 'Dallas',
+								asn: 123,
+								latitude: 32.7492,
+								longitude: -96.8389,
+								network: 'Psychz Networks'
+							},
+							tags: [],
+							resolvers: []
+						},
+						{
+							version: '0.14.0',
+							ready: true,
+							location: {
+								continent: 'NA',
+								region: 'Northern America',
+								country: 'US',
+								state: 'NY',
+								city: 'New York',
+								asn: 61493,
+								latitude: -7.7568,
+								longitude: -35.3656,
+								network: 'InterBS S.R.L. (BAEHOST)'
+							},
+							tags: [],
+							resolvers: []
+						}
 					]);
 				});
 
-			for (const key of probeIds) {
-				deleteFakeProbe(key);
-			}
+				await deleteFakeProbe(probe1);
+				await deleteFakeProbe(probe2);
+				await deleteFakeProbe(probe3);
 		});
 	});
 });
