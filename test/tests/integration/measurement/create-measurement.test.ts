@@ -1,14 +1,19 @@
+
+import fs from 'node:fs';
 import {expect} from 'chai';
 import request, {type SuperTest, type Test} from 'supertest';
 import * as td from 'testdouble';
 import nock from 'nock';
+import {type Socket} from 'socket.io-client';
 import RedisCacheMock from '../../../mocks/redis-cache.js';
+
+const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
 describe('Create measurement', function () {
 	this.timeout(15_000);
 
-	let addFakeProbe;
-	let deleteFakeProbe;
+	let addFakeProbe: () => Promise<Socket>;
+	let deleteFakeProbe: (Socket) => Promise<void>;
 	let getTestServer;
 	let requestAgent: SuperTest<Test>;
 
@@ -52,59 +57,14 @@ describe('Create measurement', function () {
 
 	describe('probes connected', () => {
 		before(async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, {
-				as: {
-					name: "psychz networks",
-					number: 40676
-				},
-				"geo-digitalelement": {
-					city: "dallas",
-					continent_code: "NA",
-					country_code: "US",
-					country_code3: "USA",
-					country_name: "united states",
-					latitude: 32.810,
-					longitude: -96.880,
-					region: "TX"
-				},
-				client: {
-					proxy_desc: "web-browser",
-					proxy_type: "edu"
-				}
-			});
-			nock('https://ipinfo.io').get(/.*/).reply(200, {
-				city: "Dallas",
-				region: "Texas",
-				country: "US",
-				loc: "32.7492,-96.8389",
-				org: "AS123 Psychz Networks"
-			});
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, {
-				continent: {
-					code: "NA"
-				},
-				country: {
-					isoCode: "US"
-				},
-				city: {
-					names: {
-						en: "Dallas"
-					}
-				},
-				location: {
-					latitude: 32.814,
-					longitude: -96.870
-				},
-				traits: {
-					autonomousSystemNumber: 40676,
-					isp: "psychz networks"
-				}
-			});
+			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['01.00'].fastly);
+			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['01.00'].maxmind);
 			probe = await addFakeProbe();
 		});
 
-		after(() => {
-			deleteFakeProbe(probe);
+		after(async () => {
+			await deleteFakeProbe(probe);
 		});
 
 		it('should create measurement with global limit', async () => {

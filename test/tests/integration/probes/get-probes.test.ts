@@ -3,6 +3,7 @@ import nock from 'nock';
 import {expect} from 'chai';
 import request, {type SuperTest, type Test} from 'supertest';
 import * as td from 'testdouble';
+import {type Socket} from 'socket.io-client';
 import RedisCacheMock from '../../../mocks/redis-cache.js';
 
 const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
@@ -10,8 +11,8 @@ const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toS
 describe('Get Probes', function () {
 	this.timeout(15_000);
 
-	let addFakeProbe;
-	let deleteFakeProbe;
+	let addFakeProbe: () => Promise<Socket>;
+	let deleteFakeProbe: (Socket) => Promise<void>;
 	let requestAgent: SuperTest<Test>;
 
 	before(async () => {
@@ -51,21 +52,21 @@ describe('Get Probes', function () {
 				.expect(200)
 				.expect(response => {
 					expect(response.body).to.deep.equal([{
-							version: '0.14.0',
-							ready: true,
-							location: {
-								continent: 'SA',
-								region: 'Southern America',
-								country: 'AR',
-								city: 'Buenos Aires',
-								asn: 61493,
-								latitude: -34.602,
-								longitude: -58.384,
-								network: 'interbs s.r.l.'
-							},
-							tags: [],
-							resolvers: []
-						}]);
+						version: '0.14.0',
+						ready: true,
+						location: {
+							continent: 'SA',
+							region: 'Southern America',
+							country: 'AR',
+							city: 'Buenos Aires',
+							asn: 61_493,
+							latitude: -34.602,
+							longitude: -58.384,
+							network: 'interbs s.r.l.',
+						},
+						tags: [],
+						resolvers: [],
+					}]);
 				});
 
 			await deleteFakeProbe(probe);
@@ -90,42 +91,42 @@ describe('Get Probes', function () {
 				.expect(200)
 				.expect(response => {
 					expect(response.body).to.deep.equal([{
-							version: '0.14.0',
-							ready: true,
-							location: {
-								continent: 'SA',
-								region: 'Southern America',
-								country: 'AR',
-								city: 'Buenos Aires',
-								asn: 61493,
-								latitude: -34.602,
-								longitude: -58.384,
-								network: 'interbs s.r.l.'
-							},
-							tags: [],
-							resolvers: []
+						version: '0.14.0',
+						ready: true,
+						location: {
+							continent: 'SA',
+							region: 'Southern America',
+							country: 'AR',
+							city: 'Buenos Aires',
+							asn: 61_493,
+							latitude: -34.602,
+							longitude: -58.384,
+							network: 'interbs s.r.l.',
 						},
-						{
-							version: '0.14.0',
-							ready: true,
-							location: {
-								continent: 'NA',
-								region: 'Northern America',
-								country: 'US',
-								state: 'TX',
-								city: 'Dallas',
-								asn: 123,
-								latitude: 32.7492,
-								longitude: -96.8389,
-								network: 'Psychz Networks'
-							},
-							tags: [],
-							resolvers: []
-						}]);
+						tags: [],
+						resolvers: [],
+					},
+					{
+						version: '0.14.0',
+						ready: true,
+						location: {
+							continent: 'NA',
+							region: 'Northern America',
+							country: 'US',
+							state: 'TX',
+							city: 'Dallas',
+							asn: 123,
+							latitude: 32.7492,
+							longitude: -96.8389,
+							network: 'Psychz Networks',
+						},
+						tags: [],
+						resolvers: [],
+					}]);
 				});
 
-				await deleteFakeProbe(probe1);
-				await deleteFakeProbe(probe2);
+			await deleteFakeProbe(probe1);
+			await deleteFakeProbe(probe2);
 		});
 
 		it('should detect 3 probes', async () => {
@@ -159,13 +160,13 @@ describe('Get Probes', function () {
 								region: 'Southern America',
 								country: 'AR',
 								city: 'Buenos Aires',
-								asn: 61493,
+								asn: 61_493,
 								latitude: -34.602,
 								longitude: -58.384,
-								network: 'interbs s.r.l.'
+								network: 'interbs s.r.l.',
 							},
 							tags: [],
-							resolvers: []
+							resolvers: [],
 						},
 						{
 							version: '0.14.0',
@@ -179,10 +180,10 @@ describe('Get Probes', function () {
 								asn: 123,
 								latitude: 32.7492,
 								longitude: -96.8389,
-								network: 'Psychz Networks'
+								network: 'Psychz Networks',
 							},
 							tags: [],
-							resolvers: []
+							resolvers: [],
 						},
 						{
 							version: '0.14.0',
@@ -193,20 +194,20 @@ describe('Get Probes', function () {
 								country: 'US',
 								state: 'NY',
 								city: 'New York',
-								asn: 61493,
+								asn: 61_493,
 								latitude: -7.7568,
 								longitude: -35.3656,
-								network: 'InterBS S.R.L. (BAEHOST)'
+								network: 'InterBS S.R.L. (BAEHOST)',
 							},
 							tags: [],
-							resolvers: []
-						}
+							resolvers: [],
+						},
 					]);
 				});
 
-				await deleteFakeProbe(probe1);
-				await deleteFakeProbe(probe2);
-				await deleteFakeProbe(probe3);
+			await deleteFakeProbe(probe1);
+			await deleteFakeProbe(probe2);
+			await deleteFakeProbe(probe3);
 		});
 	});
 });

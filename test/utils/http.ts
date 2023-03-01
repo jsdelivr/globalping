@@ -1,13 +1,13 @@
 import type {Server} from 'node:http';
+import {type AddressInfo} from 'node:net';
 import _ from 'lodash';
-import {io, Socket} from 'socket.io-client';
+import {io, type Socket} from 'socket.io-client';
 
 import {createServer} from '../../src/lib/server.js';
 import {
 	populateIpList,
 	populateDomainList,
 } from './malware.js';
-import { AddressInfo } from 'node:net';
 
 let app: Server;
 let url: string;
@@ -21,7 +21,7 @@ export const getTestServer = async (): Promise<Server> => {
 	if (!app) {
 		app = await createServer();
 		app.listen(0);
-		const port = (app.address() as AddressInfo).port;
+		const {port} = app.address() as AddressInfo;
 		url = `http://127.0.0.1:${port}/probes`;
 	}
 
@@ -38,7 +38,9 @@ export const addFakeProbe = async (): Promise<Socket> => {
 				version: '0.14.0',
 			},
 		});
-		client.on('connect', () => resolve(client));
+		client.on('connect', () => {
+			resolve(client);
+		});
 	});
 	return socket;
 };

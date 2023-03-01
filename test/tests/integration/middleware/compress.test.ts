@@ -3,6 +3,7 @@ import request, {type Response} from 'supertest';
 import {expect} from 'chai';
 import * as td from 'testdouble';
 import nock from 'nock';
+import {type Socket} from 'socket.io-client';
 import RedisCacheMock from '../../../mocks/redis-cache.js';
 
 const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
@@ -10,8 +11,8 @@ const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toS
 describe('compression', function () {
 	this.timeout(15_000);
 
-	let addFakeProbe;
-	let deleteFakeProbe;
+	let addFakeProbe: () => Promise<Socket>;
+	let deleteFakeProbe: (Socket) => Promise<void>;
 	let requestAgent: any;
 
 	describe('headers', () => {
