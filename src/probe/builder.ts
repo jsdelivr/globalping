@@ -1,3 +1,4 @@
+/* eslint-disable capitalized-comments */
 import * as process from 'node:process';
 import _ from 'lodash';
 import type {Socket} from 'socket.io';
@@ -17,8 +18,8 @@ import {getRegion} from '../lib/ip-ranges.js';
 import type {Probe, ProbeLocation, Tag} from './types.js';
 
 const fakeIpForDebug = () => _.sample([
-	'18.200.0.1', // AWS eu-west-1
-	'34.140.0.10', // GCP europe-west1
+	'18.200.0.1', // aws-eu-west-1
+	'34.140.0.10', // gcp-europe-west1
 	'95.155.94.127',
 	'65.49.22.66',
 	'185.229.226.83',
