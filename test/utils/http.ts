@@ -28,7 +28,7 @@ export const getTestServer = async (): Promise<Server> => {
 	return app;
 };
 
-export const addFakeProbe = async (): Promise<Socket> => {
+export const addFakeProbe = async (events: Record<string, Function> = {}): Promise<Socket> => {
 	const socket = await new Promise<Socket>(resolve => {
 		const client = io(url, {
 			transports: ['websocket'],
@@ -38,6 +38,7 @@ export const addFakeProbe = async (): Promise<Socket> => {
 				version: '0.14.0',
 			},
 		});
+		Object.entries(events).forEach(([event, listener]) => client.on(event, listener));
 		client.on('connect', () => {
 			resolve(client);
 		});
