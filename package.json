@@ -94,11 +94,11 @@
     "lint:fix": "xo --fix",
     "lint:types": "tsc --noEmit",
     "download-jsons": "node dist/lib/download-jsons.js",
-    "test": "NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false npm run lint:types && npm run test:src",
+    "test": "npm run lint:types && npm run test:src",
     "test:src": "NODE_ENV=test NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false FAKE_PROBE_IP=1 mocha",
     "test:perf": "tsx test-perf/index.ts",
     "clean": "rimraf coverage",
-    "test:coverage": "NEW_RELIC_ENABLED=false npm run clean && c8 mocha",
+    "test:coverage": "npm run clean && NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false FAKE_PROBE_IP=1 c8 mocha",
     "init:hooks": "husky install"
   },
   "xo": {
