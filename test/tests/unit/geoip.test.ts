@@ -10,7 +10,6 @@ import {scopedLogger} from '../../../src/lib/logger.js';
 
 const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const MOCK_IP = '131.255.7.26';
 
 describe('geoip service', () => {
@@ -519,7 +518,6 @@ describe('geoip service', () => {
 		});
 
 		it('should pass - detect VPN (whitelisted)', async () => {
-			// eslint-disable-next-line @typescript-eslint/naming-convention
 			const MOCK_IP = '5.134.119.43';
 
 			mockFs({

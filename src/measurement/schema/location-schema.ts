@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 
 import anyAscii from 'any-ascii';
 import Joi from 'joi';

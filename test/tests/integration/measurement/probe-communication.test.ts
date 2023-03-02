@@ -9,7 +9,7 @@ import chaiSubset from 'chai-subset';
 import RedisCacheMock from '../../../mocks/redis-cache.js';
 
 chai.use(chaiSubset);
-const expect = chai.expect;
+const {expect} = chai;
 
 const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
@@ -17,7 +17,7 @@ describe('Create measurement request', function () {
 	this.timeout(5000);
 
 	let probe: Socket;
-	let addFakeProbe: (events?: Record<string, Function>) => Promise<Socket>;
+	let addFakeProbe: (events?: Record<string, any>) => Promise<Socket>;
 	let deleteFakeProbe: (Socket) => Promise<void>;
 	let getTestServer;
 	let requestAgent: SuperTest<Test>;
@@ -82,7 +82,7 @@ describe('Create measurement request', function () {
 				packets: 4,
 			},
 		}).expect(202).expect(({body, header}) => {
-			measurementId = body.id;
+			measurementId = body.id as string;
 			expect(body.id).to.exist;
 			expect(header.location).to.exist;
 			expect(body.probesCount).to.equal(1);
@@ -113,13 +113,13 @@ describe('Create measurement request', function () {
 								longitude: -96.8389,
 								latitude: 32.7492,
 								network: 'Psychz Networks',
-								tags: [ 'gcp-us-west4' ],
-								resolvers: []
+								tags: ['gcp-us-west4'],
+								resolvers: [],
 							},
-							result: { status: 'in-progress', rawOutput: '' }
-						}
-					]
-				})
+							result: {status: 'in-progress', rawOutput: ''},
+						},
+					],
+				});
 			});
 		probe.emit('probe:measurement:progress', {
 			testId: 'testId',
@@ -147,12 +147,12 @@ describe('Create measurement request', function () {
 								longitude: -96.8389,
 								latitude: 32.7492,
 								network: 'Psychz Networks',
-								tags: [ 'gcp-us-west4' ],
-								resolvers: []
+								tags: ['gcp-us-west4'],
+								resolvers: [],
 							},
-							result: { status: 'in-progress', rawOutput: 'abc' }
-						}
-					]
+							result: {status: 'in-progress', rawOutput: 'abc'},
+						},
+					],
 				});
 			});
 		probe.emit('probe:measurement:progress', {
@@ -181,12 +181,12 @@ describe('Create measurement request', function () {
 								longitude: -96.8389,
 								latitude: 32.7492,
 								network: 'Psychz Networks',
-								tags: [ 'gcp-us-west4' ],
-								resolvers: []
+								tags: ['gcp-us-west4'],
+								resolvers: [],
 							},
-							result: { status: 'in-progress', rawOutput: 'abcdef' }
-						}
-					]
+							result: {status: 'in-progress', rawOutput: 'abcdef'},
+						},
+					],
 				});
 			});
 		probe.emit('probe:measurement:result', {
@@ -199,7 +199,8 @@ describe('Create measurement request', function () {
 				resolvedAddress: '1.1.1.1',
 			},
 		});
-		await new Promise(res => setTimeout(res, 100)); // We need to wait until all redis writes finish
+		// eslint-disable-next-line no-promise-executor-return
+		await new Promise(resolve => setTimeout(resolve, 100)); // We need to wait until all redis writes finish
 		await requestAgent.get(`/v1/measurements/${measurementId}`).send()
 			.expect(200).expect(response => {
 				expect(response.body).to.containSubset({
@@ -219,17 +220,17 @@ describe('Create measurement request', function () {
 								longitude: -96.8389,
 								latitude: 32.7492,
 								network: 'Psychz Networks',
-								tags: [ 'gcp-us-west4' ],
-								resolvers: []
+								tags: ['gcp-us-west4'],
+								resolvers: [],
 							},
 							result: {
 								status: 'finished',
 								rawOutput: 'abcdefhij',
 								resolvedHostname: 'jsdelivr.com',
-								resolvedAddress: '1.1.1.1'
-							}
-						}
-					]
+								resolvedAddress: '1.1.1.1',
+							},
+						},
+					],
 				});
 			});
 	});
@@ -237,26 +238,26 @@ describe('Create measurement request', function () {
 	it('should handle stats event from probe', async () => {
 		probe.emit('probe:stats:report', {
 			cpu: {
-					count: 4,
-					load: [
-							{
-									usage: 1.02,
-									idle: 98.98
-							},
-							{
-									usage: 6.32,
-									idle: 93.68
-							},
-							{
-									usage: 2.06,
-									idle: 97.94
-							},
-							{
-									usage: 43,
-									idle: 57
-							}
-					]
-			}
+				count: 4,
+				load: [
+					{
+						usage: 1.02,
+						idle: 98.98,
+					},
+					{
+						usage: 6.32,
+						idle: 93.68,
+					},
+					{
+						usage: 2.06,
+						idle: 97.94,
+					},
+					{
+						usage: 43,
+						idle: 57,
+					},
+				],
+			},
 		});
 
 		await requestAgent.get('/v1/probes?adminkey=admin').send()
@@ -273,22 +274,22 @@ describe('Create measurement request', function () {
 						asn: 123,
 						latitude: 32.7492,
 						longitude: -96.8389,
-						network: 'Psychz Networks'
+						network: 'Psychz Networks',
 					},
-					tags: [ 'gcp-us-west4' ],
+					tags: ['gcp-us-west4'],
 					resolvers: [],
 					host: '',
 					stats: {
 						cpu: {
 							count: 4,
 							load: [
-								{ usage: 1.02, idle: 98.98 },
-								{ usage: 6.32, idle: 93.68 },
-								{ usage: 2.06, idle: 97.94 },
-								{ usage: 43, idle: 57 }
-							]
-						}
-					}
+								{usage: 1.02, idle: 98.98},
+								{usage: 6.32, idle: 93.68},
+								{usage: 2.06, idle: 97.94},
+								{usage: 43, idle: 57},
+							],
+						},
+					},
 				}]);
 			});
 	});

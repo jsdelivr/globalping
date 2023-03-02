@@ -9,13 +9,11 @@ import {
 	globalIpOptions,
 } from './utils.js';
 
-/* eslint-disable @typescript-eslint/naming-convention */
 export const schemaErrorMessages = {
 	...joiMalwareSchemaErrorMessage(),
 	'ip.private': 'Private hostnames are not allowed.',
 	'domain.invalid': 'Provided target is not a valid domain name',
 };
-/* eslint-enable @typescript-eslint/naming-convention */
 
 export const validCmdTypes = ['ping', 'dns', 'traceroute', 'mtr', 'http'];
 

@@ -1,6 +1,5 @@
 import {PROBES_NAMESPACE, type WsServer} from '../server.js';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const TIME_TO_RECONNECT_PROBES = 60_000;
 
 export const reconnectProbes = async (io: WsServer) => {
