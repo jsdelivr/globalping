@@ -3,7 +3,7 @@ import process from 'node:process';
 import {expect} from 'chai';
 import * as sinon from 'sinon';
 import request, {type SuperTest, type Test} from 'supertest';
-import {getTestServer} from '../../../utils/http.js';
+import {getTestServer} from '../../../utils/server.js';
 
 after(() => {
 	process.removeAllListeners('SIGTERM');

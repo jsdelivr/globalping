@@ -18,7 +18,7 @@ describe('compression', function () {
 	describe('headers', () => {
 		before(async () => {
 			await td.replaceEsm('../../../../src/lib/cache/redis-cache.ts', {}, RedisCacheMock);
-			const http = await import('../../../utils/http.js');
+			const http = await import('../../../utils/server.js');
 			addFakeProbe = http.addFakeProbe;
 			deleteFakeProbe = http.deleteFakeProbe;
 			const app = await http.getTestServer();

@@ -20,7 +20,7 @@ describe('Create measurement', function () {
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/cache/redis-cache.ts', {}, RedisCacheMock);
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', {getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve()});
-		({getTestServer, addFakeProbe, deleteFakeProbe} = await import('../../../utils/http.js'));
+		({getTestServer, addFakeProbe, deleteFakeProbe} = await import('../../../utils/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
 	});
