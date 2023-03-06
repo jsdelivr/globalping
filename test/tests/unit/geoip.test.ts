@@ -22,6 +22,10 @@ describe('geoip service', () => {
 		);
 	});
 
+	afterEach(() => {
+		nock.cleanAll();
+	});
+
 	it('should use maxmind & digitalelement consensus', async () => {
 		nock('https://globalping-geoip.global.ssl.fastly.net')
 			.get(`/${MOCK_IP}`)

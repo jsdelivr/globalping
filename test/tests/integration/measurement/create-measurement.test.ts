@@ -65,6 +65,7 @@ describe('Create measurement', function () {
 
 		after(async () => {
 			await deleteFakeProbe(probe);
+			nock.cleanAll();
 		});
 
 		it('should create measurement with global limit', async () => {

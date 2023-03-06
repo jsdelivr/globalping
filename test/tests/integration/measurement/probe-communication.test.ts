@@ -45,6 +45,7 @@ describe('Create measurement request', function () {
 
 	afterEach(async () => {
 		await deleteFakeProbe(probe);
+		nock.cleanAll();
 	});
 
 	after(() => {

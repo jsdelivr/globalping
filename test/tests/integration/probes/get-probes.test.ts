@@ -40,6 +40,10 @@ describe('Get Probes', function () {
 	});
 
 	describe('probes connected', () => {
+		afterEach(() => {
+			nock.cleanAll();
+		});
+
 		it('should detect 1 probe', async () => {
 			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['00.00'].fastly);
 			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['00.00'].ipinfo);

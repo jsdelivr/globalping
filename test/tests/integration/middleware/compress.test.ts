@@ -25,6 +25,10 @@ describe('compression', function () {
 			requestAgent = request(app);
 		});
 
+		after(() => {
+			nock.cleanAll();
+		});
+
 		it('should include compression headers', async () => {
 			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).times(10).reply(200, nockMocks['00.00'].fastly);
 			nock('https://ipinfo.io').get(/.*/).times(10).reply(200, nockMocks['00.00'].ipinfo);
