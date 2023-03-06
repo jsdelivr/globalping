@@ -53,7 +53,7 @@ describe('Create measurement', function () {
 		});
 	});
 
-	let probe;
+	let probe: Socket;
 
 	describe('probes connected', () => {
 		before(async () => {
@@ -68,7 +68,54 @@ describe('Create measurement', function () {
 			nock.cleanAll();
 		});
 
+		it('should respond with error if there are no ready probes', async () => {
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{country: 'US'}],
+					measurementOptions: {
+						packets: 4,
+					},
+					limit: 2,
+				})
+				.expect(422)
+				.expect(response => {
+					expect(response.body).to.deep.equal({
+						error: {
+							message: 'No suitable probes found',
+							type: 'no_probes_found',
+						},
+					});
+				});
+		});
+
+		it('should respond with error if ready probe emitted "probe:status:not_ready"', async () => {
+			probe.emit('probe:status:ready');
+			probe.emit('probe:status:not_ready');
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{country: 'US'}],
+					measurementOptions: {
+						packets: 4,
+					},
+					limit: 2,
+				})
+				.expect(422)
+				.expect(response => {
+					expect(response.body).to.deep.equal({
+						error: {
+							message: 'No suitable probes found',
+							type: 'no_probes_found',
+						},
+					});
+				});
+		});
+
 		it('should create measurement with global limit', async () => {
+			probe.emit('probe:status:ready');
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -88,6 +135,7 @@ describe('Create measurement', function () {
 		});
 
 		it('should create measurement with location limit', async () => {
+			probe.emit('probe:status:ready');
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -106,6 +154,7 @@ describe('Create measurement', function () {
 		});
 
 		it('should create measurement for globally distributed probes', async () => {
+			probe.emit('probe:status:ready');
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -124,6 +173,7 @@ describe('Create measurement', function () {
 		});
 
 		it('should create measurement with "magic: world" location', async () => {
+			probe.emit('probe:status:ready');
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -142,6 +192,7 @@ describe('Create measurement', function () {
 		});
 
 		it('should create measurement with "magic" value in any case', async () => {
+			probe.emit('probe:status:ready');
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -160,6 +211,7 @@ describe('Create measurement', function () {
 		});
 
 		it('should create measurement with partial tag value "magic: TaG-v" location', async () => {
+			probe.emit('probe:status:ready');
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -178,6 +230,7 @@ describe('Create measurement', function () {
 		});
 
 		it('should not create measurement with "magic: non-existing-tag" location', async () => {
+			probe.emit('probe:status:ready');
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -199,6 +252,7 @@ describe('Create measurement', function () {
 		});
 
 		it('should create measurement with "tags: ["tag-value"]" location', async () => {
+			probe.emit('probe:status:ready');
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',

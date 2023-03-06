@@ -57,6 +57,39 @@ describe('Get Probes', function () {
 				.expect(response => {
 					expect(response.body).to.deep.equal([{
 						version: '0.14.0',
+						ready: false,
+						location: {
+							continent: 'SA',
+							region: 'Southern America',
+							country: 'AR',
+							city: 'Buenos Aires',
+							asn: 61_493,
+							latitude: -34.602,
+							longitude: -58.384,
+							network: 'interbs s.r.l.',
+						},
+						tags: [],
+						resolvers: [],
+					}]);
+				});
+
+			await deleteFakeProbe(probe);
+		});
+
+		it('should detect 1 probe in "ready: true" status', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['00.00'].fastly);
+			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['00.00'].ipinfo);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['00.00'].maxmind);
+
+			const probe = await addFakeProbe();
+			probe.emit('probe:status:ready');
+
+			await requestAgent.get('/v1/probes')
+				.send()
+				.expect(200)
+				.expect(response => {
+					expect(response.body).to.deep.equal([{
+						version: '0.14.0',
 						ready: true,
 						location: {
 							continent: 'SA',
@@ -96,7 +129,7 @@ describe('Get Probes', function () {
 				.expect(response => {
 					expect(response.body).to.deep.equal([{
 						version: '0.14.0',
-						ready: true,
+						ready: false,
 						location: {
 							continent: 'SA',
 							region: 'Southern America',
@@ -112,7 +145,7 @@ describe('Get Probes', function () {
 					},
 					{
 						version: '0.14.0',
-						ready: true,
+						ready: false,
 						location: {
 							continent: 'NA',
 							region: 'Northern America',
@@ -158,7 +191,7 @@ describe('Get Probes', function () {
 					expect(response.body).to.deep.equal([
 						{
 							version: '0.14.0',
-							ready: true,
+							ready: false,
 							location: {
 								continent: 'SA',
 								region: 'Southern America',
@@ -174,7 +207,7 @@ describe('Get Probes', function () {
 						},
 						{
 							version: '0.14.0',
-							ready: true,
+							ready: false,
 							location: {
 								continent: 'NA',
 								region: 'Northern America',
@@ -191,7 +224,7 @@ describe('Get Probes', function () {
 						},
 						{
 							version: '0.14.0',
-							ready: true,
+							ready: false,
 							location: {
 								continent: 'NA',
 								region: 'Northern America',

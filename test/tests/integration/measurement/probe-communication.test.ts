@@ -75,6 +75,7 @@ describe('Create measurement request', function () {
 	it('should send and handle proper events during measurement request', async () => {
 		let measurementId!: string;
 
+		probe.emit('probe:status:ready');
 		await requestAgent.post('/v1/measurements').send({
 			type: 'ping',
 			target: 'jsdelivr.com',
@@ -265,7 +266,7 @@ describe('Create measurement request', function () {
 			.expect(200).expect(response => {
 				expect(response.body).to.containSubset([{
 					version: '0.14.0',
-					ready: true,
+					ready: false,
 					location: {
 						continent: 'NA',
 						region: 'Northern America',
