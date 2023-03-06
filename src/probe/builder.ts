@@ -96,7 +96,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 			},
 			jobs: {count: 0},
 		},
-		ready: false,
+		status: 'initializing',
 	};
 };
 

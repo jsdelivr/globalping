@@ -8,11 +8,15 @@ type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
 	const {isAdmin} = ctx;
-	const socketList = await fetchSockets();
+	let sockets = await fetchSockets();
 
-	ctx.body = socketList.map((socket: Socket) => ({
+	if (!isAdmin) {
+		sockets = sockets.filter(socket => socket.data.probe.status === 'ready');
+	}
+
+	ctx.body = sockets.map((socket: Socket) => ({
+		status: isAdmin ? socket.data.probe.status : undefined,
 		version: socket.data.probe.version,
-		ready: socket.data.probe.ready,
 		location: {
 			continent: socket.data.probe.location.continent,
 			region: socket.data.probe.location.region,
