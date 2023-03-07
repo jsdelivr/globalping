@@ -96,7 +96,7 @@ describe('Get Probes', function () {
 				});
 		});
 
-		it('should detect 2 probes', async () => {
+		it('should detect 2 probes in "ready: true" status', async () => {
 			nock('https://globalping-geoip.global.ssl.fastly.net')
 				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
 				.get(/.*/).reply(200, nockMocks['01.00'].fastly);
@@ -150,7 +150,7 @@ describe('Get Probes', function () {
 				});
 		});
 
-		it('should detect 3 probes', async () => {
+		it('should detect 3 probes in "ready: true" status', async () => {
 			nock('https://globalping-geoip.global.ssl.fastly.net')
 				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
 				.get(/.*/).reply(200, nockMocks['01.00'].fastly)
@@ -224,6 +224,77 @@ describe('Get Probes', function () {
 							resolvers: [],
 						},
 					]);
+				});
+		});
+
+		it('should detect only "ready" probes and filter out other', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
+				.get(/.*/).reply(200, nockMocks['01.00'].fastly);
+			nock('https://ipinfo.io')
+				.get(/.*/).reply(200, nockMocks['00.00'].ipinfo)
+				.get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+				.get(/.*/).reply(200, nockMocks['00.00'].maxmind)
+				.get(/.*/).reply(200, nockMocks['01.00'].maxmind);
+
+			const probe1 = await addFakeProbe();
+			const probe2 = await addFakeProbe();
+			probe1.emit('probe:status:update', 'ready');
+
+			await requestAgent.get('/v1/probes')
+				.send()
+				.expect(200)
+				.expect(response => {
+					expect(response.body).to.deep.equal([{
+						version: '0.14.0',
+						location: {
+							continent: 'SA',
+							region: 'Southern America',
+							country: 'AR',
+							city: 'Buenos Aires',
+							asn: 61_493,
+							latitude: -34.602,
+							longitude: -58.384,
+							network: 'interbs s.r.l.',
+						},
+						tags: [],
+						resolvers: [],
+					}]);
+				});
+		});
+
+		it('should add extra info if admin key is provided', async () => {
+			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['00.00'].fastly);
+			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['00.00'].ipinfo);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['00.00'].maxmind);
+
+			const probe = await addFakeProbe();
+			probe.emit('probe:status:update', 'ready');
+
+			await requestAgent.get('/v1/probes?adminkey=admin')
+				.send()
+				.expect(200)
+				.expect(response => {
+					expect(response.body[0]).to.deep.include({
+						version: '0.14.0',
+						host: '',
+						location: {
+							continent: 'SA',
+							region: 'Southern America',
+							country: 'AR',
+							city: 'Buenos Aires',
+							asn: 61_493,
+							latitude: -34.602,
+							longitude: -58.384,
+							network: 'interbs s.r.l.',
+						},
+						stats: {cpu: {count: 0, load: []}, jobs: {count: 0}},
+						status: 'ready',
+						tags: [],
+						resolvers: [],
+					});
+					expect(response.body[0].ipAddress).to.be.a('string');
 				});
 		});
 	});

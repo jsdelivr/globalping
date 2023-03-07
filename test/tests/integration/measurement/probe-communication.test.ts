@@ -4,12 +4,8 @@ import * as td from 'testdouble';
 import nock from 'nock';
 import {type Socket} from 'socket.io-client';
 import * as sinon from 'sinon';
-import chai from 'chai';
-import chaiSubset from 'chai-subset';
+import {expect} from 'chai';
 import RedisCacheMock from '../../../mocks/redis-cache.js';
-
-chai.use(chaiSubset);
-const {expect} = chai;
 
 const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
@@ -98,7 +94,7 @@ describe('Create measurement request', function () {
 		probe.emit('probe:measurement:ack', {id: 'testId', measurementId});
 		await requestAgent.get(`/v1/measurements/${measurementId}`).send()
 			.expect(200).expect(response => {
-				expect(response.body).to.containSubset({
+				expect(response.body).to.deep.include({
 					id: measurementId,
 					type: 'ping',
 					status: 'in-progress',
@@ -132,7 +128,7 @@ describe('Create measurement request', function () {
 		});
 		await requestAgent.get(`/v1/measurements/${measurementId}`).send()
 			.expect(200).expect(response => {
-				expect(response.body).to.containSubset({
+				expect(response.body).to.deep.include({
 					id: measurementId,
 					type: 'ping',
 					status: 'in-progress',
@@ -166,7 +162,7 @@ describe('Create measurement request', function () {
 		});
 		await requestAgent.get(`/v1/measurements/${measurementId}`).send()
 			.expect(200).expect(response => {
-				expect(response.body).to.containSubset({
+				expect(response.body).to.deep.include({
 					id: measurementId,
 					type: 'ping',
 					status: 'in-progress',
@@ -205,7 +201,7 @@ describe('Create measurement request', function () {
 		await new Promise(resolve => setTimeout(resolve, 100)); // We need to wait until all redis writes finish
 		await requestAgent.get(`/v1/measurements/${measurementId}`).send()
 			.expect(200).expect(response => {
-				expect(response.body).to.containSubset({
+				expect(response.body).to.deep.include({
 					id: measurementId,
 					type: 'ping',
 					status: 'finished',
@@ -264,7 +260,7 @@ describe('Create measurement request', function () {
 
 		await requestAgent.get('/v1/probes?adminkey=admin').send()
 			.expect(200).expect(response => {
-				expect(response.body).to.containSubset([{
+				expect(response.body[0]).to.deep.include({
 					version: '0.14.0',
 					status: 'initializing',
 					location: {
@@ -292,7 +288,7 @@ describe('Create measurement request', function () {
 							],
 						},
 					},
-				}]);
+				});
 			});
 	});
 });
