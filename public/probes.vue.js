@@ -10,11 +10,14 @@ const probes = () => ({
   methods: {
     getReadyColor(index) {
       const probe = this.probes[index];
-      return probe.ready ? 'green' : 'orange';
+      if (!probe.status) {
+        return 'green';
+      }
+      return probe.status !== 'ready' ? 'orange' : 'green';
     },
     getReadyStatus(index) {
       const probe = this.probes[index];
-      return probe.ready ? '[READY]' : '[NOT READY]';
+      return probe.status ? `[${probe.status.toUpperCase()}]` : '';
     },
     getHost(index) {
       const probe = this.probes[index];

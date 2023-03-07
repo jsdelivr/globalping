@@ -7,13 +7,19 @@ import {updateIpRangeFiles, sources, populateMemList, getRegion} from '../../../
 const mockDataPath = path.join(path.resolve(), 'test/mocks/ip-ranges');
 const gcpMockRanges = await readFile(path.join(mockDataPath, 'nock-gcp.json'), 'utf8');
 const awsMockRanges = await readFile(path.join(mockDataPath, 'nock-aws.json'), 'utf8');
-
-const gcpUrl = new URL('https://www.gstatic.com/ipranges/cloud.json');
-const awsUrl = new URL('https://ip-ranges.amazonaws.com/ip-ranges.json');
-nock(gcpUrl.origin).get(gcpUrl.pathname).reply(200, gcpMockRanges);
-nock(awsUrl.origin).get(awsUrl.pathname).reply(200, awsMockRanges);
+const gcpUrl = new URL(sources.gcp.url);
+const awsUrl = new URL(sources.aws.url);
 
 describe('cloud ip ranges', () => {
+	before(() => {
+		nock(gcpUrl.origin).get(gcpUrl.pathname).reply(200, gcpMockRanges);
+		nock(awsUrl.origin).get(awsUrl.pathname).reply(200, awsMockRanges);
+	});
+
+	after(() => {
+		nock.cleanAll();
+	});
+
 	describe('updateList', () => {
 		const gcpFilePath = path.join(path.resolve(), sources.gcp.file);
 

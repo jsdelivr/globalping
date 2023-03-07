@@ -36,7 +36,7 @@ export class ProbeRouter {
 
 	private async fetchSockets(): Promise<Socket[]> {
 		const sockets = await this.fetchWsSockets();
-		return sockets.filter(s => s.data.probe.ready);
+		return sockets.filter(s => s.data.probe.status === 'ready');
 	}
 
 	private findGloballyDistributed(sockets: Socket[], limit: number): Socket[] {

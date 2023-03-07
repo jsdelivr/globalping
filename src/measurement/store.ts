@@ -29,7 +29,6 @@ export class MeasurementStore {
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
 
 		await Promise.all([
-			// eslint-disable-next-line @typescript-eslint/naming-convention
 			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probesCount, {EX: probesAwaitingTtl}),
 			this.redis.json.set(key, '$', {
 				id,

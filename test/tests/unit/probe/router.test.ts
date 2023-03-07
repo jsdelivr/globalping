@@ -40,7 +40,7 @@ describe('probe router', () => {
 	const buildSocket = async (
 		id: string,
 		location: Partial<ProbeLocation>,
-		ready = true,
+		status: Probe['status'] = 'ready',
 	): Promise<Socket> => {
 		const socket: DeepPartial<Socket> = {
 			id,
@@ -54,7 +54,7 @@ describe('probe router', () => {
 		geoLookupMock.resolves({...defaultLocation, ...location});
 		socket.data!.probe = {
 			...(await buildProbe(socket as Socket)),
-			ready,
+			status,
 		};
 		return socket as unknown as Socket;
 	};
@@ -162,8 +162,8 @@ describe('probe router', () => {
 	describe('probe readiness', () => {
 		it('should find 2 probes', async () => {
 			const sockets: Array<DeepPartial<Socket>> = [
-				await buildSocket('socket-1', {continent: 'EU', country: 'GB'}, false),
-				await buildSocket('socket-2', {continent: 'EU', country: 'PL'}, false),
+				await buildSocket('socket-1', {continent: 'EU', country: 'GB'}, 'unbuffer-missing'),
+				await buildSocket('socket-2', {continent: 'EU', country: 'PL'}, 'unbuffer-missing'),
 				await buildSocket('socket-4', {continent: 'EU', country: 'GB'}),
 				await buildSocket('socket-5', {continent: 'EU', country: 'PL'}),
 			];
@@ -279,13 +279,13 @@ describe('probe router', () => {
 	describe('route with global limit', () => {
 		it('should find probes even in overlapping locations', async () => {
 			const cache: Record<string, Socket> = {};
-			const memoizedBuildSocket = async (id, location, ready?) => {
+			const memoizedBuildSocket = async (id, location) => {
 				const cached = cache[location.country];
 				if (cached) {
 					return {...cached};
 				}
 
-				const socket = await buildSocket(id, location, ready);
+				const socket = await buildSocket(id, location);
 				cache[location.country] = socket;
 				return socket;
 			};
@@ -597,7 +597,7 @@ describe('probe router', () => {
 				it(`should match tag - ${testCase}`, async () => {
 					getRegionMock.returns('aws-eu-west-1');
 					const sockets: DeepPartial<Socket[]> = [
-						await buildSocket(String(Date.now()), location, true),
+						await buildSocket(String(Date.now()), location),
 					];
 
 					const locations: Location[] = [
@@ -629,7 +629,7 @@ describe('probe router', () => {
 		it('should return match for existing tag', async () => {
 			getRegionMock.returns('aws-eu-west-1');
 			const sockets: DeepPartial<Socket[]> = [
-				await buildSocket(String(Date.now()), location, true),
+				await buildSocket(String(Date.now()), location),
 			];
 
 			const locations: Location[] = [
@@ -647,7 +647,7 @@ describe('probe router', () => {
 		it('should return 0 matches for partial tag value', async () => {
 			getRegionMock.returns('aws-eu-west-1');
 			const sockets: DeepPartial<Socket[]> = [
-				await buildSocket(String(Date.now()), location, true),
+				await buildSocket(String(Date.now()), location),
 			];
 
 			const locations: Location[] = [

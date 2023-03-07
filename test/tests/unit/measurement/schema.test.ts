@@ -10,7 +10,7 @@ import {
 	joiValidateTarget,
 	joiValidateDomain,
 } from '../../../../src/measurement/schema/utils.js';
-import {populateDomainList, populateIpList} from '../../../utils/malware.js';
+import {populateDomainList, populateIpList} from '../../../utils/populate-static-files.js';
 
 describe('command schema', async () => {
 	before(async () => {

@@ -66,12 +66,11 @@ const populateAwsList = async () => {
 			region: string;
 		}>;
 	};
-	// eslint-disable-next-line @typescript-eslint/naming-convention
+
 	for (const {ip_prefix, region} of data.prefixes) {
 		ipV4Ranges.set(ipaddr.parseCIDR(ip_prefix), `aws-${region}`);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	for (const {ipv6_prefix, region} of data.ipv6_prefixes) {
 		ipV6Ranges.set(ipaddr.parseCIDR(ipv6_prefix), `aws-${region}`);
 	}
