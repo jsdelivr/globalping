@@ -5,7 +5,6 @@ export default class RedisCache implements CacheInterface {
 	constructor(private readonly redis: RedisClient) {}
 
 	async set(key: string, value: unknown, ttl?: number): Promise<void> {
-		// eslint-disable-next-line @typescript-eslint/naming-convention
 		await this.redis.set(this.buildCacheKey(key), JSON.stringify(value), {EX: ttl ? ttl / 1000 : 0});
 	}
 

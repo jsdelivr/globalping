@@ -457,7 +457,7 @@ const app = () => ({
             </ul>
           </div>
           <div>
-            <button @click="addNewHttpHeader">add header</button>
+            <button type="button" @click="addNewHttpHeader">add header</button>
           </div>
         </div>
 
@@ -487,14 +487,14 @@ const app = () => ({
                   </div>
               </div>
               <div>
-                <button @click="addLocationField" :value="lIndex">add field</button>
-                <button @click="removeLocation" :value="lIndex">remove</button>
+                <button type="button" @click="addLocationField" :value="lIndex">add field</button>
+                <button type="button" @click="removeLocation" :value="lIndex">remove</button>
               </div>
             </li>
           </ul>
         </div>
         <div>
-          <button @click="addNewLocation">add location</button>
+          <button type="button" @click="addNewLocation">add location</button>
           <button type="submit">measure</button>
         </div>
       </form>

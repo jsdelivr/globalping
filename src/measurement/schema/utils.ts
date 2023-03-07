@@ -13,11 +13,9 @@ import {joiValidate as joiMalwareValidateIp} from '../../lib/malware/ip.js';
 import {joiValidate as joiMalwareValidateDomain} from '../../lib/malware/domain.js';
 
 export const joiValidateDomain = () => (value: string, helpers: CustomHelpers): string | ErrorReport => {
-	/* eslint-disable @typescript-eslint/naming-convention */
 	const options = {
 		allow_underscores: true,
 	};
-	/* eslint-enable @typescript-eslint/naming-convention */
 
 	if (!validator.isFQDN(value, options)) {
 		return helpers.error('domain.invalid');

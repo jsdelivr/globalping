@@ -18,7 +18,6 @@ Get list of all probes currently online and connected to the API server.
 [
     {
         version: string
-        ready: boolean
         location: {
             continent: string
             region: string
@@ -43,7 +42,6 @@ GET https://api.globalping.io/v1/probes
 [
     {
         "version": "0.10.1",
-        "ready": true,
         "location": {
             "continent": "EU",
             "region": "Western Europe",
@@ -63,7 +61,6 @@ GET https://api.globalping.io/v1/probes
     },
     {
         "version": "0.10.1",
-        "ready": true,
         "location": {
             "continent": "EU",
             "region": "Northern Europe",

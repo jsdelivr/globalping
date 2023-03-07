@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+
 import _ from 'lodash';
 import {type RemoteSocket, Server} from 'socket.io';
 import {createAdapter} from '@socket.io/redis-adapter';

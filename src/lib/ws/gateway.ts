@@ -4,10 +4,7 @@ import type {Probe} from '../../probe/types.js';
 import {handleMeasurementAck} from '../../measurement/handler/ack.js';
 import {handleMeasurementResult} from '../../measurement/handler/result.js';
 import {handleMeasurementProgress} from '../../measurement/handler/progress.js';
-import {
-	handleStatusReady,
-	handleStatusNotReady,
-} from '../../probe/handler/status.js';
+import {handleStatusUpdate} from '../../probe/handler/status.js';
 import {handleDnsUpdate} from '../../probe/handler/dns.js';
 import {handleStatsReport} from '../../probe/handler/stats.js';
 import {scopedLogger} from '../logger.js';
@@ -32,8 +29,7 @@ io
 		logger.info(`ws client ${socket.id} connected from ${probe.location.city}, ${probe.location.country} [${probe.ipAddress} - ${probe.location.network}]`);
 
 		// Handlers
-		socket.on('probe:status:ready', handleStatusReady(probe));
-		socket.on('probe:status:not_ready', handleStatusNotReady(probe));
+		socket.on('probe:status:update', handleStatusUpdate(probe));
 		socket.on('probe:dns:update', handleDnsUpdate(probe));
 		socket.on('probe:stats:report', handleStatsReport(probe));
 		subscribeWithHandler(socket, 'probe:measurement:ack', handleMeasurementAck(probe));

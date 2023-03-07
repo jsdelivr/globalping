@@ -3,7 +3,7 @@ import request, {type Response} from 'supertest';
 import requestIp from 'request-ip';
 import type {RateLimiterRedis} from 'rate-limiter-flexible';
 import {expect} from 'chai';
-import {getTestServer} from '../../../utils/http.js';
+import {getTestServer} from '../../../utils/server.js';
 
 describe('rate limiter', () => {
 	let app: Server;

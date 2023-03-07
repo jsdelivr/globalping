@@ -1,7 +1,6 @@
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 
-/* eslint-disable-next-line @typescript-eslint/naming-convention */
 const WHITELIST_FILE_PATH = 'config/whitelist-ips.txt';
 
 let whiteListIps: Set<string>;

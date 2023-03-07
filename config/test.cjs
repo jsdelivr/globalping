@@ -4,4 +4,7 @@ module.exports = {
 			tls: false,
 		},
 	},
+	admin: {
+		key: 'admin',
+	},
 };

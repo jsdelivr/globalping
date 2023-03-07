@@ -2,7 +2,7 @@ import type {Server} from 'node:http';
 import request from 'supertest';
 import {expect} from 'chai';
 
-import {getTestServer} from '../../../utils/http.js';
+import {getTestServer} from '../../../utils/server.js';
 
 describe('domain redirect', function () {
 	this.timeout(15_000);
