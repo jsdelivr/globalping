@@ -14,6 +14,7 @@ describe('compression', function () {
 	let addFakeProbe: () => Promise<Socket>;
 	let deleteFakeProbe: (Socket) => Promise<void>;
 	let requestAgent: any;
+	let probes: Socket[] = [];
 
 	describe('headers', () => {
 		before(async () => {
@@ -25,11 +26,19 @@ describe('compression', function () {
 			requestAgent = request(app);
 		});
 
+		after(async () => {
+			nock.cleanAll();
+			await Promise.all(probes.map(probe => deleteFakeProbe(probe)));
+		});
+
 		it('should include compression headers', async () => {
 			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).times(10).reply(200, nockMocks['00.00'].fastly);
 			nock('https://ipinfo.io').get(/.*/).times(10).reply(200, nockMocks['00.00'].ipinfo);
 			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).times(10).reply(200, nockMocks['00.00'].maxmind);
-			const probes = await Promise.all(Array.from({length: 10}).map(() => addFakeProbe()));
+			probes = await Promise.all(Array.from({length: 10}).map(() => addFakeProbe()));
+			for (const probe of probes) {
+				probe.emit('probe:status:update', 'ready');
+			}
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			const response = await requestAgent
@@ -39,8 +48,6 @@ describe('compression', function () {
 
 			expect(response.headers['transfer-encoding']).to.equal('chunked');
 			expect(response.headers['content-length']).to.not.exist;
-
-			await Promise.all(probes.map(probe => deleteFakeProbe(probe)));
 		});
 	});
 });

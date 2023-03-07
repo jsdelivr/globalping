@@ -2,12 +2,7 @@ import type {Server} from 'node:http';
 import {type AddressInfo} from 'node:net';
 import _ from 'lodash';
 import {io, type Socket} from 'socket.io-client';
-
 import {createServer} from '../../src/lib/server.js';
-import {
-	populateIpList,
-	populateDomainList,
-} from './malware.js';
 
 let app: Server;
 let url: string;
@@ -15,8 +10,6 @@ let url: string;
 export const getTestServer = async (): Promise<Server> => {
 	// eslint-disable-next-line @typescript-eslint/ban-types
 	_.throttle = ((func: Function) => func) as unknown as typeof _.throttle;
-	await populateIpList();
-	await populateDomainList();
 
 	if (!app) {
 		app = await createServer();
