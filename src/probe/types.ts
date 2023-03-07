@@ -32,7 +32,7 @@ export type Tag = {
 };
 
 export type Probe = {
-	status: 'initializing' | 'ready' | 'unbuffer-missing';
+	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'sigterm';
 	client: string;
 	version: string | undefined;
 	ipAddress: string;

@@ -14,14 +14,25 @@ describe('Get Probes', function () {
 	let addFakeProbe: () => Promise<Socket>;
 	let deleteFakeProbe: (Socket) => Promise<void>;
 	let requestAgent: SuperTest<Test>;
+	const probes: Socket[] = [];
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/cache/redis-cache.ts', {}, RedisCacheMock);
 		const http = await import('../../../utils/server.js');
-		addFakeProbe = http.addFakeProbe;
 		deleteFakeProbe = http.deleteFakeProbe;
+		addFakeProbe = async () => {
+			const probe = await http.addFakeProbe();
+			probes.push(probe);
+			return probe;
+		};
+
 		const app = await http.getTestServer();
 		requestAgent = request(app);
+	});
+
+	afterEach(async () => {
+		nock.cleanAll();
+		await Promise.all(probes.map(probe => deleteFakeProbe(probe)));
 	});
 
 	after(() => {
@@ -40,11 +51,7 @@ describe('Get Probes', function () {
 	});
 
 	describe('probes connected', () => {
-		afterEach(() => {
-			nock.cleanAll();
-		});
-
-		it('should detect 1 probe', async () => {
+		it('should not detect probes if they are not ready', async () => {
 			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['00.00'].fastly);
 			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['00.00'].ipinfo);
 			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['00.00'].maxmind);
@@ -55,25 +62,8 @@ describe('Get Probes', function () {
 				.send()
 				.expect(200)
 				.expect(response => {
-					expect(response.body).to.deep.equal([{
-						version: '0.14.0',
-						ready: false,
-						location: {
-							continent: 'SA',
-							region: 'Southern America',
-							country: 'AR',
-							city: 'Buenos Aires',
-							asn: 61_493,
-							latitude: -34.602,
-							longitude: -58.384,
-							network: 'interbs s.r.l.',
-						},
-						tags: [],
-						resolvers: [],
-					}]);
+					expect(response.body).to.deep.equal([]);
 				});
-
-			await deleteFakeProbe(probe);
 		});
 
 		it('should detect 1 probe in "ready: true" status', async () => {
@@ -82,7 +72,7 @@ describe('Get Probes', function () {
 			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['00.00'].maxmind);
 
 			const probe = await addFakeProbe();
-			probe.emit('probe:status:ready');
+			probe.emit('probe:status:update', 'ready');
 
 			await requestAgent.get('/v1/probes')
 				.send()
@@ -90,7 +80,6 @@ describe('Get Probes', function () {
 				.expect(response => {
 					expect(response.body).to.deep.equal([{
 						version: '0.14.0',
-						ready: true,
 						location: {
 							continent: 'SA',
 							region: 'Southern America',
@@ -105,8 +94,6 @@ describe('Get Probes', function () {
 						resolvers: [],
 					}]);
 				});
-
-			await deleteFakeProbe(probe);
 		});
 
 		it('should detect 2 probes', async () => {
@@ -122,6 +109,8 @@ describe('Get Probes', function () {
 
 			const probe1 = await addFakeProbe();
 			const probe2 = await addFakeProbe();
+			probe1.emit('probe:status:update', 'ready');
+			probe2.emit('probe:status:update', 'ready');
 
 			await requestAgent.get('/v1/probes')
 				.send()
@@ -129,7 +118,6 @@ describe('Get Probes', function () {
 				.expect(response => {
 					expect(response.body).to.deep.equal([{
 						version: '0.14.0',
-						ready: false,
 						location: {
 							continent: 'SA',
 							region: 'Southern America',
@@ -145,7 +133,6 @@ describe('Get Probes', function () {
 					},
 					{
 						version: '0.14.0',
-						ready: false,
 						location: {
 							continent: 'NA',
 							region: 'Northern America',
@@ -161,9 +148,6 @@ describe('Get Probes', function () {
 						resolvers: [],
 					}]);
 				});
-
-			await deleteFakeProbe(probe1);
-			await deleteFakeProbe(probe2);
 		});
 
 		it('should detect 3 probes', async () => {
@@ -183,6 +167,9 @@ describe('Get Probes', function () {
 			const probe1 = await addFakeProbe();
 			const probe2 = await addFakeProbe();
 			const probe3 = await addFakeProbe();
+			probe1.emit('probe:status:update', 'ready');
+			probe2.emit('probe:status:update', 'ready');
+			probe3.emit('probe:status:update', 'ready');
 
 			await requestAgent.get('/v1/probes')
 				.send()
@@ -191,7 +178,6 @@ describe('Get Probes', function () {
 					expect(response.body).to.deep.equal([
 						{
 							version: '0.14.0',
-							ready: false,
 							location: {
 								continent: 'SA',
 								region: 'Southern America',
@@ -207,7 +193,6 @@ describe('Get Probes', function () {
 						},
 						{
 							version: '0.14.0',
-							ready: false,
 							location: {
 								continent: 'NA',
 								region: 'Northern America',
@@ -224,7 +209,6 @@ describe('Get Probes', function () {
 						},
 						{
 							version: '0.14.0',
-							ready: false,
 							location: {
 								continent: 'NA',
 								region: 'Northern America',
@@ -241,10 +225,6 @@ describe('Get Probes', function () {
 						},
 					]);
 				});
-
-			await deleteFakeProbe(probe1);
-			await deleteFakeProbe(probe2);
-			await deleteFakeProbe(probe3);
 		});
 	});
 });

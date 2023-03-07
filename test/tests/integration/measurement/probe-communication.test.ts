@@ -53,7 +53,7 @@ describe('Create measurement request', function () {
 	});
 
 	it('should send and handle proper events during probe connection', async () => {
-		probe.emit('probe:status:ready');
+		probe.emit('probe:status:update', 'ready');
 		probe.emit('probe:dns:update', ['1.1.1.1']);
 		expect(locationHandlerStub.callCount).to.equal(1);
 		expect(locationHandlerStub.firstCall.args).to.deep.equal([{
@@ -75,7 +75,7 @@ describe('Create measurement request', function () {
 	it('should send and handle proper events during measurement request', async () => {
 		let measurementId!: string;
 
-		probe.emit('probe:status:ready');
+		probe.emit('probe:status:update', 'ready');
 		await requestAgent.post('/v1/measurements').send({
 			type: 'ping',
 			target: 'jsdelivr.com',
@@ -266,7 +266,7 @@ describe('Create measurement request', function () {
 			.expect(200).expect(response => {
 				expect(response.body).to.containSubset([{
 					version: '0.14.0',
-					ready: false,
+					status: 'initializing',
 					location: {
 						continent: 'NA',
 						region: 'Northern America',
