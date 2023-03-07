@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import config from 'config';
 import cryptoRandomString from 'crypto-random-string';
 import type {Probe} from '../probe/types.js';

@@ -62,7 +62,6 @@ describe('measurement store', () => {
 		await sandbox.clock.tickAsync(16_000);
 
 		expect(redisMock.hScan.callCount).to.equal(1);
-		// eslint-disable-next-line @typescript-eslint/naming-convention
 		expect(redisMock.hScan.firstCall.args).to.deep.equal(['gp:in-progress', 0, {COUNT: 5000}]);
 		expect(redisMock.json.mGet.callCount).to.equal(1);
 		expect(redisMock.json.mGet.firstCall.args).to.deep.equal([['gp:measurement:id1', 'gp:measurement:id2'], '.']);
