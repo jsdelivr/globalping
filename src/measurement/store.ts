@@ -147,18 +147,26 @@ export class MeasurementStore {
 		const intervalTime = Math.round(Math.random() * SCAN_INTERVAL_TIME);
 
 		setTimeout(async () => {
-			const {cursor, tuples} = await this.redis.hScan('gp:in-progress', 0, {COUNT: SCAN_BATCH_SIZE});
+			try {
+				const {cursor, tuples} = await this.redis.hScan('gp:in-progress', 0, {COUNT: SCAN_BATCH_SIZE});
 
-			if (cursor !== 0) {
-				logger.warn(`There are more than ${SCAN_BATCH_SIZE} "in-progress" elements in db`);
+				if (cursor !== 0) {
+					logger.warn(`There are more than ${SCAN_BATCH_SIZE} "in-progress" elements in db`);
+				}
+
+				const timedOutIds = tuples
+					.filter(({value: time}) => Date.now() - Number(time) >= timeoutTime)
+					.map(({field: id}) => id);
+
+				await this.markFinishedByTimeout(timedOutIds);
+				logger.info({a: 1});
+				logger.info('data', {a: 1});
+				throw new Error('alo');
+			} catch (error: unknown) {
+				logger.error(error);
+			} finally {
+				this.scheduleCleanup();
 			}
-
-			const timedOutIds = tuples
-				.filter(({value: time}) => Date.now() - Number(time) >= timeoutTime)
-				.map(({field: id}) => id);
-
-			await this.markFinishedByTimeout(timedOutIds);
-			this.scheduleCleanup();
 		}, intervalTime);
 	}
 }
