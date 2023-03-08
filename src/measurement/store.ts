@@ -159,9 +159,6 @@ export class MeasurementStore {
 					.map(({field: id}) => id);
 
 				await this.markFinishedByTimeout(timedOutIds);
-				logger.info({a: 1});
-				logger.info('data', {a: 1});
-				throw new Error('alo');
 			} catch (error: unknown) {
 				logger.error(error);
 			} finally {
