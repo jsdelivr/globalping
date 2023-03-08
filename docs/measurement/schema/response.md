@@ -274,7 +274,7 @@ the delay between sending the packet and getting the response.
 
 ### DNS
 
-***warning!***: In case the measurement was requested with `toggle` enabled, the `Result.hops` will be of type `Object[]`. This is because each trace path is returned individually by the probe.
+***warning!***: In case the measurement was requested with `trace` enabled, the `Result.hops` will be of type `Object[]`. This is because each trace path is returned individually by the probe.
 
 example:
 ```json
