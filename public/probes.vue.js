@@ -44,7 +44,17 @@ const probes = () => ({
     async fetchProbes() {
       const adminKey = new URLSearchParams(window.location.search).get('adminkey');
       const url = `/v1/probes?adminkey=${adminKey}`;
-      this.probes = await (await fetch(url)).json();
+      const probes = await (await fetch(url)).json();
+      const sortNonReadyFirst = (probe1, probe2) => {
+        if (probe1.status === 'ready' && probe2.status !== 'ready') {
+          return 1;
+        } else if (probe1.status !== 'ready' && probe2.status === 'ready') {
+          return -1;
+        } else {
+          return 0;
+        }
+      };
+      this.probes = probes.sort(sortNonReadyFirst);
     },
   },
   template: `
