@@ -8,11 +8,11 @@ The purpose is to document everything for ourselves as well as allow everyone el
 The main production API that all probes and users connect to.
 
 - Hosted on Hetzner in Falkenstein
-- 2xVMs with 4 threads and 8GB RAM per VM
+- 2xVMs with 8 threads and 16GB RAM per VM
 - 1 Load-balancer with health-checks and TLS termination and automated LetsEncrypt certs
 - Master branch is compiled into a Docker container automatically by Docker Hub.
 - Manually triggered deployments using Docker Swarm (Network host mode)
-- $33/month
+- $60/month
 
 
 ### API - Redis 7.x
