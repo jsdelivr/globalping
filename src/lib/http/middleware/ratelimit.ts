@@ -14,7 +14,8 @@ const setResponseHeaders = (ctx: Context, response: RateLimiterRes) => {
 const methodsWhitelist = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
-	if (methodsWhitelist.has(ctx.method)) {
+	const {method, isAdmin} = ctx;
+	if (methodsWhitelist.has(method) || isAdmin) {
 		return next();
 	}
 
