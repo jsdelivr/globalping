@@ -18,7 +18,7 @@ const locationKeyMap = [
 
 export class SocketsLocationFilter {
 	static getIndexPosition(socket: Socket, value: string) {
-		return socket.data.probe.index.findIndex(index => index.includes(value.replace('-', ' ').trim()));
+		return socket.data.probe.index.findIndex(index => index.includes(value.replaceAll('-', ' ').trim()));
 	}
 
 	static hasTag(socket: Socket, tag: string) {
