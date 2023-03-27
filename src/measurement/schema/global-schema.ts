@@ -9,7 +9,6 @@ import {schema as locationSchema} from './location-schema.js';
 
 const measurementConfig = config.get<{limits: {global: number; location: number}}>('measurement');
 
-// eslint-disable-next-line unicorn/explicit-length-check
 const limitDefaultHandler = (parent: {locations: LocationWithLimit[]}) => parent.locations.length || 1;
 
 export const schema = Joi.object({

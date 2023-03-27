@@ -10,7 +10,6 @@ const setResponseHeaders = (ctx: Context, response: RateLimiterRes) => {
 	ctx.set('X-RateLimit-Remaining', `${response.remainingPoints}`);
 };
 
-// eslint-disable-next-line unicorn/prevent-abbreviations
 const methodsWhitelist = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 export const rateLimitHandler = () => async (ctx: Context, next: Next) => {

@@ -40,7 +40,6 @@ describe('measurement store', () => {
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/redis/client.ts', {getRedisClient: () => redisMock});
-		// eslint-disable-next-line unicorn/no-await-expression-member
 		getMeasurementStore = (await import('../../../../src/measurement/store.js')).getMeasurementStore;
 	});
 

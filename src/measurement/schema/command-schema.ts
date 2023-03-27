@@ -96,7 +96,6 @@ export const dnsSchema = Joi.object({
 	trace: Joi.boolean().default(false),
 }).default().messages(schemaErrorMessages);
 
-/* eslint-disable unicorn/prefer-spread */
 export const targetSchema = whenTypeApply('ping', pingTargetSchema)
 	.concat(whenTypeApply('http', httpTargetSchema))
 	.concat(whenTypeApply('traceroute', tracerouteTargetSchema))
@@ -108,4 +107,3 @@ export const measurementSchema = whenTypeApply('ping', pingSchema)
 	.concat(whenTypeApply('traceroute', tracerouteSchema))
 	.concat(whenTypeApply('dns', dnsSchema))
 	.concat(whenTypeApply('mtr', mtrSchema));
-/* eslint-enable unicorn/prefer-spread */

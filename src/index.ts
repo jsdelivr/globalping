@@ -13,7 +13,6 @@ const workerFn = async () => {
 	});
 };
 
-// eslint-disable-next-line unicorn/prefer-top-level-await
 workerFn().catch(error => {
 	logger.error('failed to start cluster', error);
 });

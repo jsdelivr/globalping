@@ -63,7 +63,6 @@ describe('probe router', () => {
 		await td.replaceEsm('../../../../src/lib/geoip/client.ts', {createGeoipClient: () => ({lookup: geoLookupMock})});
 		await td.replaceEsm('request-ip', null, {getClientIp: () => '18.200.0.1'});
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', {getRegion: getRegionMock});
-		// eslint-disable-next-line unicorn/no-await-expression-member
 		buildProbe = (await import('../../../../src/probe/builder.js')).buildProbe as unknown as (socket: Socket) => Promise<Probe>;
 	});
 

@@ -95,14 +95,12 @@ export const getRegion = (ip: string) => {
 	const parsedIp = ipaddr.process(ip);
 	if (parsedIp.kind() === 'ipv4') {
 		for (const [ipRange, region] of ipV4Ranges) {
-			// eslint-disable-next-line unicorn/prefer-regexp-test
 			if (parsedIp.match(ipRange)) {
 				return region;
 			}
 		}
 	} else if (parsedIp.kind() === 'ipv6') {
 		for (const [ipRange, region] of ipV6Ranges) {
-			// eslint-disable-next-line unicorn/prefer-regexp-test
 			if (parsedIp.match(ipRange)) {
 				return region;
 			}

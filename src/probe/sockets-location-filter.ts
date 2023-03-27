@@ -99,7 +99,6 @@ export class SocketsLocationFilter {
 	private magicSort(sockets: Socket[], magicString: string): Socket[] {
 		const getClosestIndexPosition = (socket: Socket) => {
 			const keywords = magicString.split('+');
-			// eslint-disable-next-line unicorn/no-array-reduce
 			const closestIndexPosition = keywords.reduce((smallesIndex, keyword) => {
 				const indexPosition = SocketsLocationFilter.getIndexPosition(socket, keyword);
 				return indexPosition < smallesIndex ? indexPosition : smallesIndex;
