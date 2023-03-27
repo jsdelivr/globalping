@@ -37,12 +37,12 @@ export class SocketsLocationFilter {
 
 		const filteredSockets = sockets.filter(s => Object.keys(location).every((k) => {
 			if (k === 'tags') {
-				const tags = location[k]!;
+				const tags = location.tags!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
 				return tags.every(tag => SocketsLocationFilter.hasTag(s, tag));
 			}
 
 			if (k === 'magic') {
-				const keywords = location[k]!.split('+');
+				const keywords = location.magic!.split('+'); // eslint-disable-line @typescript-eslint/no-non-null-assertion
 				return keywords.every(keyword => SocketsLocationFilter.getIndexPosition(s, keyword) !== -1);
 			}
 
@@ -52,6 +52,7 @@ export class SocketsLocationFilter {
 		}));
 
 		const isMagicSorting = Object.keys(location).includes('magic');
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		return isMagicSorting ? this.magicSort(filteredSockets, location.magic!) : _.shuffle(filteredSockets);
 	}
 

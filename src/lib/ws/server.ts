@@ -38,7 +38,7 @@ export const initWsServer = async () => {
 
 	io.adapter(createAdapter(pubClient, subClient));
 
-	throttledFetchSockets = throttle<any[], Array<RemoteSocket<DefaultEventsMap, SocketData>>>(
+	throttledFetchSockets = throttle<[], Array<RemoteSocket<DefaultEventsMap, SocketData>>>(
 		io.of(PROBES_NAMESPACE).fetchSockets.bind(io.of(PROBES_NAMESPACE)),
 		config.get<number>('ws.fetchSocketsCacheTTL'),
 	);

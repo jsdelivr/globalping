@@ -13,8 +13,10 @@ export const verifyIpLimit = async (socket: Socket): Promise<void> => {
 		return;
 	}
 
+	const probe = socket.data['probe'] as Probe;
+
 	const socketList = await io.of(PROBES_NAMESPACE).fetchSockets();
-	const previousSocket = socketList.find(s => s.data.probe.ipAddress === socket.data['probe'].ipAddress && s.id !== socket.id);
+	const previousSocket = socketList.find(s => s.data.probe.ipAddress === probe.ipAddress && s.id !== socket.id);
 
 	if (previousSocket) {
 		logger.info(`ws client ${socket.id} has reached the concurrent IP limit.`, { message: previousSocket.data.probe.ipAddress });
@@ -23,8 +25,8 @@ export const verifyIpLimit = async (socket: Socket): Promise<void> => {
 			{
 				code: 'ip_limit',
 				socketId: socket.id,
-				probe: socket.data['probe'] as Probe,
-				ipAddress: socket.data['probe'].ipAddress as Probe['ipAddress'],
+				probe,
+				ipAddress: probe.ipAddress,
 			},
 		);
 	}

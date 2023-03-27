@@ -6,7 +6,7 @@ type Info = {
 	// A string used for message parsing
 	code?: string;
 	probe?: Probe;
-	cause?: any;
+	cause?: unknown;
 };
 
 type JsonResponse = {

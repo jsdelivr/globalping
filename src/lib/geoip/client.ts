@@ -172,7 +172,7 @@ export default class GeoipClient {
 		const info = await fn();
 		const ttl = Number(config.get('geoip.cache.ttl'));
 
-		await this.cache.set(key, info, ttl).catch((error) => {
+		await this.cache.set(key, info, ttl).catch((error: Error) => {
 			this.logger.error('Failed to cache geoip info for probe.', error);
 			newrelic.noticeError(error, { key, ttl });
 		});

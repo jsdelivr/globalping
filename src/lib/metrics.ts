@@ -48,7 +48,7 @@ export class MetricsAgent {
 	private async updateMeasurementCount (): Promise<void> {
 		let count = 0;
 
-		for await (const _ of this.redis.scanIterator({ MATCH: 'gp:measurement:*' })) {
+		for await (const _ of this.redis.scanIterator({ MATCH: 'gp:measurement:*' })) { // eslint-disable-line @typescript-eslint/no-unused-vars
 			count++;
 		}
 

@@ -28,7 +28,7 @@ const fakeIpForDebug = () => _.sample([
 	'213.136.174.80',
 	'94.214.253.78',
 	'79.205.97.254',
-])!;
+]);
 
 const geoipClient = createGeoipClient();
 

@@ -16,11 +16,12 @@ type NextMwArgument = (
 
 type NextArgument = NextConnectArgument | NextMwArgument;
 
-const isError = (error: unknown): error is Error => Boolean(error as Error.message);
+const isError = (error: unknown): error is Error => Boolean(error as Error['message']);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const errorHandler = (next: NextArgument) => async (socket: Socket, mwNext?: (error?: any) => void | undefined) => {
 	try {
-		await next(socket, mwNext!);
+		await next(socket, mwNext!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
 	} catch (error: unknown) {
 		const clientIp = getProbeIp(socket.request) ?? '';
 		const reason = isError(error) ? error.message : 'unknown';

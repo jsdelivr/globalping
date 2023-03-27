@@ -33,7 +33,7 @@ export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 		country: result.country ?? '',
 		city: normalizeCityNamePublic(result.city ?? ''),
 		normalizedCity: normalizeCityName(result.city ?? ''),
-		asn: parsedAsn!,
+		asn: Number(parsedAsn),
 		latitude: Number(lat),
 		longitude: Number(lon),
 		network,

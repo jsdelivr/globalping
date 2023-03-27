@@ -140,7 +140,7 @@ type HttpResult = TestResult & {
 	statusCode: number;
 	timings: Record<string, number>;
 	tls: {
-		[key: string]: any;
+		[key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 		authorized: boolean;
 		authorizationError?: string;
 		createdAt: string;
