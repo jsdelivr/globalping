@@ -233,13 +233,13 @@ describe('Create measurement', function () {
 				});
 		});
 
-		it('should create measurement with partial tag value "magic: TaG-v" location', async () => {
+		it('should create measurement with partial tag value "magic: GCP-us-West4" location', async () => {
 			probe.emit('probe:status:update', 'ready');
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
 					target: 'example.com',
-					locations: [{magic: 'Us-WeSt4', limit: 2}],
+					locations: [{magic: 'GCP-us-West4', limit: 2}],
 					measurementOptions: {
 						packets: 4,
 					},
