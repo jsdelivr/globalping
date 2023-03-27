@@ -1,7 +1,7 @@
-import type {Context, Next} from 'koa';
+import type { Context, Next } from 'koa';
 import createHttpError from 'http-errors';
 import newrelic from 'newrelic';
-import {scopedLogger} from '../../logger.js';
+import { scopedLogger } from '../../logger.js';
 
 const logger = scopedLogger('error-handler-mw');
 
@@ -11,6 +11,7 @@ export const errorHandlerMw = async (ctx: Context, next: Next) => {
 	} catch (error: unknown) {
 		if (createHttpError.isHttpError(error)) {
 			ctx.status = error.status;
+
 			ctx.body = {
 				error: {
 					message: error.expose ? error.message : createHttpError(error.status).message,
@@ -28,6 +29,7 @@ export const errorHandlerMw = async (ctx: Context, next: Next) => {
 		logger.error(error);
 
 		ctx.status = 500;
+
 		ctx.body = {
 			error: {
 				message: 'Internal Server Error',

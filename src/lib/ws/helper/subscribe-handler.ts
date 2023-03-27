@@ -1,8 +1,8 @@
-import type {Socket} from 'socket.io';
-import {scopedLogger} from '../../logger.js';
+import type { Socket } from 'socket.io';
+import { scopedLogger } from '../../logger.js';
 
 const logger = scopedLogger('ws:handler:error');
-const isError = (error: unknown): error is Error => Boolean((error as Error).message);
+const isError = (error: unknown): error is Error => Boolean(error as Error.message);
 
 type HandlerMethod = (...args: never[]) => Promise<void>;
 

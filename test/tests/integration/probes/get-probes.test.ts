@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import nock from 'nock';
-import {expect} from 'chai';
-import request, {type SuperTest, type Test} from 'supertest';
+import { expect } from 'chai';
+import request, { type SuperTest, type Test } from 'supertest';
 import * as td from 'testdouble';
-import {type Socket} from 'socket.io-client';
+import { type Socket } from 'socket.io-client';
 import RedisCacheMock from '../../../mocks/redis-cache.js';
 
 const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
@@ -20,6 +20,7 @@ describe('Get Probes', function () {
 		await td.replaceEsm('../../../../src/lib/cache/redis-cache.ts', {}, RedisCacheMock);
 		const http = await import('../../../utils/server.js');
 		deleteFakeProbe = http.deleteFakeProbe;
+
 		addFakeProbe = async () => {
 			const probe = await http.addFakeProbe();
 			probes.push(probe);
@@ -44,7 +45,7 @@ describe('Get Probes', function () {
 			await requestAgent.get('/v1/probes')
 				.send()
 				.expect(200)
-				.expect(response => {
+				.expect((response) => {
 					expect(response.body).to.deep.equal([]);
 				});
 		});
@@ -61,7 +62,7 @@ describe('Get Probes', function () {
 			await requestAgent.get('/v1/probes')
 				.send()
 				.expect(200)
-				.expect(response => {
+				.expect((response) => {
 					expect(response.body).to.deep.equal([]);
 				});
 		});
@@ -77,7 +78,7 @@ describe('Get Probes', function () {
 			await requestAgent.get('/v1/probes')
 				.send()
 				.expect(200)
-				.expect(response => {
+				.expect((response) => {
 					expect(response.body).to.deep.equal([{
 						version: '0.14.0',
 						location: {
@@ -100,9 +101,11 @@ describe('Get Probes', function () {
 			nock('https://globalping-geoip.global.ssl.fastly.net')
 				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
 				.get(/.*/).reply(200, nockMocks['01.00'].fastly);
+
 			nock('https://ipinfo.io')
 				.get(/.*/).reply(200, nockMocks['00.00'].ipinfo)
 				.get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
+
 			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
 				.get(/.*/).reply(200, nockMocks['00.00'].maxmind)
 				.get(/.*/).reply(200, nockMocks['01.00'].maxmind);
@@ -115,7 +118,7 @@ describe('Get Probes', function () {
 			await requestAgent.get('/v1/probes')
 				.send()
 				.expect(200)
-				.expect(response => {
+				.expect((response) => {
 					expect(response.body).to.deep.equal([{
 						version: '0.14.0',
 						location: {
@@ -155,10 +158,12 @@ describe('Get Probes', function () {
 				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
 				.get(/.*/).reply(200, nockMocks['01.00'].fastly)
 				.get(/.*/).reply(200, nockMocks['00.04'].fastly);
+
 			nock('https://ipinfo.io')
 				.get(/.*/).reply(200, nockMocks['00.00'].ipinfo)
 				.get(/.*/).reply(200, nockMocks['01.00'].ipinfo)
 				.get(/.*/).reply(200, nockMocks['00.04'].ipinfo);
+
 			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
 				.get(/.*/).reply(200, nockMocks['00.00'].maxmind)
 				.get(/.*/).reply(200, nockMocks['01.00'].maxmind)
@@ -174,7 +179,7 @@ describe('Get Probes', function () {
 			await requestAgent.get('/v1/probes')
 				.send()
 				.expect(200)
-				.expect(response => {
+				.expect((response) => {
 					expect(response.body).to.deep.equal([
 						{
 							version: '0.14.0',
@@ -231,9 +236,11 @@ describe('Get Probes', function () {
 			nock('https://globalping-geoip.global.ssl.fastly.net')
 				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
 				.get(/.*/).reply(200, nockMocks['01.00'].fastly);
+
 			nock('https://ipinfo.io')
 				.get(/.*/).reply(200, nockMocks['00.00'].ipinfo)
 				.get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
+
 			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
 				.get(/.*/).reply(200, nockMocks['00.00'].maxmind)
 				.get(/.*/).reply(200, nockMocks['01.00'].maxmind);
@@ -245,7 +252,7 @@ describe('Get Probes', function () {
 			await requestAgent.get('/v1/probes')
 				.send()
 				.expect(200)
-				.expect(response => {
+				.expect((response) => {
 					expect(response.body).to.deep.equal([{
 						version: '0.14.0',
 						location: {
@@ -275,7 +282,7 @@ describe('Get Probes', function () {
 			await requestAgent.get('/v1/probes?adminkey=admin')
 				.send()
 				.expect(200)
-				.expect(response => {
+				.expect((response) => {
 					expect(response.body[0]).to.deep.include({
 						version: '0.14.0',
 						host: '',
@@ -289,11 +296,12 @@ describe('Get Probes', function () {
 							longitude: -58.384,
 							network: 'interbs s.r.l.',
 						},
-						stats: {cpu: {count: 0, load: []}, jobs: {count: 0}},
+						stats: { cpu: { count: 0, load: [] }, jobs: { count: 0 } },
 						status: 'ready',
 						tags: [],
 						resolvers: [],
 					});
+
 					expect(response.body[0].ipAddress).to.be.a('string');
 				});
 		});

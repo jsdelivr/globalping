@@ -1,19 +1,19 @@
 import _ from 'lodash';
 import config from 'config';
-import type {Logger} from 'winston';
+import type { Logger } from 'winston';
 import newrelic from 'newrelic';
-import type {CacheInterface} from '../cache/cache-interface.js';
-import {InternalError} from '../internal-error.js';
-import type {ProbeLocation} from '../../probe/types.js';
+import type { CacheInterface } from '../cache/cache-interface.js';
+import { InternalError } from '../internal-error.js';
+import type { ProbeLocation } from '../../probe/types.js';
 import RedisCache from '../cache/redis-cache.js';
-import {getRedisClient} from '../redis/client.js';
-import {scopedLogger} from '../logger.js';
-import {getRegionByCountry} from '../location/location.js';
-import {isAddrWhitelisted} from './whitelist.js';
-import {ipinfoLookup} from './providers/ipinfo.js';
-import {type FastlyBundledResponse, fastlyLookup} from './providers/fastly.js';
-import {maxmindLookup} from './providers/maxmind.js';
-import {prettifyRegionName} from './utils.js';
+import { getRedisClient } from '../redis/client.js';
+import { scopedLogger } from '../logger.js';
+import { getRegionByCountry } from '../location/location.js';
+import { isAddrWhitelisted } from './whitelist.js';
+import { ipinfoLookup } from './providers/ipinfo.js';
+import { type FastlyBundledResponse, fastlyLookup } from './providers/fastly.js';
+import { maxmindLookup } from './providers/maxmind.js';
+import { prettifyRegionName } from './utils.js';
 
 export type LocationInfo = Omit<ProbeLocation, 'region' | 'normalizedRegion'>;
 export type LocationInfoWithProvider = LocationInfo & {provider: string};
@@ -33,25 +33,25 @@ export const createGeoipClient = (): GeoipClient => new GeoipClient(
 );
 
 export default class GeoipClient {
-	constructor(
+	constructor (
 		private readonly cache: CacheInterface,
 		private readonly logger: Logger,
 	) {}
 
-	async lookup(addr: string): Promise<ProbeLocation> {
+	async lookup (addr: string): Promise<ProbeLocation> {
 		const results = await Promise
 			.allSettled([
 				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
 				this.lookupWithCache<LocationInfo>(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
 				this.lookupWithCache<FastlyBundledResponse>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
-			.then(([ipinfo, maxmind, fastly]) => {
+			.then(([ ipinfo, maxmind, fastly ]) => {
 				const fulfilled = [];
 
 				fulfilled.push(
-					ipinfo.status === 'fulfilled' ? {...ipinfo.value, provider: 'ipinfo'} : null,
-					maxmind.status === 'fulfilled' ? {...maxmind.value, provider: 'maxmind'} : null,
-					fastly.status === 'fulfilled' ? {...fastly.value.location, provider: 'fastly'} : null,
+					ipinfo.status === 'fulfilled' ? { ...ipinfo.value, provider: 'ipinfo' } : null,
+					maxmind.status === 'fulfilled' ? { ...maxmind.value, provider: 'maxmind' } : null,
+					fastly.status === 'fulfilled' ? { ...fastly.value.location, provider: 'fastly' } : null,
 				);
 
 				if (fastly.status === 'fulfilled' && this.isVpn(fastly.value.client) && !isAddrWhitelisted(addr)) {
@@ -92,12 +92,12 @@ export default class GeoipClient {
 		};
 	}
 
-	private isVpn(client: {proxy_desc: string; proxy_type: string}): boolean {
+	private isVpn (client: {proxy_desc: string; proxy_type: string}): boolean {
 		if (!client) {
 			return false;
 		}
 
-		if (['anonymous', 'aol', 'blackberry', 'corporate'].includes(client.proxy_type)) {
+		if ([ 'anonymous', 'aol', 'blackberry', 'corporate' ].includes(client.proxy_type)) {
 			return true;
 		}
 
@@ -108,7 +108,7 @@ export default class GeoipClient {
 		return false;
 	}
 
-	private matchRegion(best: LocationInfo): RegionInfo {
+	private matchRegion (best: LocationInfo): RegionInfo {
 		const region = getRegionByCountry(best.country);
 
 		return {
@@ -117,7 +117,7 @@ export default class GeoipClient {
 		};
 	}
 
-	private matchNetwork(best: LocationInfo, sources: LocationInfoWithProvider[]): NetworkInfo | undefined {
+	private matchNetwork (best: LocationInfo, sources: LocationInfoWithProvider[]): NetworkInfo | undefined {
 		if (best.asn && best.network) {
 			return {
 				asn: best.asn,
@@ -127,6 +127,7 @@ export default class GeoipClient {
 		}
 
 		const maxmind = sources.find(s => s.provider === 'maxmind' && s.city === best.city);
+
 		if (maxmind?.asn && maxmind?.network) {
 			return {
 				asn: maxmind.asn,
@@ -138,7 +139,7 @@ export default class GeoipClient {
 		return undefined;
 	}
 
-	private bestMatch(field: keyof LocationInfo, sources: LocationInfoWithProvider[]): LocationInfo {
+	private bestMatch (field: keyof LocationInfo, sources: LocationInfoWithProvider[]): LocationInfo {
 		const filtered = sources.filter(s => s[field]);
 		// Group by the same field value
 		const grouped = Object.values(_.groupBy(filtered, field));
@@ -149,19 +150,19 @@ export default class GeoipClient {
 
 		// If all values are different
 		if (grouped.length === filtered.length) {
-			const sourcesObject = Object.fromEntries(filtered.map(s => [s.provider, s]));
+			const sourcesObject = Object.fromEntries(filtered.map(s => [ s.provider, s ]));
 			best = sourcesObject['ipinfo'] ?? sourcesObject['maxmind'];
 		}
 
 		if (!best || best.provider === 'fastly') {
-			this.logger.error(`failed to find a correct value for a field "${field}"`, {field, sources});
+			this.logger.error(`failed to find a correct value for a field "${field}"`, { field, sources });
 			throw new Error(`failed to find a correct value for a field "${field}"`);
 		}
 
 		return _.omit(best, 'provider');
 	}
 
-	private async lookupWithCache<T>(key: string, fn: () => Promise<T>): Promise<T> {
+	private async lookupWithCache<T> (key: string, fn: () => Promise<T>): Promise<T> {
 		const cached = await this.cache.get<T>(key);
 
 		if (cached) {
@@ -171,9 +172,9 @@ export default class GeoipClient {
 		const info = await fn();
 		const ttl = Number(config.get('geoip.cache.ttl'));
 
-		await this.cache.set(key, info, ttl).catch(error => {
+		await this.cache.set(key, info, ttl).catch((error) => {
 			this.logger.error('Failed to cache geoip info for probe.', error);
-			newrelic.noticeError(error, {key, ttl});
+			newrelic.noticeError(error, { key, ttl });
 		});
 
 		return info;

@@ -1,4 +1,4 @@
-import {writeFile, readFile} from 'node:fs/promises';
+import { writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import got from 'got';
 import ipaddr from 'ipaddr.js';
@@ -26,7 +26,7 @@ export const sources: Record<'gcp' | 'aws', Source> = {
 
 const query = async (url: string): Promise<string> => {
 	const result = await got(url, {
-		timeout: {request: 5000},
+		timeout: { request: 5000 },
 	}).text();
 
 	return result;
@@ -43,7 +43,8 @@ const populateGcpList = async () => {
 			scope: string;
 		}>;
 	};
-	for (const {ipv4Prefix, ipv6Prefix, scope} of data.prefixes) {
+
+	for (const { ipv4Prefix, ipv6Prefix, scope } of data.prefixes) {
 		if (ipv4Prefix) {
 			ipV4Ranges.set(ipaddr.parseCIDR(ipv4Prefix), `gcp-${scope}`);
 		} else if (ipv6Prefix) {
@@ -67,11 +68,11 @@ const populateAwsList = async () => {
 		}>;
 	};
 
-	for (const {ip_prefix, region} of data.prefixes) {
+	for (const { ip_prefix, region } of data.prefixes) {
 		ipV4Ranges.set(ipaddr.parseCIDR(ip_prefix), `aws-${region}`);
 	}
 
-	for (const {ipv6_prefix, region} of data.ipv6_prefixes) {
+	for (const { ipv6_prefix, region } of data.ipv6_prefixes) {
 		ipV6Ranges.set(ipaddr.parseCIDR(ipv6_prefix), `aws-${region}`);
 	}
 };
@@ -84,7 +85,7 @@ export const populateMemList = async (): Promise<void> => {
 };
 
 export const updateIpRangeFiles = async (): Promise<void> => {
-	await Promise.all(Object.values(sources).map(async source => {
+	await Promise.all(Object.values(sources).map(async (source) => {
 		const response = await query(source.url);
 		const filePath = path.join(path.resolve(), source.file);
 		await writeFile(filePath, response, 'utf8');
@@ -93,14 +94,15 @@ export const updateIpRangeFiles = async (): Promise<void> => {
 
 export const getRegion = (ip: string) => {
 	const parsedIp = ipaddr.process(ip);
+
 	if (parsedIp.kind() === 'ipv4') {
-		for (const [ipRange, region] of ipV4Ranges) {
+		for (const [ ipRange, region ] of ipV4Ranges) {
 			if (parsedIp.match(ipRange)) {
 				return region;
 			}
 		}
 	} else if (parsedIp.kind() === 'ipv6') {
-		for (const [ipRange, region] of ipV6Ranges) {
+		for (const [ ipRange, region ] of ipV6Ranges) {
 			if (parsedIp.match(ipRange)) {
 				return region;
 			}

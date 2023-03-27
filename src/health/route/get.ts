@@ -1,4 +1,4 @@
-import type {DefaultContext, DefaultState, ParameterizedContext} from 'koa';
+import type { DefaultContext, DefaultState, ParameterizedContext } from 'koa';
 import type Router from '@koa/router';
 
 import termListener from '../term-listener.js';

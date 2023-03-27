@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 
 exports.config = {
-	app_name: [''],
+	app_name: [ '' ],
 	license_key: '',
 	logging: {
 		level: 'info',

@@ -1,11 +1,11 @@
 import config from 'config';
 import throttle from '@jcoreio/async-throttle';
-import {type RemoteSocket, Server} from 'socket.io';
-import {createAdapter} from '@socket.io/redis-adapter';
-import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
-import type {Probe} from '../../probe/types.js';
-import {getRedisClient} from '../redis/client.js';
-import {reconnectProbes} from './helper/reconnect-probes.js';
+import { type RemoteSocket, Server } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import type { DefaultEventsMap } from 'socket.io/dist/typed-events';
+import type { Probe } from '../../probe/types.js';
+import { getRedisClient } from '../redis/client.js';
+import { reconnectProbes } from './helper/reconnect-probes.js';
 
 export type SocketData = {
 	probe: Probe;
@@ -27,10 +27,10 @@ export const initWsServer = async () => {
 	const pubClient = getRedisClient().duplicate();
 	const subClient = pubClient.duplicate();
 
-	await Promise.all([pubClient.connect(), subClient.connect()]);
+	await Promise.all([ pubClient.connect(), subClient.connect() ]);
 
 	io = new Server({
-		transports: ['websocket'],
+		transports: [ 'websocket' ],
 		serveClient: false,
 		pingInterval: 3000,
 		pingTimeout: 3000,

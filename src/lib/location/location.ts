@@ -1,15 +1,15 @@
 import _ from 'lodash';
 import geoLists from 'countries-list';
-import {regions} from './regions.js';
-import {states} from './states.js';
+import { regions } from './regions.js';
+import { states } from './states.js';
 import {
 	alpha as countryAlpha,
 	aliases as countryAliases,
 } from './countries.js';
-import {aliases as networkAliases} from './networks.js';
+import { aliases as networkAliases } from './networks.js';
 
-const {countries} = geoLists;
-const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [c, r.replace(/-/g, ' ')])));
+const { countries } = geoLists;
+const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [ c, r.replace(/-/g, ' ') ])));
 
 export const getRegionByCountry = (country: string): string => {
 	const region = countryToRegionMap.get(country);

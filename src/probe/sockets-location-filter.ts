@@ -1,8 +1,8 @@
 import config from 'config';
 import _ from 'lodash';
-import type {Location} from '../lib/location/types';
-import type {Socket} from './router.js';
-import type {ProbeLocation} from './types';
+import type { Location } from '../lib/location/types';
+import type { Socket } from './router.js';
+import type { ProbeLocation } from './types';
 
 /*
  * [
@@ -11,31 +11,31 @@ import type {ProbeLocation} from './types';
  *
  * */
 const locationKeyMap = [
-	['region', 'normalizedRegion'],
-	['network', 'normalizedNetwork'],
-	['city', 'normalizedCity'],
+	[ 'region', 'normalizedRegion' ],
+	[ 'network', 'normalizedNetwork' ],
+	[ 'city', 'normalizedCity' ],
 ];
 
 export class SocketsLocationFilter {
-	static getIndexPosition(socket: Socket, value: string) {
+	static getIndexPosition (socket: Socket, value: string) {
 		return socket.data.probe.index.findIndex(index => index.includes(value.replaceAll('-', ' ').trim()));
 	}
 
-	static hasTag(socket: Socket, tag: string) {
-		return socket.data.probe.tags.some(({type, value}) => type === 'system' && value === tag);
+	static hasTag (socket: Socket, tag: string) {
+		return socket.data.probe.tags.some(({ type, value }) => type === 'system' && value === tag);
 	}
 
-	public filterGloballyDistibuted(sockets: Socket[], limit: number): Socket[] {
+	public filterGloballyDistibuted (sockets: Socket[], limit: number): Socket[] {
 		const distribution = this.getDistibutionConfig();
 		return this.filterByLocationAndWeight(sockets, distribution, limit);
 	}
 
-	public filterByLocation(sockets: Socket[], location: Location): Socket[] {
+	public filterByLocation (sockets: Socket[], location: Location): Socket[] {
 		if (location.magic === 'world') {
 			return _.shuffle(this.filterGloballyDistibuted(sockets, sockets.length));
 		}
 
-		const filteredSockets = sockets.filter(s => Object.keys(location).every(k => {
+		const filteredSockets = sockets.filter(s => Object.keys(location).every((k) => {
 			if (k === 'tags') {
 				const tags = location[k]!;
 				return tags.every(tag => SocketsLocationFilter.hasTag(s, tag));
@@ -55,11 +55,12 @@ export class SocketsLocationFilter {
 		return isMagicSorting ? this.magicSort(filteredSockets, location.magic!) : _.shuffle(filteredSockets);
 	}
 
-	public filterByLocationAndWeight(sockets: Socket[], distribution: Map<Location, number>, limit: number): Socket[] {
+	public filterByLocationAndWeight (sockets: Socket[], distribution: Map<Location, number>, limit: number): Socket[] {
 		const groupedByLocation = new Map<Location, Socket[]>();
 
-		for (const [location] of distribution) {
+		for (const [ location ] of distribution) {
 			const foundSockets = this.filterByLocation(sockets, location);
+
 			if (foundSockets.length > 0) {
 				groupedByLocation.set(location, foundSockets);
 			}
@@ -70,7 +71,7 @@ export class SocketsLocationFilter {
 		while (groupedByLocation.size > 0 && pickedSockets.size < limit) {
 			const selectedCount = pickedSockets.size;
 
-			for (const [location, locationSockets] of groupedByLocation) {
+			for (const [ location, locationSockets ] of groupedByLocation) {
 				if (pickedSockets.size === limit) {
 					break;
 				}
@@ -93,10 +94,10 @@ export class SocketsLocationFilter {
 			}
 		}
 
-		return [...pickedSockets];
+		return [ ...pickedSockets ];
 	}
 
-	private magicSort(sockets: Socket[], magicString: string): Socket[] {
+	private magicSort (sockets: Socket[], magicString: string): Socket[] {
 		const getClosestIndexPosition = (socket: Socket) => {
 			const keywords = magicString.split('+');
 			const closestIndexPosition = keywords.reduce((smallesIndex, keyword) => {
@@ -114,10 +115,8 @@ export class SocketsLocationFilter {
 		return resultSockets;
 	}
 
-	private getDistibutionConfig() {
-		return new Map<Location, number>(
-			_.shuffle(Object.entries(config.get<Record<string, number>>('measurement.globalDistribution')))
-				.map(([value, weight]) => ([{continent: value}, weight])),
-		);
+	private getDistibutionConfig () {
+		return new Map<Location, number>(_.shuffle(Object.entries(config.get<Record<string, number>>('measurement.globalDistribution')))
+			.map(([ value, weight ]) => [{ continent: value }, weight ]));
 	}
 }

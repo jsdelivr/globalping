@@ -1,18 +1,18 @@
-import type {Socket} from 'socket.io';
-import {getMetricsAgent} from '../metrics.js';
-import type {Probe} from '../../probe/types.js';
-import {handleMeasurementAck} from '../../measurement/handler/ack.js';
-import {handleMeasurementResult} from '../../measurement/handler/result.js';
-import {handleMeasurementProgress} from '../../measurement/handler/progress.js';
-import {handleStatusUpdate} from '../../probe/handler/status.js';
-import {handleDnsUpdate} from '../../probe/handler/dns.js';
-import {handleStatsReport} from '../../probe/handler/stats.js';
-import {scopedLogger} from '../logger.js';
-import {getWsServer, PROBES_NAMESPACE} from './server.js';
-import {probeMetadata} from './middleware/probe-metadata.js';
-import {verifyIpLimit} from './helper/probe-ip-limit.js';
-import {errorHandler} from './helper/error-handler.js';
-import {subscribeWithHandler} from './helper/subscribe-handler.js';
+import type { Socket } from 'socket.io';
+import { getMetricsAgent } from '../metrics.js';
+import type { Probe } from '../../probe/types.js';
+import { handleMeasurementAck } from '../../measurement/handler/ack.js';
+import { handleMeasurementResult } from '../../measurement/handler/result.js';
+import { handleMeasurementProgress } from '../../measurement/handler/progress.js';
+import { handleStatusUpdate } from '../../probe/handler/status.js';
+import { handleDnsUpdate } from '../../probe/handler/dns.js';
+import { handleStatsReport } from '../../probe/handler/stats.js';
+import { scopedLogger } from '../logger.js';
+import { getWsServer, PROBES_NAMESPACE } from './server.js';
+import { probeMetadata } from './middleware/probe-metadata.js';
+import { verifyIpLimit } from './helper/probe-ip-limit.js';
+import { errorHandler } from './helper/error-handler.js';
+import { subscribeWithHandler } from './helper/subscribe-handler.js';
 
 const io = getWsServer();
 const logger = scopedLogger('gateway');
@@ -36,8 +36,9 @@ io
 		subscribeWithHandler(socket, 'probe:measurement:progress', handleMeasurementProgress);
 		subscribeWithHandler(socket, 'probe:measurement:result', handleMeasurementResult);
 
-		socket.on('disconnect', reason => {
+		socket.on('disconnect', (reason) => {
 			logger.debug(`Probe disconnected. (reason: ${reason}) [${socket.id}][${probe.ipAddress}]`);
+
 			if (reason === 'server namespace disconnect') {
 				return; // Probe was disconnected by the .disconnect() call from the API, no need to record that
 			}

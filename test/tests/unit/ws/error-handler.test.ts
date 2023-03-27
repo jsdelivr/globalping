@@ -1,8 +1,8 @@
-import {expect} from 'chai';
-import type {Socket} from 'socket.io';
+import { expect } from 'chai';
+import type { Socket } from 'socket.io';
 
-import {WsError} from '../../../../src/lib/ws/ws-error.js';
-import {errorHandler} from '../../../../src/lib/ws/helper/error-handler.js';
+import { WsError } from '../../../../src/lib/ws/ws-error.js';
+import { errorHandler } from '../../../../src/lib/ws/helper/error-handler.js';
 
 class MockSocket {
 	public isConnected = true;
@@ -11,15 +11,13 @@ class MockSocket {
 
 	public request: any = {};
 
-	constructor(
-		public id: string,
-	) {}
+	constructor (public id: string) {}
 
-	emit(event: string, payload: string | Record<string, unknown>) {
-		this.store.push({type: 'emit', event, payload});
+	emit (event: string, payload: string | Record<string, unknown>) {
+		this.store.push({ type: 'emit', event, payload });
 	}
 
-	disconnect() {
+	disconnect () {
 		this.isConnected = false;
 	}
 }
@@ -48,7 +46,7 @@ describe('ws error', () => {
 			const testMethod = async (socket: Socket): Promise<void> => {
 				// Prevent unused variable err
 				socket.emit('connect', '');
-				throw new WsError('abc', {socketId: socket.id});
+				throw new WsError('abc', { socketId: socket.id });
 			};
 
 			await errorHandler(testMethod)(socket as Socket);
@@ -90,7 +88,7 @@ describe('ws error', () => {
 			const testMethod = async (socket: Socket): Promise<void> => {
 				// Prevent unused variable err
 				socket.emit('connect', '');
-				throw new WsError('vpn detected', {socketId: socket.id});
+				throw new WsError('vpn detected', { socketId: socket.id });
 			};
 
 			const testCb = (error: Error) => {

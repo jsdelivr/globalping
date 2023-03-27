@@ -1,9 +1,9 @@
-import type {Server} from 'node:http';
-import request, {type Response} from 'supertest';
+import type { Server } from 'node:http';
+import request, { type Response } from 'supertest';
 import requestIp from 'request-ip';
-import type {RateLimiterRedis} from 'rate-limiter-flexible';
-import {expect} from 'chai';
-import {getTestServer} from '../../../utils/server.js';
+import type { RateLimiterRedis } from 'rate-limiter-flexible';
+import { expect } from 'chai';
+import { getTestServer } from '../../../utils/server.js';
 
 describe('rate limiter', () => {
 	let app: Server;
@@ -53,7 +53,7 @@ describe('rate limiter', () => {
 		it('should change values on next request (5) (POST)', async () => {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			const requestPromise = () => requestAgent.post('/v1/').send() as Response;
-			const responseList = await Promise.all(Array.from({length: 5}).map(() => requestPromise()));
+			const responseList = await Promise.all(Array.from({ length: 5 }).map(() => requestPromise()));
 
 			const firstResponse = responseList[0];
 			const lastResponse = responseList[4];

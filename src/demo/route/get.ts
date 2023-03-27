@@ -1,10 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type {DefaultContext, DefaultState, ParameterizedContext} from 'koa';
+import type { DefaultContext, DefaultState, ParameterizedContext } from 'koa';
 import type Router from '@koa/router';
 
 const handle = (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): void => {
-	const {file} = ctx.params;
+	const { file } = ctx.params;
 	ctx.body = fs.readFileSync(path.join(path.resolve(), '/public/', file ?? 'index.html'), 'utf8');
 };
 

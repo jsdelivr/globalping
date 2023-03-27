@@ -7,7 +7,7 @@ import {
 	type RedisFunctions,
 	type RedisScripts,
 } from 'redis';
-import {scopedLogger} from '../logger.js';
+import { scopedLogger } from '../logger.js';
 
 const logger = scopedLogger('redis');
 

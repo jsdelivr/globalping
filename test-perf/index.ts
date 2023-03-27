@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 
-import {execSync} from 'node:child_process';
+import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 
 // Config
@@ -9,9 +9,9 @@ const config = {
 	host: 'https://api.globalping.io/v1',
 	delay: 300, // Time to wait between measurements
 	measurements: [
-		{probes: 100, rps: 1, duration: 240},
-		{probes: 100, rps: 2, duration: 240},
-		{probes: 100, rps: 5, duration: 240},
+		{ probes: 100, rps: 1, duration: 240 },
+		{ probes: 100, rps: 2, duration: 240 },
+		{ probes: 100, rps: 5, duration: 240 },
 	],
 };
 
@@ -58,26 +58,27 @@ type Measurement = {
 
 // Utils
 
-const wait = secs => new Promise(resolve => {
+const wait = secs => new Promise((resolve) => {
 	setTimeout(resolve, secs * 1000);
 });
 
 const clearDirs = () => {
-	const dirs = ['test-perf/jsons', 'test-perf/htmls'];
+	const dirs = [ 'test-perf/jsons', 'test-perf/htmls' ];
+
 	for (const dir of dirs) {
-		fs.rmSync(dir, {recursive: true, force: true});
+		fs.rmSync(dir, { recursive: true, force: true });
 		fs.mkdirSync(dir);
 	}
 };
 
 const measure = (probes: number, rps: number, duration: number) => {
 	const name = `${probes}-probes-${rps}-rps-${duration}-duration`;
-	execSync(`HOST=${config.host} DURATION=${duration} RPS=${rps} LIMIT=${probes} artillery run -o test-perf/jsons/${name}.json test-perf/artillery.yml`, {stdio: 'inherit'});
-	execSync(`artillery report -o test-perf/htmls/${name}.html test-perf/jsons/${name}.json`, {stdio: 'inherit'});
+	execSync(`HOST=${config.host} DURATION=${duration} RPS=${rps} LIMIT=${probes} artillery run -o test-perf/jsons/${name}.json test-perf/artillery.yml`, { stdio: 'inherit' });
+	execSync(`artillery report -o test-perf/htmls/${name}.html test-perf/jsons/${name}.json`, { stdio: 'inherit' });
 };
 
 const readResults = async (fileName: string): Promise<Measurement> => {
-	const json = await import(`./jsons/${fileName}`, {assert: {type: 'json'}}).then(module => module.default as JsonResult);
+	const json = await import(`./jsons/${fileName}`, { assert: { type: 'json' } }).then(module => module.default as JsonResult);
 	const requests = {
 		sent: json.aggregate.counters['http.requests'] || 0,
 		codes202: json.aggregate.counters['http.codes.202'] || 0,
@@ -98,6 +99,7 @@ const readResults = async (fileName: string): Promise<Measurement> => {
 const getResultsFromJsons = async () => {
 	const fileNames = fs.readdirSync('test-perf/jsons');
 	const results: Record<string, Measurement> = {};
+
 	for (const fileName of fileNames) {
 		const result = await readResults(fileName);
 		results[fileName.slice(0, -5)] = result;
@@ -108,6 +110,7 @@ const getResultsFromJsons = async () => {
 
 const generateCsv = (results: Record<string, Measurement>, startDate: string) => {
 	let resultString = 'Measurement,N of Requests,N of 202,N of 400,N of Errors,min T,median T,max T\n';
+
 	// eslint-disable-next-line guard-for-in
 	for (const name in results) {
 		const result = results[name];
@@ -125,7 +128,7 @@ const run = async () => {
 
 	clearDirs();
 
-	for (const {probes, rps, duration} of config.measurements) {
+	for (const { probes, rps, duration } of config.measurements) {
 		measure(probes, rps, duration);
 		const results = await getResultsFromJsons();
 		generateCsv(results, startDate);

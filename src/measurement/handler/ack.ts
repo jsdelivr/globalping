@@ -1,6 +1,6 @@
-import type {Probe} from '../../probe/types.js';
-import {getMeasurementRunner} from '../runner.js';
-import type {MeasurementAckMessage} from '../types.js';
+import type { Probe } from '../../probe/types.js';
+import { getMeasurementRunner } from '../runner.js';
+import type { MeasurementAckMessage } from '../types.js';
 
 const runner = getMeasurementRunner();
 

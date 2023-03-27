@@ -1,8 +1,8 @@
-import {Socket} from 'socket.io';
+import { Socket } from 'socket.io';
 import * as sinon from 'sinon';
 
-import {getWsServer, PROBES_NAMESPACE} from '../../../../src/lib/ws/server.js';
-import {createServer} from '../../../../src/lib/server.js';
+import { getWsServer, PROBES_NAMESPACE } from '../../../../src/lib/ws/server.js';
+import { createServer } from '../../../../src/lib/server.js';
 
 describe('server', function () {
 	this.timeout(15_000);
@@ -10,7 +10,7 @@ describe('server', function () {
 	let sandbox: sinon.SinonSandbox;
 
 	beforeEach(() => {
-		sandbox = sinon.createSandbox({useFakeTimers: true});
+		sandbox = sinon.createSandbox({ useFakeTimers: true });
 	});
 
 	afterEach(() => {
@@ -25,7 +25,7 @@ describe('server', function () {
 		const fakeSocket3 = sinon.createStubInstance(Socket);
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-expect-error
-		namespace.fetchSockets = async () => ([fakeSocket1, fakeSocket2, fakeSocket3]);
+		namespace.fetchSockets = async () => [ fakeSocket1, fakeSocket2, fakeSocket3 ];
 
 		sinon.assert.notCalled(fakeSocket1.disconnect);
 		sinon.assert.notCalled(fakeSocket2.disconnect);

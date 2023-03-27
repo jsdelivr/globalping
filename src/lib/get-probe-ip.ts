@@ -1,8 +1,9 @@
-import type {IncomingMessage} from 'node:http';
+import type { IncomingMessage } from 'node:http';
 import requestIp from 'request-ip';
 
 const getProbeIp = (request: IncomingMessage) => {
 	const clientIp = requestIp.getClientIp(request);
+
 	if (!clientIp) {
 		return null;
 	}

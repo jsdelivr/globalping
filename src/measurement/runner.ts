@@ -1,13 +1,13 @@
-import type {Server} from 'socket.io';
+import type { Server } from 'socket.io';
 import createHttpError from 'http-errors';
-import {getWsServer} from '../lib/ws/server.js';
-import type {RedisClient} from '../lib/redis/client.js';
-import {getRedisClient} from '../lib/redis/client.js';
-import {getProbeRouter, type ProbeRouter} from '../probe/router.js';
-import type {Probe} from '../probe/types.js';
-import {getMetricsAgent, type MetricsAgent} from '../lib/metrics.js';
-import type {MeasurementStore} from './store.js';
-import {getMeasurementKey, getMeasurementStore} from './store.js';
+import { getWsServer } from '../lib/ws/server.js';
+import type { RedisClient } from '../lib/redis/client.js';
+import { getRedisClient } from '../lib/redis/client.js';
+import { getProbeRouter, type ProbeRouter } from '../probe/router.js';
+import type { Probe } from '../probe/types.js';
+import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
+import type { MeasurementStore } from './store.js';
+import { getMeasurementKey, getMeasurementStore } from './store.js';
 import type {
 	NetworkTest,
 	MeasurementConfig,
@@ -17,7 +17,7 @@ import type {
 } from './types.js';
 
 export class MeasurementRunner {
-	constructor(
+	constructor (
 		private readonly io: Server,
 		private readonly redis: RedisClient,
 		private readonly store: MeasurementStore,
@@ -25,11 +25,11 @@ export class MeasurementRunner {
 		private readonly metrics: MetricsAgent,
 	) {}
 
-	async run(request: MeasurementRequest): Promise<MeasurementConfig> {
+	async run (request: MeasurementRequest): Promise<MeasurementConfig> {
 		const probes = await this.router.findMatchingProbes(request.locations, request.limit);
 
 		if (probes.length === 0) {
-			throw createHttpError(422, 'No suitable probes found', {type: 'no_probes_found'});
+			throw createHttpError(422, 'No suitable probes found', { type: 'no_probes_found' });
 		}
 
 		const measurement: NetworkTest = {
@@ -39,7 +39,7 @@ export class MeasurementRunner {
 		};
 
 		const id = await this.store.createMeasurement(measurement, probes.length);
-		const measurementConfig: MeasurementConfig = {id, probes, measurementOptions: measurement};
+		const measurementConfig: MeasurementConfig = { id, probes, measurementOptions: measurement };
 
 		this.sendToProbes(measurementConfig);
 		this.metrics.recordMeasurement(request.type);
@@ -47,15 +47,15 @@ export class MeasurementRunner {
 		return measurementConfig;
 	}
 
-	async addProbe(measurementId: string, resultId: string, probe: Probe): Promise<void> {
+	async addProbe (measurementId: string, resultId: string, probe: Probe): Promise<void> {
 		await this.store.storeMeasurementProbe(measurementId, resultId, probe);
 	}
 
-	async recordProgress(data: MeasurementResultMessage): Promise<void> {
+	async recordProgress (data: MeasurementResultMessage): Promise<void> {
 		await this.store.storeMeasurementProgress(data);
 	}
 
-	async recordResult(data: MeasurementResultMessage): Promise<void> {
+	async recordResult (data: MeasurementResultMessage): Promise<void> {
 		const probesAwaiting = await this.redis.get(getMeasurementKey(data.measurementId, 'probes_awaiting'));
 
 		if (probesAwaiting === null) {
@@ -67,13 +67,14 @@ export class MeasurementRunner {
 		if (remainingProbes === 0) {
 			await this.store.markFinished(data.measurementId);
 			const record = (await this.redis.json.get(getMeasurementKey(data.measurementId))) as MeasurementRecord;
+
 			if (record) {
-				this.metrics.recordMeasurementTime(record.type, (Date.now() - (new Date(record.createdAt)).getTime()));
+				this.metrics.recordMeasurementTime(record.type, Date.now() - new Date(record.createdAt).getTime());
 			}
 		}
 	}
 
-	private sendToProbes(measurementConfig: MeasurementConfig) {
+	private sendToProbes (measurementConfig: MeasurementConfig) {
 		for (const probe of measurementConfig.probes) {
 			this.io.of('probes').to(probe.client).emit('probe:measurement:request', {
 				id: measurementConfig.id,

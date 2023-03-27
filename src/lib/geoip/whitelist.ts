@@ -1,4 +1,4 @@
-import {readFile} from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const WHITELIST_FILE_PATH = 'config/whitelist-ips.txt';

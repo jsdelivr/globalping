@@ -1,5 +1,5 @@
-import type {Probe} from '../probe/types.js';
-import type {Location} from '../lib/location/types.js';
+import type { Probe } from '../probe/types.js';
+import type { Location } from '../lib/location/types.js';
 
 /**
  * Network Tests

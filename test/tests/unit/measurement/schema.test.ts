@@ -1,4 +1,4 @@
-import {expect} from 'chai';
+import { expect } from 'chai';
 import Joi from 'joi';
 import {
 	schema as globalSchema,
@@ -10,7 +10,7 @@ import {
 	joiValidateTarget,
 	joiValidateDomain,
 } from '../../../../src/measurement/schema/utils.js';
-import {populateDomainList, populateIpList} from '../../../utils/populate-static-files.js';
+import { populateDomainList, populateIpList } from '../../../utils/populate-static-files.js';
 
 describe('command schema', async () => {
 	before(async () => {
@@ -38,7 +38,7 @@ describe('command schema', async () => {
 					type: 'ping',
 					target: 'abc.com',
 					locations: [
-						{city: 'milan', limit: 1},
+						{ city: 'milan', limit: 1 },
 					],
 					measurementOptions: {},
 					limit: 1,
@@ -54,8 +54,8 @@ describe('command schema', async () => {
 					type: 'ping',
 					target: 'abc.com',
 					locations: [
-						{city: 'milan'},
-						{city: 'london'},
+						{ city: 'milan' },
+						{ city: 'london' },
 					],
 					measurementOptions: {},
 				};
@@ -71,7 +71,7 @@ describe('command schema', async () => {
 					type: 'ping',
 					target: 'abc.com',
 					locations: [
-						{city: 'milan'},
+						{ city: 'milan' },
 					],
 					measurementOptions: {},
 				};
@@ -281,6 +281,7 @@ describe('command schema', async () => {
 			const input = '192.168.0.101';
 
 			let result: string | Error = '';
+
 			try {
 				result = joiValidateTarget('ip')(input);
 			} catch (error: unknown) {
@@ -296,6 +297,7 @@ describe('command schema', async () => {
 			const input = '192.168.0.101';
 
 			let result: string | Error = '';
+
 			try {
 				result = joiValidateTarget('any')(input);
 			} catch (error: unknown) {
@@ -1252,7 +1254,7 @@ describe('command schema', async () => {
 						host: 'elocast.com',
 						path: '/',
 						query: '',
-						headers: {test: 'abc'},
+						headers: { test: 'abc' },
 					},
 				},
 				locations: [],
@@ -1293,7 +1295,7 @@ describe('command schema', async () => {
 						host: 'elocast.com',
 						path: '/',
 						query: '',
-						headers: {test: 'abc'},
+						headers: { test: 'abc' },
 					},
 				},
 				locations: [],

@@ -1,4 +1,4 @@
-import {readFile} from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import nock from 'nock';
 import {
@@ -11,7 +11,7 @@ import {
 	populateMemList as populateMemDomainList,
 	updateList as updateListDomain,
 } from '../../src/lib/malware/domain.js';
-import {updateIpRangeFiles, sources} from '../../src/lib/ip-ranges.js';
+import { updateIpRangeFiles, sources } from '../../src/lib/ip-ranges.js';
 
 const mockDataPath = path.join(path.resolve(), 'test/mocks');
 

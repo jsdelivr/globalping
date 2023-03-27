@@ -1,10 +1,10 @@
 import config from 'config';
 import cryptoRandomString from 'crypto-random-string';
-import type {Probe} from '../probe/types.js';
-import type {RedisClient} from '../lib/redis/client.js';
-import {getRedisClient} from '../lib/redis/client.js';
-import {scopedLogger} from '../lib/logger.js';
-import type {MeasurementRecord, MeasurementResultMessage, MeasurementResult, NetworkTest} from './types.js';
+import type { Probe } from '../probe/types.js';
+import type { RedisClient } from '../lib/redis/client.js';
+import { getRedisClient } from '../lib/redis/client.js';
+import { scopedLogger } from '../lib/logger.js';
+import type { MeasurementRecord, MeasurementResultMessage, MeasurementResult, NetworkTest } from './types.js';
 
 const logger = scopedLogger('store');
 
@@ -19,14 +19,14 @@ export const getMeasurementKey = (id: string, suffix: 'probes_awaiting' | undefi
 };
 
 export class MeasurementStore {
-	constructor(private readonly redis: RedisClient) {}
+	constructor (private readonly redis: RedisClient) {}
 
-	async getMeasurementResults(id: string): Promise<MeasurementRecord> {
+	async getMeasurementResults (id: string): Promise<MeasurementRecord> {
 		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord;
 	}
 
-	async createMeasurement(test: NetworkTest, probesCount: number): Promise<string> {
-		const id = cryptoRandomString({length: 16, type: 'alphanumeric'});
+	async createMeasurement (test: NetworkTest, probesCount: number): Promise<string> {
+		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
 
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
@@ -34,7 +34,7 @@ export class MeasurementStore {
 
 		await Promise.all([
 			this.redis.hSet('gp:in-progress', id, startTime),
-			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probesCount, {EX: probesAwaitingTtl}),
+			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probesCount, { EX: probesAwaitingTtl }),
 			this.redis.json.set(key, '$', {
 				id,
 				type: test.type,
@@ -50,7 +50,7 @@ export class MeasurementStore {
 		return id;
 	}
 
-	async storeMeasurementProbe(measurementId: string, probeId: string, probe: Probe): Promise<void> {
+	async storeMeasurementProbe (measurementId: string, probeId: string, probe: Probe): Promise<void> {
 		const key = getMeasurementKey(measurementId);
 		await Promise.all([
 			this.redis.json.set(key, `$.results.${probeId}`, {
@@ -64,7 +64,7 @@ export class MeasurementStore {
 					longitude: probe.location.longitude,
 					latitude: probe.location.latitude,
 					network: probe.location.network,
-					tags: probe.tags.map(({value}) => value),
+					tags: probe.tags.map(({ value }) => value),
 					resolvers: probe.resolvers,
 				},
 				result: {
@@ -76,7 +76,7 @@ export class MeasurementStore {
 		]);
 	}
 
-	async storeMeasurementProgress(data: MeasurementResultMessage): Promise<void> {
+	async storeMeasurementProgress (data: MeasurementResultMessage): Promise<void> {
 		const key = getMeasurementKey(data.measurementId);
 
 		await Promise.all([
@@ -88,10 +88,10 @@ export class MeasurementStore {
 		]);
 	}
 
-	async storeMeasurementResult(data: MeasurementResultMessage): Promise<number> {
+	async storeMeasurementResult (data: MeasurementResultMessage): Promise<number> {
 		const key = getMeasurementKey(data.measurementId);
 
-		const [remainingProbes] = await Promise.all([
+		const [ remainingProbes ] = await Promise.all([
 			this.redis.decr(`${key}:probes_awaiting`),
 			this.redis.json.set(key, `$.results.${data.testId}.result`, data.result),
 			this.redis.json.set(key, '$.updatedAt', Date.now()),
@@ -100,7 +100,7 @@ export class MeasurementStore {
 		return remainingProbes;
 	}
 
-	async markFinished(id: string): Promise<void> {
+	async markFinished (id: string): Promise<void> {
 		const key = getMeasurementKey(id);
 
 		await Promise.all([
@@ -111,7 +111,7 @@ export class MeasurementStore {
 		]);
 	}
 
-	async markFinishedByTimeout(ids: string[]): Promise<void> {
+	async markFinishedByTimeout (ids: string[]): Promise<void> {
 		if (ids.length === 0) {
 			return;
 		}
@@ -125,6 +125,7 @@ export class MeasurementStore {
 			measurement.status = 'finished';
 			measurement.updatedAt = Date.now();
 			const inProgressResults = Object.values(measurement.results).filter(resultObject => resultObject.result.status === 'in-progress');
+
 			for (const resultObject of inProgressResults) {
 				resultObject.result.status = 'failed';
 				resultObject.result.rawOutput += '\n\nThe measurement timed out';
@@ -139,7 +140,7 @@ export class MeasurementStore {
 		]);
 	}
 
-	scheduleCleanup() {
+	scheduleCleanup () {
 		const SCAN_INTERVAL_TIME = 15_000;
 		const SCAN_BATCH_SIZE = 5000;
 		const timeoutTime = config.get<number>('measurement.timeout') * 1000;
@@ -147,15 +148,15 @@ export class MeasurementStore {
 
 		setTimeout(async () => {
 			try {
-				const {cursor, tuples} = await this.redis.hScan('gp:in-progress', 0, {COUNT: SCAN_BATCH_SIZE});
+				const { cursor, tuples } = await this.redis.hScan('gp:in-progress', 0, { COUNT: SCAN_BATCH_SIZE });
 
 				if (cursor !== 0) {
 					logger.warn(`There are more than ${SCAN_BATCH_SIZE} "in-progress" elements in db`);
 				}
 
 				const timedOutIds = tuples
-					.filter(({value: time}) => Date.now() - Number(time) >= timeoutTime)
-					.map(({field: id}) => id);
+					.filter(({ value: time }) => Date.now() - Number(time) >= timeoutTime)
+					.map(({ field: id }) => id);
 
 				await this.markFinishedByTimeout(timedOutIds);
 			} catch (error: unknown) {

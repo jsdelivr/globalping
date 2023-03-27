@@ -1,6 +1,6 @@
-import type {Context, Next} from 'koa';
+import type { Context, Next } from 'koa';
 import requestIp from 'request-ip';
-import type {RateLimiterRes} from 'rate-limiter-flexible';
+import type { RateLimiterRes } from 'rate-limiter-flexible';
 
 import rateLimiter from '../../ratelimiter.js';
 
@@ -10,10 +10,11 @@ const setResponseHeaders = (ctx: Context, response: RateLimiterRes) => {
 	ctx.set('X-RateLimit-Remaining', `${response.remainingPoints}`);
 };
 
-const methodsWhitelist = new Set(['GET', 'HEAD', 'OPTIONS']);
+const methodsWhitelist = new Set([ 'GET', 'HEAD', 'OPTIONS' ]);
 
 export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
-	const {method, isAdmin} = ctx;
+	const { method, isAdmin } = ctx;
+
 	if (methodsWhitelist.has(method) || isAdmin) {
 		return next();
 	}

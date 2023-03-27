@@ -1,4 +1,4 @@
-import {PROBES_NAMESPACE, type WsServer} from '../server.js';
+import { PROBES_NAMESPACE, type WsServer } from '../server.js';
 
 const TIME_TO_RECONNECT_PROBES = 60_000;
 

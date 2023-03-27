@@ -1,8 +1,8 @@
 import config from 'config';
 import newrelic from 'newrelic';
-import {type City, WebServiceClient} from '@maxmind/geoip2-node';
-import type {WebServiceClientError} from '@maxmind/geoip2-node/dist/src/types';
-import type {LocationInfo} from '../client.js';
+import { type City, WebServiceClient } from '@maxmind/geoip2-node';
+import type { WebServiceClientError } from '@maxmind/geoip2-node/dist/src/types';
+import type { LocationInfo } from '../client.js';
 import {
 	normalizeCityName,
 	normalizeCityNamePublic,
@@ -11,7 +11,7 @@ import {
 
 const client = new WebServiceClient(config.get('maxmind.accountId'), config.get('maxmind.licenseKey'));
 
-export const isMaxmindError = (error: unknown): error is WebServiceClientError => (error as WebServiceClientError).code !== undefined;
+export const isMaxmindError = (error: unknown): error is WebServiceClientError => error as WebServiceClientError.code !== undefined;
 
 const query = async (addr: string, retryCounter = 0): Promise<City> => {
 	try {
@@ -23,7 +23,7 @@ const query = async (addr: string, retryCounter = 0): Promise<City> => {
 			}
 
 			if (error.code === 'ACCOUNT_ID_REQUIRED') {
-				newrelic.noticeError(new Error(error.error), {client: 'maxmind'});
+				newrelic.noticeError(new Error(error.error), { client: 'maxmind' });
 			}
 		}
 

@@ -1,5 +1,5 @@
 import newrelic from 'newrelic';
-import {scopedLogger} from '../logger.js';
+import { scopedLogger } from '../logger.js';
 
 const logger = scopedLogger('error-handler-http');
 

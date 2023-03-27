@@ -1,10 +1,10 @@
-import type {Socket} from 'socket.io';
-import type {ExtendedError} from 'socket.io/dist/namespace.js';
-import {WsError} from '../ws-error.js';
-import {buildProbe} from '../../../probe/builder.js';
-import {InternalError} from '../../internal-error.js';
-import {errorHandler} from '../helper/error-handler.js';
-import {scopedLogger} from '../../logger.js';
+import type { Socket } from 'socket.io';
+import type { ExtendedError } from 'socket.io/dist/namespace.js';
+import { WsError } from '../ws-error.js';
+import { buildProbe } from '../../../probe/builder.js';
+import { InternalError } from '../../internal-error.js';
+import { errorHandler } from '../helper/error-handler.js';
+import { scopedLogger } from '../../logger.js';
 import getProbeIp from '../../get-probe-ip.js';
 
 const logger = scopedLogger('probe-metadata');

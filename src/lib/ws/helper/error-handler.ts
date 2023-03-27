@@ -1,7 +1,7 @@
-import type {Socket} from 'socket.io';
+import type { Socket } from 'socket.io';
 import getProbeIp from '../../get-probe-ip.js';
-import {scopedLogger} from '../../logger.js';
-import {WsError} from '../ws-error.js';
+import { scopedLogger } from '../../logger.js';
+import { WsError } from '../ws-error.js';
 
 const logger = scopedLogger('ws:error');
 
@@ -16,7 +16,7 @@ type NextMwArgument = (
 
 type NextArgument = NextConnectArgument | NextMwArgument;
 
-const isError = (error: unknown): error is Error => Boolean((error as Error).message);
+const isError = (error: unknown): error is Error => Boolean(error as Error.message);
 
 export const errorHandler = (next: NextArgument) => async (socket: Socket, mwNext?: (error?: any) => void | undefined) => {
 	try {

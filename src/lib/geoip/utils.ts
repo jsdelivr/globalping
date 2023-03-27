@@ -1,5 +1,5 @@
 import anyAscii from 'any-ascii';
-import {cities} from './altnames.js';
+import { cities } from './altnames.js';
 
 export const normalizeCityNamePublic = (name: string): string => {
 	// We don't add city to the regex as there are valid names like 'Mexico City' or 'Kansas City'

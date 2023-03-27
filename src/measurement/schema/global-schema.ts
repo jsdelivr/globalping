@@ -1,11 +1,11 @@
 import config from 'config';
 import Joi from 'joi';
-import type {LocationWithLimit} from '../types.js';
+import type { LocationWithLimit } from '../types.js';
 import {
 	targetSchema,
 	measurementSchema,
 } from './command-schema.js';
-import {schema as locationSchema} from './location-schema.js';
+import { schema as locationSchema } from './location-schema.js';
 
 const measurementConfig = config.get<{limits: {global: number; location: number}}>('measurement');
 
