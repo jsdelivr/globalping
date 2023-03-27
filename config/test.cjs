@@ -7,4 +7,7 @@ module.exports = {
 	admin: {
 		key: 'admin',
 	},
+	ws: {
+		fetchSocketsCacheTTL: 0,
+	},
 };

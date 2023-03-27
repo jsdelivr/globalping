@@ -1,5 +1,5 @@
-
-import _ from 'lodash';
+import config from 'config';
+import throttle from '@jcoreio/async-throttle';
 import {type RemoteSocket, Server} from 'socket.io';
 import {createAdapter} from '@socket.io/redis-adapter';
 import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
@@ -15,10 +15,13 @@ export type WsServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsM
 
 export const PROBES_NAMESPACE = '/probes';
 const TIME_UNTIL_VM_BECOMES_HEALTHY = 8000;
-const TIME_TO_CACHE_FETCH_SOCKETS = 200;
 
 let io: WsServer;
-let throttledFetchSockets: _.DebouncedFunc<() => Promise<Array<RemoteSocket<DefaultEventsMap, SocketData>>>>;
+let throttledFetchSockets: {
+	(): Promise<Array<RemoteSocket<DefaultEventsMap, SocketData>>>;
+	cancel: () => Promise<void>;
+	flush: () => Promise<void>;
+};
 
 export const initWsServer = async () => {
 	const pubClient = getRedisClient().duplicate();
@@ -35,7 +38,10 @@ export const initWsServer = async () => {
 
 	io.adapter(createAdapter(pubClient, subClient));
 
-	throttledFetchSockets = _.throttle(io.of(PROBES_NAMESPACE).fetchSockets.bind(io.of(PROBES_NAMESPACE)), TIME_TO_CACHE_FETCH_SOCKETS);
+	throttledFetchSockets = throttle<any[], Array<RemoteSocket<DefaultEventsMap, SocketData>>>(
+		io.of(PROBES_NAMESPACE).fetchSockets.bind(io.of(PROBES_NAMESPACE)),
+		config.get<number>('ws.fetchSocketsCacheTTL'),
+	);
 
 	setTimeout(() => reconnectProbes(io), TIME_UNTIL_VM_BECOMES_HEALTHY);
 };
