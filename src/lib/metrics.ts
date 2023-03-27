@@ -3,6 +3,9 @@ import newrelic from 'newrelic';
 
 import { getRedisClient, type RedisClient } from './redis/client.js';
 import { getWsServer, PROBES_NAMESPACE } from './ws/server.js';
+import { scopedLogger } from './logger.js';
+
+const logger = scopedLogger('metrics');
 
 export class MetricsAgent {
 	private interval: NodeJS.Timer | undefined;
@@ -36,8 +39,12 @@ export class MetricsAgent {
 	}
 
 	private async intervalHandler (): Promise<void> {
-		await this.updateProbeCount();
-		await this.updateMeasurementCount();
+		try {
+			await this.updateProbeCount();
+			await this.updateMeasurementCount();
+		} catch (error) {
+			logger.error(error);
+		}
 	}
 
 	private async updateProbeCount (): Promise<void> {
