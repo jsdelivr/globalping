@@ -40,6 +40,7 @@
     "winston": "^3.8.2"
   },
   "devDependencies": {
+    "@martin-kolarik/eslint-config": "^7.1.2",
     "@tsconfig/node18-strictest-esm": "^1.0.1",
     "@types/chai": "^4.3.4",
     "@types/chai-subset": "^1.3.3",
@@ -64,9 +65,12 @@
     "@types/supertest": "^2.0.12",
     "@types/throng": "^5.0.4",
     "@types/validator": "^13.7.10",
+    "@typescript-eslint/eslint-plugin": "^5.56.0",
+    "@typescript-eslint/parser": "^5.56.0",
     "artillery": "^2.0.0-27",
     "c8": "^7.12.0",
     "chai": "^4.3.7",
+    "eslint": "^8.36.0",
     "husky": "^8.0.2",
     "mocha": "^10.2.0",
     "mock-fs": "^5.2.0",
@@ -78,8 +82,7 @@
     "testdouble": "^3.16.8",
     "ts-node": "^10.9.1",
     "tsx": "^3.12.1",
-    "typescript": "~4.7.4",
-    "xo": "^0.53.1"
+    "typescript": "~4.7.4"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.7",
@@ -90,8 +93,8 @@
     "start": "NODE_ENV=production node --max_old_space_size=6656 --max-semi-space-size=128 --experimental-loader newrelic/esm-loader.mjs dist/index.js",
     "dev": "NODE_ENV=development FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false node dist/index.js",
     "dev:tsx": "NODE_ENV=development FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false tsx src/index.ts",
-    "lint": "xo",
-    "lint:fix": "xo --fix",
+    "lint": "eslint --cache --ext .cjs,.js,.json,.ts config src test test-perf *.{cjs,js}",
+    "lint:fix": "eslint --cache --fix --ext .cjs,.js,.json,.ts config src test test-perf *.{cjs,js}",
     "lint:types": "tsc --noEmit",
     "download-jsons": "node dist/lib/download-jsons.js",
     "test": "npm run lint:types && npm run test:src",
@@ -100,19 +103,6 @@
     "clean": "rimraf coverage",
     "test:coverage": "npm run clean && NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false FAKE_PROBE_IP=1 c8 mocha",
     "init:hooks": "husky install"
-  },
-  "xo": {
-    "ignores": [
-      "public"
-    ],
-    "rules": {
-      "import/no-unassigned-import": "off",
-      "unicorn/no-thenable": "off",
-      "@typescript-eslint/class-literal-property-style": "off",
-      "@typescript-eslint/no-unused-expressions": "off",
-      "@typescript-eslint/promise-function-async": "off",
-      "@typescript-eslint/naming-convention": "off"
-    }
   },
   "engines": {
     "node": "18"
