@@ -1,4 +1,10 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
 
-npm run lint
+# Add cygpath to PATH if missing to make this work with GitHub Desktop app
+# https://github.com/desktop/desktop/issues/12562
+if ! type cygpath > /dev/null 2>&1; then
+	PATH="$PATH:$(type -ap git | grep 'cmd/git' | sed 's$cmd/git$usr/bin$')"
+fi
+
+node_modules/.bin/lint-staged --no-stash --quiet
