@@ -140,30 +140,30 @@ export class MeasurementStore {
 		]);
 	}
 
-	scheduleCleanup () {
-		const SCAN_INTERVAL_TIME = 15_000;
+	async cleanup () {
 		const SCAN_BATCH_SIZE = 5000;
 		const timeoutTime = config.get<number>('measurement.timeout') * 1000;
+		const { cursor, tuples } = await this.redis.hScan('gp:in-progress', 0, { COUNT: SCAN_BATCH_SIZE });
+
+		if (cursor !== 0) {
+			logger.warn(`There are more than ${SCAN_BATCH_SIZE} "in-progress" elements in db`);
+		}
+
+		const timedOutIds = tuples
+			.filter(({ value: time }) => Date.now() - Number(time) >= timeoutTime)
+			.map(({ field: id }) => id);
+
+		await this.markFinishedByTimeout(timedOutIds);
+	}
+
+	scheduleCleanup () {
+		const SCAN_INTERVAL_TIME = 15_000;
 		const intervalTime = Math.round(Math.random() * SCAN_INTERVAL_TIME);
 
-		setTimeout(async () => {
-			try {
-				const { cursor, tuples } = await this.redis.hScan('gp:in-progress', 0, { COUNT: SCAN_BATCH_SIZE });
-
-				if (cursor !== 0) {
-					logger.warn(`There are more than ${SCAN_BATCH_SIZE} "in-progress" elements in db`);
-				}
-
-				const timedOutIds = tuples
-					.filter(({ value: time }) => Date.now() - Number(time) >= timeoutTime)
-					.map(({ field: id }) => id);
-
-				await this.markFinishedByTimeout(timedOutIds);
-			} catch (error: unknown) {
-				logger.error(error);
-			} finally {
-				this.scheduleCleanup();
-			}
+		setTimeout(() => {
+			this.cleanup()
+				.catch(error => logger.error(error))
+				.finally(() => this.scheduleCleanup());
 		}, intervalTime);
 	}
 }

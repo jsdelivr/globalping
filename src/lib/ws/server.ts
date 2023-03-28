@@ -6,6 +6,7 @@ import type { DefaultEventsMap } from 'socket.io/dist/typed-events';
 import type { Probe } from '../../probe/types.js';
 import { getRedisClient } from '../redis/client.js';
 import { reconnectProbes } from './helper/reconnect-probes.js';
+import { scopedLogger } from '../logger.js';
 
 export type SocketData = {
 	probe: Probe;
@@ -15,6 +16,7 @@ export type WsServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsM
 
 export const PROBES_NAMESPACE = '/probes';
 const TIME_UNTIL_VM_BECOMES_HEALTHY = 8000;
+const logger = scopedLogger('ws-server');
 
 let io: WsServer;
 let throttledFetchSockets: {
@@ -43,7 +45,9 @@ export const initWsServer = async () => {
 		config.get<number>('ws.fetchSocketsCacheTTL'),
 	);
 
-	setTimeout(() => reconnectProbes(io), TIME_UNTIL_VM_BECOMES_HEALTHY);
+	setTimeout(() => {
+		reconnectProbes(io).catch(error => logger.error(error));
+	}, TIME_UNTIL_VM_BECOMES_HEALTHY);
 };
 
 export const getWsServer = (): WsServer => {

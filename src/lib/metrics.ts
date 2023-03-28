@@ -38,13 +38,11 @@ export class MetricsAgent {
 		newrelic.incrementMetric(`probe_disconnect_${type.replaceAll(' ', '_')}`, 1);
 	}
 
-	private async intervalHandler (): Promise<void> {
-		try {
-			await this.updateProbeCount();
-			await this.updateMeasurementCount();
-		} catch (error) {
-			logger.error(error);
-		}
+	private intervalHandler (): void {
+		Promise.all([
+			this.updateProbeCount(),
+			this.updateMeasurementCount(),
+		]).catch(error => logger.error(error));
 	}
 
 	private async updateProbeCount (): Promise<void> {

@@ -25,7 +25,12 @@
 			],
 			"rules": {
 				"no-duplicate-imports": "off",
-				"@typescript-eslint/no-misused-promises": "off"
+				"promise/catch-or-return": [
+					"error",
+					{
+						"allowFinally": true
+					}
+				]
 			}
 		}
 	]
