@@ -54,7 +54,7 @@ export class ProbeRouter {
 		const grouped = new Map<LocationWithLimit, Socket[]>();
 
 		for (const location of locations) {
-			const { limit, ...l } = location; // eslint-disable-line @typescript-eslint/no-unused-vars
+			const { limit, ...l } = location;
 			const found = this.socketsFilter.filterByLocation(sockets, l);
 
 			if (found.length > 0) {

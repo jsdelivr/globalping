@@ -1,4 +1,3 @@
-/* eslint-disable capitalized-comments */
 import * as process from 'node:process';
 import _ from 'lodash';
 import type { Socket } from 'socket.io';
