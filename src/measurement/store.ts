@@ -162,8 +162,8 @@ export class MeasurementStore {
 
 		setTimeout(() => {
 			this.cleanup()
-				.catch(error => logger.error(error))
-				.finally(() => this.scheduleCleanup());
+				.finally(() => this.scheduleCleanup())
+				.catch(error => logger.error(error));
 		}, intervalTime);
 	}
 }

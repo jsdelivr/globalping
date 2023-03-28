@@ -24,13 +24,7 @@
 				"**"
 			],
 			"rules": {
-				"no-duplicate-imports": "off",
-				"promise/catch-or-return": [
-					"error",
-					{
-						"allowFinally": true
-					}
-				]
+				"no-duplicate-imports": "off"
 			}
 		}
 	]
