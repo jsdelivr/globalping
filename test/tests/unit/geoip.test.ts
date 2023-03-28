@@ -135,7 +135,7 @@ describe('geoip service', () => {
 		const info = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 		expect(info).to.be.an.instanceof(Error);
-		expect(info as Error.message).to.equal(`unresolvable geoip: ${MOCK_IP}`);
+		expect(info).to.equal(`unresolvable geoip: ${MOCK_IP}`);
 	});
 
 	it('should work when fastly is down', async () => {
@@ -578,7 +578,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
-			expect(response as Error.message).to.equal('vpn detected');
+			expect(response).to.equal('vpn detected');
 		});
 
 		it('should detect TOR-EXIT (proxy_desc)', async () => {
@@ -597,7 +597,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
-			expect(response as Error.message).to.equal('vpn detected');
+			expect(response).to.equal('vpn detected');
 		});
 
 		it('should detect TOR-RELAY (proxy_desc)', async () => {
@@ -616,7 +616,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
-			expect(response as Error.message).to.equal('vpn detected');
+			expect(response).to.equal('vpn detected');
 		});
 
 		it('should detect corporate (proxy_type)', async () => {
@@ -635,7 +635,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
-			expect(response as Error.message).to.equal('vpn detected');
+			expect(response).to.equal('vpn detected');
 		});
 
 		it('should detect aol (proxy_type)', async () => {
@@ -654,7 +654,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
-			expect(response as Error.message).to.equal('vpn detected');
+			expect(response).to.equal('vpn detected');
 		});
 
 		it('should detect anonymous (proxy_type)', async () => {
@@ -673,7 +673,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
-			expect(response as Error.message).to.equal('vpn detected');
+			expect(response).to.equal('vpn detected');
 		});
 
 		it('should detect blackberry (proxy_type)', async () => {
@@ -692,7 +692,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
-			expect(response as Error.message).to.equal('vpn detected');
+			expect(response).to.equal('vpn detected');
 		});
 	});
 });
