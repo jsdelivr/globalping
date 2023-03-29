@@ -1,4 +1,5 @@
 import { createServer } from 'node:http';
+import * as zlib from 'node:zlib';
 import json from 'koa-json';
 import Router from '@koa/router';
 import conditionalGet from 'koa-conditional-get';
@@ -53,7 +54,7 @@ registerHealthRoute(healthRouter);
 
 app
 	.use(domainRedirect())
-	.use(compress({ br: false }))
+	.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 } } }))
 	.use(conditionalGet())
 	.use(etag({ weak: true }))
 // Exclude root + demo routers from any checks
