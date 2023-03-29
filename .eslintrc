@@ -24,7 +24,8 @@
 				"**"
 			],
 			"rules": {
-				"no-duplicate-imports": "off"
+				"no-duplicate-imports": "off",
+				"no-extra-parens": "off"
 			}
 		}
 	]

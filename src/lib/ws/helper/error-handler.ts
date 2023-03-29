@@ -28,7 +28,6 @@ export const errorHandler = (next: NextArgument) => (socket: Socket, mwNext?: (e
 		logger.debug(error);
 
 		if (error instanceof WsError) {
-			console.log('WsError');
 			socket.emit('api:error', error.toJson());
 		}
 

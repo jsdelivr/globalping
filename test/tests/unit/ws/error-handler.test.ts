@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import type { Socket } from 'socket.io';
+import * as sinon from 'sinon';
 
 import { WsError } from '../../../../src/lib/ws/ws-error.js';
 import { errorHandler } from '../../../../src/lib/ws/helper/error-handler.js';
@@ -25,6 +26,16 @@ class MockSocket {
 type BundledMockSocket = Socket & MockSocket;
 
 describe('ws error', () => {
+	let sandbox: sinon.SinonSandbox;
+
+	beforeEach(() => {
+		sandbox = sinon.createSandbox({ useFakeTimers: true });
+	});
+
+	afterEach(() => {
+		sandbox.restore();
+	});
+
 	describe('connect', () => {
 		it('should catch error and disconnect socket', async () => {
 			const socket = new MockSocket('abc') as BundledMockSocket;
@@ -35,7 +46,8 @@ describe('ws error', () => {
 				throw new Error('abc');
 			};
 
-			await errorHandler(testMethod)(socket as Socket);
+			errorHandler(testMethod)(socket as Socket);
+			await sandbox.clock.nextAsync();
 
 			expect(socket.isConnected).to.equal(false);
 		});
@@ -46,10 +58,11 @@ describe('ws error', () => {
 			const testMethod = async (socket: Socket): Promise<void> => {
 				// Prevent unused variable err
 				socket.emit('connect', '');
-				throw new WsError('abc', { socketId: socket.id });
+				throw new WsError('abc', { socketId: socket.id, ipAddress: '' });
 			};
 
-			await errorHandler(testMethod)(socket as Socket);
+			errorHandler(testMethod)(socket as Socket);
+			await sandbox.clock.nextAsync();
 
 			const storeError = socket.store.find(m => m.event === 'api:error');
 			expect(socket.isConnected).to.equal(false);
@@ -61,7 +74,7 @@ describe('ws error', () => {
 	describe('middleware', () => {
 		it('should catch error and execute cb', async () => {
 			const socket = new MockSocket('abc') as BundledMockSocket;
-			let cbError = null;
+			let cbError: Error | null = null;
 
 			const testMethod = async (socket: Socket): Promise<void> => {
 				// Prevent unused variable err
@@ -73,7 +86,8 @@ describe('ws error', () => {
 				cbError = error;
 			};
 
-			await errorHandler(testMethod)(socket as Socket, testCb);
+			errorHandler(testMethod)(socket as Socket, testCb);
+			await sandbox.clock.nextAsync();
 
 			const apiError = socket.store.find(m => m.event === 'api:error');
 			expect(cbError).to.not.be.null;
@@ -83,19 +97,20 @@ describe('ws error', () => {
 
 		it('should catch error, execute cb and emit api:error event', async () => {
 			const socket = new MockSocket('abc') as BundledMockSocket;
-			let cbError = null;
+			let cbError: Error | null = null;
 
 			const testMethod = async (socket: Socket): Promise<void> => {
 				// Prevent unused variable err
 				socket.emit('connect', '');
-				throw new WsError('vpn detected', { socketId: socket.id });
+				throw new WsError('vpn detected', { socketId: socket.id, ipAddress: '' });
 			};
 
 			const testCb = (error: Error) => {
 				cbError = error;
 			};
 
-			await errorHandler(testMethod)(socket as Socket, testCb);
+			errorHandler(testMethod)(socket as Socket, testCb);
+			await sandbox.clock.nextAsync();
 
 			const apiError = socket.store.find(m => m.event === 'api:error');
 			expect(cbError).to.not.be.null;
