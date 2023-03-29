@@ -138,9 +138,10 @@ You can do it on a rented VPS or Dedicated server that has available capacity or
 It's as simple as running this command:
 
 ```
-docker run -d --network host --restart=always --name globalping-probe ghcr.io/jsdelivr/globalping-probe
+docker run -d --log-driver local --network host --restart=always --name globalping-probe ghcr.io/jsdelivr/globalping-probe
 ```
 And it works for both x86 and ARM architectures. 
+[Podman related instructions.](https://github.com/jsdelivr/globalping-probe#podman-alternative)
 
 Notes:
 - The probe doesn't open any ports or accept any incoming connections. It can only establish a connection with our API.
