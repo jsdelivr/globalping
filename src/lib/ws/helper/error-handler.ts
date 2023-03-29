@@ -19,10 +19,8 @@ type NextArgument = NextConnectArgument | NextMwArgument;
 const isError = (error: unknown): error is Error => Boolean(error as Error['message']);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const errorHandler = (next: NextArgument) => async (socket: Socket, mwNext?: (error?: any) => void | undefined) => {
-	try {
-		await next(socket, mwNext!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
-	} catch (error: unknown) {
+export const errorHandler = (next: NextArgument) => (socket: Socket, mwNext?: (error?: any) => void | undefined) => {
+	next(socket, mwNext!).catch((error) => { // eslint-disable-line @typescript-eslint/no-non-null-assertion
 		const clientIp = getProbeIp(socket.request) ?? '';
 		const reason = isError(error) ? error.message : 'unknown';
 
@@ -30,6 +28,7 @@ export const errorHandler = (next: NextArgument) => async (socket: Socket, mwNex
 		logger.debug(error);
 
 		if (error instanceof WsError) {
+			console.log('WsError');
 			socket.emit('api:error', error.toJson());
 		}
 
@@ -38,5 +37,5 @@ export const errorHandler = (next: NextArgument) => async (socket: Socket, mwNex
 		}
 
 		socket.disconnect();
-	}
+	});
 };

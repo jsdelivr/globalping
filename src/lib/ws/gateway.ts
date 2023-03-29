@@ -20,7 +20,7 @@ const metricsAgent = getMetricsAgent();
 
 io
 	.of(PROBES_NAMESPACE)
-	.use(probeMetadata) // eslint-disable-line @typescript-eslint/no-misused-promises
+	.use(probeMetadata)
 	.on('connect', errorHandler(async (socket: Socket) => {
 		await verifyIpLimit(socket);
 
