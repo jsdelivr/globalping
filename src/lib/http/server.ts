@@ -53,7 +53,7 @@ registerHealthRoute(healthRouter);
 
 app
 	.use(domainRedirect())
-	.use(compress({br: false}))
+	.use(compress({ br: false }))
 	.use(conditionalGet())
 	.use(etag({ weak: true }))
 // Exclude root + demo routers from any checks
