@@ -1,5 +1,6 @@
 import type { Server } from 'socket.io';
 import createHttpError from 'http-errors';
+import cryptoRandomString from 'crypto-random-string';
 import { getWsServer } from '../lib/ws/server.js';
 import type { RedisClient } from '../lib/redis/client.js';
 import { getRedisClient } from '../lib/redis/client.js';
@@ -25,12 +26,19 @@ export class MeasurementRunner {
 		private readonly metrics: MetricsAgent,
 	) {}
 
-	async run (request: MeasurementRequest): Promise<MeasurementConfig> {
-		const probes = await this.router.findMatchingProbes(request.locations, request.limit);
+	async run (request: MeasurementRequest): Promise<{measurementId: string; probesCount: number;}> {
+		const probesArray = await this.router.findMatchingProbes(request.locations, request.limit);
+		const probesCount = probesArray.length;
 
-		if (probes.length === 0) {
+		if (probesCount === 0) {
 			throw createHttpError(422, 'No suitable probes found', { type: 'no_probes_found' });
 		}
+
+		const probes: Record<string, Probe> = {};
+		probesArray.forEach((probe) => {
+			const testId = cryptoRandomString({ length: 16, type: 'alphanumeric' });
+			probes[testId] = probe;
+		});
 
 		const measurement: NetworkTest = {
 			...request.measurementOptions,
@@ -38,17 +46,12 @@ export class MeasurementRunner {
 			target: request.target,
 		};
 
-		const id = await this.store.createMeasurement(measurement, probes.length);
-		const measurementConfig: MeasurementConfig = { id, probes, measurementOptions: measurement };
+		const measurementId = await this.store.createMeasurement(measurement, probes, probesCount);
 
-		this.sendToProbes(measurementConfig);
+		this.sendToProbes({ measurementId, probes, measurementOptions: measurement });
 		this.metrics.recordMeasurement(request.type);
 
-		return measurementConfig;
-	}
-
-	async addProbe (measurementId: string, resultId: string, probe: Probe): Promise<void> {
-		await this.store.storeMeasurementProbe(measurementId, resultId, probe);
+		return { measurementId, probesCount };
 	}
 
 	async recordProgress (data: MeasurementResultMessage): Promise<void> {
@@ -75,9 +78,10 @@ export class MeasurementRunner {
 	}
 
 	private sendToProbes (measurementConfig: MeasurementConfig) {
-		for (const probe of measurementConfig.probes) {
+		for (const [ testId, probe ] of Object.entries(measurementConfig.probes)) {
 			this.io.of('probes').to(probe.client).emit('probe:measurement:request', {
-				id: measurementConfig.id,
+				measurementId: measurementConfig.measurementId,
+				testId,
 				measurement: measurementConfig.measurementOptions,
 			});
 		}

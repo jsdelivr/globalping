@@ -25,10 +25,11 @@ export class MeasurementStore {
 		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord;
 	}
 
-	async createMeasurement (test: NetworkTest, probesCount: number): Promise<string> {
+	async createMeasurement (test: NetworkTest, probes: Record<string, Probe>, probesCount: number): Promise<string> {
 		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
 
+		const results = this.probesToResults(probes);
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
 		const startTime = Date.now();
 
@@ -42,38 +43,12 @@ export class MeasurementStore {
 				createdAt: startTime,
 				updatedAt: startTime,
 				probesCount,
-				results: {},
+				results,
 			}),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
 		]);
 
 		return id;
-	}
-
-	async storeMeasurementProbe (measurementId: string, probeId: string, probe: Probe): Promise<void> {
-		const key = getMeasurementKey(measurementId);
-		await Promise.all([
-			this.redis.json.set(key, `$.results.${probeId}`, {
-				probe: {
-					continent: probe.location.continent,
-					region: probe.location.region,
-					country: probe.location.country,
-					state: probe.location.state ?? null,
-					city: probe.location.city,
-					asn: probe.location.asn,
-					longitude: probe.location.longitude,
-					latitude: probe.location.latitude,
-					network: probe.location.network,
-					tags: probe.tags.map(({ value }) => value),
-					resolvers: probe.resolvers,
-				},
-				result: {
-					status: 'in-progress',
-					rawOutput: '',
-				},
-			} as MeasurementResult),
-			this.redis.json.set(key, '$.updatedAt', Date.now()),
-		]);
 	}
 
 	async storeMeasurementProgress (data: MeasurementResultMessage): Promise<void> {
@@ -165,6 +140,33 @@ export class MeasurementStore {
 				.finally(() => this.scheduleCleanup())
 				.catch(error => logger.error(error));
 		}, intervalTime);
+	}
+
+	probesToResults (probes: Record<string, Probe>) {
+		const results: Record<string, MeasurementResult> = {};
+		Object.entries(probes).forEach(([ testId, probe ]) => {
+			results[testId] = {
+				probe: {
+					continent: probe.location.continent,
+					region: probe.location.region,
+					country: probe.location.country,
+					state: probe.location.state ?? null,
+					city: probe.location.city,
+					asn: probe.location.asn,
+					longitude: probe.location.longitude,
+					latitude: probe.location.latitude,
+					network: probe.location.network,
+					tags: probe.tags.map(({ value }) => value),
+					resolvers: probe.resolvers,
+				},
+				result: {
+					status: 'in-progress',
+					rawOutput: '',
+				},
+			} as MeasurementResult;
+		});
+
+		return results;
 	}
 }
 

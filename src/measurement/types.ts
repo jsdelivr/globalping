@@ -171,9 +171,9 @@ export type MeasurementRequest = {
 };
 
 export type MeasurementConfig = {
-	id: string;
+	measurementId: string;
 	measurementOptions: MeasurementOptions;
-	probes: Probe[];
+	probes: Record<string, Probe>;
 };
 
 export type MeasurementResult = {
