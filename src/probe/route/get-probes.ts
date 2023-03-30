@@ -1,13 +1,13 @@
-import type {DefaultContext, DefaultState, ParameterizedContext} from 'koa';
+import type { DefaultContext, DefaultState, ParameterizedContext } from 'koa';
 import type Router from '@koa/router';
-import type {RemoteSocket} from 'socket.io';
-import type {DefaultEventsMap} from 'socket.io/dist/typed-events';
-import {fetchSockets, type SocketData} from '../../lib/ws/server.js';
+import type { RemoteSocket } from 'socket.io';
+import type { DefaultEventsMap } from 'socket.io/dist/typed-events';
+import { fetchSockets, type SocketData } from '../../lib/ws/server.js';
 
 type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
-	const {isAdmin} = ctx;
+	const { isAdmin } = ctx;
 	let sockets = await fetchSockets();
 
 	if (!isAdmin) {
@@ -28,7 +28,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 			longitude: socket.data.probe.location.longitude,
 			network: socket.data.probe.location.network,
 		},
-		tags: socket.data.probe.tags.map(({value}) => value),
+		tags: socket.data.probe.tags.map(({ value }) => value),
 		resolvers: socket.data.probe.resolvers,
 		ipAddress: isAdmin ? socket.data.probe.ipAddress : undefined,
 		host: isAdmin ? socket.data.probe.host : undefined,

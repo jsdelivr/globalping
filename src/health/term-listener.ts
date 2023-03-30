@@ -1,24 +1,25 @@
 import process from 'node:process';
-import {scopedLogger} from '../lib/logger.js';
+import { scopedLogger } from '../lib/logger.js';
 
 const logger = scopedLogger('sigterm-listener');
 
 class TermListener {
 	private isTerminating: boolean;
 
-	constructor() {
+	constructor () {
 		this.isTerminating = false;
 		this.attachListener();
 	}
 
-	public getIsTerminating() {
+	public getIsTerminating () {
 		return this.isTerminating;
 	}
 
-	private attachListener() {
-		process.on('SIGTERM', signal => {
+	private attachListener () {
+		process.on('SIGTERM', (signal) => {
 			logger.info(`Process ${process.pid} received a ${signal} signal`);
 			this.isTerminating = true;
+
 			setTimeout(() => {
 				logger.info('Exiting');
 				process.exit(0);

@@ -1,7 +1,7 @@
 import got from 'got';
 import config from 'config';
-import {getContinentByCountry, getStateIsoByName} from '../../location/location.js';
-import type {LocationInfo} from '../client.js';
+import { getContinentByCountry, getStateIsoByName } from '../../location/location.js';
+import type { LocationInfo } from '../client.js';
 import {
 	normalizeCityName,
 	normalizeCityNamePublic,
@@ -19,10 +19,10 @@ type IpinfoResponse = {
 export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 	const result = await got(`https://ipinfo.io/${addr}`, {
 		username: config.get<string>('ipinfo.apiKey'),
-		timeout: {request: 5000},
+		timeout: { request: 5000 },
 	}).json<IpinfoResponse>();
 
-	const [lat, lon] = (result.loc ?? ',').split(',');
+	const [ lat, lon ] = (result.loc ?? ',').split(',');
 	const match = /^AS(\d+)/.exec(result.org ?? '');
 	const parsedAsn = match?.[1] ? Number(match[1]) : null;
 	const network = (result.org ?? '').split(' ').slice(1).join(' ');
@@ -33,7 +33,7 @@ export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 		country: result.country ?? '',
 		city: normalizeCityNamePublic(result.city ?? ''),
 		normalizedCity: normalizeCityName(result.city ?? ''),
-		asn: parsedAsn!,
+		asn: Number(parsedAsn),
 		latitude: Number(lat),
 		longitude: Number(lon),
 		network,

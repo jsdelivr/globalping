@@ -1,8 +1,8 @@
-import type {Server} from 'node:http';
-import {type AddressInfo} from 'node:net';
+import type { Server } from 'node:http';
+import { type AddressInfo } from 'node:net';
 import _ from 'lodash';
-import {io, type Socket} from 'socket.io-client';
-import {createServer} from '../../src/lib/server.js';
+import { io, type Socket } from 'socket.io-client';
+import { createServer } from '../../src/lib/server.js';
 
 let app: Server;
 let url: string;
@@ -14,7 +14,7 @@ export const getTestServer = async (): Promise<Server> => {
 	if (!app) {
 		app = await createServer();
 		app.listen(0);
-		const {port} = app.address() as AddressInfo;
+		const { port } = app.address() as AddressInfo;
 		url = `http://127.0.0.1:${port}/probes`;
 	}
 
@@ -22,16 +22,17 @@ export const getTestServer = async (): Promise<Server> => {
 };
 
 export const addFakeProbe = async (events: Record<string, any> = {}): Promise<Socket> => {
-	const socket = await new Promise<Socket>(resolve => {
+	const socket = await new Promise<Socket>((resolve) => {
 		const client = io(url, {
-			transports: ['websocket'],
+			transports: [ 'websocket' ],
 			reconnectionDelay: 100,
 			reconnectionDelayMax: 500,
 			query: {
 				version: '0.14.0',
 			},
 		});
-		for (const [event, listener] of Object.entries(events)) {
+
+		for (const [ event, listener ] of Object.entries(events)) {
 			client.on(event, listener);
 		}
 

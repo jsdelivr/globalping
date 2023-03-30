@@ -1,7 +1,6 @@
-/* eslint-disable capitalized-comments */
 import * as process from 'node:process';
 import _ from 'lodash';
-import type {Socket} from 'socket.io';
+import type { Socket } from 'socket.io';
 import isIpPrivate from 'private-ip';
 import semver from 'semver';
 import {
@@ -11,11 +10,11 @@ import {
 	getCountryAliases,
 	getNetworkAliases,
 } from '../lib/location/location.js';
-import {InternalError} from '../lib/internal-error.js';
-import {createGeoipClient} from '../lib/geoip/client.js';
+import { InternalError } from '../lib/internal-error.js';
+import { createGeoipClient } from '../lib/geoip/client.js';
 import getProbeIp from '../lib/get-probe-ip.js';
-import {getRegion} from '../lib/ip-ranges.js';
-import type {Probe, ProbeLocation, Tag} from './types.js';
+import { getRegion } from '../lib/ip-ranges.js';
+import type { Probe, ProbeLocation, Tag } from './types.js';
 
 const fakeIpForDebug = () => _.sample([
 	'18.200.0.1', // aws-eu-west-1
@@ -28,7 +27,7 @@ const fakeIpForDebug = () => _.sample([
 	'213.136.174.80',
 	'94.214.253.78',
 	'79.205.97.254',
-])!;
+]);
 
 const geoipClient = createGeoipClient();
 
@@ -70,7 +69,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		getCountryAliases(location.country),
 		location.normalizedCity,
 		location.state ?? [],
-		...(location.state ? [getStateNameByIso(location.state)] : []),
+		...location.state ? [ getStateNameByIso(location.state) ] : [],
 		location.continent,
 		location.normalizedRegion,
 		`as${location.asn}`,
@@ -94,7 +93,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 				count: 0,
 				load: [],
 			},
-			jobs: {count: 0},
+			jobs: { count: 0 },
 		},
 		status: 'initializing',
 	};
@@ -118,6 +117,7 @@ const getLocation = (ipInfo: ProbeLocation): ProbeLocation => ({
 const getTags = (clientIp: string) => {
 	const tags: Tag[] = [];
 	const cloudRegion = getRegion(clientIp);
+
 	if (cloudRegion) {
 		tags.push({
 			type: 'system',

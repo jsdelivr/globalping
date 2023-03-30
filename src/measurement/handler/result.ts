@@ -1,5 +1,5 @@
-import type {MeasurementResultMessage} from '../types.js';
-import {getMeasurementRunner} from '../runner.js';
+import type { MeasurementResultMessage } from '../types.js';
+import { getMeasurementRunner } from '../runner.js';
 
 const runner = getMeasurementRunner();
 

@@ -1,4 +1,4 @@
-import type {Context, Next} from 'koa';
+import type { Context, Next } from 'koa';
 
 export const corsHandler = () => async (ctx: Context, next: Next) => {
 	ctx.set('Access-Control-Allow-Origin', '*');

@@ -1,4 +1,4 @@
-import type {Context, Next} from 'koa';
+import type { Context, Next } from 'koa';
 
 const domainRedirect = () => (ctx: Context, next: Next) => {
 	if (ctx.host === 'globalping.io') {

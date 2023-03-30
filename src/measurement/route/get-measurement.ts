@@ -1,11 +1,11 @@
-import type {DefaultContext, DefaultState, ParameterizedContext} from 'koa';
+import type { DefaultContext, DefaultState, ParameterizedContext } from 'koa';
 import type Router from '@koa/router';
-import {getMeasurementStore} from '../store.js';
+import { getMeasurementStore } from '../store.js';
 
 const store = getMeasurementStore();
 
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
-	const {id} = ctx.params;
+	const { id } = ctx.params;
 
 	if (!id) {
 		ctx.status = 400;
@@ -19,7 +19,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		return;
 	}
 
-	ctx.set('last-modified', (new Date(result.createdAt)).toUTCString());
+	ctx.set('last-modified', new Date(result.createdAt).toUTCString());
 
 	ctx.body = {
 		id: result.id,

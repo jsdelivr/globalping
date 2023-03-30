@@ -1,4 +1,4 @@
-import type {Context, Next} from 'koa';
+import type { Context, Next } from 'koa';
 import config from 'config';
 
 export const isAdminMw = async (ctx: Context, next: Next) => {

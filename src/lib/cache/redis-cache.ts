@@ -1,14 +1,14 @@
-import type {RedisClient} from '../redis/client.js';
-import type {CacheInterface} from './cache-interface.js';
+import type { RedisClient } from '../redis/client.js';
+import type { CacheInterface } from './cache-interface.js';
 
 export default class RedisCache implements CacheInterface {
-	constructor(private readonly redis: RedisClient) {}
+	constructor (private readonly redis: RedisClient) {}
 
-	async set(key: string, value: unknown, ttl?: number): Promise<void> {
-		await this.redis.set(this.buildCacheKey(key), JSON.stringify(value), {EX: ttl ? ttl / 1000 : 0});
+	async set (key: string, value: unknown, ttl?: number): Promise<void> {
+		await this.redis.set(this.buildCacheKey(key), JSON.stringify(value), { EX: ttl ? ttl / 1000 : 0 });
 	}
 
-	async get<T = unknown>(key: string): Promise<T | undefined> {
+	async get<T = unknown> (key: string): Promise<T | undefined> {
 		const raw = await this.redis.get(this.buildCacheKey(key));
 
 		if (!raw) {
@@ -18,7 +18,7 @@ export default class RedisCache implements CacheInterface {
 		return JSON.parse(raw) as T;
 	}
 
-	async delete<T = unknown>(key: string): Promise<T | undefined> {
+	async delete<T = unknown> (key: string): Promise<T | undefined> {
 		const raw = await this.redis.get(this.buildCacheKey(key));
 
 		if (!raw) {
@@ -30,7 +30,7 @@ export default class RedisCache implements CacheInterface {
 		return JSON.parse(raw) as T;
 	}
 
-	private buildCacheKey(key: string): string {
+	private buildCacheKey (key: string): string {
 		return `gp:cache:${key}`;
 	}
 }

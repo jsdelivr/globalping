@@ -15,10 +15,10 @@ export const schemaErrorMessages = {
 	'domain.invalid': 'Provided target is not a valid domain name',
 };
 
-export const validCmdTypes = ['ping', 'dns', 'traceroute', 'mtr', 'http'];
+export const validCmdTypes = [ 'ping', 'dns', 'traceroute', 'mtr', 'http' ];
 
-const allowedHttpProtocols = ['http', 'https', 'http2'];
-const allowedHttpMethods = ['get', 'head'];
+const allowedHttpProtocols = [ 'http', 'https', 'http2' ];
+const allowedHttpMethods = [ 'get', 'head' ];
 
 // Http
 const httpTargetSchema = Joi.alternatives()
@@ -47,7 +47,8 @@ const mtrTargetSchema = Joi.alternatives()
 	.required()
 	.messages(schemaErrorMessages);
 
-const allowedMtrProtocols = ['UDP', 'TCP', 'ICMP'];
+const allowedMtrProtocols = [ 'UDP', 'TCP', 'ICMP' ];
+
 export const mtrSchema = Joi.object({
 	protocol: Joi.string().valid(...allowedMtrProtocols).insensitive().default('ICMP'),
 	packets: Joi.number().min(1).max(16).default(3),
@@ -77,13 +78,14 @@ export const tracerouteSchema = Joi.object({
 	port: Joi.number().port().default(80),
 }).default().messages(schemaErrorMessages);
 
-const allowedDnsTypes = ['A', 'AAAA', 'ANY', 'CNAME', 'DNSKEY', 'DS', 'MX', 'NS', 'NSEC', 'PTR', 'RRSIG', 'SOA', 'TXT', 'SRV'];
-const allowedDnsProtocols = ['UDP', 'TCP'];
+const allowedDnsTypes = [ 'A', 'AAAA', 'ANY', 'CNAME', 'DNSKEY', 'DS', 'MX', 'NS', 'NSEC', 'PTR', 'RRSIG', 'SOA', 'TXT', 'SRV' ];
+const allowedDnsProtocols = [ 'UDP', 'TCP' ];
 
 // Dns
 const dnsDefaultTargetSchema = Joi.custom(joiValidateDomain()).custom(joiValidateTarget('domain')).required().messages(schemaErrorMessages);
 const dnsPtrTargetSchema = Joi.string().ip(globalIpOptions).custom(joiValidateTarget('ip')).required().messages(schemaErrorMessages);
-const dnsTargetSchema = Joi.when(Joi.ref('..measurementOptions.query.type'), {is: Joi.string().insensitive().valid('PTR').required(), then: dnsPtrTargetSchema, otherwise: dnsDefaultTargetSchema});
+const dnsTargetSchema = Joi.when(Joi.ref('..measurementOptions.query.type'), { is: Joi.string().insensitive().valid('PTR').required(), then: dnsPtrTargetSchema, otherwise: dnsDefaultTargetSchema });
+
 export const dnsSchema = Joi.object({
 	query: Joi.object({
 		type: Joi.string().valid(...allowedDnsTypes).insensitive().default('A'),
@@ -96,7 +98,6 @@ export const dnsSchema = Joi.object({
 	trace: Joi.boolean().default(false),
 }).default().messages(schemaErrorMessages);
 
-/* eslint-disable unicorn/prefer-spread */
 export const targetSchema = whenTypeApply('ping', pingTargetSchema)
 	.concat(whenTypeApply('http', httpTargetSchema))
 	.concat(whenTypeApply('traceroute', tracerouteTargetSchema))
@@ -108,4 +109,3 @@ export const measurementSchema = whenTypeApply('ping', pingSchema)
 	.concat(whenTypeApply('traceroute', tracerouteSchema))
 	.concat(whenTypeApply('dns', dnsSchema))
 	.concat(whenTypeApply('mtr', mtrSchema));
-/* eslint-enable unicorn/prefer-spread */

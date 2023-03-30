@@ -1,0 +1,32 @@
+{
+	"extends": "@martin-kolarik/eslint-config/typescript",
+	"overrides": [
+		{
+			"files": [
+				"src/**/*.ts"
+			],
+			"extends": "@martin-kolarik/eslint-config/typescript-type-checking",
+			"parserOptions": {
+				"project": true
+			}
+		},
+		{
+			"files": [
+				"test/**"
+			],
+			"rules": {
+				"@typescript-eslint/no-explicit-any": "off",
+				"@typescript-eslint/no-non-null-assertion": "off"
+			}
+		},
+		{
+			"files": [
+				"**"
+			],
+			"rules": {
+				"no-duplicate-imports": "off",
+				"no-extra-parens": "off"
+			}
+		}
+	]
+}

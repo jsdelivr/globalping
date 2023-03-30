@@ -7,7 +7,7 @@ import {
 	type RedisFunctions,
 	type RedisScripts,
 } from 'redis';
-import {scopedLogger} from '../logger.js';
+import { scopedLogger } from '../logger.js';
 
 const logger = scopedLogger('redis');
 
@@ -21,7 +21,7 @@ export const initRedis = async () => {
 
 export const createRedisClient = async (options?: RedisClientOptions): Promise<RedisClient> => {
 	const client = createClient({
-		...config.util.toObject(config.get('redis')),
+		...config.util.toObject(config.get('redis')) as RedisClientOptions,
 		...options,
 	});
 

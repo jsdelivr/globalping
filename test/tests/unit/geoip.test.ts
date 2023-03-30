@@ -1,12 +1,13 @@
 import * as fs from 'node:fs';
 import nock from 'nock';
 import mockFs from 'mock-fs';
-import {expect} from 'chai';
-import type {LocationInfo} from '../../../src/lib/geoip/client.js';
-import {fastlyLookup} from '../../../src/lib/geoip/providers/fastly.js';
+import { expect } from 'chai';
+import type { LocationInfo } from '../../../src/lib/geoip/client.js';
+import { fastlyLookup } from '../../../src/lib/geoip/providers/fastly.js';
 import GeoipClient from '../../../src/lib/geoip/client.js';
 import NullCache from '../../../src/lib/cache/null-cache.js';
-import {scopedLogger} from '../../../src/lib/logger.js';
+import { scopedLogger } from '../../../src/lib/logger.js';
+import { populateMemList } from '../../../src/lib/geoip/whitelist.js';
 
 const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
@@ -15,7 +16,9 @@ const MOCK_IP = '131.255.7.26';
 describe('geoip service', () => {
 	let client: GeoipClient;
 
-	before(() => {
+	before(async () => {
+		await populateMemList();
+
 		client = new GeoipClient(
 			new NullCache(),
 			scopedLogger('geoip:test'),

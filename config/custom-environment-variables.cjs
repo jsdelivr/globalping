@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const df = require('./default.cjs');
 
-function mapEnvConfig(object, prefix = '') {
+function mapEnvConfig (object, prefix = '') {
 	return _.mapValues(object, (value, key) => {
 		if (_.isObject(value)) {
 			return mapEnvConfig(value, (prefix ? `${prefix}_` : '') + _.snakeCase(key).toUpperCase());

@@ -1,6 +1,3 @@
-/* eslint @typescript-eslint/naming-convention: 0 */
-/* eslint-disable quote-props */
-
 export const states: Record<string, string> = {
 	'Alabama': 'AL',
 	'Alaska': 'AK',

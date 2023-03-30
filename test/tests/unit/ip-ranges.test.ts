@@ -1,8 +1,8 @@
-import {writeFile, readFile} from 'node:fs/promises';
+import { writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import nock from 'nock';
-import {expect} from 'chai';
-import {updateIpRangeFiles, sources, populateMemList, getRegion} from '../../../src/lib/ip-ranges.js';
+import { expect } from 'chai';
+import { updateIpRangeFiles, sources, populateMemList, getRegion } from '../../../src/lib/ip-ranges.js';
 
 const mockDataPath = path.join(path.resolve(), 'test/mocks/ip-ranges');
 const gcpMockRanges = await readFile(path.join(mockDataPath, 'nock-gcp.json'), 'utf8');
@@ -25,7 +25,7 @@ describe('cloud ip ranges', () => {
 
 		it('should override blacklist file', async () => {
 			// Reset the file
-			await writeFile(gcpFilePath, '', {encoding: 'utf8'});
+			await writeFile(gcpFilePath, '', { encoding: 'utf8' });
 
 			const preFile = await readFile(gcpFilePath, 'utf8').catch(() => null);
 			await updateIpRangeFiles();

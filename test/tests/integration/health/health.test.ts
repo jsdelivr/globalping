@@ -1,9 +1,9 @@
-import type {Server} from 'node:http';
+import type { Server } from 'node:http';
 import process from 'node:process';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
-import request, {type SuperTest, type Test} from 'supertest';
-import {getTestServer} from '../../../utils/server.js';
+import request, { type SuperTest, type Test } from 'supertest';
+import { getTestServer } from '../../../utils/server.js';
 
 after(() => {
 	process.removeAllListeners('SIGTERM');
@@ -24,7 +24,7 @@ describe('Get health', function () {
 	});
 
 	beforeEach(() => {
-		sandbox = sinon.createSandbox({useFakeTimers: true});
+		sandbox = sinon.createSandbox({ useFakeTimers: true });
 		exitStub = sandbox.stub(process, 'exit');
 	});
 
@@ -37,7 +37,7 @@ describe('Get health', function () {
 			await requestAgent.get('/health')
 				.send()
 				.expect(200)
-				.expect(response => {
+				.expect((response) => {
 					expect(response.text).to.equal('Alive');
 				});
 		});
@@ -48,11 +48,13 @@ describe('Get health', function () {
 				sandbox.clock.tick(15_000 + 10);
 				sinon.assert.calledOnce(exitStub);
 			});
+
 			process.emit('SIGTERM');
+
 			await requestAgent.get('/health')
 				.send()
 				.expect(200)
-				.expect(response => {
+				.expect((response) => {
 					expect(response.text).to.equal('Received SIGTERM, shutting down');
 				});
 		});

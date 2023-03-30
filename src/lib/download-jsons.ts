@@ -1,6 +1,6 @@
-import {scopedLogger} from './logger.js';
-import {updateMalwareFiles} from './malware/client.js';
-import {updateIpRangeFiles} from './ip-ranges.js';
+import { scopedLogger } from './logger.js';
+import { updateMalwareFiles } from './malware/client.js';
+import { updateIpRangeFiles } from './ip-ranges.js';
 
 const logger = scopedLogger('malware.blacklist');
 

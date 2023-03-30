@@ -1,5 +1,5 @@
-import type {Probe} from '../probe/types.js';
-import type {Location} from '../lib/location/types.js';
+import type { Probe } from '../probe/types.js';
+import type { Location } from '../lib/location/types.js';
 
 /**
  * Network Tests
@@ -140,7 +140,7 @@ type HttpResult = TestResult & {
 	statusCode: number;
 	timings: Record<string, number>;
 	tls: {
-		[key: string]: any;
+		[key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 		authorized: boolean;
 		authorizationError?: string;
 		createdAt: string;
@@ -171,9 +171,9 @@ export type MeasurementRequest = {
 };
 
 export type MeasurementConfig = {
-	id: string;
+	measurementId: string;
 	measurementOptions: MeasurementOptions;
-	probes: Probe[];
+	probes: Record<string, Probe>;
 };
 
 export type MeasurementResult = {

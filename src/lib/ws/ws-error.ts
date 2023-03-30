@@ -1,4 +1,4 @@
-import type {Probe} from '../../probe/types.js';
+import type { Probe } from '../../probe/types.js';
 
 type Info = {
 	socketId: string;
@@ -6,7 +6,7 @@ type Info = {
 	// A string used for message parsing
 	code?: string;
 	probe?: Probe;
-	cause?: any;
+	cause?: unknown;
 };
 
 type JsonResponse = {
@@ -16,12 +16,12 @@ type JsonResponse = {
 
 export class WsError extends Error {
 	info: Info;
-	constructor(message: string, info: Info) {
+	constructor (message: string, info: Info) {
 		super(message);
 		this.info = info;
 	}
 
-	toJson(): JsonResponse {
+	toJson (): JsonResponse {
 		return {
 			message: this.message,
 			info: this.info,
