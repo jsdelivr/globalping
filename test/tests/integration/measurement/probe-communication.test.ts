@@ -20,8 +20,10 @@ describe('Create measurement request', function () {
 
 	const locationHandlerStub = sinon.stub();
 	const requestHandlerStub = sinon.stub();
+	const cryptoRandomString = sinon.stub();
 
 	before(async () => {
+		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
 		await td.replaceEsm('../../../../src/lib/cache/redis-cache.ts', {}, RedisCacheMock);
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
 		({ getTestServer, addFakeProbe, deleteFakeProbe } = await import('../../../utils/server.js'));
@@ -38,6 +40,10 @@ describe('Create measurement request', function () {
 			'api:connect:location': locationHandlerStub,
 			'probe:measurement:request': requestHandlerStub,
 		});
+
+		cryptoRandomString.reset();
+		cryptoRandomString.onFirstCall().returns('testid');
+		cryptoRandomString.onSecondCall().returns('measurementid');
 	});
 
 	afterEach(async () => {
@@ -71,8 +77,6 @@ describe('Create measurement request', function () {
 	});
 
 	it('should send and handle proper events during measurement request', async () => {
-		let measurementId!: string;
-
 		probe.emit('probe:status:update', 'ready');
 
 		await requestAgent.post('/v1/measurements').send({
@@ -83,7 +87,6 @@ describe('Create measurement request', function () {
 				packets: 4,
 			},
 		}).expect(202).expect(({ body, header }) => {
-			measurementId = body.id as string;
 			expect(body.id).to.exist;
 			expect(header.location).to.exist;
 			expect(body.probesCount).to.equal(1);
@@ -91,17 +94,16 @@ describe('Create measurement request', function () {
 
 		expect(requestHandlerStub.callCount).to.equal(1);
 
-		expect(requestHandlerStub.firstCall.args).to.deep.equal([{
-			id: measurementId,
+		expect(requestHandlerStub.firstCall.args[0]).to.deep.equal({
+			measurementId: 'measurementid',
+			testId: 'testid',
 			measurement: { packets: 4, type: 'ping', target: 'jsdelivr.com' },
-		}]);
+		});
 
-		probe.emit('probe:measurement:ack', { id: 'testId', measurementId });
-
-		await requestAgent.get(`/v1/measurements/${measurementId}`).send()
+		await requestAgent.get(`/v1/measurements/measurementid`).send()
 			.expect(200).expect((response) => {
 				expect(response.body).to.deep.include({
-					id: measurementId,
+					id: 'measurementid',
 					type: 'ping',
 					status: 'in-progress',
 					probesCount: 1,
@@ -126,18 +128,20 @@ describe('Create measurement request', function () {
 				});
 			});
 
+		probe.emit('probe:measurement:ack');
+
 		probe.emit('probe:measurement:progress', {
-			testId: 'testId',
-			measurementId,
+			testId: 'testid',
+			measurementId: 'measurementid',
 			result: {
 				rawOutput: 'abc',
 			},
 		});
 
-		await requestAgent.get(`/v1/measurements/${measurementId}`).send()
+		await requestAgent.get(`/v1/measurements/measurementid`).send()
 			.expect(200).expect((response) => {
 				expect(response.body).to.deep.include({
-					id: measurementId,
+					id: 'measurementid',
 					type: 'ping',
 					status: 'in-progress',
 					probesCount: 1,
@@ -163,17 +167,17 @@ describe('Create measurement request', function () {
 			});
 
 		probe.emit('probe:measurement:progress', {
-			testId: 'testId',
-			measurementId,
+			testId: 'testid',
+			measurementId: 'measurementid',
 			result: {
 				rawOutput: 'def',
 			},
 		});
 
-		await requestAgent.get(`/v1/measurements/${measurementId}`).send()
+		await requestAgent.get(`/v1/measurements/measurementid`).send()
 			.expect(200).expect((response) => {
 				expect(response.body).to.deep.include({
-					id: measurementId,
+					id: 'measurementid',
 					type: 'ping',
 					status: 'in-progress',
 					probesCount: 1,
@@ -199,8 +203,8 @@ describe('Create measurement request', function () {
 			});
 
 		probe.emit('probe:measurement:result', {
-			testId: 'testId',
-			measurementId,
+			testId: 'testid',
+			measurementId: 'measurementid',
 			result: {
 				status: 'finished',
 				rawOutput: 'abcdefhij',
@@ -212,10 +216,10 @@ describe('Create measurement request', function () {
 		// eslint-disable-next-line no-promise-executor-return
 		await new Promise(resolve => setTimeout(resolve, 100)); // We need to wait until all redis writes finish
 
-		await requestAgent.get(`/v1/measurements/${measurementId}`).send()
+		await requestAgent.get(`/v1/measurements/measurementid`).send()
 			.expect(200).expect((response) => {
 				expect(response.body).to.deep.include({
-					id: measurementId,
+					id: 'measurementid',
 					type: 'ping',
 					status: 'finished',
 					probesCount: 1,
