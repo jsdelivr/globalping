@@ -54,7 +54,7 @@ registerHealthRoute(healthRouter);
 
 app
 	.use(domainRedirect())
-	.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 } } }))
+	.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }))
 	.use(conditionalGet())
 	.use(etag({ weak: true }))
 // Exclude root + demo routers from any checks
