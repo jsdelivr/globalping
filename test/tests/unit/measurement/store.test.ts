@@ -57,7 +57,7 @@ describe('measurement store', () => {
 		td.reset();
 	});
 
-	it('should call proper redis methods', async () => {
+	it('should call proper redis methods during timeout checks', async () => {
 		getMeasurementStore();
 		await sandbox.clock.tickAsync(16_000);
 
