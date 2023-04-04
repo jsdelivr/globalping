@@ -4,7 +4,7 @@ import type { Probe } from '../probe/types.js';
 import type { RedisClient } from '../lib/redis/client.js';
 import { getRedisClient } from '../lib/redis/client.js';
 import { scopedLogger } from '../lib/logger.js';
-import type { MeasurementRecord, MeasurementResultMessage, MeasurementResult, NetworkTest } from './types.js';
+import type { MeasurementRecord, MeasurementResultMessage, MeasurementResult } from './types.js';
 
 const logger = scopedLogger('store');
 
@@ -25,7 +25,7 @@ export class MeasurementStore {
 		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord;
 	}
 
-	async createMeasurement (test: NetworkTest, probes: Record<string, Probe>, probesCount: number): Promise<string> {
+	async createMeasurement (type: string, probes: Map<string, Probe>): Promise<string> {
 		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
 
@@ -35,14 +35,14 @@ export class MeasurementStore {
 
 		await Promise.all([
 			this.redis.hSet('gp:in-progress', id, startTime),
-			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probesCount, { EX: probesAwaitingTtl }),
+			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.size, { EX: probesAwaitingTtl }),
 			this.redis.json.set(key, '$', {
 				id,
-				type: test.type,
+				type,
 				status: 'in-progress',
 				createdAt: startTime,
 				updatedAt: startTime,
-				probesCount,
+				probesCount: probes.size,
 				results,
 			}),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
@@ -142,9 +142,9 @@ export class MeasurementStore {
 		}, intervalTime);
 	}
 
-	probesToResults (probes: Record<string, Probe>) {
+	probesToResults (probes: Map<string, Probe>) {
 		const results: Record<string, MeasurementResult> = {};
-		Object.entries(probes).forEach(([ testId, probe ]) => {
+		probes.forEach((probe, testId) => {
 			results[testId] = {
 				probe: {
 					continent: probe.location.continent,

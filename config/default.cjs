@@ -25,6 +25,7 @@ module.exports = {
 		fetchSocketsCacheTTL: 200,
 	},
 	measurement: {
+		maxInProgressProbes: 5,
 		// Timeout after which measurement will be marked as finished even if not all probes respond
 		timeout: 30, // 30 seconds
 		// measurement result TTL in redis

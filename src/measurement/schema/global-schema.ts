@@ -17,4 +17,5 @@ export const schema = Joi.object({
 	measurementOptions: measurementSchema,
 	locations: locationSchema,
 	limit: Joi.number().min(1).max(measurementConfig.limits.global).default(limitDefaultHandler),
+	inProgressUpdates: Joi.bool().default(false),
 });
