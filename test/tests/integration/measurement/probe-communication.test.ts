@@ -97,7 +97,7 @@ describe('Create measurement request', function () {
 		expect(requestHandlerStub.firstCall.args[0]).to.deep.equal({
 			measurementId: 'measurementid',
 			testId: 'testid',
-			measurement: { packets: 4, type: 'ping', target: 'jsdelivr.com' },
+			measurement: { packets: 4, type: 'ping', target: 'jsdelivr.com', inProgressUpdates: false },
 		});
 
 		await requestAgent.get(`/v1/measurements/measurementid`).send()

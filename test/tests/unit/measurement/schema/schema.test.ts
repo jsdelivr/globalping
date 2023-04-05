@@ -2,15 +2,15 @@ import { expect } from 'chai';
 import Joi from 'joi';
 import {
 	schema as globalSchema,
-} from '../../../../src/measurement/schema/global-schema.js';
+} from '../../../../../src/measurement/schema/global-schema.js';
 import {
 	schema as locationSchema,
-} from '../../../../src/measurement/schema/location-schema.js';
+} from '../../../../../src/measurement/schema/location-schema.js';
 import {
 	joiValidateTarget,
 	joiValidateDomain,
-} from '../../../../src/measurement/schema/utils.js';
-import { populateDomainList, populateIpList } from '../../../utils/populate-static-files.js';
+} from '../../../../../src/measurement/schema/utils.js';
+import { populateDomainList, populateIpList } from '../../../../utils/populate-static-files.js';
 
 describe('command schema', async () => {
 	before(async () => {
@@ -458,6 +458,7 @@ describe('command schema', async () => {
 
 			const desiredOutput = {
 				...input,
+				inProgressUpdates: false,
 				locations: [],
 				limit: 1,
 			};
@@ -477,6 +478,7 @@ describe('command schema', async () => {
 			const desiredOutput = {
 				...input,
 				locations: [],
+				inProgressUpdates: false,
 				measurementOptions: {
 					packets: 3,
 				},
@@ -611,6 +613,7 @@ describe('command schema', async () => {
 
 			const desiredOutput = {
 				...input,
+				inProgressUpdates: false,
 				limit: 1,
 				locations: [],
 			};
@@ -630,6 +633,7 @@ describe('command schema', async () => {
 			const desiredOutput = {
 				...input,
 				limit: 1,
+				inProgressUpdates: false,
 				locations: [],
 				measurementOptions: {
 					protocol: 'ICMP',
@@ -810,6 +814,7 @@ describe('command schema', async () => {
 
 			const desiredOutput = {
 				...input,
+				inProgressUpdates: false,
 				limit: 1,
 				locations: [],
 			};
@@ -828,6 +833,7 @@ describe('command schema', async () => {
 
 			const desiredOutput = {
 				...input,
+				inProgressUpdates: false,
 				limit: 1,
 				locations: [],
 				measurementOptions: {
@@ -1041,6 +1047,7 @@ describe('command schema', async () => {
 
 			const desiredOutput = {
 				...input,
+				inProgressUpdates: false,
 				limit: 1,
 				locations: [],
 			};
@@ -1059,6 +1066,7 @@ describe('command schema', async () => {
 
 			const desiredOutput = {
 				...input,
+				inProgressUpdates: false,
 				limit: 1,
 				locations: [],
 				measurementOptions: {
@@ -1247,6 +1255,7 @@ describe('command schema', async () => {
 			const desiredOutput = {
 				type: 'http',
 				target: 'elocast.com',
+				inProgressUpdates: false,
 				measurementOptions: {
 					protocol: 'https',
 					request: {
@@ -1287,6 +1296,7 @@ describe('command schema', async () => {
 			const desiredOutput = {
 				type: 'http',
 				target: 'elocast.com',
+				inProgressUpdates: false,
 				measurementOptions: {
 					protocol: 'https',
 					port: 443,
@@ -1317,6 +1327,7 @@ describe('command schema', async () => {
 			const desiredOutput = {
 				type: 'http',
 				target: 'elocast.com',
+				inProgressUpdates: false,
 				measurementOptions: {
 					protocol: 'https',
 					request: {

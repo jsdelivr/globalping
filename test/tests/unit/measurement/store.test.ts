@@ -2,6 +2,23 @@ import * as td from 'testdouble';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { type MeasurementStore } from '../../../../src/measurement/store.js';
+import { Probe } from '../../../../src/probe/types.js';
+
+const getProbe = id => ({
+	location: {
+		network: id,
+		continent: 'continent',
+		region: 'region',
+		country: 'country',
+		state: 'state',
+		city: 'city',
+		asn: 'asn',
+		longitude: 'longitude',
+		latitude: 'latitude',
+	},
+	tags: [],
+	resolvers: [],
+} as unknown as Probe);
 
 describe('measurement store', () => {
 	let getMeasurementStore: () => MeasurementStore;
@@ -10,36 +27,17 @@ describe('measurement store', () => {
 	const redisMock = {
 		hScan: sinon.stub(),
 		hDel: sinon.stub(),
+		hSet: sinon.stub(),
+		set: sinon.stub(),
+		expire: sinon.stub(),
 		json: {
 			mGet: sinon.stub(),
 			set: sinon.stub(),
 		},
 	};
-	redisMock.hScan.resolves({ cursor: 0, tuples: [
-		{ field: 'id1', value: '1677510747483' }, // Timed out measurement
-		{ field: 'id2', value: '1677510747483' }, // Non-existing measurement
-		{ field: 'id3', value: '2677510747483' }, // Not timed out measurement
-	] });
-
-	redisMock.json.mGet.resolves([{
-		id: 'id1',
-		type: 'ping',
-		status: 'in-progress',
-		createdAt: 1_677_510_747_483,
-		updatedAt: 1_677_510_747_483,
-		probesCount: 1,
-		results: {
-			measurementId1: {
-				probe: {},
-				result: {
-					status: 'in-progress',
-					rawOutput: '',
-				},
-			},
-		},
-	}]);
 
 	before(async () => {
+		td.replaceEsm('crypto-random-string', null, () => 'measurementid');
 		await td.replaceEsm('../../../../src/lib/redis/client.ts', { getRedisClient: () => redisMock });
 		getMeasurementStore = (await import('../../../../src/measurement/store.js')).getMeasurementStore;
 	});
@@ -47,6 +45,13 @@ describe('measurement store', () => {
 	beforeEach(() => {
 		sandbox = sinon.createSandbox({ useFakeTimers: { now: 1_678_000_000_000 } });
 		sandbox.stub(Math, 'random').returns(0.8);
+		redisMock.hScan.reset();
+		redisMock.hDel.reset();
+		redisMock.hSet.reset();
+		redisMock.set.reset();
+		redisMock.expire.reset();
+		redisMock.json.mGet.reset();
+		redisMock.json.set.reset();
 	});
 
 	afterEach(() => {
@@ -58,7 +63,32 @@ describe('measurement store', () => {
 	});
 
 	it('should call proper redis methods during timeout checks', async () => {
+		redisMock.hScan.resolves({ cursor: 0, tuples: [
+			{ field: 'id1', value: '1677510747483' }, // Timed out measurement
+			{ field: 'id2', value: '1677510747483' }, // Non-existing measurement
+			{ field: 'id3', value: '2677510747483' }, // Not timed out measurement
+		] });
+
+		redisMock.json.mGet.resolves([{
+			id: 'id1',
+			type: 'ping',
+			status: 'in-progress',
+			createdAt: 1_677_510_747_483,
+			updatedAt: 1_677_510_747_483,
+			probesCount: 1,
+			results: {
+				measurementId1: {
+					probe: {},
+					result: {
+						status: 'in-progress',
+						rawOutput: '',
+					},
+				},
+			},
+		}]);
+
 		getMeasurementStore();
+
 		await sandbox.clock.tickAsync(16_000);
 
 		expect(redisMock.hScan.callCount).to.equal(1);
@@ -86,5 +116,99 @@ describe('measurement store', () => {
 				},
 			},
 		}]);
+	});
+
+	it('should store measurement probes in the same order as in arguments', async () => {
+		const store = getMeasurementStore();
+		store.createMeasurement('ping', new Map([
+			[ 'z', getProbe('z') ],
+			[ '10', getProbe('10') ],
+			[ 'x', getProbe('x') ],
+			[ '0', getProbe('0') ],
+		]));
+
+		expect(redisMock.hSet.callCount).to.equal(1);
+		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', 'measurementid', 1678000000000 ]);
+		expect(redisMock.set.callCount).to.equal(1);
+		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid:probes_awaiting', 4, { EX: 35 }]);
+		expect(redisMock.json.set.callCount).to.equal(1);
+
+		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid', '$', {
+			id: 'measurementid',
+			type: 'ping',
+			status: 'in-progress',
+			createdAt: 1678000000000,
+			updatedAt: 1678000000000,
+			probesCount: 4,
+			results: {
+				z: {
+					probe: {
+						continent: 'continent',
+						region: 'region',
+						country: 'country',
+						state: 'state',
+						city: 'city',
+						asn: 'asn',
+						longitude: 'longitude',
+						latitude: 'latitude',
+						network: 'z',
+						tags: [],
+						resolvers: [],
+					},
+					result: { status: 'in-progress', rawOutput: '' },
+				},
+				10: {
+					probe: {
+						continent: 'continent',
+						region: 'region',
+						country: 'country',
+						state: 'state',
+						city: 'city',
+						asn: 'asn',
+						longitude: 'longitude',
+						latitude: 'latitude',
+						network: '10',
+						tags: [],
+						resolvers: [],
+					},
+					result: { status: 'in-progress', rawOutput: '' },
+				},
+				x: {
+					probe: {
+						continent: 'continent',
+						region: 'region',
+						country: 'country',
+						state: 'state',
+						city: 'city',
+						asn: 'asn',
+						longitude: 'longitude',
+						latitude: 'latitude',
+						network: 'x',
+						tags: [],
+						resolvers: [],
+					},
+					result: { status: 'in-progress', rawOutput: '' },
+				},
+				0: {
+					probe: {
+						continent: 'continent',
+						region: 'region',
+						country: 'country',
+						state: 'state',
+						city: 'city',
+						asn: 'asn',
+						longitude: 'longitude',
+						latitude: 'latitude',
+						network: '0',
+						tags: [],
+						resolvers: [],
+					},
+					result: { status: 'in-progress', rawOutput: '' },
+				},
+			},
+		}]);
+
+		expect(redisMock.expire.callCount).to.equal(1);
+		expect(redisMock.expire.args[0]).to.deep.equal([ 'gp:measurement:measurementid', 604800 ]);
 	});
 });
