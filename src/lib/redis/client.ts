@@ -9,7 +9,7 @@ import {
 } from 'redis';
 import { scopedLogger } from '../logger.js';
 
-const logger = scopedLogger('redis');
+const logger = scopedLogger('redis-client');
 
 export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts>;
 
