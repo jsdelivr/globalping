@@ -1,9 +1,9 @@
-import { PROBES_NAMESPACE, type WsServer } from '../server.js';
+import { fetchSockets } from '../server.js';
 
 const TIME_TO_RECONNECT_PROBES = 60_000;
 
-export const reconnectProbes = async (io: WsServer) => {
-	const sockets = await io.of(PROBES_NAMESPACE).fetchSockets();
+export const reconnectProbes = async () => {
+	const sockets = await fetchSockets();
 
 	for (const socket of sockets) {
 		setTimeout(() => socket.disconnect(), Math.random() * TIME_TO_RECONNECT_PROBES);

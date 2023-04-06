@@ -17,6 +17,10 @@ describe('index file', () => {
 		cluster.fork.reset();
 	});
 
+	after(() => {
+		td.reset();
+	});
+
 	it('master should fork a worker for each physical CPU', async () => {
 		await import('../../../src/index.js');
 
