@@ -45,6 +45,25 @@ Global limit controls the maximum number of tests the server will perform and do
     "limit": 5
 ```
 
+### inProgressUpdates
+
+Specifies if the results of the measurement should be updated while being in progress.
+
+By default results of the tests are populated to the measurement object only after the finish of the test. For more interactive applications that want to present real-time `rawOutput` updates to the user (e.g. [globalping-cli](https://github.com/jsdelivr/globalping-cli)) `inProgressUpdates` can be enabled. Note that only the top 5 tests from the `results` array will be update in real-time.
+
+**key**: `inProgressUpdates`
+
+**default**: `false`
+
+**required**: `false`
+
+**rules**:
+- typeof `boolean`
+
+```json
+    "inProgressUpdates": true
+```
+
 ### locations
 
 Specifies a list of desired locations from which tests should be run. The server distributes probes based on its preconfigured geo-weight algorithm if none is provided.

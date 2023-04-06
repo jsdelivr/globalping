@@ -10,4 +10,7 @@ module.exports = {
 	ws: {
 		fetchSocketsCacheTTL: 0,
 	},
+	measurement: {
+		maxInProgressProbes: 2,
+	},
 };

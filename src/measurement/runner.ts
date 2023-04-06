@@ -1,3 +1,4 @@
+import config from 'config';
 import type { Server } from 'socket.io';
 import createHttpError from 'http-errors';
 import cryptoRandomString from 'crypto-random-string';
@@ -10,8 +11,6 @@ import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementKey, getMeasurementStore } from './store.js';
 import type {
-	NetworkTest,
-	MeasurementConfig,
 	MeasurementRequest,
 	MeasurementResultMessage,
 	MeasurementRecord,
@@ -28,30 +27,24 @@ export class MeasurementRunner {
 
 	async run (request: MeasurementRequest): Promise<{measurementId: string; probesCount: number;}> {
 		const probesArray = await this.router.findMatchingProbes(request.locations, request.limit);
-		const probesCount = probesArray.length;
 
-		if (probesCount === 0) {
+		if (probesArray.length === 0) {
 			throw createHttpError(422, 'No suitable probes found', { type: 'no_probes_found' });
 		}
 
-		const probes: Record<string, Probe> = {};
-		probesArray.forEach((probe) => {
+		const probes = new Map<string, Probe>();
+
+		for (const probe of probesArray) {
 			const testId = cryptoRandomString({ length: 16, type: 'alphanumeric' });
-			probes[testId] = probe;
-		});
+			probes.set(testId, probe);
+		}
 
-		const measurement: NetworkTest = {
-			...request.measurementOptions,
-			type: request.type,
-			target: request.target,
-		};
+		const measurementId = await this.store.createMeasurement(request.type, probes);
 
-		const measurementId = await this.store.createMeasurement(measurement, probes, probesCount);
-
-		this.sendToProbes({ measurementId, probes, measurementOptions: measurement });
+		this.sendToProbes(measurementId, probes, request);
 		this.metrics.recordMeasurement(request.type);
 
-		return { measurementId, probesCount };
+		return { measurementId, probesCount: probes.size };
 	}
 
 	async recordProgress (data: MeasurementResultMessage): Promise<void> {
@@ -77,14 +70,22 @@ export class MeasurementRunner {
 		}
 	}
 
-	private sendToProbes (measurementConfig: MeasurementConfig) {
-		for (const [ testId, probe ] of Object.entries(measurementConfig.probes)) {
+	private sendToProbes (measurementId: string, probes: Map<string, Probe>, request: MeasurementRequest) {
+		let inProgressProbes = 0;
+		const maxInProgressProbes = config.get<number>('measurement.maxInProgressProbes');
+		probes.forEach((probe, testId) => {
+			const inProgressUpdates = request.inProgressUpdates && inProgressProbes++ < maxInProgressProbes;
 			this.io.of('probes').to(probe.client).emit('probe:measurement:request', {
-				measurementId: measurementConfig.measurementId,
+				measurementId,
 				testId,
-				measurement: measurementConfig.measurementOptions,
+				measurement: {
+					...request.measurementOptions,
+					type: request.type,
+					target: request.target,
+					inProgressUpdates,
+				},
 			});
-		}
+		});
 	}
 }
 

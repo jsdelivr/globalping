@@ -1,4 +1,3 @@
-import type { Probe } from '../probe/types.js';
 import type { Location } from '../lib/location/types.js';
 
 /**
@@ -153,7 +152,6 @@ type HttpResult = TestResult & {
 export type RequestType = 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 
 export type MeasurementOptions = PingTest | TracerouteTest | MtrTest | DnsTest | HttpTest;
-export type NetworkTest = MeasurementOptions & {type: RequestType; target: string};
 export type LocationWithLimit = Location & {limit?: number};
 
 /**
@@ -165,15 +163,10 @@ type MeasurementStatus = 'in-progress' | 'finished';
 export type MeasurementRequest = {
 	type: 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 	target: string;
-	measurementOptions: NetworkTest;
+	measurementOptions: MeasurementOptions;
 	locations: LocationWithLimit[];
 	limit: number;
-};
-
-export type MeasurementConfig = {
-	measurementId: string;
-	measurementOptions: MeasurementOptions;
-	probes: Record<string, Probe>;
+	inProgressUpdates: boolean;
 };
 
 export type MeasurementResult = {

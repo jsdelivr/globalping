@@ -1,286 +1,288 @@
+/* eslint-disable no-unused-vars, no-undef */
 const app = () => ({
-  data() {
-    return {
-      query: {
-        type: 'ping',
-        locations: [],
-        target: 'google.com',
-        limit: 1,
-        combineFilters: false,
-        query: {},
-        request: {}
-      },
-      response: {
-        data: null,
-        error: null
-      },
-      selectedResultIndex: null,
-      measurementId: null,
-    };
-  },
-  watch: {
-    measurementId(nId, oId) {
-      // prevent loop on empty value
-      if (nId) {
-        clearInterval(this.resultInterval);
-        this.resultInterval = setInterval(this.fetchMeasurement.bind(this), 500);
-      }
-    },
-    'response.data.results'() {
-      if (!this.selectedResultIndex || this.selectedResultIndex > 0) {
-        this.selectedResultIndex = 0;
-      }
-    },
-    'response.data.status'(status) {
-      if (status === 'finished') {
-        clearInterval(this.resultInterval);
-      }
-    }
-  },
-  computed: {
-    responseParams() {
-      if (!this.response.error || !this.response.error.error.params) {
-        return '';
-      }
+	data () {
+		return {
+			query: {
+				type: 'ping',
+				locations: [],
+				target: 'google.com',
+				limit: 1,
+				combineFilters: false,
+				query: {},
+				request: {},
+			},
+			response: {
+				data: null,
+				error: null,
+			},
+			selectedResultIndex: null,
+			measurementId: null,
+		};
+	},
+	watch: {
+		measurementId (nId, oId) {
+			// prevent loop on empty value
+			if (nId) {
+				clearInterval(this.resultInterval);
+				this.resultInterval = setInterval(this.fetchMeasurement.bind(this), 500);
+			}
+		},
+		'response.data.results' () {
+			if (!this.selectedResultIndex || this.selectedResultIndex > 0) {
+				this.selectedResultIndex = 0;
+			}
+		},
+		'response.data.status' (status) {
+			if (status === 'finished') {
+				clearInterval(this.resultInterval);
+			}
+		},
+	},
+	computed: {
+		responseParams () {
+			if (!this.response.error || !this.response.error.error.params) {
+				return '';
+			}
 
-      const errList = Object.entries(this.response.error.error.params).map(([key, value]) => `[${key}] ${value}`);
-      return errList.join('<br>').trim();
-    },
-    responseRawOutput() {
-      const index = this.selectedResultIndex;
-      const output = this.response.data.results[index].result.rawOutput;
+			const errList = Object.entries(this.response.error.error.params).map(([ key, value ]) => `[${key}] ${value}`);
+			return errList.join('<br>').trim();
+		},
+		responseRawOutput () {
+			const index = this.selectedResultIndex;
+			const output = this.response.data.results[index].result.rawOutput;
 
-      if (!output) {
-        return null;
-      }
+			if (!output) {
+				return null;
+			}
 
-      return output.trim();
-    },
-    responseJSON() {
-      return JSON.stringify(this.response.data, 0, 2).trim();
-    }
-  },
-  methods: {
-    getHttpMethodArray() {
-      return ALLOWED_HTTP_METHODS;
-    },
-    getHttpProtocolArray() {
-      return ALLOWED_HTTP_PROTOCOLS;
-    },
-    getDnsTypeArray() {
-      return ALLOWED_DNS_TYPES;
-    },
-    getDnsProtocolArray() {
-      return ALLOWED_DNS_PROTOCOLS;
-    },
-    getTraceProtocolArray() {
-      return ALLOWED_TRACE_PROTOCOLS;
-    },
-    getMtrProtocolArray() {
-      return ALLOWED_MTR_PROTOCOLS;
-    },
-    getQueryTypeArray() {
-      return ALLOWED_QUERY_TYPES;
-    },
-    getLocationTypeArray() {
-      return ALLOWED_LOCATION_TYPES;
-    },
-    submitPostMeasurement(e) {
-      e.preventDefault();
-      this.response = {};
-      this.buildAndPostMeasurement();
-    },
-    buildAndPostMeasurement() {
-      const measurement = {
-        type: this.query.type,
-        target: this.query.target
-      };
+			return output.trim();
+		},
+		responseJSON () {
+			return JSON.stringify(this.response.data, 0, 2).trim();
+		},
+	},
+	methods: {
+		getHttpMethodArray () {
+			return ALLOWED_HTTP_METHODS;
+		},
+		getHttpProtocolArray () {
+			return ALLOWED_HTTP_PROTOCOLS;
+		},
+		getDnsTypeArray () {
+			return ALLOWED_DNS_TYPES;
+		},
+		getDnsProtocolArray () {
+			return ALLOWED_DNS_PROTOCOLS;
+		},
+		getTraceProtocolArray () {
+			return ALLOWED_TRACE_PROTOCOLS;
+		},
+		getMtrProtocolArray () {
+			return ALLOWED_MTR_PROTOCOLS;
+		},
+		getQueryTypeArray () {
+			return ALLOWED_QUERY_TYPES;
+		},
+		getLocationTypeArray () {
+			return ALLOWED_LOCATION_TYPES;
+		},
+		submitPostMeasurement (e) {
+			e.preventDefault();
+			this.response = {};
+			this.buildAndPostMeasurement();
+		},
+		buildAndPostMeasurement () {
+			const measurement = {
+				type: this.query.type,
+				target: this.query.target,
+			};
 
-      if (this.query.type === 'ping' && this.query.packets) {
-        measurement.packets = this.query.packets;
-      }
+			if (this.query.type === 'ping' && this.query.packets) {
+				measurement.packets = this.query.packets;
+			}
 
-      if (this.query.type === 'mtr') {
-        if (this.query.packets) {
-          measurement.packets = this.query.packets;
-        }
+			if (this.query.type === 'mtr') {
+				if (this.query.packets) {
+					measurement.packets = this.query.packets;
+				}
 
-        if (this.query.port) {
-          measurement.port = this.query.port;
-        }
+				if (this.query.port) {
+					measurement.port = this.query.port;
+				}
 
-        if (this.query.protocol) {
-          measurement.protocol = this.query.protocol;
-        }
-      }
+				if (this.query.protocol) {
+					measurement.protocol = this.query.protocol;
+				}
+			}
 
-      if (this.query.type === 'traceroute') {
-        if (this.query.protocol) {
-          measurement.protocol = this.query.protocol;
-        }
+			if (this.query.type === 'traceroute') {
+				if (this.query.protocol) {
+					measurement.protocol = this.query.protocol;
+				}
 
-        if (this.query.port) {
-          measurement.port = this.query.port;
-        }
-      }
+				if (this.query.port) {
+					measurement.port = this.query.port;
+				}
+			}
 
-      if (this.query.type === 'dns') {
-        const query = {};
+			if (this.query.type === 'dns') {
+				const query = {};
 
-        if (this.query.query.type) {
-          query.type = this.query.query.type;
-        }
+				if (this.query.query.type) {
+					query.type = this.query.query.type;
+				}
 
-        if (this.query.protocol) {
-          measurement.protocol = this.query.protocol;
-        }
+				if (this.query.protocol) {
+					measurement.protocol = this.query.protocol;
+				}
 
 
-        if (this.query.port) {
-          measurement.port = this.query.port;
-        }
+				if (this.query.port) {
+					measurement.port = this.query.port;
+				}
 
-        if (this.query.resolver) {
-          measurement.resolver = this.query.resolver;
-        }
+				if (this.query.resolver) {
+					measurement.resolver = this.query.resolver;
+				}
 
-        if (this.query.trace) {
-          measurement.trace = !!this.query.trace;
-        }
+				if (this.query.trace) {
+					measurement.trace = !!this.query.trace;
+				}
 
-        if (Object.keys(query).length > 0) {
-          measurement.query = query;
-        }
-      }
+				if (Object.keys(query).length > 0) {
+					measurement.query = query;
+				}
+			}
 
-      if (this.query.type === 'http') {
-        measurement.protocol = this.query.protocol;
-        measurement.port = this.query.port;
-        measurement.resolver = this.query.resolver;
+			if (this.query.type === 'http') {
+				measurement.protocol = this.query.protocol;
+				measurement.port = this.query.port;
+				measurement.resolver = this.query.resolver;
 
-        const request = {
-          method: this.query.request.method,
-          path: this.query.request.path,
-          query: this.query.request.query,
-          host: this.query.request.host,
-        };
+				const request = {
+					method: this.query.request.method,
+					path: this.query.request.path,
+					query: this.query.request.query,
+					host: this.query.request.host,
+				};
 
-        if (this.query.request.headers) {
-          request.headers = Object.fromEntries(this.query.request.headers.map(h => [h.title, h.value]));
-        }
+				if (this.query.request.headers) {
+					request.headers = Object.fromEntries(this.query.request.headers.map(h => [ h.title, h.value ]));
+				}
 
-        measurement.request = Object.fromEntries(Object.entries(request).filter(entry => entry[1]))
-      }
+				measurement.request = Object.fromEntries(Object.entries(request).filter(entry => entry[1]));
+			}
 
-      const locations = this.query.locations.map(({ limit, fields }) => ({
-        fields: fields.map(field => ({
-          ...field,
-          value: field.type === 'tags' ? field.value.split(',') : field.value
-        })),
-        ...(limit ? { limit } : {})
-      }))
+			const locations = this.query.locations.map(({ limit, fields }) => ({
+				fields: fields.map(field => ({
+					...field,
+					value: field.type === 'tags' ? field.value.split(',') : field.value,
+				})),
+				...(limit ? { limit } : {}),
+			}));
 
-      this.postMeasurement(this.query.limit, measurement, locations, this.query.combineFilters);
-    },
-    addNewHttpHeader(e) {
-      e.preventDefault();
+			this.postMeasurement(this.query.limit, measurement, locations, this.query.combineFilters);
+		},
+		addNewHttpHeader (e) {
+			e.preventDefault();
 
-      if (!this.query.request.headers) {
-        this.query.request.headers = []
-      }
+			if (!this.query.request.headers) {
+				this.query.request.headers = [];
+			}
 
-      const header = { id: Date.now(), title: '', value: '' };
-      this.query.request.headers.push(header);
-    },
-    addNewLocation(e) {
-      e.preventDefault();
+			const header = { id: Date.now(), title: '', value: '' };
+			this.query.request.headers.push(header);
+		},
+		addNewLocation (e) {
+			e.preventDefault();
 
-      const loc = {
-        id: Date.now(),
-        limit: 1,
-        fields: [{
-          id: Date.now(),
-          type: '',
-          value: ''
-        }]
-      };
-      this.query.locations.push(loc);
-    },
-    removeLocation(e) {
-      e.preventDefault();
+			const loc = {
+				id: Date.now(),
+				limit: 1,
+				fields: [{
+					id: Date.now(),
+					type: '',
+					value: '',
+				}],
+			};
+			this.query.locations.push(loc);
+		},
+		removeLocation (e) {
+			e.preventDefault();
 
-      const index = +e.target.value;
+			const index = Number(e.target.value);
 
-      this.query.locations = [
-        ...this.query.locations.slice(0, index),
-        ...this.query.locations.slice(index + 1)
-      ];
-    },
-    addLocationField(e) {
-      e.preventDefault();
+			this.query.locations = [
+				...this.query.locations.slice(0, index),
+				...this.query.locations.slice(index + 1),
+			];
+		},
+		addLocationField (e) {
+			e.preventDefault();
 
-      const index = +e.target.value;
-      this.query.locations[index].fields.push({ id: Date.now(), type: '', value: '' })
-    },
-    async postMeasurement(limit = 1, measurement = {}, locations = [], combineFilters) {
-      const url = '/v1/measurements';
+			const index = Number(e.target.value);
+			this.query.locations[index].fields.push({ id: Date.now(), type: '', value: '' });
+		},
+		async postMeasurement (limit = 1, measurement = {}, locations = [], combineFilters) {
+			const url = '/v1/measurements';
 
-      const { type, target, ...measurementOptions} = measurement;
+			const { type, target, ...measurementOptions } = measurement;
 
-      const body = {
-        type,
-        target,
-        measurementOptions,
-        locations: locations.map(l => ({
-          ...Object.fromEntries(l.fields.map(f => [f.type, f.value])),
-          limit: l.limit
-        }))
-      };
+			const body = {
+				type,
+				target,
+				measurementOptions,
+				locations: locations.map(l => ({
+					...Object.fromEntries(l.fields.map(f => [ f.type, f.value ])),
+					limit: l.limit,
+				})),
+				inProgressUpdates: true,
+			};
 
-      if (!locations.find(l => l.limit)) {
-        body.limit = limit;
-      }
+			if (!locations.find(l => l.limit)) {
+				body.limit = limit;
+			}
 
-      const response = await fetch(url, {
-        method: 'post',
-        body: JSON.stringify(body),
-        headers: {
-          'content-type': 'application/json'
-        }
-      });
+			const response = await fetch(url, {
+				method: 'post',
+				body: JSON.stringify(body),
+				headers: {
+					'content-type': 'application/json',
+				},
+			});
 
-      if (response.ok) {
-        const data = await response.json();
-        this.measurementId = data.id;
-      } else {
-        const error = await response.json();
+			if (response.ok) {
+				const data = await response.json();
+				this.measurementId = data.id;
+			} else {
+				const error = await response.json();
 
-        this.response = {
-          error
-        };
-      }
-    },
-    async fetchMeasurement() {
-      const url = `/v1/measurements/${this.measurementId}`;
+				this.response = {
+					error,
+				};
+			}
+		},
+		async fetchMeasurement () {
+			const url = `/v1/measurements/${this.measurementId}`;
 
-      const response = await fetch(url);
+			const response = await fetch(url);
 
-      if (response.ok) {
-        const data = await response.json();
+			if (response.ok) {
+				const data = await response.json();
 
-        this.response = {
-          data
-        };
-      } else {
-        const error = await response.json();
+				this.response = {
+					data,
+				};
+			} else {
+				const error = await response.json();
 
-        this.response = {
-          error
-        };
-      }
-    }
-  },
-  template: `
+				this.response = {
+					error,
+				};
+			}
+		},
+	},
+	template: `
     <div class="row">
       <h2>
         query
@@ -308,7 +310,7 @@ const app = () => ({
         <div class="form-group row">
           <label for="query_filter_combine" class="col-sm-2 col-form-label">combine filters</label>
           <div class="col-sm-10">
-            <input type="checkbox" v-model="query.combineFilters" >
+            <input type="checkbox" v-model="query.combineFilters" />
           </div>
         </div>
         <div class="form-group row">
@@ -519,7 +521,7 @@ const app = () => ({
       <pre v-if="response.data" class="bg-light"><code>{{ responseRawOutput }}</code></pre>
       <pre v-if="response.data" class="bg-light"><code>{{ responseJSON }}</code></pre>
     </div>
-  `
+  `,
 });
 
 Vue.createApp(app()).mount('#app');

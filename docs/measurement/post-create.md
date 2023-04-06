@@ -24,6 +24,7 @@ below is presented a schema containing all possible input values; some are gener
     locations: Locations[]
     type: string
     target: string
+    inProgressUpdates?: boolean
     measurementOptions: {
         query?: {
             type?: string
