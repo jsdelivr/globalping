@@ -46,7 +46,7 @@ export const initWsServer = async () => {
 	);
 
 	setTimeout(() => {
-		reconnectProbes(io).catch(error => logger.error(error));
+		reconnectProbes().catch(error => logger.error(error));
 	}, TIME_UNTIL_VM_BECOMES_HEALTHY);
 };
 

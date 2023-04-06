@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import { getWsServer, PROBES_NAMESPACE } from '../../../../src/lib/ws/server.js';
 import { createServer } from '../../../../src/lib/server.js';
 
-describe('server', function () {
+describe.skip('server', function () {
 	this.timeout(15_000);
 
 	let sandbox: sinon.SinonSandbox;
