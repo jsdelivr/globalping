@@ -4,6 +4,9 @@
 
 **API prefix**: `/v1`
 
+If you are implementing an application interacting with the API, please also see the
+[client guidelines](CLIENT_GUIDELINES.md).
+
 ## Open Endpoints
 
 Open endpoints require no Authentication.
