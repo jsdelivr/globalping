@@ -20,7 +20,7 @@ describe('Create measurement request', function () {
 
 	const locationHandlerStub = sinon.stub();
 	const requestHandlerStub = sinon.stub();
-	const cryptoRandomString = sinon.stub();
+	const cryptoRandomString = sinon.stub().returns('measurementid');
 
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
@@ -40,10 +40,6 @@ describe('Create measurement request', function () {
 			'api:connect:location': locationHandlerStub,
 			'probe:measurement:request': requestHandlerStub,
 		});
-
-		cryptoRandomString.reset();
-		cryptoRandomString.onFirstCall().returns('testid');
-		cryptoRandomString.onSecondCall().returns('measurementid');
 	});
 
 	afterEach(async () => {
@@ -96,12 +92,14 @@ describe('Create measurement request', function () {
 
 		expect(requestHandlerStub.firstCall.args[0]).to.deep.equal({
 			measurementId: 'measurementid',
-			testId: 'testid',
+			testId: '0',
 			measurement: { packets: 4, type: 'ping', target: 'jsdelivr.com', inProgressUpdates: false },
 		});
 
 		await requestAgent.get(`/v1/measurements/measurementid`).send()
 			.expect(200).expect((response) => {
+				expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
+
 				expect(response.body).to.deep.include({
 					id: 'measurementid',
 					type: 'ping',
@@ -131,7 +129,7 @@ describe('Create measurement request', function () {
 		probe.emit('probe:measurement:ack');
 
 		probe.emit('probe:measurement:progress', {
-			testId: 'testid',
+			testId: '0',
 			measurementId: 'measurementid',
 			result: {
 				rawOutput: 'abc',
@@ -167,7 +165,7 @@ describe('Create measurement request', function () {
 			});
 
 		probe.emit('probe:measurement:progress', {
-			testId: 'testid',
+			testId: '0',
 			measurementId: 'measurementid',
 			result: {
 				rawOutput: 'def',
@@ -203,7 +201,7 @@ describe('Create measurement request', function () {
 			});
 
 		probe.emit('probe:measurement:result', {
-			testId: 'testid',
+			testId: '0',
 			measurementId: 'measurementid',
 			result: {
 				status: 'finished',

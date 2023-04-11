@@ -19,7 +19,7 @@ describe('Timeout results', function () {
 	let requestAgent: SuperTest<Test>;
 	let sandbox: sinon.SinonSandbox;
 
-	const cryptoRandomString = sinon.stub();
+	const cryptoRandomString = sinon.stub().returns('measurementid');
 
 	before(async () => {
 		sandbox = sinon.createSandbox({ useFakeTimers: true });
@@ -36,10 +36,6 @@ describe('Timeout results', function () {
 		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['01.00'].fastly);
 		nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
 		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['01.00'].maxmind);
-
-		cryptoRandomString.reset();
-		cryptoRandomString.onFirstCall().returns('testid');
-		cryptoRandomString.onSecondCall().returns('measurementid');
 
 		probe = await addFakeProbe();
 	});

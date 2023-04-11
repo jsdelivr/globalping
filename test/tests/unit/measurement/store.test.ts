@@ -76,15 +76,13 @@ describe('measurement store', () => {
 			createdAt: 1_677_510_747_483,
 			updatedAt: 1_677_510_747_483,
 			probesCount: 1,
-			results: {
-				measurementId1: {
-					probe: {},
-					result: {
-						status: 'in-progress',
-						rawOutput: '',
-					},
+			results: [{
+				probe: {},
+				result: {
+					status: 'in-progress',
+					rawOutput: '',
 				},
-			},
+			}],
 		}]);
 
 		getMeasurementStore();
@@ -104,28 +102,21 @@ describe('measurement store', () => {
 			type: 'ping',
 			status: 'finished',
 			createdAt: 1_677_510_747_483,
-			updatedAt: 1_678_000_012_000,
+			updatedAt: '2023-03-05T07:06:52.000Z',
 			probesCount: 1,
-			results: {
-				measurementId1: {
-					probe: {},
-					result: {
-						status: 'failed',
-						rawOutput: '\n\nThe measurement timed out',
-					},
+			results: [{
+				probe: {},
+				result: {
+					status: 'failed',
+					rawOutput: '\n\nThe measurement timed out',
 				},
-			},
+			}],
 		}]);
 	});
 
 	it('should store measurement probes in the same order as in arguments', async () => {
 		const store = getMeasurementStore();
-		store.createMeasurement('ping', new Map([
-			[ 'z', getProbe('z') ],
-			[ '10', getProbe('10') ],
-			[ 'x', getProbe('x') ],
-			[ '0', getProbe('0') ],
-		]));
+		store.createMeasurement('ping', [ getProbe('z'), getProbe('10'), getProbe('x'), getProbe('0') ]);
 
 		expect(redisMock.hSet.callCount).to.equal(1);
 		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', 'measurementid', 1678000000000 ]);
@@ -137,75 +128,73 @@ describe('measurement store', () => {
 			id: 'measurementid',
 			type: 'ping',
 			status: 'in-progress',
-			createdAt: 1678000000000,
-			updatedAt: 1678000000000,
+			createdAt: '2023-03-05T07:06:40.000Z',
+			updatedAt: '2023-03-05T07:06:40.000Z',
 			probesCount: 4,
-			results: {
-				z: {
-					probe: {
-						continent: 'continent',
-						region: 'region',
-						country: 'country',
-						state: 'state',
-						city: 'city',
-						asn: 'asn',
-						longitude: 'longitude',
-						latitude: 'latitude',
-						network: 'z',
-						tags: [],
-						resolvers: [],
-					},
-					result: { status: 'in-progress', rawOutput: '' },
+			results: [{
+				probe: {
+					continent: 'continent',
+					region: 'region',
+					country: 'country',
+					state: 'state',
+					city: 'city',
+					asn: 'asn',
+					longitude: 'longitude',
+					latitude: 'latitude',
+					network: 'z',
+					tags: [],
+					resolvers: [],
 				},
-				10: {
-					probe: {
-						continent: 'continent',
-						region: 'region',
-						country: 'country',
-						state: 'state',
-						city: 'city',
-						asn: 'asn',
-						longitude: 'longitude',
-						latitude: 'latitude',
-						network: '10',
-						tags: [],
-						resolvers: [],
-					},
-					result: { status: 'in-progress', rawOutput: '' },
-				},
-				x: {
-					probe: {
-						continent: 'continent',
-						region: 'region',
-						country: 'country',
-						state: 'state',
-						city: 'city',
-						asn: 'asn',
-						longitude: 'longitude',
-						latitude: 'latitude',
-						network: 'x',
-						tags: [],
-						resolvers: [],
-					},
-					result: { status: 'in-progress', rawOutput: '' },
-				},
-				0: {
-					probe: {
-						continent: 'continent',
-						region: 'region',
-						country: 'country',
-						state: 'state',
-						city: 'city',
-						asn: 'asn',
-						longitude: 'longitude',
-						latitude: 'latitude',
-						network: '0',
-						tags: [],
-						resolvers: [],
-					},
-					result: { status: 'in-progress', rawOutput: '' },
-				},
+				result: { status: 'in-progress', rawOutput: '' },
 			},
+			{
+				probe: {
+					continent: 'continent',
+					region: 'region',
+					country: 'country',
+					state: 'state',
+					city: 'city',
+					asn: 'asn',
+					longitude: 'longitude',
+					latitude: 'latitude',
+					network: '10',
+					tags: [],
+					resolvers: [],
+				},
+				result: { status: 'in-progress', rawOutput: '' },
+			},
+			{
+				probe: {
+					continent: 'continent',
+					region: 'region',
+					country: 'country',
+					state: 'state',
+					city: 'city',
+					asn: 'asn',
+					longitude: 'longitude',
+					latitude: 'latitude',
+					network: 'x',
+					tags: [],
+					resolvers: [],
+				},
+				result: { status: 'in-progress', rawOutput: '' },
+			},
+			{
+				probe: {
+					continent: 'continent',
+					region: 'region',
+					country: 'country',
+					state: 'state',
+					city: 'city',
+					asn: 'asn',
+					longitude: 'longitude',
+					latitude: 'latitude',
+					network: '0',
+					tags: [],
+					resolvers: [],
+				},
+				result: { status: 'in-progress', rawOutput: '' },
+			}],
 		}]);
 
 		expect(redisMock.expire.callCount).to.equal(1);
