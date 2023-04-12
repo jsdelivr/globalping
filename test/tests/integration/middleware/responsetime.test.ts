@@ -8,8 +8,7 @@ describe('response time', () => {
 	let app: Server;
 	let requestAgent: any;
 
-	before(async function () {
-		this.timeout(15_000);
+	before(async () => {
 		app = await getTestServer();
 		requestAgent = request(app);
 	});
