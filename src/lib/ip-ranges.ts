@@ -16,11 +16,11 @@ const ipV6Ranges = new Map<ParsedIpRange, string>();
 export const sources: Record<'gcp' | 'aws', Source> = {
 	gcp: {
 		url: 'https://www.gstatic.com/ipranges/cloud.json',
-		file: 'GCP_IP_RANGES.json',
+		file: 'data/GCP_IP_RANGES.json',
 	},
 	aws: {
 		url: 'https://ip-ranges.amazonaws.com/ip-ranges.json',
-		file: 'AWS_IP_RANGES.json',
+		file: 'data/AWS_IP_RANGES.json',
 	},
 };
 
