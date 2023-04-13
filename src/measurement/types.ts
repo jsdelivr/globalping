@@ -190,8 +190,8 @@ export type MeasurementRecord = {
 	id: string;
 	type: MeasurementRequest['type'];
 	status: MeasurementStatus;
-	createdAt: number;
-	updatedAt: number;
+	createdAt: string;
+	updatedAt: string;
 	probesCount: number;
 	results: Record<string, MeasurementResult>;
 };

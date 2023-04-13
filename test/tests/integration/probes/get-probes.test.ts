@@ -9,9 +9,7 @@ import RedisCacheMock from '../../../mocks/redis-cache.js';
 
 const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
-describe('Get Probes', function () {
-	this.timeout(15_000);
-
+describe('Get Probes', () => {
 	let addFakeProbe: () => Promise<Socket>;
 	let deleteFakeProbe: (Socket) => Promise<void>;
 	let requestAgent: SuperTest<Test>;

@@ -1,7 +1,6 @@
 import config from 'config';
 import type { Server } from 'socket.io';
 import createHttpError from 'http-errors';
-import cryptoRandomString from 'crypto-random-string';
 import { getWsServer } from '../lib/ws/server.js';
 import type { RedisClient } from '../lib/redis/client.js';
 import { getRedisClient } from '../lib/redis/client.js';
@@ -26,17 +25,10 @@ export class MeasurementRunner {
 	) {}
 
 	async run (request: MeasurementRequest): Promise<{measurementId: string; probesCount: number;}> {
-		const probesArray = await this.router.findMatchingProbes(request.locations, request.limit);
+		const probes = await this.router.findMatchingProbes(request.locations, request.limit);
 
-		if (probesArray.length === 0) {
+		if (probes.length === 0) {
 			throw createHttpError(422, 'No suitable probes found', { type: 'no_probes_found' });
-		}
-
-		const probes = new Map<string, Probe>();
-
-		for (const probe of probesArray) {
-			const testId = cryptoRandomString({ length: 16, type: 'alphanumeric' });
-			probes.set(testId, probe);
 		}
 
 		const measurementId = await this.store.createMeasurement(request.type, probes);
@@ -44,7 +36,7 @@ export class MeasurementRunner {
 		this.sendToProbes(measurementId, probes, request);
 		this.metrics.recordMeasurement(request.type);
 
-		return { measurementId, probesCount: probes.size };
+		return { measurementId, probesCount: probes.length };
 	}
 
 	async recordProgress (data: MeasurementResultMessage): Promise<void> {
@@ -70,14 +62,14 @@ export class MeasurementRunner {
 		}
 	}
 
-	private sendToProbes (measurementId: string, probes: Map<string, Probe>, request: MeasurementRequest) {
+	private sendToProbes (measurementId: string, probes: Probe[], request: MeasurementRequest) {
 		let inProgressProbes = 0;
 		const maxInProgressProbes = config.get<number>('measurement.maxInProgressProbes');
-		probes.forEach((probe, testId) => {
+		probes.forEach((probe, index) => {
 			const inProgressUpdates = request.inProgressUpdates && inProgressProbes++ < maxInProgressProbes;
 			this.io.of('probes').to(probe.client).emit('probe:measurement:request', {
 				measurementId,
-				testId,
+				testId: index.toString(),
 				measurement: {
 					...request.measurementOptions,
 					type: request.type,

@@ -11,8 +11,7 @@ describe('rate limiter', () => {
 	let clientIpv6: string;
 	let rateLimiterInstance: RateLimiterRedis;
 
-	before(async function () {
-		this.timeout(15_000);
+	before(async () => {
 		app = await getTestServer();
 		requestAgent = request(app);
 

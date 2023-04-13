@@ -19,17 +19,8 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		return;
 	}
 
-	ctx.set('last-modified', new Date(result.createdAt).toUTCString());
-
-	ctx.body = {
-		id: result.id,
-		type: result.type,
-		status: result.status,
-		createdAt: new Date(result.createdAt).toISOString(),
-		updatedAt: new Date(result.updatedAt).toISOString(),
-		probesCount: result.probesCount,
-		results: Object.values(result.results),
-	};
+	ctx.type = 'application/json';
+	ctx.body = result;
 };
 
 export const registerGetMeasurementRoute = (router: Router): void => {
