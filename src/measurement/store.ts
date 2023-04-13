@@ -21,28 +21,28 @@ export const getMeasurementKey = (id: string, suffix: 'probes_awaiting' | undefi
 export class MeasurementStore {
 	constructor (private readonly redis: RedisClient) {}
 
-	async getMeasurementResults (id: string): Promise<MeasurementRecord> {
-		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord;
+	async getMeasurementResults (id: string): Promise<string> {
+		return this.redis.sendCommand([ 'JSON.GET', getMeasurementKey(id) ]);
 	}
 
-	async createMeasurement (type: string, probes: Map<string, Probe>): Promise<string> {
+	async createMeasurement (type: string, probes: Probe[]): Promise<string> {
 		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
 
 		const results = this.probesToResults(probes);
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
-		const startTime = Date.now();
+		const startTime = new Date();
 
 		await Promise.all([
-			this.redis.hSet('gp:in-progress', id, startTime),
-			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.size, { EX: probesAwaitingTtl }),
+			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
+			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.length, { EX: probesAwaitingTtl }),
 			this.redis.json.set(key, '$', {
 				id,
 				type,
 				status: 'in-progress',
-				createdAt: startTime,
-				updatedAt: startTime,
-				probesCount: probes.size,
+				createdAt: startTime.toISOString(),
+				updatedAt: startTime.toISOString(),
+				probesCount: probes.length,
 				results,
 			}),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
@@ -56,10 +56,10 @@ export class MeasurementStore {
 
 		await Promise.all([
 			data.overwrite
-				? this.redis.json.set(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput)
-				: this.redis.json.strAppend(key, `$.results.${data.testId}.result.rawOutput`, data.result.rawOutput),
+				? this.redis.json.set(key, `$.results[${data.testId}].result.rawOutput`, data.result.rawOutput)
+				: this.redis.json.strAppend(key, `$.results[${data.testId}].result.rawOutput`, data.result.rawOutput),
 
-			this.redis.json.set(key, '$.updatedAt', Date.now()),
+			this.redis.json.set(key, '$.updatedAt', new Date().toISOString()),
 		]);
 	}
 
@@ -68,8 +68,8 @@ export class MeasurementStore {
 
 		const [ remainingProbes ] = await Promise.all([
 			this.redis.decr(`${key}:probes_awaiting`),
-			this.redis.json.set(key, `$.results.${data.testId}.result`, data.result),
-			this.redis.json.set(key, '$.updatedAt', Date.now()),
+			this.redis.json.set(key, `$.results[${data.testId}].result`, data.result),
+			this.redis.json.set(key, '$.updatedAt', new Date().toISOString()),
 		]);
 
 		return remainingProbes;
@@ -82,7 +82,7 @@ export class MeasurementStore {
 			this.redis.hDel('gp:in-progress', id),
 			this.redis.del(`${key}:probes_awaiting`),
 			this.redis.json.set(key, '$.status', 'finished'),
-			this.redis.json.set(key, '$.updatedAt', Date.now()),
+			this.redis.json.set(key, '$.updatedAt', new Date().toISOString()),
 		]);
 	}
 
@@ -98,7 +98,7 @@ export class MeasurementStore {
 
 		for (const measurement of existingMeasurements) {
 			measurement.status = 'finished';
-			measurement.updatedAt = Date.now();
+			measurement.updatedAt = new Date().toISOString();
 			const inProgressResults = Object.values(measurement.results).filter(resultObject => resultObject.result.status === 'in-progress');
 
 			for (const resultObject of inProgressResults) {
@@ -142,29 +142,26 @@ export class MeasurementStore {
 		}, intervalTime);
 	}
 
-	probesToResults (probes: Map<string, Probe>) {
-		const results: Record<string, MeasurementResult> = {};
-		probes.forEach((probe, testId) => {
-			results[testId] = {
-				probe: {
-					continent: probe.location.continent,
-					region: probe.location.region,
-					country: probe.location.country,
-					state: probe.location.state ?? null,
-					city: probe.location.city,
-					asn: probe.location.asn,
-					longitude: probe.location.longitude,
-					latitude: probe.location.latitude,
-					network: probe.location.network,
-					tags: probe.tags.map(({ value }) => value),
-					resolvers: probe.resolvers,
-				},
-				result: {
-					status: 'in-progress',
-					rawOutput: '',
-				},
-			} as MeasurementResult;
-		});
+	probesToResults (probes: Probe[]) {
+		const results = probes.map(probe => ({
+			probe: {
+				continent: probe.location.continent,
+				region: probe.location.region,
+				country: probe.location.country,
+				state: probe.location.state ?? null,
+				city: probe.location.city,
+				asn: probe.location.asn,
+				longitude: probe.location.longitude,
+				latitude: probe.location.latitude,
+				network: probe.location.network,
+				tags: probe.tags.map(({ value }) => value),
+				resolvers: probe.resolvers,
+			},
+			result: {
+				status: 'in-progress',
+				rawOutput: '',
+			},
+		} as MeasurementResult));
 
 		return results;
 	}

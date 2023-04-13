@@ -22,7 +22,7 @@ module.exports = {
 		apiKey: '',
 	},
 	ws: {
-		fetchSocketsCacheTTL: 200,
+		fetchSocketsCacheTTL: 1000,
 	},
 	measurement: {
 		maxInProgressProbes: 5,

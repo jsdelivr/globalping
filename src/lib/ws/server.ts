@@ -58,16 +58,12 @@ export const getWsServer = (): WsServer => {
 	return io;
 };
 
-export const fetchSockets = () => {
+export const fetchSockets = async () => {
 	if (!io || !throttledFetchSockets) {
 		throw new Error('WS server not initialized yet');
 	}
 
-	const sockets = throttledFetchSockets();
-
-	if (sockets === undefined) {
-		throw new Error('undefined, the debounced function was not invoked yet');
-	}
+	const sockets = await throttledFetchSockets();
 
 	return sockets;
 };

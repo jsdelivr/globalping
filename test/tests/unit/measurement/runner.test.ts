@@ -58,12 +58,7 @@ describe('MeasurementRunner', () => {
 		expect(router.findMatchingProbes.args[0]).to.deep.equal([ [], 10 ]);
 		expect(store.createMeasurement.callCount).to.equal(1);
 
-		expect(store.createMeasurement.args[0]).to.deep.equal([ 'ping', new Map([
-			[ 0, { client: 0 }],
-			[ 1, { client: 1 }],
-			[ 2, { client: 2 }],
-			[ 3, { client: 3 }],
-		]) ]);
+		expect(store.createMeasurement.args[0]).to.deep.equal([ 'ping', [{ client: 0 }, { client: 1 }, { client: 2 }, { client: 3 }] ]);
 
 		expect(to.callCount).to.equal(4);
 		expect(emit.callCount).to.equal(4);
@@ -77,7 +72,7 @@ describe('MeasurementRunner', () => {
 				type: 'ping',
 			},
 			measurementId: 'measurementid',
-			testId: 0,
+			testId: '0',
 		}]);
 
 		expect(to.args[1][0]).to.equal(1);
@@ -90,7 +85,7 @@ describe('MeasurementRunner', () => {
 				type: 'ping',
 			},
 			measurementId: 'measurementid',
-			testId: 1,
+			testId: '1',
 		}]);
 
 		expect(to.args[2][0]).to.equal(2);
@@ -103,7 +98,7 @@ describe('MeasurementRunner', () => {
 				type: 'ping',
 			},
 			measurementId: 'measurementid',
-			testId: 2,
+			testId: '2',
 		}]);
 
 		expect(to.args[3][0]).to.equal(3);
@@ -116,7 +111,7 @@ describe('MeasurementRunner', () => {
 				type: 'ping',
 			},
 			measurementId: 'measurementid',
-			testId: 3,
+			testId: '3',
 		}]);
 
 		expect(metrics.recordMeasurement.callCount).to.equal(1);
@@ -142,12 +137,7 @@ describe('MeasurementRunner', () => {
 		expect(router.findMatchingProbes.args[0]).to.deep.equal([ [], 10 ]);
 		expect(store.createMeasurement.callCount).to.equal(1);
 
-		expect(store.createMeasurement.args[0]).to.deep.equal([ 'ping', new Map([
-			[ 0, { client: 0 }],
-			[ 1, { client: 1 }],
-			[ 2, { client: 2 }],
-			[ 3, { client: 3 }],
-		]) ]);
+		expect(store.createMeasurement.args[0]).to.deep.equal([ 'ping', [{ client: 0 }, { client: 1 }, { client: 2 }, { client: 3 }] ]);
 
 		expect(to.callCount).to.equal(4);
 		expect(emit.callCount).to.equal(4);
@@ -160,7 +150,7 @@ describe('MeasurementRunner', () => {
 				type: 'ping',
 			},
 			measurementId: 'measurementid',
-			testId: 0,
+			testId: '0',
 		}]);
 
 		expect(emit.args[1]).to.deep.equal([ 'probe:measurement:request', {
@@ -171,7 +161,7 @@ describe('MeasurementRunner', () => {
 				type: 'ping',
 			},
 			measurementId: 'measurementid',
-			testId: 1,
+			testId: '1',
 		}]);
 
 		expect(emit.args[2]).to.deep.equal([ 'probe:measurement:request', {
@@ -182,7 +172,7 @@ describe('MeasurementRunner', () => {
 				type: 'ping',
 			},
 			measurementId: 'measurementid',
-			testId: 2,
+			testId: '2',
 		}]);
 
 		expect(emit.args[3]).to.deep.equal([ 'probe:measurement:request', {
@@ -193,7 +183,7 @@ describe('MeasurementRunner', () => {
 				type: 'ping',
 			},
 			measurementId: 'measurementid',
-			testId: 3,
+			testId: '3',
 		}]);
 
 		expect(metrics.recordMeasurement.callCount).to.equal(1);
