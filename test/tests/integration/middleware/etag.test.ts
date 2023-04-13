@@ -4,9 +4,7 @@ import { expect } from 'chai';
 
 import { getTestServer } from '../../../utils/server.js';
 
-describe('etag', function () {
-	this.timeout(15_000);
-
+describe('etag', () => {
 	let app: Server;
 	let requestAgent: any;
 

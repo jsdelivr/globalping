@@ -10,9 +10,7 @@ after(() => {
 	process.removeAllListeners('SIGINT');
 });
 
-describe('Get health', function () {
-	this.timeout(15_000);
-
+describe('Get health', () => {
 	let app: Server;
 	let requestAgent: SuperTest<Test>;
 	let sandbox: sinon.SinonSandbox;

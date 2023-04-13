@@ -4,9 +4,7 @@ import { expect } from 'chai';
 
 import { getTestServer } from '../../../utils/server.js';
 
-describe('domain redirect', function () {
-	this.timeout(15_000);
-
+describe('domain redirect', () => {
 	let app: Server;
 	let requestAgent: any;
 

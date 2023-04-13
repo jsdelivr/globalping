@@ -4,8 +4,7 @@ import { expect } from 'chai';
 
 import { getTestServer } from '../../../utils/server.js';
 
-describe('cors', function () {
-	this.timeout(15_000);
+describe('cors', () => {
 	let app: Server;
 	let requestAgent: any;
 

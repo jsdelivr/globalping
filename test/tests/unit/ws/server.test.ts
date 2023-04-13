@@ -1,41 +1,76 @@
-import { Socket } from 'socket.io';
 import * as sinon from 'sinon';
+import * as td from 'testdouble';
+import { expect } from 'chai';
 
-import { getWsServer, PROBES_NAMESPACE } from '../../../../src/lib/ws/server.js';
-import { createServer } from '../../../../src/lib/server.js';
-
-describe.skip('server', function () {
-	this.timeout(15_000);
-
+describe('ws server', () => {
 	let sandbox: sinon.SinonSandbox;
+	let initWsServer, getWsServer, fetchSockets;
 
-	beforeEach(() => {
+	const redisClient = {
+		duplicate: () => redisClient,
+		connect: sinon.stub(),
+	};
+	const disconnect = sinon.stub();
+	const fetchSocketsSocketIo = sinon.stub();
+	const getRedisClient = sinon.stub().returns(redisClient);
+	const of = sinon.stub().returns({
+		fetchSockets: fetchSocketsSocketIo,
+	});
+	const io = {
+		adapter: sinon.stub(),
+		of,
+	};
+
+	before(async () => {
+		await td.replaceEsm('socket.io', { Server: sinon.stub().returns(io) });
+		await td.replaceEsm('../../../../src/lib/redis/client.ts', { getRedisClient });
+	});
+
+	beforeEach(async () => {
+		({ initWsServer, getWsServer, fetchSockets } = await import('../../../../src/lib/ws/server.js'));
 		sandbox = sinon.createSandbox({ useFakeTimers: true });
+		fetchSocketsSocketIo.reset();
+		fetchSocketsSocketIo.resolves([{ disconnect }, {	disconnect }]);
 	});
 
 	afterEach(() => {
 		sandbox.restore();
 	});
 
-	it('should force probes to reconnect on start', async () => {
-		await createServer();
-		const namespace = getWsServer().of(PROBES_NAMESPACE);
-		const fakeSocket1 = sinon.createStubInstance(Socket);
-		const fakeSocket2 = sinon.createStubInstance(Socket);
-		const fakeSocket3 = sinon.createStubInstance(Socket);
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-expect-error
-		namespace.fetchSockets = async () => [ fakeSocket1, fakeSocket2, fakeSocket3 ];
+	after(() => {
+		td.reset();
+	});
 
-		sinon.assert.notCalled(fakeSocket1.disconnect);
-		sinon.assert.notCalled(fakeSocket2.disconnect);
-		sinon.assert.notCalled(fakeSocket3.disconnect);
+	it('initWsServer should reconnect the probes on start', async () => {
+		await initWsServer();
+		await sandbox.clock.tickAsync(8000 + 60_000 + 1000);
 
-		sandbox.clock.tick(10_000);
-		await sandbox.clock.tickAsync(62_000);
+		expect(io.adapter.callCount).to.equal(1);
+		expect(redisClient.connect.callCount).to.equal(2);
+		expect(disconnect.callCount).to.equal(2);
+	});
 
-		sinon.assert.calledOnce(fakeSocket1.disconnect);
-		sinon.assert.calledOnce(fakeSocket2.disconnect);
-		sinon.assert.calledOnce(fakeSocket3.disconnect);
+	it('getWsServer should return the same instance every time', async () => {
+		await initWsServer();
+		const wsServer1 = getWsServer();
+		const wsServer2 = getWsServer();
+		const wsServer3 = getWsServer();
+		expect(wsServer1).to.equal(wsServer2);
+		expect(wsServer1).to.equal(wsServer3);
+	});
+
+	it('multiple calls to fetchSockets should result in one socket.io fetchSockets call', async () => {
+		await initWsServer();
+		await sandbox.clock.tickAsync(8000 + 60_000 + 1000);
+		fetchSocketsSocketIo.reset();
+		fetchSocketsSocketIo.resolves([]);
+
+		await Promise.all([
+			fetchSockets(),
+			fetchSockets(),
+			fetchSockets(),
+		]);
+
+		expect(fetchSocketsSocketIo.callCount).to.equal(1);
 	});
 });
