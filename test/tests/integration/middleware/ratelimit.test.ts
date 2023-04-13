@@ -70,11 +70,11 @@ describe('rate limiter', () => {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			const response = await requestAgent.post('/v1/').send() as Response;
 
-			expect(Number(response.headers['x-ratelimit-remaining'])).to.equal(99);
+			expect(Number(response.headers['x-ratelimit-remaining'])).to.equal(299);
 		});
 
 		it('should fail (limit reached) (start at 100)', async () => {
-			await rateLimiterInstance.set(clientIpv6, 100, 0);
+			await rateLimiterInstance.set(clientIpv6, 300, 0);
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			const response = await requestAgent.post('/v1/').send() as Response;
