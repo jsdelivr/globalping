@@ -73,6 +73,7 @@ app
 
 app.on('error', errorHandler);
 
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 const server = createServer(app.callback());
 
 export const getHttpServer = () => server;
