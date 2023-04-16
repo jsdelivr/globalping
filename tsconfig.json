@@ -1,19 +1,19 @@
 {
-  "extends": "@tsconfig/node18-strictest-esm/tsconfig.json",
-  "compilerOptions": {
-    "outDir": "./dist",
-    "moduleResolution": "node",
-    "sourceMap": true
-  },
-  "ts-node": {
-    "transpileOnly": true
-  },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "public",
-    "node_modules",
-    "dist"
-  ]
+	"extends": "@tsconfig/node18-strictest-esm/tsconfig.json",
+	"compilerOptions": {
+		"outDir": "./dist",
+		"moduleResolution": "node",
+		"sourceMap": true
+	},
+	"ts-node": {
+		"transpileOnly": true
+	},
+	"include": [
+		"src/**/*"
+	],
+	"exclude": [
+		"public",
+		"node_modules",
+		"dist"
+	]
 }

@@ -1,5 +1,9 @@
 {
 	"extends": "@martin-kolarik/eslint-config/typescript",
+	"ignorePatterns": [
+		"data/**",
+		"dist/**"
+	],
 	"overrides": [
 		{
 			"files": [
@@ -12,20 +16,32 @@
 		},
 		{
 			"files": [
-				"test/**"
-			],
-			"rules": {
-				"@typescript-eslint/no-explicit-any": "off",
-				"@typescript-eslint/no-non-null-assertion": "off"
-			}
-		},
-		{
-			"files": [
 				"**"
 			],
 			"rules": {
 				"no-duplicate-imports": "off",
 				"no-extra-parens": "off"
+			}
+		},
+		{
+			"files": [
+				"public/**"
+			],
+			"parserOptions": {
+				"sourceType": "script"
+			},
+			"rules": {
+				"no-undef": "off",
+				"no-unused-vars": "off"
+			}
+		},
+		{
+			"files": [
+				"test/**"
+			],
+			"rules": {
+				"@typescript-eslint/no-explicit-any": "off",
+				"@typescript-eslint/no-non-null-assertion": "off"
 			}
 		}
 	]
