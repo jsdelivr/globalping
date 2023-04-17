@@ -25,6 +25,13 @@ We don't expect most of our users to work with the API directly; instead, we con
 
 Learn more about Globalping on our website [www.jsdelivr.com/globalping](https://www.jsdelivr.com/globalping)
 
+## Major sponsors
+
+We thank our sponsors who contribute to the development of Globalping and help us expand the network of probes.
+
+| <img src="https://gcore.com/favicon.ico" width="15" height="15"> [Gcore](https://gcore.com) | <img src="https://xtom.com/favicon.ico" width="15" height="15"> [xTom](https://xtom.com) | <img src="https://www.fdcservers.net/templates/favicon-fdc.png" width="15" height="15"> [FDCServers](https://fdcservers.net) |
+|---|---|---|
+
 
 ## Quick Start - Run your first test
 
@@ -94,7 +101,7 @@ POST https://api.globalping.io/v1/measurements
 }
 ```
 
-[Read the full API documentation](docs)
+[Read the full API documentation](docs) and [explore our dev demo](https://api.globalping.io/demo/)
 
 
 ### Slack App
