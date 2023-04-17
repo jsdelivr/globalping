@@ -18,8 +18,31 @@ const locationKeyMap = [
 
 export class SocketsLocationFilter {
 	static magicFilter (sockets: Socket[], magicLocation: string) {
+		let filteredSockets = sockets;
 		const keywords = magicLocation.split('+'); // eslint-disable-line @typescript-eslint/no-non-null-assertion
-		return sockets.filter(socket => keywords.every(keyword => SocketsLocationFilter.getIndexPosition(socket, keyword) !== -1));
+
+		for (const keyword of keywords) {
+			const closestExactMatchPosition = sockets.reduce((smallestExactMatchPosition, socket) => {
+				const exactMatchPosition = SocketsLocationFilter.getExactIndexPosition(socket, keyword);
+
+				if (exactMatchPosition === -1) {
+					return smallestExactMatchPosition;
+				}
+
+				return exactMatchPosition < smallestExactMatchPosition ? exactMatchPosition : smallestExactMatchPosition;
+			}, Number.POSITIVE_INFINITY);
+			filteredSockets = filteredSockets.filter((socket) => {
+				const matchPosition = SocketsLocationFilter.getIndexPosition(socket, keyword);
+				const socketIsValid = matchPosition !== -1 && matchPosition <= closestExactMatchPosition;
+				return socketIsValid;
+			});
+		}
+
+		return filteredSockets;
+	}
+
+	static getExactIndexPosition (socket: Socket, value: string) {
+		return socket.data.probe.index.findIndex(index => index === value.replaceAll('-', ' ').trim());
 	}
 
 	static getIndexPosition (socket: Socket, value: string) {
