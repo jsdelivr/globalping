@@ -17,6 +17,11 @@ const locationKeyMap = [
 ];
 
 export class SocketsLocationFilter {
+	static magicFilter (sockets: Socket[], magicLocation: string) {
+		const keywords = magicLocation.split('+'); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+		return sockets.filter(socket => keywords.every(keyword => SocketsLocationFilter.getIndexPosition(socket, keyword) !== -1));
+	}
+
 	static getIndexPosition (socket: Socket, value: string) {
 		return socket.data.probe.index.findIndex(index => index.includes(value.replaceAll('-', ' ').trim()));
 	}
@@ -35,21 +40,18 @@ export class SocketsLocationFilter {
 			return _.shuffle(this.filterGloballyDistibuted(sockets, sockets.length));
 		}
 
-		const filteredSockets = sockets.filter(s => Object.keys(location).every((k) => {
-			if (k === 'tags') {
-				const tags = location.tags!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-				return tags.every(tag => SocketsLocationFilter.hasTag(s, tag));
+		let filteredSockets = sockets;
+
+		Object.keys(location).forEach((key) => {
+			if (key === 'tags') {
+				filteredSockets = filteredSockets.filter(socket => location.tags!.every(tag => SocketsLocationFilter.hasTag(socket, tag)));
+			} else if (key === 'magic') {
+				filteredSockets = SocketsLocationFilter.magicFilter(filteredSockets, location.magic!);
+			} else {
+				const probeKey = locationKeyMap.find(m => m.includes(key))?.[1] ?? key;
+				filteredSockets = filteredSockets.filter(socket => location[key as keyof Location] === socket.data.probe.location[probeKey as keyof ProbeLocation]);
 			}
-
-			if (k === 'magic') {
-				const keywords = location.magic!.split('+'); // eslint-disable-line @typescript-eslint/no-non-null-assertion
-				return keywords.every(keyword => SocketsLocationFilter.getIndexPosition(s, keyword) !== -1);
-			}
-
-			const key = locationKeyMap.find(m => m.includes(k))?.[1] ?? k;
-
-			return location[k as keyof Location] === s.data.probe.location[key as keyof ProbeLocation];
-		}));
+		});
 
 		const isMagicSorting = Object.keys(location).includes('magic');
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
