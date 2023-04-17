@@ -64,7 +64,7 @@ brew install globalping
 And then run your tests in a familiar way:
 
 ```
-$ globalping traceroute google.com --from "Western Europe" --limit 2
+$ globalping traceroute google.com from Western Europe --limit 2
 > EU, DE, Frankfurt, ASN:210546
 traceroute to google.com (142.250.185.78), 20 hops max, 60 byte packets
  1  10.0.0.1 (10.0.0.1)  0.747 ms  0.714 ms
