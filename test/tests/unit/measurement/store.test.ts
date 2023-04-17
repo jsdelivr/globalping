@@ -1,10 +1,10 @@
 import * as td from 'testdouble';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { type MeasurementStore } from '../../../../src/measurement/store.js';
-import { Probe } from '../../../../src/probe/types.js';
+import type { MeasurementStore } from '../../../../src/measurement/store.js';
+import type { Probe } from '../../../../src/probe/types.js';
 
-const getProbe = id => ({
+const getProbe = (id: string) => ({
 	location: {
 		network: id,
 		continent: 'continent',

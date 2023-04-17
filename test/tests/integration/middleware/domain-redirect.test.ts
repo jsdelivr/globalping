@@ -1,5 +1,5 @@
 import type { Server } from 'node:http';
-import request from 'supertest';
+import request, { Response } from 'supertest';
 import { expect } from 'chai';
 
 import { getTestServer } from '../../../utils/server.js';
@@ -21,7 +21,7 @@ describe('domain redirect', () => {
 				.send()
 				.set('Host', 'globalping.io')
 				.expect(301)
-				.expect((response) => {
+				.expect((response: Response) => {
 					expect(response.header.location).to.equal('https://jsdelivr.com/globalping');
 				});
 		});
@@ -33,7 +33,7 @@ describe('domain redirect', () => {
 				.send()
 				.set('Host', 'api.globalping.io')
 				.expect(200)
-				.expect((response) => {
+				.expect((response: Response) => {
 					expect(response.body).to.deep.equal([]);
 				});
 		});

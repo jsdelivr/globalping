@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import request, { type SuperTest, type Test } from 'supertest';
 import * as td from 'testdouble';
 import nock from 'nock';
-import { type Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import RedisCacheMock from '../../../mocks/redis-cache.js';
@@ -12,7 +12,7 @@ const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toS
 describe('Timeout results', () => {
 	let probe: Socket;
 	let addFakeProbe: (events?: Record<string, any>) => Promise<Socket>;
-	let deleteFakeProbe: (Socket) => Promise<void>;
+	let deleteFakeProbe: (socket: Socket) => Promise<void>;
 	let getTestServer;
 	let requestAgent: SuperTest<Test>;
 	let sandbox: sinon.SinonSandbox;
@@ -21,7 +21,7 @@ describe('Timeout results', () => {
 
 	before(async () => {
 		sandbox = sinon.createSandbox({ useFakeTimers: true });
-		await td.replaceEsm('@jcoreio/async-throttle', null, f => f);
+		await td.replaceEsm('@jcoreio/async-throttle', null, (f: any) => f);
 		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
 		await td.replaceEsm('../../../../src/lib/cache/redis-cache.ts', {}, RedisCacheMock);
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });

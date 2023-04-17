@@ -4,7 +4,7 @@ import { expect } from 'chai';
 
 describe('ws server', () => {
 	let sandbox: sinon.SinonSandbox;
-	let initWsServer, getWsServer, fetchSockets;
+	let initWsServer: () => any, getWsServer: () => any, fetchSockets: () => any;
 
 	const redisClient = {
 		duplicate: () => redisClient,

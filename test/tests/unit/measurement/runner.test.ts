@@ -6,9 +6,10 @@ import type { RedisClient } from '../../../../src/lib/redis/client.js';
 import { MeasurementStore } from '../../../../src/measurement/store.js';
 import { ProbeRouter } from '../../../../src/probe/router.js';
 import { MetricsAgent } from '../../../../src/lib/metrics.js';
-import { Probe } from '../../../../src/probe/types.js';
+import type { Probe } from '../../../../src/probe/types.js';
+import type { MeasurementRunner } from '../../../../src/measurement/runner.js';
 
-const getProbe = id => ({ client: id } as Probe);
+const getProbe = (id: number) => ({ client: id } as unknown as Probe);
 
 describe('MeasurementRunner', () => {
 	const emit = sinon.stub();
@@ -18,8 +19,8 @@ describe('MeasurementRunner', () => {
 	const store = sinon.createStubInstance(MeasurementStore);
 	const router = sinon.createStubInstance(ProbeRouter);
 	const metrics = sinon.createStubInstance(MetricsAgent);
-	let runner;
-	let testId;
+	let runner: MeasurementRunner;
+	let testId: number;
 
 	before(async () => {
 		td.replaceEsm('crypto-random-string', null, () => testId++);
@@ -62,7 +63,7 @@ describe('MeasurementRunner', () => {
 
 		expect(to.callCount).to.equal(4);
 		expect(emit.callCount).to.equal(4);
-		expect(to.args[0][0]).to.equal(0);
+		expect(to.args[0]![0]).to.equal(0);
 
 		expect(emit.args[0]).to.deep.equal([ 'probe:measurement:request', {
 			measurement: {
@@ -75,7 +76,7 @@ describe('MeasurementRunner', () => {
 			testId: '0',
 		}]);
 
-		expect(to.args[1][0]).to.equal(1);
+		expect(to.args[1]![0]).to.equal(1);
 
 		expect(emit.args[1]).to.deep.equal([ 'probe:measurement:request', {
 			measurement: {
@@ -88,7 +89,7 @@ describe('MeasurementRunner', () => {
 			testId: '1',
 		}]);
 
-		expect(to.args[2][0]).to.equal(2);
+		expect(to.args[2]![0]).to.equal(2);
 
 		expect(emit.args[2]).to.deep.equal([ 'probe:measurement:request', {
 			measurement: {
@@ -101,7 +102,7 @@ describe('MeasurementRunner', () => {
 			testId: '2',
 		}]);
 
-		expect(to.args[3][0]).to.equal(3);
+		expect(to.args[3]![0]).to.equal(3);
 
 		expect(emit.args[3]).to.deep.equal([ 'probe:measurement:request', {
 			measurement: {

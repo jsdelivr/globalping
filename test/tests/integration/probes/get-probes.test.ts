@@ -4,14 +4,14 @@ import nock from 'nock';
 import { expect } from 'chai';
 import request, { type SuperTest, type Test } from 'supertest';
 import * as td from 'testdouble';
-import { type Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import RedisCacheMock from '../../../mocks/redis-cache.js';
 
 const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
 describe('Get Probes', () => {
 	let addFakeProbe: () => Promise<Socket>;
-	let deleteFakeProbe: (Socket) => Promise<void>;
+	let deleteFakeProbe: (socket: Socket) => Promise<void>;
 	let requestAgent: SuperTest<Test>;
 	const probes: Socket[] = [];
 
@@ -56,7 +56,7 @@ describe('Get Probes', () => {
 			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['00.00'].ipinfo);
 			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['00.00'].maxmind);
 
-			const probe = await addFakeProbe();
+			await addFakeProbe();
 
 			await requestAgent.get('/v1/probes')
 				.send()
@@ -245,7 +245,7 @@ describe('Get Probes', () => {
 				.get(/.*/).reply(200, nockMocks['01.00'].maxmind);
 
 			const probe1 = await addFakeProbe();
-			const probe2 = await addFakeProbe();
+			await addFakeProbe();
 			probe1.emit('probe:status:update', 'ready');
 
 			await requestAgent.get('/v1/probes')

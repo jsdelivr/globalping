@@ -5,15 +5,12 @@
 		"moduleResolution": "node",
 		"sourceMap": true
 	},
-	"ts-node": {
-		"transpileOnly": true
-	},
 	"include": [
 		"src/**/*"
 	],
 	"exclude": [
+		"dist",
 		"public",
-		"node_modules",
-		"dist"
+		"node_modules"
 	]
 }

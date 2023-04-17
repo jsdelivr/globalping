@@ -1,5 +1,5 @@
 import type { Server } from 'node:http';
-import { type AddressInfo } from 'node:net';
+import type { AddressInfo } from 'node:net';
 import { io, type Socket } from 'socket.io-client';
 import { createServer } from '../../src/lib/server.js';
 

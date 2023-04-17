@@ -14,10 +14,10 @@ export default function wallaby () {
 			'test/setup.ts',
 			'test/types.ts',
 			'package.json',
-			'GCP_IP_RANGES.json',
-			'AWS_IP_RANGES.json',
-			'DOMAIN_BLACKLIST.json',
-			'IP_BLACKLIST.json',
+			'data/GCP_IP_RANGES.json',
+			'data/AWS_IP_RANGES.json',
+			'data/DOMAIN_BLACKLIST.json',
+			'data/IP_BLACKLIST.json',
 		],
 		tests: [
 			'test/tests/**/*.test.ts',
@@ -26,7 +26,7 @@ export default function wallaby () {
 			type: 'node',
 			params: {
 				runner: '--experimental-specifier-resolution=node --loader '
-          + path.join(__dirname, 'node_modules/testdouble/lib/index.mjs'),
+					+ url.pathToFileURL(path.join(__dirname, 'node_modules/testdouble/lib/index.mjs')),
 				env: 'NODE_ENV=test;NEW_RELIC_ENABLED=false;NEW_RELIC_LOG_ENABLED=false;FAKE_PROBE_IP=1',
 			},
 		},

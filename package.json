@@ -41,7 +41,7 @@
 		"winston": "^3.8.2"
 	},
 	"devDependencies": {
-		"@martin-kolarik/eslint-config": "^7.1.5",
+		"@martin-kolarik/eslint-config": "^7.1.6",
 		"@tsconfig/node18-strictest-esm": "^1.0.1",
 		"@types/chai": "^4.3.4",
 		"@types/chai-subset": "^1.3.3",
@@ -63,7 +63,7 @@
 		"@types/physical-cpu-count": "^2.0.0",
 		"@types/request-ip": "^0.0.37",
 		"@types/semver": "^7.3.13",
-		"@types/sinon": "^10.0.13",
+		"@types/sinon": "^10.0.14",
 		"@types/supertest": "^2.0.12",
 		"@types/throng": "^5.0.4",
 		"@types/validator": "^13.7.15",
@@ -85,27 +85,30 @@
 		"testdouble": "^3.17.2",
 		"ts-node": "^10.9.1",
 		"tsx": "^3.12.6",
-		"typescript": "^4.7.4"
+		"typescript": "~4.7.4"
 	},
 	"optionalDependencies": {
 		"bufferutil": "^4.0.7",
 		"utf-8-validate": "^5.0.10"
 	},
 	"scripts": {
-		"build": "tsc && npm run download-jsons",
-		"start": "NODE_ENV=production node --max_old_space_size=3584 --max-semi-space-size=128 --experimental-loader newrelic/esm-loader.mjs dist/index.js",
-		"dev": "NODE_ENV=development FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false node dist/index.js",
-		"dev:tsx": "NODE_ENV=development FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false tsx src/index.ts",
-		"lint": "eslint --cache .",
-		"lint:fix": "eslint --cache --fix .",
-		"lint:types": "tsc --noEmit",
-		"download-jsons": "node dist/lib/download-jsons.js",
-		"test": "npm run lint:types && npm run test:src",
-		"test:src": "NODE_ENV=test NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false FAKE_PROBE_IP=1 mocha",
-		"test:perf": "tsx test-perf/index.ts",
+		"build": "tsc && npm run download:jsons",
+		"coverage": "npm run clean && NODE_ENV=test FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false c8 mocha",
 		"clean": "rimraf coverage",
-		"test:coverage": "npm run clean && NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false FAKE_PROBE_IP=1 c8 mocha",
-		"init:hooks": "husky install"
+		"download:jsons": "tsx src/lib/download-jsons.ts",
+		"prepare": "npm run download:jsons; husky install || echo 'Failed to install husky'",
+		"start": "NODE_ENV=production node --max_old_space_size=3584 --max-semi-space-size=128 --experimental-loader newrelic/esm-loader.mjs dist/index.js",
+		"dev": "NODE_ENV=development FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false tsx src/index.ts",
+		"lint": "npm run lint:js && npm run lint:types",
+		"lint:fix": "npm run lint:js:fix",
+		"lint:js": "eslint --cache .",
+		"lint:js:fix": "eslint --cache --fix .",
+		"lint:types": "tsc --noEmit",
+		"test": "npm run lint:js && npm run test:mocha",
+		"test:dist": "node --test-reporter=spec test/dist.js",
+		"test:mocha": "NODE_ENV=test FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false mocha",
+		"test:mocha:dev": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false mocha",
+		"test:perf": "tsx test-perf/index.ts"
 	},
 	"lint-staged": {
 		"*.{cjs,js,json,ts}": "eslint --cache --fix"
