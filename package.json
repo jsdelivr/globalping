@@ -105,6 +105,7 @@
 		"prepare": "npm run download:jsons; husky install || echo 'Failed to install husky'",
 		"start": "NODE_ENV=production node --max_old_space_size=3584 --max-semi-space-size=128 --experimental-loader newrelic/esm-loader.mjs dist/index.js",
 		"test": "npm run lint:js && npm run test:mocha",
+		"test:dist": "node --test-reporter=spec test/dist.js",
 		"test:mocha": "NODE_ENV=test FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false mocha",
 		"test:mocha:dev": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false mocha",
 		"test:perf": "tsx test-perf/index.ts"
