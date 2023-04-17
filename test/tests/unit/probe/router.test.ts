@@ -1,7 +1,7 @@
 import * as sinon from 'sinon';
 import _ from 'lodash';
 import { expect } from 'chai';
-import { type RemoteSocket } from 'socket.io';
+import type { RemoteSocket } from 'socket.io';
 import * as td from 'testdouble';
 import type { DefaultEventsMap } from 'socket.io/dist/typed-events.js';
 
@@ -280,7 +280,7 @@ describe('probe router', () => {
 	describe('route with global limit', () => {
 		it('should find probes even in overlapping locations', async () => {
 			const cache: Record<string, Socket> = {};
-			const memoizedBuildSocket = async (id, location) => {
+			const memoizedBuildSocket = async (id: string, location: ProbeLocation) => {
 				const cached = cache[location.country];
 
 				if (cached) {
@@ -296,7 +296,7 @@ describe('probe router', () => {
 
 			for (const i of _.range(10_000)) {
 				// eslint-disable-next-line no-await-in-loop
-				const socket = await memoizedBuildSocket(`PL-${i}`, { continent: 'EU', country: 'PL' });
+				const socket = await memoizedBuildSocket(`PL-${i}`, { continent: 'EU', country: 'PL' } as ProbeLocation);
 				euSockets.push(socket as never);
 			}
 
@@ -461,9 +461,9 @@ describe('probe router', () => {
 
 			expect(fetchSocketsMock.calledOnce).to.be.true;
 			expect(probes.length).to.equal(3);
-			expect(probes[0].location.country).to.equal('DE');
-			expect(probes[1].location.country).to.equal('RS');
-			expect(probes[2].location.country).to.equal('PL');
+			expect(probes[0]!.location.country).to.equal('DE');
+			expect(probes[1]!.location.country).to.equal('RS');
+			expect(probes[2]!.location.country).to.equal('PL');
 		});
 
 		it('should shuffle result considering priority of magic fields', async () => {

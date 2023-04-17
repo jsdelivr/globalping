@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import request, { type SuperTest, type Test } from 'supertest';
 import * as td from 'testdouble';
 import nock from 'nock';
-import { type Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import RedisCacheMock from '../../../mocks/redis-cache.js';
@@ -12,7 +12,7 @@ const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toS
 describe('Create measurement request', () => {
 	let probe: Socket;
 	let addFakeProbe: (events?: Record<string, any>) => Promise<Socket>;
-	let deleteFakeProbe: (Socket) => Promise<void>;
+	let deleteFakeProbe: (socket: Socket) => Promise<void>;
 	let getTestServer;
 	let requestAgent: SuperTest<Test>;
 

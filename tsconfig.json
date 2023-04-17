@@ -5,9 +5,6 @@
 		"moduleResolution": "node",
 		"sourceMap": true
 	},
-	"ts-node": {
-		"transpileOnly": true
-	},
 	"include": [
 		"src/**/*"
 	],
