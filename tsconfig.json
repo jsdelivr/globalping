@@ -9,8 +9,8 @@
 		"src/**/*"
 	],
 	"exclude": [
+		"dist",
 		"public",
-		"node_modules",
-		"dist"
+		"node_modules"
 	]
 }

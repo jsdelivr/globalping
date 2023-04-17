@@ -1,6 +1,7 @@
 {
 	"extends": "@martin-kolarik/eslint-config/typescript",
 	"ignorePatterns": [
+		"coverage/**",
 		"data/**",
 		"dist/**"
 	],

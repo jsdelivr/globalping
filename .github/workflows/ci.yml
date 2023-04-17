@@ -36,4 +36,4 @@ jobs:
       - name: Test
         run: |
           npm run lint
-          npm run test:coverage
+          npm run coverage

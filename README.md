@@ -209,8 +209,8 @@ API uses 3000 port by default. This can be overridden by `PORT` environment vari
 
 1. Clone this repository.
 2. `docker-compose up -d` - Run Redis
-3. `npm install && npm run init:hooks`
-4. Either `npm run build && npm run dev` or `npm run dev:tsx` (no type-checking)
+3. `npm install`
+4. Run `npm run dev`
 
 Once the API is live, you can spin up a probe instance by running the following in the probe repository:
 
