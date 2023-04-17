@@ -85,7 +85,7 @@
 		"testdouble": "^3.17.2",
 		"ts-node": "^10.9.1",
 		"tsx": "^3.12.6",
-		"typescript": "~4.9.5"
+		"typescript": "^4.7.4"
 	},
 	"optionalDependencies": {
 		"bufferutil": "^4.0.7",
