@@ -19,7 +19,7 @@ const locationKeyMap = [
 export class SocketsLocationFilter {
 	static magicFilter (sockets: Socket[], magicLocation: string) {
 		let filteredSockets = sockets;
-		const keywords = magicLocation.split('+'); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+		const keywords = magicLocation.split('+');
 
 		for (const keyword of keywords) {
 			const closestExactMatchPosition = sockets.reduce((smallestExactMatchPosition, socket) => {
@@ -67,8 +67,10 @@ export class SocketsLocationFilter {
 
 		Object.keys(location).forEach((key) => {
 			if (key === 'tags') {
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				filteredSockets = filteredSockets.filter(socket => location.tags!.every(tag => SocketsLocationFilter.hasTag(socket, tag)));
 			} else if (key === 'magic') {
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				filteredSockets = SocketsLocationFilter.magicFilter(filteredSockets, location.magic!);
 			} else {
 				const probeKey = locationKeyMap.find(m => m.includes(key))?.[1] ?? key;

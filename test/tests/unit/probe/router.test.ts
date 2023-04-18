@@ -468,19 +468,19 @@ describe('probe router', () => {
 
 		it('should ignore matches on the lower levels after exact match', async () => {
 			const sockets: Array<DeepPartial<Socket>> = [
-				await buildSocket('socket-3', { country: 'PL', normalizedCity: 'warsaw', normalizedNetwork: 'ultra development networks' }),
-				await buildSocket('socket-2', { country: 'RS', normalizedCity: 'belgrade', normalizedNetwork: 'belgrade networks' }),
-				await buildSocket('socket-1', { country: 'DE', normalizedCity: 'berlin', normalizedNetwork: 'berlin networks' }),
+				await buildSocket('socket-3', { country: 'VN', normalizedCity: 'hanoi', normalizedNetwork: 'ultra networks' }),
+				await buildSocket('socket-2', { country: 'RU', normalizedCity: 'vnukovo', normalizedNetwork: 'super networks' }),
+				await buildSocket('socket-1', { country: 'HU', normalizedCity: 'budapest', normalizedNetwork: '23VNet Kft' }),
 			];
 			fetchSocketsMock.resolves(sockets as never);
 
 			const probes = await router.findMatchingProbes([
-				{ magic: 'de' },
+				{ magic: 'vn' },
 			], 100);
 
 			expect(fetchSocketsMock.calledOnce).to.be.true;
 			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.country).to.equal('DE');
+			expect(probes[0]!.location.country).to.equal('VN');
 		});
 
 		it('should accept partial matches on the higher or same level as exact match', async () => {
