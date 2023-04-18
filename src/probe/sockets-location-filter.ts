@@ -42,11 +42,11 @@ export class SocketsLocationFilter {
 	}
 
 	static getExactIndexPosition (socket: Socket, value: string) {
-		return socket.data.probe.index.findIndex(index => index === value.replaceAll('-', ' ').trim());
+		return socket.data.probe.index.findIndex(category => category.some(index => index === value.replaceAll('-', ' ').trim()));
 	}
 
 	static getIndexPosition (socket: Socket, value: string) {
-		return socket.data.probe.index.findIndex(index => index.includes(value.replaceAll('-', ' ').trim()));
+		return socket.data.probe.index.findIndex(category => category.some(index => index.includes(value.replaceAll('-', ' ').trim())));
 	}
 
 	static hasTag (socket: Socket, tag: string) {

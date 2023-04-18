@@ -62,21 +62,22 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const tags = getTags(clientIp);
 
+	// Storing index values as string[][] so every category will have it's exact position in the index array across all probes
 	const index = [
-		location.country,
-		getCountryIso3ByIso2(location.country),
-		getCountryByIso(location.country),
+		[ location.country ],
+		[ getCountryIso3ByIso2(location.country) ],
+		[ getCountryByIso(location.country) ],
 		getCountryAliases(location.country),
-		location.normalizedCity,
-		location.state ?? [],
-		...location.state ? [ getStateNameByIso(location.state) ] : [],
-		location.continent,
-		location.normalizedRegion,
-		`as${location.asn}`,
+		[ location.normalizedCity ],
+		location.state ? [ location.state ] : [],
+		location.state ? [ getStateNameByIso(location.state) ] : [],
+		[ location.continent ],
+		[ location.normalizedRegion ],
+		[ `as${location.asn}` ],
 		tags.filter(tag => tag.type === 'system').map(tag => tag.value),
-		location.normalizedNetwork,
+		[ location.normalizedNetwork ],
 		getNetworkAliases(location.normalizedNetwork),
-	].flat().filter(Boolean).map(s => s.toLowerCase().replaceAll('-', ' '));
+	].map(category => category.map(s => s.toLowerCase().replaceAll('-', ' ')));
 
 	// Todo: add validation and handle missing or partial data
 	return {

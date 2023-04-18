@@ -38,7 +38,7 @@ export type Probe = {
 	ipAddress: string;
 	host: string;
 	location: ProbeLocation;
-	index: string[];
+	index: string[][];
 	resolvers: string[];
 	tags: Tag[];
 	stats: ProbeStats;
