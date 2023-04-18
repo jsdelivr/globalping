@@ -1,3 +1,4 @@
+import config from 'config';
 import { EventEmitter } from 'node:events';
 import { expect } from 'chai';
 import * as td from 'testdouble';
@@ -9,7 +10,6 @@ describe('index file', () => {
 	cluster.fork = sinon.stub();
 
 	before(async () => {
-		await td.replaceEsm('physical-cpu-count', null, 4);
 		await td.replaceEsm('node:cluster', null, cluster);
 	});
 
@@ -21,10 +21,10 @@ describe('index file', () => {
 		td.reset();
 	});
 
-	it('master should fork a worker for each physical CPU', async () => {
+	it('master should fork the configured number of processes', async () => {
 		await import('../../../src/index.js');
 
-		expect(cluster.fork.callCount).to.equal(4);
+		expect(cluster.fork.callCount).to.equal(config.get<number>('server.processes'));
 	});
 
 	it('master should restart a worker if it dies', async () => {
