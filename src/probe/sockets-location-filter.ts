@@ -31,11 +31,13 @@ export class SocketsLocationFilter {
 
 				return exactMatchPosition < smallestExactMatchPosition ? exactMatchPosition : smallestExactMatchPosition;
 			}, Number.POSITIVE_INFINITY);
-			filteredSockets = filteredSockets.filter((socket) => {
-				const matchPosition = SocketsLocationFilter.getIndexPosition(socket, keyword);
-				const socketIsValid = matchPosition !== -1 && matchPosition <= closestExactMatchPosition;
-				return socketIsValid;
-			});
+			const noExactMatches = closestExactMatchPosition === Number.POSITIVE_INFINITY;
+
+			if (noExactMatches) {
+				filteredSockets = filteredSockets.filter(socket => SocketsLocationFilter.getIndexPosition(socket, keyword) !== -1);
+			} else {
+				filteredSockets = filteredSockets.filter(socket => SocketsLocationFilter.getExactIndexPosition(socket, keyword) === closestExactMatchPosition);
+			}
 		}
 
 		return filteredSockets;

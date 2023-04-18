@@ -466,7 +466,7 @@ describe('probe router', () => {
 			expect(probes[2]!.location.country).to.equal('CZ');
 		});
 
-		it('should ignore matches on the lower levels after exact match', async () => {
+		it('should ignore low-priority partial matches if there is an exact match', async () => {
 			const sockets: Array<DeepPartial<Socket>> = [
 				await buildSocket('socket-3', { country: 'VN', normalizedCity: 'hanoi', normalizedNetwork: 'ultra networks' }),
 				await buildSocket('socket-2', { country: 'RU', normalizedCity: 'vnukovo', normalizedNetwork: 'super networks' }),
@@ -483,11 +483,11 @@ describe('probe router', () => {
 			expect(probes[0]!.location.country).to.equal('VN');
 		});
 
-		it('should accept partial matches on the higher or same level as exact match', async () => {
+		it('should ignore high-priority partial matches if there is an exact match', async () => {
 			const sockets: Array<DeepPartial<Socket>> = [
-				await buildSocket('socket-1', { country: 'PL', normalizedCity: 'warsaw', normalizedNetwork: 'wars' }),
-				await buildSocket('socket-2', { country: 'PL', normalizedCity: 'warsaw', normalizedNetwork: 'super networks' }),
-				await buildSocket('socket-3', { country: 'PL', normalizedCity: 'poznan', normalizedNetwork: 'wars networks' }),
+				await buildSocket('socket-1', { country: 'PL', normalizedCity: 'warsaw', normalizedNetwork: 'super networks' }),
+				await buildSocket('socket-2', { country: 'PL', normalizedCity: 'warsaw', normalizedNetwork: 'wars networks' }),
+				await buildSocket('socket-3', { country: 'PL', normalizedCity: 'poznan', normalizedNetwork: 'wars' }),
 			];
 			fetchSocketsMock.resolves(sockets as never);
 
@@ -496,10 +496,24 @@ describe('probe router', () => {
 			], 100);
 
 			expect(fetchSocketsMock.calledOnce).to.be.true;
-			expect(probes.length).to.equal(3);
-			expect(probes[0]!.location.country).to.equal('PL');
-			expect(probes[1]!.location.country).to.equal('PL');
-			expect(probes[2]!.location.country).to.equal('PL');
+			expect(probes.length).to.equal(1);
+			expect(probes[0]!.location.normalizedCity).to.equal('poznan');
+		});
+
+		it('should ignore same-level partial matches if there is an exact match', async () => {
+			const sockets: Array<DeepPartial<Socket>> = [
+				await buildSocket('socket-1', { country: 'US', normalizedCity: 'new york' }),
+				await buildSocket('socket-2', { country: 'GB', normalizedCity: 'york' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes([
+				{ magic: 'york' },
+			], 100);
+
+			expect(fetchSocketsMock.calledOnce).to.be.true;
+			expect(probes.length).to.equal(1);
+			expect(probes[0]!.location.country).to.equal('GB');
 		});
 
 		it('should shuffle result considering priority of magic fields', async () => {
