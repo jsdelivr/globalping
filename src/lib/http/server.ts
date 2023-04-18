@@ -7,6 +7,7 @@ import conditionalGet from 'koa-conditional-get';
 import compress from 'koa-compress';
 import etag from 'koa-etag';
 import responseTime from 'koa-response-time';
+import koaFavicon from 'koa-favicon';
 import koaStatic from 'koa-static';
 import cjsDependencies from '../../cjs-dependencies.cjs';
 import { registerGetProbesRoute } from '../../probe/route/get-probes.js';
@@ -21,6 +22,7 @@ import { isAdminMw } from './middleware/is-admin.js';
 import domainRedirect from './middleware/domain-redirect.js';
 
 const app = new cjsDependencies.Koa();
+const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
 
 const rootRouter = new Router({ strict: true, sensitive: true });
 rootRouter.prefix('/');
@@ -55,6 +57,7 @@ registerHealthRoute(healthRouter);
 app
 	.use(responseTime())
 	.use(domainRedirect())
+	.use(koaFavicon(`${publicPath}/favicon.ico`))
 	.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }))
 	.use(conditionalGet())
 	.use(etag({ weak: true }))
@@ -66,7 +69,7 @@ app
 	.use(healthRouter.routes())
 	.use(apiRouter.routes())
 	.use(apiRouter.allowedMethods())
-	.use(koaStatic(url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public', { format: false }));
+	.use(koaStatic(publicPath, { format: false }));
 
 app.on('error', errorHandler);
 
