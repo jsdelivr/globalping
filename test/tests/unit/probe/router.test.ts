@@ -447,7 +447,26 @@ describe('probe router', () => {
 			expect(probes[0]!.location.country).to.equal('GB');
 		});
 
-		it('should return result sorted by priority of magic fields', async () => {
+		it('should return result sorted by priority of magic fields in case of partial match', async () => {
+			const sockets: Array<DeepPartial<Socket>> = [
+				await buildSocket('socket-3', { country: 'CZ', normalizedCity: 'praga', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-2', { country: 'RS', normalizedCity: 'belgrade', normalizedNetwork: 'belgrade networks' }),
+				await buildSocket('socket-1', { country: 'DE', normalizedCity: 'berlin', normalizedNetwork: 'berlin networks' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes([
+				{ magic: 'd' },
+			], 100);
+
+			expect(fetchSocketsMock.calledOnce).to.be.true;
+			expect(probes.length).to.equal(3);
+			expect(probes[0]!.location.country).to.equal('DE');
+			expect(probes[1]!.location.country).to.equal('RS');
+			expect(probes[2]!.location.country).to.equal('CZ');
+		});
+
+		it('should ignore matches on the lower levels after exact match', async () => {
 			const sockets: Array<DeepPartial<Socket>> = [
 				await buildSocket('socket-3', { country: 'PL', normalizedCity: 'warsaw', normalizedNetwork: 'ultra development networks' }),
 				await buildSocket('socket-2', { country: 'RS', normalizedCity: 'belgrade', normalizedNetwork: 'belgrade networks' }),
@@ -460,24 +479,41 @@ describe('probe router', () => {
 			], 100);
 
 			expect(fetchSocketsMock.calledOnce).to.be.true;
-			expect(probes.length).to.equal(3);
+			expect(probes.length).to.equal(1);
 			expect(probes[0]!.location.country).to.equal('DE');
-			expect(probes[1]!.location.country).to.equal('RS');
+		});
+
+		it('should accept partial matches on the higher or same level as exact match', async () => {
+			const sockets: Array<DeepPartial<Socket>> = [
+				await buildSocket('socket-1', { country: 'PL', normalizedCity: 'warsaw', normalizedNetwork: 'wars' }),
+				await buildSocket('socket-2', { country: 'PL', normalizedCity: 'warsaw', normalizedNetwork: 'super networks' }),
+				await buildSocket('socket-3', { country: 'PL', normalizedCity: 'poznan', normalizedNetwork: 'wars networks' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes([
+				{ magic: 'wars' },
+			], 100);
+
+			expect(fetchSocketsMock.calledOnce).to.be.true;
+			expect(probes.length).to.equal(3);
+			expect(probes[0]!.location.country).to.equal('PL');
+			expect(probes[1]!.location.country).to.equal('PL');
 			expect(probes[2]!.location.country).to.equal('PL');
 		});
 
 		it('should shuffle result considering priority of magic fields', async () => {
 			const sockets: Array<DeepPartial<Socket>> = [
-				await buildSocket('socket-3', { normalizedCity: 'warsaw1', country: 'PL', normalizedNetwork: 'ultra development networks' }),
-				await buildSocket('socket-3', { normalizedCity: 'warsaw2', country: 'PL', normalizedNetwork: 'ultra development networks' }),
-				await buildSocket('socket-3', { normalizedCity: 'warsaw3', country: 'PL', normalizedNetwork: 'ultra development networks' }),
-				await buildSocket('socket-3', { normalizedCity: 'warsaw4', country: 'PL', normalizedNetwork: 'ultra development networks' }),
-				await buildSocket('socket-3', { normalizedCity: 'warsaw5', country: 'PL', normalizedNetwork: 'ultra development networks' }),
-				await buildSocket('socket-3', { normalizedCity: 'warsaw6', country: 'PL', normalizedNetwork: 'ultra development networks' }),
-				await buildSocket('socket-3', { normalizedCity: 'warsaw7', country: 'PL', normalizedNetwork: 'ultra development networks' }),
-				await buildSocket('socket-3', { normalizedCity: 'warsaw8', country: 'PL', normalizedNetwork: 'ultra development networks' }),
-				await buildSocket('socket-3', { normalizedCity: 'warsaw9', country: 'PL', normalizedNetwork: 'ultra development networks' }),
-				await buildSocket('socket-3', { normalizedCity: 'warsaw10', country: 'PL', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-3', { normalizedCity: 'praga1', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-3', { normalizedCity: 'praga2', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-3', { normalizedCity: 'praga3', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-3', { normalizedCity: 'praga4', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-3', { normalizedCity: 'praga5', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-3', { normalizedCity: 'praga6', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-3', { normalizedCity: 'praga7', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-3', { normalizedCity: 'praga8', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-3', { normalizedCity: 'praga9', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-3', { normalizedCity: 'praga10', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
 				await buildSocket('socket-2', { normalizedCity: 'belgrade1', country: 'RS', normalizedNetwork: 'belgrade networks' }),
 				await buildSocket('socket-2', { normalizedCity: 'belgrade2', country: 'RS', normalizedNetwork: 'belgrade networks' }),
 				await buildSocket('socket-2', { normalizedCity: 'belgrade3', country: 'RS', normalizedNetwork: 'belgrade networks' }),
@@ -502,10 +538,10 @@ describe('probe router', () => {
 			fetchSocketsMock.resolves(sockets as never);
 
 			const probes1 = await router.findMatchingProbes([
-				{ magic: 'de' },
+				{ magic: 'd' },
 			], 100);
 			const probes2 = await router.findMatchingProbes([
-				{ magic: 'de' },
+				{ magic: 'd' },
 			], 100);
 
 			expect(fetchSocketsMock.calledTwice).to.be.true;
@@ -517,9 +553,45 @@ describe('probe router', () => {
 			expect(probes1.slice(10, 19).every(probe => probe.location.country === 'RS')).to.be.true;
 			expect(probes1.slice(10, 19).every(probe => probe.location.country === 'RS')).to.be.true;
 			expect(probes1.slice(10, 19).map(probe => probe.location.normalizedCity)).to.not.deep.equal(probes2.slice(0, 9).map(probe => probe.location.normalizedCity));
-			expect(probes1.slice(20, 29).every(probe => probe.location.country === 'PL')).to.be.true;
-			expect(probes1.slice(20, 29).every(probe => probe.location.country === 'PL')).to.be.true;
+			expect(probes1.slice(20, 29).every(probe => probe.location.country === 'CZ')).to.be.true;
+			expect(probes1.slice(20, 29).every(probe => probe.location.country === 'CZ')).to.be.true;
 			expect(probes1.slice(20, 29).map(probe => probe.location.normalizedCity)).to.not.deep.equal(probes2.slice(0, 9).map(probe => probe.location.normalizedCity));
+		});
+
+		it('should shuffle result in case of exact match', async () => {
+			const sockets: Array<DeepPartial<Socket>> = [
+				await buildSocket('socket-3', { normalizedCity: 'praga1', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-3', { normalizedCity: 'praga2', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-3', { normalizedCity: 'praga3', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
+				await buildSocket('socket-2', { normalizedCity: 'belgrade1', country: 'RS', normalizedNetwork: 'belgrade networks' }),
+				await buildSocket('socket-2', { normalizedCity: 'belgrade2', country: 'RS', normalizedNetwork: 'belgrade networks' }),
+				await buildSocket('socket-2', { normalizedCity: 'belgrade3', country: 'RS', normalizedNetwork: 'belgrade networks' }),
+				await buildSocket('socket-1', { normalizedCity: 'berlin1', country: 'DE', normalizedNetwork: 'berlin networks' }),
+				await buildSocket('socket-1', { normalizedCity: 'berlin2', country: 'DE', normalizedNetwork: 'berlin networks' }),
+				await buildSocket('socket-1', { normalizedCity: 'berlin3', country: 'DE', normalizedNetwork: 'berlin networks' }),
+				await buildSocket('socket-1', { normalizedCity: 'berlin4', country: 'DE', normalizedNetwork: 'berlin networks' }),
+				await buildSocket('socket-1', { normalizedCity: 'berlin5', country: 'DE', normalizedNetwork: 'berlin networks' }),
+				await buildSocket('socket-1', { normalizedCity: 'berlin6', country: 'DE', normalizedNetwork: 'berlin networks' }),
+				await buildSocket('socket-1', { normalizedCity: 'berlin7', country: 'DE', normalizedNetwork: 'berlin networks' }),
+				await buildSocket('socket-1', { normalizedCity: 'berlin8', country: 'DE', normalizedNetwork: 'berlin networks' }),
+				await buildSocket('socket-1', { normalizedCity: 'berlin9', country: 'DE', normalizedNetwork: 'berlin networks' }),
+				await buildSocket('socket-1', { normalizedCity: 'berlin10', country: 'DE', normalizedNetwork: 'berlin networks' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+
+			const probes1 = await router.findMatchingProbes([
+				{ magic: 'de' },
+			], 100);
+			const probes2 = await router.findMatchingProbes([
+				{ magic: 'de' },
+			], 100);
+
+			expect(fetchSocketsMock.calledTwice).to.be.true;
+			expect(probes1.length).to.equal(10);
+			expect(probes2.length).to.equal(10);
+			expect(probes1.slice(0, 9).every(probe => probe.location.country === 'DE')).to.be.true;
+			expect(probes2.slice(0, 9).every(probe => probe.location.country === 'DE')).to.be.true;
+			expect(probes1.slice(0, 9).map(probe => probe.location.normalizedCity)).to.not.deep.equal(probes2.slice(0, 9).map(probe => probe.location.normalizedCity));
 		});
 
 		describe('Location type - Network', () => {
