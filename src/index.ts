@@ -12,7 +12,7 @@ const workerFn = async () => {
 	const server = await createServer();
 
 	server.listen(port, () => {
-		logger.info(`application started on port ${port}`);
+		logger.info(`application started at http://localhost:${port}`);
 	});
 };
 
