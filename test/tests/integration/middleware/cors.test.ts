@@ -21,11 +21,11 @@ describe('cors', () => {
 			expect(response.headers['access-control-allow-origin']).to.equal('*');
 		});
 
-		it('should NOT include the header', async () => {
+		it('should include the header at root', async () => {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			const response = await requestAgent.get('/').send() as Response;
 
-			expect(response.headers['access-control-allow-origin']).to.not.exist;
+			expect(response.headers['access-control-allow-origin']).to.equal('*');
 		});
 	});
 });

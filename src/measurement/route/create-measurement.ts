@@ -7,7 +7,7 @@ import { bodyParser } from '../../lib/http/middleware/body-parser.js';
 import { validate } from '../../lib/http/middleware/validate.js';
 import { schema } from '../schema/global-schema.js';
 
-const hostConfig = config.get<string>('host');
+const hostConfig = config.get<string>('server.host');
 const runner = getMeasurementRunner();
 
 const handle = async (ctx: Context): Promise<void> => {

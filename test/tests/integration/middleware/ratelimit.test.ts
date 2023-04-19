@@ -42,7 +42,7 @@ describe('rate limiter', () => {
 
 		it('should include headers (POST)', async () => {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			const response = await requestAgent.post('/v1/').send() as Response;
+			const response = await requestAgent.post('/v1/measurements').send() as Response;
 
 			expect(response.headers['x-ratelimit-limit']).to.exist;
 			expect(response.headers['x-ratelimit-remaining']).to.exist;
@@ -51,7 +51,7 @@ describe('rate limiter', () => {
 
 		it('should change values on next request (5) (POST)', async () => {
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			const requestPromise = () => requestAgent.post('/v1/').send() as Response;
+			const requestPromise = () => requestAgent.post('/v1/measurements').send() as Response;
 			const responseList = await Promise.all(Array.from({ length: 5 }).map(() => requestPromise()));
 
 			const firstResponse = responseList[0];
@@ -67,7 +67,7 @@ describe('rate limiter', () => {
 			await rateLimiterInstance.set(clientIpv6, 0, 0);
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			const response = await requestAgent.post('/v1/').send() as Response;
+			const response = await requestAgent.post('/v1/measurements').send() as Response;
 
 			expect(Number(response.headers['x-ratelimit-remaining'])).to.equal(299);
 		});
@@ -76,7 +76,7 @@ describe('rate limiter', () => {
 			await rateLimiterInstance.set(clientIpv6, 300, 0);
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			const response = await requestAgent.post('/v1/').send() as Response;
+			const response = await requestAgent.post('/v1/measurements').send() as Response;
 
 			expect(Number(response.headers['x-ratelimit-remaining'])).to.equal(0);
 			expect(response.statusCode).to.equal(429);

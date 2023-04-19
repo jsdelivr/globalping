@@ -1,24 +1,25 @@
+import config from 'config';
 import process from 'node:process';
 import cluster from 'node:cluster';
-import physicalCpuCount from 'physical-cpu-count';
 import { scopedLogger } from './lib/logger.js';
 import { createServer } from './lib/server.js';
 
 const logger = scopedLogger('index');
-const port = process.env['PORT'] ?? 3000;
+const port = process.env['PORT'] ?? config.get<number>('server.port');
+const workerCount = config.get<number>('server.processes');
 
 const workerFn = async () => {
 	const server = await createServer();
 
 	server.listen(port, () => {
-		logger.info(`application started on port ${port}`);
+		logger.info(`application started at http://localhost:${port}`);
 	});
 };
 
 if (cluster.isPrimary) {
-	logger.info(`Master ${process.pid} is running with ${physicalCpuCount} workers`);
+	logger.info(`Master ${process.pid} is running with ${workerCount} workers`);
 
-	for (let i = 0; i < physicalCpuCount; i++) {
+	for (let i = 0; i < workerCount; i++) {
 		cluster.fork();
 	}
 
