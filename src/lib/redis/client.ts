@@ -5,9 +5,9 @@ import {
 	type RedisDefaultModules,
 	type RedisClientOptions,
 	type RedisFunctions,
-	type RedisScripts,
 } from 'redis';
 import { scopedLogger } from '../logger.js';
+import { count, type RedisScripts } from './scripts.js';
 
 const logger = scopedLogger('redis-client');
 
@@ -23,6 +23,7 @@ export const createRedisClient = async (options?: RedisClientOptions): Promise<R
 	const client = createClient({
 		...config.util.toObject(config.get('redis')) as RedisClientOptions,
 		...options,
+		scripts: { count },
 	});
 
 	client

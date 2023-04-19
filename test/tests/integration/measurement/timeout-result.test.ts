@@ -89,7 +89,10 @@ describe('Timeout results', () => {
 			});
 
 		await sandbox.clock.tickAsync(60000); // cleanup interval + time to treat measurement as timed out
-		await sandbox.clock.nextAsync();
+
+		for (let i = 0; i < 10; i++) { // need to wait for a few additional event loop cycles, so redis update will be finished
+			await sandbox.clock.nextAsync();
+		}
 
 		await requestAgent.get(`/v1/measurements/measurementid`).send()
 			.expect(200).expect((response) => {
