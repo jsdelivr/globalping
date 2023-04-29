@@ -4,8 +4,6 @@
 	"description": "",
 	"type": "module",
 	"main": "dist/index.js",
-	"author": "Artem Stoianov <stoianov.artem@gmail.com>",
-	"license": "MIT",
 	"dependencies": {
 		"@jcoreio/async-throttle": "^1.4.3",
 		"@koa/router": "^12.0.0",
