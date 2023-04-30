@@ -3,6 +3,7 @@
 node_modules/
 coverage/
 dist/
+tmp/
 config/local.cjs
 data/DOMAIN_BLACKLIST.json
 data/IP_BLACKLIST.json

@@ -1,0 +1,107 @@
+# Based on https://github.com/adidas/api-guidelines/blob/master/.spectral.yml
+
+rules:
+  adidas-paths-kebab-case:
+    description: All YAML/JSON paths MUST follow kebab-case
+    severity: warn
+    recommended: true
+    message: "{{property}} is not kebab-case: {{error}}"
+    given: $.paths[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "^\/([a-z0-9]+(-[a-z0-9]+)*)?(\/[a-z0-9]+(-[a-z0-9]+)*|\/@?{.+})*$" # doesn't allow /asasd{asdas}sadas pattern or not closed braces
+
+  adidas-path-parameters-camelCase-alphanumeric:
+    description: Path parameters MUST follow camelCase
+    severity: warn
+    recommended: true
+    message: "{{property}} path parameter is not camelCase: {{error}}"
+    given: $..parameters[?(@.in == 'path')].name
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-zA-Z0-9]+$"
+
+  adidas-definitions-camelCase-alphanumeric:
+    description: All YAML/JSON definitions MUST follow fields-camelCase and be ASCII alphanumeric characters or `_` or `$`.
+    severity: error
+    recommended: true
+    message: "{{property}} MUST follow camelCase and be ASCII alphanumeric characters or `_` or `$`."
+    given: $.definitions[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "/^[a-z$_]{1}[A-Z09$_]*/"
+
+  adidas-properties-camelCase-alphanumeric:
+    description: All JSON Schema properties MUST follow fields-camelCase and be ASCII alphanumeric characters or `_` or `$`.
+    severity: error
+    recommended: true
+    message: "{{property}} MUST follow camelCase and be ASCII alphanumeric characters or `_` or `$`."
+    given: $.definitions..properties[*]~
+    then:
+      function: pattern
+      functionOptions:
+        match: "/^[a-z$_]{1}[A-Z09$_]*/"
+
+  adidas-request-GET-no-body:
+    description: "A 'GET' request MUST NOT accept a 'body` parameter"
+    severity: error
+    given: $.paths..get.parameters..in
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "/^body$/"
+
+  adidas-headers-no-x-headers:
+    description: "All 'HTTP' headers SHOULD NOT include 'X-' headers (https://tools.ietf.org/html/rfc6648)."
+    severity: warn
+    given: "$..parameters[?(@.in == 'header')].name"
+    message: "HTTP headers SHOULD NOT include 'X-' prefix."
+    recommended: true
+    type: style
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: "/^(x|X)-/"
+
+  adidas-headers-hyphenated-pascal-case:
+    description: All `HTTP` headers MUST use `Hyphenated-Pascal-Case` notation
+    severity: error
+    given: "$..parameters[?(@.in == 'header')].name"
+    message: "'HTTP' headers MUST follow 'Hyphenated-Pascal-Case' notation"
+    recommended: true
+    type: style
+    then:
+      function: pattern
+      functionOptions:
+        match: "/^([A-Z][a-z0-9]-)*([A-Z][a-z0-9])+/"
+
+  # ---------------------------------------------------------------------------
+  # Only OAS3 rules
+  # ---------------------------------------------------------------------------
+
+  adidas-oas3-request-support-json:
+    description: Every request MUST support `application/json` media type
+    formats:
+      - oas3
+    recommended: true
+    severity: error
+    message: "{{description}}: {{error}}"
+    given: $.paths.[*].requestBody.content[?(@property.indexOf('json') === -1)]^
+    then:
+      function: falsy
+
+  adidas-oas3-protocol-https-only: # checks how does the servers array values start
+    description: "ALL requests MUST go through `https` protocol only"
+    formats:
+      - oas3
+    recommended: true
+    severity: error
+    message: "Servers MUST be https and no other protocol is allowed."
+    given: $.servers..url
+    then:
+      function: pattern
+      functionOptions:
+        match: "/^https:/"
