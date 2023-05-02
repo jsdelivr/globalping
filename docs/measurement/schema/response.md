@@ -19,6 +19,8 @@ Jump to:
 
 **type**: `string`
 
+**mandatory**: `true`
+
 Measurement Id number, obtained from [`POST /v1/measurements`](../post-create.md) request.
 
 #### type
@@ -26,6 +28,8 @@ Measurement Id number, obtained from [`POST /v1/measurements`](../post-create.md
 **key**: `type`
 
 **type**: `string`
+
+**mandatory**: `true`
 
 The type of measurement. For more details about measurement type, please see [`MEASUREMENT REQUEST SCHEMA`](./request.md)
 
@@ -41,6 +45,8 @@ The type of measurement. For more details about measurement type, please see [`M
 
 **type**: `string`
 
+**mandatory**: `true`
+
 Measurement's current status. Communication between server and probes is asynchronious, thus the response should not be considered final, until this field returns `finished`.
 
 **available values**:
@@ -53,11 +59,65 @@ Measurement's current status. Communication between server and probes is asynchr
 
 **type**: `string` (ISO)
 
+**mandatory**: `true`
+
+#### target
+
+**key**: `target`
+
+**type**: `string`
+
+**mandatory**: `true`
+
+An endpoint on which the tests were executed. For more details about measurement target, please see [`MEASUREMENT REQUEST SCHEMA`](./request.md)
+
+#### limit
+
+**key**: `limit`
+
+**type**: `number`
+
+**mandatory**: `false`
+
+The global limit of probes that was specified in the request body. For more details about measurement limit, please see [`MEASUREMENT REQUEST SCHEMA`](./request.md)
+
+#### probesCount
+
+**key**: `probesCount`
+
+**type**: `number`
+
+**mandatory**: `true`
+
+The number of probes that performed the measurement. `probesCount` is always smaller or equal to `limit`.
+
+#### locations
+
+**key**: `locations`
+
+**type**: `Location[]`
+
+**mandatory**: `false`
+
+A list of desired locations from which tests were executed. For more details about measurement locations, please see [`MEASUREMENT REQUEST SCHEMA`](./request.md)
+
+#### measurementOptions
+
+**key**: `measurementOptions`
+
+**type**: `Object`
+
+**mandatory**: `false`
+
+Measurement options that were specified during measurement request. For more details about measurement options, please see [`MEASUREMENT REQUEST SCHEMA`](./request.md)
+
 #### results[]
 
 **key**: `results`
 
 **type**: `Object[]`
+
+**mandatory**: `true`
 
 An array of all probe responses. Jump to [`RESULT SCHEMA`](#result) for more details.
 

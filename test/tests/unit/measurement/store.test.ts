@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import type { MeasurementStore } from '../../../../src/measurement/store.js';
 import type { Probe } from '../../../../src/probe/types.js';
+import type { MeasurementOptions } from '../../../../src/measurement/types.js';
 
 const getProbe = (id: string) => ({
 	location: {
@@ -116,7 +117,17 @@ describe('measurement store', () => {
 
 	it('should store measurement probes in the same order as in arguments', async () => {
 		const store = getMeasurementStore();
-		store.createMeasurement('ping', [ getProbe('z'), getProbe('10'), getProbe('x'), getProbe('0') ]);
+		store.createMeasurement(
+			{
+				type: 'ping',
+				measurementOptions: { packets: 3 },
+				target: 'jsdelivr.com',
+				locations: [],
+				limit: 4,
+				inProgressUpdates: false,
+			},
+			[ getProbe('z'), getProbe('10'), getProbe('x'), getProbe('0') ],
+		);
 
 		expect(redisMock.hSet.callCount).to.equal(1);
 		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', 'measurementid', 1678000000000 ]);
@@ -130,7 +141,10 @@ describe('measurement store', () => {
 			status: 'in-progress',
 			createdAt: '2023-03-05T07:06:40.000Z',
 			updatedAt: '2023-03-05T07:06:40.000Z',
+			target: 'jsdelivr.com',
+			limit: 4,
 			probesCount: 4,
+			measurementOptions: { packets: 3 },
 			results: [{
 				probe: {
 					continent: 'continent',
@@ -190,6 +204,54 @@ describe('measurement store', () => {
 					longitude: 'longitude',
 					latitude: 'latitude',
 					network: '0',
+					tags: [],
+					resolvers: [],
+				},
+				result: { status: 'in-progress', rawOutput: '' },
+			}],
+		}]);
+
+		expect(redisMock.expire.callCount).to.equal(1);
+		expect(redisMock.expire.args[0]).to.deep.equal([ 'gp:measurement:measurementid', 604800 ]);
+	});
+
+	it('shouldn\'t store non-actual fields of the measurement data', async () => {
+		const store = getMeasurementStore();
+		store.createMeasurement(
+			{
+				type: 'ping',
+				measurementOptions: {} as unknown as MeasurementOptions,
+				target: 'jsdelivr.com',
+				locations: [{
+					magic: 'EU',
+					limit: 2,
+				}],
+				limit: 10,
+				inProgressUpdates: false,
+			},
+			[ getProbe('id') ],
+		);
+
+		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid', '$', {
+			id: 'measurementid',
+			type: 'ping',
+			status: 'in-progress',
+			createdAt: '2023-03-05T07:06:40.000Z',
+			updatedAt: '2023-03-05T07:06:40.000Z',
+			target: 'jsdelivr.com',
+			probesCount: 1,
+			locations: [{ limit: 2, magic: 'EU' }],
+			results: [{
+				probe: {
+					continent: 'continent',
+					region: 'region',
+					country: 'country',
+					state: 'state',
+					city: 'city',
+					asn: 'asn',
+					longitude: 'longitude',
+					latitude: 'latitude',
+					network: 'id',
 					tags: [],
 					resolvers: [],
 				},

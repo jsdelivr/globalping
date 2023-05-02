@@ -59,7 +59,7 @@ describe('MeasurementRunner', () => {
 		expect(router.findMatchingProbes.args[0]).to.deep.equal([ [], 10 ]);
 		expect(store.createMeasurement.callCount).to.equal(1);
 
-		expect(store.createMeasurement.args[0]).to.deep.equal([ 'ping', [{ client: 0 }, { client: 1 }, { client: 2 }, { client: 3 }] ]);
+		expect(store.createMeasurement.args[0]![1]).to.deep.equal([{ client: 0 }, { client: 1 }, { client: 2 }, { client: 3 }]);
 
 		expect(to.callCount).to.equal(4);
 		expect(emit.callCount).to.equal(4);
@@ -138,7 +138,7 @@ describe('MeasurementRunner', () => {
 		expect(router.findMatchingProbes.args[0]).to.deep.equal([ [], 10 ]);
 		expect(store.createMeasurement.callCount).to.equal(1);
 
-		expect(store.createMeasurement.args[0]).to.deep.equal([ 'ping', [{ client: 0 }, { client: 1 }, { client: 2 }, { client: 3 }] ]);
+		expect(store.createMeasurement.args[0]![1]).to.deep.equal([{ client: 0 }, { client: 1 }, { client: 2 }, { client: 3 }]);
 
 		expect(to.callCount).to.equal(4);
 		expect(emit.callCount).to.equal(4);

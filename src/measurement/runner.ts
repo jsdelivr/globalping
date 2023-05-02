@@ -31,7 +31,7 @@ export class MeasurementRunner {
 			throw createHttpError(422, 'No suitable probes found', { type: 'no_probes_found' });
 		}
 
-		const measurementId = await this.store.createMeasurement(request.type, probes);
+		const measurementId = await this.store.createMeasurement(request, probes);
 
 		this.sendToProbes(measurementId, probes, request);
 		this.metrics.recordMeasurement(request.type);

@@ -1,10 +1,11 @@
 import config from 'config';
+import _ from 'lodash';
 import cryptoRandomString from 'crypto-random-string';
 import type { Probe } from '../probe/types.js';
 import type { RedisClient } from '../lib/redis/client.js';
 import { getRedisClient } from '../lib/redis/client.js';
 import { scopedLogger } from '../lib/logger.js';
-import type { MeasurementRecord, MeasurementResultMessage, MeasurementResult } from './types.js';
+import type { MeasurementRecord, MeasurementResultMessage, MeasurementResult, MeasurementRequest } from './types.js';
 
 const logger = scopedLogger('store');
 
@@ -25,7 +26,7 @@ export class MeasurementStore {
 		return this.redis.sendCommand([ 'JSON.GET', getMeasurementKey(id) ]);
 	}
 
-	async createMeasurement (type: string, probes: Probe[]): Promise<string> {
+	async createMeasurement (request: MeasurementRequest, probes: Probe[]): Promise<string> {
 		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
 
@@ -38,11 +39,15 @@ export class MeasurementStore {
 			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.length, { EX: probesAwaitingTtl }),
 			this.redis.json.set(key, '$', {
 				id,
-				type,
+				type: request.type,
 				status: 'in-progress',
 				createdAt: startTime.toISOString(),
 				updatedAt: startTime.toISOString(),
+				target: request.target,
+				...(request.locations.some(l => l.limit) ? {} : { limit: request.limit }),
 				probesCount: probes.length,
+				...(request.locations.length ? { locations: request.locations } : {}),
+				...(_.isEmpty(request.measurementOptions) ? {} : { measurementOptions: request.measurementOptions }),
 				results,
 			}),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
