@@ -1,0 +1,43 @@
+openapi: 3.1.0
+info:
+  title: Globalping API
+  summary: The public Globalping API.
+  description: Monitor, debug, and benchmark your internet infrastructure from a globally distributed network of probes.
+  version: 1.0.0
+  termsOfService: https://github.com/jsdelivr/globalping
+  contact:
+    url: https://github.com/jsdelivr/globalping/issues
+    email: dak@prospectone.io
+  license:
+    name: Open Software License 3.0
+    identifier: OSL-3.0
+servers:
+  - url: https://api.globalping.io
+tags:
+  - name: Probes
+
+#components:
+#  headers:
+
+#  parameters:
+
+#  schemas:
+
+#  examples:
+
+#  responses:
+
+paths:
+  /v1/probes:
+    get:
+      operationId: getProbes
+      description: TODO
+      responses:
+        '200':
+          description: TODO
+          content:
+            application/json:
+              schema:
+                type: array
+      tags:
+        - Probes

@@ -46,6 +46,7 @@ describe('Get Probes', () => {
 				.expect(200)
 				.expect((response) => {
 					expect(response.body).to.deep.equal([]);
+					expect(response).to.matchApiSchema();
 				});
 		});
 	});

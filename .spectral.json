@@ -1,0 +1,6 @@
+{
+	"extends": [
+		"spectral:oas",
+		"./.spectral.adidas.yaml"
+	]
+}

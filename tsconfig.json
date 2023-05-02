@@ -3,7 +3,12 @@
 	"compilerOptions": {
 		"outDir": "./dist",
 		"moduleResolution": "node",
-		"sourceMap": true
+		"sourceMap": true,
+		"paths": {
+			"chai": [
+				"./test/plugins/oas"
+			]
+		}
 	},
 	"include": [
 		"src/**/*"
