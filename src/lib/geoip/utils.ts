@@ -10,4 +10,5 @@ export const normalizeCityNamePublic = (name: string): string => {
 export const normalizeCityName = (name: string): string => normalizeCityNamePublic(name).toLowerCase();
 
 export const normalizeNetworkName = (name: string): string => name.toLowerCase();
-export const prettifyRegionName = (name: string): string => name.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+
+export const normalizeRegionName = (name: string): string => name.toLowerCase();

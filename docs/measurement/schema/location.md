@@ -52,7 +52,7 @@ it will match a probe located in `London, England`, running on `Virgin Media Lim
 - `western europe`
 - `eastern europe`
 - `southern asia`
-- `south eastern asia`
+- `south-eastern asia`
 - `western asia`
 - `eastern asia`
 - `central asia`
@@ -63,8 +63,8 @@ it will match a probe located in `London, England`, running on `Virgin Media Lim
 - `middle africa`
 - `central america`
 - `northern america`
-- `southern america`
-- `australasia`
+- `south america`
+- `australia and new zealand`
 - `caribbean`
 - `polynesia`
 - `melanesia`
