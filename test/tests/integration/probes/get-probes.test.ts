@@ -83,7 +83,7 @@ describe('Get Probes', () => {
 						version: '0.14.0',
 						location: {
 							continent: 'SA',
-							region: 'Southern America',
+							region: 'South America',
 							country: 'AR',
 							city: 'Buenos Aires',
 							asn: 61_493,
@@ -123,7 +123,7 @@ describe('Get Probes', () => {
 						version: '0.14.0',
 						location: {
 							continent: 'SA',
-							region: 'Southern America',
+							region: 'South America',
 							country: 'AR',
 							city: 'Buenos Aires',
 							asn: 61_493,
@@ -185,7 +185,7 @@ describe('Get Probes', () => {
 							version: '0.14.0',
 							location: {
 								continent: 'SA',
-								region: 'Southern America',
+								region: 'South America',
 								country: 'AR',
 								city: 'Buenos Aires',
 								asn: 61_493,
@@ -257,7 +257,7 @@ describe('Get Probes', () => {
 						version: '0.14.0',
 						location: {
 							continent: 'SA',
-							region: 'Southern America',
+							region: 'South America',
 							country: 'AR',
 							city: 'Buenos Aires',
 							asn: 61_493,
@@ -288,7 +288,7 @@ describe('Get Probes', () => {
 						host: '',
 						location: {
 							continent: 'SA',
-							region: 'Southern America',
+							region: 'South America',
 							country: 'AR',
 							city: 'Buenos Aires',
 							asn: 61_493,

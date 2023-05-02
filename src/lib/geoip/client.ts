@@ -13,7 +13,7 @@ import { isAddrWhitelisted } from './whitelist.js';
 import { ipinfoLookup } from './providers/ipinfo.js';
 import { type FastlyBundledResponse, fastlyLookup } from './providers/fastly.js';
 import { maxmindLookup } from './providers/maxmind.js';
-import { prettifyRegionName } from './utils.js';
+import { normalizeRegionName } from './utils.js';
 
 export type LocationInfo = Omit<ProbeLocation, 'region' | 'normalizedRegion'>;
 export type LocationInfoWithProvider = LocationInfo & {provider: string};
@@ -112,8 +112,8 @@ export default class GeoipClient {
 		const region = getRegionByCountry(best.country);
 
 		return {
-			region: prettifyRegionName(region),
-			normalizedRegion: region,
+			region,
+			normalizedRegion: normalizeRegionName(region),
 		};
 	}
 
