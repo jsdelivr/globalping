@@ -13,12 +13,12 @@ const measurementConfig = config.get<{limits: {global: number; location: number}
 const normalizeValue = (value: string): string => anyAscii(value);
 
 export const schema = Joi.array().items(Joi.object().keys({
-	continent: Joi.string().valid(...Object.keys(continents)).custom(normalizeValue).insensitive()
+	continent: Joi.string().valid(...Object.keys(continents)).insensitive()
 		.messages({ 'any.only': 'The continent must be a valid two-letter continent code' }),
-	region: Joi.string().valid(...regionNames).custom(normalizeValue).insensitive(),
-	country: Joi.string().valid(...Object.keys(countries)).custom(normalizeValue).insensitive()
+	region: Joi.string().valid(...regionNames).insensitive(),
+	country: Joi.string().valid(...Object.keys(countries)).insensitive()
 		.messages({ 'any.only': 'The country must be a valid two-letter ISO code' }),
-	state: Joi.string().valid(...Object.values(states)).custom(normalizeValue).insensitive()
+	state: Joi.string().valid(...Object.values(states)).insensitive()
 		.messages({ 'any.only': 'The US state must be a valid two-letter code, e.g. CA' }),
 	city: Joi.string().min(1).max(128).lowercase().custom(normalizeValue),
 	network: Joi.string().min(1).max(128).lowercase().custom(normalizeValue),
