@@ -7,6 +7,7 @@ import {
 	joiValidateTarget,
 	whenTypeApply,
 	globalIpOptions,
+	COMMAND_DEFAULTS,
 } from './utils.js';
 
 export const schemaErrorMessages = {
@@ -29,14 +30,14 @@ const httpTargetSchema = Joi.alternatives()
 
 export const httpSchema = Joi.object({
 	request: Joi.object({
-		method: Joi.string().valid(...allowedHttpMethods).insensitive().default('head'),
+		method: Joi.string().valid(...allowedHttpMethods).insensitive().default(COMMAND_DEFAULTS.http.request.method),
 		host: Joi.string().domain().custom(joiValidateTarget('domain')).optional(),
-		path: Joi.string().optional().default('/'),
-		query: Joi.string().optional().default(''),
-		headers: Joi.object().default({}),
+		path: Joi.string().optional().default(COMMAND_DEFAULTS.http.request.path),
+		query: Joi.string().optional().default(COMMAND_DEFAULTS.http.request.query),
+		headers: Joi.object().default(COMMAND_DEFAULTS.http.request.headers),
 	}).default(),
 	resolver: Joi.string().ip(globalIpOptions).custom(joiValidateTarget('ip')),
-	protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default('https'),
+	protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default(COMMAND_DEFAULTS.http.protocol),
 	port: Joi.number(),
 }).default().messages(schemaErrorMessages);
 
@@ -50,9 +51,9 @@ const mtrTargetSchema = Joi.alternatives()
 const allowedMtrProtocols = [ 'UDP', 'TCP', 'ICMP' ];
 
 export const mtrSchema = Joi.object({
-	protocol: Joi.string().valid(...allowedMtrProtocols).insensitive().default('ICMP'),
-	packets: Joi.number().min(1).max(16).default(3),
-	port: Joi.number().port().default(80),
+	protocol: Joi.string().valid(...allowedMtrProtocols).insensitive().default(COMMAND_DEFAULTS.mtr.protocol),
+	packets: Joi.number().min(1).max(16).default(COMMAND_DEFAULTS.mtr.packets),
+	port: Joi.number().port().default(COMMAND_DEFAULTS.mtr.port),
 }).default();
 
 // Ping
@@ -63,19 +64,19 @@ const pingTargetSchema = Joi.alternatives()
 	.messages(schemaErrorMessages);
 
 export const pingSchema = Joi.object({
-	packets: Joi.number().min(1).max(16).default(3),
+	packets: Joi.number().min(1).max(16).default(COMMAND_DEFAULTS.ping.packets),
 }).default().messages(schemaErrorMessages);
 
+// Traceroute
 const tracerouteTargetSchema = Joi.alternatives()
 	.try(Joi.string().ip(globalIpOptions), Joi.custom(joiValidateDomain()))
 	.custom(joiValidateTarget('any'))
 	.required()
 	.messages(schemaErrorMessages);
 
-// Traceroute
 export const tracerouteSchema = Joi.object({
-	protocol: Joi.string().valid('TCP', 'UDP', 'ICMP').insensitive().default('ICMP'),
-	port: Joi.number().port().default(80),
+	protocol: Joi.string().valid('TCP', 'UDP', 'ICMP').insensitive().default(COMMAND_DEFAULTS.traceroute.protocol),
+	port: Joi.number().port().default(COMMAND_DEFAULTS.traceroute.port),
 }).default().messages(schemaErrorMessages);
 
 const allowedDnsTypes = [ 'A', 'AAAA', 'ANY', 'CNAME', 'DNSKEY', 'DS', 'MX', 'NS', 'NSEC', 'PTR', 'RRSIG', 'SOA', 'TXT', 'SRV' ];
@@ -88,14 +89,14 @@ const dnsTargetSchema = Joi.when(Joi.ref('..measurementOptions.query.type'), { i
 
 export const dnsSchema = Joi.object({
 	query: Joi.object({
-		type: Joi.string().valid(...allowedDnsTypes).insensitive().default('A'),
+		type: Joi.string().valid(...allowedDnsTypes).insensitive().default(COMMAND_DEFAULTS.dns.query.type),
 	}).default(),
 	resolver: Joi.alternatives()
 		.try(Joi.string().ip(globalIpOptions), Joi.custom(joiValidateDomain()))
 		.custom(joiValidateTarget('any')),
-	protocol: Joi.string().valid(...allowedDnsProtocols).insensitive().default('UDP'),
-	port: Joi.number().default(53),
-	trace: Joi.boolean().default(false),
+	protocol: Joi.string().valid(...allowedDnsProtocols).insensitive().default(COMMAND_DEFAULTS.dns.protocol),
+	port: Joi.number().default(COMMAND_DEFAULTS.dns.port),
+	trace: Joi.boolean().default(COMMAND_DEFAULTS.dns.trace),
 }).default().messages(schemaErrorMessages);
 
 export const targetSchema = whenTypeApply('ping', pingTargetSchema)

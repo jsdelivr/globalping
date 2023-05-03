@@ -89,12 +89,13 @@ type MtrResult = TestResult & {
 type DnsQueryTypes = 'A' | 'AAAA' | 'ANY' | 'CNAME' | 'DNSKEY' | 'DS' | 'MX' | 'NS' | 'NSEC' | 'PTR' | 'RRSIG' | 'SOA' | 'TXT' | 'SRV';
 
 type DnsTest = {
-	query?: {
+	query: {
 		type: DnsQueryTypes;
 	};
 	resolver: string;
 	protocol: 'TCP' | 'UDP';
 	port: number;
+	trace: boolean;
 };
 
 type DnsAnswer = {
@@ -120,13 +121,14 @@ type DnsTraceResult = {
 type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);
 
 type HttpTest = {
-	query: {
+	request: {
 		method: 'head' | 'get';
 		host?: string;
-		path?: string;
+		path: string;
+		query: string;
 		headers: Record<string, string>;
 	};
-	port: number;
+	port?: number;
 	protocol: 'https' | 'http' | 'http2';
 	resolver?: string;
 };
@@ -192,8 +194,12 @@ export type MeasurementRecord = {
 	status: MeasurementStatus;
 	createdAt: string;
 	updatedAt: string;
+	target: string;
+	limit?: number;
 	probesCount: number;
-	results: Record<string, MeasurementResult>;
+	locations?: LocationWithLimit[];
+	measurementOptions?: MeasurementOptions;
+	results: MeasurementResult[];
 };
 
 /**
