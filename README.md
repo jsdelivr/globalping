@@ -29,7 +29,7 @@ Learn more about Globalping on our website [www.jsdelivr.com/globalping](https:/
 
 We thank our sponsors who contribute to the development of Globalping and help us expand the network of probes.
 
-| <img src="https://gcore.com/favicon.ico" width="15" height="15"> [Gcore](https://gcore.com) | <img src="https://xtom.com/favicon.ico" width="15" height="15"> [xTom](https://xtom.com) | <img src="https://www.fdcservers.net/templates/favicon-fdc.png" width="15" height="15"> [FDCServers](https://fdcservers.net) |
+| <img src="https://gcore.com/favicon.ico" width="15" height="15"> [Gcore](https://gcore.com) | <img src="https://xtom.com/favicon.ico" width="15" height="15"> [xTom](https://xtom.com) | <img src="https://www.edisglobal.com/favicon.png" width="15" height="15"> [Edis Global](https://www.edisglobal.com) |
 |---|---|---|
 
 
