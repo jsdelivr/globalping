@@ -116,7 +116,17 @@ describe('measurement store', () => {
 
 	it('should store measurement probes in the same order as in arguments', async () => {
 		const store = getMeasurementStore();
-		store.createMeasurement('ping', [ getProbe('z'), getProbe('10'), getProbe('x'), getProbe('0') ]);
+		store.createMeasurement(
+			{
+				type: 'ping',
+				measurementOptions: { packets: 3 },
+				target: 'jsdelivr.com',
+				locations: [],
+				limit: 4,
+				inProgressUpdates: false,
+			},
+			[ getProbe('z'), getProbe('10'), getProbe('x'), getProbe('0') ],
+		);
 
 		expect(redisMock.hSet.callCount).to.equal(1);
 		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', 'measurementid', 1678000000000 ]);
@@ -130,6 +140,8 @@ describe('measurement store', () => {
 			status: 'in-progress',
 			createdAt: '2023-03-05T07:06:40.000Z',
 			updatedAt: '2023-03-05T07:06:40.000Z',
+			target: 'jsdelivr.com',
+			limit: 4,
 			probesCount: 4,
 			results: [{
 				probe: {
@@ -190,6 +202,128 @@ describe('measurement store', () => {
 					longitude: 'longitude',
 					latitude: 'latitude',
 					network: '0',
+					tags: [],
+					resolvers: [],
+				},
+				result: { status: 'in-progress', rawOutput: '' },
+			}],
+		}]);
+
+		expect(redisMock.expire.callCount).to.equal(1);
+		expect(redisMock.expire.args[0]).to.deep.equal([ 'gp:measurement:measurementid', 604800 ]);
+	});
+
+	it('should store non-default fields of the measurement request', async () => {
+		const store = getMeasurementStore();
+		store.createMeasurement(
+			{
+				type: 'http',
+				measurementOptions: {
+					request: {
+						method: 'GET',
+						path: '/path',
+						query: 'query',
+						headers: {
+							headername: 'headervalue',
+						},
+					},
+					protocol: 'HTTP',
+				},
+				target: 'jsdelivr.com',
+				locations: [{
+					magic: 'EU',
+					limit: 2,
+				}, {
+					magic: 'US',
+					limit: 2,
+				}],
+				limit: 2,
+				inProgressUpdates: false,
+			},
+			[ getProbe('id') ],
+		);
+
+		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid', '$', {
+			id: 'measurementid',
+			type: 'http',
+			status: 'in-progress',
+			createdAt: '2023-03-05T07:06:40.000Z',
+			updatedAt: '2023-03-05T07:06:40.000Z',
+			target: 'jsdelivr.com',
+			probesCount: 1,
+			measurementOptions: {
+				protocol: 'HTTP',
+				request: {
+					headers: { headername: 'headervalue' },
+					method: 'GET',
+					path: '/path',
+					query: 'query',
+				},
+			},
+			locations: [{ limit: 2, magic: 'EU' }, { limit: 2, magic: 'US' }],
+			results: [{
+				probe: {
+					continent: 'continent',
+					region: 'region',
+					country: 'country',
+					state: 'state',
+					city: 'city',
+					asn: 'asn',
+					longitude: 'longitude',
+					latitude: 'latitude',
+					network: 'id',
+					tags: [],
+					resolvers: [],
+				},
+				result: { status: 'in-progress', rawOutput: '' },
+			}],
+		}]);
+
+		expect(redisMock.expire.callCount).to.equal(1);
+		expect(redisMock.expire.args[0]).to.deep.equal([ 'gp:measurement:measurementid', 604800 ]);
+	});
+
+	it('shouldn\'t store fields of the measurement request which are equal to the default', async () => {
+		const store = getMeasurementStore();
+		store.createMeasurement(
+			{
+				type: 'http',
+				measurementOptions: {
+					request: {
+						method: 'HEAD',
+						path: '/',
+						query: '',
+						headers: {},
+					},
+					protocol: 'HTTPS',
+				},
+				target: 'jsdelivr.com',
+				limit: 1,
+				locations: [],
+				inProgressUpdates: false,
+			},
+			[ getProbe('id') ],
+		);
+
+		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid', '$', {
+			id: 'measurementid',
+			type: 'http',
+			status: 'in-progress',
+			createdAt: '2023-03-05T07:06:40.000Z',
+			updatedAt: '2023-03-05T07:06:40.000Z',
+			target: 'jsdelivr.com',
+			probesCount: 1,
+			results: [{
+				probe: {
+					continent: 'continent',
+					region: 'region',
+					country: 'country',
+					state: 'state',
+					city: 'city',
+					asn: 'asn',
+					longitude: 'longitude',
+					latitude: 'latitude',
+					network: 'id',
 					tags: [],
 					resolvers: [],
 				},

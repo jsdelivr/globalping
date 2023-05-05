@@ -1,10 +1,12 @@
 import config from 'config';
+import _ from 'lodash';
 import cryptoRandomString from 'crypto-random-string';
 import type { Probe } from '../probe/types.js';
 import type { RedisClient } from '../lib/redis/client.js';
 import { getRedisClient } from '../lib/redis/client.js';
 import { scopedLogger } from '../lib/logger.js';
-import type { MeasurementRecord, MeasurementResultMessage, MeasurementResult } from './types.js';
+import type { MeasurementRecord, MeasurementResultMessage, MeasurementResult, MeasurementRequest } from './types.js';
+import { getDefaults } from './schema/utils.js';
 
 const logger = scopedLogger('store');
 
@@ -18,6 +20,27 @@ export const getMeasurementKey = (id: string, suffix: 'probes_awaiting' | undefi
 	return key;
 };
 
+const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unknown> = {}) => {
+	const result: Record<string, unknown> = {};
+	const keys1 = Object.keys(obj1);
+	keys1.forEach((key) => {
+		const value1 = obj1[key];
+		const value2 = obj2[key];
+
+		if (_.isPlainObject(value1)) {
+			const difference = substractObjects(value1 as Record<string, unknown>, value2 as Record<string, unknown>);
+
+			if (!_.isEmpty(difference)) {
+				result[key] = difference;
+			}
+		} else if (!_.isEqual(value1, value2)) {
+			result[key] = value1;
+		}
+	});
+
+	return result;
+};
+
 export class MeasurementStore {
 	constructor (private readonly redis: RedisClient) {}
 
@@ -25,26 +48,33 @@ export class MeasurementStore {
 		return this.redis.sendCommand([ 'JSON.GET', getMeasurementKey(id) ]);
 	}
 
-	async createMeasurement (type: string, probes: Probe[]): Promise<string> {
+	async createMeasurement (request: MeasurementRequest, probes: Probe[]): Promise<string> {
 		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
 
 		const results = this.probesToResults(probes);
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
 		const startTime = new Date();
+		let measurement: MeasurementRecord = {
+			id,
+			type: request.type,
+			status: 'in-progress',
+			createdAt: startTime.toISOString(),
+			updatedAt: startTime.toISOString(),
+			target: request.target,
+			limit: request.limit,
+			probesCount: probes.length,
+			locations: request.locations,
+			measurementOptions: request.measurementOptions,
+			results,
+		};
+		const defaults = getDefaults(request);
+		measurement = substractObjects(measurement, defaults) as MeasurementRecord;
 
 		await Promise.all([
 			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
 			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.length, { EX: probesAwaitingTtl }),
-			this.redis.json.set(key, '$', {
-				id,
-				type,
-				status: 'in-progress',
-				createdAt: startTime.toISOString(),
-				updatedAt: startTime.toISOString(),
-				probesCount: probes.length,
-				results,
-			}),
+			this.redis.json.set(key, '$', measurement),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
 		]);
 

@@ -6,6 +6,7 @@ import config from 'config';
 import geoLists from 'countries-list';
 import { states } from '../../lib/location/states.js';
 import { regionNames } from '../../lib/location/regions.js';
+import { GLOBAL_DEFAULTS } from './utils.js';
 
 const { continents, countries } = geoLists;
 const measurementConfig = config.get<{limits: {global: number; location: number}}>('measurement');
@@ -29,4 +30,4 @@ export const schema = Joi.array().items(Joi.object().keys({
 		is: Joi.exist(),
 		then: Joi.forbidden().messages({ 'any.unknown': 'limit per location is not allowed when a global limit is set' }),
 	}),
-}).or('continent', 'region', 'country', 'state', 'city', 'network', 'asn', 'magic', 'tags')).default([]);
+}).or('continent', 'region', 'country', 'state', 'city', 'network', 'asn', 'magic', 'tags')).default(GLOBAL_DEFAULTS.locations);

@@ -29,7 +29,11 @@ Get the current state of the measurement.
         status: string
         createdAt: number
         updatedAt: number
+        target: string
+        limit?: number
         probesCount: number
+        locations?: Location[]
+        measurementOptions?: Object
         results: Result[]
     }
 ]
@@ -44,9 +48,14 @@ GET https://api.globalping.io/v1/measurements/tEaUg3vYnOu2exVC
     "id": "tEaUg3vYnOu2exVC",
     "type": "ping",
     "status": "finished",
-    "createdAt": 1650384403719,
-    "updatedAt": 1650384404482,
+    "createdAt": "2022-07-17T16:19:52.909Z",
+    "updatedAt": "2022-07-17T16:19:52.909Z",
+    "target": "google.com",
+    "limit": 1,
     "probesCount": 1,
+    "measurementOptions": {
+        "packets": 3
+    },
     "results": [
         {
             "probe": {

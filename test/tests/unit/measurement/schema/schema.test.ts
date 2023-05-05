@@ -1174,7 +1174,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"measurementOptions.request.method" must be one of [get, head]');
+			expect(valid.error!.message).to.equal('"measurementOptions.request.method" must be one of [GET, HEAD]');
 		});
 
 		it('should fail (unsupported protocol)', () => {
@@ -1197,7 +1197,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"measurementOptions.protocol" must be one of [http, https, http2]');
+			expect(valid.error!.message).to.equal('"measurementOptions.protocol" must be one of [HTTP, HTTPS, HTTP2]');
 		});
 
 		it('should fail (blacklisted target domain)', () => {
@@ -1257,9 +1257,9 @@ describe('command schema', async () => {
 				target: 'elocast.com',
 				inProgressUpdates: false,
 				measurementOptions: {
-					protocol: 'https',
+					protocol: 'HTTPS',
 					request: {
-						method: 'get',
+						method: 'GET',
 						host: 'elocast.com',
 						path: '/',
 						query: '',
@@ -1298,10 +1298,10 @@ describe('command schema', async () => {
 				target: 'elocast.com',
 				inProgressUpdates: false,
 				measurementOptions: {
-					protocol: 'https',
+					protocol: 'HTTPS',
 					port: 443,
 					request: {
-						method: 'get',
+						method: 'GET',
 						host: 'elocast.com',
 						path: '/',
 						query: '',
@@ -1329,9 +1329,9 @@ describe('command schema', async () => {
 				target: 'elocast.com',
 				inProgressUpdates: false,
 				measurementOptions: {
-					protocol: 'https',
+					protocol: 'HTTPS',
 					request: {
-						method: 'head',
+						method: 'HEAD',
 						path: '/',
 						query: '',
 						headers: {},
