@@ -18,8 +18,8 @@ export const schemaErrorMessages = {
 
 export const validCmdTypes = [ 'ping', 'dns', 'traceroute', 'mtr', 'http' ];
 
-const allowedHttpProtocols = [ 'http', 'https', 'http2' ];
-const allowedHttpMethods = [ 'get', 'head' ];
+const allowedHttpProtocols = [ 'HTTP', 'HTTPS', 'HTTP2' ];
+const allowedHttpMethods = [ 'GET', 'HEAD' ];
 
 // Http
 const httpTargetSchema = Joi.alternatives()

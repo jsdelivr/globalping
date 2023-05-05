@@ -122,14 +122,14 @@ type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);
 
 type HttpTest = {
 	request: {
-		method: 'head' | 'get';
+		method: 'HEAD' | 'GET';
 		host?: string;
 		path: string;
 		query: string;
 		headers: Record<string, string>;
 	};
 	port?: number;
-	protocol: 'https' | 'http' | 'http2';
+	protocol: 'HTTPS' | 'HTTP' | 'HTTP2';
 	resolver?: string;
 };
 

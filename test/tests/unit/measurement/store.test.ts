@@ -220,14 +220,14 @@ describe('measurement store', () => {
 				type: 'http',
 				measurementOptions: {
 					request: {
-						method: 'get',
+						method: 'GET',
 						path: '/path',
 						query: 'query',
 						headers: {
 							headername: 'headervalue',
 						},
 					},
-					protocol: 'http',
+					protocol: 'HTTP',
 				},
 				target: 'jsdelivr.com',
 				locations: [{
@@ -252,10 +252,10 @@ describe('measurement store', () => {
 			target: 'jsdelivr.com',
 			probesCount: 1,
 			measurementOptions: {
-				protocol: 'http',
+				protocol: 'HTTP',
 				request: {
 					headers: { headername: 'headervalue' },
-					method: 'get',
+					method: 'GET',
 					path: '/path',
 					query: 'query',
 				},
@@ -290,12 +290,12 @@ describe('measurement store', () => {
 				type: 'http',
 				measurementOptions: {
 					request: {
-						method: 'head',
+						method: 'HEAD',
 						path: '/',
 						query: '',
 						headers: {},
 					},
-					protocol: 'https',
+					protocol: 'HTTPS',
 				},
 				target: 'jsdelivr.com',
 				limit: 1,

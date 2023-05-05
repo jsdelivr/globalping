@@ -59,12 +59,12 @@ export const GLOBAL_DEFAULTS = {
 export const COMMAND_DEFAULTS = {
 	http: {
 		request: {
-			method: 'head',
+			method: 'HEAD',
 			path: '/',
 			query: '',
 			headers: {},
 		},
-		protocol: 'https',
+		protocol: 'HTTPS',
 	},
 	mtr: {
 		protocol: 'ICMP',
