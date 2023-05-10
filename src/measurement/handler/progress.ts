@@ -1,8 +1,8 @@
 import { getMeasurementRunner } from '../runner.js';
-import type { MeasurementResultMessage } from '../types.js';
+import type { MeasurementProgressMessage } from '../types.js';
 
 const runner = getMeasurementRunner();
 
-export const handleMeasurementProgress = async (data: MeasurementResultMessage): Promise<void> => {
+export const handleMeasurementProgress = async (data: MeasurementProgressMessage): Promise<void> => {
 	await runner.recordProgress(data);
 };

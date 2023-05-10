@@ -13,6 +13,7 @@ import type {
 	MeasurementRequest,
 	MeasurementResultMessage,
 	MeasurementRecord,
+	MeasurementProgressMessage,
 } from './types.js';
 
 export class MeasurementRunner {
@@ -39,7 +40,7 @@ export class MeasurementRunner {
 		return { measurementId, probesCount: probes.length };
 	}
 
-	async recordProgress (data: MeasurementResultMessage): Promise<void> {
+	async recordProgress (data: MeasurementProgressMessage): Promise<void> {
 		await this.store.storeMeasurementProgress(data);
 	}
 

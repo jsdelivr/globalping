@@ -33,6 +33,7 @@ describe('measurement store', () => {
 		json: {
 			mGet: sinon.stub(),
 			set: sinon.stub(),
+			strAppend: sinon.stub(),
 		},
 	};
 
@@ -52,6 +53,7 @@ describe('measurement store', () => {
 		redisMock.expire.reset();
 		redisMock.json.mGet.reset();
 		redisMock.json.set.reset();
+		redisMock.json.strAppend.reset();
 	});
 
 	afterEach(() => {
@@ -114,9 +116,116 @@ describe('measurement store', () => {
 		}]);
 	});
 
+	it('should initialize measurement object with the proper default values', async () => {
+		const store = getMeasurementStore();
+		await store.createMeasurement(
+			{
+				type: 'ping',
+				measurementOptions: { packets: 3 },
+				target: 'jsdelivr.com',
+				locations: [],
+				limit: 1,
+				inProgressUpdates: false,
+			},
+			[ getProbe('id') ],
+		);
+
+		expect(redisMock.json.set.firstCall.args).to.deep.equal([
+			'gp:measurement:measurementid',
+			'$',
+			{
+				id: 'measurementid',
+				type: 'ping',
+				status: 'in-progress',
+				createdAt: '2023-03-05T07:06:40.000Z',
+				updatedAt: '2023-03-05T07:06:40.000Z',
+				target: 'jsdelivr.com',
+				probesCount: 1,
+				results: [
+					{
+						probe: {
+							continent: 'continent',
+							region: 'region',
+							country: 'country',
+							state: 'state',
+							city: 'city',
+							asn: 'asn',
+							longitude: 'longitude',
+							latitude: 'latitude',
+							network: 'id',
+							tags: [],
+							resolvers: [],
+						},
+						result: { status: 'in-progress', rawOutput: '' },
+					},
+				],
+			},
+		]);
+	});
+
+	it('should initialize measurement object with the proper default values in case of http measurement', async () => {
+		const store = getMeasurementStore();
+		await store.createMeasurement(
+			{
+				type: 'http',
+				measurementOptions: {
+					request: {
+						method: 'HEAD',
+						path: '/',
+						query: '',
+						headers: {},
+					},
+					protocol: 'HTTPS',
+				},
+				target: 'jsdelivr.com',
+				locations: [],
+				limit: 1,
+				inProgressUpdates: false,
+			},
+			[ getProbe('id') ],
+		);
+
+		expect(redisMock.json.set.firstCall.args).to.deep.equal([
+			'gp:measurement:measurementid',
+			'$',
+			{
+				id: 'measurementid',
+				type: 'http',
+				status: 'in-progress',
+				createdAt: '2023-03-05T07:06:40.000Z',
+				updatedAt: '2023-03-05T07:06:40.000Z',
+				target: 'jsdelivr.com',
+				probesCount: 1,
+				results: [
+					{
+						probe: {
+							continent: 'continent',
+							region: 'region',
+							country: 'country',
+							state: 'state',
+							city: 'city',
+							asn: 'asn',
+							longitude: 'longitude',
+							latitude: 'latitude',
+							network: 'id',
+							tags: [],
+							resolvers: [],
+						},
+						result: {
+							status: 'in-progress',
+							rawHeaders: '',
+							rawBody: '',
+							rawOutput: '',
+						},
+					},
+				],
+			},
+		]);
+	});
+
 	it('should store measurement probes in the same order as in arguments', async () => {
 		const store = getMeasurementStore();
-		store.createMeasurement(
+		await store.createMeasurement(
 			{
 				type: 'ping',
 				measurementOptions: { packets: 3 },
@@ -215,7 +324,7 @@ describe('measurement store', () => {
 
 	it('should store non-default fields of the measurement request', async () => {
 		const store = getMeasurementStore();
-		store.createMeasurement(
+		await store.createMeasurement(
 			{
 				type: 'http',
 				measurementOptions: {
@@ -275,7 +384,12 @@ describe('measurement store', () => {
 					tags: [],
 					resolvers: [],
 				},
-				result: { status: 'in-progress', rawOutput: '' },
+				result: {
+					status: 'in-progress',
+					rawHeaders: '',
+					rawBody: '',
+					rawOutput: '',
+				},
 			}],
 		}]);
 
@@ -285,7 +399,7 @@ describe('measurement store', () => {
 
 	it('shouldn\'t store fields of the measurement request which are equal to the default', async () => {
 		const store = getMeasurementStore();
-		store.createMeasurement(
+		await store.createMeasurement(
 			{
 				type: 'http',
 				measurementOptions: {
@@ -327,11 +441,72 @@ describe('measurement store', () => {
 					tags: [],
 					resolvers: [],
 				},
-				result: { status: 'in-progress', rawOutput: '' },
+				result: {
+					status: 'in-progress',
+					rawHeaders: '',
+					rawBody: '',
+					rawOutput: '',
+				},
 			}],
 		}]);
 
 		expect(redisMock.expire.callCount).to.equal(1);
 		expect(redisMock.expire.args[0]).to.deep.equal([ 'gp:measurement:measurementid', 604800 ]);
+	});
+
+	it('should store rawHeaders and rawBody fields for the http in-progress updates', async () => {
+		const store = getMeasurementStore();
+		await store.storeMeasurementProgress({
+			testId: 'testid',
+			measurementId: 'measurementid',
+			result: {
+				rawHeaders: 'headers',
+				rawBody: 'body',
+				rawOutput: 'output',
+			},
+		});
+
+		expect(redisMock.json.strAppend.callCount).to.equal(3);
+
+		expect(redisMock.json.strAppend.firstCall.args).to.deep.equal([
+			'gp:measurement:measurementid',
+			'$.results[testid].result.rawHeaders',
+			'headers',
+		]);
+
+		expect(redisMock.json.strAppend.secondCall.args).to.deep.equal([
+			'gp:measurement:measurementid',
+			'$.results[testid].result.rawBody',
+			'body',
+		]);
+
+		expect(redisMock.json.strAppend.thirdCall.args).to.deep.equal([
+			'gp:measurement:measurementid',
+			'$.results[testid].result.rawOutput',
+			'output',
+		]);
+
+		expect(redisMock.json.set.callCount).to.equal(1);
+
+		expect(redisMock.json.set.firstCall.args).to.deep.equal([
+			'gp:measurement:measurementid',
+			'$.updatedAt',
+			'2023-03-05T07:06:40.000Z',
+		]);
+	});
+
+	it('should call redis.json.set instead of redis.json.strAppend if `overwrite` is true', async () => {
+		const store = getMeasurementStore();
+		await store.storeMeasurementProgress({
+			testId: 'testid',
+			measurementId: 'measurementid',
+			overwrite: true,
+			result: {
+				rawOutput: 'output',
+			},
+		});
+
+		expect(redisMock.json.strAppend.callCount).to.equal(0);
+		expect(redisMock.json.set.callCount).to.equal(2);
 	});
 });
