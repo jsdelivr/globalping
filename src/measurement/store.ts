@@ -5,7 +5,7 @@ import type { Probe } from '../probe/types.js';
 import type { RedisClient } from '../lib/redis/client.js';
 import { getRedisClient } from '../lib/redis/client.js';
 import { scopedLogger } from '../lib/logger.js';
-import type { MeasurementRecord, MeasurementResultMessage, MeasurementResult, MeasurementRequest } from './types.js';
+import type { MeasurementRecord, MeasurementResultMessage, MeasurementResult, MeasurementRequest, MeasurementProgressMessage } from './types.js';
 import { getDefaults } from './schema/utils.js';
 
 const logger = scopedLogger('store');
@@ -52,7 +52,7 @@ export class MeasurementStore {
 		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
 
-		const results = this.probesToResults(probes);
+		const results = this.probesToResults(probes, request.type);
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
 		const startTime = new Date();
 		let measurement: MeasurementRecord = {
@@ -81,14 +81,19 @@ export class MeasurementStore {
 		return id;
 	}
 
-	async storeMeasurementProgress (data: MeasurementResultMessage): Promise<void> {
+	async storeMeasurementProgress (data: MeasurementProgressMessage): Promise<void> {
 		const key = getMeasurementKey(data.measurementId);
+		const entries = Object.entries(data.result);
+		let progressUpdatePromises;
+
+		if (data.overwrite) {
+			progressUpdatePromises = entries.map(([ field, value ]) => this.redis.json.set(key, `$.results[${data.testId}].result.${field}`, value));
+		} else {
+			progressUpdatePromises = entries.map(([ field, value ]) => this.redis.json.strAppend(key, `$.results[${data.testId}].result.${field}`, value));
+		}
 
 		await Promise.all([
-			data.overwrite
-				? this.redis.json.set(key, `$.results[${data.testId}].result.rawOutput`, data.result.rawOutput)
-				: this.redis.json.strAppend(key, `$.results[${data.testId}].result.rawOutput`, data.result.rawOutput),
-
+			...progressUpdatePromises,
 			this.redis.json.set(key, '$.updatedAt', new Date().toISOString()),
 		]);
 	}
@@ -172,7 +177,7 @@ export class MeasurementStore {
 		}, intervalTime);
 	}
 
-	probesToResults (probes: Probe[]) {
+	probesToResults (probes: Probe[], type: string) {
 		const results = probes.map(probe => ({
 			probe: {
 				continent: probe.location.continent,
@@ -187,13 +192,26 @@ export class MeasurementStore {
 				tags: probe.tags.map(({ value }) => value),
 				resolvers: probe.resolvers,
 			},
-			result: {
-				status: 'in-progress',
-				rawOutput: '',
-			},
+			result: this.getInitialResult(type),
 		} as MeasurementResult));
 
 		return results;
+	}
+
+	getInitialResult (type: string) {
+		if (type === 'http') {
+			return {
+				status: 'in-progress',
+				rawHeaders: '',
+				rawBody: '',
+				rawOutput: '',
+			};
+		}
+
+		return {
+			status: 'in-progress',
+			rawOutput: '',
+		};
 	}
 }
 

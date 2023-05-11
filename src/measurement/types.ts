@@ -133,6 +133,11 @@ type HttpTest = {
 	resolver?: string;
 };
 
+type HttpProgress = TestProgress & {
+	rawHeaders?: string;
+	rawBody?: string;
+};
+
 type HttpResult = TestResult & {
 	resolvedAddress: string;
 	headers: Record<string, string>;
@@ -149,6 +154,10 @@ type HttpResult = TestResult & {
 		issuer: Record<string, string>;
 		subject: Record<string, string>;
 	};
+};
+
+type TestProgress = {
+	rawOutput: string;
 };
 
 export type RequestType = 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
@@ -208,6 +217,13 @@ export type MeasurementRecord = {
 export type MeasurementAckMessage = {
 	id: string;
 	measurementId: string;
+};
+
+export type MeasurementProgressMessage = {
+	testId: string;
+	measurementId: string;
+	overwrite?: boolean;
+	result: TestProgress | HttpProgress
 };
 
 export type MeasurementResultMessage = {
