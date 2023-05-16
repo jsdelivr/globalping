@@ -38,7 +38,7 @@ export const httpSchema = Joi.object({
 	}).default(),
 	resolver: Joi.string().ip(globalIpOptions).custom(joiValidateTarget('ip')),
 	protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default(COMMAND_DEFAULTS.http.protocol),
-	port: Joi.number(),
+	port: Joi.number().port(),
 }).default().messages(schemaErrorMessages);
 
 // Mtr
@@ -95,7 +95,7 @@ export const dnsSchema = Joi.object({
 		.try(Joi.string().ip(globalIpOptions), Joi.custom(joiValidateDomain()))
 		.custom(joiValidateTarget('any')),
 	protocol: Joi.string().valid(...allowedDnsProtocols).insensitive().default(COMMAND_DEFAULTS.dns.protocol),
-	port: Joi.number().default(COMMAND_DEFAULTS.dns.port),
+	port: Joi.number().port().default(COMMAND_DEFAULTS.dns.port),
 	trace: Joi.boolean().default(COMMAND_DEFAULTS.dns.trace),
 }).default().messages(schemaErrorMessages);
 
