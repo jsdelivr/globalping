@@ -540,6 +540,21 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
+		it('should fail (invalid port)', () => {
+			const input = {
+				type: 'traceroute',
+				target: 'abc.com',
+				measurementOptions: {
+					port: 232322,
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"measurementOptions.port" must be a valid port');
+		});
+
 		it('should pass (target domain)', () => {
 			const input = {
 				type: 'traceroute',
@@ -727,6 +742,21 @@ describe('command schema', async () => {
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (invalid port)', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					port: 232322,
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"measurementOptions.port" must be a valid port');
 		});
 
 		it('should pass (hostname resolver)', () => {
@@ -971,6 +1001,21 @@ describe('command schema', async () => {
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (invalid port)', () => {
+			const input = {
+				type: 'mtr',
+				target: 'abc.com',
+				measurementOptions: {
+					port: 232322,
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"measurementOptions.port" must be a valid port');
 		});
 
 		it('should pass (target domain)', () => {
@@ -1234,6 +1279,21 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input);
 
 			expect(valid.error).to.not.exist;
+		});
+
+		it('should fail (invalid port)', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				measurementOptions: {
+					port: 232322,
+				},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"measurementOptions.port" must be a valid port');
 		});
 
 		it('should pass (empty port)', () => {
