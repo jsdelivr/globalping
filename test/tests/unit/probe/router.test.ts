@@ -230,6 +230,19 @@ describe('probe router', () => {
 			expect(grouped['SA']?.length).to.equal(22);
 		});
 
+		it('should return exactly the same number of probes if limit can\'t be divided evenly', async () => {
+			const sockets: DeepPartial<Socket[]> = await Promise.all([
+				..._.range(5).map(i => buildSocket(`AF-${i}`, { continent: 'AF' })),
+				..._.range(5).map(i => buildSocket(`NA-${i}`, { continent: 'NA' })),
+				..._.range(5).map(i => buildSocket(`SA-${i}`, { continent: 'SA' })),
+			]);
+
+			fetchSocketsMock.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes([{ continent: 'AF' }, { continent: 'NA' }, { continent: 'SA' }], 7);
+			expect(probes.length).to.equal(7);
+		});
+
 		it('should find when probes not enough', async () => {
 			const sockets: DeepPartial<Socket[]> = await Promise.all([
 				..._.range(15).map(i => buildSocket(`AF-${i}`, { continent: 'AF' })),

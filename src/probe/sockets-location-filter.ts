@@ -112,7 +112,9 @@ export class SocketsLocationFilter {
 					continue;
 				}
 
-				const count = Math.ceil((limit - selectedCount) * locationWeight / 100);
+				let count = Math.ceil((limit - selectedCount) * locationWeight / 100);
+				const remainingSpace = limit - pickedSockets.size;
+				count = count > remainingSpace ? remainingSpace : count;
 
 				for (const s of locationSockets.splice(0, count)) {
 					pickedSockets.add(s);
