@@ -8,6 +8,7 @@ import { ProbeRouter } from '../../../../src/probe/router.js';
 import { MetricsAgent } from '../../../../src/lib/metrics.js';
 import type { Probe } from '../../../../src/probe/types.js';
 import type { MeasurementRunner } from '../../../../src/measurement/runner.js';
+import type { MeasurementRecord, MeasurementResultMessage } from '../../../../src/measurement/types.js';
 
 const getProbe = (id: number) => ({ client: id } as unknown as Probe);
 
@@ -15,7 +16,9 @@ describe('MeasurementRunner', () => {
 	const emit = sinon.stub();
 	const to = sinon.stub();
 	const io = sinon.createStubInstance(Server);
-	const redis = {} as RedisClient;
+	const redis = {
+		recordResult: sinon.stub(),
+	} as sinon.SinonStubbedInstance<RedisClient>;
 	const store = sinon.createStubInstance(MeasurementStore);
 	const router = sinon.createStubInstance(ProbeRouter);
 	const metrics = sinon.createStubInstance(MetricsAgent);
@@ -37,6 +40,7 @@ describe('MeasurementRunner', () => {
 		store.createMeasurement.reset();
 		store.createMeasurement.resolves('measurementid');
 		metrics.recordMeasurement.reset();
+		redis.recordResult.reset();
 		testId = 0;
 	});
 
@@ -189,5 +193,25 @@ describe('MeasurementRunner', () => {
 
 		expect(metrics.recordMeasurement.callCount).to.equal(1);
 		expect(metrics.recordMeasurement.args[0]).to.deep.equal([ 'ping' ]);
+	});
+
+	it('should properly handle result events from probes', async () => {
+		const sandbox = sinon.createSandbox({ useFakeTimers: { now: new Date('2023-05-24T09:56:55.000Z').getTime() } });
+		redis.recordResult
+			.onFirstCall().resolves(null)
+			.onSecondCall().resolves({ type: 'ping', createdAt: '2023-05-24T09:56:30.000Z' } as MeasurementRecord)
+			.onThirdCall().resolves(null);
+
+		await runner.recordResult({ measurementId: 'measurementid', testId: 'testid1', result: {} as MeasurementResultMessage['result'] });
+		await runner.recordResult({ measurementId: 'measurementid', testId: 'testid2', result: {} as MeasurementResultMessage['result'] });
+		await runner.recordResult({ measurementId: 'measurementid', testId: 'testid3', result: {} as MeasurementResultMessage['result'] });
+
+		expect(redis.recordResult.callCount).to.equal(3);
+		expect(redis.recordResult.args[0]).to.deep.equal([ 'measurementid', 'testid1', {}]);
+		expect(redis.recordResult.args[1]).to.deep.equal([ 'measurementid', 'testid2', {}]);
+		expect(redis.recordResult.args[2]).to.deep.equal([ 'measurementid', 'testid3', {}]);
+		expect(metrics.recordMeasurementTime.callCount).to.equal(1);
+		expect(metrics.recordMeasurementTime.args[0]).to.deep.equal([ 'ping', 25000 ]);
+		sandbox.restore();
 	});
 });

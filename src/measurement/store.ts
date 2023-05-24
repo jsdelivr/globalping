@@ -5,7 +5,7 @@ import type { Probe } from '../probe/types.js';
 import type { RedisClient } from '../lib/redis/client.js';
 import { getRedisClient } from '../lib/redis/client.js';
 import { scopedLogger } from '../lib/logger.js';
-import type { MeasurementRecord, MeasurementResultMessage, MeasurementResult, MeasurementRequest, MeasurementProgressMessage } from './types.js';
+import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage } from './types.js';
 import { getDefaults } from './schema/utils.js';
 
 const logger = scopedLogger('store');
@@ -94,29 +94,6 @@ export class MeasurementStore {
 
 		await Promise.all([
 			...progressUpdatePromises,
-			this.redis.json.set(key, '$.updatedAt', new Date().toISOString()),
-		]);
-	}
-
-	async storeMeasurementResult (data: MeasurementResultMessage): Promise<number> {
-		const key = getMeasurementKey(data.measurementId);
-
-		const [ remainingProbes ] = await Promise.all([
-			this.redis.decr(`${key}:probes_awaiting`),
-			this.redis.json.set(key, `$.results[${data.testId}].result`, data.result),
-			this.redis.json.set(key, '$.updatedAt', new Date().toISOString()),
-		]);
-
-		return remainingProbes;
-	}
-
-	async markFinished (id: string): Promise<void> {
-		const key = getMeasurementKey(id);
-
-		await Promise.all([
-			this.redis.hDel('gp:in-progress', id),
-			this.redis.del(`${key}:probes_awaiting`),
-			this.redis.json.set(key, '$.status', 'finished'),
 			this.redis.json.set(key, '$.updatedAt', new Date().toISOString()),
 		]);
 	}

@@ -8,11 +8,10 @@ import { getProbeRouter, type ProbeRouter } from '../probe/router.js';
 import type { Probe } from '../probe/types.js';
 import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
-import { getMeasurementKey, getMeasurementStore } from './store.js';
+import { getMeasurementStore } from './store.js';
 import type {
 	MeasurementRequest,
 	MeasurementResultMessage,
-	MeasurementRecord,
 	MeasurementProgressMessage,
 } from './types.js';
 
@@ -45,21 +44,10 @@ export class MeasurementRunner {
 	}
 
 	async recordResult (data: MeasurementResultMessage): Promise<void> {
-		const probesAwaiting = await this.redis.get(getMeasurementKey(data.measurementId, 'probes_awaiting'));
+		const record = await this.redis.recordResult(data.measurementId, data.testId, data.result);
 
-		if (probesAwaiting === null) {
-			return;
-		}
-
-		const remainingProbes = await this.store.storeMeasurementResult(data);
-
-		if (remainingProbes === 0) {
-			await this.store.markFinished(data.measurementId);
-			const record = (await this.redis.json.get(getMeasurementKey(data.measurementId))) as MeasurementRecord;
-
-			if (record) {
-				this.metrics.recordMeasurementTime(record.type, Date.now() - new Date(record.createdAt).getTime());
-			}
+		if (record) {
+			this.metrics.recordMeasurementTime(record.type, Date.now() - new Date(record.createdAt).getTime());
 		}
 	}
 
