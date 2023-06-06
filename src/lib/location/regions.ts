@@ -29,4 +29,19 @@ export const regions = {
 	'Polynesia': [ 'WS', 'TO', 'TV', 'CK', 'NU', 'PF', 'PN', 'TK', 'WF' ],
 };
 
+export const aliases = [
+	[ 'northern africa', 'north africa' ],
+	[ 'eastern africa', 'east africa' ],
+	[ 'western africa', 'west africa' ],
+	[ 'south america', 'southern america' ],
+	[ 'eastern asia', 'east asia' ],
+	[ 'south-eastern asia', 'south-east asia' ],
+	[ 'southern asia', 'south asia' ],
+	[ 'western asia', 'west asia' ],
+	[ 'eastern europe', 'east europe' ],
+	[ 'northern europe', 'north europe' ],
+	[ 'southern europe', 'south europe' ],
+	[ 'western europe', 'west europe' ],
+];
+
 export const regionNames = Object.keys(regions);

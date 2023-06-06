@@ -388,6 +388,7 @@ describe('probe router', () => {
 		const location = {
 			continent: 'NA',
 			region: getRegionByCountry('US'),
+			normalizedRegion: 'northern america',
 			country: 'US',
 			state: 'NY',
 			city: 'The New York City',
@@ -412,6 +413,31 @@ describe('probe router', () => {
 			expect(probes.length).to.equal(1);
 			expect(probes[0]!.location.country).to.equal('US');
 		});
+
+		it('should not find probe by continent alias if it is used not in magic field', async () => {
+			const sockets: DeepPartial<Socket[]> = [
+				await buildSocket('socket-1', location),
+			];
+
+			fetchSocketsMock.resolves(sockets as never);
+			const probes = await router.findMatchingProbes([{ continent: 'NA' }], 100);
+			expect(probes.length).to.equal(1);
+			const probes2 = await router.findMatchingProbes([{ continent: 'North America' }], 100);
+			expect(probes2.length).to.equal(0);
+		});
+
+		it('should not find probe by region alias if it is used not in magic field', async () => {
+			const sockets: DeepPartial<Socket[]> = [
+				await buildSocket('socket-1', { normalizedRegion: 'northern africa', region: 'Northern Africa' }),
+			];
+
+			fetchSocketsMock.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes([{ region: 'northern africa' }], 100);
+			expect(probes.length).to.equal(1);
+			const probes2 = await router.findMatchingProbes([{ region: 'north africa' }], 100);
+			expect(probes2.length).to.equal(0);
+		});
 	});
 
 	describe('route with magic location', () => {
@@ -426,9 +452,47 @@ describe('probe router', () => {
 			normalizedNetwork: 'a-virgin media',
 		};
 
-		it('should return match (country alias)', async () => {
+		it('should return match (continent alias)', async () => {
 			const sockets: DeepPartial<Socket[]> = [
 				await buildSocket(String(Date.now()), location),
+			];
+
+			fetchSocketsMock.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes([{ magic: 'europe' }], 100);
+
+			expect(probes.length).to.equal(1);
+			expect(probes[0]!.location.country).to.equal('GB');
+		});
+
+		it('should return match (region alias)', async () => {
+			const sockets: DeepPartial<Socket[]> = [
+				await buildSocket('socket-1', { normalizedRegion: 'northern africa', region: 'Northern Africa' }),
+			];
+
+			fetchSocketsMock.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes([{ magic: 'north africa' }], 100);
+
+			expect(probes.length).to.equal(1);
+			expect(probes[0]!.location.region).to.equal('Northern Africa');
+		});
+
+		it('should not return match (non-existing region alias)', async () => {
+			const sockets: DeepPartial<Socket[]> = [
+				await buildSocket('socket-1', { normalizedRegion: 'southern africa', region: 'Southern Africa' }),
+			];
+
+			fetchSocketsMock.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes([{ magic: 'south africa' }], 100);
+
+			expect(probes.length).to.equal(0);
+		});
+
+		it('should return match (country alias)', async () => {
+			const sockets: DeepPartial<Socket[]> = [
+				await buildSocket('socket-1', location),
 			];
 
 			const locations: Location[] = [
