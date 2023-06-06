@@ -9,6 +9,8 @@ import {
 	getCountryIso3ByIso2,
 	getCountryAliases,
 	getNetworkAliases,
+	getContinentAliases,
+	getRegionAliases,
 } from '../lib/location/location.js';
 import { InternalError } from '../lib/internal-error.js';
 import { createGeoipClient } from '../lib/geoip/client.js';
@@ -62,7 +64,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const tags = getTags(clientIp);
 
-	// Storing index values as string[][] so every category will have it's exact position in the index array across all probes
+	// Storing index as string[][] so every category will have it's exact position in the index array across all probes
 	const index = [
 		[ location.country ],
 		[ getCountryIso3ByIso2(location.country) ],
@@ -72,7 +74,9 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		location.state ? [ location.state ] : [],
 		location.state ? [ getStateNameByIso(location.state) ] : [],
 		[ location.continent ],
+		getContinentAliases(location.continent),
 		[ location.normalizedRegion ],
+		getRegionAliases(location.normalizedRegion),
 		[ `as${location.asn}` ],
 		tags.filter(tag => tag.type === 'system').map(tag => tag.value),
 		[ location.normalizedNetwork ],

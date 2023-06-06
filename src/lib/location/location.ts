@@ -1,12 +1,13 @@
 import _ from 'lodash';
 import geoLists from 'countries-list';
-import { regions } from './regions.js';
+import { regions, aliases as regionAliases } from './regions.js';
 import { states } from './states.js';
 import {
 	alpha as countryAlpha,
 	aliases as countryAliases,
 } from './countries.js';
 import { aliases as networkAliases } from './networks.js';
+import { aliases as continentAliases } from './continents.js';
 
 const { countries } = geoLists;
 const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [ c, r ])));
@@ -82,3 +83,16 @@ export const getNetworkAliases = (key: string): string[] => {
 
 	return array ?? [];
 };
+
+export const getContinentAliases = (key: string): string[] => {
+	const array = continentAliases.find(n => n.includes(key.toLowerCase()));
+
+	return array ?? [];
+};
+
+export const getRegionAliases = (key: string): string[] => {
+	const array = regionAliases.find(n => n.includes(key.toLowerCase()));
+
+	return array ?? [];
+};
+
