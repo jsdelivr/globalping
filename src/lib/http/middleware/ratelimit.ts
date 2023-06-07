@@ -1,3 +1,4 @@
+import config from 'config';
 import type { Context, Next } from 'koa';
 import requestIp from 'request-ip';
 import type { RateLimiterRes } from 'rate-limiter-flexible';
@@ -19,15 +20,25 @@ export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
 		return next();
 	}
 
-	try {
-		const response = await rateLimiter.consume(requestIp.getClientIp(ctx.req) ?? '');
-		setResponseHeaders(ctx, response);
-	} catch (error: unknown) { // Ts requires 'unknown' for errors
-		setResponseHeaders(ctx, error as RateLimiterRes);
+	const defaultState = {
+		remainingPoints: config.get<number>('measurement.rateLimit'),
+		msBeforeNext: config.get<number>('measurement.rateLimitResetMs'),
+		consumedPoints: 0,
+		isFirstInDuration: true,
+	};
+	const currentState = await rateLimiter.get(requestIp.getClientIp(ctx.req) ?? '') ?? defaultState;
+
+	if (currentState.remainingPoints >= ctx.request.body.limit) {
+		await next();
+		const newState = await rateLimiter.penalty(requestIp.getClientIp(ctx.req) ?? '', ctx.response.body.probesCount);
+		setResponseHeaders(ctx, newState);
+	} else {
+		setResponseHeaders(ctx, currentState);
 		ctx.status = 429;
 		ctx.body = 'Too Many Requests';
 		return;
 	}
 
-	await next();
+	const data = await rateLimiter.get(requestIp.getClientIp(ctx.req) ?? '');
+	console.log('data', data);
 };
