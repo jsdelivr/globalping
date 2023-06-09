@@ -3,19 +3,20 @@ import request, { type Response } from 'supertest';
 import requestIp from 'request-ip';
 import type { RateLimiterRedis } from 'rate-limiter-flexible';
 import { expect } from 'chai';
-import { getTestServer } from '../../../utils/server.js';
+import { Socket } from 'socket.io-client';
+import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../../utils/server.js';
 
 describe('rate limiter', () => {
 	let app: Server;
 	let requestAgent: any;
 	let clientIpv6: string;
 	let rateLimiterInstance: RateLimiterRedis;
+	let probe: Socket;
 
 	before(async () => {
 		app = await getTestServer();
 		requestAgent = request(app);
 
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 		const httpResponse = await requestAgent.post('/v1/').send() as Response & {req: any};
 		// Supertest renders request as ipv4
 		const clientIp = requestIp.getClientIp(httpResponse.req);
@@ -24,6 +25,12 @@ describe('rate limiter', () => {
 
 		const rateLimiter = await import('../../../../src/lib/ratelimiter.js');
 		rateLimiterInstance = rateLimiter.default;
+		probe = await addFakeProbe();
+		probe.emit('probe:status:update', 'ready');
+	});
+
+	after(async () => {
+		await deleteFakeProbe(probe);
 	});
 
 	afterEach(async () => {
@@ -32,7 +39,6 @@ describe('rate limiter', () => {
 
 	describe('headers', () => {
 		it('should NOT include headers (GET)', async () => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			const response = await requestAgent.get('/v1/').send() as Response;
 
 			expect(response.headers['x-ratelimit-limit']).to.not.exist;
@@ -40,25 +46,43 @@ describe('rate limiter', () => {
 			expect(response.headers['x-ratelimit-reset']).to.not.exist;
 		});
 
-		it('should include headers (POST)', async () => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
+		it('should NOT include headers if body is not valid (POST)', async () => {
 			const response = await requestAgent.post('/v1/measurements').send() as Response;
+
+			expect(response.headers['x-ratelimit-limit']).to.not.exist;
+			expect(response.headers['x-ratelimit-remaining']).to.not.exist;
+			expect(response.headers['x-ratelimit-reset']).to.not.exist;
+		});
+
+		it('should include headers (POST)', async () => {
+			const response = await requestAgent.post('/v1/measurements').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+			}) as Response;
 
 			expect(response.headers['x-ratelimit-limit']).to.exist;
 			expect(response.headers['x-ratelimit-remaining']).to.exist;
 			expect(response.headers['x-ratelimit-reset']).to.exist;
 		});
 
-		it('should change values on next request (5) (POST)', async () => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			const requestPromise = () => requestAgent.post('/v1/measurements').send() as Response;
-			const responseList = await Promise.all(Array.from({ length: 5 }).map(() => requestPromise()));
+		it('should change values on multiple requests (POST)', async () => {
+			const response = await requestAgent.post('/v1/measurements').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+			}) as Response;
 
-			const firstResponse = responseList[0];
-			const lastResponse = responseList[4];
+			expect(response.headers['x-ratelimit-limit']).to.equal('100000');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('99999');
+			expect(response.headers['x-ratelimit-reset']).to.equal('3600');
 
-			expect(responseList).to.have.lengthOf(5);
-			expect(firstResponse?.headers?.['x-ratelimit-remaining']).to.not.equal(lastResponse?.headers?.['x-ratelimit-remaining']);
+			const response2 = await requestAgent.post('/v1/measurements').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+			}) as Response;
+
+			expect(response2.headers['x-ratelimit-limit']).to.equal('100000');
+			expect(response2.headers['x-ratelimit-remaining']).to.equal('99998');
+			expect(response2.headers['x-ratelimit-reset']).to.equal('3600');
 		});
 	});
 
@@ -66,17 +90,21 @@ describe('rate limiter', () => {
 		it('should succeed (limit not reached)', async () => {
 			await rateLimiterInstance.set(clientIpv6, 0, 0);
 
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			const response = await requestAgent.post('/v1/measurements').send() as Response;
+			const response = await requestAgent.post('/v1/measurements').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+			}) as Response;
 
-			expect(Number(response.headers['x-ratelimit-remaining'])).to.equal(299);
+			expect(Number(response.headers['x-ratelimit-remaining'])).to.equal(99999);
 		});
 
 		it('should fail (limit reached) (start at 100)', async () => {
-			await rateLimiterInstance.set(clientIpv6, 300, 0);
+			await rateLimiterInstance.set(clientIpv6, 100000, 0);
 
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
-			const response = await requestAgent.post('/v1/measurements').send() as Response;
+			const response = await requestAgent.post('/v1/measurements').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+			}) as Response;
 
 			expect(Number(response.headers['x-ratelimit-remaining'])).to.equal(0);
 			expect(response.statusCode).to.equal(429);

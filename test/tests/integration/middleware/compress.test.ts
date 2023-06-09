@@ -39,7 +39,6 @@ describe('compression', () => {
 				probe.emit('probe:status:update', 'ready');
 			}
 
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			const response = await requestAgent
 				.get('/v1/probes')
 				.set('accept-encoding', '*')
