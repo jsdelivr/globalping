@@ -11,20 +11,17 @@ const setResponseHeaders = (ctx: Context, response: RateLimiterRes) => {
 	ctx.set('X-RateLimit-Remaining', `${response.remainingPoints}`);
 };
 
-const methodsWhitelist = new Set([ 'GET', 'HEAD', 'OPTIONS' ]);
-
 export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
-	const { method, isAdmin } = ctx;
+	const { isAdmin } = ctx;
 	const clientIp = requestIp.getClientIp(ctx.req) ?? '';
 	const request = ctx.request.body as MeasurementRequest;
-	const limit = request.locations.some(l => l.limit) ? request.locations.reduce((sum, { limit }) => sum + limit, 0) : request.limit;
+	const limit = request.locations.some(l => l.limit) ? request.locations.reduce((sum, { limit = 1 }) => sum + limit, 0) : request.limit;
 
-	if (methodsWhitelist.has(method) || isAdmin) {
+	if (isAdmin) {
 		return next();
 	}
 
 	const currentState = await rateLimiter.get(clientIp) ?? defaultState as RateLimiterRes;
-	setResponseHeaders(ctx, currentState);
 
 	if (currentState.remainingPoints < limit) {
 		setResponseHeaders(ctx, currentState);
@@ -32,12 +29,12 @@ export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
 	}
 
 	await next();
-	const response = ctx.response.body as object;
+	const response = ctx.response.body as object & { probesCount?: number };
 
 	if (!('probesCount' in response) || typeof response.probesCount !== 'number') {
 		throw new Error('Missing probesCount field in response object');
 	}
 
-	const newState = await rateLimiter.penalty(clientIp, response.probesCount as number);
+	const newState = await rateLimiter.penalty(clientIp, response.probesCount);
 	setResponseHeaders(ctx, newState);
 };

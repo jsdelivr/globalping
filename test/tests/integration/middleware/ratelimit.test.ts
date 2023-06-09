@@ -3,7 +3,7 @@ import request, { type Response } from 'supertest';
 import requestIp from 'request-ip';
 import type { RateLimiterRedis } from 'rate-limiter-flexible';
 import { expect } from 'chai';
-import { Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../../utils/server.js';
 
 describe('rate limiter', () => {
