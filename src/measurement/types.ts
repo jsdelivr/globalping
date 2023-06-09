@@ -163,7 +163,7 @@ type TestProgress = {
 export type RequestType = 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 
 export type MeasurementOptions = PingTest | TracerouteTest | MtrTest | DnsTest | HttpTest;
-export type LocationWithLimit = Location & {limit?: number};
+export type LocationWithLimit = Location & {limit: number};
 
 /**
  * Measurement Objects

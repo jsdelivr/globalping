@@ -17,6 +17,7 @@ export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
 	const { method, isAdmin } = ctx;
 	const clientIp = requestIp.getClientIp(ctx.req) ?? '';
 	const request = ctx.request.body as MeasurementRequest;
+	const limit = request.locations.some(l => l.limit) ? request.locations.reduce((sum, { limit }) => sum + limit, 0) : request.limit;
 
 	if (methodsWhitelist.has(method) || isAdmin) {
 		return next();
@@ -25,7 +26,7 @@ export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
 	const currentState = await rateLimiter.get(clientIp) ?? defaultState as RateLimiterRes;
 	setResponseHeaders(ctx, currentState);
 
-	if (currentState.remainingPoints < request.limit) {
+	if (currentState.remainingPoints < limit) {
 		setResponseHeaders(ctx, currentState);
 		throw createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
 	}
