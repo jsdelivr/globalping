@@ -50,7 +50,7 @@ example:
 POST https://api.globalping.io/v1/measurements
 {
     "target": "jsdelivr.com",
-    "type": "ping"
+    "type": "ping",
     "measurementOptions": {
         "packets": 10,
     },
