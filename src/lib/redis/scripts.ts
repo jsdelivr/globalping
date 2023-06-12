@@ -4,8 +4,8 @@ import type { MeasurementRecord, MeasurementResultMessage } from '../../measurem
 type CountScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
-	transformArguments (this: void, key: string): Array<string>;
-	transformReply (this: void, reply: number): number;
+	transformArguments (key: string): Array<string>;
+	transformReply (reply: number): number;
 } & {
 	SHA1: string;
 };
@@ -13,8 +13,8 @@ type CountScript = {
 export type RecordResultScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
-	transformArguments (this: void, measurementId: string, testId: string, data: MeasurementResultMessage['result']): string[];
-	transformReply (this: void, reply: string): MeasurementRecord | null;
+	transformArguments (measurementId: string, testId: string, data: MeasurementResultMessage['result']): string[];
+	transformReply (reply: string): MeasurementRecord | null;
 } & {
 	SHA1: string;
 };
