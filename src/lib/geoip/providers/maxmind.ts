@@ -27,7 +27,7 @@ const query = async (addr: string, retryCounter = 0): Promise<City> => {
 			}
 		}
 
-		throw new Error('no maxmind data');
+		throw error;
 	}
 };
 
