@@ -10,3 +10,5 @@ data/IP_BLACKLIST.json
 data/AWS_IP_RANGES.json
 data/GCP_IP_RANGES.json
 .eslintcache
+probes-stats/result.csv
+probes-stats/result.json
