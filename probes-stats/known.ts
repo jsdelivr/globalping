@@ -6,14 +6,16 @@
  */
 
 import fs from 'node:fs';
-import { initRedis } from '../src/lib/redis/client.js';
+import { getRedisClient, initRedis } from '../src/lib/redis/client.js';
 import { LocationInfo, createGeoipClient } from '../src/lib/geoip/client.js';
 import { normalizeCityName } from '../src/lib/geoip/utils.js';
 import { FastlyBundledResponse, fastlyLookup } from '../src/lib/geoip/providers/fastly.js';
 import { ipinfoLookup } from '../src/lib/geoip/providers/ipinfo.js';
 import { maxmindLookup } from '../src/lib/geoip/providers/maxmind.js';
+import { populateMemList as populateIpWhiteList } from '../src/lib/geoip/whitelist.js';
 import sheet from './known-probes.json' assert { type: 'json' };
 
+await populateIpWhiteList();
 await initRedis();
 const geoIpClient = createGeoipClient();
 
@@ -31,7 +33,7 @@ type ResultItem = {
 const getData = async () => {
 	const result: ResultItem[] = [];
 
-	for (const row of sheet) {
+	await Promise.all(sheet.map(async (row) => {
 		const normalizedCity = normalizeCityName(row.city);
 
 		const ipinfo = await geoIpClient.lookupWithCache<LocationInfo>(`geoip:ipinfo:${row.ip}`, async () => ipinfoLookup(row.ip));
@@ -54,7 +56,7 @@ const getData = async () => {
 		}
 
 		result.push(updatedRow);
-	}
+	}));
 
 	return result;
 };
@@ -74,17 +76,18 @@ const getAccuracy = (result) => {
 
 const generateFiles = (data: ResultItem[], acc: {ipinfo: string, maxmind: string, fastly: string, algorithm: string}) => {
 	const csvContent = [
-		'ip,city,ipinfo,maxmind,fastly,algorithm',
+		'ip,real city,ipinfo,maxmind,fastly,algorithm',
 		`accuracy:,1,${acc.ipinfo},${acc.maxmind},${acc.fastly},${acc.algorithm}`,
 		...data.map(row => `${row.ip},${row.city},${row.ipinfo},${row.maxmind},${row.fastly},${row.algorithm}`),
 	].join('\n');
-	fs.writeFileSync('./probes-stats/result.json', JSON.stringify(data, null, 2));
-	fs.writeFileSync('./probes-stats/result.csv', csvContent);
+	fs.writeFileSync('./probes-stats/known-result.json', JSON.stringify(data, null, 2));
+	fs.writeFileSync('./probes-stats/known-result.csv', csvContent);
 };
 
 (async () => {
 	const data = await getData();
 	const acc = getAccuracy(data);
 	generateFiles(data, acc);
-	console.log('Finished!');
+	const redis = getRedisClient();
+	await redis.disconnect();
 })();
