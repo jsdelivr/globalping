@@ -1,26 +1,19 @@
 import fs from 'node:fs';
 import request, { type Response } from 'supertest';
 import { expect } from 'chai';
-import * as td from 'testdouble';
 import nock from 'nock';
 import type { Socket } from 'socket.io-client';
-import RedisCacheMock from '../../../mocks/redis-cache.js';
+import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../../utils/server.js';
 
 const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
 describe('compression', () => {
-	let addFakeProbe: () => Promise<Socket>;
-	let deleteFakeProbe: (socket: Socket) => Promise<void>;
 	let requestAgent: any;
 	let probes: Socket[] = [];
 
 	describe('headers', () => {
 		before(async () => {
-			await td.replaceEsm('../../../../src/lib/cache/redis-cache.ts', {}, RedisCacheMock);
-			const http = await import('../../../utils/server.js');
-			addFakeProbe = http.addFakeProbe;
-			deleteFakeProbe = http.deleteFakeProbe;
-			const app = await http.getTestServer();
+			const app = await getTestServer();
 			requestAgent = request(app);
 		});
 

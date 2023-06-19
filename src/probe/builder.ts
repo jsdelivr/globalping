@@ -18,18 +18,20 @@ import getProbeIp from '../lib/get-probe-ip.js';
 import { getRegion } from '../lib/ip-ranges.js';
 import type { Probe, ProbeLocation, Tag } from './types.js';
 
-const fakeIpForDebug = () => _.sample([
-	'18.200.0.1', // aws-eu-west-1
-	'34.140.0.10', // gcp-europe-west1
-	'95.155.94.127',
-	'65.49.22.66',
-	'185.229.226.83',
-	'51.158.22.211',
-	'131.255.7.26',
-	'213.136.174.80',
-	'94.214.253.78',
-	'79.205.97.254',
-]);
+const fakeIpForDebug = () => {
+	return _.sample([
+		'18.200.0.1', // aws-eu-west-1
+		'34.140.0.10', // gcp-europe-west1
+		'95.155.94.127',
+		'65.49.22.66',
+		'185.229.226.83',
+		'51.158.22.211',
+		'131.255.7.26',
+		'213.136.174.80',
+		'94.214.253.78',
+		'79.205.97.254',
+	]);
+};
 
 const geoipClient = createGeoipClient();
 

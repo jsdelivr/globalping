@@ -46,7 +46,7 @@ export const initWsServer = async () => {
 	);
 
 	setTimeout(() => {
-		reconnectProbes().catch(error => logger.error(error));
+		reconnectProbes(fetchSockets).catch(error => logger.error(error));
 	}, TIME_UNTIL_VM_BECOMES_HEALTHY);
 };
 
@@ -67,3 +67,5 @@ export const fetchSockets = async () => {
 
 	return sockets;
 };
+
+export type ThrottledFetchSockets = typeof fetchSockets;

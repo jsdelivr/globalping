@@ -2,6 +2,7 @@ import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { io, type Socket } from 'socket.io-client';
 import { createServer } from '../../src/lib/server.js';
+import { getRedisClient } from '../../src/lib/redis/client.js';
 
 let app: Server;
 let url: string;
@@ -12,6 +13,8 @@ export const getTestServer = async (): Promise<Server> => {
 		app.listen(0);
 		const { port } = app.address() as AddressInfo;
 		url = `http://127.0.0.1:${port}/probes`;
+		const redis = getRedisClient();
+		await redis.flushDb();
 	}
 
 	return app;
