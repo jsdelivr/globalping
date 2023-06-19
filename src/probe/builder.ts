@@ -19,16 +19,10 @@ import { getRegion } from '../lib/ip-ranges.js';
 import type { Probe, ProbeLocation, Tag } from './types.js';
 
 const fakeIpForDebug = () => {
-	/**
-	 * Ips for test and dev should be separated so redis will not return dev data during the tests
-	 */
-	if (process.env['NODE_ENV'] === 'test') {
-		return '95.155.94.127';
-	}
-
 	return _.sample([
 		'18.200.0.1', // aws-eu-west-1
 		'34.140.0.10', // gcp-europe-west1
+		'95.155.94.127',
 		'65.49.22.66',
 		'185.229.226.83',
 		'51.158.22.211',
