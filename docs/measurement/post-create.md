@@ -36,7 +36,6 @@ below is presented a schema containing all possible input values; some are gener
             query?: string
             method?: string
         }
-        protocol?: string
         port?: number
         resolver?: string
         trace?: boolean
@@ -50,7 +49,7 @@ example:
 POST https://api.globalping.io/v1/measurements
 {
     "target": "jsdelivr.com",
-    "type": "ping"
+    "type": "ping",
     "measurementOptions": {
         "packets": 10,
     },
