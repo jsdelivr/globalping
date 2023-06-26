@@ -1,3 +1,4 @@
+import process from 'node:process';
 import type { Server as SocketServer } from 'socket.io';
 import newrelic from 'newrelic';
 
@@ -47,7 +48,7 @@ export class MetricsAgent {
 
 	private async updateProbeCount (): Promise<void> {
 		const socketList = await this.io.of(PROBES_NAMESPACE).local.fetchSockets();
-		newrelic.recordMetric('probe_count', socketList.length);
+		newrelic.recordMetric(`probe_count_${process.pid}`, socketList.length);
 	}
 
 	private async updateMeasurementCount (): Promise<void> {
