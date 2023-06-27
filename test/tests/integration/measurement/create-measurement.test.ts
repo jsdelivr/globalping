@@ -1,12 +1,10 @@
 
-import fs from 'node:fs';
 import { expect } from 'chai';
 import request, { type SuperTest, type Test } from 'supertest';
 import * as td from 'testdouble';
 import nock from 'nock';
 import type { Socket } from 'socket.io-client';
-
-const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
+import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 
 describe('Create measurement', () => {
 	let addFakeProbe: () => Promise<Socket>;
@@ -53,9 +51,7 @@ describe('Create measurement', () => {
 
 	describe('probes connected', () => {
 		before(async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks.fastly.default);
-			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks.ipinfo.default);
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks.maxmind.default);
+			nockGeoIpProviders();
 			probe = await addFakeProbe();
 		});
 

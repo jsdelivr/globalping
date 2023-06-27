@@ -1,12 +1,10 @@
-import fs from 'node:fs';
 import request, { type SuperTest, type Test } from 'supertest';
 import * as td from 'testdouble';
 import nock from 'nock';
 import type { Socket } from 'socket.io-client';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
-
-const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
+import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 
 describe('Timeout results', () => {
 	let probe: Socket;
@@ -29,9 +27,7 @@ describe('Timeout results', () => {
 	});
 
 	beforeEach(async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks.fastly.default);
-		nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks.ipinfo.default);
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks.maxmind.default);
+		nockGeoIpProviders();
 
 		probe = await addFakeProbe();
 	});
