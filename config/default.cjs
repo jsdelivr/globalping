@@ -25,6 +25,9 @@ module.exports = {
 	ipinfo: {
 		apiKey: '',
 	},
+	ip2location: {
+		apiKey: '',
+	},
 	ws: {
 		fetchSocketsCacheTTL: 1000,
 	},
