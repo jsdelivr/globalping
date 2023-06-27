@@ -29,9 +29,9 @@ describe('Timeout results', () => {
 	});
 
 	beforeEach(async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['01.00'].fastly);
-		nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['01.00'].maxmind);
+		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks.fastly.default);
+		nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks.ipinfo.default);
+		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks.maxmind.default);
 
 		probe = await addFakeProbe();
 	});

@@ -48,9 +48,9 @@ describe('Get Probes', () => {
 
 	describe('probes connected', () => {
 		it('should not detect probes if they are not ready', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['00.00'].fastly);
-			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['00.00'].ipinfo);
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['00.00'].maxmind);
+			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks.fastly.default);
+			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks.ipinfo.default);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks.maxmind.default);
 
 			await addFakeProbe();
 
@@ -63,9 +63,9 @@ describe('Get Probes', () => {
 		});
 
 		it('should detect 1 probe in "ready: true" status', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['00.00'].fastly);
-			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['00.00'].ipinfo);
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['00.00'].maxmind);
+			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks.fastly.argentina);
+			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks.ipinfo.argentina);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks.maxmind.argentina);
 
 			const probe = await addFakeProbe();
 			probe.emit('probe:status:update', 'ready');
@@ -94,16 +94,16 @@ describe('Get Probes', () => {
 
 		it('should detect 2 probes in "ready: true" status', async () => {
 			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
-				.get(/.*/).reply(200, nockMocks['01.00'].fastly);
+				.get(/.*/).reply(200, nockMocks.fastly.argentina)
+				.get(/.*/).reply(200, nockMocks.fastly.default);
 
 			nock('https://ipinfo.io')
-				.get(/.*/).reply(200, nockMocks['00.00'].ipinfo)
-				.get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
+				.get(/.*/).reply(200, nockMocks.ipinfo.argentina)
+				.get(/.*/).reply(200, nockMocks.ipinfo.default);
 
 			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(/.*/).reply(200, nockMocks['00.00'].maxmind)
-				.get(/.*/).reply(200, nockMocks['01.00'].maxmind);
+				.get(/.*/).reply(200, nockMocks.maxmind.argentina)
+				.get(/.*/).reply(200, nockMocks.maxmind.default);
 
 			const probe1 = await addFakeProbe();
 			const probe2 = await addFakeProbe();
@@ -150,19 +150,19 @@ describe('Get Probes', () => {
 
 		it('should detect 3 probes in "ready: true" status', async () => {
 			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
-				.get(/.*/).reply(200, nockMocks['01.00'].fastly)
-				.get(/.*/).reply(200, nockMocks['00.04'].fastly);
+				.get(/.*/).reply(200, nockMocks.fastly.argentina)
+				.get(/.*/).reply(200, nockMocks.fastly.default)
+				.get(/.*/).reply(200, nockMocks.fastly.newYork);
 
 			nock('https://ipinfo.io')
-				.get(/.*/).reply(200, nockMocks['00.00'].ipinfo)
-				.get(/.*/).reply(200, nockMocks['01.00'].ipinfo)
-				.get(/.*/).reply(200, nockMocks['00.04'].ipinfo);
+				.get(/.*/).reply(200, nockMocks.ipinfo.argentina)
+				.get(/.*/).reply(200, nockMocks.ipinfo.default)
+				.get(/.*/).reply(200, nockMocks.ipinfo.newYork);
 
 			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(/.*/).reply(200, nockMocks['00.00'].maxmind)
-				.get(/.*/).reply(200, nockMocks['01.00'].maxmind)
-				.get(/.*/).reply(200, nockMocks['00.04'].maxmind);
+				.get(/.*/).reply(200, nockMocks.maxmind.argentina)
+				.get(/.*/).reply(200, nockMocks.maxmind.default)
+				.get(/.*/).reply(200, nockMocks.maxmind.newYork);
 
 			const probe1 = await addFakeProbe();
 			const probe2 = await addFakeProbe();
@@ -229,16 +229,16 @@ describe('Get Probes', () => {
 
 		it('should detect only "ready" probes and filter out other', async () => {
 			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
-				.get(/.*/).reply(200, nockMocks['01.00'].fastly);
+				.get(/.*/).reply(200, nockMocks.fastly.argentina)
+				.get(/.*/).reply(200, nockMocks.fastly.default);
 
 			nock('https://ipinfo.io')
-				.get(/.*/).reply(200, nockMocks['00.00'].ipinfo)
-				.get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
+				.get(/.*/).reply(200, nockMocks.ipinfo.argentina)
+				.get(/.*/).reply(200, nockMocks.ipinfo.default);
 
 			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(/.*/).reply(200, nockMocks['00.00'].maxmind)
-				.get(/.*/).reply(200, nockMocks['01.00'].maxmind);
+				.get(/.*/).reply(200, nockMocks.maxmind.argentina)
+				.get(/.*/).reply(200, nockMocks.maxmind.default);
 
 			const probe1 = await addFakeProbe();
 			await addFakeProbe();
@@ -267,9 +267,9 @@ describe('Get Probes', () => {
 		});
 
 		it('should add extra info if admin key is provided', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['00.00'].fastly);
-			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['00.00'].ipinfo);
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['00.00'].maxmind);
+			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks.fastly.argentina);
+			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks.ipinfo.argentina);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks.maxmind.argentina);
 
 			const probe = await addFakeProbe();
 			probe.emit('probe:status:update', 'ready');

@@ -23,9 +23,9 @@ describe('compression', () => {
 		});
 
 		it('should include compression headers', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).times(10).reply(200, nockMocks['00.00'].fastly);
-			nock('https://ipinfo.io').get(/.*/).times(10).reply(200, nockMocks['00.00'].ipinfo);
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).times(10).reply(200, nockMocks['00.00'].maxmind);
+			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).times(10).reply(200, nockMocks.fastly.default);
+			nock('https://ipinfo.io').get(/.*/).times(10).reply(200, nockMocks.ipinfo.default);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).times(10).reply(200, nockMocks.maxmind.default);
 			probes = await Promise.all(Array.from({ length: 10 }).map(() => addFakeProbe()));
 
 			for (const probe of probes) {

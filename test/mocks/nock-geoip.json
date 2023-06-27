@@ -1,98 +1,6 @@
 {
-	"00.00": {
-		"ipinfo": {
-			"city": "Lagoa do Carro",
-			"region": "Pernambuco",
-			"country": "BR",
-			"loc": "-7.7568,-35.3656",
-			"org": "AS61493 InterBS S.R.L. (BAEHOST)"
-		},
-		"maxmind": {
-			"continent": {
-				"code": "SA"
-			},
-			"country": {
-				"isoCode": "AR"
-			},
-			"city": {
-				"names": {
-					"en": "Buenos Aires"
-				}
-			},
-			"location": {
-				"latitude": -34.602,
-				"longitude": -58.384
-			},
-			"traits": {
-				"autonomousSystemNumber": 61493,
-				"isp": "interbs s.r.l."
-			}
-		},
-		"fastly": {
-			"as": {
-				"name": "interbs s.r.l.",
-				"number": 61493
-			},
-			"geo-digitalelement": {
-				"city": "buenos aires",
-				"continent_code": "SA",
-				"country_code": "AR",
-				"country_code3": "ARG",
-				"country_name": "argentina",
-				"latitude": -34.61,
-				"longitude": -58.42,
-				"region": "C"
-			}
-		}
-	},
-	"00.01": {
-		"ipinfo": {
-			"city": "Lagoa do Carro",
-			"region": "Pernambuco",
-			"country": "BR",
-			"loc": "-7.7568,-35.3656",
-			"org": "AS61493 InterBS S.R.L. (BAEHOST)"
-		},
-		"maxmind": {
-			"continent": {
-				"code": "SA"
-			},
-			"country": {
-				"isoCode": "AR"
-			},
-			"city": {
-				"names": {
-					"en": "Buenos Aires"
-				}
-			},
-			"location": {
-				"latitude": -34.602,
-				"longitude": -58.384
-			},
-			"traits": {
-				"autonomousSystemNumber": 61493,
-				"isp": "interbs s.r.l."
-			}
-		},
-		"fastly": {
-			"as": {
-				"name": "interbs s.r.l.",
-				"number": 61493
-			},
-			"geo-digitalelement": {
-				"city": "Buenos Aires",
-				"continent_code": "SA",
-				"country_code": "AR",
-				"country_code3": "ARG",
-				"country_name": "argentina",
-				"latitude": -34.61,
-				"longitude": -58.42,
-				"region": "C"
-			}
-		}
-	},
-	"00.02": {
-		"maxmind": {
+	"maxmind": {
+		"default": {
 			"continent": {
 				"code": "NA"
 			},
@@ -113,76 +21,28 @@
 				"isp": "psychz networks"
 			}
 		},
-		"fastly": {
-			"as": {
-				"name": "psychz networks",
-				"number": 40676
-			},
-			"geo-digitalelement": {
-				"city": "dallas",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.810,
-				"longitude": -96.880,
-				"region": "TX"
-			}
-		},
-		"ipinfo": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7492,-96.8389",
-			"org": "AS43939 Psychz Networks"
-		}
-	},
-	"00.03": {
-		"maxmind": {
+		"argentina": {
 			"continent": {
-				"code": "NA"
+				"code": "SA"
 			},
 			"country": {
-				"isoCode": "US"
+				"isoCode": "AR"
 			},
 			"city": {
-				"names": {}
+				"names": {
+					"en": "Buenos Aires"
+				}
 			},
 			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
+				"latitude": -34.602,
+				"longitude": -58.384
 			},
 			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
+				"autonomousSystemNumber": 61493,
+				"isp": "interbs s.r.l."
 			}
 		},
-		"fastly": {
-			"as": {
-				"name": "psychz networks",
-				"number": 40676
-			},
-			"geo-digitalelement": {
-				"city": "",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.810,
-				"longitude": -96.880,
-				"region": "TX"
-			}
-		},
-		"ipinfo": {
-			"city": "Lagoa do Carro",
-			"region": "Pernambuco",
-			"country": "BR",
-			"loc": "-7.7568,-35.3656",
-			"org": "AS61493 InterBS S.R.L. (BAEHOST)"
-		}
-	},
-	"00.04": {
-		"maxmind": {
+		"newYork": {
 			"continent": {
 				"code": "NA"
 			},
@@ -203,7 +63,103 @@
 				"isp": "psychz networks"
 			}
 		},
-		"fastly": {
+		"emptyCity": {
+			"continent": {
+				"code": "NA"
+			},
+			"country": {
+				"isoCode": "US"
+			},
+			"city": {
+				"names": {}
+			},
+			"location": {
+				"latitude": 32.814,
+				"longitude": -96.870
+			},
+			"traits": {
+				"autonomousSystemNumber": 40676,
+				"isp": "psychz networks"
+			}
+		}
+	},
+	"ipinfo": {
+		"default": {
+			"city": "Dallas",
+			"region": "Texas",
+			"country": "US",
+			"loc": "32.7492,-96.8389",
+			"org": "AS123 Psychz Networks"
+		},
+		"argentina": {
+			"city": "Lagoa do Carro",
+			"region": "Pernambuco",
+			"country": "BR",
+			"loc": "-7.7568,-35.3656",
+			"org": "AS61493 InterBS S.R.L. (BAEHOST)"
+		},
+		"emptyCity": {
+			"city": "",
+			"region": "Texas",
+			"country": "US",
+			"loc": "32.7492,-96.8389",
+			"org": "AS43939 Psychz Networks"
+		},
+		"newYork": {
+			"city": "The New York City",
+			"region": "New York",
+			"country": "US",
+			"loc": "-7.7568,-35.3656",
+			"org": "AS61493 InterBS S.R.L. (BAEHOST)"
+		},
+		"emptyNetwork": {
+			"city": "Dallas",
+			"region": "Texas",
+			"country": "US",
+			"loc": "32.7492,-96.8389",
+			"org": ""
+		},
+		"undefinedNetwork": {
+			"city": "Dallas",
+			"region": "Texas",
+			"country": "US",
+			"loc": "32.7492,-96.8389"
+		}
+	},
+	"fastly": {
+		"default": {
+			"as": {
+				"name": "psychz networks",
+				"number": 40676
+			},
+			"geo-digitalelement": {
+				"city": "dallas",
+				"continent_code": "NA",
+				"country_code": "US",
+				"country_code3": "USA",
+				"country_name": "united states",
+				"latitude": 32.810,
+				"longitude": -96.880,
+				"region": "TX"
+			}
+		},
+		"argentina": {
+			"as": {
+				"name": "interbs s.r.l.",
+				"number": 61493
+			},
+			"geo-digitalelement": {
+				"city": "buenos aires",
+				"continent_code": "SA",
+				"country_code": "AR",
+				"country_code3": "ARG",
+				"country_name": "argentina",
+				"latitude": -34.61,
+				"longitude": -58.42,
+				"region": "C"
+			}
+		},
+		"newYork": {
 			"as": {
 				"name": "psychz networks",
 				"number": 40676
@@ -219,62 +175,39 @@
 				"region": "NY"
 			}
 		},
-		"ipinfo": {
-			"city": "The New York City",
-			"region": "New York",
-			"country": "US",
-			"loc": "-7.7568,-35.3656",
-			"org": "AS61493 InterBS S.R.L. (BAEHOST)"
-		}
-	},
-	"00.05": {
-		"ipinfo": {
-			"city": "",
-			"region": "Pernambuco",
-			"country": "BR",
-			"loc": "-7.7568,-35.3656",
-			"org": "AS61493 InterBS S.R.L. (BAEHOST)"
-		},
-		"maxmind": {
-			"continent": {
-				"code": "SA"
-			},
-			"country": {
-				"isoCode": "AR"
-			},
-			"city": {
-				"names": {
-					"en": "Buenos Aires"
-				}
-			},
-			"location": {
-				"latitude": -34.602,
-				"longitude": -58.384
-			},
-			"traits": {
-				"autonomousSystemNumber": 61493,
-				"isp": "interbs s.r.l."
-			}
-		},
-		"fastly": {
+		"emtpyCity": {
 			"as": {
-				"name": "interbs s.r.l.",
-				"number": 61493
+				"name": "psychz networks",
+				"number": 40676
 			},
 			"geo-digitalelement": {
-				"city": "abc",
-				"continent_code": "SA",
-				"country_code": "AR",
-				"country_code3": "ARG",
-				"country_name": "argentina",
-				"latitude": -34.61,
-				"longitude": -58.42,
-				"region": "C"
+				"city": "",
+				"continent_code": "NA",
+				"country_code": "US",
+				"country_code3": "USA",
+				"country_name": "united states",
+				"latitude": 32.810,
+				"longitude": -96.880,
+				"region": "TX"
 			}
-		}
-	},
-	"00.06": {
-		"fastly": {
+		},
+		"noClient": {
+			"as": {
+				"name": "psychz networks",
+				"number": 40676
+			},
+			"geo-digitalelement": {
+				"city": "dallas",
+				"continent_code": "NA",
+				"country_code": "US",
+				"country_code3": "USA",
+				"country_name": "united states",
+				"latitude": 32.810,
+				"longitude": -96.880,
+				"region": "TX"
+			}
+		},
+		"reserved": {
 			"as": {
 				"name": "interbs s.r.l.",
 				"number": 61493
@@ -289,10 +222,8 @@
 				"longitude": -58.42,
 				"region": "C"
 			}
-		}
-	},
-	"00.07": {
-		"fastly": {
+		},
+		"private": {
 			"as": {
 				"name": "interbs s.r.l.",
 				"number": 61493
@@ -307,218 +238,8 @@
 				"longitude": -58.42,
 				"region": "C"
 			}
-		}
-	},
-	"00.08": {
-		"maxmind": {
-			"continent": {
-				"code": "NA"
-			},
-			"country": {
-				"isoCode": "US"
-			},
-			"city": {
-				"names": {
-					"en": "Dallas"
-				}
-			},
-			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
-			},
-			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
-			}
 		},
-		"fastly": {
-			"as": {
-				"name": "psychz networks",
-				"number": 40676
-			},
-			"geo-digitalelement": {
-				"city": "",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.810,
-				"longitude": -96.880,
-				"region": "TX"
-			}
-		},
-		"ipinfo": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7492,-96.8389",
-			"org": ""
-		}
-	},
-	"00.09": {
-		"maxmind": {
-			"continent": {
-				"code": "NA"
-			},
-			"country": {
-				"isoCode": "US"
-			},
-			"city": {
-				"names": {
-					"en": "Dallas"
-				}
-			},
-			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
-			},
-			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
-			}
-		},
-		"fastly": {
-			"as": {
-				"name": "psychz networks",
-				"number": 40676
-			},
-			"geo-digitalelement": {
-				"city": "",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.810,
-				"longitude": -96.880,
-				"region": "TX"
-			}
-		},
-		"ipinfo": {
-			"city": "Lagoa do Carro",
-			"region": "Pernambuco",
-			"country": "BR",
-			"loc": "-7.7568,-35.3656",
-			"org": ""
-		}
-	},
-	"00.10": {
-		"maxmind": {
-			"continent": {
-				"code": "NA"
-			},
-			"country": {
-				"isoCode": "US"
-			},
-			"city": {
-				"names": {
-					"en": "Dallas"
-				}
-			},
-			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
-			},
-			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
-			}
-		},
-		"fastly": {
-			"as": {
-				"name": "psychz networks",
-				"number": 40676
-			},
-			"geo-digitalelement": {
-				"city": "",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.810,
-				"longitude": -96.880,
-				"region": "TX"
-			}
-		},
-		"ipinfo": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7492,-96.8389"
-		}
-	},
-	"01.00": {
-		"maxmind": {
-			"continent": {
-				"code": "NA"
-			},
-			"country": {
-				"isoCode": "US"
-			},
-			"city": {
-				"names": {
-					"en": "Dallas"
-				}
-			},
-			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
-			},
-			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
-			}
-		},
-		"fastly": {
-			"as": {
-				"name": "psychz networks",
-				"number": 40676
-			},
-			"geo-digitalelement": {
-				"city": "dallas",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.810,
-				"longitude": -96.880,
-				"region": "TX"
-			},
-			"client": {
-				"proxy_desc": "web-browser",
-				"proxy_type": "edu"
-			}
-		},
-		"ipinfo": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7492,-96.8389",
-			"org": "AS123 Psychz Networks"
-		}
-	},
-	"01.01": {
-		"maxmind": {
-			"continent": {
-				"code": "NA"
-			},
-			"country": {
-				"isoCode": "US"
-			},
-			"city": {
-				"names": {
-					"en": "Dallas"
-				}
-			},
-			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
-			},
-			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
-			}
-		},
-		"fastly": {
+		"proxyDescVpn": {
 			"as": {
 				"name": "psychz networks",
 				"number": 40676
@@ -538,37 +259,7 @@
 				"proxy_type": "unknown"
 			}
 		},
-		"ipinfo": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7492,-96.8389",
-			"org": "AS123 Psychz Networks"
-		}
-	},
-	"01.02": {
-		"maxmind": {
-			"continent": {
-				"code": "NA"
-			},
-			"country": {
-				"isoCode": "US"
-			},
-			"city": {
-				"names": {
-					"en": "Dallas"
-				}
-			},
-			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
-			},
-			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
-			}
-		},
-		"fastly": {
+		"proxyDescTor": {
 			"as": {
 				"name": "psychz networks",
 				"number": 40676
@@ -588,37 +279,7 @@
 				"proxy_type": "corporate"
 			}
 		},
-		"ipinfo": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7492,-96.8389",
-			"org": "AS123 Psychz Networks"
-		}
-	},
-	"01.03": {
-		"maxmind": {
-			"continent": {
-				"code": "NA"
-			},
-			"country": {
-				"isoCode": "US"
-			},
-			"city": {
-				"names": {
-					"en": "Dallas"
-				}
-			},
-			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
-			},
-			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
-			}
-		},
-		"fastly": {
+		"proxyTypeCorporate": {
 			"as": {
 				"name": "psychz networks",
 				"number": 40676
@@ -634,41 +295,11 @@
 				"region": "TX"
 			},
 			"client": {
-				"proxy_desc": "tor-relay",
+				"proxy_desc": "",
 				"proxy_type": "corporate"
 			}
 		},
-		"ipinfo": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7492,-96.8389",
-			"org": "AS123 Psychz Networks"
-		}
-	},
-	"01.04": {
-		"maxmind": {
-			"continent": {
-				"code": "NA"
-			},
-			"country": {
-				"isoCode": "US"
-			},
-			"city": {
-				"names": {
-					"en": "Dallas"
-				}
-			},
-			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
-			},
-			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
-			}
-		},
-		"fastly": {
+		"proxyTypeAol": {
 			"as": {
 				"name": "psychz networks",
 				"number": 40676
@@ -684,41 +315,11 @@
 				"region": "TX"
 			},
 			"client": {
-				"proxy_desc": "tor-relay",
+				"proxy_desc": "",
 				"proxy_type": "aol"
 			}
 		},
-		"ipinfo": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7492,-96.8389",
-			"org": "AS123 Psychz Networks"
-		}
-	},
-	"01.05": {
-		"maxmind": {
-			"continent": {
-				"code": "NA"
-			},
-			"country": {
-				"isoCode": "US"
-			},
-			"city": {
-				"names": {
-					"en": "Dallas"
-				}
-			},
-			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
-			},
-			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
-			}
-		},
-		"fastly": {
+		"proxyTypeAnonymous": {
 			"as": {
 				"name": "psychz networks",
 				"number": 40676
@@ -734,41 +335,11 @@
 				"region": "TX"
 			},
 			"client": {
-				"proxy_desc": "tor-relay",
+				"proxy_desc": "",
 				"proxy_type": "anonymous"
 			}
 		},
-		"ipinfo": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7492,-96.8389",
-			"org": "AS123 Psychz Networks"
-		}
-	},
-	"01.06": {
-		"maxmind": {
-			"continent": {
-				"code": "NA"
-			},
-			"country": {
-				"isoCode": "US"
-			},
-			"city": {
-				"names": {
-					"en": "Dallas"
-				}
-			},
-			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
-			},
-			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
-			}
-		},
-		"fastly": {
+		"proxyTypeBlackberry": {
 			"as": {
 				"name": "psychz networks",
 				"number": 40676
@@ -784,112 +355,9 @@
 				"region": "TX"
 			},
 			"client": {
-				"proxy_desc": "tor-relay",
-				"proxy_type": "unknown"
+				"proxy_desc": "",
+				"proxy_type": "blackberry"
 			}
-		},
-		"ipinfo": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7492,-96.8389",
-			"org": "AS123 Psychz Networks"
-		}
-	},
-	"01.07": {
-		"maxmind": {
-			"continent": {
-				"code": "NA"
-			},
-			"country": {
-				"isoCode": "US"
-			},
-			"city": {
-				"names": {
-					"en": "Dallas"
-				}
-			},
-			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
-			},
-			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
-			}
-		},
-		"fastly": {
-			"as": {
-				"name": "psychz networks",
-				"number": 40676
-			},
-			"geo-digitalelement": {
-				"city": "dallas",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.810,
-				"longitude": -96.880,
-				"region": "TX"
-			}
-		},
-		"ipinfo": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7492,-96.8389",
-			"org": "AS123 Psychz Networks"
-		}
-	},
-	"01.08": {
-		"maxmind": {
-			"continent": {
-				"code": "NA"
-			},
-			"country": {
-				"isoCode": "US"
-			},
-			"city": {
-				"names": {
-					"en": "Dallas"
-				}
-			},
-			"location": {
-				"latitude": 32.814,
-				"longitude": -96.870
-			},
-			"traits": {
-				"autonomousSystemNumber": 40676,
-				"isp": "psychz networks"
-			}
-		},
-		"fastly": {
-			"as": {
-				"name": "psychz networks",
-				"number": 40676
-			},
-			"geo-digitalelement": {
-				"city": "dallas",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.810,
-				"longitude": -96.880,
-				"region": "TX"
-			},
-			"client": {
-				"proxy_desc": "vpn",
-				"proxy_type": "unknown"
-			}
-		},
-		"ipinfo": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7492,-96.8389",
-			"org": "AS123 Psychz Networks"
 		}
 	}
 }
