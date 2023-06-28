@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import fs from 'node:fs';
 import nock from 'nock';
 import { expect } from 'chai';
 import request, { type SuperTest, type Test } from 'supertest';
