@@ -44,18 +44,18 @@ export default class GeoipClient {
 	async lookup (addr: string): Promise<ProbeLocation> {
 		const results = await Promise
 			.allSettled([
-				this.lookupWithCache<LocationInfo>(`geoip:ipmap:${addr}`, async () => ipmapLookup(addr)),
 				this.lookupWithCache<LocationInfo>(`geoip:ip2location:${addr}`, async () => ip2LocationLookup(addr)),
+				this.lookupWithCache<LocationInfo>(`geoip:ipmap:${addr}`, async () => ipmapLookup(addr)),
 				this.lookupWithCache<LocationInfo>(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
 				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
 				this.lookupWithCache<FastlyBundledResponse>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
-			.then(([ ipmap, ip2location, maxmind, ipinfo, fastly ]) => {
+			.then(([ ip2location, ipmap, maxmind, ipinfo, fastly ]) => {
 				const fulfilled: (LocationInfoWithProvider | null)[] = [];
 
 				fulfilled.push(
-					ipmap.status === 'fulfilled' ? { ...ipmap.value, provider: 'ipmap' } : null,
 					ip2location.status === 'fulfilled' ? { ...ip2location.value, provider: 'ip2location' } : null,
+					ipmap.status === 'fulfilled' ? { ...ipmap.value, provider: 'ipmap' } : null,
 					maxmind.status === 'fulfilled' ? { ...maxmind.value, provider: 'maxmind' } : null,
 					ipinfo.status === 'fulfilled' ? { ...ipinfo.value, provider: 'ipinfo' } : null,
 					fastly.status === 'fulfilled' ? { ...fastly.value.location, provider: 'fastly' } : null,
@@ -149,12 +149,13 @@ export default class GeoipClient {
 	private bestMatch (field: keyof LocationInfo, sources: LocationInfoWithProvider[]): [LocationInfo, LocationInfoWithProvider[]] {
 		const DESC_PRIORITY_OF_PROVIDERS: Provider[] = [ 'ip2location', 'ipmap', 'maxmind', 'ipinfo', 'fastly' ];
 		const filtered = sources.filter(s => s[field]);
-		// Group by the same field value
+		// Initially sort sources so they are sorted inside groups
 		const sorted = filtered.sort((sourceA, sourceB) => {
 			const indexSourceA = DESC_PRIORITY_OF_PROVIDERS.indexOf(sourceA.provider);
 			const indexSourceB = DESC_PRIORITY_OF_PROVIDERS.indexOf(sourceB.provider);
 			return indexSourceA - indexSourceB;
 		});
+		// Group sources by the same field value
 		const grouped = Object.values(_.groupBy(sorted, field));
 		const ranked = grouped.sort((sourcesA, sourcesB) => {
 			// Move bigger groups to the beginning

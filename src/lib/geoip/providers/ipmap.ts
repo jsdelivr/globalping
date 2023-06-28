@@ -18,14 +18,10 @@ export type IpmapResponse = {
 
 export const ipmapLookup = async (addr: string): Promise<LocationInfo> => {
 	const result = await got.get(`https://ipmap-api.ripe.net/v1/locate/${addr}`).json<IpmapResponse>();
-	const location = result?.locations?.[0];
-
-	if (!location) {
-		throw new Error('No ipmap location data.');
-	}
+	const location = result?.locations?.[0] || {};
 
 	return {
-		continent: getContinentByCountry(location.countryCodeAlpha2 ?? ''),
+		continent: location.countryCodeAlpha2 ? getContinentByCountry(location.countryCodeAlpha2) : '',
 		state: location.countryCodeAlpha2 === 'US' ? location.stateAnsiCode : undefined,
 		country: location.countryCodeAlpha2 ?? '',
 		city: normalizeCityNamePublic(location.cityName ?? ''),

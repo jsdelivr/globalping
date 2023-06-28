@@ -36,8 +36,8 @@ export const ip2LocationLookup = async (addr: string): Promise<LocationInfo> => 
 	}).json<Ip2LocationResponse>();
 
 	return {
-		continent: getContinentByCountry(result.country_code ?? ''),
-		state: result.country_code === 'US' ? getStateIsoByName(result.region_name ?? '') : undefined,
+		continent: result.country_code ? getContinentByCountry(result.country_code) : '',
+		state: result.country_code === 'US' && result.region_name ? getStateIsoByName(result.region_name) : undefined,
 		country: result.country_code ?? '',
 		city: normalizeCityNamePublic(result.city_name ?? ''),
 		normalizedCity: normalizeCityName(result.city_name ?? ''),
