@@ -15,7 +15,6 @@ describe('etag', () => {
 
 	describe('ETag header', () => {
 		it('should include the header', async () => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			const response = await requestAgent.get('/v1/probes').send() as Response;
 
 			expect(response.headers.etag).to.exist;
@@ -24,7 +23,6 @@ describe('etag', () => {
 
 	describe('conditional get', () => {
 		it('should redirect to cache', async () => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			const response = await requestAgent
 				.get('/v1/probes')
 				.set('if-none-match', 'W/"2-l9Fw4VUO7kr8CvBlt4zaMCqXZ0w"')

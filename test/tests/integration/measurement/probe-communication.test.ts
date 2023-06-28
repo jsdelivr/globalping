@@ -5,7 +5,6 @@ import nock from 'nock';
 import type { Socket } from 'socket.io-client';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
-import RedisCacheMock from '../../../mocks/redis-cache.js';
 
 const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
@@ -22,7 +21,6 @@ describe('Create measurement request', () => {
 
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
-		await td.replaceEsm('../../../../src/lib/cache/redis-cache.ts', {}, RedisCacheMock);
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
 		({ getTestServer, addFakeProbe, deleteFakeProbe } = await import('../../../utils/server.js'));
 		const app = await getTestServer();

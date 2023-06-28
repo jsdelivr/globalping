@@ -16,7 +16,6 @@ describe('response time', () => {
 	describe('X-Response-Time header', () => {
 		describe('should include the header', (): void => {
 			it('should succeed', async () => {
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 				const response = await requestAgent.get('/v1/').send() as Response;
 
 				expect(response.headers['x-response-time']).to.exist;
