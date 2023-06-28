@@ -23,6 +23,8 @@ describe('compression', () => {
 		});
 
 		it('should include compression headers', async () => {
+			nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).times(10).reply(200, nockMocks.ipmap.default);
+			nock('https://api.ip2location.io').get(/.*/).times(10).reply(200, nockMocks.ip2location.default);
 			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).times(10).reply(200, nockMocks.fastly.default);
 			nock('https://ipinfo.io').get(/.*/).times(10).reply(200, nockMocks.ipinfo.default);
 			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).times(10).reply(200, nockMocks.maxmind.default);

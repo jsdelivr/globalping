@@ -18,6 +18,15 @@
 			"asn": "61001",
 			"as": "interbs s.r.l."
 		},
+		"newYork": {
+			"country_code": "US",
+			"region_name": "New York",
+			"city_name": "New York",
+			"latitude": 40.001,
+			"longitude": -74.001,
+			"asn": "80001",
+			"as": "The Constant Company LLC"
+		},
 		"emptyCity": {
 			"country_code": "US",
 			"region_name": "Texas",
@@ -27,14 +36,14 @@
 			"asn": "20001",
 			"as": "The Constant Company LLC"
 		},
-		"newYork": {
+		"emptyNetwork": {
 			"country_code": "US",
-			"region_name": "New York",
-			"city_name": "New York",
-			"latitude": 40.001,
-			"longitude": -74.001,
-			"asn": "80001",
-			"as": "The Constant Company LLC"
+			"region_name": "Texas",
+			"city_name": "Dallas",
+			"latitude": 32.001,
+			"longitude": -96.001,
+			"asn": "",
+			"as": ""
 		}
 	},
 	"ipmap": {

@@ -97,7 +97,28 @@ describe('geoip service', () => {
 		});
 	});
 
-	it('should top prioritized provider when all providers returned different cities', async () => {
+	it('should fulfill missing data with other provider network data with the same city', async () => {
+		nockGeoIpProviders({ ip2location: 'emptyNetwork', ipmap: 'default', maxmind: 'emptyCity', ipinfo: 'emptyCity', fastly: 'default' });
+
+		const info = await client.lookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
+			continent: 'NA',
+			country: 'US',
+			state: 'TX',
+			city: 'Dallas',
+			region: 'Northern America',
+			normalizedRegion: 'northern america',
+			normalizedCity: 'dallas',
+			asn: 20005,
+			latitude: 32.001,
+			longitude: -96.001,
+			network: 'psychz networks',
+			normalizedNetwork: 'psychz networks',
+		});
+	});
+
+	it('should choose top prioritized provider when all providers returned different cities', async () => {
 		nockGeoIpProviders({ ipmap: 'default', ip2location: 'argentina', maxmind: 'newYork', ipinfo: 'emptyCity', fastly: 'bangkok' });
 
 		const info = await client.lookup(MOCK_IP).catch((error: Error) => error);
@@ -120,10 +141,10 @@ describe('geoip service', () => {
 
 	it('should fail when only fastly reports the data', async () => {
 		nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).reply(400);
-		nock('https://api.ip2location.io').get(/.*/).reply(500);
+		nock('https://api.ip2location.io').get(/.*/).reply(400);
 		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, mocks.fastly.default);
 		nock('https://ipinfo.io').get(/.*/).reply(400);
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(500);
+		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(400);
 
 		const info = await client.lookup(MOCK_IP).catch((error: Error) => error);
 

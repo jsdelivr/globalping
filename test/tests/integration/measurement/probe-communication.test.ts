@@ -56,11 +56,11 @@ describe('Create measurement request', () => {
 			state: 'TX',
 			city: 'Dallas',
 			normalizedCity: 'dallas',
-			asn: 123,
-			latitude: 32.7492,
-			longitude: -96.8389,
-			network: 'Psychz Networks',
-			normalizedNetwork: 'psychz networks',
+			asn: 20001,
+			latitude: 32.001,
+			longitude: -96.001,
+			network: 'The Constant Company LLC',
+			normalizedNetwork: 'the constant company llc',
 		}]);
 	});
 
@@ -96,7 +96,10 @@ describe('Create measurement request', () => {
 					id: 'measurementid',
 					type: 'ping',
 					status: 'in-progress',
+					target: 'jsdelivr.com',
 					probesCount: 1,
+					locations: [{ country: 'US' }],
+					measurementOptions: { packets: 4 },
 					results: [
 						{
 							probe: {
@@ -105,10 +108,10 @@ describe('Create measurement request', () => {
 								country: 'US',
 								state: 'TX',
 								city: 'Dallas',
-								asn: 123,
-								longitude: -96.8389,
-								latitude: 32.7492,
-								network: 'Psychz Networks',
+								asn: 20001,
+								longitude: -96.001,
+								latitude: 32.001,
+								network: 'The Constant Company LLC',
 								tags: [ 'gcp-us-west4' ],
 								resolvers: [],
 							},
@@ -134,7 +137,10 @@ describe('Create measurement request', () => {
 					id: 'measurementid',
 					type: 'ping',
 					status: 'in-progress',
+					target: 'jsdelivr.com',
 					probesCount: 1,
+					locations: [{ country: 'US' }],
+					measurementOptions: { packets: 4 },
 					results: [
 						{
 							probe: {
@@ -143,10 +149,10 @@ describe('Create measurement request', () => {
 								country: 'US',
 								state: 'TX',
 								city: 'Dallas',
-								asn: 123,
-								longitude: -96.8389,
-								latitude: 32.7492,
-								network: 'Psychz Networks',
+								asn: 20001,
+								longitude: -96.001,
+								latitude: 32.001,
+								network: 'The Constant Company LLC',
 								tags: [ 'gcp-us-west4' ],
 								resolvers: [],
 							},
@@ -170,7 +176,10 @@ describe('Create measurement request', () => {
 					id: 'measurementid',
 					type: 'ping',
 					status: 'in-progress',
+					target: 'jsdelivr.com',
 					probesCount: 1,
+					locations: [{ country: 'US' }],
+					measurementOptions: { packets: 4 },
 					results: [
 						{
 							probe: {
@@ -179,10 +188,10 @@ describe('Create measurement request', () => {
 								country: 'US',
 								state: 'TX',
 								city: 'Dallas',
-								asn: 123,
-								longitude: -96.8389,
-								latitude: 32.7492,
-								network: 'Psychz Networks',
+								asn: 20001,
+								longitude: -96.001,
+								latitude: 32.001,
+								network: 'The Constant Company LLC',
 								tags: [ 'gcp-us-west4' ],
 								resolvers: [],
 							},
@@ -212,7 +221,10 @@ describe('Create measurement request', () => {
 					id: 'measurementid',
 					type: 'ping',
 					status: 'finished',
+					target: 'jsdelivr.com',
 					probesCount: 1,
+					locations: [{ country: 'US' }],
+					measurementOptions: { packets: 4 },
 					results: [
 						{
 							probe: {
@@ -221,10 +233,10 @@ describe('Create measurement request', () => {
 								country: 'US',
 								state: 'TX',
 								city: 'Dallas',
-								asn: 123,
-								longitude: -96.8389,
-								latitude: 32.7492,
-								network: 'Psychz Networks',
+								asn: 20001,
+								longitude: -96.001,
+								latitude: 32.001,
+								network: 'The Constant Company LLC',
 								tags: [ 'gcp-us-west4' ],
 								resolvers: [],
 							},
@@ -268,18 +280,18 @@ describe('Create measurement request', () => {
 		await requestAgent.get('/v1/probes?adminkey=admin').send()
 			.expect(200).expect((response) => {
 				expect(response.body[0]).to.deep.include({
-					version: '0.14.0',
 					status: 'initializing',
+					version: '0.14.0',
 					location: {
 						continent: 'NA',
 						region: 'Northern America',
 						country: 'US',
 						state: 'TX',
 						city: 'Dallas',
-						asn: 123,
-						latitude: 32.7492,
-						longitude: -96.8389,
-						network: 'Psychz Networks',
+						asn: 20001,
+						latitude: 32.001,
+						longitude: -96.001,
+						network: 'The Constant Company LLC',
 					},
 					tags: [ 'gcp-us-west4' ],
 					resolvers: [],
