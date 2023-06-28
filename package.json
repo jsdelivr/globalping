@@ -105,6 +105,8 @@
 		"clean": "rimraf coverage",
 		"download:jsons": "tsx src/lib/download-jsons.ts",
 		"prepare": "npm run download:jsons; husky install || echo 'Failed to install husky'",
+		"stats:known": "NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false tsx probes-stats/known.ts",
+		"stats:all": "NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false tsx probes-stats/all.ts",
 		"start": "NODE_ENV=production node --max_old_space_size=3584 --max-semi-space-size=128 --experimental-loader newrelic/esm-loader.mjs dist/index.js",
 		"start:dev": "NODE_ENV=development FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false tsx src/index.ts",
 		"start:test": "NODE_ENV=test FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false tsx src/index.ts",

@@ -162,7 +162,7 @@ export default class GeoipClient {
 		return _.omit(best, 'provider');
 	}
 
-	private async lookupWithCache<T> (key: string, fn: () => Promise<T>): Promise<T> {
+	public async lookupWithCache<T> (key: string, fn: () => Promise<T>): Promise<T> {
 		const cached = await this.cache.get<T>(key);
 
 		if (cached) {
