@@ -1,8 +1,9 @@
 import type { Context, Next } from 'koa';
 import requestIp from 'request-ip';
 import type { RateLimiterRes } from 'rate-limiter-flexible';
-
-import rateLimiter from '../../ratelimiter.js';
+import createHttpError from 'http-errors';
+import rateLimiter, { defaultState } from '../../ratelimiter.js';
+import type { MeasurementRequest } from '../../../measurement/types.js';
 
 const setResponseHeaders = (ctx: Context, response: RateLimiterRes) => {
 	ctx.set('X-RateLimit-Reset', `${Math.round(response.msBeforeNext / 1000)}`);
@@ -10,24 +11,30 @@ const setResponseHeaders = (ctx: Context, response: RateLimiterRes) => {
 	ctx.set('X-RateLimit-Remaining', `${response.remainingPoints}`);
 };
 
-const methodsWhitelist = new Set([ 'GET', 'HEAD', 'OPTIONS' ]);
-
 export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
-	const { method, isAdmin } = ctx;
+	const { isAdmin } = ctx;
+	const clientIp = requestIp.getClientIp(ctx.req) ?? '';
+	const request = ctx.request.body as MeasurementRequest;
+	const limit = request.locations.some(l => l.limit) ? request.locations.reduce((sum, { limit = 1 }) => sum + limit, 0) : request.limit;
 
-	if (methodsWhitelist.has(method) || isAdmin) {
+	if (isAdmin) {
 		return next();
 	}
 
-	try {
-		const response = await rateLimiter.consume(requestIp.getClientIp(ctx.req) ?? '');
-		setResponseHeaders(ctx, response);
-	} catch (error: unknown) { // Ts requires 'unknown' for errors
-		setResponseHeaders(ctx, error as RateLimiterRes);
-		ctx.status = 429;
-		ctx.body = 'Too Many Requests';
-		return;
+	const currentState = await rateLimiter.get(clientIp) ?? defaultState as RateLimiterRes;
+
+	if (currentState.remainingPoints < limit) {
+		setResponseHeaders(ctx, currentState);
+		throw createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
 	}
 
 	await next();
+	const response = ctx.response.body as object & { probesCount?: number };
+
+	if (!('probesCount' in response) || typeof response.probesCount !== 'number') {
+		throw new Error('Missing probesCount field in response object');
+	}
+
+	const newState = await rateLimiter.penalty(clientIp, response.probesCount);
+	setResponseHeaders(ctx, newState);
 };

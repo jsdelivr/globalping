@@ -6,6 +6,7 @@ import type { MeasurementRequest } from '../types.js';
 import { bodyParser } from '../../lib/http/middleware/body-parser.js';
 import { validate } from '../../lib/http/middleware/validate.js';
 import { schema } from '../schema/global-schema.js';
+import { rateLimitHandler } from '../../lib/http/middleware/ratelimit.js';
 
 const hostConfig = config.get<string>('server.host');
 const runner = getMeasurementRunner();
@@ -24,5 +25,5 @@ const handle = async (ctx: Context): Promise<void> => {
 };
 
 export const registerCreateMeasurementRoute = (router: Router): void => {
-	router.post('/measurements', bodyParser(), validate(schema), handle);
+	router.post('/measurements', bodyParser(), validate(schema), rateLimitHandler(), handle);
 };

@@ -1,8 +1,8 @@
-import { fetchSockets } from '../server.js';
+import type { ThrottledFetchSockets } from '../server';
 
 const TIME_TO_RECONNECT_PROBES = 60_000;
 
-export const reconnectProbes = async () => {
+export const reconnectProbes = async (fetchSockets: ThrottledFetchSockets) => { // passing fetchSockets in arguments to avoid cycle dependency
 	const sockets = await fetchSockets();
 
 	for (const socket of sockets) {

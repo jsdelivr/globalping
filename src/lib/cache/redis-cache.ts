@@ -5,7 +5,7 @@ export default class RedisCache implements CacheInterface {
 	constructor (private readonly redis: RedisClient) {}
 
 	async set (key: string, value: unknown, ttl?: number): Promise<void> {
-		await this.redis.set(this.buildCacheKey(key), JSON.stringify(value), { EX: ttl ? ttl / 1000 : 0 });
+		await this.redis.set(this.buildCacheKey(key), JSON.stringify(value), { PX: ttl ?? 0 });
 	}
 
 	async get<T = unknown> (key: string): Promise<T | undefined> {
