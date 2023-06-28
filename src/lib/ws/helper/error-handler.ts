@@ -19,7 +19,7 @@ type NextArgument = NextConnectArgument | NextMwArgument;
 const isError = (error: unknown): error is Error => Boolean(error as Error['message']);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const errorHandler = (next: NextArgument) => (socket: Socket, mwNext?: (error?: any) => void | undefined) => {
+export const errorHandler = (next: NextArgument) => (socket: Socket, mwNext?: (error?: any) => void) => {
 	next(socket, mwNext!).catch((error) => { // eslint-disable-line @typescript-eslint/no-non-null-assertion
 		const clientIp = getProbeIp(socket.request) ?? '';
 		const reason = isError(error) ? error.message : 'unknown';

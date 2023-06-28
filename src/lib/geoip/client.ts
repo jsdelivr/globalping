@@ -63,7 +63,7 @@ export default class GeoipClient {
 
 		const resultsWithCities = results.filter(s => s.city);
 
-		if (resultsWithCities.length < 2 && resultsWithCities[0]?.provider === 'fastly') {
+		if (resultsWithCities.length === 0 || (resultsWithCities.length === 1 && resultsWithCities[0]?.provider === 'fastly')) {
 			throw new InternalError(`unresolvable geoip: ${addr}`, true);
 		}
 

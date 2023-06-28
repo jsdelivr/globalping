@@ -15,7 +15,8 @@ export const isMaxmindError = (error: unknown): error is WebServiceClientError =
 
 const query = async (addr: string, retryCounter = 0): Promise<City> => {
 	try {
-		return await client.city(addr);
+		const city = await client.city(addr);
+		return city;
 	} catch (error: unknown) {
 		if (isMaxmindError(error)) {
 			if (error.code === 'SERVER_ERROR' && retryCounter < 3) {
@@ -27,7 +28,7 @@ const query = async (addr: string, retryCounter = 0): Promise<City> => {
 			}
 		}
 
-		throw new Error('no maxmind data');
+		throw error;
 	}
 };
 

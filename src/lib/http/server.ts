@@ -15,7 +15,6 @@ import { registerGetMeasurementRoute } from '../../measurement/route/get-measure
 import { registerCreateMeasurementRoute } from '../../measurement/route/create-measurement.js';
 import { registerHealthRoute } from '../../health/route/get.js';
 import { errorHandler } from './error-handler.js';
-import { rateLimitHandler } from './middleware/ratelimit.js';
 import { errorHandlerMw } from './middleware/error-handler.js';
 import { corsHandler } from './middleware/cors.js';
 import { isAdminMw } from './middleware/is-admin.js';
@@ -40,8 +39,7 @@ rootRouter.get('/', (ctx) => {
 const apiRouter = new Router({ strict: true, sensitive: true });
 
 apiRouter.prefix('/v1')
-	.use(isAdminMw)
-	.use(rateLimitHandler());
+	.use(isAdminMw);
 
 // POST /measurements
 registerCreateMeasurementRoute(apiRouter);

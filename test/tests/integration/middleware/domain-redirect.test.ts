@@ -15,7 +15,6 @@ describe('domain redirect', () => {
 
 	describe('http requests', () => {
 		it('should be redirected to "https://jsdelivr.com/globalping" if Host is "globalping.io"', async () => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			await requestAgent
 				.get('/v1/probes')
 				.send()
@@ -27,7 +26,6 @@ describe('domain redirect', () => {
 		});
 
 		it('should not be redirected to if Host is not "globalping.io"', async () => {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 			await requestAgent
 				.get('/v1/probes')
 				.send()
