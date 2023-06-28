@@ -36,7 +36,6 @@ below is presented a schema containing all possible input values; some are gener
             query?: string
             method?: string
         }
-        protocol?: string
         port?: number
         resolver?: string
         trace?: boolean
