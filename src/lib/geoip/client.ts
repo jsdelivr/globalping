@@ -18,7 +18,7 @@ import { ip2LocationLookup } from './providers/ip2location.js';
 import { normalizeRegionName } from './utils.js';
 
 export type LocationInfo = Omit<ProbeLocation, 'region' | 'normalizedRegion'>;
-type Provider = 'ipmap' | 'ip2Location' | 'ipinfo' | 'maxmind' | 'fastly';
+type Provider = 'ipmap' | 'ip2location' | 'ipinfo' | 'maxmind' | 'fastly';
 export type LocationInfoWithProvider = LocationInfo & {provider: Provider};
 export type RegionInfo = {
 	region: string;
@@ -50,12 +50,12 @@ export default class GeoipClient {
 				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
 				this.lookupWithCache<FastlyBundledResponse>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
-			.then(([ ipmap, ip2Location, maxmind, ipinfo, fastly ]) => {
+			.then(([ ipmap, ip2location, maxmind, ipinfo, fastly ]) => {
 				const fulfilled: (LocationInfoWithProvider | null)[] = [];
 
 				fulfilled.push(
 					ipmap.status === 'fulfilled' ? { ...ipmap.value, provider: 'ipmap' } : null,
-					ip2Location.status === 'fulfilled' ? { ...ip2Location.value, provider: 'ip2Location' } : null,
+					ip2location.status === 'fulfilled' ? { ...ip2location.value, provider: 'ip2location' } : null,
 					maxmind.status === 'fulfilled' ? { ...maxmind.value, provider: 'maxmind' } : null,
 					ipinfo.status === 'fulfilled' ? { ...ipinfo.value, provider: 'ipinfo' } : null,
 					fastly.status === 'fulfilled' ? { ...fastly.value.location, provider: 'fastly' } : null,
@@ -134,7 +134,7 @@ export default class GeoipClient {
 		}
 
 		for (const source of rankedSources) {
-			if (source.city === best.city && source?.asn && source?.network) {
+			if (source.normalizedCity === best.normalizedCity && source?.asn && source?.network) {
 				return {
 					asn: source.asn,
 					network: source.network,
@@ -147,7 +147,7 @@ export default class GeoipClient {
 	}
 
 	private bestMatch (field: keyof LocationInfo, sources: LocationInfoWithProvider[]): [LocationInfo, LocationInfoWithProvider[]] {
-		const DESC_PRIORITY_OF_PROVIDERS: Provider[] = [ 'ipmap', 'ip2Location', 'maxmind', 'ipinfo', 'fastly' ];
+		const DESC_PRIORITY_OF_PROVIDERS: Provider[] = [ 'ip2location', 'ipmap', 'maxmind', 'ipinfo', 'fastly' ];
 		const filtered = sources.filter(s => s[field]);
 		// Group by the same field value
 		const sorted = filtered.sort((sourceA, sourceB) => {
