@@ -300,9 +300,6 @@ describe('geoip service', () => {
 
 		it('should fail (missing network data + city mismatch)', async () => {
 			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'newYork', maxmind: 'emptyNetwork', ipinfo: 'emptyNetwork', fastly: 'emptyCity' });
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, geoIpMocks['fastly'].emptyCity);
-			nock('https://ipinfo.io').get(/.*/).reply(200, geoIpMocks['ipinfo'].emptyNetwork);
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, geoIpMocks['maxmind'].argentina);
 
 			const info: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 

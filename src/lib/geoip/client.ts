@@ -163,8 +163,8 @@ export default class GeoipClient {
 
 			if (groupsSizeDiff === 0) {
 				// If group sizes are equal move the group with the prioritized item to the beginning
-				const smallestIndexSourceA = DESC_PRIORITY_OF_PROVIDERS.indexOf(sourcesA[0]!.provider);
-				const smallestIndexSourceB = DESC_PRIORITY_OF_PROVIDERS.indexOf(sourcesB[0]!.provider);
+				const smallestIndexSourceA = DESC_PRIORITY_OF_PROVIDERS.indexOf((sourcesA[0] as LocationInfoWithProvider).provider);
+				const smallestIndexSourceB = DESC_PRIORITY_OF_PROVIDERS.indexOf((sourcesA[0] as LocationInfoWithProvider).provider);
 				return smallestIndexSourceA - smallestIndexSourceB;
 			}
 

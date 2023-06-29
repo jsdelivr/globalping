@@ -1,14 +1,11 @@
-import fs from 'node:fs';
 import type { Server } from 'node:http';
 import request, { type Response } from 'supertest';
 import requestIp from 'request-ip';
 import type { RateLimiterRedis } from 'rate-limiter-flexible';
 import { expect } from 'chai';
-import nock from 'nock';
 import type { Socket } from 'socket.io-client';
 import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../../utils/server.js';
-
-const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
+import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 
 describe('rate limiter', () => {
 	let app: Server;
@@ -30,9 +27,7 @@ describe('rate limiter', () => {
 		const rateLimiter = await import('../../../../src/lib/ratelimiter.js');
 		rateLimiterInstance = rateLimiter.default;
 
-		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['01.00'].fastly);
-		nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['01.00'].maxmind);
+		nockGeoIpProviders();
 		probe = await addFakeProbe();
 		probe.emit('probe:status:update', 'ready');
 	});
