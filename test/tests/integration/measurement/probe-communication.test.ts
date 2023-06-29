@@ -98,7 +98,7 @@ describe('Create measurement request', () => {
 					status: 'in-progress',
 					target: 'jsdelivr.com',
 					probesCount: 1,
-					locations: [{ country: 'US', limit: 1 }],
+					locations: [{ country: 'US' }],
 					measurementOptions: { packets: 4 },
 					results: [
 						{
@@ -139,7 +139,7 @@ describe('Create measurement request', () => {
 					status: 'in-progress',
 					target: 'jsdelivr.com',
 					probesCount: 1,
-					locations: [{ country: 'US', limit: 1 }],
+					locations: [{ country: 'US' }],
 					measurementOptions: { packets: 4 },
 					results: [
 						{
@@ -178,7 +178,7 @@ describe('Create measurement request', () => {
 					status: 'in-progress',
 					target: 'jsdelivr.com',
 					probesCount: 1,
-					locations: [{ country: 'US', limit: 1 }],
+					locations: [{ country: 'US' }],
 					measurementOptions: { packets: 4 },
 					results: [
 						{
@@ -223,7 +223,7 @@ describe('Create measurement request', () => {
 					status: 'finished',
 					target: 'jsdelivr.com',
 					probesCount: 1,
-					locations: [{ country: 'US', limit: 1 }],
+					locations: [{ country: 'US' }],
 					measurementOptions: { packets: 4 },
 					results: [
 						{

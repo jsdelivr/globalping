@@ -97,7 +97,7 @@ describe('Timeout results', () => {
 					status: 'finished',
 					target: 'jsdelivr.com',
 					probesCount: 1,
-					locations: [{ country: 'US', limit: 1 }],
+					locations: [{ country: 'US' }],
 					measurementOptions: { packets: 4 },
 					results: [
 						{
