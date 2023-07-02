@@ -9,8 +9,8 @@ import {
 export type IpmapResponse = {
 	locations: {
 		cityName?: string;
-    stateAnsiCode?: string;
-    countryCodeAlpha2?: string;
+		stateAnsiCode?: string;
+		countryCodeAlpha2?: string;
 		latitude?: string;
 		longitude?: string;
 	}[]
