@@ -15,29 +15,187 @@ servers:
   - url: https://api.globalping.io
 tags:
   - name: Probes
-
-#components:
-#  headers:
-
-#  parameters:
-
-#  schemas:
-
-#  examples:
-
-#  responses:
-
 paths:
   /v1/probes:
     get:
-      operationId: getProbes
-      description: TODO
+      summary: List currently connected probes
+      operationId: listProbes
+      description: |
+        Returns a list of all currently connected probes and their metadata.
       responses:
         '200':
-          description: TODO
-          content:
-            application/json:
-              schema:
-                type: array
+          $ref: '#/components/responses/probes200'
       tags:
         - Probes
+
+components:
+  #  headers:
+
+  #  parameters:
+
+  schemas:
+    AsnCode:
+      type: integer
+      description: An autonomous system number.
+    CountryCode:
+      type: string
+      description: An ISO 3166-1 alpha-2 country code.
+    ContinentCode:
+      type: string
+      enum:
+        - AF
+        - AN
+        - AS
+        - EU
+        - NA
+        - OC
+        - SA
+    CityName:
+      type: string
+      description: A city name in English.
+    Latitude:
+      type: number
+    Longitude:
+      type: number
+    NetworkName:
+      type: string
+      description: A network name.
+    Probe:
+      type: object
+      properties:
+        version:
+          type: string
+        location:
+          $ref: '#/components/schemas/ProbeLocation'
+        tags:
+          $ref: '#/components/schemas/Tags'
+        resolvers:
+          type: array
+          description: A list of default DNS resolvers configured on the probe.
+          items:
+            $ref: '#/components/schemas/ProbeResolver'
+      required:
+        - version
+        - location
+        - tags
+        - resolvers
+    ProbeLocation:
+      type: object
+      properties:
+        continent:
+          $ref: '#/components/schemas/ContinentCode'
+        region:
+          $ref: '#/components/schemas/RegionName'
+        country:
+          $ref: '#/components/schemas/CountryCode'
+        state:
+          $ref: '#/components/schemas/StateCode'
+        city:
+          $ref: '#/components/schemas/CityName'
+        asn:
+          $ref: '#/components/schemas/AsnCode'
+        network:
+          $ref: '#/components/schemas/NetworkName'
+        latitude:
+          $ref: '#/components/schemas/Latitude'
+        longitude:
+          $ref: '#/components/schemas/Longitude'
+      required:
+        - continent
+        - region
+        - country
+        - city
+        - asn
+        - network
+        - latitude
+        - longitude
+    ProbeResolver:
+      oneOf:
+        - type: string
+          format: ipv4
+          description: An IPv4 address.
+        - type: string
+          const: private
+          description: Indicate the resolver points to a private IP address.
+    Probes:
+      type: array
+      items:
+        $ref: '#/components/schemas/Probe'
+    RegionName:
+      type: string
+      description: |
+        A Geographic Region name based on the
+        UN [Standard Country or Area Codes for Statistical Use (M49)](https://unstats.un.org/unsd/methodology/m49/).
+      enum:
+        - Northern Africa
+        - Eastern Africa
+        - Middle Africa
+        - Southern Africa
+        - Western Africa
+
+        - Caribbean
+        - Central America
+        - South America
+        - Northern America
+
+        - Central Asia
+        - Eastern Asia
+        - South-eastern Asia
+        - Southern Asia
+        - Western Asia
+
+        - Eastern Europe
+        - Northern Europe
+        - Southern Europe
+        - Western Europe
+
+        - Australia and New Zealand
+        - Melanesia
+        - Micronesia
+        - Polynesia
+    StateCode:
+      type: string
+      description: Only for US states. A two-letter state code based on ISO 3166-2.
+    Tags:
+      type: array
+      description: |
+        An array of additional values that can be used to target the probe.
+        Probes hosted in [AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)
+        and [Google Cloud](https://cloud.google.com/compute/docs/regions-zones#available) are automatically assigned the service region code.
+      items:
+        type: string
+  examples:
+    probes:
+      value:
+        [
+          {
+            "version": "0.20.0",
+            "location": {
+              "continent": "NA",
+              "region": "Northern America",
+              "country": "US",
+              "state": "VA",
+              "city": "Ashburn",
+              "asn": 14618,
+              "network": "Amazon.com, Inc.",
+              "latitude": 39.0437,
+              "longitude": -77.4875
+            },
+            "tags": [
+              "aws-us-east-1"
+            ],
+            "resolvers": [
+              "private"
+            ]
+          }
+        ]
+  responses:
+    probes200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Probes'
+          examples:
+            '0':
+              $ref: '#/components/examples/probes'
