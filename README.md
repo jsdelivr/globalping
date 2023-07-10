@@ -32,16 +32,18 @@ We thank our sponsors who contribute to the development of Globalping and help u
 | <img src="https://gcore.com/favicon.ico" width="15" height="15"> [Gcore](https://gcore.com) | <img src="https://xtom.com/favicon.ico" width="15" height="15"> [xTom](https://xtom.com) | <img src="https://www.edisglobal.com/favicon.png" width="15" height="15"> [Edis Global](https://www.edisglobal.com) |
 |---|---|---|
 
+Consider [running our probe software](https://github.com/jsdelivr/globalping-probe) on your network of servers or [sponsor a batch of hardware probes](https://docs.google.com/document/d/1xIe-BaZ-6mmkjN1yMH5Kauw3FTXADrB79w4pnJ4SLa4/edit#heading=h.tmcgof2zm3yh) with your own stickers and swag included to ship to your users or distribute at conferences.
+Stand out among the sea of water bottles and pens!
 
 ## Quick Start - Run your first test
 
 You can begin using the platform in a few different ways:
 
-### Web Based Tools | WIP
+### [Web Based Tools - Globalping website](https://www.jsdelivr.com/globalping)
+[![globalping latency test from google cloud](https://github.com/jsdelivr/globalping/assets/1834071/760c9031-9292-4e2a-9901-68ef7f0745ca)](https://www.jsdelivr.com/globalping)
 
-We keep building more and more web tools to cover all kinds of use-cases.
-
-* https://api.globalping.io/demo/
+Our website is the best way to get started. You can start running tests immediatly and learn more about how different parts of the system work. 
+For example our magic location field can accept not just locations but also cloud regions, ISP providers and even combine filters using the + symbol.
 
 ### [Globalping CLI](https://github.com/jsdelivr/globalping-cli)
 
@@ -59,6 +61,11 @@ dnf install globalping
 #MacOS
 brew tap jsdelivr/globalping
 brew install globalping
+
+#Windows
+winget install globalping
+OR
+choco install globalping
 ```
 
 And then run your tests in a familiar way:
@@ -124,6 +131,7 @@ The location field can process all kinds of different types of location matching
 You can also combine filters, e.g. `from hetzner+Finland` will ensure the results come from a probe that matches both parameters.
 Providing no location will default to "world" which will match a probe from a random location in the world.
 
+You can even mention it in threads using `@globalping ping google.com`
 
 ### GitHub Bot
 
@@ -135,7 +143,7 @@ Examples:
 @globalping traceroute jsdelivr.com from South America limit 2
 ```
 
-At the moment only `ping` and `traceroute` commands are supported. The location field can process all kinds of different types of location matching, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`
+The location field can process all kinds of different types of location matching, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`.
 
 ## Join the Network - Run a probe
 
@@ -170,7 +178,6 @@ These limits are applied per IP address regardless if an API key supplied or not
 
 - 100 POST requests per minute per IP. No GET limits are implemented to support "real-time" use-cases.
 - A single measurement is limited to 200 probes per location and 500 total probes
-- other?
 
 
 #### Un-authenticated users
@@ -180,7 +187,6 @@ In this case we limit the amount of tests an IP address can run. A single test i
 A limit of 10 tests means the user can run either 10 measurements with the probe limit set to 1 per measurement, or a single measurement with the probe limit set to 10.
 
 - 100 tests per hour
-- other?
 
 
 #### Registered jsDelivr users - Free
@@ -203,7 +209,6 @@ We will then automatically upgrade your account to get a higher limit as defined
 
 Feel free to reach out if you need a custom limit for your API key.
 We're more than happy to provide higher limits to researchers, non-profits and other open source projects.
-
 
 
 ## Development
