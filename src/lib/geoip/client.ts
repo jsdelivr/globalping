@@ -53,6 +53,7 @@ export default class GeoipClient {
 			.then(([ ip2location, ipmap, maxmind, ipinfo, fastly ]) => {
 				const fulfilled: (LocationInfoWithProvider | null)[] = [];
 
+				// Providers here are pushed in a desc prioritized order
 				fulfilled.push(
 					ip2location.status === 'fulfilled' ? { ...ip2location.value, provider: 'ip2location' } : null,
 					ipmap.status === 'fulfilled' ? { ...ipmap.value, provider: 'ipmap' } : null,
@@ -147,29 +148,10 @@ export default class GeoipClient {
 	}
 
 	private bestMatch (field: keyof LocationInfo, sources: LocationInfoWithProvider[]): [LocationInfo, LocationInfoWithProvider[]] {
-		const DESC_PRIORITY_OF_PROVIDERS: Provider[] = [ 'ip2location', 'ipmap', 'maxmind', 'ipinfo', 'fastly' ];
 		const filtered = sources.filter(s => s[field]);
-		// Initially sort sources so they are sorted inside groups
-		const sorted = filtered.sort((sourceA, sourceB) => {
-			const indexSourceA = DESC_PRIORITY_OF_PROVIDERS.indexOf(sourceA.provider);
-			const indexSourceB = DESC_PRIORITY_OF_PROVIDERS.indexOf(sourceB.provider);
-			return indexSourceA - indexSourceB;
-		});
 		// Group sources by the same field value
-		const grouped = Object.values(_.groupBy(sorted, field));
-		const ranked = grouped.sort((sourcesA, sourcesB) => {
-			// Move bigger groups to the beginning
-			const groupsSizeDiff = sourcesB.length - sourcesA.length;
-
-			if (groupsSizeDiff === 0) {
-				// If group sizes are equal move the group with the prioritized item to the beginning
-				const smallestIndexSourceA = DESC_PRIORITY_OF_PROVIDERS.indexOf((sourcesA[0] as LocationInfoWithProvider).provider);
-				const smallestIndexSourceB = DESC_PRIORITY_OF_PROVIDERS.indexOf((sourcesA[0] as LocationInfoWithProvider).provider);
-				return smallestIndexSourceA - smallestIndexSourceB;
-			}
-
-			return groupsSizeDiff;
-		}).flat();
+		const grouped = Object.values(_.groupBy(filtered, field));
+		const ranked = grouped.sort((a, b) => b.length - a.length).flat();
 
 		const best = ranked[0];
 

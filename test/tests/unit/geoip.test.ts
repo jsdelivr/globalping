@@ -116,10 +116,31 @@ describe('geoip service', () => {
 		});
 	});
 
+	it('should choose top prioritized provider when there is a draw in returned results', async () => {
+		nockGeoIpProviders({ ipmap: 'argentina', ip2location: 'emptyCity', maxmind: 'newYork', ipinfo: 'argentina', fastly: 'newYork' });
+
+		const info = await client.lookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
+			continent: 'SA',
+			country: 'AR',
+			state: undefined,
+			city: 'Buenos Aires',
+			region: 'South America',
+			normalizedRegion: 'south america',
+			normalizedCity: 'buenos aires',
+			asn: 61004,
+			latitude: -34.002,
+			longitude: -58.002,
+			network: 'InterBS S.R.L. (BAEHOST)',
+			normalizedNetwork: 'interbs s.r.l. (baehost)',
+		});
+	});
+
 	it('should choose top prioritized provider when all providers returned different cities', async () => {
 		nockGeoIpProviders({ ipmap: 'default', ip2location: 'argentina', maxmind: 'newYork', ipinfo: 'emptyCity', fastly: 'bangkok' });
 
-		const info = await client.lookup(MOCK_IP).catch((error: Error) => error);
+		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
 			continent: 'SA',
@@ -359,7 +380,7 @@ describe('geoip service', () => {
 		it('should pass - non-vpn', async () => {
 			nockGeoIpProviders();
 
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP);
 
 			expect(response).to.deep.equal({
 				continent: 'NA',
@@ -380,7 +401,7 @@ describe('geoip service', () => {
 		it('should pass - no client object', async () => {
 			nockGeoIpProviders({ fastly: 'noClient' });
 
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP);
 
 			expect(response).to.deep.equal({
 				continent: 'NA',
@@ -409,7 +430,7 @@ describe('geoip service', () => {
 
 			nockGeoIpProviders({ fastly: 'proxyDescVpn' });
 
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP);
 
 			expect(response).to.deep.equal({
 				continent: 'NA',
