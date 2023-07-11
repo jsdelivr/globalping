@@ -14,8 +14,129 @@ info:
 servers:
   - url: https://api.globalping.io
 tags:
+  - name: Measurements
   - name: Probes
 paths:
+  /v1/measurements:
+    post:
+      summary: Create a new measurement
+      operationId: createMeasurement
+      description: |
+        Creates a new measurement with the configured parameters.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - type
+                - target
+              properties:
+                type:
+                  $ref: '#/components/schemas/MeasurementType'
+                target:
+                  type: string
+                  description: |
+                    A public endpoint on which the measurement is executed.
+                    Typically a hostname or an IPv4 address. The validation rules might differ depending on the measurement type.
+                inProgressUpdates:
+                  type: boolean
+                  description: |
+                    Specifies if the results of the measurement should be updated while being in progress.
+                    If `false`, results are populated to the measurement object only after the test finishes.
+                    If `true`, partial results are returned as soon as they are available and can be presented to the user in real-time.
+                    Note that only the top 5 tests from the results array will update in real-time.
+                  default: false
+                limit:
+                  type: integer
+                  description: |
+                    Specifies the maximum number of probes that run the measurement.
+                    The result count might be lower if there aren't enough probes available in the specified locations.
+                  minimum: 1
+                  maximum: 500
+                  default: 1
+                measurementOptions:
+                  anyOf:
+                    - $ref: '#/components/schemas/MeasurementPingOptions'
+                    - $ref: '#/components/schemas/MeasurementTracerouteOptions'
+                    - $ref: '#/components/schemas/MeasurementDnsOptions'
+                    - $ref: '#/components/schemas/MeasurementMtrOptions'
+                    - $ref: '#/components/schemas/MeasurementHttpOptions'
+                locations:
+                  type: array
+                  description: |
+                    An array of locations from which to run the measurement.
+                    Each object specifies a location using one or multiple keys.
+                  items:
+                    $ref: '#/components/schemas/MeasurementLocationOption'
+            examples:
+              ping:
+                summary: 'ping: default options'
+                value:
+                  {
+                    "type": "ping",
+                    "target": "cdn.jsdelivr.net",
+                  }
+              pingCustom:
+                summary: 'ping: custom options'
+                value:
+                  {
+                    "type": "ping",
+                    "target": "cdn.jsdelivr.net",
+                    "measurementOptions": {
+                      "packets": 6
+                    }
+                  }
+              pingLocations:
+                summary: 'ping: specific locations'
+                value:
+                  {
+                    "type": "ping",
+                    "target": "cdn.jsdelivr.net",
+                    "locations": [
+                      { "country": "DE" },
+                      { "country": "PL" }
+                    ]
+                  }
+              pingLocationsLimit:
+                summary: 'ping: specific locations and limit'
+                value:
+                  {
+                    "type": "ping",
+                    "target": "cdn.jsdelivr.net",
+                    "locations": [
+                      { "country": "DE", "limit": 4 },
+                      { "country": "PL", "limit": 2 }
+                    ]
+                  }
+              pingLocationsMagic:
+                summary: 'ping: magic location filter'
+                value:
+                  {
+                    "type": "ping",
+                    "target": "cdn.jsdelivr.net",
+                    "locations": [
+                      { "magic": "FR" },
+                      { "magic": "Poland" },
+                      { "magic": "Berlin+Germany" },
+                      { "magic": "California" },
+                      { "magic": "Europe" },
+                      { "magic": "Western Europe" },
+                      { "magic": "AS13335" },
+                      { "magic": "aws-us-east-1" },
+                      { "magic": "Google" }
+                    ]
+                  }
+      responses:
+        '202':
+          $ref: '#/components/responses/measurements202'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/measurements422'
+      tags:
+        - Measurements
   /v1/probes:
     get:
       summary: List currently connected probes
@@ -29,7 +150,12 @@ paths:
         - Probes
 
 components:
-  #  headers:
+  headers:
+    MeasurementLocation:
+      description: A link to the newly created measurement.
+      schema:
+        type: string
+        format: uri
 
   #  parameters:
 
@@ -53,18 +179,222 @@ components:
     CityName:
       type: string
       description: A city name in English.
+    CreateMeasurementResponse:
+      type: object
+      required:
+        - id
+        - probesCount
+      properties:
+        id:
+          type: string
+        probesCount:
+          type: integer
     Latitude:
       type: number
     Longitude:
       type: number
+    MeasurementLocationOption:
+      type: object
+      additionalProperties: false
+      properties:
+        continent:
+          $ref: '#/components/schemas/ContinentCode'
+        region:
+          $ref: '#/components/schemas/RegionName'
+        country:
+          $ref: '#/components/schemas/CountryCode'
+        state:
+          $ref: '#/components/schemas/StateCode'
+        city:
+          $ref: '#/components/schemas/CityName'
+        asn:
+          $ref: '#/components/schemas/AsnCode'
+        network:
+          $ref: '#/components/schemas/NetworkName'
+        tags:
+          $ref: '#/components/schemas/Tags'
+        magic:
+          type: string
+          description: |
+            Fuzzy matching based on the `country`, `city`, `state`, `continent`, `region`, `asn` (using `AS` prefix, e.g., `AS123`), `tags`, and `network` values.
+            Includes the full names, ISO codes (where applicable), and common aliases.
+            Multiple conditions can be combined using the `+` character.
+        limit:
+          type: integer
+          description: |
+            Mutually exclusive with the global `limit`.
+            Specifies the maximum number of probes that run the measurement in this location.
+          minimum: 1
+          maximum: 200
+          default: 1
+    MeasurementResolver:
+      anyOf:
+        - type: string
+          format: ipv4
+          description: An IPv4 address.
+        - type: string
+          format: hostname
+          description: A Fully Qualified Domain Name (FQDN).
+    MeasurementType:
+      type: string
+      description: The measurement type.
+      enum:
+        - ping
+        - traceroute
+        - dns
+        - mtr
+        - http
+    MeasurementPingOptions:
+      title: PingOptions
+      type: object
+      additionalProperties: false
+      properties:
+        packets:
+          type: integer
+          default: 3
+          minimum: 1
+          maximum: 16
+    MeasurementTracerouteOptions:
+      title: TracerouteOptions
+      type: object
+      additionalProperties: false
+      properties:
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 80
+        protocol:
+          type: string
+          enum:
+            - ICMP
+            - TCP
+            - UDP
+          default: ICMP
+    MeasurementDnsOptions:
+      title: DnsOptions
+      type: object
+      additionalProperties: false
+      properties:
+        query:
+          type: object
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              enum:
+                - A
+                - AAAA
+                - ANY
+                - CNAME
+                - DNSKEY
+                - DS
+                - MX
+                - NS
+                - NSEC
+                - PTR
+                - RRSIG
+                - SOA
+                - TXT
+                - SRV
+              default: A
+        resolver:
+          $ref: '#/components/schemas/MeasurementResolver'
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 53
+        protocol:
+          type: string
+          enum:
+            - TCP
+            - UDP
+          default: UDP
+        trace:
+          type: boolean
+          description: |
+            Toggles tracing of the delegation path from the root servers down to the target domain name.
+          default: false
+    MeasurementMtrOptions:
+      title: MtrOptions
+      type: object
+      additionalProperties: false
+      properties:
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 80
+        protocol:
+          type: string
+          enum:
+            - ICMP
+            - TCP
+            - UDP
+          default: ICMP
+        packets:
+          type: integer
+          default: 3
+          minimum: 1
+          maximum: 16
+    MeasurementHttpOptions:
+      title: HttpOptions
+      type: object
+      additionalProperties: false
+      properties:
+        request:
+          type: object
+          additionalProperties: false
+          properties:
+            host:
+              type: string
+              description: |
+                An optional override for the `Host` header. The default value is based on the `target`.
+            path:
+              type: string
+            query:
+              type: string
+            method:
+              type: string
+              enum:
+                - HEAD
+                - GET
+              default: HEAD
+            headers:
+              type: object
+              description: |
+                Additional request headers. Note that the `Host` and `User-Agent` are reserved and internally overridden.
+              additionalProperties:
+                type: string
+        resolver:
+          $ref: '#/components/schemas/MeasurementResolver'
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 80
+        protocol:
+          type: string
+          enum:
+            - HTTP
+            - HTTPS
+            - HTTP2
+          default: HTTPS
     NetworkName:
       type: string
       description: A network name.
     Probe:
       type: object
+      required:
+        - version
+        - location
+        - tags
+        - resolvers
       properties:
         version:
           type: string
+          description: Probe version.
         location:
           $ref: '#/components/schemas/ProbeLocation'
         tags:
@@ -74,13 +404,17 @@ components:
           description: A list of default DNS resolvers configured on the probe.
           items:
             $ref: '#/components/schemas/ProbeResolver'
-      required:
-        - version
-        - location
-        - tags
-        - resolvers
     ProbeLocation:
       type: object
+      required:
+        - continent
+        - region
+        - country
+        - city
+        - asn
+        - network
+        - latitude
+        - longitude
       properties:
         continent:
           $ref: '#/components/schemas/ContinentCode'
@@ -100,17 +434,8 @@ components:
           $ref: '#/components/schemas/Latitude'
         longitude:
           $ref: '#/components/schemas/Longitude'
-      required:
-        - continent
-        - region
-        - country
-        - city
-        - asn
-        - network
-        - latitude
-        - longitude
     ProbeResolver:
-      oneOf:
+      anyOf:
         - type: string
           format: ipv4
           description: An IPv4 address.
@@ -189,7 +514,44 @@ components:
             ]
           }
         ]
+    createMeasurementResponse:
+      value:
+        {
+          "id": "PY5fMsREMmIq45VR",
+          "probesCount": 1
+        }
   responses:
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - error
+            properties:
+              error:
+                type: object
+                required:
+                  - type
+                  - message
+                properties:
+                  type:
+                    type: string
+                  message:
+                    type: string
+                  params:
+                    type: object
+                    additionalProperties:
+                      type: string
+          examples:
+            json:
+              value:
+                error:
+                  type: validation_error
+                  message: Validation Failed
+                  params:
+                    measurement: '\"measurement\" does not match any of the allowed types'
     probes200:
       description: Success
       content:
@@ -199,3 +561,40 @@ components:
           examples:
             '0':
               $ref: '#/components/examples/probes'
+    measurements202:
+      description: Accepted
+      headers:
+        Location:
+          $ref: '#/components/headers/MeasurementLocation'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateMeasurementResponse'
+          examples:
+            '0':
+              $ref: '#/components/examples/createMeasurementResponse'
+    measurements422:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - error
+            properties:
+              error:
+                type: object
+                required:
+                  - type
+                  - message
+                properties:
+                  type:
+                    type: string
+                  message:
+                    type: string
+          examples:
+            json:
+              value:
+                error:
+                  type: no_probes_found
+                  message: No suitable probes found
