@@ -6,8 +6,8 @@ import type { LocationInfo } from '../../../src/lib/geoip/client.js';
 import { fastlyLookup } from '../../../src/lib/geoip/providers/fastly.js';
 import GeoipClient from '../../../src/lib/geoip/client.js';
 import NullCache from '../../../src/lib/cache/null-cache.js';
-import { scopedLogger } from '../../../src/lib/logger.js';
 import { populateMemList } from '../../../src/lib/geoip/whitelist.js';
+import type { CacheInterface } from '../../../src/lib/cache/cache-interface.js';
 
 const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
@@ -19,14 +19,59 @@ describe('geoip service', () => {
 	before(async () => {
 		await populateMemList();
 
-		client = new GeoipClient(
-			new NullCache(),
-			scopedLogger('geoip:test'),
-		);
+		client = new GeoipClient(new NullCache());
 	});
 
 	afterEach(() => {
 		nock.cleanAll();
+	});
+
+	describe('GeoipClient', () => {
+		it('should work even if cache is failing', async () => {
+			class BrokenCache implements CacheInterface {
+				async delete (): Promise<undefined> {
+					throw new Error('delete is broken');
+				}
+
+				async get (): Promise<undefined> {
+					throw new Error('get is broken');
+				}
+
+				async set (): Promise<void> {
+					throw new Error('set is broken');
+				}
+			}
+
+			const clientWithBrokenCache = new GeoipClient(new BrokenCache());
+			nock('https://globalping-geoip.global.ssl.fastly.net')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.00'].fastly);
+
+			nock('https://ipinfo.io')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.00'].ipinfo);
+
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
+				.get(`/${MOCK_IP}`)
+				.reply(200, mocks['00.00'].maxmind);
+
+			const info = await clientWithBrokenCache.lookup(MOCK_IP);
+
+			expect(info).to.deep.equal({
+				continent: 'SA',
+				country: 'AR',
+				normalizedRegion: 'south america',
+				region: 'South America',
+				state: undefined,
+				city: 'Buenos Aires',
+				normalizedCity: 'buenos aires',
+				asn: 61_493,
+				latitude: -34.602,
+				longitude: -58.384,
+				network: 'interbs s.r.l.',
+				normalizedNetwork: 'interbs s.r.l.',
+			});
+		});
 	});
 
 	it('should use maxmind & digitalelement consensus', async () => {
