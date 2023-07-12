@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import config from 'config';
-import type { Logger } from 'winston';
 import newrelic from 'newrelic';
 import type { CacheInterface } from '../cache/cache-interface.js';
 import { InternalError } from '../internal-error.js';
@@ -30,16 +29,12 @@ export type NetworkInfo = {
 	asn: number;
 };
 
-export const createGeoipClient = (): GeoipClient => new GeoipClient(
-	new RedisCache(getRedisClient()),
-	scopedLogger('geoip'),
-);
+const logger = scopedLogger('geoip');
+
+export const createGeoipClient = (): GeoipClient => new GeoipClient(new RedisCache(getRedisClient()));
 
 export default class GeoipClient {
-	constructor (
-		private readonly cache: CacheInterface,
-		private readonly logger: Logger,
-	) {}
+	constructor (private readonly cache: CacheInterface) {}
 
 	async lookup (addr: string): Promise<ProbeLocation> {
 		const results = await Promise
@@ -156,7 +151,7 @@ export default class GeoipClient {
 		const best = ranked[0];
 
 		if (!best || best.provider === 'fastly') {
-			this.logger.error(`failed to find a correct value for a field "${field}"`, { field, sources });
+			logger.error(`failed to find a correct value for a field "${field}"`, { field, sources });
 			throw new Error(`failed to find a correct value for a field "${field}"`);
 		}
 
@@ -165,7 +160,10 @@ export default class GeoipClient {
 	}
 
 	public async lookupWithCache<T> (key: string, fn: () => Promise<T>): Promise<T> {
-		const cached = await this.cache.get<T>(key);
+		const cached = await this.cache.get<T>(key).catch((error: Error) => {
+			logger.error('Failed to get cached geoip info for probe.', error);
+			newrelic.noticeError(error, { key });
+		});
 
 		if (cached) {
 			return cached;
@@ -175,7 +173,7 @@ export default class GeoipClient {
 		const ttl = Number(config.get('geoip.cache.ttl'));
 
 		await this.cache.set(key, info, ttl).catch((error: Error) => {
-			this.logger.error('Failed to cache geoip info for probe.', error);
+			logger.error('Failed to cache geoip info for probe.', error);
 			newrelic.noticeError(error, { key, ttl });
 		});
 

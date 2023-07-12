@@ -5,10 +5,9 @@ import type { LocationInfo } from '../../../src/lib/geoip/client.js';
 import { fastlyLookup } from '../../../src/lib/geoip/providers/fastly.js';
 import GeoipClient from '../../../src/lib/geoip/client.js';
 import NullCache from '../../../src/lib/cache/null-cache.js';
-import { scopedLogger } from '../../../src/lib/logger.js';
 import { populateMemList } from '../../../src/lib/geoip/whitelist.js';
-import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
-import { geoIpMocks } from '../../utils/nock-geo-ip.js';
+import nockGeoIpProviders, { geoIpMocks } from '../../utils/nock-geo-ip.js';
+import { CacheInterface } from '../../../src/lib/cache/cache-interface.js';
 
 const MOCK_IP = '131.255.7.26';
 
@@ -18,14 +17,50 @@ describe('geoip service', () => {
 	before(async () => {
 		await populateMemList();
 
-		client = new GeoipClient(
-			new NullCache(),
-			scopedLogger('geoip:test'),
-		);
+		client = new GeoipClient(new NullCache());
 	});
 
 	afterEach(() => {
 		nock.cleanAll();
+	});
+
+
+	describe('GeoipClient', () => {
+		it('should work even if cache is failing', async () => {
+			class BrokenCache implements CacheInterface {
+				async delete (): Promise<undefined> {
+					throw new Error('delete is broken');
+				}
+
+				async get (): Promise<undefined> {
+					throw new Error('get is broken');
+				}
+
+				async set (): Promise<void> {
+					throw new Error('set is broken');
+				}
+			}
+
+			const clientWithBrokenCache = new GeoipClient(new BrokenCache());
+			nockGeoIpProviders();
+
+			const info = await clientWithBrokenCache.lookup(MOCK_IP);
+
+			expect(info).to.deep.equal({
+				continent: 'NA',
+				country: 'US',
+				state: 'TX',
+				city: 'Dallas',
+				region: 'Northern America',
+				normalizedRegion: 'northern america',
+				normalizedCity: 'dallas',
+				asn: 20001,
+				latitude: 32.001,
+				longitude: -96.001,
+				network: 'The Constant Company LLC',
+				normalizedNetwork: 'the constant company llc',
+			});
+		});
 	});
 
 	it('should choose top prioritized provider from the winners majority', async () => {
