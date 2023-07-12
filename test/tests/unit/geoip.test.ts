@@ -7,7 +7,7 @@ import GeoipClient from '../../../src/lib/geoip/client.js';
 import NullCache from '../../../src/lib/cache/null-cache.js';
 import { populateMemList } from '../../../src/lib/geoip/whitelist.js';
 import nockGeoIpProviders, { geoIpMocks } from '../../utils/nock-geo-ip.js';
-import { CacheInterface } from '../../../src/lib/cache/cache-interface.js';
+import type { CacheInterface } from '../../../src/lib/cache/cache-interface.js';
 
 const MOCK_IP = '131.255.7.26';
 
