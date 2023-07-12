@@ -1,11 +1,9 @@
-import fs from 'node:fs';
 import request, { type Response } from 'supertest';
 import { expect } from 'chai';
 import nock from 'nock';
 import type { Socket } from 'socket.io-client';
 import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../../utils/server.js';
-
-const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
+import { geoIpMocks } from '../../../utils/nock-geo-ip.js';
 
 describe('compression', () => {
 	let requestAgent: any;
@@ -23,9 +21,11 @@ describe('compression', () => {
 		});
 
 		it('should include compression headers', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).times(10).reply(200, nockMocks['00.00'].fastly);
-			nock('https://ipinfo.io').get(/.*/).times(10).reply(200, nockMocks['00.00'].ipinfo);
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).times(10).reply(200, nockMocks['00.00'].maxmind);
+			nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).times(10).reply(200, geoIpMocks['ipmap'].default);
+			nock('https://api.ip2location.io').get(/.*/).times(10).reply(200, geoIpMocks['ip2location'].default);
+			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).times(10).reply(200, geoIpMocks['fastly'].default);
+			nock('https://ipinfo.io').get(/.*/).times(10).reply(200, geoIpMocks['ipinfo'].default);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).times(10).reply(200, geoIpMocks['maxmind'].default);
 			probes = await Promise.all(Array.from({ length: 10 }).map(() => addFakeProbe()));
 
 			for (const probe of probes) {

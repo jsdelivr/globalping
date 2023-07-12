@@ -12,10 +12,13 @@ import { isAddrWhitelisted } from './whitelist.js';
 import { ipinfoLookup } from './providers/ipinfo.js';
 import { type FastlyBundledResponse, fastlyLookup } from './providers/fastly.js';
 import { maxmindLookup } from './providers/maxmind.js';
+import { ipmapLookup } from './providers/ipmap.js';
+import { ip2LocationLookup } from './providers/ip2location.js';
 import { normalizeRegionName } from './utils.js';
 
 export type LocationInfo = Omit<ProbeLocation, 'region' | 'normalizedRegion'>;
-export type LocationInfoWithProvider = LocationInfo & {provider: string};
+type Provider = 'ipmap' | 'ip2location' | 'ipinfo' | 'maxmind' | 'fastly';
+export type LocationInfoWithProvider = LocationInfo & {provider: Provider};
 export type RegionInfo = {
 	region: string;
 	normalizedRegion: string;
@@ -36,16 +39,21 @@ export default class GeoipClient {
 	async lookup (addr: string): Promise<ProbeLocation> {
 		const results = await Promise
 			.allSettled([
-				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
+				this.lookupWithCache<LocationInfo>(`geoip:ip2location:${addr}`, async () => ip2LocationLookup(addr)),
+				this.lookupWithCache<LocationInfo>(`geoip:ipmap:${addr}`, async () => ipmapLookup(addr)),
 				this.lookupWithCache<LocationInfo>(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
+				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
 				this.lookupWithCache<FastlyBundledResponse>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
-			.then(([ ipinfo, maxmind, fastly ]) => {
-				const fulfilled = [];
+			.then(([ ip2location, ipmap, maxmind, ipinfo, fastly ]) => {
+				const fulfilled: (LocationInfoWithProvider | null)[] = [];
 
+				// Providers here are pushed in a desc prioritized order
 				fulfilled.push(
-					ipinfo.status === 'fulfilled' ? { ...ipinfo.value, provider: 'ipinfo' } : null,
+					ip2location.status === 'fulfilled' ? { ...ip2location.value, provider: 'ip2location' } : null,
+					ipmap.status === 'fulfilled' ? { ...ipmap.value, provider: 'ipmap' } : null,
 					maxmind.status === 'fulfilled' ? { ...maxmind.value, provider: 'maxmind' } : null,
+					ipinfo.status === 'fulfilled' ? { ...ipinfo.value, provider: 'ipinfo' } : null,
 					fastly.status === 'fulfilled' ? { ...fastly.value.location, provider: 'fastly' } : null,
 				);
 
@@ -62,8 +70,8 @@ export default class GeoipClient {
 			throw new InternalError(`unresolvable geoip: ${addr}`, true);
 		}
 
-		const match = this.bestMatch('normalizedCity', results);
-		const networkMatch = this.matchNetwork(match, results);
+		const [ match, ranked ] = this.bestMatch('normalizedCity', results);
+		const networkMatch = this.matchNetwork(match, ranked);
 
 		if (!networkMatch) {
 			throw new InternalError(`unresolvable geoip: ${addr}`, true);
@@ -112,7 +120,7 @@ export default class GeoipClient {
 		};
 	}
 
-	private matchNetwork (best: LocationInfo, sources: LocationInfoWithProvider[]): NetworkInfo | undefined {
+	private matchNetwork (best: LocationInfo, rankedSources: LocationInfoWithProvider[]): NetworkInfo | undefined {
 		if (best.asn && best.network) {
 			return {
 				asn: best.asn,
@@ -121,40 +129,34 @@ export default class GeoipClient {
 			};
 		}
 
-		const maxmind = sources.find(s => s.provider === 'maxmind' && s.city === best.city);
-
-		if (maxmind?.asn && maxmind?.network) {
-			return {
-				asn: maxmind.asn,
-				network: maxmind.network,
-				normalizedNetwork: maxmind.normalizedNetwork,
-			};
+		for (const source of rankedSources) {
+			if (source.normalizedCity === best.normalizedCity && source?.asn && source?.network) {
+				return {
+					asn: source.asn,
+					network: source.network,
+					normalizedNetwork: source.normalizedNetwork,
+				};
+			}
 		}
 
 		return undefined;
 	}
 
-	private bestMatch (field: keyof LocationInfo, sources: LocationInfoWithProvider[]): LocationInfo {
+	private bestMatch (field: keyof LocationInfo, sources: LocationInfoWithProvider[]): [LocationInfo, LocationInfoWithProvider[]] {
 		const filtered = sources.filter(s => s[field]);
-		// Group by the same field value
+		// Group sources by the same field value
 		const grouped = Object.values(_.groupBy(filtered, field));
-		// Move items with the same values to the beginning
 		const ranked = grouped.sort((a, b) => b.length - a.length).flat();
 
-		let best = ranked[0];
-
-		// If all values are different
-		if (grouped.length === filtered.length) {
-			const sourcesObject = Object.fromEntries(filtered.map(s => [ s.provider, s ]));
-			best = sourcesObject['ipinfo'] ?? sourcesObject['maxmind'];
-		}
+		const best = ranked[0];
 
 		if (!best || best.provider === 'fastly') {
 			logger.error(`failed to find a correct value for a field "${field}"`, { field, sources });
 			throw new Error(`failed to find a correct value for a field "${field}"`);
 		}
 
-		return _.omit(best, 'provider');
+		const match = _.omit(best, 'provider');
+		return [ match, ranked ];
 	}
 
 	public async lookupWithCache<T> (key: string, fn: () => Promise<T>): Promise<T> {

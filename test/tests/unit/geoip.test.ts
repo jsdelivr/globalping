@@ -1,4 +1,3 @@
-import * as fs from 'node:fs';
 import nock from 'nock';
 import mockFs from 'mock-fs';
 import { expect } from 'chai';
@@ -7,9 +6,8 @@ import { fastlyLookup } from '../../../src/lib/geoip/providers/fastly.js';
 import GeoipClient from '../../../src/lib/geoip/client.js';
 import NullCache from '../../../src/lib/cache/null-cache.js';
 import { populateMemList } from '../../../src/lib/geoip/whitelist.js';
+import nockGeoIpProviders, { geoIpMocks } from '../../utils/nock-geo-ip.js';
 import type { CacheInterface } from '../../../src/lib/cache/cache-interface.js';
-
-const mocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
 
 const MOCK_IP = '131.255.7.26';
 
@@ -25,6 +23,7 @@ describe('geoip service', () => {
 	afterEach(() => {
 		nock.cleanAll();
 	});
+
 
 	describe('GeoipClient', () => {
 		it('should work even if cache is failing', async () => {
@@ -43,142 +42,163 @@ describe('geoip service', () => {
 			}
 
 			const clientWithBrokenCache = new GeoipClient(new BrokenCache());
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['00.00'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['00.00'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['00.00'].maxmind);
+			nockGeoIpProviders();
 
 			const info = await clientWithBrokenCache.lookup(MOCK_IP);
 
 			expect(info).to.deep.equal({
-				continent: 'SA',
-				country: 'AR',
-				normalizedRegion: 'south america',
-				region: 'South America',
-				state: undefined,
-				city: 'Buenos Aires',
-				normalizedCity: 'buenos aires',
-				asn: 61_493,
-				latitude: -34.602,
-				longitude: -58.384,
-				network: 'interbs s.r.l.',
-				normalizedNetwork: 'interbs s.r.l.',
+				continent: 'NA',
+				country: 'US',
+				state: 'TX',
+				city: 'Dallas',
+				region: 'Northern America',
+				normalizedRegion: 'northern america',
+				normalizedCity: 'dallas',
+				asn: 20001,
+				latitude: 32.001,
+				longitude: -96.001,
+				network: 'The Constant Company LLC',
+				normalizedNetwork: 'the constant company llc',
 			});
 		});
 	});
 
-	it('should use maxmind & digitalelement consensus', async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.00'].fastly);
-
-		nock('https://ipinfo.io')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.00'].ipinfo);
-
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.00'].maxmind);
+	it('should choose top prioritized provider from the winners majority', async () => {
+		nockGeoIpProviders({ ipmap: 'default', ip2location: 'default', maxmind: 'argentina', fastly: 'argentina', ipinfo: 'argentina' });
 
 		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
 			continent: 'SA',
 			country: 'AR',
-			normalizedRegion: 'south america',
-			region: 'South America',
 			state: undefined,
 			city: 'Buenos Aires',
+			region: 'South America',
+			normalizedRegion: 'south america',
 			normalizedCity: 'buenos aires',
-			asn: 61_493,
-			latitude: -34.602,
-			longitude: -58.384,
+			asn: 61003,
+			latitude: -34.003,
+			longitude: -58.003,
 			network: 'interbs s.r.l.',
 			normalizedNetwork: 'interbs s.r.l.',
 		});
 	});
 
-	it('should use ipinfo as a fallback', async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.01'].fastly);
-
-		nock('https://ipinfo.io')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.01'].ipinfo);
-
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-			.get(`/${MOCK_IP}`)
-			.reply(400);
+	it('should choose top prioritized provider if some providers are down', async () => {
+		nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).reply(400);
+		nock('https://api.ip2location.io').get(/.*/).reply(400);
+		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, geoIpMocks['fastly'].argentina);
+		nock('https://ipinfo.io').get(/.*/).reply(200, geoIpMocks['ipinfo'].argentina);
+		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(400);
 
 		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
-			asn: 61_493,
-			city: 'Lagoa do Carro',
-			normalizedCity: 'lagoa do carro',
 			continent: 'SA',
-			normalizedRegion: 'south america',
-			region: 'South America',
 			country: 'BR',
-			latitude: -7.7568,
-			longitude: -35.3656,
 			state: undefined,
+			city: 'Buenos Aires',
+			region: 'South America',
+			normalizedRegion: 'south america',
+			normalizedCity: 'buenos aires',
+			asn: 61004,
+			latitude: -34.004,
+			longitude: -58.004,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
 		});
 	});
 
-	it('should work when ipinfo is down (prioritize maxmind)', async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.01'].fastly);
-
-		nock('https://ipinfo.io')
-			.get(`/${MOCK_IP}`)
-			.reply(400);
-
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.01'].maxmind);
+	it('should fulfill ipmap network data with other provider network data with the same city', async () => {
+		nockGeoIpProviders({ ipmap: 'default', ip2location: 'argentina', maxmind: 'newYork', ipinfo: 'emptyCity', fastly: 'default' });
 
 		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
-			asn: 61_493,
-			city: 'Buenos Aires',
-			normalizedCity: 'buenos aires',
+			continent: 'NA',
+			country: 'US',
+			state: 'TX',
+			city: 'Dallas',
+			region: 'Northern America',
+			normalizedRegion: 'northern america',
+			normalizedCity: 'dallas',
+			asn: 20005,
+			latitude: 32.002,
+			longitude: -96.002,
+			network: 'psychz networks',
+			normalizedNetwork: 'psychz networks',
+		});
+	});
+
+	it('should fulfill missing data with other provider network data with the same city', async () => {
+		nockGeoIpProviders({ ip2location: 'emptyNetwork', ipmap: 'default', maxmind: 'emptyCity', ipinfo: 'emptyCity', fastly: 'default' });
+
+		const info = await client.lookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
+			continent: 'NA',
+			country: 'US',
+			state: 'TX',
+			city: 'Dallas',
+			region: 'Northern America',
+			normalizedRegion: 'northern america',
+			normalizedCity: 'dallas',
+			asn: 20005,
+			latitude: 32.001,
+			longitude: -96.001,
+			network: 'psychz networks',
+			normalizedNetwork: 'psychz networks',
+		});
+	});
+
+	it('should choose top prioritized provider when there is a draw in returned results', async () => {
+		nockGeoIpProviders({ ipmap: 'argentina', ip2location: 'emptyCity', maxmind: 'newYork', ipinfo: 'argentina', fastly: 'newYork' });
+
+		const info = await client.lookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
 			continent: 'SA',
-			normalizedRegion: 'south america',
-			region: 'South America',
 			country: 'AR',
-			latitude: -34.602,
-			longitude: -58.384,
 			state: undefined,
+			city: 'Buenos Aires',
+			region: 'South America',
+			normalizedRegion: 'south america',
+			normalizedCity: 'buenos aires',
+			asn: 61004,
+			latitude: -34.002,
+			longitude: -58.002,
+			network: 'InterBS S.R.L. (BAEHOST)',
+			normalizedNetwork: 'interbs s.r.l. (baehost)',
+		});
+	});
+
+	it('should choose top prioritized provider when all providers returned different cities', async () => {
+		nockGeoIpProviders({ ipmap: 'default', ip2location: 'argentina', maxmind: 'newYork', ipinfo: 'emptyCity', fastly: 'bangkok' });
+
+		const info = await client.lookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
+			continent: 'SA',
+			country: 'AR',
+			state: undefined,
+			city: 'Buenos Aires',
+			region: 'South America',
+			normalizedRegion: 'south america',
+			normalizedCity: 'buenos aires',
+			asn: 61001,
+			latitude: -34.001,
+			longitude: -58.001,
 			network: 'interbs s.r.l.',
 			normalizedNetwork: 'interbs s.r.l.',
 		});
 	});
 
-	it('should fail when only fastly reports', async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.01'].fastly);
-
-		nock('https://ipinfo.io')
-			.get(`/${MOCK_IP}`)
-			.reply(400);
-
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-			.get(`/${MOCK_IP}`)
-			.reply(500);
+	it('should fail when only fastly reports the data', async () => {
+		nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).reply(400);
+		nock('https://api.ip2location.io').get(/.*/).reply(400);
+		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, geoIpMocks['fastly'].default);
+		nock('https://ipinfo.io').get(/.*/).reply(400);
+		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(400);
 
 		const info = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
@@ -186,267 +206,156 @@ describe('geoip service', () => {
 		expect((info as Error).message).to.equal(`unresolvable geoip: ${MOCK_IP}`);
 	});
 
-	it('should work when fastly is down', async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get(`/${MOCK_IP}`)
-			.reply(400);
-
-		nock('https://ipinfo.io')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.01'].ipinfo);
-
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.01'].maxmind);
-
-		const info = await client.lookup(MOCK_IP);
-
-		expect(info).to.deep.equal({
-			asn: 61_493,
-			city: 'Lagoa do Carro',
-			normalizedCity: 'lagoa do carro',
-			continent: 'SA',
-			normalizedRegion: 'south america',
-			region: 'South America',
-			country: 'BR',
-			latitude: -7.7568,
-			longitude: -35.3656,
-			state: undefined,
-			network: 'InterBS S.R.L. (BAEHOST)',
-			normalizedNetwork: 'interbs s.r.l. (baehost)',
-		});
-	});
-
-	it('should work when maxmind is down', async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.01'].fastly);
-
-		nock('https://ipinfo.io')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.01'].ipinfo);
-
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-			.get(`/${MOCK_IP}`)
-			.reply(400);
-
-		const info = await client.lookup(MOCK_IP);
-
-		expect(info).to.deep.equal({
-			asn: 61_493,
-			city: 'Lagoa do Carro',
-			normalizedCity: 'lagoa do carro',
-			continent: 'SA',
-			normalizedRegion: 'south america',
-			region: 'South America',
-			country: 'BR',
-			latitude: -7.7568,
-			longitude: -35.3656,
-			state: undefined,
-			network: 'InterBS S.R.L. (BAEHOST)',
-			normalizedNetwork: 'interbs s.r.l. (baehost)',
-		});
-	});
-
 	it('should detect US state', async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.02'].fastly);
-
-		nock('https://ipinfo.io')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.02'].ipinfo);
-
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.02'].maxmind);
+		nockGeoIpProviders();
 
 		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
-			asn: 43_939,
-			city: 'Dallas',
-			normalizedCity: 'dallas',
 			continent: 'NA',
-			normalizedRegion: 'northern america',
-			region: 'Northern America',
 			country: 'US',
-			latitude: 32.7492,
-			longitude: -96.8389,
 			state: 'TX',
-			network: 'Psychz Networks',
-			normalizedNetwork: 'psychz networks',
+			city: 'Dallas',
+			region: 'Northern America',
+			normalizedRegion: 'northern america',
+			normalizedCity: 'dallas',
+			asn: 20001,
+			latitude: 32.001,
+			longitude: -96.001,
+			network: 'The Constant Company LLC',
+			normalizedNetwork: 'the constant company llc',
 		});
 	});
 
 	it('should filter out incomplete results', async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.03'].fastly);
-
-		nock('https://ipinfo.io')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.03'].ipinfo);
-
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.03'].maxmind);
+		nockGeoIpProviders({ ipmap: 'emptyCity', ip2location: 'emptyCity', maxmind: 'emptyCity', fastly: 'emptyCity', ipinfo: 'argentina' });
 
 		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
-			asn: 61_493,
-			normalizedCity: 'lagoa do carro',
-			city: 'Lagoa do Carro',
 			continent: 'SA',
-			normalizedRegion: 'south america',
-			region: 'South America',
 			country: 'BR',
 			state: undefined,
-			latitude: -7.7568,
-			longitude: -35.3656,
+			city: 'Buenos Aires',
+			region: 'South America',
+			normalizedRegion: 'south america',
+			normalizedCity: 'buenos aires',
+			asn: 61004,
+			latitude: -34.004,
+			longitude: -58.004,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
 		});
 	});
 
 	it('should query normalized city field', async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.04'].fastly);
-
-		nock('https://ipinfo.io')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.04'].ipinfo);
-
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.04'].maxmind);
+		nockGeoIpProviders({ ipmap: 'newYork', ip2location: 'newYork', maxmind: 'newYork', fastly: 'newYork', ipinfo: 'newYork' });
 
 		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
-			asn: 61_493,
-			normalizedCity: 'new york',
-			city: 'New York',
-			normalizedRegion: 'northern america',
-			region: 'Northern America',
 			continent: 'NA',
 			country: 'US',
 			state: 'NY',
-			latitude: -7.7568,
-			longitude: -35.3656,
-			network: 'InterBS S.R.L. (BAEHOST)',
-			normalizedNetwork: 'interbs s.r.l. (baehost)',
+			city: 'New York',
+			region: 'Northern America',
+			normalizedRegion: 'northern america',
+			normalizedCity: 'new york',
+			asn: 80001,
+			latitude: 40.001,
+			longitude: -74.001,
+			network: 'The Constant Company LLC',
+			normalizedNetwork: 'the constant company llc',
 		});
 	});
 
-	it('should pick maxmind, if ipinfo has no city', async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.05'].fastly);
-
-		nock('https://ipinfo.io')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.05'].ipinfo);
-
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-			.get(`/${MOCK_IP}`)
-			.reply(200, mocks['00.05'].maxmind);
+	it('should pick another provider if prioritized don\'t have city value', async () => {
+		nockGeoIpProviders({ ip2location: 'emptyCity', ipmap: 'emptyCity', maxmind: 'emptyCity' });
 
 		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
-			continent: 'SA',
-			country: 'AR',
-			normalizedRegion: 'south america',
-			region: 'South America',
-			state: undefined,
-			city: 'Buenos Aires',
-			normalizedCity: 'buenos aires',
-			asn: 61_493,
-			latitude: -34.602,
-			longitude: -58.384,
-			network: 'interbs s.r.l.',
-			normalizedNetwork: 'interbs s.r.l.',
+			continent: 'NA',
+			country: 'US',
+			state: 'TX',
+			city: 'Dallas',
+			region: 'Northern America',
+			normalizedRegion: 'northern america',
+			normalizedCity: 'dallas',
+			asn: 20004,
+			latitude: 32.004,
+			longitude: -96.004,
+			network: 'Psychz Networks',
+			normalizedNetwork: 'psychz networks',
 		});
 	});
 
 	describe('network match', () => {
-		it('should pick ipinfo data + maxmind network (missing network data)', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['00.08'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['00.08'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['00.08'].maxmind);
+		it('should pick ipmap data + other provider network (missing network data)', async () => {
+			nockGeoIpProviders({ ip2location: 'emptyCity' });
 
 			const info = await client.lookup(MOCK_IP);
 
 			expect(info).to.deep.equal({
 				continent: 'NA',
-				normalizedRegion: 'northern america',
-				region: 'Northern America',
 				country: 'US',
 				state: 'TX',
 				city: 'Dallas',
+				region: 'Northern America',
+				normalizedRegion: 'northern america',
 				normalizedCity: 'dallas',
-				asn: 40_676,
-				latitude: 32.7492,
-				longitude: -96.8389,
+				asn: 20003,
+				latitude: 32.002,
+				longitude: -96.002,
+				network: 'psychz networks',
+				normalizedNetwork: 'psychz networks',
+			});
+		});
+
+		it('should pick ipinfo data + fastly network (missing network data)', async () => {
+			nockGeoIpProviders({ ip2location: 'emptyCity', ipmap: 'emptyCity', maxmind: 'emptyCity', ipinfo: 'emptyNetwork' });
+
+			const info = await client.lookup(MOCK_IP);
+
+			expect(info).to.deep.equal({
+				continent: 'NA',
+				country: 'US',
+				state: 'TX',
+				city: 'Dallas',
+				region: 'Northern America',
+				normalizedRegion: 'northern america',
+				normalizedCity: 'dallas',
+				asn: 20005,
+				latitude: 32.004,
+				longitude: -96.004,
 				network: 'psychz networks',
 				normalizedNetwork: 'psychz networks',
 			});
 		});
 
 		it('should pick ipinfo data + maxmind network (undefined network data)', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['00.10'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['00.10'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['00.10'].maxmind);
+			nockGeoIpProviders({ ip2location: 'emptyCity', ipmap: 'emptyCity', maxmind: 'emptyCity', ipinfo: 'undefinedNetwork' });
 
 			const info = await client.lookup(MOCK_IP);
 
 			expect(info).to.deep.equal({
 				continent: 'NA',
-				normalizedRegion: 'northern america',
-				region: 'Northern America',
 				country: 'US',
 				state: 'TX',
 				city: 'Dallas',
+				region: 'Northern America',
+				normalizedRegion: 'northern america',
 				normalizedCity: 'dallas',
-				asn: 40_676,
-				latitude: 32.7492,
-				longitude: -96.8389,
+				asn: 20005,
+				latitude: 32.004,
+				longitude: -96.004,
 				network: 'psychz networks',
 				normalizedNetwork: 'psychz networks',
 			});
 		});
 
 		it('should fail (missing network data + city mismatch)', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['00.09'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['00.09'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['00.09'].maxmind);
+			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'newYork', maxmind: 'emptyNetwork', ipinfo: 'emptyNetwork', fastly: 'emptyCity' });
 
 			const info: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
@@ -457,50 +366,46 @@ describe('geoip service', () => {
 	describe('provider parsing', () => {
 		describe('fastly', () => {
 			it('should filter out "reserved" city name', async () => {
-				nock('https://globalping-geoip.global.ssl.fastly.net')
-					.get(`/${MOCK_IP}`)
-					.reply(200, mocks['00.06'].fastly);
+				nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, geoIpMocks['fastly'].reserved);
 
 				const result = await fastlyLookup(MOCK_IP);
 
 				expect(result).to.deep.equal({
-					client: undefined,
 					location: {
-						asn: 61_493,
-						city: '',
-						normalizedCity: '',
 						continent: 'SA',
 						country: 'AR',
-						latitude: -34.61,
-						longitude: -58.42,
+						state: undefined,
+						city: '',
+						normalizedCity: '',
+						asn: 61005,
+						latitude: -34.005,
+						longitude: -58.005,
 						network: 'interbs s.r.l.',
 						normalizedNetwork: 'interbs s.r.l.',
-						state: undefined,
 					},
+					client: undefined,
 				});
 			});
 
 			it('should filter out "private" city name', async () => {
-				nock('https://globalping-geoip.global.ssl.fastly.net')
-					.get(`/${MOCK_IP}`)
-					.reply(200, mocks['00.07'].fastly);
+				nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, geoIpMocks['fastly'].private);
 
 				const result = await fastlyLookup(MOCK_IP);
 
 				expect(result).to.deep.equal({
-					client: undefined,
 					location: {
-						asn: 61_493,
-						city: '',
-						normalizedCity: '',
 						continent: 'SA',
 						country: 'AR',
-						latitude: -34.61,
-						longitude: -58.42,
+						state: undefined,
+						city: '',
+						normalizedCity: '',
+						asn: 61005,
+						latitude: -34.005,
+						longitude: -58.005,
 						network: 'interbs s.r.l.',
 						normalizedNetwork: 'interbs s.r.l.',
-						state: undefined,
 					},
+					client: undefined,
 				});
 			});
 		});
@@ -508,64 +413,44 @@ describe('geoip service', () => {
 
 	describe('limit vpn/tor connection', () => {
 		it('should pass - non-vpn', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.00'].fastly);
+			nockGeoIpProviders();
 
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.00'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.00'].maxmind);
-
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP);
 
 			expect(response).to.deep.equal({
-				asn: 123,
-				city: 'Dallas',
-				normalizedCity: 'dallas',
-				normalizedRegion: 'northern america',
-				region: 'Northern America',
 				continent: 'NA',
 				country: 'US',
-				latitude: 32.7492,
-				longitude: -96.8389,
 				state: 'TX',
-				network: 'Psychz Networks',
-				normalizedNetwork: 'psychz networks',
+				city: 'Dallas',
+				region: 'Northern America',
+				normalizedRegion: 'northern america',
+				normalizedCity: 'dallas',
+				asn: 20001,
+				latitude: 32.001,
+				longitude: -96.001,
+				network: 'The Constant Company LLC',
+				normalizedNetwork: 'the constant company llc',
 			});
 		});
 
 		it('should pass - no client object', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.07'].fastly);
+			nockGeoIpProviders({ fastly: 'noClient' });
 
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.07'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.07'].maxmind);
-
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP);
 
 			expect(response).to.deep.equal({
-				asn: 123,
-				city: 'Dallas',
-				normalizedCity: 'dallas',
 				continent: 'NA',
-				normalizedRegion: 'northern america',
-				region: 'Northern America',
 				country: 'US',
-				latitude: 32.7492,
-				longitude: -96.8389,
 				state: 'TX',
-				network: 'Psychz Networks',
-				normalizedNetwork: 'psychz networks',
+				city: 'Dallas',
+				region: 'Northern America',
+				normalizedRegion: 'northern america',
+				normalizedCity: 'dallas',
+				asn: 20001,
+				latitude: 32.001,
+				longitude: -96.001,
+				network: 'The Constant Company LLC',
+				normalizedNetwork: 'the constant company llc',
 			});
 		});
 
@@ -578,50 +463,30 @@ describe('geoip service', () => {
 				},
 			});
 
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.01'].fastly);
+			nockGeoIpProviders({ fastly: 'proxyDescVpn' });
 
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.01'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.01'].maxmind);
-
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP);
 
 			expect(response).to.deep.equal({
-				asn: 123,
-				city: 'Dallas',
-				normalizedCity: 'dallas',
 				continent: 'NA',
-				normalizedRegion: 'northern america',
-				region: 'Northern America',
 				country: 'US',
-				latitude: 32.7492,
-				longitude: -96.8389,
 				state: 'TX',
-				network: 'Psychz Networks',
-				normalizedNetwork: 'psychz networks',
+				city: 'Dallas',
+				region: 'Northern America',
+				normalizedRegion: 'northern america',
+				normalizedCity: 'dallas',
+				asn: 20001,
+				latitude: 32.001,
+				longitude: -96.001,
+				network: 'The Constant Company LLC',
+				normalizedNetwork: 'the constant company llc',
 			});
 
 			mockFs.restore();
 		});
 
 		it('should detect VPN (proxy_desc)', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.01'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.01'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.01'].maxmind);
+			nockGeoIpProviders({ fastly: 'proxyDescVpn' });
 
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
@@ -630,36 +495,7 @@ describe('geoip service', () => {
 		});
 
 		it('should detect TOR-EXIT (proxy_desc)', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.02'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.02'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.02'].maxmind);
-
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
-
-			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.equal('vpn detected');
-		});
-
-		it('should detect TOR-RELAY (proxy_desc)', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.03'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.03'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.03'].maxmind);
+			nockGeoIpProviders({ fastly: 'proxyDescTor' });
 
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
@@ -668,17 +504,7 @@ describe('geoip service', () => {
 		});
 
 		it('should detect corporate (proxy_type)', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.03'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.03'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.03'].maxmind);
+			nockGeoIpProviders({ fastly: 'proxyTypeCorporate' });
 
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
@@ -687,17 +513,7 @@ describe('geoip service', () => {
 		});
 
 		it('should detect aol (proxy_type)', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.04'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.04'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.04'].maxmind);
+			nockGeoIpProviders({ fastly: 'proxyTypeAol' });
 
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
@@ -706,17 +522,7 @@ describe('geoip service', () => {
 		});
 
 		it('should detect anonymous (proxy_type)', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.05'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.05'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.05'].maxmind);
+			nockGeoIpProviders({ fastly: 'proxyTypeAnonymous' });
 
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
@@ -725,17 +531,7 @@ describe('geoip service', () => {
 		});
 
 		it('should detect blackberry (proxy_type)', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.06'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.06'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(`/${MOCK_IP}`)
-				.reply(200, mocks['01.06'].maxmind);
+			nockGeoIpProviders({ fastly: 'proxyTypeBlackberry' });
 
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
