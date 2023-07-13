@@ -27,7 +27,7 @@
 		"koa-response-time": "^2.1.0",
 		"lodash": "^4.17.21",
 		"maxmind": "^4.3.10",
-		"newrelic": "^9.15.0",
+		"newrelic": "^10.4.1",
 		"physical-cpu-count": "^2.0.0",
 		"private-ip": "^3.0.0",
 		"rate-limiter-flexible": "^2.4.1",
