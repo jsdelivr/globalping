@@ -135,12 +135,12 @@ You can even mention it in threads using `@globalping ping google.com`
 
 ### GitHub Bot
 
-Our GitHub bot can by triggered by simply mentioning it in any public GitHub issue. It supports a human friendly format of issuing commands. 
+Our GitHub bot can by triggered by simply mentioning it in any public GitHub issue. It supports a human friendly format of issuing commands and follows the existing Slack and CLI formatting logic allowing you to easily move between integrations. 
 
 Examples:
 ```
 @globalping ping 8.8.8.8 from Germany
-@globalping traceroute jsdelivr.com from South America limit 2
+@globalping traceroute jsdelivr.com from South America --limit 2
 ```
 
 The location field can process all kinds of different types of location matching, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`.
