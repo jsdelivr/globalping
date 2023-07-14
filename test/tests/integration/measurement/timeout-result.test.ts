@@ -84,6 +84,8 @@ describe('Timeout results', () => {
 						},
 					],
 				});
+
+				expect(response).to.matchApiSchema();
 			});
 
 		await sandbox.clock.tickAsync(60000); // cleanup interval + time to treat measurement as timed out
@@ -119,6 +121,8 @@ describe('Timeout results', () => {
 						},
 					}],
 				});
+
+				expect(response).to.matchApiSchema();
 			});
 	});
 });

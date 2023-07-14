@@ -78,10 +78,11 @@ describe('Create measurement request', () => {
 			measurementOptions: {
 				packets: 4,
 			},
-		}).expect(202).expect(({ body, header }) => {
-			expect(body.id).to.exist;
-			expect(header.location).to.exist;
-			expect(body.probesCount).to.equal(1);
+		}).expect(202).expect((response) => {
+			expect(response.body.id).to.exist;
+			expect(response.header.location).to.exist;
+			expect(response.body.probesCount).to.equal(1);
+			expect(response).to.matchApiSchema();
 		});
 
 		expect(requestHandlerStub.callCount).to.equal(1);
@@ -116,10 +117,15 @@ describe('Create measurement request', () => {
 								tags: [ 'gcp-us-west4' ],
 								resolvers: [],
 							},
-							result: { status: 'in-progress', rawOutput: '' },
+							result: {
+								status: 'in-progress',
+								rawOutput: '',
+							},
 						},
 					],
 				});
+
+				expect(response).to.matchApiSchema();
 			});
 
 		probe.emit('probe:measurement:ack');
@@ -158,6 +164,8 @@ describe('Create measurement request', () => {
 						},
 					],
 				});
+
+				expect(response).to.matchApiSchema();
 			});
 
 		probe.emit('probe:measurement:progress', {
@@ -241,6 +249,8 @@ describe('Create measurement request', () => {
 						},
 					],
 				});
+
+				expect(response).to.matchApiSchema();
 			});
 	});
 
@@ -300,6 +310,8 @@ describe('Create measurement request', () => {
 						},
 					},
 				});
+
+				expect(response).to.matchApiSchema();
 			});
 	});
 });

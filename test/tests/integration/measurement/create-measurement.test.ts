@@ -45,6 +45,8 @@ describe('Create measurement', () => {
 							type: 'no_probes_found',
 						},
 					});
+
+					expect(response).to.matchApiSchema();
 				});
 		});
 	});
@@ -83,6 +85,8 @@ describe('Create measurement', () => {
 							type: 'no_probes_found',
 						},
 					});
+
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -107,6 +111,8 @@ describe('Create measurement', () => {
 							type: 'no_probes_found',
 						},
 					});
+
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -132,6 +138,8 @@ describe('Create measurement', () => {
 							type: 'no_probes_found',
 						},
 					});
+
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -149,10 +157,11 @@ describe('Create measurement', () => {
 					limit: 2,
 				})
 				.expect(202)
-				.expect(({ body, header }) => {
-					expect(body.id).to.exist;
-					expect(header.location).to.exist;
-					expect(body.probesCount).to.equal(1);
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -169,10 +178,11 @@ describe('Create measurement', () => {
 					},
 				})
 				.expect(202)
-				.expect(({ body, header }) => {
-					expect(body.id).to.exist;
-					expect(header.location).to.exist;
-					expect(body.probesCount).to.equal(1);
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -189,10 +199,11 @@ describe('Create measurement', () => {
 					limit: 2,
 				})
 				.expect(202)
-				.expect(({ body, header }) => {
-					expect(body.id).to.exist;
-					expect(header.location).to.exist;
-					expect(body.probesCount).to.equal(1);
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -209,10 +220,11 @@ describe('Create measurement', () => {
 					},
 				})
 				.expect(202)
-				.expect(({ body, header }) => {
-					expect(body.id).to.exist;
-					expect(header.location).to.exist;
-					expect(body.probesCount).to.equal(1);
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -229,10 +241,11 @@ describe('Create measurement', () => {
 					},
 				})
 				.expect(202)
-				.expect(({ body, header }) => {
-					expect(body.id).to.exist;
-					expect(header.location).to.exist;
-					expect(body.probesCount).to.equal(1);
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -249,10 +262,11 @@ describe('Create measurement', () => {
 					},
 				})
 				.expect(202)
-				.expect(({ body, header }) => {
-					expect(body.id).to.exist;
-					expect(header.location).to.exist;
-					expect(body.probesCount).to.equal(1);
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -276,6 +290,8 @@ describe('Create measurement', () => {
 							type: 'no_probes_found',
 						},
 					});
+
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -292,10 +308,11 @@ describe('Create measurement', () => {
 					},
 				})
 				.expect(202)
-				.expect(({ body, header }) => {
-					expect(body.id).to.exist;
-					expect(header.location).to.exist;
-					expect(body.probesCount).to.equal(1);
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
 				});
 		});
 	});

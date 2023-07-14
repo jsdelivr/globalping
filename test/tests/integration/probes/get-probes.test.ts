@@ -59,6 +59,7 @@ describe('Get Probes', () => {
 				.expect(200)
 				.expect((response) => {
 					expect(response.body).to.deep.equal([]);
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -89,6 +90,8 @@ describe('Get Probes', () => {
 						tags: [],
 						resolvers: [],
 					}]);
+
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -145,6 +148,8 @@ describe('Get Probes', () => {
 						tags: [],
 						resolvers: [],
 					}]);
+
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -224,6 +229,8 @@ describe('Get Probes', () => {
 							resolvers: [],
 						},
 					]);
+
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -263,6 +270,8 @@ describe('Get Probes', () => {
 						tags: [],
 						resolvers: [],
 					}]);
+
+					expect(response).to.matchApiSchema();
 				});
 		});
 
@@ -298,6 +307,7 @@ describe('Get Probes', () => {
 					});
 
 					expect(response.body[0].ipAddress).to.be.a('string');
+					expect(response).to.matchApiSchema();
 				});
 		});
 	});
