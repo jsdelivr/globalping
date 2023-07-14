@@ -1,12 +1,10 @@
-import fs from 'node:fs';
 import request, { type SuperTest, type Test } from 'supertest';
 import * as td from 'testdouble';
 import nock from 'nock';
 import type { Socket } from 'socket.io-client';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
-
-const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
+import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 
 describe('Timeout results', () => {
 	let probe: Socket;
@@ -29,9 +27,7 @@ describe('Timeout results', () => {
 	});
 
 	beforeEach(async () => {
-		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['01.00'].fastly);
-		nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
-		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['01.00'].maxmind);
+		nockGeoIpProviders();
 
 		probe = await addFakeProbe();
 	});
@@ -64,6 +60,7 @@ describe('Timeout results', () => {
 					id: 'measurementid',
 					type: 'ping',
 					status: 'in-progress',
+					target: 'jsdelivr.com',
 					probesCount: 1,
 					results: [
 						{
@@ -73,10 +70,10 @@ describe('Timeout results', () => {
 								country: 'US',
 								state: 'TX',
 								city: 'Dallas',
-								asn: 123,
-								longitude: -96.8389,
-								latitude: 32.7492,
-								network: 'Psychz Networks',
+								asn: 20001,
+								longitude: -96.001,
+								latitude: 32.001,
+								network: 'The Constant Company LLC',
 								tags: [ 'gcp-us-west4' ],
 								resolvers: [],
 							},
@@ -100,26 +97,28 @@ describe('Timeout results', () => {
 					id: 'measurementid',
 					type: 'ping',
 					status: 'finished',
+					target: 'jsdelivr.com',
 					probesCount: 1,
-					results: [{
-						probe: {
-							asn: 123,
-							city: 'Dallas',
-							continent: 'NA',
-							country: 'US',
-							latitude: 32.7492,
-							longitude: -96.8389,
-							network: 'Psychz Networks',
-							region: 'Northern America',
-							resolvers: [],
-							state: 'TX',
-							tags: [ 'gcp-us-west4' ],
+					locations: [{ country: 'US' }],
+					measurementOptions: { packets: 4 },
+					results: [
+						{
+							probe: {
+								continent: 'NA',
+								region: 'Northern America',
+								country: 'US',
+								state: 'TX',
+								city: 'Dallas',
+								asn: 20001,
+								longitude: -96.001,
+								latitude: 32.001,
+								network: 'The Constant Company LLC',
+								tags: [ 'gcp-us-west4' ],
+								resolvers: [],
+							},
+							result: { status: 'failed', rawOutput: '\n\nThe measurement timed out' },
 						},
-						result: {
-							rawOutput: '\n\nThe measurement timed out',
-							status: 'failed',
-						},
-					}],
+					],
 				});
 
 				expect(response).to.matchApiSchema();

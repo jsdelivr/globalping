@@ -55,7 +55,7 @@ export class MeasurementStore {
 		const results = this.probesToResults(probes, request.type);
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
 		const startTime = new Date();
-		let measurement: MeasurementRecord = {
+		const measurement: MeasurementRecord = {
 			id,
 			type: request.type,
 			status: 'in-progress',
@@ -68,13 +68,12 @@ export class MeasurementStore {
 			measurementOptions: request.measurementOptions,
 			results,
 		};
-		const defaults = getDefaults(request);
-		measurement = substractObjects(measurement, defaults) as MeasurementRecord;
+		const measurementWithoutDefaults = this.removeDefaults(measurement, request);
 
 		await Promise.all([
 			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
 			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.length, { EX: probesAwaitingTtl }),
-			this.redis.json.set(key, '$', measurement),
+			this.redis.json.set(key, '$', measurementWithoutDefaults),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
 		]);
 
@@ -152,6 +151,14 @@ export class MeasurementStore {
 				.finally(() => this.scheduleCleanup())
 				.catch(error => logger.error(error));
 		}, intervalTime);
+	}
+
+	removeDefaults (measurement: MeasurementRecord, request: MeasurementRequest): Partial<MeasurementRecord> {
+		const defaults = getDefaults(request);
+		// Remove `"limit": 1` from locations. E.g. [{"country": "US", "limit": 1}] => [{"country": "US"}]
+		measurement.locations = measurement.locations.map(location => location.limit === 1 ? _.omit(location, 'limit') : location);
+
+		return substractObjects(measurement, defaults) as Partial<MeasurementRecord>;
 	}
 
 	probesToResults (probes: Probe[], type: string) {

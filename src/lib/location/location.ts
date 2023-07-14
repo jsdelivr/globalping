@@ -26,7 +26,7 @@ export const getContinentByCountry = (country: string): string => {
 	const countryInfo = countries[country as keyof typeof countries];
 
 	if (!countryInfo) {
-		throw new Error(`country information associated with a iso code "${country}" not found`);
+		throw new Error(`country information associated with an iso code "${country}" not found`);
 	}
 
 	return countryInfo.continent;

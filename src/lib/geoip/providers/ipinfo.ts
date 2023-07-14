@@ -28,8 +28,8 @@ export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 	const network = (result.org ?? '').split(' ').slice(1).join(' ');
 
 	return {
-		continent: getContinentByCountry(result.country ?? ''),
-		state: result.country === 'US' ? getStateIsoByName(result.region ?? '') : undefined,
+		continent: result.country ? getContinentByCountry(result.country) : '',
+		state: result.country === 'US' && result.region ? getStateIsoByName(result.region) : undefined,
 		country: result.country ?? '',
 		city: normalizeCityNamePublic(result.city ?? ''),
 		normalizedCity: normalizeCityName(result.city ?? ''),

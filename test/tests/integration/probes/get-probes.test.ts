@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import fs from 'node:fs';
 import nock from 'nock';
 import { expect } from 'chai';
 import request, { type SuperTest, type Test } from 'supertest';
 import * as td from 'testdouble';
 import type { Socket } from 'socket.io-client';
 import { getTestServer, addFakeProbe as addProbe, deleteFakeProbe } from '../../../utils/server.js';
-
-const nockMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
+import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 
 describe('Get Probes', () => {
 	let requestAgent: SuperTest<Test>;
@@ -48,9 +46,7 @@ describe('Get Probes', () => {
 
 	describe('probes connected', () => {
 		it('should not detect probes if they are not ready', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['00.00'].fastly);
-			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['00.00'].ipinfo);
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['00.00'].maxmind);
+			nockGeoIpProviders();
 
 			await addFakeProbe();
 
@@ -64,9 +60,7 @@ describe('Get Probes', () => {
 		});
 
 		it('should detect 1 probe in "ready: true" status', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['00.00'].fastly);
-			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['00.00'].ipinfo);
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['00.00'].maxmind);
+			nockGeoIpProviders({ maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
 
 			const probe = await addFakeProbe();
 			probe.emit('probe:status:update', 'ready');
@@ -82,9 +76,9 @@ describe('Get Probes', () => {
 							region: 'South America',
 							country: 'AR',
 							city: 'Buenos Aires',
-							asn: 61_493,
-							latitude: -34.602,
-							longitude: -58.384,
+							asn: 61003,
+							latitude: -34.003,
+							longitude: -58.003,
 							network: 'interbs s.r.l.',
 						},
 						tags: [],
@@ -96,17 +90,8 @@ describe('Get Probes', () => {
 		});
 
 		it('should detect 2 probes in "ready: true" status', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
-				.get(/.*/).reply(200, nockMocks['01.00'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(/.*/).reply(200, nockMocks['00.00'].ipinfo)
-				.get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(/.*/).reply(200, nockMocks['00.00'].maxmind)
-				.get(/.*/).reply(200, nockMocks['01.00'].maxmind);
+			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
+			nockGeoIpProviders();
 
 			const probe1 = await addFakeProbe();
 			const probe2 = await addFakeProbe();
@@ -117,57 +102,48 @@ describe('Get Probes', () => {
 				.send()
 				.expect(200)
 				.expect((response) => {
-					expect(response.body).to.deep.equal([{
-						version: '0.14.0',
-						location: {
-							continent: 'SA',
-							region: 'South America',
-							country: 'AR',
-							city: 'Buenos Aires',
-							asn: 61_493,
-							latitude: -34.602,
-							longitude: -58.384,
-							network: 'interbs s.r.l.',
+					expect(response.body).to.deep.equal([
+						{
+							version: '0.14.0',
+							location: {
+								continent: 'SA',
+								region: 'South America',
+								country: 'AR',
+								city: 'Buenos Aires',
+								asn: 61001,
+								latitude: -34.001,
+								longitude: -58.001,
+								network: 'interbs s.r.l.',
+							},
+							tags: [],
+							resolvers: [],
 						},
-						tags: [],
-						resolvers: [],
-					},
-					{
-						version: '0.14.0',
-						location: {
-							continent: 'NA',
-							region: 'Northern America',
-							country: 'US',
-							state: 'TX',
-							city: 'Dallas',
-							asn: 123,
-							latitude: 32.7492,
-							longitude: -96.8389,
-							network: 'Psychz Networks',
+						{
+							version: '0.14.0',
+							location: {
+								continent: 'NA',
+								region: 'Northern America',
+								country: 'US',
+								state: 'TX',
+								city: 'Dallas',
+								asn: 20001,
+								latitude: 32.001,
+								longitude: -96.001,
+								network: 'The Constant Company LLC',
+							},
+							tags: [],
+							resolvers: [],
 						},
-						tags: [],
-						resolvers: [],
-					}]);
+					]);
 
 					expect(response).to.matchApiSchema();
 				});
 		});
 
 		it('should detect 3 probes in "ready: true" status', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
-				.get(/.*/).reply(200, nockMocks['01.00'].fastly)
-				.get(/.*/).reply(200, nockMocks['00.04'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(/.*/).reply(200, nockMocks['00.00'].ipinfo)
-				.get(/.*/).reply(200, nockMocks['01.00'].ipinfo)
-				.get(/.*/).reply(200, nockMocks['00.04'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(/.*/).reply(200, nockMocks['00.00'].maxmind)
-				.get(/.*/).reply(200, nockMocks['01.00'].maxmind)
-				.get(/.*/).reply(200, nockMocks['00.04'].maxmind);
+			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
+			nockGeoIpProviders();
+			nockGeoIpProviders({ ip2location: 'newYork', ipmap: 'argentina', maxmind: 'newYork', ipinfo: 'newYork', fastly: 'newYork' });
 
 			const probe1 = await addFakeProbe();
 			const probe2 = await addFakeProbe();
@@ -188,9 +164,9 @@ describe('Get Probes', () => {
 								region: 'South America',
 								country: 'AR',
 								city: 'Buenos Aires',
-								asn: 61_493,
-								latitude: -34.602,
-								longitude: -58.384,
+								asn: 61001,
+								latitude: -34.001,
+								longitude: -58.001,
 								network: 'interbs s.r.l.',
 							},
 							tags: [],
@@ -204,10 +180,10 @@ describe('Get Probes', () => {
 								country: 'US',
 								state: 'TX',
 								city: 'Dallas',
-								asn: 123,
-								latitude: 32.7492,
-								longitude: -96.8389,
-								network: 'Psychz Networks',
+								asn: 20001,
+								latitude: 32.001,
+								longitude: -96.001,
+								network: 'The Constant Company LLC',
 							},
 							tags: [],
 							resolvers: [],
@@ -220,10 +196,10 @@ describe('Get Probes', () => {
 								country: 'US',
 								state: 'NY',
 								city: 'New York',
-								asn: 61_493,
-								latitude: -7.7568,
-								longitude: -35.3656,
-								network: 'InterBS S.R.L. (BAEHOST)',
+								asn: 80001,
+								latitude: 40.001,
+								longitude: -74.001,
+								network: 'The Constant Company LLC',
 							},
 							tags: [],
 							resolvers: [],
@@ -235,17 +211,8 @@ describe('Get Probes', () => {
 		});
 
 		it('should detect only "ready" probes and filter out other', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net')
-				.get(/.*/).reply(200, nockMocks['00.00'].fastly)
-				.get(/.*/).reply(200, nockMocks['01.00'].fastly);
-
-			nock('https://ipinfo.io')
-				.get(/.*/).reply(200, nockMocks['00.00'].ipinfo)
-				.get(/.*/).reply(200, nockMocks['01.00'].ipinfo);
-
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/')
-				.get(/.*/).reply(200, nockMocks['00.00'].maxmind)
-				.get(/.*/).reply(200, nockMocks['01.00'].maxmind);
+			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
+			nockGeoIpProviders();
 
 			const probe1 = await addFakeProbe();
 			await addFakeProbe();
@@ -262,9 +229,9 @@ describe('Get Probes', () => {
 							region: 'South America',
 							country: 'AR',
 							city: 'Buenos Aires',
-							asn: 61_493,
-							latitude: -34.602,
-							longitude: -58.384,
+							asn: 61_001,
+							latitude: -34.001,
+							longitude: -58.001,
 							network: 'interbs s.r.l.',
 						},
 						tags: [],
@@ -276,9 +243,7 @@ describe('Get Probes', () => {
 		});
 
 		it('should add extra info if admin key is provided', async () => {
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, nockMocks['00.00'].fastly);
-			nock('https://ipinfo.io').get(/.*/).reply(200, nockMocks['00.00'].ipinfo);
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(200, nockMocks['00.00'].maxmind);
+			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
 
 			const probe = await addFakeProbe();
 			probe.emit('probe:status:update', 'ready');
@@ -295,9 +260,9 @@ describe('Get Probes', () => {
 							region: 'South America',
 							country: 'AR',
 							city: 'Buenos Aires',
-							asn: 61_493,
-							latitude: -34.602,
-							longitude: -58.384,
+							asn: 61_001,
+							latitude: -34.001,
+							longitude: -58.001,
 							network: 'interbs s.r.l.',
 						},
 						stats: { cpu: { count: 0, load: [] }, jobs: { count: 0 } },
