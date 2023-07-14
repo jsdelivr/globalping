@@ -26,6 +26,11 @@ if (cluster.isPrimary) {
 	cluster.on('exit', (worker, code, signal) => {
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		logger.error(`worker ${worker.process.pid!} died with code ${code} and signal ${signal}`);
+
+		if (process.env['TEST_DONT_RESTART_WORKERS']) {
+			return;
+		}
+
 		cluster.fork();
 	});
 } else {
