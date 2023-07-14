@@ -80,7 +80,7 @@ const generateFiles = (data: ResultItem[], acc: {ipinfo: string, maxmind: string
 		`accuracy:,1,${acc.ipinfo},${acc.maxmind},${acc.fastly},${acc.algorithm}`,
 		...data.map(row => `${row.ip},${row.city},${row.ipinfo},${row.maxmind},${row.fastly},${row.algorithm}`),
 	].join('\n');
-	fs.writeFileSync('./probes-stats/known-result.json', JSON.stringify(data, null, 2));
+	fs.writeFileSync('./probes-stats/known-result.json', JSON.stringify(data, null, '\t'));
 	fs.writeFileSync('./probes-stats/known-result.csv', csvContent);
 };
 
