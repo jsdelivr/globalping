@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 import SwaggerParser from '@apidevtools/swagger-parser';
 import betterAjvErrors from 'better-ajv-errors';
 
@@ -17,6 +18,9 @@ export default async ({ specPath, ajvBodyOptions = {}, ajvHeadersOptions = {} })
 	let ajvBody = new Ajv({ strictSchema: false, strictTypes: true, ...ajvBodyOptions });
 	let ajvHeaders = new Ajv({ strictSchema: false, strictTypes: true, coerceTypes: true, ...ajvHeadersOptions });
 	let $refs = new Set();
+
+	addFormats(ajvBody);
+	addFormats(ajvHeaders);
 
 	let collectRefs = (value) => {
 		if (typeof value !== 'object') {
