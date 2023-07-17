@@ -1,31 +1,12 @@
-import type { Probe } from '../../probe/types.js';
-
-type Info = {
-	socketId: string;
+type Data = {
 	ipAddress: string;
-	// A string used for message parsing
-	code?: string;
-	probe?: Probe;
-	cause?: unknown;
-};
-
-type JsonResponse = {
-	message: string;
-	info: Info;
 };
 
 export class WsError extends Error {
-	info: Info;
-	constructor (message: string, info: Info) {
+	data: Data;
+	constructor (message: string, data: Data) {
 		super(message);
-		this.info = info;
-	}
-
-	toJson (): JsonResponse {
-		return {
-			message: this.message,
-			info: this.info,
-		};
+		this.data = data;
 	}
 }
 
