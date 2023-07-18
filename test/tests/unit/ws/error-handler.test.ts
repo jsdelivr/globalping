@@ -36,43 +36,8 @@ describe('ws error', () => {
 		sandbox.restore();
 	});
 
-	describe('connect', () => {
-		it('should catch error and disconnect socket', async () => {
-			const socket = new MockSocket('abc') as BundledMockSocket;
-
-			const testMethod = async (socket: Socket): Promise<void> => {
-				// Prevent unused variable err
-				socket.emit('connect', '');
-				throw new Error('abc');
-			};
-
-			errorHandler(testMethod)(socket as Socket);
-			await sandbox.clock.nextAsync();
-
-			expect(socket.isConnected).to.equal(false);
-		});
-
-		it('should catch error and emit api:error event ', async () => {
-			const socket = new MockSocket('abc') as BundledMockSocket;
-
-			const testMethod = async (socket: Socket): Promise<void> => {
-				// Prevent unused variable err
-				socket.emit('connect', '');
-				throw new WsError('abc', { socketId: socket.id, ipAddress: '' });
-			};
-
-			errorHandler(testMethod)(socket as Socket);
-			await sandbox.clock.nextAsync();
-
-			const storeError = socket.store.find(m => m.event === 'api:error');
-			expect(socket.isConnected).to.equal(false);
-			expect(storeError).to.exist;
-			expect(storeError?.payload?.message).to.equal('abc');
-		});
-	});
-
-	describe('middleware', () => {
-		it('should catch error and execute cb', async () => {
+	describe('ws error handler', () => {
+		it('should catch Error and execute cb', async () => {
 			const socket = new MockSocket('abc') as BundledMockSocket;
 			let cbError: Error | null = null;
 
@@ -87,22 +52,24 @@ describe('ws error', () => {
 			};
 
 			errorHandler(testMethod)(socket as Socket, testCb);
+
+			expect(socket.isConnected).to.equal(true);
 			await sandbox.clock.nextAsync();
 
-			const apiError = socket.store.find(m => m.event === 'api:error');
+			expect(socket.isConnected).to.equal(false);
 			expect(cbError).to.not.be.null;
 			expect(cbError).to.be.instanceof(Error);
-			expect(apiError).to.not.exist;
+			expect(cbError!.toString()).to.equal('Error: abc');
 		});
 
-		it('should catch error, execute cb and emit api:error event', async () => {
+		it('should catch WsError and execute cb', async () => {
 			const socket = new MockSocket('abc') as BundledMockSocket;
 			let cbError: Error | null = null;
 
 			const testMethod = async (socket: Socket): Promise<void> => {
 				// Prevent unused variable err
 				socket.emit('connect', '');
-				throw new WsError('vpn detected', { socketId: socket.id, ipAddress: '' });
+				throw new WsError('vpn detected', { ipAddress: '' });
 			};
 
 			const testCb = (error: Error) => {
@@ -110,13 +77,14 @@ describe('ws error', () => {
 			};
 
 			errorHandler(testMethod)(socket as Socket, testCb);
+
+			expect(socket.isConnected).to.equal(true);
 			await sandbox.clock.nextAsync();
 
-			const apiError = socket.store.find(m => m.event === 'api:error');
+			expect(socket.isConnected).to.equal(false);
 			expect(cbError).to.not.be.null;
 			expect(cbError).to.be.instanceof(WsError);
-			expect(apiError).to.exist;
-			expect(apiError?.payload.message).to.equal('vpn detected');
+			expect(cbError!.toString()).to.equal('Error: vpn detected');
 		});
 	});
 });
