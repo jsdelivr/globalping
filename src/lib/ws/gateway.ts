@@ -10,7 +10,6 @@ import { handleStatsReport } from '../../probe/handler/stats.js';
 import { scopedLogger } from '../logger.js';
 import { getWsServer, PROBES_NAMESPACE } from './server.js';
 import { probeMetadata } from './middleware/probe-metadata.js';
-import { verifyIpLimit } from './helper/probe-ip-limit.js';
 import { errorHandler } from './helper/error-handler.js';
 import { subscribeWithHandler } from './helper/subscribe-handler.js';
 
@@ -22,8 +21,6 @@ io
 	.of(PROBES_NAMESPACE)
 	.use(probeMetadata)
 	.on('connect', errorHandler(async (socket: Socket) => {
-		await verifyIpLimit(socket);
-
 		const probe = socket.data['probe'] as Probe;
 		socket.emit('api:connect:location', probe.location);
 		logger.info(`ws client ${socket.id} connected from ${probe.location.city}, ${probe.location.country} [${probe.ipAddress} - ${probe.location.network}]`);

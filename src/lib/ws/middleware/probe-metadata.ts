@@ -24,7 +24,6 @@ export const probeMetadata = errorHandler(async (socket: Socket, next: (error?: 
 		}
 
 		throw new WsError(message, {
-			socketId: socket.id,
 			ipAddress: clientIp ?? '',
 		});
 	}
