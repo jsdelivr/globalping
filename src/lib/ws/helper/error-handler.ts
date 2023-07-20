@@ -1,7 +1,6 @@
 import type { Socket } from 'socket.io';
 import getProbeIp from '../../get-probe-ip.js';
 import { scopedLogger } from '../../logger.js';
-import { WsError } from '../ws-error.js';
 
 const logger = scopedLogger('ws:error');
 
@@ -26,10 +25,6 @@ export const errorHandler = (next: NextArgument) => (socket: Socket, mwNext?: (e
 
 		logger.info(`disconnecting client ${socket.id} for (${reason}) [${clientIp}]`);
 		logger.debug(error);
-
-		if (error instanceof WsError) {
-			socket.emit('api:error', error.toJson());
-		}
 
 		if (mwNext) {
 			mwNext(error);
