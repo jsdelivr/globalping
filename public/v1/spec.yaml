@@ -28,81 +28,16 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              additionalProperties: false
-              required:
-                - type
-                - target
-              properties:
-                type:
-                  $ref: '#/components/schemas/MeasurementType'
-                target:
-                  $ref: '#/components/schemas/MeasurementTarget'
-                inProgressUpdates:
-                  type: boolean
-                  description: |
-                    Specifies if the results of the measurement should be updated while being in progress.
-                    If `false`, results are populated to the measurement object only after the test finishes.
-                    If `true`, partial results are returned as soon as they are available and can be presented to the user in real-time.
-                    Note that only the top 5 tests from the results array will update in real-time.
-                  default: false
-                limit:
-                  $ref: '#/components/schemas/MeasurementLimit'
-                measurementOptions:
-                  $ref: '#/components/schemas/MeasurementOptions'
-                locations:
-                  $ref: '#/components/schemas/MeasurementLocations'
+              $ref: '#/components/schemas/MeasurementRequest'
             examples:
               pingLocations:
-                summary: 'ping: specific locations'
-                value:
-                  {
-                    "type": "ping",
-                    "target": "cdn.jsdelivr.net",
-                    "locations": [
-                      { "country": "DE" },
-                      { "country": "PL" }
-                    ]
-                  }
+                $ref: '#/components/examples/createMeasurementPingLocations'
               pingLocationsLimit:
-                summary: 'ping: specific locations and limit'
-                value:
-                  {
-                    "type": "ping",
-                    "target": "cdn.jsdelivr.net",
-                    "locations": [
-                      { "country": "DE", "limit": 4 },
-                      { "country": "PL", "limit": 2 }
-                    ]
-                  }
+                $ref: '#/components/examples/createMeasurementPingLocationsLimit'
               pingLocationsMagic:
-                summary: 'ping: magic location filter'
-                value:
-                  {
-                    "type": "ping",
-                    "target": "cdn.jsdelivr.net",
-                    "locations": [
-                      { "magic": "FR" },
-                      { "magic": "Poland" },
-                      { "magic": "Berlin+Germany" },
-                      { "magic": "California" },
-                      { "magic": "Europe" },
-                      { "magic": "Western Europe" },
-                      { "magic": "AS13335" },
-                      { "magic": "aws-us-east-1" },
-                      { "magic": "Google" }
-                    ]
-                  }
+                $ref: '#/components/examples/createMeasurementPingLocationsMagic'
               pingCustom:
-                summary: 'ping: custom options'
-                value:
-                  {
-                    "type": "ping",
-                    "target": "cdn.jsdelivr.net",
-                    "measurementOptions": {
-                      "packets": 6
-                    }
-                  }
+                $ref: '#/components/examples/createMeasurementPingCustom'
       responses:
         '202':
           $ref: '#/components/responses/measurements202'
@@ -246,9 +181,192 @@ components:
         - $ref: '#/components/schemas/MeasurementDnsOptions'
         - $ref: '#/components/schemas/MeasurementMtrOptions'
         - $ref: '#/components/schemas/MeasurementHttpOptions'
+    MeasurementOptionsConditions:
+      allOf:
+        - if:
+            type: object
+            properties:
+              type:
+                const: ping
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: '#/components/schemas/MeasurementPingOptions'
+        - if:
+            type: object
+            properties:
+              type:
+                const: traceroute
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: '#/components/schemas/MeasurementTracerouteOptions'
+        - if:
+            type: object
+            properties:
+              type:
+                const: dns
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: '#/components/schemas/MeasurementDnsOptions'
+        - if:
+            type: object
+            properties:
+              type:
+                const: mtr
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: '#/components/schemas/MeasurementMtrOptions'
+        - if:
+            type: object
+            properties:
+              type:
+                const: http
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: '#/components/schemas/MeasurementHttpOptions'
+    MeasurementResultsConditions:
+      allOf:
+        - if:
+            type: object
+            properties:
+              type:
+                const: ping
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: '#/components/schemas/FinishedPingTestResult'
+        - if:
+            type: object
+            properties:
+              type:
+                const: traceroute
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: '#/components/schemas/FinishedTracerouteTestResult'
+        - if:
+            type: object
+            properties:
+              type:
+                const: dns
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: '#/components/schemas/FinishedDnsTestResult'
+        - if:
+            type: object
+            properties:
+              type:
+                const: mtr
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: '#/components/schemas/FinishedMtrTestResult'
+        - if:
+            type: object
+            properties:
+              type:
+                const: http
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: '#/components/schemas/FinishedHttpTestResult'
     MeasurementPingOptions:
-      title: PingOptions
       type: object
+      title: PingOptions
       additionalProperties: false
       properties:
         packets:
@@ -257,8 +375,8 @@ components:
           minimum: 1
           maximum: 16
     MeasurementTracerouteOptions:
-      title: TracerouteOptions
       type: object
+      title: TracerouteOptions
       additionalProperties: false
       properties:
         port:
@@ -274,8 +392,8 @@ components:
             - UDP
           default: ICMP
     MeasurementDnsOptions:
-      title: DnsOptions
       type: object
+      title: DnsOptions
       additionalProperties: false
       properties:
         query:
@@ -320,8 +438,8 @@ components:
             Toggles tracing of the delegation path from the root servers down to the target domain name.
           default: false
     MeasurementMtrOptions:
-      title: MtrOptions
       type: object
+      title: MtrOptions
       additionalProperties: false
       properties:
         port:
@@ -342,8 +460,8 @@ components:
           minimum: 1
           maximum: 16
     MeasurementHttpOptions:
-      title: HttpOptions
       type: object
+      title: HttpOptions
       additionalProperties: false
       properties:
         request:
@@ -434,6 +552,33 @@ components:
         - dns
         - mtr
         - http
+    MeasurementRequest:
+      allOf:
+        - $ref: '#/components/schemas/MeasurementOptionsConditions'
+        - type: object
+          additionalProperties: false
+          required:
+            - type
+            - target
+          properties:
+            type:
+              $ref: '#/components/schemas/MeasurementType'
+            target:
+              $ref: '#/components/schemas/MeasurementTarget'
+            inProgressUpdates:
+              type: boolean
+              description: |
+                Specifies if the results of the measurement should be updated while being in progress.
+                If `false`, results are populated to the measurement object only after the test finishes.
+                If `true`, partial results are returned as soon as they are available and can be presented to the user in real-time.
+                Note that only the top 5 tests from the results array will update in real-time.
+              default: false
+            locations:
+              $ref: '#/components/schemas/MeasurementLocations'
+            limit:
+              $ref: '#/components/schemas/MeasurementLimit'
+            measurementOptions:
+              $ref: '#/components/schemas/MeasurementOptions'
     MeasurementResponse:
       type: object
       required:
@@ -465,6 +610,10 @@ components:
         probesCount:
           type: integer
           description: The number of probes that performed the measurement. Smaller or equal to `limit`.
+        locations:
+          allOf:
+            - $ref: '#/components/schemas/MeasurementLocations'
+            - description: The locations specified when creating the measurement.
         limit:
           allOf:
             - $ref: '#/components/schemas/MeasurementLimit'
@@ -473,10 +622,6 @@ components:
           allOf:
             - $ref: '#/components/schemas/MeasurementOptions'
             - description: The options specified when creating the measurement if different from default.
-        locations:
-          allOf:
-            - $ref: '#/components/schemas/MeasurementLocations'
-            - description: The locations specified when creating the measurement.
         results:
           type: array
           description: The measurement results.
@@ -1169,6 +1314,56 @@ components:
             ]
           }
         ]
+    createMeasurementPingLocations:
+      summary: 'ping: specific locations'
+      value:
+        {
+          "type": "ping",
+          "target": "cdn.jsdelivr.net",
+          "locations": [
+            { "country": "DE" },
+            { "country": "PL" }
+          ]
+        }
+    createMeasurementPingLocationsLimit:
+      summary: 'ping: specific locations and limit'
+      value:
+        {
+          "type": "ping",
+          "target": "cdn.jsdelivr.net",
+          "locations": [
+            { "country": "DE", "limit": 4 },
+            { "country": "PL", "limit": 2 }
+          ]
+        }
+    createMeasurementPingLocationsMagic:
+      summary: 'ping: magic location filter'
+      value:
+        {
+          "type": "ping",
+          "target": "cdn.jsdelivr.net",
+          "locations": [
+            { "magic": "FR" },
+            { "magic": "Poland" },
+            { "magic": "Berlin+Germany" },
+            { "magic": "California" },
+            { "magic": "Europe" },
+            { "magic": "Western Europe" },
+            { "magic": "AS13335" },
+            { "magic": "aws-us-east-1" },
+            { "magic": "Google" }
+          ]
+        }
+    createMeasurementPingCustom:
+      summary: 'ping: custom options'
+      value:
+        {
+          "type": "ping",
+          "target": "cdn.jsdelivr.net",
+          "measurementOptions": {
+            "packets": 6
+          }
+        }
     createMeasurementResponse:
       value:
         {
