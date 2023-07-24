@@ -66,6 +66,8 @@ paths:
           $ref: '#/components/responses/400'
         '422':
           $ref: '#/components/responses/measurements422'
+        '429':
+          $ref: '#/components/responses/measurements429'
       tags:
         - Measurements
   /v1/measurements/{id}:
@@ -111,6 +113,18 @@ components:
       schema:
         type: string
         format: uri
+    RateLimitLimit:
+      description: The number of requests available in a given time window.
+      schema:
+        type: integer
+    RateLimitRemaining:
+      description: The number of requests remaining in the current time window.
+      schema:
+        type: integer
+    RateLimitReset:
+      description: The number of seconds until the limit is reset.
+      schema:
+        type: integer
 
   parameters:
     measurementId:
@@ -1828,14 +1842,34 @@ components:
               value:
                 error:
                   type: validation_error
-                  message: Validation Failed
+                  message: Parameter validation failed.
                   params:
                     measurement: '\"measurement\" does not match any of the allowed types'
     '404':
       description: Not Found
       content:
-#       TODO: change?
-        text/plain: {}
+        application/json:
+          schema:
+            type: object
+            required:
+              - error
+            properties:
+              error:
+                type: object
+                required:
+                  - type
+                  - message
+                properties:
+                  type:
+                    type: string
+                  message:
+                    type: string
+          examples:
+            json:
+              value:
+                error:
+                  type: not_found
+                  message: Couldn't find the requested item.
     measurements422:
       description: Unprocessable Entity
       content:
@@ -1860,12 +1894,43 @@ components:
               value:
                 error:
                   type: no_probes_found
-                  message: No suitable probes found
+                  message: No suitable probes found.
+    measurements429:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - error
+            properties:
+              error:
+                type: object
+                required:
+                  - type
+                  - message
+                properties:
+                  type:
+                    type: string
+                  message:
+                    type: string
+          examples:
+            json:
+              value:
+                error:
+                  type: rate_limit_exceeded
+                  message: API rate limit exceeded.
     measurements202:
       description: Accepted
       headers:
         Location:
           $ref: '#/components/headers/MeasurementLocation'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
       content:
         application/json:
           schema:
