@@ -217,6 +217,16 @@ describe('Create measurement request', () => {
 				rawOutput: 'abcdefhij',
 				resolvedHostname: 'jsdelivr.com',
 				resolvedAddress: '1.1.1.1',
+				stats: {
+					min: 1,
+					avg: 1,
+					max: 1,
+					total: 4,
+					rcv: 4,
+					drop: 0,
+					loss: 0,
+				},
+				timings: [],
 			},
 		});
 
@@ -253,6 +263,16 @@ describe('Create measurement request', () => {
 								rawOutput: 'abcdefhij',
 								resolvedHostname: 'jsdelivr.com',
 								resolvedAddress: '1.1.1.1',
+								stats: {
+									min: 1,
+									avg: 1,
+									max: 1,
+									total: 4,
+									rcv: 4,
+									drop: 0,
+									loss: 0,
+								},
+								timings: [],
 							},
 						},
 					],

@@ -493,10 +493,6 @@ components:
       type:
         - number
         - 'null'
-    NullableString:
-      type:
-        - string
-        - 'null'
     Probe:
       type: object
       required:
@@ -594,9 +590,8 @@ components:
         - Micronesia
         - Polynesia
     ResolvedAddress:
-      allOf:
-        - $ref: '#/components/schemas/NullableString'
-        - description: The resolved IP address of the `target`.
+      type: string
+      description: The resolved IP address of the `target`.
     ResolvedHostname:
       type:
         - string
@@ -632,31 +627,15 @@ components:
     StatsPacketsTotal:
       type: integer
       description: The number of sent packets.
-    StatsPacketsTotalNullable:
-      allOf:
-        - $ref: '#/components/schemas/NullableInteger'
-        - description: The number of sent packets.
     StatsPacketsRcv:
       type: integer
       description: The number of received packets.
-    StatsPacketsRcvNullable:
-      allOf:
-        - $ref: '#/components/schemas/NullableInteger'
-        - description: The number of received packets.
     StatsPacketsDrop:
       type: integer
       description: The number of dropped packets (`total` - `rcv`).
-    StatsPacketsDropNullable:
-      allOf:
-        - $ref: '#/components/schemas/NullableInteger'
-        - description: The number of dropped packets (`total` - `rcv`).
     StatsPacketsLoss:
       type: number
       description: The percentage of dropped packets.
-    StatsPacketsLossNullable:
-      allOf:
-        - $ref: '#/components/schemas/NullableNumber'
-        - description: The percentage of dropped packets.
     StatsJitterMin:
       type: number
       description: The lowest jitter value.
@@ -680,32 +659,52 @@ components:
     TestResult:
       anyOf:
         - $ref: '#/components/schemas/InProgressTestResult'
-        - $ref: '#/components/schemas/PingTestResult'
-        - $ref: '#/components/schemas/TracerouteTestResult'
-        - $ref: '#/components/schemas/DnsTestResult'
-        - $ref: '#/components/schemas/MtrTestResult'
-        - $ref: '#/components/schemas/HttpTestResult'
-    BaseTestResult:
+        - $ref: '#/components/schemas/FailedTestResult'
+        - $ref: '#/components/schemas/FinishedPingTestResult'
+        - $ref: '#/components/schemas/FinishedTracerouteTestResult'
+        - $ref: '#/components/schemas/FinishedDnsTestResult'
+        - $ref: '#/components/schemas/FinishedMtrTestResult'
+        - $ref: '#/components/schemas/FinishedHttpTestResult'
+    BaseFinishedTestResult:
       type: object
       required:
         - status
         - rawOutput
       properties:
         status:
-          $ref: '#/components/schemas/TestStatus'
+          $ref: '#/components/schemas/FinishedTestStatus'
         rawOutput:
           $ref: '#/components/schemas/TestRawOutput'
     InProgressTestResult:
+      type: object
+      title: InProgressTestResult
+      description: |
+        Represents an `in-progress` test where most fields are not available.
+      required:
+        - status
+        - rawOutput
+      properties:
+        status:
+          $ref: '#/components/schemas/InProgressTestStatus'
+        rawOutput:
+          $ref: '#/components/schemas/TestRawOutput'
+    FailedTestResult:
+      type: object
+      title: FailedTestResult
+      description: |
+        Represents a `failed` test where most fields are not available.
+      required:
+        - status
+        - rawOutput
+      properties:
+        status:
+          $ref: '#/components/schemas/FailedTestStatus'
+        rawOutput:
+          $ref: '#/components/schemas/TestRawOutput'
+    FinishedPingTestResult:
+      title: FinishedPingTestResult
       allOf:
-        - $ref: '#/components/schemas/BaseTestResult'
-        - title: InProgressTestResult
-          description: |
-            This type represents an `in-progress` test as most fields are included in the response only
-            after the test finishes.
-    PingTestResult:
-      title: PingTestResult
-      allOf:
-        - $ref: '#/components/schemas/BaseTestResult'
+        - $ref: '#/components/schemas/BaseFinishedTestResult'
         - type: object
           required:
             - resolvedAddress
@@ -738,13 +737,13 @@ components:
                 max:
                   $ref: '#/components/schemas/StatsRttMaxNullable'
                 total:
-                  $ref: '#/components/schemas/StatsPacketsTotalNullable'
+                  $ref: '#/components/schemas/StatsPacketsTotal'
                 rcv:
-                  $ref: '#/components/schemas/StatsPacketsRcvNullable'
+                  $ref: '#/components/schemas/StatsPacketsRcv'
                 drop:
-                  $ref: '#/components/schemas/StatsPacketsDropNullable'
+                  $ref: '#/components/schemas/StatsPacketsDrop'
                 loss:
-                  $ref: '#/components/schemas/StatsPacketsLossNullable'
+                  $ref: '#/components/schemas/StatsPacketsLoss'
             timings:
               type: array
               description: |
@@ -760,10 +759,10 @@ components:
                     $ref: '#/components/schemas/TimingPacketRtt'
                   ttl:
                     $ref: '#/components/schemas/TimingPacketTtl'
-    TracerouteTestResult:
-      title: TracerouteTestResult
+    FinishedTracerouteTestResult:
+      title: FinishedTracerouteTestResult
       allOf:
-        - $ref: '#/components/schemas/BaseTestResult'
+        - $ref: '#/components/schemas/BaseFinishedTestResult'
         - type: object
           required:
             - resolvedAddress
@@ -800,31 +799,27 @@ components:
                       properties:
                         rtt:
                           $ref: '#/components/schemas/TimingPacketRtt'
-    DnsTestResult:
-      title: DnsTestResult
+    FinishedDnsTestResult:
+      title: FinishedDnsTestResult
       anyOf:
-        - $ref: '#/components/schemas/SimpleDnsTestResult'
-        - $ref: '#/components/schemas/TraceDnsTestResult'
+        - $ref: '#/components/schemas/FinishedSimpleDnsTestResult'
+        - $ref: '#/components/schemas/FinishedTraceDnsTestResult'
     DnsStatusCode:
-      allOf:
-        - $ref: '#/components/schemas/NullableInteger'
-        - description: The DNS [response code](https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#table-dns-parameters-6).
+      type: integer
+      description: The DNS [response code](https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#table-dns-parameters-6).
     DnsStatusCodeName:
-      allOf:
-        - $ref: '#/components/schemas/NullableString'
-        - description: The DNS [response code name](https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#table-dns-parameters-6).
+      type: string
+      description: The DNS [response code name](https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#table-dns-parameters-6).
     HttpStatusCode:
-      allOf:
-        - $ref: '#/components/schemas/NullableInteger'
-        - description: The HTTP response status code.
+      type: integer
+      description: The HTTP response status code.
     HttpStatusCodeName:
+      type: string
+      description: The HTTP response status code name.
+    FinishedSimpleDnsTestResult:
+      title: FinishedSimpleDnsTestResult
       allOf:
-        - $ref: '#/components/schemas/NullableString'
-        - description: The HTTP response status code name.
-    SimpleDnsTestResult:
-      title: SimpleDnsTestResult
-      allOf:
-        - $ref: '#/components/schemas/BaseTestResult'
+        - $ref: '#/components/schemas/BaseFinishedTestResult'
         - type: object
           required:
             - statusCode
@@ -835,10 +830,10 @@ components:
             statusCodeName:
               $ref: '#/components/schemas/DnsStatusCodeName'
         - $ref: '#/components/schemas/DnsTestHopResult'
-    TraceDnsTestResult:
-      title: TraceDnsTestResult
+    FinishedTraceDnsTestResult:
+      title: FinishedTraceDnsTestResult
       allOf:
-        - $ref: '#/components/schemas/BaseTestResult'
+        - $ref: '#/components/schemas/BaseFinishedTestResult'
         - type: object
           required:
             - hops
@@ -894,10 +889,10 @@ components:
         value:
           type: string
           description: The record value.
-    MtrTestResult:
-      title: MtrTestResult
+    FinishedMtrTestResult:
+      title: FinishedMtrTestResult
       allOf:
-        - $ref: '#/components/schemas/BaseTestResult'
+        - $ref: '#/components/schemas/BaseFinishedTestResult'
         - type: object
           required:
             - resolvedAddress
@@ -984,10 +979,10 @@ components:
                       properties:
                         rtt:
                           $ref: '#/components/schemas/TimingPacketRtt'
-    HttpTestResult:
-      title: HttpTestResult
+    FinishedHttpTestResult:
+      title: FinishedHttpTestResult
       allOf:
-        - $ref: '#/components/schemas/BaseTestResult'
+        - $ref: '#/components/schemas/BaseFinishedTestResult'
         - type: object
           required:
             - rawHeaders
@@ -1047,13 +1042,21 @@ components:
       description: |
         The raw output can be presented to users but is not meant to be parsed clients.
         Please use the individual values provided in other fields for automated processing.
-    TestStatus:
+    BaseTestStatus:
       type: string
       description: The test status. Any value other than `in-progress` is final.
-      enum:
-        - in-progress
-        - finished
-        - failed
+    InProgressTestStatus:
+      allOf:
+        - $ref: '#/components/schemas/BaseTestStatus'
+        - const: in-progress
+    FinishedTestStatus:
+      allOf:
+        - $ref: '#/components/schemas/BaseTestStatus'
+        - const: finished
+    FailedTestStatus:
+      allOf:
+        - $ref: '#/components/schemas/BaseTestStatus'
+        - const: failed
     TimingPacketRtt:
       type: number
       description: The round-trip time for this packet.
@@ -1980,7 +1983,10 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/MeasurementResponse'
+            allOf:
+              - $ref: '#/components/schemas/MeasurementOptionsConditions'
+              - $ref: '#/components/schemas/MeasurementResultsConditions'
+              - $ref: '#/components/schemas/MeasurementResponse'
           examples:
             pingMeasurement:
               $ref: '#/components/examples/getPingMeasurementResponse'
