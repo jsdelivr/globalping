@@ -14,8 +14,8 @@ export const errorHandlerMw = async (ctx: Context, next: Next) => {
 
 			ctx.body = {
 				error: {
-					message: error.expose ? error.message : createHttpError(error.status).message,
 					type: error['type'] as string ?? 'api_error',
+					message: error.expose ? error.message : `${createHttpError(error.status).message}.`,
 				},
 			};
 
@@ -32,8 +32,8 @@ export const errorHandlerMw = async (ctx: Context, next: Next) => {
 
 		ctx.body = {
 			error: {
-				message: 'Internal Server Error',
 				type: 'api_error',
+				message: 'Internal Server Error.',
 			},
 		};
 	}

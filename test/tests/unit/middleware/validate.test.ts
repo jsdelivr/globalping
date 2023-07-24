@@ -34,7 +34,7 @@ describe('Validate middleware', () => {
 
 		expect(ctx.body).to.deep.equal({
 			error: {
-				message: 'Validation Failed',
+				message: 'Parameter validation failed.',
 				type: 'validation_error',
 				params: { hello: '"hello" must be [world!]' },
 			},

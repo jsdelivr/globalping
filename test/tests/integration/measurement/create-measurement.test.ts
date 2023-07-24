@@ -39,7 +39,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found',
+							message: 'No suitable probes found.',
 							type: 'no_probes_found',
 						},
 					});
@@ -77,7 +77,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found',
+							message: 'No suitable probes found.',
 							type: 'no_probes_found',
 						},
 					});
@@ -103,7 +103,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found',
+							message: 'No suitable probes found.',
 							type: 'no_probes_found',
 						},
 					});
@@ -130,7 +130,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found',
+							message: 'No suitable probes found.',
 							type: 'no_probes_found',
 						},
 					});
@@ -282,7 +282,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found',
+							message: 'No suitable probes found.',
 							type: 'no_probes_found',
 						},
 					});

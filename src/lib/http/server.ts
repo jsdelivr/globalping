@@ -15,6 +15,7 @@ import { registerGetMeasurementRoute } from '../../measurement/route/get-measure
 import { registerCreateMeasurementRoute } from '../../measurement/route/create-measurement.js';
 import { registerHealthRoute } from '../../health/route/get.js';
 import { errorHandler } from './error-handler.js';
+import { defaultJson } from './middleware/default-json.js';
 import { errorHandlerMw } from './middleware/error-handler.js';
 import { corsHandler } from './middleware/cors.js';
 import { isAdminMw } from './middleware/is-admin.js';
@@ -31,8 +32,9 @@ rootRouter.get('/', (ctx) => {
 	ctx.status = 404;
 
 	ctx.body = {
-		type: 'docs',
-		uri: 'https://github.com/jsdelivr/globalping/tree/master/docs',
+		links: {
+			documentation: 'https://github.com/jsdelivr/globalping/tree/master/docs',
+		},
 	};
 });
 
@@ -60,6 +62,7 @@ app
 	.use(conditionalGet())
 	.use(etag({ weak: true }))
 	.use(json({ pretty: true, spaces: 2 }))
+	.use(defaultJson())
 	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 	.use(errorHandlerMw)
 	.use(corsHandler())
