@@ -1,11 +1,11 @@
-import type { Context, Next } from 'koa';
 import createHttpError from 'http-errors';
 import newrelic from 'newrelic';
 import { scopedLogger } from '../../logger.js';
+import type { ExtendedMiddleware } from '../../../types';
 
 const logger = scopedLogger('error-handler-mw');
 
-export const errorHandlerMw = async (ctx: Context, next: Next) => {
+export const errorHandlerMw: ExtendedMiddleware = async (ctx, next) => {
 	try {
 		await next();
 	} catch (error: unknown) {
@@ -16,6 +16,9 @@ export const errorHandlerMw = async (ctx: Context, next: Next) => {
 				error: {
 					type: error['type'] as string ?? 'api_error',
 					message: error.expose ? error.message : `${createHttpError(error.status).message}.`,
+				},
+				links: {
+					documentation: ctx.getDocsLink(),
 				},
 			};
 
@@ -34,6 +37,9 @@ export const errorHandlerMw = async (ctx: Context, next: Next) => {
 			error: {
 				type: 'api_error',
 				message: 'Internal Server Error.',
+			},
+			links: {
+				documentation: ctx.getDocsLink(),
 			},
 		};
 	}

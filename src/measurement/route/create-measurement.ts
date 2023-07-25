@@ -25,5 +25,5 @@ const handle = async (ctx: Context): Promise<void> => {
 };
 
 export const registerCreateMeasurementRoute = (router: Router): void => {
-	router.post('/measurements', bodyParser(), validate(schema), rateLimitHandler(), handle);
+	router.post('/measurements', '/measurements', bodyParser(), validate(schema), rateLimitHandler(), handle);
 };

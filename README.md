@@ -108,7 +108,7 @@ POST https://api.globalping.io/v1/measurements
 }
 ```
 
-[Read the full API documentation](docs) and [explore our dev demo](https://api.globalping.io/demo/)
+[Read the full API documentation](https://www.jsdelivr.com/docs/api.globalping.io) and [explore our dev demo](https://api.globalping.io/demo/)
 
 
 ### Slack App

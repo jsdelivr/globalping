@@ -37,5 +37,5 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 };
 
 export const registerGetProbesRoute = (router: Router): void => {
-	router.get('/probes', handle);
+	router.get('/probes', '/probes', handle);
 };

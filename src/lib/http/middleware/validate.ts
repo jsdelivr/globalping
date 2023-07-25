@@ -1,7 +1,7 @@
 import type { Schema } from 'joi';
-import type { Context, Next } from 'koa';
+import type { ExtendedMiddleware } from '../../../types.js';
 
-export const validate = (schema: Schema) => async (ctx: Context, next: Next) => {
+export const validate = (schema: Schema): ExtendedMiddleware => async (ctx, next) => {
 	const valid = schema.validate(ctx.request.body, { convert: true });
 
 	if (valid.error) {
@@ -14,6 +14,9 @@ export const validate = (schema: Schema) => async (ctx: Context, next: Next) => 
 				type: 'validation_error',
 				message: 'Parameter validation failed.',
 				params: Object.fromEntries(fields) as never,
+			},
+			links: {
+				documentation: ctx.getDocsLink(),
 			},
 		};
 
