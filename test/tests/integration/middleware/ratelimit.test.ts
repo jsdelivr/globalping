@@ -22,7 +22,7 @@ describe('rate limiter', () => {
 		// Supertest renders request as ipv4
 		const clientIp = requestIp.getClientIp(httpResponse.req);
 		// Koa sees ipv6-ipv4 monster
-		clientIpv6 = `::ffff:${clientIp ?? ''}`;
+		clientIpv6 = `::ffff:${clientIp ?? '127.0.0.1'}`;
 
 		const rateLimiter = await import('../../../../src/lib/ratelimiter.js');
 		rateLimiterInstance = rateLimiter.default;

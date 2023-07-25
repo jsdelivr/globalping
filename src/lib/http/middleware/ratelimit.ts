@@ -25,7 +25,7 @@ export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
 
 	if (currentState.remainingPoints < limit) {
 		setResponseHeaders(ctx, currentState);
-		throw createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
+		throw createHttpError(429, 'API rate limit exceeded.', { type: 'rate_limit_exceeded' });
 	}
 
 	await next();

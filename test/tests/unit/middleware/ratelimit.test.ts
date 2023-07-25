@@ -92,7 +92,7 @@ describe('rate limit middleware', () => {
 		expect(ctx.set.args[2]).to.deep.equal([ 'X-RateLimit-Remaining', '40000' ]);
 
 		const err = await rateLimitHandler()(ctx, next).catch(err => err); // 60000 > 40000 so another request with the same body fails
-		expect(err).to.deep.equal(createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' }));
+		expect(err).to.deep.equal(createHttpError(429, 'API rate limit exceeded.', { type: 'rate_limit_exceeded' }));
 		expect(ctx.set.args[5]).to.deep.equal([ 'X-RateLimit-Remaining', '40000' ]);
 
 		ctx.request.body = {
@@ -133,7 +133,7 @@ describe('rate limit middleware', () => {
 		expect(ctx.set.args[2]).to.deep.equal([ 'X-RateLimit-Remaining', '10000' ]);
 
 		const err = await rateLimitHandler()(ctx, next).catch(err => err); // only 10000 points remaining so another request with the same body fails
-		expect(err).to.deep.equal(createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' }));
+		expect(err).to.deep.equal(createHttpError(429, 'API rate limit exceeded.', { type: 'rate_limit_exceeded' }));
 		expect(ctx.set.args[5]).to.deep.equal([ 'X-RateLimit-Remaining', '10000' ]);
 
 		ctx.request.body = {

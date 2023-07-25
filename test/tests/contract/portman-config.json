@@ -4,6 +4,9 @@
 		"contractTests": [
 			{
 				"openApiOperation": "*::/*",
+				"excludeForOperations": [
+					"createMeasurement"
+				],
 				"statusSuccess": {
 					"enabled": true
 				},
@@ -19,7 +22,34 @@
 				"headersPresent": {
 					"enabled": true
 				}
+			},
+			{
+				"openApiOperation": "createMeasurement",
+				"contentType": {
+					"enabled": true
+				},
+				"jsonBody": {
+					"enabled": true
+				},
+				"schemaValidation": {
+					"enabled": true
+				},
+				"headersPresent": {
+					"enabled": true
+				}
 			}
 		]
-	}
+	},
+	"overwrites": [
+		{
+			"openApiOperationId": "getMeasurement",
+			"overwriteRequestPathVariables": [
+				{
+					"key": "id",
+					"value": "measurementid",
+					"insert": false
+				}
+			]
+		}
+	]
 }

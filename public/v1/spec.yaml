@@ -2,7 +2,23 @@ openapi: 3.1.0
 info:
   title: Globalping API
   summary: The public Globalping API.
-  description: Monitor, debug, and benchmark your internet infrastructure from a globally distributed network of probes.
+  description: |
+    Monitor, debug, and benchmark your internet infrastructure from a globally distributed network of probes.
+    
+    ## Client guidelines
+    
+    If you implement an application interacting with the API, please consider the "client guidelines"
+    section of each endpoint below to provide the best UX and reduce the chance of your application breaking in the future.
+    
+    ### General guidelines for non-browser based apps:
+
+    - Set a `User-Agent` header. The recommended format and approach is [as here](https://github.com/jsdelivr/data.jsdelivr.com/blob/60c5154d26c403ba9dd403a8ddc5e42a31931f0d/config/default.js#L9).
+    - Set an `Accept-Encoding` header with a value of either `br` (preferred) or `gzip`, depending on what your client can support. The compression has a significant impact on the response size.
+    - When requesting the measurement status, implement ETag-based client-side caching using the `ETag`/`If-None-Match` headers.
+    
+    ## Endpoints
+    
+    https://api.globalping.io/v1/
   version: 1.0.0
   termsOfService: https://github.com/jsdelivr/globalping
   contact:
@@ -14,30 +30,1942 @@ info:
 servers:
   - url: https://api.globalping.io
 tags:
+  - name: Measurements
+#    description: TODO: some text can be here if needed
   - name: Probes
-
-#components:
-#  headers:
-
-#  parameters:
-
-#  schemas:
-
-#  examples:
-
-#  responses:
-
 paths:
-  /v1/probes:
+  /v1/measurements:
+    post:
+      summary: Create measurement
+      operationId: createMeasurement
+      description: |
+        Creates a new measurement with the configured parameters.
+        
+        ### Client guidelines
+
+        - Set the `inProgressUpdates` option to `true` if the application is running in interactive mode so that the user sees the results right away.
+          - If the application is interactive by default but also implements a "CI" mode to be used in scripts, do not set the flag in the CI mode.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeasurementRequest'
+            examples:
+              pingLocations:
+                $ref: '#/components/examples/createMeasurementPingLocations'
+              pingLocationsLimit:
+                $ref: '#/components/examples/createMeasurementPingLocationsLimit'
+              pingLocationsMagic:
+                $ref: '#/components/examples/createMeasurementPingLocationsMagic'
+              pingCustom:
+                $ref: '#/components/examples/createMeasurementPingCustom'
+      responses:
+        '202':
+          $ref: '#/components/responses/measurements202'
+        '400':
+          $ref: '#/components/responses/400'
+        '422':
+          $ref: '#/components/responses/measurements422'
+        '429':
+          $ref: '#/components/responses/measurements429'
+      tags:
+        - Measurements
+  /v1/measurements/{id}:
+    parameters:
+      - $ref: '#/components/parameters/measurementId'
     get:
-      operationId: getProbes
-      description: TODO
+      summary: Get measurement
+      operationId: getMeasurement
+      description: |
+        Retrieves data of an existing measurement.
+        A link to this endpoint is returned in the `Location` response header when creating the measurement.
+        The measurement is typically available for up to 7 days after creation.
+        
+        ### Client guidelines
+        
+        - Use the following algorithm for measurement result pooling:
+          1. Request the measurement status.
+          2. If the status is `in-progress`, wait 500 ms and repeat from step 1. Note that it is important to wait 500 ms *after* receiving the response, instead of simply using an "every 500 ms" interval. For large measurements, the request itself may take a few hundred milliseconds to complete.
+          3. If the status is anything else, stop. The measurement is no longer running. Any value other than `in-progress` is final.
       responses:
         '200':
-          description: TODO
-          content:
-            application/json:
-              schema:
-                type: array
+          $ref: '#/components/responses/measurement200'
+        '404':
+          $ref: '#/components/responses/404'
+      tags:
+        - Measurements
+  /v1/probes:
+    get:
+      summary: List currently connected probes
+      operationId: listProbes
+      description: |
+        Returns a list of all currently connected probes and their metadata.
+      responses:
+        '200':
+          $ref: '#/components/responses/probes200'
       tags:
         - Probes
+
+components:
+  headers:
+    MeasurementLocation:
+      description: A link to the newly created measurement.
+      schema:
+        type: string
+        format: uri
+    RateLimitLimit:
+      description: The number of requests available in a given time window.
+      schema:
+        type: integer
+    RateLimitRemaining:
+      description: The number of requests remaining in the current time window.
+      schema:
+        type: integer
+    RateLimitReset:
+      description: The number of seconds until the limit is reset.
+      schema:
+        type: integer
+
+  parameters:
+    measurementId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    AsnCode:
+      type: integer
+      description: An autonomous system number.
+    CountryCode:
+      type: string
+      description: An ISO 3166-1 alpha-2 country code.
+    ContinentCode:
+      type: string
+      enum:
+        - AF
+        - AN
+        - AS
+        - EU
+        - NA
+        - OC
+        - SA
+    CityName:
+      type: string
+      description: A city name in English.
+    CreateMeasurementResponse:
+      type: object
+      required:
+        - id
+        - probesCount
+      properties:
+        id:
+          type: string
+        probesCount:
+          type: integer
+    Latitude:
+      type: number
+    Longitude:
+      type: number
+    MeasurementLimit:
+      type: integer
+      description: |
+        Specifies the maximum number of probes that run the measurement.
+        The result count might be lower if there aren't enough probes available in the specified locations.
+      minimum: 1
+      maximum: 500
+      default: 1
+    MeasurementLocationOption:
+      type: object
+      additionalProperties: false
+      properties:
+        continent:
+          $ref: '#/components/schemas/ContinentCode'
+        region:
+          $ref: '#/components/schemas/RegionName'
+        country:
+          $ref: '#/components/schemas/CountryCode'
+        state:
+          $ref: '#/components/schemas/StateCode'
+        city:
+          $ref: '#/components/schemas/CityName'
+        asn:
+          $ref: '#/components/schemas/AsnCode'
+        network:
+          $ref: '#/components/schemas/NetworkName'
+        tags:
+          $ref: '#/components/schemas/Tags'
+        magic:
+          type: string
+          description: |
+            Fuzzy matching based on the `country`, `city`, `state`, `continent`, `region`, `asn` (using `AS` prefix, e.g., `AS123`), `tags`, and `network` values.
+            Includes the full names, ISO codes (where applicable), and common aliases.
+            Multiple conditions can be combined using the `+` character.
+        limit:
+          type: integer
+          description: |
+            Mutually exclusive with the global `limit`.
+            Specifies the maximum number of probes that run the measurement in this location.
+          minimum: 1
+          maximum: 200
+          default: 1
+    MeasurementLocations:
+      type: array
+      description: |
+        An array of locations from which to run the measurement.
+        Each object specifies a location using one or multiple keys.
+      items:
+        $ref: '#/components/schemas/MeasurementLocationOption'
+    MeasurementOptions:
+      anyOf:
+        - $ref: '#/components/schemas/MeasurementPingOptions'
+        - $ref: '#/components/schemas/MeasurementTracerouteOptions'
+        - $ref: '#/components/schemas/MeasurementDnsOptions'
+        - $ref: '#/components/schemas/MeasurementMtrOptions'
+        - $ref: '#/components/schemas/MeasurementHttpOptions'
+    MeasurementOptionsConditions:
+      allOf:
+        - if:
+            type: object
+            properties:
+              type:
+                const: ping
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: '#/components/schemas/MeasurementPingOptions'
+        - if:
+            type: object
+            properties:
+              type:
+                const: traceroute
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: '#/components/schemas/MeasurementTracerouteOptions'
+        - if:
+            type: object
+            properties:
+              type:
+                const: dns
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: '#/components/schemas/MeasurementDnsOptions'
+        - if:
+            type: object
+            properties:
+              type:
+                const: mtr
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: '#/components/schemas/MeasurementMtrOptions'
+        - if:
+            type: object
+            properties:
+              type:
+                const: http
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: '#/components/schemas/MeasurementHttpOptions'
+    MeasurementResultsConditions:
+      allOf:
+        - if:
+            type: object
+            properties:
+              type:
+                const: ping
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: '#/components/schemas/FinishedPingTestResult'
+        - if:
+            type: object
+            properties:
+              type:
+                const: traceroute
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: '#/components/schemas/FinishedTracerouteTestResult'
+        - if:
+            type: object
+            properties:
+              type:
+                const: dns
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: '#/components/schemas/FinishedDnsTestResult'
+        - if:
+            type: object
+            properties:
+              type:
+                const: mtr
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: '#/components/schemas/FinishedMtrTestResult'
+        - if:
+            type: object
+            properties:
+              type:
+                const: http
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: '#/components/schemas/FinishedHttpTestResult'
+    MeasurementPingOptions:
+      type: object
+      title: PingOptions
+      additionalProperties: false
+      properties:
+        packets:
+          type: integer
+          default: 3
+          minimum: 1
+          maximum: 16
+    MeasurementTracerouteOptions:
+      type: object
+      title: TracerouteOptions
+      additionalProperties: false
+      properties:
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 80
+        protocol:
+          type: string
+          enum:
+            - ICMP
+            - TCP
+            - UDP
+          default: ICMP
+    MeasurementDnsOptions:
+      type: object
+      title: DnsOptions
+      additionalProperties: false
+      properties:
+        query:
+          type: object
+          description: The DNS query properties.
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              enum:
+                - A
+                - AAAA
+                - ANY
+                - CNAME
+                - DNSKEY
+                - DS
+                - MX
+                - NS
+                - NSEC
+                - PTR
+                - RRSIG
+                - SOA
+                - TXT
+                - SRV
+              default: A
+        resolver:
+          $ref: '#/components/schemas/MeasurementResolver'
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 53
+        protocol:
+          type: string
+          enum:
+            - TCP
+            - UDP
+          default: UDP
+        trace:
+          type: boolean
+          description: |
+            Toggles tracing of the delegation path from the root servers down to the target domain name.
+          default: false
+    MeasurementMtrOptions:
+      type: object
+      title: MtrOptions
+      additionalProperties: false
+      properties:
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 80
+        protocol:
+          type: string
+          enum:
+            - ICMP
+            - TCP
+            - UDP
+          default: ICMP
+        packets:
+          type: integer
+          default: 3
+          minimum: 1
+          maximum: 16
+    MeasurementHttpOptions:
+      type: object
+      title: HttpOptions
+      additionalProperties: false
+      properties:
+        request:
+          type: object
+          description: The HTTP request properties.
+          additionalProperties: false
+          properties:
+            host:
+              type: string
+              description: |
+                An optional override for the `Host` header. The default value is based on the `target`.
+            path:
+              type: string
+            query:
+              type: string
+            method:
+              type: string
+              enum:
+                - HEAD
+                - GET
+              default: HEAD
+            headers:
+              type: object
+              description: |
+                Additional request headers. Note that the `Host` and `User-Agent` are reserved and internally overridden.
+              additionalProperties:
+                type: string
+        resolver:
+          $ref: '#/components/schemas/MeasurementResolver'
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 80
+        protocol:
+          type: string
+          enum:
+            - HTTP
+            - HTTPS
+            - HTTP2
+          default: HTTPS
+    MeasurementResolver:
+      description: A DNS resolver to use for the query. Defaults to the probe's system resolver.
+      anyOf:
+        - type: string
+          format: ipv4
+          description: An IPv4 address.
+        - type: string
+          format: hostname
+          description: A Fully Qualified Domain Name (FQDN).
+    MeasurementResultItem:
+      type: object
+      required:
+        - probe
+        - result
+      properties:
+        probe:
+          allOf:
+            - $ref: '#/components/schemas/ProbeLocation'
+            - type: object
+              description: Information about the probe that performed this test.
+              required:
+                - tags
+                - resolvers
+              properties:
+                tags:
+                  $ref: '#/components/schemas/Tags'
+                resolvers:
+                  $ref: '#/components/schemas/ProbeResolvers'
+        result:
+          $ref: '#/components/schemas/TestResult'
+    MeasurementStatus:
+      type: string
+      description: The measurement status. Any value other than `in-progress` is final.
+      enum:
+        - in-progress
+        - finished
+    MeasurementTarget:
+      type: string
+      description: |
+        A public endpoint on which the measurement is executed.
+        Typically a hostname or an IPv4 address. The exact format depends on the measurement type.
+    MeasurementType:
+      type: string
+      enum:
+        - ping
+        - traceroute
+        - dns
+        - mtr
+        - http
+    MeasurementRequest:
+      allOf:
+        - $ref: '#/components/schemas/MeasurementOptionsConditions'
+        - type: object
+          additionalProperties: false
+          required:
+            - type
+            - target
+          properties:
+            type:
+              $ref: '#/components/schemas/MeasurementType'
+            target:
+              $ref: '#/components/schemas/MeasurementTarget'
+            inProgressUpdates:
+              type: boolean
+              description: |
+                Specifies if the results of the measurement should be updated while being in progress.
+                If `false`, results are populated to the measurement object only after the test finishes.
+                If `true`, partial results are returned as soon as they are available and can be presented to the user in real-time.
+                Note that only the top 5 tests from the results array will update in real-time.
+              default: false
+            locations:
+              $ref: '#/components/schemas/MeasurementLocations'
+            limit:
+              $ref: '#/components/schemas/MeasurementLimit'
+            measurementOptions:
+              $ref: '#/components/schemas/MeasurementOptions'
+    MeasurementResponse:
+      type: object
+      required:
+        - id
+        - type
+        - status
+        - createdAt
+        - updatedAt
+        - target
+        - probesCount
+        - results
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/MeasurementType'
+        target:
+          $ref: '#/components/schemas/MeasurementTarget'
+        status:
+          $ref: '#/components/schemas/MeasurementStatus'
+        createdAt:
+          type: string
+          format: date-time
+          description: Time when the measurement was created.
+        updatedAt:
+          type: string
+          format: date-time
+          description: Time when the measurement was last updated.
+        probesCount:
+          type: integer
+          description: The number of probes that performed the measurement. Smaller or equal to `limit`.
+        locations:
+          allOf:
+            - $ref: '#/components/schemas/MeasurementLocations'
+            - description: The locations specified when creating the measurement.
+        limit:
+          allOf:
+            - $ref: '#/components/schemas/MeasurementLimit'
+            - description: The limit specified when creating the measurement if different from default.
+        measurementOptions:
+          allOf:
+            - $ref: '#/components/schemas/MeasurementOptions'
+            - description: The options specified when creating the measurement if different from default.
+        results:
+          type: array
+          description: The measurement results.
+          items:
+            $ref: '#/components/schemas/MeasurementResultItem'
+    NetworkName:
+      type: string
+      description: A network name.
+    NullableInteger:
+      type:
+        - integer
+        - 'null'
+    NullableNumber:
+      type:
+        - number
+        - 'null'
+    Probe:
+      type: object
+      required:
+        - version
+        - location
+        - tags
+        - resolvers
+      properties:
+        version:
+          type: string
+          description: Probe version.
+        location:
+          $ref: '#/components/schemas/ProbeLocation'
+        tags:
+          $ref: '#/components/schemas/Tags'
+        resolvers:
+          $ref: '#/components/schemas/ProbeResolvers'
+    ProbeLocation:
+      type: object
+      required:
+        - continent
+        - region
+        - country
+        - city
+        - asn
+        - network
+        - latitude
+        - longitude
+      properties:
+        continent:
+          $ref: '#/components/schemas/ContinentCode'
+        region:
+          $ref: '#/components/schemas/RegionName'
+        country:
+          $ref: '#/components/schemas/CountryCode'
+        state:
+          $ref: '#/components/schemas/StateCode'
+        city:
+          $ref: '#/components/schemas/CityName'
+        asn:
+          $ref: '#/components/schemas/AsnCode'
+        network:
+          $ref: '#/components/schemas/NetworkName'
+        latitude:
+          $ref: '#/components/schemas/Latitude'
+        longitude:
+          $ref: '#/components/schemas/Longitude'
+    ProbeResolver:
+      anyOf:
+        - type: string
+          format: ipv4
+          description: An IPv4 address.
+        - type: string
+          const: private
+          description: Indicates the resolver points to a private IP address.
+    ProbeResolvers:
+      type: array
+      description: A list of default DNS resolvers configured on the probe.
+      items:
+        $ref: '#/components/schemas/ProbeResolver'
+    Probes:
+      type: array
+      items:
+        $ref: '#/components/schemas/Probe'
+    RegionName:
+      type: string
+      description: |
+        A Geographic Region name based on the
+        UN [Standard Country or Area Codes for Statistical Use (M49)](https://unstats.un.org/unsd/methodology/m49/).
+      enum:
+        - Northern Africa
+        - Eastern Africa
+        - Middle Africa
+        - Southern Africa
+        - Western Africa
+
+        - Caribbean
+        - Central America
+        - South America
+        - Northern America
+
+        - Central Asia
+        - Eastern Asia
+        - South-eastern Asia
+        - Southern Asia
+        - Western Asia
+
+        - Eastern Europe
+        - Northern Europe
+        - Southern Europe
+        - Western Europe
+
+        - Australia and New Zealand
+        - Melanesia
+        - Micronesia
+        - Polynesia
+    ResolvedAddress:
+      type: string
+      description: The resolved IP address of the `target`.
+    ResolvedHostname:
+      type:
+        - string
+        - 'null'
+      format: hostname
+      description: The resolved hostname of the `target`.
+    StateCode:
+      type:
+        - string
+        - 'null'
+      description: Only for US states. A two-letter state code based on ISO 3166-2.
+    StatsRttMin:
+      type: number
+      description: The lowest `rtt` value.
+    StatsRttMinNullable:
+      allOf:
+        - $ref: '#/components/schemas/NullableNumber'
+        - description: The lowest `rtt` value.
+    StatsRttAvg:
+      type: number
+      description: The average `rtt` value.
+    StatsRttAvgNullable:
+      allOf:
+        - $ref: '#/components/schemas/NullableNumber'
+        - description: The average `rtt` value.
+    StatsRttMax:
+      type: number
+      description: The highest `rtt` value.
+    StatsRttMaxNullable:
+      allOf:
+        - $ref: '#/components/schemas/NullableNumber'
+        - description: The highest `rtt` value.
+    StatsPacketsTotal:
+      type: integer
+      description: The number of sent packets.
+    StatsPacketsRcv:
+      type: integer
+      description: The number of received packets.
+    StatsPacketsDrop:
+      type: integer
+      description: The number of dropped packets (`total` - `rcv`).
+    StatsPacketsLoss:
+      type: number
+      description: The percentage of dropped packets.
+    StatsJitterMin:
+      type: number
+      description: The lowest jitter value.
+    StatsJitterAvg:
+      type: number
+      description: The average jitter value.
+    StatsJitterMax:
+      type: number
+      description: The highest jitter value.
+    StatsStDev:
+      type: number
+      description: The standard deviation of the `rtt` values.
+    Tags:
+      type: array
+      description: |
+        An array of additional values that can be used to target the probe.
+        Probes hosted in [AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)
+        and [Google Cloud](https://cloud.google.com/compute/docs/regions-zones#available) are automatically assigned the service region code.
+      items:
+        type: string
+    TestResult:
+      anyOf:
+        - $ref: '#/components/schemas/InProgressTestResult'
+        - $ref: '#/components/schemas/FailedTestResult'
+        - $ref: '#/components/schemas/FinishedPingTestResult'
+        - $ref: '#/components/schemas/FinishedTracerouteTestResult'
+        - $ref: '#/components/schemas/FinishedDnsTestResult'
+        - $ref: '#/components/schemas/FinishedMtrTestResult'
+        - $ref: '#/components/schemas/FinishedHttpTestResult'
+    BaseFinishedTestResult:
+      type: object
+      required:
+        - status
+        - rawOutput
+      properties:
+        status:
+          $ref: '#/components/schemas/FinishedTestStatus'
+        rawOutput:
+          $ref: '#/components/schemas/TestRawOutput'
+    InProgressTestResult:
+      type: object
+      title: InProgressTestResult
+      description: |
+        Represents an `in-progress` test where most fields are not available.
+      required:
+        - status
+        - rawOutput
+      properties:
+        status:
+          $ref: '#/components/schemas/InProgressTestStatus'
+        rawOutput:
+          $ref: '#/components/schemas/TestRawOutput'
+    FailedTestResult:
+      type: object
+      title: FailedTestResult
+      description: |
+        Represents a `failed` test where most fields are not available.
+      required:
+        - status
+        - rawOutput
+      properties:
+        status:
+          $ref: '#/components/schemas/FailedTestStatus'
+        rawOutput:
+          $ref: '#/components/schemas/TestRawOutput'
+    FinishedPingTestResult:
+      title: FinishedPingTestResult
+      allOf:
+        - $ref: '#/components/schemas/BaseFinishedTestResult'
+        - type: object
+          required:
+            - resolvedAddress
+            - resolvedHostname
+            - stats
+            - timings
+          properties:
+            resolvedAddress:
+              $ref: '#/components/schemas/ResolvedAddress'
+            resolvedHostname:
+              $ref: '#/components/schemas/ResolvedHostname'
+            stats:
+              type: object
+              description: |
+                Summary `rtt` and packet loss statistics.
+                All times are in milliseconds.
+              required:
+                - min
+                - avg
+                - max
+                - total
+                - rcv
+                - drop
+                - loss
+              properties:
+                min:
+                  $ref: '#/components/schemas/StatsRttMinNullable'
+                avg:
+                  $ref: '#/components/schemas/StatsRttAvgNullable'
+                max:
+                  $ref: '#/components/schemas/StatsRttMaxNullable'
+                total:
+                  $ref: '#/components/schemas/StatsPacketsTotal'
+                rcv:
+                  $ref: '#/components/schemas/StatsPacketsRcv'
+                drop:
+                  $ref: '#/components/schemas/StatsPacketsDrop'
+                loss:
+                  $ref: '#/components/schemas/StatsPacketsLoss'
+            timings:
+              type: array
+              description: |
+                Details for each sent packet. 
+                All times are in milliseconds.
+              items:
+                type: object
+                required:
+                  - rtt
+                  - ttl
+                properties:
+                  rtt:
+                    $ref: '#/components/schemas/TimingPacketRtt'
+                  ttl:
+                    $ref: '#/components/schemas/TimingPacketTtl'
+    FinishedTracerouteTestResult:
+      title: FinishedTracerouteTestResult
+      allOf:
+        - $ref: '#/components/schemas/BaseFinishedTestResult'
+        - type: object
+          required:
+            - resolvedAddress
+            - resolvedHostname
+            - hops
+          properties:
+            resolvedAddress:
+              $ref: '#/components/schemas/ResolvedAddress'
+            resolvedHostname:
+              $ref: '#/components/schemas/ResolvedHostname'
+            hops:
+              type: array
+              description: Details for each hop.
+              items:
+                type: object
+                required:
+                  - resolvedAddress
+                  - resolvedHostname
+                  - timings
+                properties:
+                  resolvedAddress:
+                    $ref: '#/components/schemas/ResolvedAddress'
+                  resolvedHostname:
+                    $ref: '#/components/schemas/ResolvedHostname'
+                  timings:
+                    type: array
+                    description: |
+                      Details for each sent packet.
+                      All times are in milliseconds.
+                    items:
+                      type: object
+                      required:
+                        - rtt
+                      properties:
+                        rtt:
+                          $ref: '#/components/schemas/TimingPacketRtt'
+    FinishedDnsTestResult:
+      title: FinishedDnsTestResult
+      anyOf:
+        - $ref: '#/components/schemas/FinishedSimpleDnsTestResult'
+        - $ref: '#/components/schemas/FinishedTraceDnsTestResult'
+    DnsStatusCode:
+      type: integer
+      description: The DNS [response code](https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#table-dns-parameters-6).
+    DnsStatusCodeName:
+      type: string
+      description: The DNS [response code name](https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#table-dns-parameters-6).
+    HttpStatusCode:
+      type: integer
+      description: The HTTP response status code.
+    HttpStatusCodeName:
+      type: string
+      description: The HTTP response status code name.
+    FinishedSimpleDnsTestResult:
+      title: FinishedSimpleDnsTestResult
+      allOf:
+        - $ref: '#/components/schemas/BaseFinishedTestResult'
+        - type: object
+          required:
+            - statusCode
+            - statusCodeName
+          properties:
+            statusCode:
+              $ref: '#/components/schemas/DnsStatusCode'
+            statusCodeName:
+              $ref: '#/components/schemas/DnsStatusCodeName'
+        - $ref: '#/components/schemas/DnsTestHopResult'
+    FinishedTraceDnsTestResult:
+      title: FinishedTraceDnsTestResult
+      allOf:
+        - $ref: '#/components/schemas/BaseFinishedTestResult'
+        - type: object
+          required:
+            - hops
+          properties:
+            hops:
+              type: array
+              items:
+                $ref: '#/components/schemas/DnsTestHopResult'
+    DnsTestHopResult:
+      type: object
+      required:
+        - resolver
+        - answers
+        - timings
+      properties:
+        resolver:
+          type: string
+          description: The hostname or IP of the resolver that answered the query.
+        answers:
+          type: array
+          description: The list of received resource records.
+          items:
+            $ref: '#/components/schemas/DnsTestAnswer'
+        timings:
+          type: object
+          required:
+            - total
+          properties:
+            total:
+              type: number
+              description: The total query time in milliseconds.
+    DnsTestAnswer:
+      type: object
+      required:
+        - name
+        - type
+        - ttl
+        - class
+        - value
+      properties:
+        name:
+          type: string
+          description: The record domain name.
+        type:
+          type: string
+          description: The record type.
+        ttl:
+          type: integer
+          description: The record TTL in seconds.
+        class:
+          type: string
+          description: The record class.
+        value:
+          type: string
+          description: The record value.
+    FinishedMtrTestResult:
+      title: FinishedMtrTestResult
+      allOf:
+        - $ref: '#/components/schemas/BaseFinishedTestResult'
+        - type: object
+          required:
+            - resolvedAddress
+            - resolvedHostname
+            - hops
+          properties:
+            resolvedAddress:
+              $ref: '#/components/schemas/ResolvedAddress'
+            resolvedHostname:
+              $ref: '#/components/schemas/ResolvedHostname'
+            hops:
+              type: array
+              items:
+                type: object
+                required:
+                  - resolvedAddress
+                  - resolvedHostname
+                  - asn
+                  - timings
+                  - stats
+                properties:
+                  resolvedAddress:
+                    allOf:
+                      - $ref: '#/components/schemas/ResolvedAddress'
+                      - description: The resolved IP address of this hop.
+                  resolvedHostname:
+                    allOf:
+                      - $ref: '#/components/schemas/ResolvedHostname'
+                      - description: The resolved hostname of this hop.
+                  asn:
+                    type: array
+                    description: The list of ASNs assigned to this hop.
+                    items:
+                      type: integer
+                  stats:
+                    type: object
+                    description: |
+                      Summary `rtt` and packet loss statistics.
+                      All times are in milliseconds.
+                    required:
+                      - min
+                      - avg
+                      - max
+                      - stDev
+                      - jMin
+                      - jAvg
+                      - jMax
+                      - total
+                      - rcv
+                      - drop
+                      - loss
+                    properties:
+                      min:
+                        $ref: '#/components/schemas/StatsRttMin'
+                      avg:
+                        $ref: '#/components/schemas/StatsRttAvg'
+                      max:
+                        $ref: '#/components/schemas/StatsRttMax'
+                      stDev:
+                        $ref: '#/components/schemas/StatsStDev'
+                      jMin:
+                        $ref: '#/components/schemas/StatsJitterMin'
+                      jAvg:
+                        $ref: '#/components/schemas/StatsJitterAvg'
+                      jMax:
+                        $ref: '#/components/schemas/StatsJitterMax'
+                      total:
+                        $ref: '#/components/schemas/StatsPacketsTotal'
+                      rcv:
+                        $ref: '#/components/schemas/StatsPacketsRcv'
+                      drop:
+                        $ref: '#/components/schemas/StatsPacketsDrop'
+                      loss:
+                        $ref: '#/components/schemas/StatsPacketsLoss'
+                  timings:
+                    type: array
+                    description: |
+                      Details for each sent packet. 
+                      All times are in milliseconds.
+                    items:
+                      type: object
+                      required:
+                        - rtt
+                      properties:
+                        rtt:
+                          $ref: '#/components/schemas/TimingPacketRtt'
+    FinishedHttpTestResult:
+      title: FinishedHttpTestResult
+      allOf:
+        - $ref: '#/components/schemas/BaseFinishedTestResult'
+        - type: object
+          required:
+            - rawHeaders
+            - rawBody
+            - headers
+            - resolvedAddress
+            - statusCode
+            - statusCodeName
+            - timings
+            - tls
+          properties:
+            rawHeaders:
+              type: string
+              description: The raw HTTP response headers.
+            rawBody:
+              type: string
+              description: The raw HTTP response body. Only the first 10 kb are returned.
+            headers:
+              type: object
+              description: The HTTP response headers.
+              additionalProperties:
+                type: string
+            statusCode:
+              $ref: '#/components/schemas/HttpStatusCode'
+            statusCodeName:
+              $ref: '#/components/schemas/HttpStatusCodeName'
+            resolvedAddress:
+              $ref: '#/components/schemas/ResolvedAddress'
+            timings:
+              type: object
+              required:
+                - total
+                - dns
+                - tcp
+                - tls
+                - firstByte
+                - download
+              properties:
+                total:
+                  $ref: '#/components/schemas/TimingHttpTotalNullable'
+                dns:
+                  $ref: '#/components/schemas/TimingHttpDnsNullable'
+                tcp:
+                  $ref: '#/components/schemas/TimingHttpTcpNullable'
+                tls:
+                  $ref: '#/components/schemas/TimingHttpTlsNullable'
+                firstByte:
+                  $ref: '#/components/schemas/TimingHttpFirstByteNullable'
+                download:
+                  $ref: '#/components/schemas/TimingHttpDownloadNullable'
+            tls:
+              oneOf:
+                - $ref: '#/components/schemas/TlsCertificate'
+                - type: 'null'
+    TestRawOutput:
+      type: string
+      description: |
+        The raw output can be presented to users but is not meant to be parsed clients.
+        Please use the individual values provided in other fields for automated processing.
+    BaseTestStatus:
+      type: string
+      description: The test status. Any value other than `in-progress` is final.
+    InProgressTestStatus:
+      allOf:
+        - $ref: '#/components/schemas/BaseTestStatus'
+        - const: in-progress
+    FinishedTestStatus:
+      allOf:
+        - $ref: '#/components/schemas/BaseTestStatus'
+        - const: finished
+    FailedTestStatus:
+      allOf:
+        - $ref: '#/components/schemas/BaseTestStatus'
+        - const: failed
+    TimingPacketRtt:
+      type: number
+      description: The round-trip time for this packet.
+    TimingPacketTtl:
+      type: number
+      description: The packet time-to-live value.
+    TimingHttpTotalNullable:
+      allOf:
+        - $ref: '#/components/schemas/NullableInteger'
+        - description: The total HTTP request time.
+    TimingHttpDnsNullable:
+      allOf:
+        - $ref: '#/components/schemas/NullableInteger'
+        - description: The time required to perform the DNS lookup.
+    TimingHttpTcpNullable:
+      allOf:
+        - $ref: '#/components/schemas/NullableInteger'
+        - description: The time from performing the DNS lookup to establishing the TCP connection.
+    TimingHttpTlsNullable:
+      allOf:
+        - $ref: '#/components/schemas/NullableInteger'
+        - description: The time from establishing the TCP connection to establishing the TLS session.
+    TimingHttpFirstByteNullable:
+      allOf:
+        - $ref: '#/components/schemas/NullableInteger'
+        - description: The time from establishing the TCP/TLS connection to the first response byte.
+    TimingHttpDownloadNullable:
+      allOf:
+        - $ref: '#/components/schemas/NullableInteger'
+        - description: The time from the first byte to downloading the whole response.
+    TlsCertificate:
+      type: object
+      description: The TLS session information.
+      required:
+        - authorized
+        - createdAt
+        - expiresAt
+        - subject
+        - issuer
+      properties:
+        authorized:
+          type: boolean
+          description: |
+            `true` if the certificate is valid and signed by a trusted authority, `false` otherwise.
+        error:
+          type: string
+          description: |
+            The reason for rejecting the certificate if `authorized` is `false`.
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        subject:
+          $ref: '#/components/schemas/TlsCertificateSubject'
+        issuer:
+          $ref: '#/components/schemas/TlsCertificateIssuer'
+    TlsCertificateIssuer:
+      type: object
+      required:
+        - C
+        - O
+        - CN
+      properties:
+        C:
+          type: string
+          description: The issuer's country.
+        O:
+          type: string
+          description: The issuer's organization.
+        CN:
+          type: string
+          description: The issuer's common name.
+    TlsCertificateSubject:
+      type: object
+      required:
+        - CN
+        - alt
+      properties:
+        CN:
+          type: string
+          description: The subject's common name.
+        alt:
+          type: string
+          description: The subject's alternative names.
+
+  examples:
+    probes:
+      value:
+        [
+          {
+            "version": "0.20.0",
+            "location": {
+              "continent": "NA",
+              "region": "Northern America",
+              "country": "US",
+              "state": "VA",
+              "city": "Ashburn",
+              "asn": 14618,
+              "network": "Amazon.com, Inc.",
+              "latitude": 39.0437,
+              "longitude": -77.4875
+            },
+            "tags": [
+              "aws-us-east-1"
+            ],
+            "resolvers": [
+              "private"
+            ]
+          }
+        ]
+    createMeasurementPingLocations:
+      summary: 'ping: specific locations'
+      value:
+        {
+          "type": "ping",
+          "target": "cdn.jsdelivr.net",
+          "locations": [
+            { "country": "DE" },
+            { "country": "PL" }
+          ]
+        }
+    createMeasurementPingLocationsLimit:
+      summary: 'ping: specific locations and limit'
+      value:
+        {
+          "type": "ping",
+          "target": "cdn.jsdelivr.net",
+          "locations": [
+            { "country": "DE", "limit": 4 },
+            { "country": "PL", "limit": 2 }
+          ]
+        }
+    createMeasurementPingLocationsMagic:
+      summary: 'ping: magic location filter'
+      value:
+        {
+          "type": "ping",
+          "target": "cdn.jsdelivr.net",
+          "locations": [
+            { "magic": "FR" },
+            { "magic": "Poland" },
+            { "magic": "Berlin+Germany" },
+            { "magic": "California" },
+            { "magic": "Europe" },
+            { "magic": "Western Europe" },
+            { "magic": "AS13335" },
+            { "magic": "aws-us-east-1" },
+            { "magic": "Google" }
+          ]
+        }
+    createMeasurementPingCustom:
+      summary: 'ping: custom options'
+      value:
+        {
+          "type": "ping",
+          "target": "cdn.jsdelivr.net",
+          "measurementOptions": {
+            "packets": 6
+          }
+        }
+    createMeasurementResponse:
+      value:
+        {
+          "id": "PY5fMsREMmIq45VR",
+          "probesCount": 1
+        }
+    getPingMeasurementResponse:
+      summary: 'type: ping'
+      value:
+        {
+          "id": "nzGzfAGL7sZfUs3c",
+          "type": "ping",
+          "status": "finished",
+          "createdAt": "2023-07-14T18:25:52.414Z",
+          "updatedAt": "2023-07-14T18:25:53.207Z",
+          "target": "cdn.jsdelivr.net",
+          "probesCount": 1,
+          "measurementOptions": {
+            "packets": 2
+          },
+          "results": [
+            {
+              "probe": {
+                "continent": "OC",
+                "region": "Australia and New Zealand",
+                "country": "NZ",
+                "state": null,
+                "city": "Auckland",
+                "asn": 61138,
+                "longitude": 174.76667,
+                "latitude": -36.86667,
+                "network": "Zappie Host LLC",
+                "tags": [ ],
+                "resolvers": [
+                  "1.1.1.1",
+                  "8.8.8.8"
+                ]
+              },
+              "result": {
+                "status": "finished",
+                "rawOutput": "PING jsdelivr.map.fastly.net (151.101.129.229) 56(84) bytes of data.\n64 bytes from 151.101.129.229 (151.101.129.229): icmp_seq=1 ttl=59 time=24.2 ms\n64 bytes from 151.101.129.229 (151.101.129.229): icmp_seq=2 ttl=59 time=24.2 ms\n\n--- jsdelivr.map.fastly.net ping statistics ---\n2 packets transmitted, 2 received, 0% packet loss, time 201ms\nrtt min/avg/max/mdev = 24.174/24.183/24.193/0.009 ms",
+                "resolvedAddress": "151.101.129.229",
+                "resolvedHostname": "151.101.129.229",
+                "timings": [{ "ttl": 59, "rtt": 24.2 }, { "ttl": 59, "rtt": 24.2 }],
+                "stats": { "min": 24.174, "max": 24.193, "avg": 24.183, "total": 2, "loss": 0, "rcv": 2, "drop": 0 }
+              }
+            }
+          ]
+        }
+    getTracerouteMeasurementResponse:
+      summary: 'type: traceroute'
+      value:
+        {
+          "id": "MH97NFzqirjA9NZZ",
+          "type": "traceroute",
+          "status": "finished",
+          "createdAt": "2023-07-14T18:29:19.630Z",
+          "updatedAt": "2023-07-14T18:29:21.165Z",
+          "target": "cdn.jsdelivr.net",
+          "probesCount": 1,
+          "results": [
+            {
+              "probe": {
+                "continent": "OC",
+                "region": "Australia and New Zealand",
+                "country": "AU",
+                "state": null,
+                "city": "Sydney",
+                "asn": 16276,
+                "longitude": 151.207052,
+                "latitude": -33.86778,
+                "network": "OVH SAS",
+                "tags": [ ],
+                "resolvers": [
+                  "213.186.33.99"
+                ]
+              },
+              "result": {
+                "rawOutput": "traceroute to cdn.jsdelivr.net (104.16.85.20), 20 hops max, 60 byte packets\n 1  139.99.172.1 (139.99.172.1)  0.315 ms  0.301 ms\n 2  192.168.143.254 (192.168.143.254)  0.295 ms  0.292 ms\n 3  10.29.250.254 (10.29.250.254)  0.289 ms  0.286 ms\n 4  10.29.231.208 (10.29.231.208)  0.338 ms  0.349 ms\n 5  10.133.18.32 (10.133.18.32)  0.502 ms  0.596 ms\n 6  10.75.8.8 (10.75.8.8)  0.322 ms  0.344 ms\n 7  10.75.248.66 (10.75.248.66)  1.101 ms  1.106 ms\n 8  syd-sy2-bb1-a9.au.asia (103.5.14.220)  1.105 ms  1.160 ms\n 9  as13335.nsw.ix.asn.au (218.100.52.11)  1.097 ms  1.097 ms\n10  172.68.208.3 (172.68.208.3)  1.777 ms  1.778 ms\n11  104.16.85.20 (104.16.85.20)  0.826 ms  0.733 ms",
+                "status": "finished",
+                "resolvedAddress": "104.16.85.20",
+                "resolvedHostname": "104.16.85.20",
+                "hops": [
+                  {
+                    "resolvedHostname": "172.68.208.3",
+                    "resolvedAddress": "172.68.208.3",
+                    "timings": [{ "rtt": 1.777 }, { "rtt": 1.778 }]
+                  },
+                  {
+                    "resolvedHostname": "104.16.85.20",
+                    "resolvedAddress": "104.16.85.20",
+                    "timings": [{ "rtt": 0.826 }, { "rtt": 0.733 }]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+    getSimpleDnsMeasurementResponse:
+      summary: 'type: dns'
+      value:
+        {
+          "id": "av5Z6kM6FXLAfKO0",
+          "type": "dns",
+          "status": "finished",
+          "createdAt": "2023-07-14T18:31:01.002Z",
+          "updatedAt": "2023-07-14T18:31:01.844Z",
+          "target": "cdn.jsdelivr.net",
+          "probesCount": 1,
+          "results": [
+            {
+              "probe": {
+                "continent": "OC",
+                "region": "Australia and New Zealand",
+                "country": "AU",
+                "state": null,
+                "city": "Sydney",
+                "asn": 202422,
+                "longitude": 151.207052,
+                "latitude": -33.86778,
+                "network": "G-Core Labs S.A.",
+                "tags": [ ],
+                "resolvers": [
+                  "8.8.8.8"
+                ]
+              },
+              "result": {
+                "status": "finished",
+                "statusCodeName": "NOERROR",
+                "statusCode": 0,
+                "rawOutput": "\n; <<>> DiG 9.16.37-Debian <<>> -t A cdn.jsdelivr.net -p 53 -4 +timeout=3 +tries=2 +nocookie +nsid\n;; global options: +cmd\n;; Got answer:\n;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 50465\n;; flags: qr rd ra; QUERY: 1, ANSWER: 5, AUTHORITY: 0, ADDITIONAL: 1\n\n;; OPT PSEUDOSECTION:\n; EDNS: version: 0, flags:; udp: 512\n; NSID: 67 70 64 6e 73 2d 73 79 64 (\"gpdns-syd\")\n;; QUESTION SECTION:\n;cdn.jsdelivr.net.\t\tIN\tA\n\n;; ANSWER SECTION:\ncdn.jsdelivr.net.\t180\tIN\tCNAME\tjsdelivr.map.fastly.net.\njsdelivr.map.fastly.net. 23\tIN\tA\t151.101.1.229\njsdelivr.map.fastly.net. 23\tIN\tA\t151.101.65.229\njsdelivr.map.fastly.net. 23\tIN\tA\t151.101.129.229\njsdelivr.map.fastly.net. 23\tIN\tA\t151.101.193.229\n\n;; Query time: 99 msec\n;; SERVER: 8.8.8.8#53(8.8.8.8)\n;; WHEN: Fri Jul 14 18:31:01 UTC 2023\n;; MSG SIZE  rcvd: 156\n",
+                "answers": [
+                  { "name": "cdn.jsdelivr.net.", "type": "CNAME", "ttl": 180, "class": "IN", "value": "jsdelivr.map.fastly.net." },
+                  { "name": "jsdelivr.map.fastly.net.", "type": "A", "ttl": 23, "class": "IN", "value": "151.101.1.229" },
+                  { "name": "jsdelivr.map.fastly.net.", "type": "A", "ttl": 23, "class": "IN", "value": "151.101.65.229" },
+                  { "name": "jsdelivr.map.fastly.net.", "type": "A", "ttl": 23, "class": "IN", "value": "151.101.129.229" },
+                  { "name": "jsdelivr.map.fastly.net.", "type": "A", "ttl": 23, "class": "IN", "value": "151.101.193.229" }
+                ],
+                "timings": { "total": 99 },
+                "resolver": "8.8.8.8"
+              }
+            }
+          ]
+        }
+    getTraceDnsMeasurementResponse:
+      summary: 'type: dns + trace'
+      value:
+        {
+          "id": "xgaym4ha2736BCPe",
+          "type": "dns",
+          "status": "finished",
+          "createdAt": "2023-07-14T18:32:52.259Z",
+          "updatedAt": "2023-07-14T18:32:54.312Z",
+          "target": "cdn.jsdelivr.net",
+          "probesCount": 1,
+          "measurementOptions": {
+            "trace": true
+          },
+          "results": [
+            {
+              "probe": {
+                "continent": "OC",
+                "region": "Australia and New Zealand",
+                "country": "AU",
+                "state": null,
+                "city": "Melbourne",
+                "asn": 20473,
+                "longitude": 144.96332,
+                "latitude": -37.814,
+                "network": "Choopa, LLC",
+                "tags": [ ],
+                "resolvers": [
+                  "108.61.10.10"
+                ]
+              },
+              "result": {
+                "status": "finished",
+                "rawOutput": "\n; <<>> DiG 9.16.37-Debian <<>> -t A cdn.jsdelivr.net -p 53 -4 +timeout=3 +tries=2 +nocookie +nsid +trace\n;; global options: +cmd\n.\t\t\t59490\tIN\tNS\ta.root-servers.net.\n.\t\t\t59490\tIN\tNS\tb.root-servers.net.\n.\t\t\t59490\tIN\tNS\ti.root-servers.net.\n.\t\t\t59490\tIN\tNS\tm.root-servers.net.\n.\t\t\t59490\tIN\tNS\th.root-servers.net.\n.\t\t\t59490\tIN\tNS\tc.root-servers.net.\n.\t\t\t59490\tIN\tNS\tk.root-servers.net.\n.\t\t\t59490\tIN\tNS\tf.root-servers.net.\n.\t\t\t59490\tIN\tNS\tg.root-servers.net.\n.\t\t\t59490\tIN\tNS\tj.root-servers.net.\n.\t\t\t59490\tIN\tNS\te.root-servers.net.\n.\t\t\t59490\tIN\tNS\tl.root-servers.net.\n.\t\t\t59490\tIN\tNS\td.root-servers.net.\n.\t\t\t59490\tIN\tRRSIG\tNS 8 0 518400 20230727050000 20230714040000 11019 . pU6YT+mpbxCmYTvPIpmujeuOZGvCxDVtJ/uaHdwosmjsnZWcvZgQvHJl Li0gl3HcpSSYTGAmMsi27yvGYh0Vm+7gtcuZMTTcsCZmZnz6bv+OAapD ZDqhnWfKmp5tj4ew5tibSXVCDFPmjX0Tt01ly4e5Z+xn5K+AyQqtAIHO oB2weZ/K9sqUMqXgYZZVXjjkNkhO7FE8CtUNi3ZDOVkKvSIHeT1LLFOw AvCDCtnL9rqka9xb0ZoKZCf8Q3JicirNnRGNjA/9Rn3XenyYwuI0K8f3 xrIhDg7CdKRvgL8C9oLfCMvtr1HuMfQbNQq4MYrsv17eWfE45ccyLRLY CIqSfQ==\n;; Received 525 bytes from 108.61.10.10#53(108.61.10.10) in 1 ms\n\nnet.\t\t\t172800\tIN\tNS\ta.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tb.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tc.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\td.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\te.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tf.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tg.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\th.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\ti.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tj.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tk.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tl.gtld-servers.net.\nnet.\t\t\t172800\tIN\tNS\tm.gtld-servers.net.\nnet.\t\t\t86400\tIN\tDS\t35886 8 2 7862B27F5F516EBE19680444D4CE5E762981931842C465F00236401D 8BD973EE\nnet.\t\t\t86400\tIN\tRRSIG\tDS 8 1 86400 20230727170000 20230714160000 11019 . vdkTxdYXe7XI50EjlQeDlO0zqKWElUR64o8SHfgB3+Kki58EkAB7heQY PplYxcxZ8U0eVEwVyqAd2Nhph9ra5V/jRWDRSbSwml0D9H2a5oUTfeun HRyy9VhojElZ8HShYZFDtgbzp5X1WbV96CmHP4YqCDnwVpHsvzG15mVM eswavjwHiSyxKpW9plE4qD2Ch4gzX3Ja/SriIWvhNp7ghh+n8uZf7owU BhGWrHDwIydv5tRXtDrJ3ae0fBaMucUIxWqSLAsTx+6aYcjfh+MhMZVg xkvIOCSiTWo/pUrjEx1nd2hXJHZX3jfkrYt5tkOwDT5YL75kHKPsE+V/ zTB3Jg==\n;; Received 1203 bytes from 198.97.190.53#53(h.root-servers.net) in 258 ms\n\njsdelivr.net.\t\t172800\tIN\tNS\tdns1.p01.nsone.net.\njsdelivr.net.\t\t172800\tIN\tNS\tns1.gcorelabs.net.\njsdelivr.net.\t\t172800\tIN\tNS\tns2.gcdn.services.\nA1RT98BS5QGC9NFI51S9HCI47ULJG6JH.net. 86400 IN NSEC3 1 1 0 - A1RTLNPGULOGN7B9A62SHJE1U3TTP8DR NS SOA RRSIG DNSKEY NSEC3PARAM\nA1RT98BS5QGC9NFI51S9HCI47ULJG6JH.net. 86400 IN RRSIG NSEC3 8 2 86400 20230721064011 20230714053011 27554 net. sTPenGEoqRbNRlbCqO1wBUuSLViplkAUYileU6k5aqSx5GcWmFcASmwX xxXcU4Ck2el9/p5UTMA/IN8s6FliHkyhHMban0w8yTAgllMB44BJfyKw J7d3gQGMSpEi7dJHYEW9epunLB0qIb3GjFvNANouw4qnnDJMBPo3y8gn U+tr2cLBz5cce4KitJVl+smFdSkIEDTeU1tdHieXAEL3zA==\nGBMIV90GKKAHN7P6PL113RFI1O4TFNCK.net. 86400 IN NSEC3 1 1 0 - GBMJLF8O7TPSKBNV9CGB4OIIK74L9AVN NS DS RRSIG\nGBMIV90GKKAHN7P6PL113RFI1O4TFNCK.net. 86400 IN RRSIG NSEC3 8 2 86400 20230719063901 20230712052901 27554 net. n1r0f+ShvkocU0OSXs1SO2GOc0X8Li1qwZSApLja76RyS7TkEoPtwmUr cJ/Z3TAqLNuHKUOGBcVHl2XPoWe5f4GO+Dnw59ym2V5lCHUQu6P0V7g2 1+99KT4x879xVbh6K5liRlHNdJyCsQiI17pnmhfSLVEn3vxumA7e68pu o12GX4W3XIv3wtcQ7P2I2aYqXbT6sP4AKWV7GlY4qtHMiw==\n;; Received 783 bytes from 192.31.80.30#53(d.gtld-servers.net) in 231 ms\n\ncdn.jsdelivr.net.\t180\tIN\tCNAME\tjsdelivr.map.fastly.net.\n;; Received 130 bytes from 92.223.100.53#53(ns1.gcorelabs.net) in 0 ms\n",
+                "hops": [
+                  {
+                    "answers": [
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "a.root-servers.net." },
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "b.root-servers.net." },
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "i.root-servers.net." },
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "m.root-servers.net." },
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "h.root-servers.net." },
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "c.root-servers.net." },
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "k.root-servers.net." },
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "f.root-servers.net." },
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "g.root-servers.net." },
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "j.root-servers.net." },
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "e.root-servers.net." },
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "l.root-servers.net." },
+                      { "name": ".", "type": "NS", "ttl": 59490, "class": "IN", "value": "d.root-servers.net." },
+                      { "name": ".", "type": "RRSIG", "ttl": 59490, "class": "IN", "value": "CIqSfQ=="} ],
+                    "timings": {
+                      "total": 1
+                    },
+                    "resolver": "108.61.10.10"
+                  },
+                  {
+                    "answers": [
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "a.gtld-servers.net." },
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "b.gtld-servers.net." },
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "c.gtld-servers.net." },
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "d.gtld-servers.net." },
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "e.gtld-servers.net." },
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "f.gtld-servers.net." },
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "g.gtld-servers.net." },
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "h.gtld-servers.net." },
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "i.gtld-servers.net." },
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "j.gtld-servers.net." },
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "k.gtld-servers.net." },
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "l.gtld-servers.net." },
+                      { "name": "net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "m.gtld-servers.net." },
+                      { "name": "net.", "type": "DS", "ttl": 86400, "class": "IN", "value": "8BD973EE" },
+                      { "name": "net.", "type": "RRSIG", "ttl": 86400, "class": "IN", "value": "zTB3Jg== "}
+                    ],
+                    "timings": {
+                      "total": 258
+                    },
+                    "resolver": "h.root-servers.net"
+                  },
+                  {
+                    "answers": [
+                      { "name": "jsdelivr.net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "dns1.p01.nsone.net." },
+                      { "name": "jsdelivr.net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "ns1.gcorelabs.net." },
+                      { "name": "jsdelivr.net.", "type": "NS", "ttl": 172800, "class": "IN", "value": "ns2.gcdn.services." },
+                      { "name": "A1RT98BS5QGC9NFI51S9HCI47ULJG6JH.net.", "type": "NSEC3", "ttl": 86400, "class": "IN", "value": "NSEC3PARAM" },
+                      { "name": "A1RT98BS5QGC9NFI51S9HCI47ULJG6JH.net.", "type": "RRSIG", "ttl": 86400, "class": "IN", "value": "U+tr2cLBz5cce4KitJVl+smFdSkIEDTeU1tdHieXAEL3zA==" },
+                      { "name": "GBMIV90GKKAHN7P6PL113RFI1O4TFNCK.net.", "type": "NSEC3", "ttl": 86400, "class": "IN", "value": "RRSIG" },
+                      { "name": "GBMIV90GKKAHN7P6PL113RFI1O4TFNCK.net.", "type": "RRSIG", "ttl": 86400, "class": "IN", "value": "o12GX4W3XIv3wtcQ7P2I2aYqXbT6sP4AKWV7GlY4qtHMiw== "}
+                    ],
+                    "timings": {
+                      "total": 231
+                    },
+                    "resolver": "d.gtld-servers.net"
+                  },
+                  {
+                    "answers": [
+                      { "name": "cdn.jsdelivr.net.", "type": "CNAME", "ttl": 180, "class": "IN", "value": "jsdelivr.map.fastly.net." }
+                    ],
+                    "timings": {
+                      "total": 0
+                    },
+                    "resolver": "ns1.gcorelabs.net"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+    getMtrMeasurementResponse:
+      summary: 'type: mtr'
+      value:
+        {
+          "id": "1aJyGDZkWVGuXLYL",
+          "type": "mtr",
+          "status": "finished",
+          "createdAt": "2023-07-14T18:33:15.039Z",
+          "updatedAt": "2023-07-14T18:33:19.886Z",
+          "target": "cdn.jsdelivr.net",
+          "probesCount": 1,
+          "measurementOptions": {
+            "packets": 2
+          },
+          "results": [
+            {
+              "probe": {
+                "continent": "AF",
+                "region": "Southern Africa",
+                "country": "ZA",
+                "state": null,
+                "city": "Johannesburg",
+                "asn": 199524,
+                "longitude": 28.04355,
+                "latitude": -26.20225,
+                "network": "G-Core Labs S.A.",
+                "tags": [ ],
+                "resolvers": [
+                  "private"
+                ]
+              },
+              "result": {
+                "status": "finished",
+                "rawOutput": "Host                                                                Loss% Drop Rcv   Avg  StDev  Javg \n1. AS199524 _gateway (94.156.93.1)                                   0.0%    0   2   0.5    0.2   0.4\n2. AS199524 5.188.133.2 (5.188.133.2)                                0.0%    0   2   0.3    0.1   0.1\n3. AS???    10.255.31.184 (10.255.31.184)                            0.0%    0   2   0.4    0.1   0.1\n4. AS174    206.249.1.209 (206.249.1.209)                            0.0%    0   2   1.1    0.2   0.4\n5. AS174    be2385.ccr21.lon01.atlas.cogentco.com (154.54.40.93)     0.0%    0   2 177.0    0.0   0.0\n6. AS174    149.6.2.38 (149.6.2.38)                                  0.0%    0   2 176.4    0.0   0.1\n7. AS54113  151.101.1.229 (151.101.1.229)                            0.0%    0   2 178.3    0.1   0.1\n",
+                "resolvedAddress": "151.101.1.229",
+                "resolvedHostname": "151.101.1.229",
+                "hops": [
+                  {
+                    "stats": { "min": 176.348, "max": 176.416, "avg": 176.4, "total": 2, "loss": 0, "rcv": 2, "drop": 0, "stDev": 0, "jMin": 0.1, "jMax": 0.1, "jAvg": 0.1 },
+                    "asn": [ 174 ],
+                    "timings": [
+                      { "rtt": 176.348 },
+                      { "rtt": 176.416 }
+                    ],
+                    "resolvedAddress": "149.6.2.38",
+                    "resolvedHostname": "149.6.2.38"
+                  },
+                  {
+                    "stats": { "min": 178.287, "max": 178.403, "avg": 178.3, "total": 2, "loss": 0, "rcv": 2, "drop": 0, "stDev": 0.1, "jMin": 0.1, "jMax": 0.1, "jAvg": 0.1 },
+                    "asn": [ 54113 ],
+                    "timings": [
+                      { "rtt": 178.403 },
+                      { "rtt": 178.287 }
+                    ],
+                    "resolvedAddress": "151.101.1.229",
+                    "resolvedHostname": "151.101.1.229"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+    getHttpMeasurementResponse:
+      summary: 'type: http'
+      value:
+        {
+          "id": "9J2BCohDSuxoiaOD",
+          "type": "http",
+          "status": "finished",
+          "createdAt": "2023-07-14T18:34:05.161Z",
+          "updatedAt": "2023-07-14T18:34:06.310Z",
+          "target": "cdn.jsdelivr.net",
+          "probesCount": 1,
+          "measurementOptions": {
+            "request": {
+              "method": "GET",
+              "path": "/npm/jquery"
+            }
+          },
+          "results": [
+            {
+              "probe": {
+                "continent": "AS",
+                "region": "Eastern Asia",
+                "country": "KR",
+                "state": null,
+                "city": "Seoul",
+                "asn": 40676,
+                "longitude": 126.977207,
+                "latitude": 37.566309,
+                "network": "Psychz Networks",
+                "tags": [ ],
+                "resolvers": [
+                  "8.8.8.8",
+                  "8.8.4.4"
+                ]
+              },
+              "result": {
+                "status": "finished",
+                "resolvedAddress": "104.16.88.20",
+                "headers": {
+                  "date": "Fri, 14 Jul 2023 18:34:05 GMT",
+                  "content-type": "application/javascript; charset=utf-8",
+                  "transfer-encoding": "chunked",
+                  "connection": "close",
+                  "access-control-allow-origin": "*",
+                  "access-control-expose-headers": "*",
+                  "timing-allow-origin": "*",
+                  "cache-control": "public, max-age=604800, s-maxage=43200",
+                  "cross-origin-resource-policy": "cross-origin",
+                  "x-content-type-options": "nosniff",
+                  "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+                  "x-jsd-version": "3.7.0",
+                  "x-jsd-version-type": "version",
+                  "etag": "W/\"155a6-Wp7qw02G6S5WYOD0+HIE8e0Mj/Y\"",
+                  "x-served-by": "cache-fra-eddf8230065-FRA, cache-yyz4549-YYZ",
+                  "x-cache": "HIT, MISS",
+                  "vary": "Accept-Encoding",
+                  "alt-svc": "h3=\":443\"; ma=86400",
+                  "cf-cache-status": "HIT",
+                  "report-to": "{\"endpoints\":[{\"url\":\"https:\\/\\/a.nel.cloudflare.com\\/report\\/v3?s=jAS6bE6d4YvFOALu6Ejvo6BHcys8BXTVxTfBGQFf%2FvCGLTG7QIUpQUvyIag14NgmMeUcvzfaUJIwQVZ6qL4bl534ErmcTXKm9%2BZG3sRCD1hOLOD5SF4f%2BzD1IEYZze2eSt8%3D\"}],\"group\":\"cf-nel\",\"max_age\":604800}",
+                  "nel": "{\"success_fraction\":0.01,\"report_to\":\"cf-nel\",\"max_age\":604800}",
+                  "server": "cloudflare",
+                  "cf-ray": "7e6bdb9999778a57-NRT",
+                  "content-encoding": "br"
+                },
+                "rawHeaders": "Date: Fri, 14 Jul 2023 18:34:05 GMT\nContent-Type: application/javascript; charset=utf-8\nTransfer-Encoding: chunked\nConnection: close\nAccess-Control-Allow-Origin: *\nAccess-Control-Expose-Headers: *\nTiming-Allow-Origin: *\nCache-Control: public, max-age=604800, s-maxage=43200\nCross-Origin-Resource-Policy: cross-origin\nX-Content-Type-Options: nosniff\nStrict-Transport-Security: max-age=31536000; includeSubDomains; preload\nX-JSD-Version: 3.7.0\nX-JSD-Version-Type: version\nETag: W/\"155a6-Wp7qw02G6S5WYOD0+HIE8e0Mj/Y\"\nX-Served-By: cache-fra-eddf8230065-FRA, cache-yyz4549-YYZ\nX-Cache: HIT, MISS\nVary: Accept-Encoding\nalt-svc: h3=\":443\"; ma=86400\nCF-Cache-Status: HIT\nReport-To: {\"endpoints\":[{\"url\":\"https:\\/\\/a.nel.cloudflare.com\\/report\\/v3?s=jAS6bE6d4YvFOALu6Ejvo6BHcys8BXTVxTfBGQFf%2FvCGLTG7QIUpQUvyIag14NgmMeUcvzfaUJIwQVZ6qL4bl534ErmcTXKm9%2BZG3sRCD1hOLOD5SF4f%2BzD1IEYZze2eSt8%3D\"}],\"group\":\"cf-nel\",\"max_age\":604800}\nNEL: {\"success_fraction\":0.01,\"report_to\":\"cf-nel\",\"max_age\":604800}\nServer: cloudflare\nCF-RAY: 7e6bdb9999778a57-NRT\nContent-Encoding: br",
+                "rawBody": "/*! jQuery v3.7.0 | (c) OpenJS Foundation and other contributors | jquery.org/license */\n!function(e,t){\"use strict\";\"object\"==typeof module&&\"object\"==typeof module.exports?module.exports=e.document?t(e,!0):function(e){if(!e.document)throw new Error(\"jQuery requires a window with a document\");return t(e)}:t(e)}(\"undefined\"!=typeof window?window:this,function(ie,e){\"use strict\";var oe=[],r=Object.getPrototypeOf,ae=oe.slice,g=oe.flat?function(e){return oe.flat.call(e)}:function(e){return oe.concat.apply([],e)},s=oe.push,se=oe.indexOf,n={},i=n.toString,ue=n.hasOwnProperty,o=ue.toString,a=o.call(Object),le={},v=function(e){return\"function\"==typeof e&&\"number\"!=typeof e.nodeType&&\"function\"!=typeof e.item},y=function(e){return null!=e&&e===e.window},C=ie.document,u={type:!0,src:!0,nonce:!0,noModule:!0};function m(e,t,n){var r,i,o=(n=n||C).createElement(\"script\");if(o.text=e,t)for(r in u)(i=t[r]||t.getAttribute&&t.getAttribute(r))&&o.setAttribute(r,i);n.head.appendChild(o).parentNode.removeChild(o)}function x(e){return null==e?e+\"\":\"object\"==typeof e||\"function\"==typeof e?n[i.call(e)]||\"object\":typeof e}var t=\"3.7.0\",l=/HTML$/i,ce=function(e,t){return new ce.fn.init(e,t)};function c(e){var t=!!e&&\"length\"in e&&e.length,n=x(e);return!v(e)&&!y(e)&&(\"array\"===n||0===t||\"number\"==typeof t&&0<t&&t-1 in e)}function fe(e,t){return e.nodeName&&e.nodeName.toLowerCase()===t.toLowerCase()}ce.fn=ce.prototype={jquery:t,constructor:ce,length:0,toArray:function(){return ae.call(this)},get:function(e){return null==e?ae.call(this):e<0?this[e+this.length]:this[e]},pushStack:function(e){var t=ce.merge(this.constructor(),e);return t.prevObject=this,t},each:function(e){return ce.each(this,e)},map:function(n){return this.pushStack(ce.map(this,function(e,t){return n.call(e,t,e)}))},slice:function(){return this.pushStack(ae.apply(this,arguments))},first:function(){return this.eq(0)},last:function(){return this.eq(-1)},even:function(){return this.pushStack(ce.grep(this,function(e,t){return(t+1)%2}))},odd:function(){return this.pushStack(ce.grep(this,function(e,t){return t%2}))},eq:function(e){var t=this.length,n=+e+(e<0?t:0);return this.pushStack(0<=n&&n<t?[this[n]]:[])},end:function(){return this.prevObject||this.constructor()},push:s,sort:oe.sort,splice:oe.splice},ce.extend=ce.fn.extend=function(){var e,t,n,r,i,o,a=arguments[0]||{},s=1,u=arguments.length,l=!1;for(\"boolean\"==typeof a&&(l=a,a=arguments[s]||{},s++),\"object\"==typeof a||v(a)||(a={}),s===u&&(a=this,s--);s<u;s++)if(null!=(e=arguments[s]))for(t in e)r=e[t],\"__proto__\"!==t&&a!==r&&(l&&r&&(ce.isPlainObject(r)||(i=Array.isArray(r)))?(n=a[t],o=i&&!Array.isArray(n)?[]:i||ce.isPlainObject(n)?n:{},i=!1,a[t]=ce.extend(l,o,r)):void 0!==r&&(a[t]=r));return a},ce.extend({expando:\"jQuery\"+(t+Math.random()).replace(/\\D/g,\"\"),isReady:!0,error:function(e){throw new Error(e)},noop:function(){},isPlainObject:function(e){var t,n;return!(!e||\"[object Object]\"!==i.call(e))&&(!(t=r(e))||\"function\"==typeof(n=ue.call(t,\"constructor\")&&t.constructor)&&o.call(n)===a)},isEmptyObject:function(e){var t;for(t in e)return!1;return!0},globalEval:function(e,t,n){m(e,{nonce:t&&t.nonce},n)},each:function(e,t){var n,r=0;if(c(e)){for(n=e.length;r<n;r++)if(!1===t.call(e[r],r,e[r]))break}else for(r in e)if(!1===t.call(e[r],r,e[r]))break;return e},text:function(e){var t,n=\"\",r=0,i=e.nodeType;if(i){if(1===i||9===i||11===i)return e.textContent;if(3===i||4===i)return e.nodeValue}else while(t=e[r++])n+=ce.text(t);return n},makeArray:function(e,t){var n=t||[];return null!=e&&(c(Object(e))?ce.merge(n,\"string\"==typeof e?[e]:e):s.call(n,e)),n},inArray:function(e,t,n){return null==t?-1:se.call(t,e,n)},isXMLDoc:function(e){var t=e&&e.namespaceURI,n=e&&(e.ownerDocument||e).documentElement;return!l.test(t||n&&n.nodeName||\"HTML\")},merge:function(e,t){for(var n=+t.length,r=0,i=e.length;r<n;r++)e[i++]=t[r];return e.length=i,e},grep:function(e,t,n){for(var r=[],i=0,o=e.length,a=!n;i<o;i++)!t(e[i],i)!==a&&r.push(e[i]);return r},map:function(e,t,n){var r,i,o=0,a=[];if(c(e))for(r=e.length;o<r;o++)null!=(i=t(e[o],o,n))&&a.push(i);else for(o in e)null!=(i=t(e[o],o,n))&&a.push(i);return g(a)},guid:1,support:le}),\"function\"==typeof Symbol&&(ce.fn[Symbol.iterator]=oe[Symbol.iterator]),ce.each(\"Boolean Number String Function Array Date RegExp Object Error Symbol\".split(\" \"),function(e,t){n[\"[object \"+t+\"]\"]=t.toLowerCase()});var pe=oe.pop,de=oe.sort,he=oe.splice,ge=\"[\\\\x20\\\\t\\\\r\\\\n\\\\f]\",ve=new RegExp(\"^\"+ge+\"+|((?:^|[^\\\\\\\\])(?:\\\\\\\\.)*)\"+ge+\"+$\",\"g\");ce.contains=function(e,t){var n=t&&t.parentNode;return e===n||!(!n||1!==n.nodeType||!(e.contains?e.contains(n):e.compareDocumentPosition&&16&e.compareDocumentPosition(n)))};var f=/([\\0-\\x1f\\x7f]|^-?\\d)|^-$|[^\\x80-\\uFFFF\\w-]/g;function p(e,t){return t?\"\\0\"===e?\"\\ufffd\":e.slice(0,-1)+\"\\\\\"+e.charCodeAt(e.length-1).toString(16)+\" \":\"\\\\\"+e}ce.escapeSelector=function(e){return(e+\"\").replace(f,p)};var ye=C,me=s;!function(){var e,b,w,o,a,T,r,C,d,i,k=me,S=ce.expando,E=0,n=0,s=W(),c=W(),u=W(),h=W(),l=function(e,t){return e===t&&(a=!0),0},f=\"checked|selected|async|autofocus|autoplay|controls|defer|disabled|hidden|ismap|loop|multiple|open|readonly|required|scoped\",t=\"(?:\\\\\\\\[\\\\da-fA-F]{1,6}\"+ge+\"?|\\\\\\\\[^\\\\r\\\\n\\\\f]|[\\\\w-]|[^\\0-\\\\x7f])+\",p=\"\\\\[\"+ge+\"*(\"+t+\")(?:\"+ge+\"*([*^$|!~]?=)\"+ge+\"*(?:'((?:\\\\\\\\.|[^\\\\\\\\'])*)'|\\\"((?:\\\\\\\\.|[^\\\\\\\\\\\"])*)\\\"|(\"+t+\"))|)\"+ge+\"*\\\\]\",g=\":(\"+t+\")(?:\\\\((('((?:\\\\\\\\.|[^\\\\\\\\'])*)'|\\\"((?:\\\\\\\\.|[^\\\\\\\\\\\"])*)\\\")|((?:\\\\\\\\.|[^\\\\\\\\()[\\\\]]|\"+p+\")*)|.*)\\\\)|)\",v=new RegExp(ge+\"+\",\"g\"),y=new RegExp(\"^\"+ge+\"*,\"+ge+\"*\"),m=new RegExp(\"^\"+ge+\"*([>+~]|\"+ge+\")\"+ge+\"*\"),x=new RegExp(ge+\"|>\"),j=new RegExp(g),A=new RegExp(\"^\"+t+\"$\"),D={ID:new RegExp(\"^#(\"+t+\")\"),CLASS:new RegExp(\"^\\\\.(\"+t+\")\"),TAG:new RegExp(\"^(\"+t+\"|[*])\"),ATTR:new RegExp(\"^\"+p),PSEUDO:new RegExp(\"^\"+g),CHILD:new RegExp(\"^:(only|first|last|nth|nth-last)-(child|of-type)(?:\\\\(\"+ge+\"*(even|odd|(([+-]|)(\\\\d*)n|)\"+ge+\"*(?:([+-]|)\"+ge+\"*(\\\\d+)|))\"+ge+\"*\\\\)|)\",\"i\"),bool:new RegExp(\"^(?:\"+f+\")$\",\"i\"),needsContext:new RegExp(\"^\"+ge+\"*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\\\(\"+ge+\"*((?:-\\\\d)?\\\\d*)\"+ge+\"*\\\\)|)(?=[^-]|$)\",\"i\")},N=/^(?:input|select|textarea|button)$/i,q=/^h\\d$/i,L=/^(?:#([\\w-]+)|(\\w+)|\\.([\\w-]+))$/,H=/[+~]/,O=new RegExp(\"\\\\\\\\[\\\\da-fA-F]{1,6}\"+ge+\"?|\\\\\\\\([^\\\\r\\\\n\\\\f])\",\"g\"),P=function(e,t){var n=\"0x\"+e.slice(1)-65536;return t||(n<0?String.fromCharCode(n+65536):String.fromCharCode(n>>10|55296,1023&n|56320))},R=function(){V()},M=J(function(e){return!0===e.disabled&&fe(e,\"fieldset\")},{dir:\"parentNode\",next:\"legend\"});try{k.apply(oe=ae.call(ye.childNodes),ye.childNodes),oe[ye.childNodes.length].nodeType}catch(e){k={apply:function(e,t){me.apply(e,ae.call(t))},call:function(e){me.apply(e,ae.call(arguments,1))}}}function I(t,e,n,r){var i,o,a,s,u,l,c,f=e&&e.ownerDocument,p=e?e.nodeType:9;if(n=n||[],\"string\"!=typeof t||!t||1!==p&&9!==p&&11!==p)return n;if(!r&&(V(e),e=e||T,C)){if(11!==p&&(u=L.exec(t)))if(i=u[1]){if(9===p){if(!(a=e.getElementById(i)))return n;if(a.id===i)return k.call(n,a),n}else if(f&&(a=f.getElementById(i))&&I.contains(e,a)&&a.id===i)return k.call(n,a),n}else{if(u[2])return k.apply(n,e.getElementsByTagName(t)),n;if((i=u[3])&&e.getElementsByClassName)return k.apply(n,e.getElementsByClassName(i)),n}if(!(h[t+\" \"]||d&&d.test(t))){if(c=t,f=e,1===p&&(x.test(t)||m.test(t))){(f=H.test(t)&&z(e.parentNode)||e)==e&&le.scope||((s=e.getAttribute(\"id\"))?s=ce.escapeSelector(s):e.setAttribute(\"id\",s=S)),o=(l=Y(t)).length;while(o--)l[o]=(s?\"#\"+s:\":scope\")+\" \"+Q(l[o]);c=l.join(\",\")}try{return k.apply(n,f.querySelectorAll(c)),n}catch(e){h(t,!0)}finally{s===S&&e.removeAttribute(\"id\")}}}return re(t.replace(ve,\"$1\"),e,n,r)}function W(){var r=[];return function e(t,n){return r.push(t+\" \")>b.cacheLength&&delete e[r.shift()],e[t+\" \"]=n}}function F(e){return e[S]=!0,e}function $(e){var t=T.createElement(\"fieldset\");try{return!!e(t)}catch(e){return!1}finally{t.parentNode&&t.parentNode.removeChild(t),t=null}}function B(t){return function(e){return fe(e,\"input\")&&e.type===t}}function _(t){return function(e){return(fe(e,\"input\")||fe(e,\"button\"))&&e.type===t}}function X(t){return function(e){return\"form\"in e?e.parentNode&&!1===e.disabled?\"label\"in e?\"label\"in e.parentNode?e.parentNode.disabled===t:e.disabled===t:e.isDisabled===t||e.isDisabled!==!t&&M(e)===t:e.disabled===t:\"label\"in e&&e.disabled===t}}function U(a){return F(function(o){return o=+o,F(function(e,t){var n,r=a([],e.length,o),i=r.length;while(i--)e[n=r[i]]&&(e[n]=!(t[n]=e[n]))})})}function z(e){return e&&\"undefined\"!=typeof e.getElementsByTagName&&e}function V(e){var t,n=e?e.ownerDocument||e:ye;return n!=T&&9===n.nodeType&&n.documentElement&&(r=(T=n).documentElement,C=!ce.isXMLDoc(T),i=r.matches||r.webkitMatchesSelector||r.msMatchesSelector,ye!=T&&(t=T.defaultView)&&t.top!==t&&t.addEventListener(\"unload\",R),le.getById=$(function(e){return r.appendChild(e).id=ce.expando,!T.getElementsByName||!T.getElementsByName(ce.expando).length}),le.disconnectedMatch=$(function(e){return i.call(e,\"*\")}),le.scope=$(function(){return T.querySelectorAll(\":scope\")}),le.cssHas=$(function(){try{return T.querySelector(\":has(*,:jqfake)\"),!1}catch(e){return!0}}),le.getById?(b.filter.ID=function(e){var t=e.replace(O,P);return function(e){return e.getAttribute(\"id\")===t}},b.find.ID=function(e,t){if(\"undefined\"!=typeof t.getElementById&&C){var n=t.getElementById(e);return n?[n]:[]}}):(b.filter.ID=function(e){var n=e.replace(O,P);return function(e){var t=\"undefined\"!=typeof e.getAttributeNode&&e.getAttributeNode(\"id\");return t&&t.value===n}},b.find.ID=function(e,t){if(\"undefined\"!=typeof t.getElementById&&C){var n,r,i,o=t.getElementById(e);if(o){if((n=o.getAttributeNode(\"id\"))&&n.value===e)return[o];i=t.getElementsByName(e),r=0;while(o=i[r++])if((n=o.getAttributeNode(\"id\"))&&n.value===e)return[o]}return[]}}),b.find.TAG=function(e,t){return\"undefined\"!=typeof t.getElementsByTagName?t.getElementsByTagName(e):t.querySelectorAll(e)},b.find.CLASS=function(e,t){if(\"undefined\"!=typeof t.getElementsByClassName&&C)return t.getEl",
+                "rawOutput": "HTTP/1.1 200\nDate: Fri, 14 Jul 2023 18:34:05 GMT\nContent-Type: application/javascript; charset=utf-8\nTransfer-Encoding: chunked\nConnection: close\nAccess-Control-Allow-Origin: *\nAccess-Control-Expose-Headers: *\nTiming-Allow-Origin: *\nCache-Control: public, max-age=604800, s-maxage=43200\nCross-Origin-Resource-Policy: cross-origin\nX-Content-Type-Options: nosniff\nStrict-Transport-Security: max-age=31536000; includeSubDomains; preload\nX-JSD-Version: 3.7.0\nX-JSD-Version-Type: version\nETag: W/\"155a6-Wp7qw02G6S5WYOD0+HIE8e0Mj/Y\"\nX-Served-By: cache-fra-eddf8230065-FRA, cache-yyz4549-YYZ\nX-Cache: HIT, MISS\nVary: Accept-Encoding\nalt-svc: h3=\":443\"; ma=86400\nCF-Cache-Status: HIT\nReport-To: {\"endpoints\":[{\"url\":\"https:\\/\\/a.nel.cloudflare.com\\/report\\/v3?s=jAS6bE6d4YvFOALu6Ejvo6BHcys8BXTVxTfBGQFf%2FvCGLTG7QIUpQUvyIag14NgmMeUcvzfaUJIwQVZ6qL4bl534ErmcTXKm9%2BZG3sRCD1hOLOD5SF4f%2BzD1IEYZze2eSt8%3D\"}],\"group\":\"cf-nel\",\"max_age\":604800}\nNEL: {\"success_fraction\":0.01,\"report_to\":\"cf-nel\",\"max_age\":604800}\nServer: cloudflare\nCF-RAY: 7e6bdb9999778a57-NRT\nContent-Encoding: br\n\n/*! jQuery v3.7.0 | (c) OpenJS Foundation and other contributors | jquery.org/license */\n!function(e,t){\"use strict\";\"object\"==typeof module&&\"object\"==typeof module.exports?module.exports=e.document?t(e,!0):function(e){if(!e.document)throw new Error(\"jQuery requires a window with a document\");return t(e)}:t(e)}(\"undefined\"!=typeof window?window:this,function(ie,e){\"use strict\";var oe=[],r=Object.getPrototypeOf,ae=oe.slice,g=oe.flat?function(e){return oe.flat.call(e)}:function(e){return oe.concat.apply([],e)},s=oe.push,se=oe.indexOf,n={},i=n.toString,ue=n.hasOwnProperty,o=ue.toString,a=o.call(Object),le={},v=function(e){return\"function\"==typeof e&&\"number\"!=typeof e.nodeType&&\"function\"!=typeof e.item},y=function(e){return null!=e&&e===e.window},C=ie.document,u={type:!0,src:!0,nonce:!0,noModule:!0};function m(e,t,n){var r,i,o=(n=n||C).createElement(\"script\");if(o.text=e,t)for(r in u)(i=t[r]||t.getAttribute&&t.getAttribute(r))&&o.setAttribute(r,i);n.head.appendChild(o).parentNode.removeChild(o)}function x(e){return null==e?e+\"\":\"object\"==typeof e||\"function\"==typeof e?n[i.call(e)]||\"object\":typeof e}var t=\"3.7.0\",l=/HTML$/i,ce=function(e,t){return new ce.fn.init(e,t)};function c(e){var t=!!e&&\"length\"in e&&e.length,n=x(e);return!v(e)&&!y(e)&&(\"array\"===n||0===t||\"number\"==typeof t&&0<t&&t-1 in e)}function fe(e,t){return e.nodeName&&e.nodeName.toLowerCase()===t.toLowerCase()}ce.fn=ce.prototype={jquery:t,constructor:ce,length:0,toArray:function(){return ae.call(this)},get:function(e){return null==e?ae.call(this):e<0?this[e+this.length]:this[e]},pushStack:function(e){var t=ce.merge(this.constructor(),e);return t.prevObject=this,t},each:function(e){return ce.each(this,e)},map:function(n){return this.pushStack(ce.map(this,function(e,t){return n.call(e,t,e)}))},slice:function(){return this.pushStack(ae.apply(this,arguments))},first:function(){return this.eq(0)},last:function(){return this.eq(-1)},even:function(){return this.pushStack(ce.grep(this,function(e,t){return(t+1)%2}))},odd:function(){return this.pushStack(ce.grep(this,function(e,t){return t%2}))},eq:function(e){var t=this.length,n=+e+(e<0?t:0);return this.pushStack(0<=n&&n<t?[this[n]]:[])},end:function(){return this.prevObject||this.constructor()},push:s,sort:oe.sort,splice:oe.splice},ce.extend=ce.fn.extend=function(){var e,t,n,r,i,o,a=arguments[0]||{},s=1,u=arguments.length,l=!1;for(\"boolean\"==typeof a&&(l=a,a=arguments[s]||{},s++),\"object\"==typeof a||v(a)||(a={}),s===u&&(a=this,s--);s<u;s++)if(null!=(e=arguments[s]))for(t in e)r=e[t],\"__proto__\"!==t&&a!==r&&(l&&r&&(ce.isPlainObject(r)||(i=Array.isArray(r)))?(n=a[t],o=i&&!Array.isArray(n)?[]:i||ce.isPlainObject(n)?n:{},i=!1,a[t]=ce.extend(l,o,r)):void 0!==r&&(a[t]=r));return a},ce.extend({expando:\"jQuery\"+(t+Math.random()).replace(/\\D/g,\"\"),isReady:!0,error:function(e){throw new Error(e)},noop:function(){},isPlainObject:function(e){var t,n;return!(!e||\"[object Object]\"!==i.call(e))&&(!(t=r(e))||\"function\"==typeof(n=ue.call(t,\"constructor\")&&t.constructor)&&o.call(n)===a)},isEmptyObject:function(e){var t;for(t in e)return!1;return!0},globalEval:function(e,t,n){m(e,{nonce:t&&t.nonce},n)},each:function(e,t){var n,r=0;if(c(e)){for(n=e.length;r<n;r++)if(!1===t.call(e[r],r,e[r]))break}else for(r in e)if(!1===t.call(e[r],r,e[r]))break;return e},text:function(e){var t,n=\"\",r=0,i=e.nodeType;if(i){if(1===i||9===i||11===i)return e.textContent;if(3===i||4===i)return e.nodeValue}else while(t=e[r++])n+=ce.text(t);return n},makeArray:function(e,t){var n=t||[];return null!=e&&(c(Object(e))?ce.merge(n,\"string\"==typeof e?[e]:e):s.call(n,e)),n},inArray:function(e,t,n){return null==t?-1:se.call(t,e,n)},isXMLDoc:function(e){var t=e&&e.namespaceURI,n=e&&(e.ownerDocument||e).documentElement;return!l.test(t||n&&n.nodeName||\"HTML\")},merge:function(e,t){for(var n=+t.length,r=0,i=e.length;r<n;r++)e[i++]=t[r];return e.length=i,e},grep:function(e,t,n){for(var r=[],i=0,o=e.length,a=!n;i<o;i++)!t(e[i],i)!==a&&r.push(e[i]);return r},map:function(e,t,n){var r,i,o=0,a=[];if(c(e))for(r=e.length;o<r;o++)null!=(i=t(e[o],o,n))&&a.push(i);else for(o in e)null!=(i=t(e[o],o,n))&&a.push(i);return g(a)},guid:1,support:le}),\"function\"==typeof Symbol&&(ce.fn[Symbol.iterator]=oe[Symbol.iterator]),ce.each(\"Boolean Number String Function Array Date RegExp Object Error Symbol\".split(\" \"),function(e,t){n[\"[object \"+t+\"]\"]=t.toLowerCase()});var pe=oe.pop,de=oe.sort,he=oe.splice,ge=\"[\\\\x20\\\\t\\\\r\\\\n\\\\f]\",ve=new RegExp(\"^\"+ge+\"+|((?:^|[^\\\\\\\\])(?:\\\\\\\\.)*)\"+ge+\"+$\",\"g\");ce.contains=function(e,t){var n=t&&t.parentNode;return e===n||!(!n||1!==n.nodeType||!(e.contains?e.contains(n):e.compareDocumentPosition&&16&e.compareDocumentPosition(n)))};var f=/([\\0-\\x1f\\x7f]|^-?\\d)|^-$|[^\\x80-\\uFFFF\\w-]/g;function p(e,t){return t?\"\\0\"===e?\"\\ufffd\":e.slice(0,-1)+\"\\\\\"+e.charCodeAt(e.length-1).toString(16)+\" \":\"\\\\\"+e}ce.escapeSelector=function(e){return(e+\"\").replace(f,p)};var ye=C,me=s;!function(){var e,b,w,o,a,T,r,C,d,i,k=me,S=ce.expando,E=0,n=0,s=W(),c=W(),u=W(),h=W(),l=function(e,t){return e===t&&(a=!0),0},f=\"checked|selected|async|autofocus|autoplay|controls|defer|disabled|hidden|ismap|loop|multiple|open|readonly|required|scoped\",t=\"(?:\\\\\\\\[\\\\da-fA-F]{1,6}\"+ge+\"?|\\\\\\\\[^\\\\r\\\\n\\\\f]|[\\\\w-]|[^\\0-\\\\x7f])+\",p=\"\\\\[\"+ge+\"*(\"+t+\")(?:\"+ge+\"*([*^$|!~]?=)\"+ge+\"*(?:'((?:\\\\\\\\.|[^\\\\\\\\'])*)'|\\\"((?:\\\\\\\\.|[^\\\\\\\\\\\"])*)\\\"|(\"+t+\"))|)\"+ge+\"*\\\\]\",g=\":(\"+t+\")(?:\\\\((('((?:\\\\\\\\.|[^\\\\\\\\'])*)'|\\\"((?:\\\\\\\\.|[^\\\\\\\\\\\"])*)\\\")|((?:\\\\\\\\.|[^\\\\\\\\()[\\\\]]|\"+p+\")*)|.*)\\\\)|)\",v=new RegExp(ge+\"+\",\"g\"),y=new RegExp(\"^\"+ge+\"*,\"+ge+\"*\"),m=new RegExp(\"^\"+ge+\"*([>+~]|\"+ge+\")\"+ge+\"*\"),x=new RegExp(ge+\"|>\"),j=new RegExp(g),A=new RegExp(\"^\"+t+\"$\"),D={ID:new RegExp(\"^#(\"+t+\")\"),CLASS:new RegExp(\"^\\\\.(\"+t+\")\"),TAG:new RegExp(\"^(\"+t+\"|[*])\"),ATTR:new RegExp(\"^\"+p),PSEUDO:new RegExp(\"^\"+g),CHILD:new RegExp(\"^:(only|first|last|nth|nth-last)-(child|of-type)(?:\\\\(\"+ge+\"*(even|odd|(([+-]|)(\\\\d*)n|)\"+ge+\"*(?:([+-]|)\"+ge+\"*(\\\\d+)|))\"+ge+\"*\\\\)|)\",\"i\"),bool:new RegExp(\"^(?:\"+f+\")$\",\"i\"),needsContext:new RegExp(\"^\"+ge+\"*[>+~]|:(even|odd|eq|gt|lt|nth|first|last)(?:\\\\(\"+ge+\"*((?:-\\\\d)?\\\\d*)\"+ge+\"*\\\\)|)(?=[^-]|$)\",\"i\")},N=/^(?:input|select|textarea|button)$/i,q=/^h\\d$/i,L=/^(?:#([\\w-]+)|(\\w+)|\\.([\\w-]+))$/,H=/[+~]/,O=new RegExp(\"\\\\\\\\[\\\\da-fA-F]{1,6}\"+ge+\"?|\\\\\\\\([^\\\\r\\\\n\\\\f])\",\"g\"),P=function(e,t){var n=\"0x\"+e.slice(1)-65536;return t||(n<0?String.fromCharCode(n+65536):String.fromCharCode(n>>10|55296,1023&n|56320))},R=function(){V()},M=J(function(e){return!0===e.disabled&&fe(e,\"fieldset\")},{dir:\"parentNode\",next:\"legend\"});try{k.apply(oe=ae.call(ye.childNodes),ye.childNodes),oe[ye.childNodes.length].nodeType}catch(e){k={apply:function(e,t){me.apply(e,ae.call(t))},call:function(e){me.apply(e,ae.call(arguments,1))}}}function I(t,e,n,r){var i,o,a,s,u,l,c,f=e&&e.ownerDocument,p=e?e.nodeType:9;if(n=n||[],\"string\"!=typeof t||!t||1!==p&&9!==p&&11!==p)return n;if(!r&&(V(e),e=e||T,C)){if(11!==p&&(u=L.exec(t)))if(i=u[1]){if(9===p){if(!(a=e.getElementById(i)))return n;if(a.id===i)return k.call(n,a),n}else if(f&&(a=f.getElementById(i))&&I.contains(e,a)&&a.id===i)return k.call(n,a),n}else{if(u[2])return k.apply(n,e.getElementsByTagName(t)),n;if((i=u[3])&&e.getElementsByClassName)return k.apply(n,e.getElementsByClassName(i)),n}if(!(h[t+\" \"]||d&&d.test(t))){if(c=t,f=e,1===p&&(x.test(t)||m.test(t))){(f=H.test(t)&&z(e.parentNode)||e)==e&&le.scope||((s=e.getAttribute(\"id\"))?s=ce.escapeSelector(s):e.setAttribute(\"id\",s=S)),o=(l=Y(t)).length;while(o--)l[o]=(s?\"#\"+s:\":scope\")+\" \"+Q(l[o]);c=l.join(\",\")}try{return k.apply(n,f.querySelectorAll(c)),n}catch(e){h(t,!0)}finally{s===S&&e.removeAttribute(\"id\")}}}return re(t.replace(ve,\"$1\"),e,n,r)}function W(){var r=[];return function e(t,n){return r.push(t+\" \")>b.cacheLength&&delete e[r.shift()],e[t+\" \"]=n}}function F(e){return e[S]=!0,e}function $(e){var t=T.createElement(\"fieldset\");try{return!!e(t)}catch(e){return!1}finally{t.parentNode&&t.parentNode.removeChild(t),t=null}}function B(t){return function(e){return fe(e,\"input\")&&e.type===t}}function _(t){return function(e){return(fe(e,\"input\")||fe(e,\"button\"))&&e.type===t}}function X(t){return function(e){return\"form\"in e?e.parentNode&&!1===e.disabled?\"label\"in e?\"label\"in e.parentNode?e.parentNode.disabled===t:e.disabled===t:e.isDisabled===t||e.isDisabled!==!t&&M(e)===t:e.disabled===t:\"label\"in e&&e.disabled===t}}function U(a){return F(function(o){return o=+o,F(function(e,t){var n,r=a([],e.length,o),i=r.length;while(i--)e[n=r[i]]&&(e[n]=!(t[n]=e[n]))})})}function z(e){return e&&\"undefined\"!=typeof e.getElementsByTagName&&e}function V(e){var t,n=e?e.ownerDocument||e:ye;return n!=T&&9===n.nodeType&&n.documentElement&&(r=(T=n).documentElement,C=!ce.isXMLDoc(T),i=r.matches||r.webkitMatchesSelector||r.msMatchesSelector,ye!=T&&(t=T.defaultView)&&t.top!==t&&t.addEventListener(\"unload\",R),le.getById=$(function(e){return r.appendChild(e).id=ce.expando,!T.getElementsByName||!T.getElementsByName(ce.expando).length}),le.disconnectedMatch=$(function(e){return i.call(e,\"*\")}),le.scope=$(function(){return T.querySelectorAll(\":scope\")}),le.cssHas=$(function(){try{return T.querySelector(\":has(*,:jqfake)\"),!1}catch(e){return!0}}),le.getById?(b.filter.ID=function(e){var t=e.replace(O,P);return function(e){return e.getAttribute(\"id\")===t}},b.find.ID=function(e,t){if(\"undefined\"!=typeof t.getElementById&&C){var n=t.getElementById(e);return n?[n]:[]}}):(b.filter.ID=function(e){var n=e.replace(O,P);return function(e){var t=\"undefined\"!=typeof e.getAttributeNode&&e.getAttributeNode(\"id\");return t&&t.value===n}},b.find.ID=function(e,t){if(\"undefined\"!=typeof t.getElementById&&C){var n,r,i,o=t.getElementById(e);if(o){if((n=o.getAttributeNode(\"id\"))&&n.value===e)return[o];i=t.getElementsByName(e),r=0;while(o=i[r++])if((n=o.getAttributeNode(\"id\"))&&n.value===e)return[o]}return[]}}),b.find.TAG=function(e,t){return\"undefined\"!=typeof t.getElementsByTagName?t.getElementsByTagName(e):t.querySelectorAll(e)},b.find.CLASS=function(e,t){if(\"undefined\"!=typeof t.getElementsByClassName&&C)return t.getEl",
+                "statusCode": 200,
+                "statusCodeName": "OK",
+                "timings": { "total": 325, "download": 1, "firstByte": 219, "dns": 37, "tls": 36, "tcp": 32 },
+                "tls": {
+                  "authorized": true,
+                  "createdAt": "2023-05-02T00:00:00.000Z",
+                  "expiresAt": "2024-05-01T23:59:59.000Z",
+                  "issuer": {
+                    "C": "US",
+                    "O": "Cloudflare, Inc.",
+                    "CN": "Cloudflare Inc ECC CA-3"
+                  },
+                  "subject": {
+                    "C": "US",
+                    "ST": "California",
+                    "L": "San Francisco",
+                    "O": "Cloudflare, Inc.",
+                    "CN": "sni.cloudflaressl.com",
+                    "alt": "DNS:cdn.jsdelivr.net, DNS:sni.cloudflaressl.com"
+                  }
+                }
+              }
+            }
+          ]
+        }
+  responses:
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - error
+            properties:
+              error:
+                type: object
+                required:
+                  - type
+                  - message
+                properties:
+                  type:
+                    type: string
+                  message:
+                    type: string
+                  params:
+                    type: object
+                    additionalProperties:
+                      type: string
+          examples:
+            json:
+              value:
+                error:
+                  type: validation_error
+                  message: Parameter validation failed.
+                  params:
+                    measurement: '\"measurement\" does not match any of the allowed types'
+    '404':
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - error
+            properties:
+              error:
+                type: object
+                required:
+                  - type
+                  - message
+                properties:
+                  type:
+                    type: string
+                  message:
+                    type: string
+          examples:
+            json:
+              value:
+                error:
+                  type: not_found
+                  message: Couldn't find the requested item.
+    measurements422:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - error
+            properties:
+              error:
+                type: object
+                required:
+                  - type
+                  - message
+                properties:
+                  type:
+                    type: string
+                  message:
+                    type: string
+          examples:
+            json:
+              value:
+                error:
+                  type: no_probes_found
+                  message: No suitable probes found.
+    measurements429:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - error
+            properties:
+              error:
+                type: object
+                required:
+                  - type
+                  - message
+                properties:
+                  type:
+                    type: string
+                  message:
+                    type: string
+          examples:
+            json:
+              value:
+                error:
+                  type: rate_limit_exceeded
+                  message: API rate limit exceeded.
+    measurements202:
+      description: Accepted
+      headers:
+        Location:
+          $ref: '#/components/headers/MeasurementLocation'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/RateLimitLimit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/RateLimitRemaining'
+        X-RateLimit-Reset:
+          $ref: '#/components/headers/RateLimitReset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateMeasurementResponse'
+          examples:
+            '0':
+              $ref: '#/components/examples/createMeasurementResponse'
+    measurement200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/MeasurementOptionsConditions'
+              - $ref: '#/components/schemas/MeasurementResultsConditions'
+              - $ref: '#/components/schemas/MeasurementResponse'
+          examples:
+            pingMeasurement:
+              $ref: '#/components/examples/getPingMeasurementResponse'
+            tracerouteMeasurement:
+              $ref: '#/components/examples/getTracerouteMeasurementResponse'
+            simpleDnsMeasurement:
+              $ref: '#/components/examples/getSimpleDnsMeasurementResponse'
+            traceDnsMeasurement:
+              $ref: '#/components/examples/getTraceDnsMeasurementResponse'
+            mtrMeasurement:
+              $ref: '#/components/examples/getMtrMeasurementResponse'
+            httpMeasurement:
+              $ref: '#/components/examples/getHttpMeasurementResponse'
+    probes200:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Probes'
+          examples:
+            '0':
+              $ref: '#/components/examples/probes'

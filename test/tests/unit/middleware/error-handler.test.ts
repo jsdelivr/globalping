@@ -20,7 +20,7 @@ describe('Error handler middleware', () => {
 		});
 
 		expect(ctx.status).to.equal(400);
-		expect(ctx.body).to.deep.equal({ error: { message: 'Bad Request', type: 'api_error' } });
+		expect(ctx.body).to.deep.equal({ error: { message: 'Bad Request.', type: 'api_error' } });
 	});
 
 	it('should handle custom errors', async () => {
@@ -30,6 +30,6 @@ describe('Error handler middleware', () => {
 		});
 
 		expect(ctx.status).to.equal(500);
-		expect(ctx.body).to.deep.equal({ error: { message: 'Internal Server Error', type: 'api_error' } });
+		expect(ctx.body).to.deep.equal({ error: { message: 'Internal Server Error.', type: 'api_error' } });
 	});
 });
