@@ -6,7 +6,7 @@ const throttle = <Value>(func: () => Promise<Value>, time: number) => {
 		ttl: time,
 		fetchMethod: func,
 	});
-	return () => cache.fetch('') as Promise<Value>;
+	return (options?: {forceRefresh: true}) => cache.fetch('', options) as Promise<Value>;
 };
 
 export default throttle;

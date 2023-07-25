@@ -10,7 +10,7 @@ export const verifyIpLimit = async (ip: string, socketId: string): Promise<void>
 		return;
 	}
 
-	const socketList = await fetchSockets();
+	const socketList = await fetchSockets({ forceRefresh: true });
 	const previousSocket = socketList.find(s => s.data.probe.ipAddress === ip && s.id !== socketId);
 
 	if (previousSocket) {
