@@ -19,7 +19,7 @@ const TIME_UNTIL_VM_BECOMES_HEALTHY = 8000;
 const logger = scopedLogger('ws-server');
 
 let io: WsServer;
-let throttledFetchSockets: () => Promise<RemoteSocket<DefaultEventsMap, SocketData>[]>;
+let throttledFetchSockets: (options?: {forceRefresh: true}) => Promise<RemoteSocket<DefaultEventsMap, SocketData>[]>;
 
 export const initWsServer = async () => {
 	const pubClient = getRedisClient().duplicate();
@@ -54,12 +54,12 @@ export const getWsServer = (): WsServer => {
 	return io;
 };
 
-export const fetchSockets = async () => {
+export const fetchSockets = async (options?: {forceRefresh: true}) => {
 	if (!io || !throttledFetchSockets) {
 		throw new Error('WS server not initialized yet');
 	}
 
-	const sockets = await throttledFetchSockets();
+	const sockets = await throttledFetchSockets(options);
 
 	return sockets;
 };
