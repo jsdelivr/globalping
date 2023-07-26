@@ -40,6 +40,8 @@ paths:
       operationId: createMeasurement
       description: |
         Creates a new measurement with the configured parameters.
+        The measurement runs asynchronously and its current state can be retrieved
+        at the URL returned in the `Location` header.
         
         ### Client guidelines
 
@@ -163,7 +165,7 @@ components:
         id:
           type: string
         probesCount:
-          type: integer
+          $ref: '#/components/schemas/MeasurementProbesCount'
     Latitude:
       type: number
     Longitude:
@@ -546,6 +548,9 @@ components:
             - HTTPS
             - HTTP2
           default: HTTPS
+    MeasurementProbesCount:
+      type: integer
+      description: The number of probes that performed the measurement. Smaller or equal to `limit`.
     MeasurementResolver:
       description: A DNS resolver to use for the query. Defaults to the probe's system resolver.
       anyOf:
@@ -651,8 +656,7 @@ components:
           format: date-time
           description: Time when the measurement was last updated.
         probesCount:
-          type: integer
-          description: The number of probes that performed the measurement. Smaller or equal to `limit`.
+          $ref: '#/components/schemas/MeasurementProbesCount'
         locations:
           allOf:
             - $ref: '#/components/schemas/MeasurementLocations'
