@@ -371,19 +371,16 @@ describe('geoip service', () => {
 				const result = await fastlyLookup(MOCK_IP);
 
 				expect(result).to.deep.equal({
-					location: {
-						continent: 'SA',
-						country: 'AR',
-						state: undefined,
-						city: '',
-						normalizedCity: '',
-						asn: 61005,
-						latitude: -34.005,
-						longitude: -58.005,
-						network: 'interbs s.r.l.',
-						normalizedNetwork: 'interbs s.r.l.',
-					},
-					client: undefined,
+					continent: 'SA',
+					country: 'AR',
+					state: undefined,
+					city: '',
+					normalizedCity: '',
+					asn: 61005,
+					latitude: -34.005,
+					longitude: -58.005,
+					network: 'interbs s.r.l.',
+					normalizedNetwork: 'interbs s.r.l.',
 				});
 			});
 
@@ -393,25 +390,22 @@ describe('geoip service', () => {
 				const result = await fastlyLookup(MOCK_IP);
 
 				expect(result).to.deep.equal({
-					location: {
-						continent: 'SA',
-						country: 'AR',
-						state: undefined,
-						city: '',
-						normalizedCity: '',
-						asn: 61005,
-						latitude: -34.005,
-						longitude: -58.005,
-						network: 'interbs s.r.l.',
-						normalizedNetwork: 'interbs s.r.l.',
-					},
-					client: undefined,
+					continent: 'SA',
+					country: 'AR',
+					state: undefined,
+					city: '',
+					normalizedCity: '',
+					asn: 61005,
+					latitude: -34.005,
+					longitude: -58.005,
+					network: 'interbs s.r.l.',
+					normalizedNetwork: 'interbs s.r.l.',
 				});
 			});
 		});
 	});
 
-	describe('limit vpn/tor connection', () => {
+	describe('limit vpn connection', () => {
 		it('should pass - non-vpn', async () => {
 			nockGeoIpProviders();
 
@@ -433,8 +427,8 @@ describe('geoip service', () => {
 			});
 		});
 
-		it('should pass - no client object', async () => {
-			nockGeoIpProviders({ fastly: 'noClient' });
+		it('should pass - no is_proxy field', async () => {
+			nockGeoIpProviders({ ip2location: 'noVpn' });
 
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP);
 
@@ -454,7 +448,7 @@ describe('geoip service', () => {
 			});
 		});
 
-		it('should pass - detect VPN (whitelisted)', async () => {
+		it('should pass - is_proxy field is true (whitelisted)', async () => {
 			const MOCK_IP = '5.134.119.43';
 
 			mockFs({
@@ -463,7 +457,7 @@ describe('geoip service', () => {
 				},
 			});
 
-			nockGeoIpProviders({ fastly: 'proxyDescVpn' });
+			nockGeoIpProviders({ ip2location: 'vpn' });
 
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP);
 
@@ -485,53 +479,8 @@ describe('geoip service', () => {
 			mockFs.restore();
 		});
 
-		it('should detect VPN (proxy_desc)', async () => {
-			nockGeoIpProviders({ fastly: 'proxyDescVpn' });
-
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
-
-			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.equal('vpn detected');
-		});
-
-		it('should detect TOR-EXIT (proxy_desc)', async () => {
-			nockGeoIpProviders({ fastly: 'proxyDescTor' });
-
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
-
-			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.equal('vpn detected');
-		});
-
-		it('should detect corporate (proxy_type)', async () => {
-			nockGeoIpProviders({ fastly: 'proxyTypeCorporate' });
-
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
-
-			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.equal('vpn detected');
-		});
-
-		it('should detect aol (proxy_type)', async () => {
-			nockGeoIpProviders({ fastly: 'proxyTypeAol' });
-
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
-
-			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.equal('vpn detected');
-		});
-
-		it('should detect anonymous (proxy_type)', async () => {
-			nockGeoIpProviders({ fastly: 'proxyTypeAnonymous' });
-
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
-
-			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.equal('vpn detected');
-		});
-
-		it('should detect blackberry (proxy_type)', async () => {
-			nockGeoIpProviders({ fastly: 'proxyTypeBlackberry' });
+		it('should reject - is_proxy field is true', async () => {
+			nockGeoIpProviders({ ip2location: 'vpn' });
 
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 

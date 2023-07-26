@@ -7,7 +7,8 @@
 			"latitude": 32.001,
 			"longitude": -96.001,
 			"asn": "20001",
-			"as": "The Constant Company LLC"
+			"as": "The Constant Company LLC",
+			"is_proxy": false
 		},
 		"argentina": {
 			"country_code": "AR",
@@ -16,7 +17,8 @@
 			"latitude": -34.001,
 			"longitude": -58.001,
 			"asn": "61001",
-			"as": "interbs s.r.l."
+			"as": "interbs s.r.l.",
+			"is_proxy": false
 		},
 		"newYork": {
 			"country_code": "US",
@@ -25,7 +27,8 @@
 			"latitude": 40.001,
 			"longitude": -74.001,
 			"asn": "80001",
-			"as": "The Constant Company LLC"
+			"as": "The Constant Company LLC",
+			"is_proxy": false
 		},
 		"emptyCity": {
 			"country_code": "US",
@@ -34,7 +37,8 @@
 			"latitude": 32.001,
 			"longitude": -96.001,
 			"asn": "20001",
-			"as": "The Constant Company LLC"
+			"as": "The Constant Company LLC",
+			"is_proxy": false
 		},
 		"emptyNetwork": {
 			"country_code": "US",
@@ -43,7 +47,27 @@
 			"latitude": 32.001,
 			"longitude": -96.001,
 			"asn": "",
-			"as": ""
+			"as": "",
+			"is_proxy": false
+		},
+		"vpn": {
+			"country_code": "US",
+			"region_name": "Texas",
+			"city_name": "Dallas",
+			"latitude": 32.001,
+			"longitude": -96.001,
+			"asn": "20001",
+			"as": "The Constant Company LLC",
+			"is_proxy": true
+		},
+		"noVpn": {
+			"country_code": "US",
+			"region_name": "Texas",
+			"city_name": "Dallas",
+			"latitude": 32.001,
+			"longitude": -96.001,
+			"asn": "20001",
+			"as": "The Constant Company LLC"
 		}
 	},
 	"ipmap": {
@@ -377,126 +401,6 @@
 				"latitude": -34.005,
 				"longitude": -58.005,
 				"region": "C"
-			}
-		},
-		"proxyDescVpn": {
-			"as": {
-				"name": "psychz networks",
-				"number": 20005
-			},
-			"geo-digitalelement": {
-				"city": "dallas",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.005,
-				"longitude": -96.005,
-				"region": "TX"
-			},
-			"client": {
-				"proxy_desc": "vpn",
-				"proxy_type": "unknown"
-			}
-		},
-		"proxyDescTor": {
-			"as": {
-				"name": "psychz networks",
-				"number": 20005
-			},
-			"geo-digitalelement": {
-				"city": "dallas",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.005,
-				"longitude": -96.005,
-				"region": "TX"
-			},
-			"client": {
-				"proxy_desc": "tor-exit",
-				"proxy_type": "corporate"
-			}
-		},
-		"proxyTypeCorporate": {
-			"as": {
-				"name": "psychz networks",
-				"number": 20005
-			},
-			"geo-digitalelement": {
-				"city": "dallas",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.005,
-				"longitude": -96.005,
-				"region": "TX"
-			},
-			"client": {
-				"proxy_desc": "",
-				"proxy_type": "corporate"
-			}
-		},
-		"proxyTypeAol": {
-			"as": {
-				"name": "psychz networks",
-				"number": 20005
-			},
-			"geo-digitalelement": {
-				"city": "dallas",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.005,
-				"longitude": -96.005,
-				"region": "TX"
-			},
-			"client": {
-				"proxy_desc": "",
-				"proxy_type": "aol"
-			}
-		},
-		"proxyTypeAnonymous": {
-			"as": {
-				"name": "psychz networks",
-				"number": 20005
-			},
-			"geo-digitalelement": {
-				"city": "dallas",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.005,
-				"longitude": -96.005,
-				"region": "TX"
-			},
-			"client": {
-				"proxy_desc": "",
-				"proxy_type": "anonymous"
-			}
-		},
-		"proxyTypeBlackberry": {
-			"as": {
-				"name": "psychz networks",
-				"number": 20005
-			},
-			"geo-digitalelement": {
-				"city": "dallas",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.005,
-				"longitude": -96.005,
-				"region": "TX"
-			},
-			"client": {
-				"proxy_desc": "",
-				"proxy_type": "blackberry"
 			}
 		}
 	}
