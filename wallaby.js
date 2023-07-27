@@ -6,11 +6,13 @@ export default function wallaby () {
 	return {
 		testFramework: 'mocha',
 		files: [
+			'public/v1/*',
 			'src/**/*.ts',
 			'src/**/*.cjs',
 			'config/*',
 			'test/utils/**/*.ts',
 			'test/mocks/**/*',
+			'test/plugins/**/*',
 			'test/setup.ts',
 			'test/types.ts',
 			'package.json',
@@ -22,6 +24,12 @@ export default function wallaby () {
 		tests: [
 			'test/tests/**/*.test.ts',
 		],
+
+		setup (w) {
+			const path = require('path');
+			w.testFramework.addFile(path.resolve(process.cwd(), 'test/setup.js'));
+		},
+
 		env: {
 			type: 'node',
 			params: {
