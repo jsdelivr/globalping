@@ -4,6 +4,9 @@ import * as sinon from 'sinon';
 import { validate } from '../../../../src/lib/http/middleware/validate.js';
 
 describe('Validate middleware', () => {
+	const documentation = 'link://';
+	const getDocsLink = () => documentation;
+
 	const schema = Joi.object({
 		hello: Joi.string().valid('world!').required(),
 	});
@@ -14,7 +17,7 @@ describe('Validate middleware', () => {
 	});
 
 	it('should call next', async () => {
-		const ctx: any = { request: { body: { hello: 'world!' } } };
+		const ctx: any = { request: { body: { hello: 'world!' } }, getDocsLink };
 		const next = sinon.stub();
 
 		await validate(schema)(ctx, next);
@@ -24,7 +27,7 @@ describe('Validate middleware', () => {
 	});
 
 	it('should return validation error', async () => {
-		const ctx: any = { request: { body: { hello: 'no one' } } };
+		const ctx: any = { request: { body: { hello: 'no one' } }, getDocsLink };
 
 		await validate(schema)(ctx, nextMock);
 
@@ -38,11 +41,14 @@ describe('Validate middleware', () => {
 				type: 'validation_error',
 				params: { hello: '"hello" must be [world!]' },
 			},
+			links: {
+				documentation,
+			},
 		});
 	});
 
 	it('should normalise incorrect input case', async () => {
-		const ctx: any = { request: { body: { input: 'text' } } };
+		const ctx: any = { request: { body: { input: 'text' } }, getDocsLink };
 
 		const schema = Joi.object({
 			input: Joi.string().valid('TEXT').insensitive().required(),

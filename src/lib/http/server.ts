@@ -9,6 +9,7 @@ import etag from 'koa-etag';
 import responseTime from 'koa-response-time';
 import koaFavicon from 'koa-favicon';
 import koaStatic from 'koa-static';
+import config from 'config';
 import cjsDependencies from '../../cjs-dependencies.cjs';
 import { registerGetProbesRoute } from '../../probe/route/get-probes.js';
 import { registerGetMeasurementRoute } from '../../measurement/route/get-measurement.js';
@@ -20,20 +21,23 @@ import { errorHandlerMw } from './middleware/error-handler.js';
 import { corsHandler } from './middleware/cors.js';
 import { isAdminMw } from './middleware/is-admin.js';
 import domainRedirect from './middleware/domain-redirect.js';
+import { docsLink } from './middleware/docs-link.js';
+import type { CustomContext } from '../../types.js';
 
 const app = new cjsDependencies.Koa();
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
+const docsHost = config.get<string>('server.docsHost');
 
 const rootRouter = new Router({ strict: true, sensitive: true });
 rootRouter.prefix('/');
 
 // GET /
-rootRouter.get('/', (ctx) => {
+rootRouter.get<object, CustomContext>('/', '/', (ctx) => {
 	ctx.status = 404;
 
 	ctx.body = {
 		links: {
-			documentation: 'https://github.com/jsdelivr/globalping/tree/master/docs',
+			documentation: ctx.getDocsLink(),
 		},
 	};
 });
@@ -62,6 +66,7 @@ app
 	.use(conditionalGet())
 	.use(etag({ weak: true }))
 	.use(json({ pretty: true, spaces: 2 }))
+	.use(docsLink({ docsHost }))
 	.use(defaultJson())
 	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 	.use(errorHandlerMw)

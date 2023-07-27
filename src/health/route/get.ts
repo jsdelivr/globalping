@@ -9,5 +9,5 @@ const handle = (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.
 };
 
 export const registerHealthRoute = (router: Router): void => {
-	router.get('/health', handle);
+	router.get('/health', '/health', handle);
 };
