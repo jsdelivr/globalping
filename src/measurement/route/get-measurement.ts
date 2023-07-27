@@ -24,5 +24,5 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 };
 
 export const registerGetMeasurementRoute = (router: Router): void => {
-	router.get('/measurements/:id([a-zA-Z0-9]+)', handle);
+	router.get('/measurements/:id', '/measurements/:id([a-zA-Z0-9]+)', handle);
 };

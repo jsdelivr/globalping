@@ -42,6 +42,9 @@ describe('Create measurement', () => {
 							message: 'No suitable probes found.',
 							type: 'no_probes_found',
 						},
+						links: {
+							documentation: 'https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements',
+						},
 					});
 
 					expect(response).to.matchApiSchema();
@@ -80,6 +83,9 @@ describe('Create measurement', () => {
 							message: 'No suitable probes found.',
 							type: 'no_probes_found',
 						},
+						links: {
+							documentation: 'https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements',
+						},
 					});
 
 					expect(response).to.matchApiSchema();
@@ -105,6 +111,9 @@ describe('Create measurement', () => {
 						error: {
 							message: 'No suitable probes found.',
 							type: 'no_probes_found',
+						},
+						links: {
+							documentation: 'https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements',
 						},
 					});
 
@@ -132,6 +141,9 @@ describe('Create measurement', () => {
 						error: {
 							message: 'No suitable probes found.',
 							type: 'no_probes_found',
+						},
+						links: {
+							documentation: 'https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements',
 						},
 					});
 
@@ -284,6 +296,9 @@ describe('Create measurement', () => {
 						error: {
 							message: 'No suitable probes found.',
 							type: 'no_probes_found',
+						},
+						links: {
+							documentation: 'https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements',
 						},
 					});
 
