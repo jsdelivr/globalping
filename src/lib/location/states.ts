@@ -10,7 +10,6 @@ export const states: Record<string, string> = {
 	'Delaware': 'DE',
 	'Washington, D.C.': 'DC',
 	'District of Columbia': 'DC',
-	'Federated States of Micronesia': 'FM',
 	'Florida': 'FL',
 	'Georgia': 'GA',
 	'Guam': 'GU',
