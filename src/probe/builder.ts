@@ -1,7 +1,7 @@
 import * as process from 'node:process';
 import _ from 'lodash';
 import type { Socket } from 'socket.io';
-import isIpPrivate from 'private-ip';
+import { isIpPrivate } from '../lib/private-ip.js';
 import semver from 'semver';
 import {
 	getStateNameByIso,
