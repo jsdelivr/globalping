@@ -29,8 +29,6 @@ type City = {
 
 const FILE_PATH = 'data/GEONAMES-CITIES.csv';
 
-let citiesMap: Map<string, City>;
-
 const query = async (url: string): Promise<Buffer> => {
 	const result = await got(url, {
 		responseType: 'buffer',
@@ -66,39 +64,33 @@ export const populateCitiesList = async () => {
 
 	// Save coordinates
 	await Promise.all(cities.map(async (city: City) => {
-		const { geonameId, population, latitude, longitude } = city;
+		const { countryCode, name, population, latitude, longitude } = city;
 
 		await redis.geoAdd('cities', [{
-			member: `${geonameId},${population}`,
+			member: `${countryCode},${name},${population}`,
 			latitude: parseFloat(latitude),
 			longitude: parseFloat(longitude),
 		}]);
 	}));
-
-	citiesMap = new Map(cities.map(city => ([ city.geonameId, city ])));
 };
 
-export const getApproximatedCity = async (latitude: number, longitude: number) => {
-	const redis = getRedisClient();
-	const keys = await redis.geoRadius('cities', { latitude, longitude }, 30, 'km');
-	const locations = keys.map((key) => {
-		const [ geonameId, population ] = key.split(',');
-		return {
-			geonameId: geonameId!,
-			population: parseInt(population!, 10),
-		};
-	});
-	const biggestLocation = _.maxBy(locations, 'population');
-
-	if (!biggestLocation) {
+export const getApproximatedCity = async (country?: string, latitude?: number, longitude?: number) => {
+	if (!country || !latitude || !longitude) {
 		return null;
 	}
 
-	const biggestCity = citiesMap.get(biggestLocation.geonameId);
+	const redis = getRedisClient();
+	const keys = await redis.geoSearch('cities', { latitude, longitude }, { radius: 30, unit: 'km' });
+	const cities = keys.map((key) => {
+		const [ countryCode, name, population ] = key.split(',') as [string, string, string];
+		return {
+			countryCode,
+			name,
+			population: parseInt(population, 10),
+		};
+	});
 
-	if (!biggestCity) {
-		throw new Error(`Unable to find geoname id: ${biggestLocation.geonameId}`);
-	}
-
-	return biggestCity;
+	const citiesInTheSameCountry = cities.filter(location => location.countryCode === country);
+	const biggestCity = _.maxBy(citiesInTheSameCountry, 'population');
+	return biggestCity?.name ?? null;
 };
