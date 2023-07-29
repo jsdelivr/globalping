@@ -29,7 +29,7 @@ export const isIpPrivate = (ip: string) => {
 	}
 
 	if (ipVersion === 6) {
-		return privateBlockList.check(ip, 'ipv6');
+		throw new Error('IPv6 not supported');
 	}
 
 	// Not a valid IP
