@@ -3,7 +3,7 @@ import got from 'got';
 import AdmZip from 'adm-zip';
 import csvParser from 'csv-parser';
 import _ from 'lodash';
-import { getRedisClient } from '../redis/client';
+import { getRedisClient, RedisClient } from '../redis/client';
 
 type City = {
 	geonameId: string
@@ -20,12 +20,14 @@ type City = {
 	admin2Code: string
 	admin3Code: string
 	admin4Code: string
-	population: string
+	population: number
 	elevation: string
 	dem: string
 	timezone: string
 	modificationDate: string
 }
+
+type CsvCityRow = City & { population: string };
 
 const FILE_PATH = 'data/GEONAMES-CITIES.csv';
 
@@ -44,30 +46,20 @@ export const updateGeonamesCitiesFile = async (): Promise<void> => {
 	zip.extractEntryTo('cities15000.txt', 'data', false, true, false, 'GEONAMES-CITIES.csv');
 };
 
-const getCities = () => new Promise((resolve, reject) => {
-	const cities: City[] = [];
-	fs.createReadStream(FILE_PATH)
-		.pipe(csvParser({
-			headers: [ 'geonameId', 'name', 'asciiName', 'alternateNames', 'latitude', 'longitude', 'featureClass', 'featureCode', 'countryCode', 'cc2', 'admin1Code', 'admin2Code', 'admin3Code', 'admin4Code', 'population', 'elevation', 'dem', 'timezone', 'modificationDate' ],
-			separator: '\t',
-		}))
-		.on('data', (city: City) => {
-			cities.push(city);
-		})
-		.on('end', () => resolve(cities))
-		.on('error', err => reject(err));
-});
+let redis: RedisClient;
+let geonamesCities: Map<string, City> = new Map();
 
 export const populateCitiesList = async () => {
-	const redis = getRedisClient();
-	const cities = await getCities() as City[];
+	redis = getRedisClient();
+	const cities = await readCitiesCsvFile() as CsvCityRow[];
 
-	// Save coordinates
+	geonamesCities = new Map(cities.map(city => ([ city.geonameId, { ...city, population: parseInt(city.population, 10) }])));
+
 	await Promise.all(cities.map(async (city: City) => {
-		const { countryCode, name, population, latitude, longitude } = city;
+		const { geonameId, latitude, longitude } = city;
 
-		await redis.geoAdd('cities', [{
-			member: `${countryCode},${name},${population}`,
+		await redis.geoAdd('gp:cities', [{
+			member: geonameId,
 			latitude: parseFloat(latitude),
 			longitude: parseFloat(longitude),
 		}]);
@@ -75,22 +67,39 @@ export const populateCitiesList = async () => {
 };
 
 export const getApproximatedCity = async (country?: string, latitude?: number, longitude?: number) => {
+	if (geonamesCities.size === 0 || !redis) {
+		throw new Error('City approximation is not initialized.');
+	}
+
 	if (!country || !latitude || !longitude) {
 		return null;
 	}
 
-	const redis = getRedisClient();
-	const keys = await redis.geoSearch('cities', { latitude, longitude }, { radius: 30, unit: 'km' });
-	const cities = keys.map((key) => {
-		const [ countryCode, name, population ] = key.split(',') as [string, string, string];
-		return {
-			countryCode,
-			name,
-			population: parseInt(population, 10),
-		};
-	});
+	const geonameIds = await redis.geoSearch('gp:cities', { latitude, longitude }, { radius: 30, unit: 'km' });
+	const cities: City[] = [];
 
-	const citiesInTheSameCountry = cities.filter(location => location.countryCode === country);
-	const biggestCity = _.maxBy(citiesInTheSameCountry, 'population');
+	for (const geonameId of geonameIds) {
+		const city = geonamesCities.get(geonameId);
+
+		if (city && city.countryCode === country) {
+			cities.push(city);
+		}
+	}
+
+	const biggestCity = _.maxBy(cities, 'population');
 	return biggestCity?.name ?? null;
 };
+
+const readCitiesCsvFile = () => new Promise((resolve, reject) => {
+	const cities: CsvCityRow[] = [];
+	fs.createReadStream(FILE_PATH)
+		.pipe(csvParser({
+			headers: [ 'geonameId', 'name', 'asciiName', 'alternateNames', 'latitude', 'longitude', 'featureClass', 'featureCode', 'countryCode', 'cc2', 'admin1Code', 'admin2Code', 'admin3Code', 'admin4Code', 'population', 'elevation', 'dem', 'timezone', 'modificationDate' ],
+			separator: '\t',
+		}))
+		.on('data', (city: CsvCityRow) => {
+			cities.push(city);
+		})
+		.on('end', () => resolve(cities))
+		.on('error', err => reject(err));
+});
