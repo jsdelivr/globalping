@@ -1,4 +1,5 @@
 import got from 'got';
+import { getApproximatedCity } from '../city-approximation.js';
 import type { LocationInfo } from '../client.js';
 import {
 	normalizeCityName,
@@ -32,14 +33,15 @@ export const fastlyLookup = async (addr: string): Promise<LocationInfo> => {
 	}).json<FastlyResponse>();
 
 	const data = result['geo-digitalelement'];
-	const city = data.city.replace(/^(private|reserved)/, '');
+
+	const approximatedCity = await getApproximatedCity(data.country_code, Number(data.latitude), Number(data.longitude));
 
 	return {
 		continent: data.continent_code,
 		country: data.country_code,
 		state: data.country_code === 'US' ? data.region : undefined,
-		city: normalizeCityNamePublic(city),
-		normalizedCity: normalizeCityName(city),
+		city: normalizeCityNamePublic(approximatedCity ?? ''),
+		normalizedCity: normalizeCityName(approximatedCity ?? ''),
 		asn: result.as.number,
 		latitude: data.latitude,
 		longitude: data.longitude,

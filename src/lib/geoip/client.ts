@@ -50,10 +50,10 @@ export default class GeoipClient {
 
 				// Providers here are pushed in a desc prioritized order
 				fulfilled.push(
-					ip2location.status === 'fulfilled' ? { ...ip2location.value.location, provider: 'ip2location' } : null,
-					ipmap.status === 'fulfilled' ? { ...ipmap.value, provider: 'ipmap' } : null,
-					maxmind.status === 'fulfilled' ? { ...maxmind.value, provider: 'maxmind' } : null,
 					ipinfo.status === 'fulfilled' ? { ...ipinfo.value, provider: 'ipinfo' } : null,
+					ip2location.status === 'fulfilled' ? { ...ip2location.value.location, provider: 'ip2location' } : null,
+					maxmind.status === 'fulfilled' ? { ...maxmind.value, provider: 'maxmind' } : null,
+					ipmap.status === 'fulfilled' ? { ...ipmap.value, provider: 'ipmap' } : null,
 					fastly.status === 'fulfilled' ? { ...fastly.value, provider: 'fastly' } : null,
 				);
 
