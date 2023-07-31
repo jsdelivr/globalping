@@ -4,6 +4,8 @@ import AdmZip from 'adm-zip';
 import csvParser from 'csv-parser';
 import _ from 'lodash';
 import { getRedisClient, RedisClient } from '../redis/client';
+import throttle from '../ws/helper/throttle';
+import { scopedLogger } from '../logger';
 
 type City = {
 	geonameId: string
@@ -28,6 +30,8 @@ type City = {
 }
 
 type CsvCityRow = City & { population: string };
+
+const logger = scopedLogger('city-approximation');
 
 const FILE_PATH = 'data/GEONAMES-CITIES.csv';
 
@@ -66,7 +70,20 @@ export const populateCitiesList = async () => {
 	}));
 };
 
+const throttledPopulateCitiesList = throttle(async () => {
+	logger.warn('Redis cities data is empty. Populating...');
+	await populateCitiesList();
+}, 1);
+
 export const getApproximatedCity = async (country?: string, latitude?: number, longitude?: number) => {
+	const numberOfCitiesInRedis = await redis.zCard('gp:cities');
+
+	// If redis db is cleared for some reason we need to re-initiate it
+	if (numberOfCitiesInRedis < 25000) {
+		// Using throttled version to prevent parallel executions of populateCitiesList
+		await throttledPopulateCitiesList();
+	}
+
 	if (geonamesCities.size === 0 || !redis) {
 		throw new Error('City approximation is not initialized.');
 	}
