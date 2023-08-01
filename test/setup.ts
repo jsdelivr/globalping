@@ -8,11 +8,11 @@ import {
 	populateIpList,
 	populateDomainList,
 	populateIpRangeList,
+	populateNockCitiesList,
 } from './utils/populate-static-files.js';
 
 import chaiOas from './plugins/oas/index.js';
 import { getRedisClient, initRedis } from '../src/lib/redis/client.js';
-import { populateCitiesList } from '../src/lib/geoip/city-approximation.js';
 
 before(async () => {
 	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../public/v1/spec.yaml') }));
@@ -26,5 +26,5 @@ before(async () => {
 	await populateDomainList();
 	await populateIpRangeList();
 	await populateMemList();
-	await populateCitiesList();
+	await populateNockCitiesList();
 });

@@ -33,6 +33,7 @@ type CsvCityRow = City & { population: string };
 
 const logger = scopedLogger('city-approximation');
 
+export const URL = 'https://download.geonames.org/export/dump/cities15000.zip';
 const FILENAME = 'GEONAMES_CITIES.csv';
 
 const query = async (url: string): Promise<Buffer> => {
@@ -45,7 +46,7 @@ const query = async (url: string): Promise<Buffer> => {
 };
 
 export const updateGeonamesCitiesFile = async (): Promise<void> => {
-	const response = await query('https://download.geonames.org/export/dump/cities15000.zip');
+	const response = await query(URL);
 	const zip = new AdmZip(response);
 	zip.extractEntryTo('cities15000.txt', 'data', false, true, false, FILENAME);
 };

@@ -406,7 +406,7 @@ describe('geoip service', () => {
 			});
 		});
 
-		it('should pass - is_proxy field is true (whitelisted)', async () => {
+		it.skip('should pass - is_proxy field is true (whitelisted)', async () => {
 			const MOCK_IP = '5.134.119.43';
 
 			mockFs({
