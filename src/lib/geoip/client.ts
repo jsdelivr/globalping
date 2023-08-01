@@ -39,13 +39,13 @@ export default class GeoipClient {
 	async lookup (addr: string): Promise<ProbeLocation> {
 		const results = await Promise
 			.allSettled([
-				this.lookupWithCache<Ip2LocationBundledResponse>(`geoip:ip2location:${addr}`, async () => ip2LocationLookup(addr)),
-				this.lookupWithCache<LocationInfo>(`geoip:ipmap:${addr}`, async () => ipmapLookup(addr)),
-				this.lookupWithCache<LocationInfo>(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
 				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
+				this.lookupWithCache<Ip2LocationBundledResponse>(`geoip:ip2location:${addr}`, async () => ip2LocationLookup(addr)),
+				this.lookupWithCache<LocationInfo>(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
+				this.lookupWithCache<LocationInfo>(`geoip:ipmap:${addr}`, async () => ipmapLookup(addr)),
 				this.lookupWithCache<LocationInfo>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
-			.then(([ ip2location, ipmap, maxmind, ipinfo, fastly ]) => {
+			.then(([ ipinfo, ip2location, maxmind, ipmap, fastly ]) => {
 				const fulfilled: (LocationInfoWithProvider | null)[] = [];
 
 				// Providers here are pushed in a desc prioritized order

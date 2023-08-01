@@ -10,7 +10,7 @@ data/DOMAIN_BLACKLIST.json
 data/IP_BLACKLIST.json
 data/AWS_IP_RANGES.json
 data/GCP_IP_RANGES.json
-data/GEONAMES-CITIES.csv
+data/GEONAMES_CITIES.csv
 .eslintcache
 probes-stats/known-result.csv
 probes-stats/known-result.json

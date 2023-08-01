@@ -104,11 +104,11 @@
 		"utf-8-validate": "^5.0.10"
 	},
 	"scripts": {
-		"build": "tsc && npm run download:jsons",
+		"build": "tsc && npm run download:files",
 		"coverage": "npm run clean && NODE_ENV=test FAKE_PROBE_IP=1 NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false c8 mocha",
 		"clean": "rimraf coverage",
-		"download:jsons": "tsx src/lib/download-jsons.ts",
-		"prepare": "npm run download:jsons; husky install || echo 'Failed to install husky'",
+		"download:files": "tsx src/lib/download-files.ts",
+		"prepare": "npm run download:files; husky install || echo 'Failed to install husky'",
 		"stats:known": "NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false tsx probes-stats/known.ts",
 		"stats:all": "NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false tsx probes-stats/all.ts",
 		"start": "NODE_ENV=production node --max_old_space_size=3584 --max-semi-space-size=128 --experimental-loader newrelic/esm-loader.mjs dist/index.js",

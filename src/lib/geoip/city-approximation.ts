@@ -33,7 +33,7 @@ type CsvCityRow = City & { population: string };
 
 const logger = scopedLogger('city-approximation');
 
-const FILE_PATH = 'data/GEONAMES-CITIES.csv';
+const FILENAME = 'GEONAMES_CITIES.csv';
 
 const query = async (url: string): Promise<Buffer> => {
 	const result = await got(url, {
@@ -47,7 +47,7 @@ const query = async (url: string): Promise<Buffer> => {
 export const updateGeonamesCitiesFile = async (): Promise<void> => {
 	const response = await query('https://download.geonames.org/export/dump/cities15000.zip');
 	const zip = new AdmZip(response);
-	zip.extractEntryTo('cities15000.txt', 'data', false, true, false, 'GEONAMES-CITIES.csv');
+	zip.extractEntryTo('cities15000.txt', 'data', false, true, false, FILENAME);
 };
 
 let redis: RedisClient;
@@ -104,12 +104,13 @@ export const getApproximatedCity = async (country?: string, latitude?: number, l
 	}
 
 	const biggestCity = _.maxBy(cities, 'population');
+
 	return biggestCity?.name ?? null;
 };
 
 const readCitiesCsvFile = () => new Promise((resolve, reject) => {
 	const cities: CsvCityRow[] = [];
-	fs.createReadStream(FILE_PATH)
+	fs.createReadStream(`data/${FILENAME}`)
 		.pipe(csvParser({
 			headers: [ 'geonameId', 'name', 'asciiName', 'alternateNames', 'latitude', 'longitude', 'featureClass', 'featureCode', 'countryCode', 'cc2', 'admin1Code', 'admin2Code', 'admin3Code', 'admin4Code', 'population', 'elevation', 'dem', 'timezone', 'modificationDate' ],
 			separator: '\t',

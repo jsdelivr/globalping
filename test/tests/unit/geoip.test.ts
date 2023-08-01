@@ -2,7 +2,6 @@ import nock from 'nock';
 import mockFs from 'mock-fs';
 import { expect } from 'chai';
 import type { LocationInfo } from '../../../src/lib/geoip/client.js';
-import { fastlyLookup } from '../../../src/lib/geoip/providers/fastly.js';
 import GeoipClient from '../../../src/lib/geoip/client.js';
 import NullCache from '../../../src/lib/cache/null-cache.js';
 import { populateMemList } from '../../../src/lib/geoip/whitelist.js';
@@ -21,6 +20,7 @@ describe('geoip service', () => {
 	});
 
 	afterEach(() => {
+		mockFs.restore();
 		nock.cleanAll();
 	});
 
@@ -54,9 +54,9 @@ describe('geoip service', () => {
 				region: 'Northern America',
 				normalizedRegion: 'northern america',
 				normalizedCity: 'dallas',
-				asn: 20001,
-				latitude: 32.001,
-				longitude: -96.001,
+				asn: 20004,
+				latitude: 32.7831,
+				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
 			});
@@ -64,7 +64,7 @@ describe('geoip service', () => {
 	});
 
 	it('should choose top prioritized provider from the winners majority', async () => {
-		nockGeoIpProviders({ ipmap: 'default', ip2location: 'default', maxmind: 'argentina', fastly: 'argentina', ipinfo: 'argentina' });
+		nockGeoIpProviders({ ipmap: 'argentina', ip2location: 'default', maxmind: 'argentina', fastly: 'argentina', ipinfo: 'default' });
 
 		const info = await client.lookup(MOCK_IP);
 
@@ -77,10 +77,10 @@ describe('geoip service', () => {
 			normalizedRegion: 'south america',
 			normalizedCity: 'buenos aires',
 			asn: 61003,
-			latitude: -34.003,
-			longitude: -58.003,
-			network: 'interbs s.r.l.',
-			normalizedNetwork: 'interbs s.r.l.',
+			latitude: -34.6131,
+			longitude: -58.3772,
+			network: 'InterBS S.R.L. (BAEHOST)',
+			normalizedNetwork: 'interbs s.r.l. (baehost)',
 		});
 	});
 
@@ -95,15 +95,15 @@ describe('geoip service', () => {
 
 		expect(info).to.deep.equal({
 			continent: 'SA',
-			country: 'BR',
+			country: 'AR',
 			state: undefined,
 			city: 'Buenos Aires',
 			region: 'South America',
 			normalizedRegion: 'south america',
 			normalizedCity: 'buenos aires',
 			asn: 61004,
-			latitude: -34.004,
-			longitude: -58.004,
+			latitude: -34.6131,
+			longitude: -58.3772,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
 		});
@@ -123,10 +123,10 @@ describe('geoip service', () => {
 			normalizedRegion: 'northern america',
 			normalizedCity: 'dallas',
 			asn: 20005,
-			latitude: 32.002,
-			longitude: -96.002,
-			network: 'psychz networks',
-			normalizedNetwork: 'psychz networks',
+			latitude: 32.7831,
+			longitude: -96.8067,
+			network: 'The Constant Company LLC',
+			normalizedNetwork: 'the constant company llc',
 		});
 	});
 
@@ -144,15 +144,15 @@ describe('geoip service', () => {
 			normalizedRegion: 'northern america',
 			normalizedCity: 'dallas',
 			asn: 20005,
-			latitude: 32.001,
-			longitude: -96.001,
-			network: 'psychz networks',
-			normalizedNetwork: 'psychz networks',
+			latitude: 32.7831,
+			longitude: -96.8067,
+			network: 'The Constant Company LLC',
+			normalizedNetwork: 'the constant company llc',
 		});
 	});
 
 	it('should choose top prioritized provider when there is a draw in returned results', async () => {
-		nockGeoIpProviders({ ipmap: 'argentina', ip2location: 'emptyCity', maxmind: 'newYork', ipinfo: 'argentina', fastly: 'newYork' });
+		nockGeoIpProviders({ ipmap: 'emptyCity', ip2location: 'newYork', maxmind: 'newYork', ipinfo: 'argentina', fastly: 'argentina' });
 
 		const info = await client.lookup(MOCK_IP);
 
@@ -165,8 +165,8 @@ describe('geoip service', () => {
 			normalizedRegion: 'south america',
 			normalizedCity: 'buenos aires',
 			asn: 61004,
-			latitude: -34.002,
-			longitude: -58.002,
+			latitude: -34.6131,
+			longitude: -58.3772,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
 		});
@@ -186,10 +186,10 @@ describe('geoip service', () => {
 			normalizedRegion: 'south america',
 			normalizedCity: 'buenos aires',
 			asn: 61001,
-			latitude: -34.001,
-			longitude: -58.001,
-			network: 'interbs s.r.l.',
-			normalizedNetwork: 'interbs s.r.l.',
+			latitude: -34.6131,
+			longitude: -58.3772,
+			network: 'InterBS S.R.L. (BAEHOST)',
+			normalizedNetwork: 'interbs s.r.l. (baehost)',
 		});
 	});
 
@@ -219,30 +219,30 @@ describe('geoip service', () => {
 			region: 'Northern America',
 			normalizedRegion: 'northern america',
 			normalizedCity: 'dallas',
-			asn: 20001,
-			latitude: 32.001,
-			longitude: -96.001,
+			asn: 20004,
+			latitude: 32.7831,
+			longitude: -96.8067,
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
 		});
 	});
 
 	it('should filter out incomplete results', async () => {
-		nockGeoIpProviders({ ipmap: 'emptyCity', ip2location: 'emptyCity', maxmind: 'emptyCity', fastly: 'emptyCity', ipinfo: 'argentina' });
+		nockGeoIpProviders({ ipmap: 'emptyCity', ip2location: 'emptyCity', maxmind: 'argentina', fastly: 'emptyCity', ipinfo: 'emptyCity' });
 
 		const info = await client.lookup(MOCK_IP);
 
 		expect(info).to.deep.equal({
 			continent: 'SA',
-			country: 'BR',
+			country: 'AR',
 			state: undefined,
 			city: 'Buenos Aires',
 			region: 'South America',
 			normalizedRegion: 'south america',
 			normalizedCity: 'buenos aires',
-			asn: 61004,
-			latitude: -34.004,
-			longitude: -58.004,
+			asn: 61003,
+			latitude: -34.6131,
+			longitude: -58.3772,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
 		});
@@ -261,16 +261,16 @@ describe('geoip service', () => {
 			region: 'Northern America',
 			normalizedRegion: 'northern america',
 			normalizedCity: 'new york',
-			asn: 80001,
-			latitude: 40.001,
-			longitude: -74.001,
+			asn: 80004,
+			latitude: 40.7143,
+			longitude: -74.0060,
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
 		});
 	});
 
 	it('should pick another provider if prioritized don\'t have city value', async () => {
-		nockGeoIpProviders({ ip2location: 'emptyCity', ipmap: 'emptyCity', maxmind: 'emptyCity' });
+		nockGeoIpProviders({ ip2location: 'emptyCity', ipinfo: 'emptyCity', maxmind: 'emptyCity' });
 
 		const info = await client.lookup(MOCK_IP);
 
@@ -282,17 +282,17 @@ describe('geoip service', () => {
 			region: 'Northern America',
 			normalizedRegion: 'northern america',
 			normalizedCity: 'dallas',
-			asn: 20004,
-			latitude: 32.004,
-			longitude: -96.004,
-			network: 'Psychz Networks',
-			normalizedNetwork: 'psychz networks',
+			asn: 20005,
+			latitude: 32.7831,
+			longitude: -96.8067,
+			network: 'The Constant Company LLC',
+			normalizedNetwork: 'the constant company llc',
 		});
 	});
 
 	describe('network match', () => {
 		it('should pick ipmap data + other provider network (missing network data)', async () => {
-			nockGeoIpProviders({ ip2location: 'emptyCity' });
+			nockGeoIpProviders({ ip2location: 'emptyCity', ipinfo: 'emptyCity', maxmind: 'emptyCity' });
 
 			const info = await client.lookup(MOCK_IP);
 
@@ -304,11 +304,11 @@ describe('geoip service', () => {
 				region: 'Northern America',
 				normalizedRegion: 'northern america',
 				normalizedCity: 'dallas',
-				asn: 20003,
-				latitude: 32.002,
-				longitude: -96.002,
-				network: 'psychz networks',
-				normalizedNetwork: 'psychz networks',
+				asn: 20005,
+				latitude: 32.7831,
+				longitude: -96.8067,
+				network: 'The Constant Company LLC',
+				normalizedNetwork: 'the constant company llc',
 			});
 		});
 
@@ -326,14 +326,14 @@ describe('geoip service', () => {
 				normalizedRegion: 'northern america',
 				normalizedCity: 'dallas',
 				asn: 20005,
-				latitude: 32.004,
-				longitude: -96.004,
-				network: 'psychz networks',
-				normalizedNetwork: 'psychz networks',
+				latitude: 32.7831,
+				longitude: -96.8067,
+				network: 'The Constant Company LLC',
+				normalizedNetwork: 'the constant company llc',
 			});
 		});
 
-		it('should pick ipinfo data + maxmind network (undefined network data)', async () => {
+		it('should pick ipinfo data + fastly network (undefined network data)', async () => {
 			nockGeoIpProviders({ ip2location: 'emptyCity', ipmap: 'emptyCity', maxmind: 'emptyCity', ipinfo: 'undefinedNetwork' });
 
 			const info = await client.lookup(MOCK_IP);
@@ -347,10 +347,10 @@ describe('geoip service', () => {
 				normalizedRegion: 'northern america',
 				normalizedCity: 'dallas',
 				asn: 20005,
-				latitude: 32.004,
-				longitude: -96.004,
-				network: 'psychz networks',
-				normalizedNetwork: 'psychz networks',
+				latitude: 32.7831,
+				longitude: -96.8067,
+				network: 'The Constant Company LLC',
+				normalizedNetwork: 'the constant company llc',
 			});
 		});
 
@@ -360,48 +360,6 @@ describe('geoip service', () => {
 			const info: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(info).to.be.instanceof(Error);
-		});
-	});
-
-	describe('provider parsing', () => {
-		describe('fastly', () => {
-			it('should filter out "reserved" city name', async () => {
-				nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, geoIpMocks['fastly'].reserved);
-
-				const result = await fastlyLookup(MOCK_IP);
-
-				expect(result).to.deep.equal({
-					continent: 'SA',
-					country: 'AR',
-					state: undefined,
-					city: '',
-					normalizedCity: '',
-					asn: 61005,
-					latitude: -34.005,
-					longitude: -58.005,
-					network: 'interbs s.r.l.',
-					normalizedNetwork: 'interbs s.r.l.',
-				});
-			});
-
-			it('should filter out "private" city name', async () => {
-				nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, geoIpMocks['fastly'].private);
-
-				const result = await fastlyLookup(MOCK_IP);
-
-				expect(result).to.deep.equal({
-					continent: 'SA',
-					country: 'AR',
-					state: undefined,
-					city: '',
-					normalizedCity: '',
-					asn: 61005,
-					latitude: -34.005,
-					longitude: -58.005,
-					network: 'interbs s.r.l.',
-					normalizedNetwork: 'interbs s.r.l.',
-				});
-			});
 		});
 	});
 
@@ -419,9 +377,9 @@ describe('geoip service', () => {
 				region: 'Northern America',
 				normalizedRegion: 'northern america',
 				normalizedCity: 'dallas',
-				asn: 20001,
-				latitude: 32.001,
-				longitude: -96.001,
+				asn: 20004,
+				latitude: 32.7831,
+				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
 			});
@@ -440,9 +398,9 @@ describe('geoip service', () => {
 				region: 'Northern America',
 				normalizedRegion: 'northern america',
 				normalizedCity: 'dallas',
-				asn: 20001,
-				latitude: 32.001,
-				longitude: -96.001,
+				asn: 20004,
+				latitude: 32.7831,
+				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
 			});
@@ -469,14 +427,12 @@ describe('geoip service', () => {
 				region: 'Northern America',
 				normalizedRegion: 'northern america',
 				normalizedCity: 'dallas',
-				asn: 20001,
-				latitude: 32.001,
-				longitude: -96.001,
+				asn: 20004,
+				latitude: 32.7831,
+				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
 			});
-
-			mockFs.restore();
 		});
 
 		it('should reject - is_proxy field is true', async () => {
