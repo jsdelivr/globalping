@@ -81,16 +81,16 @@ export const getApproximatedCity = async (country?: string, latitude?: number, l
 		throw new Error('City approximation is not initialized.');
 	}
 
+	if (!country || !latitude || !longitude) {
+		return null;
+	}
+
 	const numberOfCitiesInRedis = await redis.zCard('gp:cities');
 
 	// If redis db is cleared for some reason we need to re-initiate it
 	if (numberOfCitiesInRedis === 0) {
 		// Using throttled version to prevent parallel executions of populateCitiesList
 		await throttledPopulateCitiesList();
-	}
-
-	if (!country || !latitude || !longitude) {
-		return null;
 	}
 
 	const geonameIds = await redis.geoSearch('gp:cities', { latitude, longitude }, { radius: 30, unit: 'km' });

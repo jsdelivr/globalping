@@ -197,7 +197,7 @@ describe('geoip service', () => {
 		expect((info as Error).message).to.equal(`unresolvable geoip: ${MOCK_IP}`);
 	});
 
-	it('should fail when providers has cities but aproximated cities from the provided lat,long wasn\'t found', async () => {
+	it('should fail when providers has cities but aproximated cities from the provider\'s lat,long wasn\'t found', async () => {
 		nockGeoIpProviders({ ipmap: 'emptyLocation', ip2location: 'emptyLocation', maxmind: 'emptyLocation', ipinfo: 'emptyLocation', fastly: 'emptyLocation' });
 
 		const info = await client.lookup(MOCK_IP).catch((error: Error) => error);

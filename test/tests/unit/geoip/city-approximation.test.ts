@@ -21,7 +21,7 @@ describe('city approximation', () => {
 	beforeEach(() => {
 		redis.geoAdd.reset();
 		redis.geoSearch.resolves([ '4684888' ]);
-		redis.zCard.resolves(0);
+		redis.zCard.resolves(25000);
 	});
 
 	after(() => {
@@ -49,14 +49,23 @@ describe('city approximation', () => {
 		expect(cities).to.deep.equal([ null, null, null ]);
 	});
 
-	it('should populate cities list automatically if it is empty during search', async () => {
+	it('should not populate cities list during search', async () => {
+		expect(redis.geoAdd.callCount).to.equal(0);
+		const city = await getApproximatedCity('US', 31,	32);
+		expect(redis.geoAdd.callCount).to.equal(0);
+		expect(city).to.equal('Dallas');
+	});
+
+	it('should populate cities list automatically during search if it is empty', async () => {
+		redis.zCard.resolves(0);
 		expect(redis.geoAdd.callCount).to.equal(0);
 		const city = await getApproximatedCity('US', 31,	32);
 		expect(redis.geoAdd.callCount).to.equal(23);
 		expect(city).to.equal('Dallas');
 	});
 
-	it('should populate cities list only once if it is empty for multiple parallel searchs', async () => {
+	it('should populate cities list only once for multiple parallel searchs', async () => {
+		redis.zCard.resolves(0);
 		expect(redis.geoAdd.callCount).to.equal(0);
 
 		const cities = await Promise.all([
