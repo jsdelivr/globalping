@@ -3,9 +3,9 @@ import got from 'got';
 import AdmZip from 'adm-zip';
 import csvParser from 'csv-parser';
 import _ from 'lodash';
-import { getRedisClient, RedisClient } from '../redis/client';
-import throttle from '../ws/helper/throttle';
-import { scopedLogger } from '../logger';
+import { getRedisClient, RedisClient } from '../redis/client.js';
+import throttle from '../ws/helper/throttle.js';
+import { scopedLogger } from '../logger.js';
 
 type City = {
 	geonameId: string
@@ -80,7 +80,7 @@ export const getApproximatedCity = async (country?: string, latitude?: number, l
 	const numberOfCitiesInRedis = await redis.zCard('gp:cities');
 
 	// If redis db is cleared for some reason we need to re-initiate it
-	if (numberOfCitiesInRedis < 25000) {
+	if (numberOfCitiesInRedis === 0) {
 		// Using throttled version to prevent parallel executions of populateCitiesList
 		await throttledPopulateCitiesList();
 	}

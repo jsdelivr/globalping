@@ -20,7 +20,6 @@ describe('geoip service', () => {
 	});
 
 	afterEach(() => {
-		mockFs.restore();
 		nock.cleanAll();
 	});
 
@@ -364,6 +363,10 @@ describe('geoip service', () => {
 	});
 
 	describe('limit vpn connection', () => {
+		afterEach(() => {
+			mockFs.restore();
+		});
+
 		it('should pass - non-vpn', async () => {
 			nockGeoIpProviders();
 
@@ -406,7 +409,7 @@ describe('geoip service', () => {
 			});
 		});
 
-		it.skip('should pass - is_proxy field is true (whitelisted)', async () => {
+		it('should pass - is_proxy field is true (whitelisted)', async () => {
 			const MOCK_IP = '5.134.119.43';
 
 			mockFs({
