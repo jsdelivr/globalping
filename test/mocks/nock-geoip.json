@@ -39,6 +39,15 @@
 			"as": "The Constant Company LLC",
 			"is_proxy": false
 		},
+		"emptyLocation": {
+			"country_code": "EG",
+			"city_name": "El-Rashda",
+			"latitude": 23.878,
+			"longitude": 26.487,
+			"asn": "20001",
+			"as": "The Constant Company LLC",
+			"is_proxy": false
+		},
 		"emptyNetwork": {
 			"country_code": "US",
 			"region_name": "Texas",
@@ -107,6 +116,16 @@
 			"locations": [
 				{
 					"cityName": "",
+					"latitude": 23.878,
+					"longitude": 26.487,
+					"countryCodeAlpha2": "EG"
+				}
+			]
+		},
+		"emptyLocation": {
+			"locations": [
+				{
+					"cityName": "El-Rashda",
 					"latitude": 23.878,
 					"longitude": 26.487,
 					"countryCodeAlpha2": "EG"
@@ -198,6 +217,23 @@
 				"longitude": 26.487
 			}
 		},
+		"emptyLocation": {
+			"continent": {
+				"code": "AF"
+			},
+			"country": {
+				"isoCode": "EG"
+			},
+			"city": {
+				"names": {
+					"en": "El-Rashda"
+				}
+			},
+			"location": {
+				"latitude": 23.878,
+				"longitude": 26.487
+			}
+		},
 		"emptyNetwork": {
 			"continent": {
 				"code": "NA"
@@ -242,6 +278,13 @@
 		},
 		"emptyCity": {
 			"city": "",
+			"region": "",
+			"country": "EG",
+			"loc": "23.878,26.487",
+			"org": ""
+		},
+		"emptyLocation": {
+			"city": "El-Rashda",
 			"region": "",
 			"country": "EG",
 			"loc": "23.878,26.487",
@@ -340,6 +383,22 @@
 			},
 			"geo-digitalelement": {
 				"city": "",
+				"continent_code": "AF",
+				"country_code": "EG",
+				"country_code3": "EGY",
+				"country_name": "egypt",
+				"latitude": 23.878,
+				"longitude": 26.487,
+				"region": ""
+			}
+		},
+		"emptyLocation": {
+			"as": {
+				"name": "The Constant Company LLC",
+				"number": 20005
+			},
+			"geo-digitalelement": {
+				"city": "El-Rashda",
 				"continent_code": "AF",
 				"country_code": "EG",
 				"country_code3": "EGY",

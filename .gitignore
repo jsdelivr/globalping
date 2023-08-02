@@ -11,8 +11,9 @@ data/IP_BLACKLIST.json
 data/AWS_IP_RANGES.json
 data/GCP_IP_RANGES.json
 data/GEONAMES_CITIES.csv
-.eslintcache
 probes-stats/known-result.csv
 probes-stats/known-result.json
 probes-stats/all-result.csv
 probes-stats/all-result.json
+.eslintcache
+.env

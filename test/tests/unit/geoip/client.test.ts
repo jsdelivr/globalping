@@ -1,23 +1,15 @@
 import nock from 'nock';
 import mockFs from 'mock-fs';
 import { expect } from 'chai';
-import type { LocationInfo } from '../../../src/lib/geoip/client.js';
-import GeoipClient from '../../../src/lib/geoip/client.js';
-import NullCache from '../../../src/lib/cache/null-cache.js';
-import { populateMemList } from '../../../src/lib/geoip/whitelist.js';
-import nockGeoIpProviders, { geoIpMocks } from '../../utils/nock-geo-ip.js';
-import type { CacheInterface } from '../../../src/lib/cache/cache-interface.js';
+import GeoipClient, { type LocationInfo } from '../../../../src/lib/geoip/client.js';
+import NullCache from '../../../../src/lib/cache/null-cache.js';
+import nockGeoIpProviders, { geoIpMocks } from '../../../utils/nock-geo-ip.js';
+import type { CacheInterface } from '../../../../src/lib/cache/cache-interface.js';
 
 const MOCK_IP = '131.255.7.26';
 
 describe('geoip service', () => {
-	let client: GeoipClient;
-
-	before(async () => {
-		await populateMemList();
-
-		client = new GeoipClient(new NullCache());
-	});
+	const client = new GeoipClient(new NullCache());
 
 	afterEach(() => {
 		nock.cleanAll();
@@ -198,6 +190,15 @@ describe('geoip service', () => {
 		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, geoIpMocks['fastly'].default);
 		nock('https://ipinfo.io').get(/.*/).reply(400);
 		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(400);
+
+		const info = await client.lookup(MOCK_IP).catch((error: Error) => error);
+
+		expect(info).to.be.an.instanceof(Error);
+		expect((info as Error).message).to.equal(`unresolvable geoip: ${MOCK_IP}`);
+	});
+
+	it('should fail when providers has cities but aproximated cities from the provided lat,long wasn\'t found', async () => {
+		nockGeoIpProviders({ ipmap: 'emptyLocation', ip2location: 'emptyLocation', maxmind: 'emptyLocation', ipinfo: 'emptyLocation', fastly: 'emptyLocation' });
 
 		const info = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
