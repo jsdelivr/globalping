@@ -17,6 +17,8 @@ Everyone is welcome to contribute. Some suggestions:
 - Documentation. Our readme and documentation need some polish
 - Tutorials and articles. Consider writing about our project on your blog or twitter
 
+Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
+
 ## The Globalping Platform
 
 Globalping is a platform that allows anyone to run networking commands such as ping, traceroute, dig and mtr on probes distributed all around the world. Our goal is to provide a free and simple API for everyone out there to build interesting networking tools and services. 
@@ -213,26 +215,4 @@ We're more than happy to provide higher limits to researchers, non-profits and o
 
 ## Development
 
-In order to run the Globalping API locally you will need Node.js 18 and Redis with [RedisJSON](https://oss.redis.com/redisjson/) module (included in docker-compose.yml file). You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
-
-API uses 3000 port by default. This can be overridden by `PORT` environment variable.
-
-### Setup
-
-1. Clone this repository.
-2. `docker-compose up -d` - Run Redis
-3. `npm install`
-4. Run `npm run dev`
-
-Once the API is live, you can spin up a probe instance by running the following in the probe repository:
-
-1. Clone [Globalping Probe](https://github.com/jsdelivr/globalping-probe) repository.
-2. `npm install && npm run init:hooks`
-3. Either `npm run build && npm run dev` or `npm run dev:tsx` (no type-checking)
-
-### Environment Variables
-- `PORT=3000` environment variable can start the API on another port (default is 3000)
-- `FAKE_PROBE_IP=1` environment variable can be used to make debug easier. When defined, every Probe 
-that connects to the API will get an IP address from the list of predefined "real" addresses.
-- `NEW_RELIC_LICENSE_KEY={value}` environment variable should be used in production to send APM metrics to new relic
-- `NEW_RELIC_APP_NAME={value}` environment variable should be used in production to send APM mentrics to new relic
+Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for more information.

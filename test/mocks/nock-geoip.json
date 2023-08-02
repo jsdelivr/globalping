@@ -30,6 +30,15 @@
 			"as": "The Constant Company LLC",
 			"is_proxy": false
 		},
+		"washington": {
+			"country_code": "US",
+			"region_name": "District of Columbia",
+			"city_name": "Washington",
+			"latitude": 38.89539,
+			"longitude": -77.039476,
+			"asn": "40676",
+			"as": "Psychz Networks"
+		},
 		"emptyCity": {
 			"country_code": "EG",
 			"city_name": "",
@@ -296,6 +305,13 @@
 			"country": "US",
 			"loc": "40.7143,-74.0060",
 			"org": "AS80004 The Constant Company LLC"
+		},
+		"washington": {
+			"city": "Washington",
+			"region": "Washington, D.C.",
+			"country": "US",
+			"loc": "38.89539,-77.039476",
+			"org": "AS701 Verizon Business"
 		},
 		"emptyNetwork": {
 			"city": "Dallas",

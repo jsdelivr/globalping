@@ -269,7 +269,7 @@ describe('geoip service', () => {
 		});
 	});
 
-	it('should pick another provider if prioritized don\'t have city value', async () => {
+	it('should pick another provider if prioritized doesn\'t have city value', async () => {
 		nockGeoIpProviders({ ip2location: 'emptyCity', ipinfo: 'emptyCity', maxmind: 'emptyCity' });
 
 		const info = await client.lookup(MOCK_IP);
@@ -351,6 +351,46 @@ describe('geoip service', () => {
 				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
+			});
+		});
+
+		it('should correctly parse states with the "of" substring inside the name', async () => {
+			nockGeoIpProviders({ ip2location: 'washington', ipmap: 'emptyCity', maxmind: 'emptyCity', ipinfo: 'emptyCity', fastly: 'emptyCity' });
+
+			const info = await client.lookup(MOCK_IP);
+
+			expect(info).to.deep.equal({
+				continent: 'NA',
+				country: 'US',
+				state: 'DC',
+				city: 'Washington',
+				region: 'Northern America',
+				normalizedRegion: 'northern america',
+				normalizedCity: 'washington',
+				asn: 40676,
+				latitude: 38.89539,
+				longitude: -77.039476,
+				network: 'Psychz Networks',
+				normalizedNetwork: 'psychz networks',
+			});
+
+			nockGeoIpProviders({ ip2location: 'emptyCity', ipmap: 'emptyCity', maxmind: 'emptyCity', ipinfo: 'washington', fastly: 'emptyCity' });
+
+			const info2 = await client.lookup(MOCK_IP);
+
+			expect(info2).to.deep.equal({
+				continent: 'NA',
+				country: 'US',
+				state: 'DC',
+				city: 'Washington',
+				region: 'Northern America',
+				normalizedRegion: 'northern america',
+				normalizedCity: 'washington',
+				asn: 701,
+				latitude: 38.89539,
+				longitude: -77.039476,
+				network: 'Verizon Business',
+				normalizedNetwork: 'verizon business',
 			});
 		});
 

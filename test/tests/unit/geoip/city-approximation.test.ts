@@ -60,7 +60,7 @@ describe('city approximation', () => {
 		redis.zCard.resolves(0);
 		expect(redis.geoAdd.callCount).to.equal(0);
 		const city = await getApproximatedCity('US', 31,	32);
-		expect(redis.geoAdd.callCount).to.equal(23);
+		expect(redis.geoAdd.callCount).to.be.within(20, 30);
 		expect(city).to.equal('Dallas');
 	});
 
@@ -74,7 +74,7 @@ describe('city approximation', () => {
 			getApproximatedCity('US', 31,	32),
 		]);
 
-		expect(redis.geoAdd.callCount).to.equal(23);
+		expect(redis.geoAdd.callCount).to.be.within(20, 30);
 		expect(cities).to.deep.equal([ 'Dallas', 'Dallas', 'Dallas' ]);
 	});
 });

@@ -5,7 +5,6 @@ import Joi, {
 	type PresenceMode,
 } from 'joi';
 import validator from 'validator';
-import isIpPrivate from 'private-ip';
 import _ from 'lodash';
 import {
 	joiValidate as joiMalwareValidate,
@@ -13,6 +12,7 @@ import {
 import { joiValidate as joiMalwareValidateIp } from '../../lib/malware/ip.js';
 import { joiValidate as joiMalwareValidateDomain } from '../../lib/malware/domain.js';
 import type { MeasurementRecord, MeasurementRequest } from '../types.js';
+import { isIpPrivate } from '../../lib/private-ip.js';
 
 export const joiValidateDomain = () => (value: string, helpers: CustomHelpers): string | ErrorReport => {
 	const options = {
