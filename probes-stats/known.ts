@@ -2,7 +2,7 @@
  * How to run:
  * 1. Run redis instance
  * 2. Replace content of the known-probes.json with the known probes info in the same format
- * 3. Run with fulfilled keys: `IP_2_LOCATION_API_KEY= IPINFO_API_KEY= MAXMIND_ACCOUNT_ID= MAXMIND_LICENSE_KEY= npm run stats:known`
+ * 3. Run with fulfilled keys: `IP_2_LOCATION_API_KEY= IPINFO_API_KEY= MAXMIND_ACCOUNT_ID= MAXMIND_LICENSE_KEY= npm run stats`
  */
 
 import fs from 'node:fs';
