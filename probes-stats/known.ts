@@ -16,9 +16,11 @@ import { populateMemList as populateIpWhiteList } from '../src/lib/geoip/whiteli
 import { Ip2LocationBundledResponse, ip2LocationLookup } from '../src/lib/geoip/providers/ip2location.js';
 import { ipmapLookup } from '../src/lib/geoip/providers/ipmap.js';
 import sheet from './known-probes.json' assert { type: 'json' };
+import { populateCitiesList } from '../src/lib/geoip/city-approximation.js';
 
 await populateIpWhiteList();
 await initRedis();
+await populateCitiesList();
 const geoIpClient = createGeoipClient();
 
 const input: [string, (string) => Promise<LocationInfo>][] = [

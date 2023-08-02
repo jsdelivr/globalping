@@ -77,16 +77,16 @@ const throttledPopulateCitiesList = throttle(async () => {
 }, 1);
 
 export const getApproximatedCity = async (country?: string, latitude?: number, longitude?: number) => {
+	if (geonamesCities.size === 0 || !redis) {
+		throw new Error('City approximation is not initialized.');
+	}
+
 	const numberOfCitiesInRedis = await redis.zCard('gp:cities');
 
 	// If redis db is cleared for some reason we need to re-initiate it
 	if (numberOfCitiesInRedis === 0) {
 		// Using throttled version to prevent parallel executions of populateCitiesList
 		await throttledPopulateCitiesList();
-	}
-
-	if (geonamesCities.size === 0 || !redis) {
-		throw new Error('City approximation is not initialized.');
 	}
 
 	if (!country || !latitude || !longitude) {
