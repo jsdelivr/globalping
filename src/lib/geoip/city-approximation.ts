@@ -6,6 +6,7 @@ import _ from 'lodash';
 import { getRedisClient, RedisClient } from '../redis/client.js';
 import throttle from '../ws/helper/throttle.js';
 import { scopedLogger } from '../logger.js';
+import { getIsDcCity } from './dc-cities.js';
 
 type City = {
 	geonameId: string
@@ -54,6 +55,22 @@ export const updateGeonamesCitiesFile = async (): Promise<void> => {
 let redis: RedisClient;
 let geonamesCities: Map<string, City> = new Map();
 
+export const getCity = async (city = '', country?: string, latitude?: number, longitude?: number) => {
+	const isDcCity = getIsDcCity(city, country);
+
+	if (isDcCity) {
+		return city;
+	}
+
+	const approximatedCity = await getApproximatedCity(country, latitude, longitude);
+
+	if (!approximatedCity) {
+		return city;
+	}
+
+	return approximatedCity;
+};
+
 export const populateCitiesList = async () => {
 	redis = getRedisClient();
 	const cities = await readCitiesCsvFile() as CsvCityRow[];
@@ -76,7 +93,7 @@ const throttledPopulateCitiesList = throttle(async () => {
 	await populateCitiesList();
 }, 1);
 
-export const getApproximatedCity = async (country?: string, latitude?: number, longitude?: number) => {
+const getApproximatedCity = async (country?: string, latitude?: number, longitude?: number) => {
 	if (geonamesCities.size === 0 || !redis) {
 		throw new Error('City approximation is not initialized.');
 	}

@@ -10,7 +10,7 @@ import {
 	normalizeCityNamePublic,
 	normalizeNetworkName,
 } from '../utils.js';
-import { getApproximatedCity } from '../city-approximation.js';
+import { getCity } from '../city-approximation.js';
 
 type Ip2LocationResponse = {
 	ip?: string;
@@ -41,14 +41,14 @@ export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundle
 		timeout: { request: 5000 },
 	}).json<Ip2LocationResponse>();
 
-	const approximatedCity = await getApproximatedCity(result.country_code, result.latitude, result.longitude);
+	const city = await getCity(result.country_code, result.city_name, result.latitude, result.longitude);
 
 	const location = {
 		continent: result.country_code ? getContinentByCountry(result.country_code) : '',
 		state: result.country_code === 'US' && result.region_name ? getStateIsoByName(result.region_name) : undefined,
 		country: result.country_code ?? '',
-		city: normalizeCityNamePublic(approximatedCity ?? ''),
-		normalizedCity: normalizeCityName(approximatedCity ?? ''),
+		city: normalizeCityNamePublic(city),
+		normalizedCity: normalizeCityName(city),
 		asn: Number(result.asn) ?? 0,
 		latitude: result.latitude ?? 0,
 		longitude: result.longitude ?? 0,

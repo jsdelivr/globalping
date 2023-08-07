@@ -8,7 +8,7 @@ import {
 	normalizeCityNamePublic,
 	normalizeNetworkName,
 } from '../utils.js';
-import { getApproximatedCity } from '../city-approximation.js';
+import { getCity } from '../city-approximation.js';
 
 const client = new WebServiceClient(config.get('maxmind.accountId'), config.get('maxmind.licenseKey'));
 
@@ -35,15 +35,14 @@ const query = async (addr: string, retryCounter = 0): Promise<City> => {
 
 export const maxmindLookup = async (addr: string): Promise<LocationInfo> => {
 	const data = await query(addr);
-
-	const approximatedCity = await getApproximatedCity(data.country?.isoCode, data.location?.latitude, data.location?.longitude);
+	const city = await getCity(data.city?.names?.en, data.country?.isoCode, data.location?.latitude, data.location?.longitude);
 
 	return {
 		continent: data.continent?.code ?? '',
 		country: data.country?.isoCode ?? '',
 		state: data.country?.isoCode === 'US' ? data.subdivisions?.map(s => s.isoCode)[0] ?? '' : undefined,
-		city: normalizeCityNamePublic(approximatedCity ?? ''),
-		normalizedCity: normalizeCityName(approximatedCity ?? ''),
+		city: normalizeCityNamePublic(city),
+		normalizedCity: normalizeCityName(city),
 		asn: data.traits?.autonomousSystemNumber ?? 0,
 		latitude: data.location?.latitude ?? 0,
 		longitude: data.location?.longitude ?? 0,
