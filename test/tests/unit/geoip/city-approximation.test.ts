@@ -29,11 +29,15 @@ describe('city approximation', () => {
 	});
 
 	it('should return the passed city if that city is in the DC cities list', async () => {
-		redis.geoSearch.resolves([ '2803560' ]);
-
 		const city = await getCity('Falkenstein', 'DE', 31, 32);
 		expect(redis.geoSearch.callCount).to.equal(0);
 		expect(city).to.equal('Falkenstein');
+	});
+
+	it('should apply normalization before searching in the DC cities list', async () => {
+		const city = await getCity('The falkenstein', 'DE', 31, 32);
+		expect(redis.geoSearch.callCount).to.equal(0);
+		expect(city).to.equal('The falkenstein');
 	});
 
 	it('should return approximated city if provided city is not in the DC cities list', async () => {
