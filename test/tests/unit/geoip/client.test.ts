@@ -101,7 +101,7 @@ describe('geoip service', () => {
 	});
 
 	it('should fulfill ipmap network data with other provider network data with the same city', async () => {
-		nockGeoIpProviders({ ipmap: 'default', ip2location: 'argentina', maxmind: 'newYork', ipinfo: 'emptyCity', fastly: 'default' });
+		nockGeoIpProviders({ ipmap: 'default', ip2location: 'argentina', maxmind: 'newYork', ipinfo: 'empty', fastly: 'default' });
 
 		const info = await client.lookup(MOCK_IP);
 
@@ -122,7 +122,7 @@ describe('geoip service', () => {
 	});
 
 	it('should fulfill missing data with other provider network data with the same city', async () => {
-		nockGeoIpProviders({ ip2location: 'emptyNetwork', ipmap: 'default', maxmind: 'emptyCity', ipinfo: 'emptyCity', fastly: 'default' });
+		nockGeoIpProviders({ ip2location: 'emptyNetwork', ipmap: 'default', maxmind: 'empty', ipinfo: 'empty', fastly: 'default' });
 
 		const info = await client.lookup(MOCK_IP);
 
@@ -143,7 +143,7 @@ describe('geoip service', () => {
 	});
 
 	it('should choose top prioritized provider when there is a draw in returned results', async () => {
-		nockGeoIpProviders({ ipmap: 'emptyCity', ip2location: 'newYork', maxmind: 'newYork', ipinfo: 'argentina', fastly: 'argentina' });
+		nockGeoIpProviders({ ipmap: 'empty', ip2location: 'newYork', maxmind: 'newYork', ipinfo: 'argentina', fastly: 'argentina' });
 
 		const info = await client.lookup(MOCK_IP);
 
@@ -164,7 +164,7 @@ describe('geoip service', () => {
 	});
 
 	it('should choose top prioritized provider when all providers returned different cities', async () => {
-		nockGeoIpProviders({ ipmap: 'default', ip2location: 'argentina', maxmind: 'newYork', ipinfo: 'emptyCity', fastly: 'bangkok' });
+		nockGeoIpProviders({ ipmap: 'default', ip2location: 'argentina', maxmind: 'newYork', ipinfo: 'empty', fastly: 'bangkok' });
 
 		const info = await client.lookup(MOCK_IP);
 
@@ -197,13 +197,67 @@ describe('geoip service', () => {
 		expect((info as Error).message).to.equal(`unresolvable geoip: ${MOCK_IP}`);
 	});
 
-	it('should fail when providers has cities but aproximated cities from the provider\'s lat,long wasn\'t found', async () => {
+	it('should use provided cities when aproximated cities wasn\'t found', async () => {
 		nockGeoIpProviders({ ipmap: 'emptyLocation', ip2location: 'emptyLocation', maxmind: 'emptyLocation', ipinfo: 'emptyLocation', fastly: 'emptyLocation' });
 
-		const info = await client.lookup(MOCK_IP).catch((error: Error) => error);
+		const info = await client.lookup(MOCK_IP);
 
-		expect(info).to.be.an.instanceof(Error);
-		expect((info as Error).message).to.equal(`unresolvable geoip: ${MOCK_IP}`);
+		expect(info).to.deep.equal({
+			continent: 'AF',
+			country: 'EG',
+			state: undefined,
+			city: 'El-Rashda',
+			region: 'Northern Africa',
+			normalizedRegion: 'northern africa',
+			normalizedCity: 'el-rashda',
+			asn: 20001,
+			latitude: 23.878,
+			longitude: 26.487,
+			network: 'The Constant Company LLC',
+			normalizedNetwork: 'the constant company llc',
+		});
+	});
+
+	it('should use provided cities when they are in a DC cities list', async () => {
+		nockGeoIpProviders({ ip2location: 'falkenstein', ipmap: 'empty', maxmind: 'empty', ipinfo: 'empty', fastly: 'empty' });
+
+		const info = await client.lookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
+			continent: 'EU',
+			country: 'DE',
+			state: undefined,
+			city: 'Falkenstein',
+			region: 'Western Europe',
+			normalizedRegion: 'western europe',
+			normalizedCity: 'falkenstein',
+			asn: 24940,
+			latitude: 50.47785,
+			longitude: 12.371563,
+			network: 'Hetzner Online GmbH',
+			normalizedNetwork: 'hetzner online gmbh',
+		});
+	});
+
+	it('should use approximated cities when they are not in a DC cities list', async () => {
+		nockGeoIpProviders({ ip2location: 'lengenfeld', ipmap: 'empty', maxmind: 'empty', ipinfo: 'empty', fastly: 'empty' });
+
+		const info = await client.lookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
+			continent: 'EU',
+			country: 'DE',
+			state: undefined,
+			city: 'Zwickau',
+			region: 'Western Europe',
+			normalizedRegion: 'western europe',
+			normalizedCity: 'zwickau',
+			asn: 24940,
+			latitude: 50.47785,
+			longitude: 12.371563,
+			network: 'Hetzner Online GmbH',
+			normalizedNetwork: 'hetzner online gmbh',
+		});
 	});
 
 	it('should detect US state', async () => {
@@ -228,7 +282,7 @@ describe('geoip service', () => {
 	});
 
 	it('should filter out incomplete results', async () => {
-		nockGeoIpProviders({ ipmap: 'emptyCity', ip2location: 'emptyCity', maxmind: 'argentina', fastly: 'emptyCity', ipinfo: 'emptyCity' });
+		nockGeoIpProviders({ ipmap: 'empty', ip2location: 'empty', maxmind: 'argentina', fastly: 'empty', ipinfo: 'empty' });
 
 		const info = await client.lookup(MOCK_IP);
 
@@ -292,7 +346,7 @@ describe('geoip service', () => {
 
 	describe('network match', () => {
 		it('should pick ipmap data + other provider network (missing network data)', async () => {
-			nockGeoIpProviders({ ip2location: 'emptyCity', ipinfo: 'emptyCity', maxmind: 'emptyCity' });
+			nockGeoIpProviders({ ip2location: 'empty', ipinfo: 'empty', maxmind: 'empty' });
 
 			const info = await client.lookup(MOCK_IP);
 
@@ -313,7 +367,7 @@ describe('geoip service', () => {
 		});
 
 		it('should pick ipinfo data + fastly network (missing network data)', async () => {
-			nockGeoIpProviders({ ip2location: 'emptyCity', ipmap: 'emptyCity', maxmind: 'emptyCity', ipinfo: 'emptyNetwork' });
+			nockGeoIpProviders({ ip2location: 'empty', ipmap: 'empty', maxmind: 'empty', ipinfo: 'emptyNetwork' });
 
 			const info = await client.lookup(MOCK_IP);
 
@@ -334,7 +388,7 @@ describe('geoip service', () => {
 		});
 
 		it('should pick ipinfo data + fastly network (undefined network data)', async () => {
-			nockGeoIpProviders({ ip2location: 'emptyCity', ipmap: 'emptyCity', maxmind: 'emptyCity', ipinfo: 'undefinedNetwork' });
+			nockGeoIpProviders({ ip2location: 'empty', ipmap: 'empty', maxmind: 'empty', ipinfo: 'undefinedNetwork' });
 
 			const info = await client.lookup(MOCK_IP);
 
@@ -355,7 +409,7 @@ describe('geoip service', () => {
 		});
 
 		it('should correctly parse states with the "of" substring inside the name', async () => {
-			nockGeoIpProviders({ ip2location: 'washington', ipmap: 'emptyCity', maxmind: 'emptyCity', ipinfo: 'emptyCity', fastly: 'emptyCity' });
+			nockGeoIpProviders({ ip2location: 'washington', ipmap: 'empty', maxmind: 'empty', ipinfo: 'empty', fastly: 'empty' });
 
 			const info = await client.lookup(MOCK_IP);
 
@@ -374,7 +428,7 @@ describe('geoip service', () => {
 				normalizedNetwork: 'psychz networks',
 			});
 
-			nockGeoIpProviders({ ip2location: 'emptyCity', ipmap: 'emptyCity', maxmind: 'emptyCity', ipinfo: 'washington', fastly: 'emptyCity' });
+			nockGeoIpProviders({ ip2location: 'empty', ipmap: 'empty', maxmind: 'empty', ipinfo: 'washington', fastly: 'empty' });
 
 			const info2 = await client.lookup(MOCK_IP);
 
@@ -395,7 +449,7 @@ describe('geoip service', () => {
 		});
 
 		it('should fail (missing network data + city mismatch)', async () => {
-			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'newYork', maxmind: 'emptyNetwork', ipinfo: 'emptyNetwork', fastly: 'emptyCity' });
+			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'newYork', maxmind: 'emptyNetwork', ipinfo: 'emptyNetwork', fastly: 'empty' });
 
 			const info: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 

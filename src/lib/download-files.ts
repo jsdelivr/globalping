@@ -3,7 +3,7 @@ import { updateMalwareFiles } from './malware/client.js';
 import { updateIpRangeFiles } from './ip-ranges.js';
 import { updateGeonamesCitiesFile } from './geoip/city-approximation.js';
 
-const logger = scopedLogger('malware.blacklist');
+const logger = scopedLogger('download-files');
 
 logger.info('updating malware blacklist JSON files');
 await updateMalwareFiles();

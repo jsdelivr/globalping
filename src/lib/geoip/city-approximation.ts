@@ -56,17 +56,15 @@ let redis: RedisClient;
 let geonamesCities: Map<string, City> = new Map();
 
 export const getCity = async (city = '', country?: string, latitude?: number, longitude?: number) => {
+	if (city === '') { return city; }
+
 	const isDcCity = getIsDcCity(city, country);
 
-	if (isDcCity) {
-		return city;
-	}
+	if (isDcCity) { return city; }
 
 	const approximatedCity = await getApproximatedCity(country, latitude, longitude);
 
-	if (!approximatedCity) {
-		return city;
-	}
+	if (!approximatedCity) { return city; }
 
 	return approximatedCity;
 };

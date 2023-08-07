@@ -1,4 +1,4 @@
-import dcCitiesJson from '../../../config/dc-cities.json' assert { type: 'json' };
+import dcCitiesJson from './dc-cities.json' assert { type: 'json' };
 
 const dcCountries = new Map(dcCitiesJson.map(({ country, cities }) => [ country, new Set(cities) ]));
 

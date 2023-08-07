@@ -39,6 +39,33 @@
 			"asn": "40676",
 			"as": "Psychz Networks"
 		},
+		"falkenstein": {
+			"country_code": "DE",
+			"region_name": "Sachsen",
+			"city_name": "Falkenstein",
+			"latitude": 50.47785,
+			"longitude": 12.371563,
+			"asn": "24940",
+			"as": "Hetzner Online GmbH"
+		},
+		"lengenfeld": {
+			"country_code": "DE",
+			"region_name": "Sachsen",
+			"city_name": "Lengenfeld",
+			"latitude": 50.47785,
+			"longitude": 12.371563,
+			"asn": "24940",
+			"as": "Hetzner Online GmbH"
+		},
+		"empty": {
+			"country_code": "",
+			"city_name": "",
+			"latitude": 0,
+			"longitude": 0,
+			"asn": "",
+			"as": "",
+			"is_proxy": false
+		},
 		"emptyCity": {
 			"country_code": "EG",
 			"city_name": "",
@@ -118,6 +145,16 @@
 					"longitude": -74.0060,
 					"stateAnsiCode": "NY",
 					"countryCodeAlpha2": "US"
+				}
+			]
+		},
+		"empty": {
+			"locations": [
+				{
+					"cityName": "",
+					"latitude": 0,
+					"longitude": 0,
+					"countryCodeAlpha2": ""
 				}
 			]
 		},
@@ -211,6 +248,21 @@
 				"isp": "The Constant Company LLC"
 			}
 		},
+		"empty": {
+			"continent": {
+				"code": "0"
+			},
+			"country": {
+				"isoCode": "0"
+			},
+			"city": {
+				"names": {}
+			},
+			"location": {
+				"latitude": 0,
+				"longitude": 0
+			}
+		},
 		"emptyCity": {
 			"continent": {
 				"code": "AF"
@@ -284,6 +336,13 @@
 			"country": "AR",
 			"loc": "-34.6131,-58.3772",
 			"org": "AS61004 InterBS S.R.L. (BAEHOST)"
+		},
+		"empty": {
+			"city": "",
+			"region": "",
+			"country": "",
+			"loc": "",
+			"org": ""
 		},
 		"emptyCity": {
 			"city": "",
@@ -390,6 +449,18 @@
 				"latitude": 13.005,
 				"longitude": 100.005,
 				"region": "10"
+			}
+		},
+		"empty": {
+			"geo-digitalelement": {
+				"city": "",
+				"continent_code": "",
+				"country_code": "",
+				"country_code3": "",
+				"country_name": "",
+				"latitude": 0,
+				"longitude": 0,
+				"region": ""
 			}
 		},
 		"emptyCity": {

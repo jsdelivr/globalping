@@ -3,7 +3,7 @@ import * as sinon from 'sinon';
 import * as td from 'testdouble';
 
 describe('city approximation', () => {
-	let getApproximatedCity: any;
+	let getCity: any;
 	let populateCitiesList: any;
 
 	const redis = {
@@ -14,13 +14,13 @@ describe('city approximation', () => {
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/redis/client.ts', { getRedisClient: () => redis });
-		({ populateCitiesList, getApproximatedCity } = await import('../../../../src/lib/geoip/city-approximation.js'));
+		({ populateCitiesList, getCity } = await import('../../../../src/lib/geoip/city-approximation.js'));
 		await populateCitiesList();
 	});
 
 	beforeEach(() => {
 		redis.geoAdd.reset();
-		redis.geoSearch.resolves([ '4684888' ]);
+		redis.geoSearch.reset();
 		redis.zCard.resolves(25000);
 	});
 
@@ -28,53 +28,74 @@ describe('city approximation', () => {
 		td.reset();
 	});
 
-	it('should return city with max population if multiple cities were found', async () => {
+	it('should return the passed city if that city is in the DC cities list', async () => {
+		redis.geoSearch.resolves([ '2803560' ]);
+
+		const city = await getCity('Falkenstein', 'DE', 31, 32);
+		expect(redis.geoSearch.callCount).to.equal(0);
+		expect(city).to.equal('Falkenstein');
+	});
+
+	it('should return approximated city if provided city is not in the DC cities list', async () => {
+		redis.geoSearch.resolves([ '2803560' ]);
+
+		const city = await getCity('Lengenfeld', 'DE', 31, 32);
+		expect(redis.geoSearch.callCount).to.equal(1);
+		expect(city).to.equal('Zwickau');
+	});
+
+	it('should return approximated city with max population if multiple cities were found', async () => {
 		redis.geoSearch.resolves([ '4684888', '5128581', '5391959' ]);
-		const city = await getApproximatedCity('US', 31,	32);
+		const city = await getCity('Clifton', 'US', 31,	32);
 		expect(city).to.equal('New York City');
 	});
 
-	it('should return null if no city was found', async () => {
+	it('should return initial city if no approximated city was found', async () => {
 		redis.geoSearch.resolves([]);
-		const city = await getApproximatedCity('US', 31,	32);
-		expect(city).to.equal(null);
+		const city = await getCity('Clifton', 'US', 31,	32);
+		expect(city).to.equal('Clifton');
 	});
 
-	it('should return null if some of the arguments are missing', async () => {
+	it('should return initial city if some of the arguments are missing', async () => {
 		const cities = await Promise.all([
-			getApproximatedCity('', 31,	32),
-			getApproximatedCity('US', 0,	32),
-			getApproximatedCity('US', 31,	0),
+			getCity('', 'US', 31,	32),
+			getCity('Clifton', '', 31,	32),
+			getCity('Clifton', 'US', 0,	32),
+			getCity('Clifton', 'US', 31,	0),
 		]);
-		expect(cities).to.deep.equal([ null, null, null ]);
+		expect(redis.geoSearch.callCount).to.equal(0);
+		expect(cities).to.deep.equal([ '', 'Clifton', 'Clifton', 'Clifton' ]);
 	});
 
 	it('should not populate cities list during search', async () => {
+		redis.geoSearch.resolves([ '5128581' ]);
 		expect(redis.geoAdd.callCount).to.equal(0);
-		const city = await getApproximatedCity('US', 31,	32);
+		const city = await getCity('Clifton', 'US', 31,	32);
 		expect(redis.geoAdd.callCount).to.equal(0);
-		expect(city).to.equal('Dallas');
+		expect(city).to.equal('New York City');
 	});
 
 	it('should populate cities list automatically during search if it is empty', async () => {
+		redis.geoSearch.resolves([ '5128581' ]);
 		redis.zCard.resolves(0);
 		expect(redis.geoAdd.callCount).to.equal(0);
-		const city = await getApproximatedCity('US', 31,	32);
+		const city = await getCity('Clifton', 'US', 31,	32);
 		expect(redis.geoAdd.callCount).to.be.within(20, 30);
-		expect(city).to.equal('Dallas');
+		expect(city).to.equal('New York City');
 	});
 
 	it('should populate cities list only once for multiple parallel searchs', async () => {
+		redis.geoSearch.resolves([ '5128581' ]);
 		redis.zCard.resolves(0);
 		expect(redis.geoAdd.callCount).to.equal(0);
 
 		const cities = await Promise.all([
-			getApproximatedCity('US', 31,	32),
-			getApproximatedCity('US', 31,	32),
-			getApproximatedCity('US', 31,	32),
+			getCity('Clifton', 'US', 31,	32),
+			getCity('Clifton', 'US', 31,	32),
+			getCity('Clifton', 'US', 31,	32),
 		]);
 
 		expect(redis.geoAdd.callCount).to.be.within(20, 30);
-		expect(cities).to.deep.equal([ 'Dallas', 'Dallas', 'Dallas' ]);
+		expect(cities).to.deep.equal([ 'New York City', 'New York City', 'New York City' ]);
 	});
 });

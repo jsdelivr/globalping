@@ -41,7 +41,7 @@ export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundle
 		timeout: { request: 5000 },
 	}).json<Ip2LocationResponse>();
 
-	const city = await getCity(result.country_code, result.city_name, result.latitude, result.longitude);
+	const city = await getCity(result.city_name, result.country_code, result.latitude, result.longitude);
 
 	const location = {
 		continent: result.country_code ? getContinentByCountry(result.country_code) : '',
