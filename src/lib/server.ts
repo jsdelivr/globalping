@@ -5,16 +5,20 @@ import { getMetricsAgent } from './metrics.js';
 import { populateMemList as populateMemMalwareList } from './malware/client.js';
 import { populateMemList as populateMemIpRangesList } from './ip-ranges.js';
 import { populateMemList as populateIpWhiteList } from './geoip/whitelist.js';
+import { populateCitiesList } from './geoip/city-approximation.js';
 
 export const createServer = async (): Promise<Server> => {
+	await initRedis();
+
 	// Populate memory malware list
 	await populateMemMalwareList();
 	// Populate memory cloud regions list
 	await populateMemIpRangesList();
 	// Populate ip whiltelist
 	await populateIpWhiteList();
+	// Populate cities info
+	await populateCitiesList();
 
-	await initRedis();
 	await initWsServer();
 
 	const { getWsServer } = await import('./ws/server.js');

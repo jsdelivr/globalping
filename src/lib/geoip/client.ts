@@ -39,21 +39,21 @@ export default class GeoipClient {
 	async lookup (addr: string): Promise<ProbeLocation> {
 		const results = await Promise
 			.allSettled([
-				this.lookupWithCache<Ip2LocationBundledResponse>(`geoip:ip2location:${addr}`, async () => ip2LocationLookup(addr)),
-				this.lookupWithCache<LocationInfo>(`geoip:ipmap:${addr}`, async () => ipmapLookup(addr)),
-				this.lookupWithCache<LocationInfo>(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
 				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
+				this.lookupWithCache<Ip2LocationBundledResponse>(`geoip:ip2location:${addr}`, async () => ip2LocationLookup(addr)),
+				this.lookupWithCache<LocationInfo>(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
+				this.lookupWithCache<LocationInfo>(`geoip:ipmap:${addr}`, async () => ipmapLookup(addr)),
 				this.lookupWithCache<LocationInfo>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
-			.then(([ ip2location, ipmap, maxmind, ipinfo, fastly ]) => {
+			.then(([ ipinfo, ip2location, maxmind, ipmap, fastly ]) => {
 				const fulfilled: (LocationInfoWithProvider | null)[] = [];
 
 				// Providers here are pushed in a desc prioritized order
 				fulfilled.push(
-					ip2location.status === 'fulfilled' ? { ...ip2location.value.location, provider: 'ip2location' } : null,
-					ipmap.status === 'fulfilled' ? { ...ipmap.value, provider: 'ipmap' } : null,
-					maxmind.status === 'fulfilled' ? { ...maxmind.value, provider: 'maxmind' } : null,
 					ipinfo.status === 'fulfilled' ? { ...ipinfo.value, provider: 'ipinfo' } : null,
+					ip2location.status === 'fulfilled' ? { ...ip2location.value.location, provider: 'ip2location' } : null,
+					maxmind.status === 'fulfilled' ? { ...maxmind.value, provider: 'maxmind' } : null,
+					ipmap.status === 'fulfilled' ? { ...ipmap.value, provider: 'ipmap' } : null,
 					fastly.status === 'fulfilled' ? { ...fastly.value, provider: 'fastly' } : null,
 				);
 

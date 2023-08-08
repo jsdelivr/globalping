@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import nock from 'nock';
+import AdmZip from 'adm-zip';
 import {
 	sourceList as ipSourceList,
 	populateMemList as populateMemIpList,
@@ -12,6 +13,7 @@ import {
 	updateList as updateListDomain,
 } from '../../src/lib/malware/domain.js';
 import { updateIpRangeFiles, sources } from '../../src/lib/ip-ranges.js';
+import { populateCitiesList, updateGeonamesCitiesFile, URL as citiesListUrl } from '../../src/lib/geoip/city-approximation.js';
 
 const mockDataPath = path.join(path.resolve(), 'test/mocks');
 
@@ -52,4 +54,13 @@ export const populateIpRangeList = async (): Promise<void> => {
 	nock(gcpUrl.origin).get(gcpUrl.pathname).reply(200, gcpMockRanges);
 	nock(awsUrl.origin).get(awsUrl.pathname).reply(200, awsMockRanges);
 	await updateIpRangeFiles();
+};
+
+export const populateNockCitiesList = async (): Promise<void> => {
+	const zip = new AdmZip();
+	zip.addLocalFile(path.join(mockDataPath, 'cities15000.txt'));
+	const url = new URL(citiesListUrl);
+	nock(url.origin).get(url.pathname).reply(200, zip.toBuffer());
+	await updateGeonamesCitiesFile();
+	await populateCitiesList();
 };

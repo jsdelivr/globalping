@@ -20,6 +20,7 @@ export default function wallaby () {
 			'data/AWS_IP_RANGES.json',
 			'data/DOMAIN_BLACKLIST.json',
 			'data/IP_BLACKLIST.json',
+			'data/GEONAMES_CITIES.csv',
 		],
 		tests: [
 			'test/tests/**/*.test.ts',

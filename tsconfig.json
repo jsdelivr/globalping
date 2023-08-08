@@ -2,6 +2,12 @@
 	"extends": "@tsconfig/node18-strictest-esm/tsconfig.json",
 	"compilerOptions": {
 		"outDir": "./dist",
+		"lib": [
+			"esnext"
+		],
+		"module": "esnext",
+		"target": "esnext",
+		"resolveJsonModule": true,
 		"moduleResolution": "node",
 		"sourceMap": true,
 		"paths": {

@@ -1,0 +1,1785 @@
+[
+	{
+		"country": "US",
+		"cities": [
+			"Los Angeles",
+			"San Jose",
+			"San Francisco",
+			"Palo Alto",
+			"San Diego",
+			"Irvine",
+			"Santa Clara",
+			"Fremont",
+			"Sacramento",
+			"Tustin",
+			"Riverside",
+			"Newport Beach",
+			"Mountain View",
+			"Oakland",
+			"Fresno",
+			"Modesto",
+			"San Luis Obispo",
+			"El Segundo",
+			"Inland Empire",
+			"Emeryville",
+			"Santa Barbara",
+			"Bakersfield",
+			"Santa Ana",
+			"Rohnert Park",
+			"Goleta",
+			"Santa Cruz",
+			"Burbank",
+			"Hawthorne",
+			"Manchester CA",
+			"San Bernardino",
+			"Dallas",
+			"McAllen",
+			"San Antonio",
+			"Austin",
+			"Houston",
+			"Bryan",
+			"El Paso",
+			"Lubbock",
+			"Nacogdoches",
+			"The Woodlands",
+			"Tyler",
+			"Laredo",
+			"Waco",
+			"Amarillo",
+			"Corpus Christi",
+			"Harlingen",
+			"Montgomery TX",
+			"Stratford",
+			"New York",
+			"Rochester",
+			"Buffalo",
+			"Albany",
+			"Long Island",
+			"Wappingers Falls",
+			"Binghamton",
+			"Westchester County",
+			"Syracuse",
+			"Watertown",
+			"Potsdam",
+			"Plattsburgh",
+			"Romulus",
+			"Utica",
+			"Yorktown Heights",
+			"Portland",
+			"Medford",
+			"Eugene",
+			"Bend",
+			"Hillsboro",
+			"Baker City",
+			"Corvallis",
+			"Bandon",
+			"Tampa",
+			"Miami",
+			"Orlando",
+			"Winter Haven",
+			"Boca Raton",
+			"Fort Lauderdale",
+			"West Palm Beach",
+			"Melbourne FL",
+			"Jacksonville",
+			"Gainesville",
+			"Tallahassee",
+			"Ocala",
+			"Stuart",
+			"Fort Myers",
+			"Daytona Beach",
+			"Deltona",
+			"Naples FL",
+			"Chicago",
+			"Bloomington",
+			"Peoria",
+			"Champaign",
+			"Aurora",
+			"Rockford",
+			"Rantoul",
+			"Ashburn",
+			"Reston",
+			"Manassas",
+			"Vienna Virginia",
+			"Sterling",
+			"Chantilly",
+			"Richmond",
+			"Middletown",
+			"Norfolk",
+			"Harrisonburg",
+			"South West Virginia",
+			"Atlanta",
+			"Alpharetta",
+			"Columbus GA",
+			"Carrollton",
+			"Buford",
+			"Dalton",
+			"Statesboro",
+			"Phoenix",
+			"Tucson",
+			"Seattle",
+			"Tacoma",
+			"Spokane",
+			"Bellevue",
+			"Bellingham",
+			"Walla Walla",
+			"Vancouver WA",
+			"Wenatchee",
+			"Moses Lake",
+			"Quincy",
+			"Milwaukee",
+			"Madison",
+			"Wisconsin Rapids",
+			"Appleton",
+			"Kenosha",
+			"Eau Claire",
+			"Green Bay",
+			"Wausau",
+			"Pittsburgh",
+			"Reading",
+			"Philadelphia",
+			"Harrisburg",
+			"Ebensburg",
+			"State College",
+			"Wilkes Barre",
+			"Allentown",
+			"Bethlehem",
+			"Valley Forge",
+			"Kansas City MO",
+			"St. Louis",
+			"Columbia",
+			"Springfield MO",
+			"Boston",
+			"Fall River",
+			"Andover",
+			"Marlborough",
+			"Fitchburg",
+			"Brockton",
+			"Worcester",
+			"Acton Boxborough",
+			"Cambridge MA",
+			"Springfield MA",
+			"Detroit",
+			"Grand Rapids",
+			"Lansing",
+			"Ann Arbor",
+			"Battle Creek",
+			"Southfield",
+			"Alpena",
+			"Cassopolis",
+			"Kalamazoo",
+			"Flint",
+			"Monroe MI",
+			"Washington D.C.",
+			"Denver",
+			"Colorado Springs",
+			"Loveland",
+			"Fort Collins",
+			"Salt Lake City",
+			"Orem",
+			"Saint George",
+			"St George",
+			"Ogden",
+			"St. George",
+			"Indianapolis",
+			"South Bend",
+			"Noblesville",
+			"Evansville",
+			"Fort Wayne",
+			"Hammond",
+			"Columbus IN",
+			"Omaha",
+			"Lincoln",
+			"Grand Island",
+			"Minneapolis",
+			"Braham",
+			"Cambridge MN",
+			"Duluth",
+			"Bemidji",
+			"Alexandria MN",
+			"Saint Paul",
+			"St. Cloud",
+			"Oklahoma City",
+			"Tulsa",
+			"Newark",
+			"Piscataway",
+			"Secaucus",
+			"Hudson County",
+			"Edison",
+			"Bridgewater",
+			"Hackensack",
+			"Totowa",
+			"Morris County",
+			"New Brunswick",
+			"Pennsauken",
+			"Princeton",
+			"Newton",
+			"Whippany",
+			"Wall Township",
+			"South Brunswick",
+			"Cleveland",
+			"Columbus",
+			"Cincinnati",
+			"Akron",
+			"Toledo",
+			"Youngstown",
+			"Dayton",
+			"Canton",
+			"Lebanon",
+			"Akron Canton",
+			"Lima OH",
+			"Las Vegas",
+			"Reno",
+			"Charlotte",
+			"Raleigh",
+			"Asheville",
+			"Greensboro",
+			"Hickory",
+			"Fayetteville",
+			"Mooresville",
+			"Winston Salem",
+			"Catawba",
+			"Durham NC",
+			"Goldsboro",
+			"Birmingham",
+			"Montgomery",
+			"Mobile",
+			"Huntsville",
+			"Baltimore",
+			"Silver Spring",
+			"Beltsville",
+			"Laurel",
+			"Frederick",
+			"Rockville",
+			"Chattanooga",
+			"Nashville",
+			"Knoxville",
+			"Memphis",
+			"Jackson",
+			"McMinnville",
+			"Lebanon TN",
+			"Sioux Falls",
+			"Wilmington",
+			"Newark DE",
+			"Louisville",
+			"Lexington",
+			"Hopkinsville",
+			"Ashland",
+			"Florence KY",
+			"Olive Hill",
+			"Norwalk",
+			"Stamford",
+			"Oxford",
+			"Hartford",
+			"Trumbull",
+			"New Haven",
+			"Fairfield County",
+			"Waterbury",
+			"Providence",
+			"Des Moines",
+			"Monticello",
+			"Cedar Rapids",
+			"Cedar Falls",
+			"Davenport",
+			"Lake Park",
+			"Waterloo IA",
+			"Honolulu",
+			"Kapolei",
+			"Billings",
+			"Bozeman",
+			"Cheyenne",
+			"Casper",
+			"Sheridan",
+			"Afton",
+			"Greenville",
+			"Seneca",
+			"Columbia SC",
+			"Charleston",
+			"Spartanburg",
+			"Rock Hill",
+			"Kansas City KS",
+			"Wichita",
+			"Topeka",
+			"Albuquerque",
+			"Taos",
+			"Clovis",
+			"Santa Fe",
+			"Santa Teresa",
+			"New Orleans",
+			"Alexandria LA",
+			"Baton Rouge",
+			"Monroe",
+			"Shreveport",
+			"Burlington",
+			"Stowe",
+			"Littleton",
+			"Manchester NH",
+			"Keene",
+			"Lebanon NH",
+			"Coeur d Alene",
+			"Boise",
+			"Little Rock",
+			"Berkeley Springs",
+			"Charleston WV",
+			"Hattiesburg",
+			"Jackson MS",
+			"Brunswick",
+			"Northern Maine",
+			"Portland MN",
+			"Fargo"
+		]
+	},
+	{
+		"country": "BR",
+		"cities": [
+			"Brasilia",
+			"Sao Paulo",
+			"Rio de Janeiro",
+			"Campina Grande",
+			"Porto Alegre",
+			"Curitiba",
+			"Belo Horizonte",
+			"Recife",
+			"Campinas",
+			"Natal",
+			"Sao Jose do Rio Preto",
+			"Fortaleza",
+			"Goiania",
+			"Sao Jose DO Rio Preto",
+			"Maringa",
+			"Joao Pessoa",
+			"Uberlandia",
+			"Cascavel",
+			"Joinville",
+			"Santa Maria",
+			"Xaxim",
+			"Ribeirao Preto"
+		]
+	},
+	{
+		"country": "FR",
+		"cities": [
+			"Paris",
+			"Lyon",
+			"Grenoble",
+			"Strasbourg",
+			"Nantes",
+			"Nice",
+			"Saint-Etienne",
+			"Sophia Antipolis",
+			"Rennes",
+			"Marseille",
+			"Toulouse",
+			"Bordeaux",
+			"Lille",
+			"Antibes",
+			"Carcassonne",
+			"Douai",
+			"Roubaix",
+			"Geneva FR",
+			"Saint Trivier sur Moignans",
+			"Montpellier",
+			"Reims",
+			"Dijon",
+			"Le Mans",
+			"Rouen",
+			"Tours",
+			"Nancy",
+			"Poitiers",
+			"Chateaubourg",
+			"Dreux",
+			"Orléans",
+			"Roanne",
+			"Valenciennes",
+			"Arras",
+			"Metz",
+			"Archamps",
+			"Besancon",
+			"Alencon",
+			"Belfort",
+			"Calais",
+			"La Rochelle",
+			"Limoges",
+			"Mareuil sur Ay",
+			"Narbonne",
+			"Nimes",
+			"Olonne sur Mer",
+			"Roann",
+			"Rodez"
+		]
+	},
+	{
+		"country": "DE",
+		"cities": [
+			"Frankfurt",
+			"Berlin",
+			"Düsseldorf",
+			"Munich",
+			"Nuremberg",
+			"Hamburg",
+			"Stuttgart",
+			"Falkenstein",
+			"Hannover",
+			"Darmstadt",
+			"Kiel",
+			"Nettetal",
+			"Schwerin",
+			"Cologne",
+			"Bamberg",
+			"Bremen",
+			"Leipzig",
+			"Dortmund",
+			"Dresden",
+			"Coburg",
+			"Oberhausen",
+			"Bielefeld",
+			"Magdeburg",
+			"Saarbrucken",
+			"Bonn",
+			"Mannheim",
+			"Erfurt",
+			"Freiburg",
+			"Karlsruhe",
+			"Saarlouis",
+			"Wuerzburg",
+			"Aachen",
+			"Balingen",
+			"Herford",
+			"Mahlow",
+			"Chemnitz",
+			"Goppingen",
+			"Halle Saale",
+			"Jena",
+			"Rostock",
+			"Saarland"
+		]
+	},
+	{
+		"country": "AU",
+		"cities": [
+			"Sydney",
+			"Melbourne",
+			"Perth",
+			"Canberra",
+			"Brisbane",
+			"Adelaide",
+			"Townsville",
+			"Gold Coast",
+			"Hobart",
+			"Geraldton",
+			"Newcastle AU",
+			"Toowoomba",
+			"Grafton",
+			"Launceston",
+			"Wollongong"
+		]
+	},
+	{
+		"country": "SE",
+		"cities": [
+			"Stockholm",
+			"Gothenburg",
+			"Malmö",
+			"Lulea",
+			"Boden",
+			"Falun",
+			"Falkenberg",
+			"Pitea",
+			"Gavle",
+			"Eslov",
+			"Vilhelmina",
+			"Jokkmokk",
+			"Boras",
+			"Jonkoping",
+			"Ljungaverk",
+			"Lund",
+			"Tallberg"
+		]
+	},
+	{
+		"country": "GB",
+		"cities": [
+			"London",
+			"Manchester",
+			"Edinburgh",
+			"Cardiff",
+			"Newcastle",
+			"Berkshire",
+			"Cambridge",
+			"Leeds",
+			"Slough",
+			"Portsmouth",
+			"Farnborough",
+			"Woking",
+			"Milton Keynes",
+			"Kent",
+			"Belfast",
+			"Peterborough",
+			"Stevenage",
+			"Glasgow",
+			"Nottingham",
+			"Derby",
+			"Somerset",
+			"Bedford",
+			"Cheltenham",
+			"Redhill",
+			"Northamptonshire",
+			"Surrey",
+			"Wakefield",
+			"Wiltshire",
+			"Sheffield",
+			"Hertford",
+			"Birmingham UK",
+			"Birmingham uk",
+			"Welwyn Garden City",
+			"Reigate",
+			"South Wales",
+			"Liverpool",
+			"Bradford",
+			"Bournemouth",
+			"Poole",
+			"Colchester",
+			"Fleet",
+			"Guildford",
+			"Ipswich",
+			"Luton",
+			"Aberdeen",
+			"Lincolnshire",
+			"Coventry",
+			"Crawley",
+			"Croydon",
+			"Dundee",
+			"Durham",
+			"Essex",
+			"Gloucester",
+			"High Wycombe",
+			"Middlesbrough",
+			"Norwich",
+			"Wolverhampton",
+			"York",
+			"North Wales",
+			"Shropshire",
+			"Walsall",
+			"Bolton",
+			"Crewe",
+			"Exeter",
+			"Glenrothes",
+			"Leicester",
+			"Leiston",
+			"Oxfordshire",
+			"Wherstead"
+		]
+	},
+	{
+		"country": "NL",
+		"cities": [
+			"Amsterdam",
+			"Rotterdam",
+			"Groningen",
+			"Dronten",
+			"Hengelo",
+			"Eindhoven",
+			"Venlo",
+			"Apeldoorn",
+			"s-Hertogenbosch",
+			"Overijssel",
+			"Den Haag",
+			"Breda",
+			"Steenbergen",
+			"Zoetermeer",
+			"Schiphol-Rijk",
+			"Utrecht",
+			"Ede",
+			"Doetinchem",
+			"Alphen aan den Rijn",
+			"Dordrecht",
+			"Amersfoort",
+			"Leeuwarden",
+			"Heerlen",
+			"Deventer",
+			"Lelystad",
+			"Maastricht",
+			"Flevoland",
+			"Arnhem",
+			"Goes",
+			"Limburg",
+			"Roosendaal"
+		]
+	},
+	{
+		"country": "JP",
+		"cities": [
+			"Tokyo",
+			"Osaka",
+			"Naha",
+			"Kobe",
+			"Nagoya",
+			"Fukuoka",
+			"Hiroshima",
+			"Inzai City",
+			"Kawaguchi",
+			"Mino City",
+			"Oyama",
+			"Sapporo",
+			"Sendai",
+			"Yokohama"
+		]
+	},
+	{
+		"country": "RO",
+		"cities": [
+			"Bucharest",
+			"Constanta",
+			"Cluj Napoca",
+			"Timisoara",
+			"Brasov",
+			"Iasi",
+			"Galati",
+			"Craiova",
+			"Drobeta Turnu Severin",
+			"Buzau"
+		]
+	},
+	{
+		"country": "ZA",
+		"cities": [
+			"Johannesburg",
+			"Cape Town",
+			"Durban",
+			"Midrand",
+			"Stellenbosch",
+			"Pretoria",
+			"Port Elizabeth"
+		]
+	},
+	{
+		"country": "CA",
+		"cities": [
+			"Toronto",
+			"Montreal",
+			"Vancouver",
+			"Ottawa",
+			"Winnipeg",
+			"Quebec",
+			"Hamilton",
+			"Mississauga",
+			"Calgary",
+			"Kelowna",
+			"Edmonton",
+			"Oakville",
+			"Saint John",
+			"Kingston",
+			"Waterloo",
+			"Charlottetown",
+			"Windsor",
+			"Halifax",
+			"Victoria",
+			"Saskatoon",
+			"Lethbridge",
+			"Moncton",
+			"Nanaimo",
+			"Winkler",
+			"Kamloops"
+		]
+	},
+	{
+		"country": "IT",
+		"cities": [
+			"Milan",
+			"Rome",
+			"Torino",
+			"Florence",
+			"Udine",
+			"Frosinone",
+			"Palermo",
+			"Pordenone",
+			"Piacenza",
+			"Naples",
+			"Bologna",
+			"Arezzo",
+			"Ancona",
+			"Citta St Angelo",
+			"Genova",
+			"Padova",
+			"Manocalzati",
+			"Bolzano",
+			"Bergamo",
+			"Ascoli Piceno",
+			"Brescia",
+			"Brindisi",
+			"Castel San Pietro Terme",
+			"Merate",
+			"Vicenza",
+			"Venice",
+			"Bari",
+			"Catania",
+			"Treviso",
+			"Lucca",
+			"Pisa",
+			"Trento",
+			"Varese"
+		]
+	},
+	{
+		"country": "ES",
+		"cities": [
+			"Madrid",
+			"Barcelona",
+			"Valencia",
+			"Donostia",
+			"Alicante",
+			"Malaga",
+			"Granada",
+			"Santa Cruz de Tenerife",
+			"Sevilla",
+			"Cadiz",
+			"Logrono",
+			"Murcia",
+			"Zaragoza",
+			"Albacete",
+			"Oviedo",
+			"Arrecife",
+			"Bilbao",
+			"Girona",
+			"Ibiza",
+			"Jaen",
+			"Los Llanos",
+			"Palma",
+			"Toledo ES"
+		]
+	},
+	{
+		"country": "PL",
+		"cities": [
+			"Warsaw",
+			"Poznan",
+			"Krakow",
+			"Torun",
+			"Nowa Sol",
+			"Lodz",
+			"Gdansk",
+			"Katowice",
+			"Suwalki",
+			"Bytom",
+			"Grodzisk Mazowiecki",
+			"Radom",
+			"Trojmiasto"
+		]
+	},
+	{
+		"country": "RU",
+		"cities": [
+			"Moscow",
+			"Saint Petersburg",
+			"Krasnoyarsk",
+			"Kazan",
+			"Nighny Novgorod",
+			"Zelenograd",
+			"Kirov",
+			"Chelyabinsk",
+			"Tomsk",
+			"Novosibirsk",
+			"Samara"
+		]
+	},
+	{
+		"country": "CH",
+		"cities": [
+			"Zürich",
+			"Geneva",
+			"Lugano",
+			"Chiasso",
+			"Lausanne",
+			"Zug",
+			"Basel",
+			"Lucerne",
+			"Uri",
+			"Bern",
+			"Winterthur",
+			"Solothurn",
+			"Jura",
+			"Biel",
+			"Chur",
+			"Sankt Gallen",
+			"Aargau",
+			"Sion"
+		]
+	},
+	{
+		"country": "BG",
+		"cities": [
+			"Sofia",
+			"Kapitan Andreevo",
+			"Ruse",
+			"Varna",
+			"Plovdiv",
+			"Montana"
+		]
+	},
+	{
+		"country": "AT",
+		"cities": [
+			"Vienna",
+			"Salzburg",
+			"Klagenfurt",
+			"Linz",
+			"Graz",
+			"Innsbruck",
+			"Ostermieting"
+		]
+	},
+	{
+		"country": "IN",
+		"cities": [
+			"Mumbai",
+			"Hyderabad",
+			"Bangalore",
+			"Noida",
+			"Chennai",
+			"New Delhi",
+			"Madurai",
+			"Gurgaon",
+			"Kolkata",
+			"Coimbatore",
+			"Cochin",
+			"Jaipur",
+			"Pune",
+			"Navi Mumbai",
+			"Ahmedabad",
+			"Nashik",
+			"Indore",
+			"Lucknow",
+			"Guntur",
+			"Pondicherry",
+			"Alappuzha",
+			"Alwar",
+			"Amaravati",
+			"Faridabad",
+			"Ludhiana"
+		]
+	},
+	{
+		"country": "SG",
+		"cities": [
+			"Singapore",
+			"Jurong"
+		]
+	},
+	{
+		"country": "HK",
+		"cities": [
+			"Hong Kong",
+			"Tsuen Wan",
+			"Tai Po",
+			"Ap Lei Chau",
+			"Fanling"
+		]
+	},
+	{
+		"country": "BE",
+		"cities": [
+			"Brussels",
+			"Zaventem",
+			"Antwerp",
+			"Liege",
+			"Nossegem",
+			"Bruges",
+			"Mechelen",
+			"Gent",
+			"Hasselt",
+			"Aalst",
+			"Lokeren",
+			"Tongeren",
+			"Leuven",
+			"Namur",
+			"Zele"
+		]
+	},
+	{
+		"country": "FI",
+		"cities": [
+			"Helsinki",
+			"Tampere",
+			"Kajaani",
+			"Huittinen",
+			"Jyvaskyla",
+			"Ulvila"
+		]
+	},
+	{
+		"country": "NO",
+		"cities": [
+			"Oslo",
+			"Trondheim",
+			"Stavanger",
+			"Kristiansand",
+			"Sandefjord",
+			"Bergen",
+			"Fredrikstad",
+			"Gaupne",
+			"Måløy",
+			"Alvdal",
+			"Billingstad",
+			"Forus",
+			"Kolbotn",
+			"Rjukan",
+			"Tomter"
+		]
+	},
+	{
+		"country": "NZ",
+		"cities": [
+			"Auckland",
+			"Wellington",
+			"Christchurch",
+			"Whangarei",
+			"Tauranga",
+			"New Plymouth",
+			"Palmerston North",
+			"Hamilton NZ",
+			"Dunedin",
+			"Invercargill"
+		]
+	},
+	{
+		"country": "TH",
+		"cities": [
+			"Bangkok",
+			"Chonburi",
+			"Pathumthani",
+			"Pakkred"
+		]
+	},
+	{
+		"country": "CL",
+		"cities": [
+			"Santiago",
+			"Temuco",
+			"Los Andes",
+			"Paine"
+		]
+	},
+	{
+		"country": "AE",
+		"cities": [
+			"Dubai",
+			"Abu Dhabi",
+			"Al Ain"
+		]
+	},
+	{
+		"country": "ID",
+		"cities": [
+			"Jakarta",
+			"Surabaya",
+			"Medan",
+			"Denpasar",
+			"Bandung",
+			"Bekasi",
+			"Makassar",
+			"Batam",
+			"Ambon",
+			"Bogor",
+			"Kupang",
+			"Manokwari",
+			"Mataram",
+			"Palembang",
+			"Pekanbaru"
+		]
+	},
+	{
+		"country": "RS",
+		"cities": [
+			"Belgrade",
+			"Nis"
+		]
+	},
+	{
+		"country": "PH",
+		"cities": [
+			"Manila",
+			"Bonuan Gueset",
+			"Sucat"
+		]
+	},
+	{
+		"country": "NG",
+		"cities": [
+			"Lagos",
+			"Abuja"
+		]
+	},
+	{
+		"country": "IE",
+		"cities": [
+			"Dublin",
+			"Cork",
+			"Galway"
+		]
+	},
+	{
+		"country": "TR",
+		"cities": [
+			"Istanbul",
+			"Ankara",
+			"Izmir",
+			"Antalya",
+			"Bursa",
+			"Denizli",
+			"Gaziantep",
+			"Konya",
+			"Rize",
+			"Samsun",
+			"Trabzon",
+			"Adana",
+			"Kayseri",
+			"Korfez"
+		]
+	},
+	{
+		"country": "GR",
+		"cities": [
+			"Athens",
+			"Thessaloniki",
+			"Chania",
+			"Koropi",
+			"Volos"
+		]
+	},
+	{
+		"country": "UA",
+		"cities": [
+			"Kiev",
+			"Odessa",
+			"Kharkov",
+			"Khmelnitskiy",
+			"Nikolaev",
+			"Vinnytsia"
+		]
+	},
+	{
+		"country": "AR",
+		"cities": [
+			"Buenos Aires"
+		]
+	},
+	{
+		"country": "CO",
+		"cities": [
+			"Bogota",
+			"Medellin",
+			"Cali"
+		]
+	},
+	{
+		"country": "PT",
+		"cities": [
+			"Lisbon",
+			"Porto",
+			"Prior Velho",
+			"Barreiro",
+			"Alentejo",
+			"Carnaxide",
+			"Matosinhos",
+			"Viseu"
+		]
+	},
+	{
+		"country": "CN",
+		"cities": [
+			"Beijing",
+			"Shanghai",
+			"Shenzhen",
+			"Chengdu",
+			"Guangzhou",
+			"Chongqing",
+			"Hangzhou",
+			"Nanjing",
+			"Gaoxin",
+			"Haikou",
+			"Nantong",
+			"Shenyang",
+			"Shijiazhuang",
+			"Taiyuan",
+			"Tianjin",
+			"Wuhan",
+			"Wuxi",
+			"Wuxing",
+			"Xiamen",
+			"Xian",
+			"Dalian",
+			"Luoyang",
+			"Qingdao",
+			"Shandong",
+			"Weinan",
+			"Wenzhou",
+			"Zhejiang",
+			"Zhuhai"
+		]
+	},
+	{
+		"country": "EG",
+		"cities": [
+			"Cairo",
+			"6 October City",
+			"Mansura",
+			"Ramadan City"
+		]
+	},
+	{
+		"country": "IL",
+		"cities": [
+			"Tel Aviv",
+			"Haifa",
+			"Netanya",
+			"Jerusalem",
+			"Hof Hasharon"
+		]
+	},
+	{
+		"country": "LU",
+		"cities": [
+			"Luxembourg",
+			"Bettembourg",
+			"Bissen"
+		]
+	},
+	{
+		"country": "MY",
+		"cities": [
+			"Selangor",
+			"Kuala Lumpur",
+			"Cyberjaya",
+			"Johor Bahru",
+			"Bayan Baru",
+			"Ipoh",
+			"Labuan",
+			"Mukim Labu"
+		]
+	},
+	{
+		"country": "TW",
+		"cities": [
+			"Taipei",
+			"Kaohsiung City",
+			"New Taipei City",
+			"Taichung"
+		]
+	},
+	{
+		"country": "DK",
+		"cities": [
+			"Copenhagen",
+			"Skanderborg",
+			"Kolding",
+			"Toender",
+			"Esbjerg",
+			"Århus",
+			"Herning",
+			"Silkeborg",
+			"Odense"
+		]
+	},
+	{
+		"country": "LT",
+		"cities": [
+			"Vilnius",
+			"Siauliai",
+			"Kaunas"
+		]
+	},
+	{
+		"country": "HR",
+		"cities": [
+			"Zagreb"
+		]
+	},
+	{
+		"country": "SK",
+		"cities": [
+			"Bratislava",
+			"Banska Bystrica",
+			"Kosice",
+			"Presov"
+		]
+	},
+	{
+		"country": "HU",
+		"cities": [
+			"Budapest",
+			"Nyiregyhaza"
+		]
+	},
+	{
+		"country": "CZ",
+		"cities": [
+			"Prague",
+			"Morava",
+			"Brno",
+			"Ivancice",
+			"Ostrava",
+			"Jihlava",
+			"Olomouc",
+			"Zlin",
+			"Ceske Budejovice",
+			"Hradec Kralove",
+			"Pisek",
+			"Prachatice"
+		]
+	},
+	{
+		"country": "KR",
+		"cities": [
+			"Seoul",
+			"Sungnam",
+			"Busan",
+			"Chuncheon"
+		]
+	},
+	{
+		"country": "MX",
+		"cities": [
+			"Mexico City",
+			"Guadalajara",
+			"Queretaro",
+			"Monterrey",
+			"Manzanillo",
+			"Merida",
+			"Nogales",
+			"Toluca"
+		]
+	},
+	{
+		"country": "PE",
+		"cities": [
+			"Lima"
+		]
+	},
+	{
+		"country": "MT",
+		"cities": [
+			"Madliena",
+			"Gzira",
+			"Birkirkara",
+			"Qormi",
+			"Marsa",
+			"St Venera"
+		]
+	},
+	{
+		"country": "AO",
+		"cities": [
+			"Luanda"
+		]
+	},
+	{
+		"country": "BH",
+		"cities": [
+			"Manama"
+		]
+	},
+	{
+		"country": "MU",
+		"cities": [
+			"Port Louis",
+			"Ebene",
+			"Arsenal",
+			"Reduit",
+			"Quatre Bornes"
+		]
+	},
+	{
+		"country": "MK",
+		"cities": [
+			"Skopje"
+		]
+	},
+	{
+		"country": "BD",
+		"cities": [
+			"Dhaka"
+		]
+	},
+	{
+		"country": "EE",
+		"cities": [
+			"Tallinn",
+			"Harku",
+			"Narva",
+			"Johvi"
+		]
+	},
+	{
+		"country": "IS",
+		"cities": [
+			"Reykjavik",
+			"Keflavik",
+			"Vestmannaeyjar"
+		]
+	},
+	{
+		"country": "NP",
+		"cities": [
+			"Kathmandu"
+		]
+	},
+	{
+		"country": "KH",
+		"cities": [
+			"Phnom Penh"
+		]
+	},
+	{
+		"country": "PR",
+		"cities": [
+			"San Juan",
+			"Caguas"
+		]
+	},
+	{
+		"country": "KE",
+		"cities": [
+			"Nairobi",
+			"Mombasa"
+		]
+	},
+	{
+		"country": "BO",
+		"cities": [
+			"Santa Cruz de la Sierra"
+		]
+	},
+	{
+		"country": "VN",
+		"cities": [
+			"Hanoi",
+			"Ho Chi Minh City",
+			"Da Nang"
+		]
+	},
+	{
+		"country": "EC",
+		"cities": [
+			"Quito"
+		]
+	},
+	{
+		"country": "AN",
+		"cities": [
+			"Curacao"
+		]
+	},
+	{
+		"country": "CD",
+		"cities": [
+			"Kinshasa"
+		]
+	},
+	{
+		"country": "LB",
+		"cities": [
+			"Beirut",
+			"Shouf"
+		]
+	},
+	{
+		"country": "UG",
+		"cities": [
+			"Kampala"
+		]
+	},
+	{
+		"country": "PK",
+		"cities": [
+			"Lahore",
+			"Karachi",
+			"Islamabad"
+		]
+	},
+	{
+		"country": "LV",
+		"cities": [
+			"Riga"
+		]
+	},
+	{
+		"country": "SA",
+		"cities": [
+			"Riyadh",
+			"Dammam",
+			"Jeddah",
+			"Khobar",
+			"Maddinah",
+			"Unaizah"
+		]
+	},
+	{
+		"country": "UY",
+		"cities": [
+			"Montevideo",
+			"Maldonado"
+		]
+	},
+	{
+		"country": "CR",
+		"cities": [
+			"San Jose CR",
+			"Alajuela"
+		]
+	},
+	{
+		"country": "CY",
+		"cities": [
+			"Nicosia",
+			"Limassol",
+			"Larnaca",
+			"Paphos",
+			"Strovolos",
+			"Anatoliko"
+		]
+	},
+	{
+		"country": "IR",
+		"cities": [
+			"Tehran",
+			"Rasht",
+			"Tabriz",
+			"Mashhad",
+			"Shiraz",
+			"Qom",
+			"Hamedan"
+		]
+	},
+	{
+		"country": "OM",
+		"cities": [
+			"Muscat",
+			"New Nizwa"
+		]
+	},
+	{
+		"country": "IM",
+		"cities": [
+			"Ballasalla",
+			"Douglas"
+		]
+	},
+	{
+		"country": "LA",
+		"cities": [
+			"Vientiane"
+		]
+	},
+	{
+		"country": "AZ",
+		"cities": [
+			"Baku"
+		]
+	},
+	{
+		"country": "PA",
+		"cities": [
+			"Panama City"
+		]
+	},
+	{
+		"country": "GI",
+		"cities": [
+			"Gibraltar"
+		]
+	},
+	{
+		"country": "DZ",
+		"cities": [
+			"Oran",
+			"Rahmania",
+			"Cheraga",
+			"Algiers"
+		]
+	},
+	{
+		"country": "BS",
+		"cities": [
+			"Nassau",
+			"Freeport"
+		]
+	},
+	{
+		"country": "TN",
+		"cities": [
+			"Tunis",
+			"Sousse"
+		]
+	},
+	{
+		"country": "JE",
+		"cities": [
+			"St Helier",
+			"St Saviour",
+			"Grouville"
+		]
+	},
+	{
+		"country": "NI",
+		"cities": [
+			"Managua"
+		]
+	},
+	{
+		"country": "KZ",
+		"cities": [
+			"Almaty"
+		]
+	},
+	{
+		"country": "QA",
+		"cities": [
+			"Doha"
+		]
+	},
+	{
+		"country": "GT",
+		"cities": [
+			"Guatemala"
+		]
+	},
+	{
+		"country": "SV",
+		"cities": [
+			"San Salvador"
+		]
+	},
+	{
+		"country": "HN",
+		"cities": [
+			"Tegucigalpa"
+		]
+	},
+	{
+		"country": "MM",
+		"cities": [
+			"Yangon"
+		]
+	},
+	{
+		"country": "MA",
+		"cities": [
+			"Fez",
+			"Casablanca",
+			"Tangier",
+			"Tanger"
+		]
+	},
+	{
+		"country": "JO",
+		"cities": [
+			"Amman"
+		]
+	},
+	{
+		"country": "SI",
+		"cities": [
+			"Ljubljana",
+			"Nova Gorica"
+		]
+	},
+	{
+		"country": "BY",
+		"cities": [
+			"Minsk"
+		]
+	},
+	{
+		"country": "LI",
+		"cities": [
+			"Vaduz"
+		]
+	},
+	{
+		"country": "ME",
+		"cities": [
+			"Podgorica",
+			"Bijelo Polje"
+		]
+	},
+	{
+		"country": "MO",
+		"cities": [
+			"Taipa"
+		]
+	},
+	{
+		"country": "PS",
+		"cities": [
+			"Ramallah"
+		]
+	},
+	{
+		"country": "GH",
+		"cities": [
+			"Accra"
+		]
+	},
+	{
+		"country": "VE",
+		"cities": [
+			"Caracas",
+			"Barcelona VE",
+			"Valencia VZ"
+		]
+	},
+	{
+		"country": "KW",
+		"cities": [
+			"Kuwait City"
+		]
+	},
+	{
+		"country": "LY",
+		"cities": [
+			"Tripoli"
+		]
+	},
+	{
+		"country": "GE",
+		"cities": [
+			"Tbilisi"
+		]
+	},
+	{
+		"country": "MD",
+		"cities": [
+			"Chisinau"
+		]
+	},
+	{
+		"country": "AF",
+		"cities": [
+			"Kabul"
+		]
+	},
+	{
+		"country": "TZ",
+		"cities": [
+			"Dar es Salaam",
+			"Dar es salaam"
+		]
+	},
+	{
+		"country": "SR",
+		"cities": [
+			"Paramaribo"
+		]
+	},
+	{
+		"country": "BA",
+		"cities": [
+			"Novi Travnik"
+		]
+	},
+	{
+		"country": "RW",
+		"cities": [
+			"Kigali"
+		]
+	},
+	{
+		"country": "BM",
+		"cities": [
+			"Hamilton BM"
+		]
+	},
+	{
+		"country": "NC",
+		"cities": [
+			"Noumea",
+			"Nouville"
+		]
+	},
+	{
+		"country": "KY",
+		"cities": [
+			"Stake Bay",
+			"George Town"
+		]
+	},
+	{
+		"country": "CM",
+		"cities": [
+			"Douala"
+		]
+	},
+	{
+		"country": "CW",
+		"cities": [
+			"Seru Mahuma"
+		]
+	},
+	{
+		"country": "GF",
+		"cities": [
+			"Cayenne"
+		]
+	},
+	{
+		"country": "PF",
+		"cities": [
+			"Papenoo"
+		]
+	},
+	{
+		"country": "GL",
+		"cities": [
+			"Nuuk"
+		]
+	},
+	{
+		"country": "XK",
+		"cities": [
+			"Prishtine"
+		]
+	},
+	{
+		"country": "PY",
+		"cities": [
+			"Asuncion"
+		]
+	},
+	{
+		"country": "TT",
+		"cities": [
+			"Princes Town"
+		]
+	},
+	{
+		"country": "ZW",
+		"cities": [
+			"Harare"
+		]
+	},
+	{
+		"country": "GG",
+		"cities": [
+			"St Peter Port",
+			"Vale"
+		]
+	},
+	{
+		"country": "BN",
+		"cities": [
+			"Bandar Seri Begawan"
+		]
+	},
+	{
+		"country": "RE",
+		"cities": [
+			"Saint Denis"
+		]
+	},
+	{
+		"country": "VI",
+		"cities": [
+			"St. Croix"
+		]
+	}
+]

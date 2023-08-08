@@ -4,8 +4,8 @@
 			"country_code": "US",
 			"region_name": "Texas",
 			"city_name": "Dallas",
-			"latitude": 32.001,
-			"longitude": -96.001,
+			"latitude": 32.7831,
+			"longitude": -96.8067,
 			"asn": "20001",
 			"as": "The Constant Company LLC",
 			"is_proxy": false
@@ -14,18 +14,18 @@
 			"country_code": "AR",
 			"region_name": "Ciudad Autonoma de Buenos Aires",
 			"city_name": "Buenos Aires",
-			"latitude": -34.001,
-			"longitude": -58.001,
+			"latitude": -34.6131,
+			"longitude": -58.3772,
 			"asn": "61001",
-			"as": "interbs s.r.l.",
+			"as": "InterBS S.R.L. (BAEHOST)",
 			"is_proxy": false
 		},
 		"newYork": {
 			"country_code": "US",
 			"region_name": "New York",
 			"city_name": "New York",
-			"latitude": 40.001,
-			"longitude": -74.001,
+			"latitude": 40.7143,
+			"longitude": -74.0060,
 			"asn": "80001",
 			"as": "The Constant Company LLC",
 			"is_proxy": false
@@ -39,12 +39,47 @@
 			"asn": "40676",
 			"as": "Psychz Networks"
 		},
-		"emptyCity": {
-			"country_code": "US",
-			"region_name": "Texas",
+		"falkenstein": {
+			"country_code": "DE",
+			"region_name": "Sachsen",
+			"city_name": "Falkenstein",
+			"latitude": 50.47785,
+			"longitude": 12.371563,
+			"asn": "24940",
+			"as": "Hetzner Online GmbH"
+		},
+		"lengenfeld": {
+			"country_code": "DE",
+			"region_name": "Sachsen",
+			"city_name": "Lengenfeld",
+			"latitude": 50.47785,
+			"longitude": 12.371563,
+			"asn": "24940",
+			"as": "Hetzner Online GmbH"
+		},
+		"empty": {
+			"country_code": "",
 			"city_name": "",
-			"latitude": 32.001,
-			"longitude": -96.001,
+			"latitude": 0,
+			"longitude": 0,
+			"asn": "",
+			"as": "",
+			"is_proxy": false
+		},
+		"emptyCity": {
+			"country_code": "EG",
+			"city_name": "",
+			"latitude": 23.878,
+			"longitude": 26.487,
+			"asn": "20001",
+			"as": "The Constant Company LLC",
+			"is_proxy": false
+		},
+		"emptyLocation": {
+			"country_code": "EG",
+			"city_name": "El-Rashda",
+			"latitude": 23.878,
+			"longitude": 26.487,
 			"asn": "20001",
 			"as": "The Constant Company LLC",
 			"is_proxy": false
@@ -53,8 +88,8 @@
 			"country_code": "US",
 			"region_name": "Texas",
 			"city_name": "Dallas",
-			"latitude": 32.001,
-			"longitude": -96.001,
+			"latitude": 32.7831,
+			"longitude": -96.8067,
 			"asn": "",
 			"as": "",
 			"is_proxy": false
@@ -63,8 +98,8 @@
 			"country_code": "US",
 			"region_name": "Texas",
 			"city_name": "Dallas",
-			"latitude": 32.001,
-			"longitude": -96.001,
+			"latitude": 32.7831,
+			"longitude": -96.8067,
 			"asn": "20001",
 			"as": "The Constant Company LLC",
 			"is_proxy": true
@@ -73,8 +108,8 @@
 			"country_code": "US",
 			"region_name": "Texas",
 			"city_name": "Dallas",
-			"latitude": 32.001,
-			"longitude": -96.001,
+			"latitude": 32.7831,
+			"longitude": -96.8067,
 			"asn": "20001",
 			"as": "The Constant Company LLC"
 		}
@@ -84,8 +119,8 @@
 			"locations": [
 				{
 					"cityName": "Dallas",
-					"latitude": 32.002,
-					"longitude": -96.002,
+					"latitude": 32.7831,
+					"longitude": -96.8067,
 					"stateAnsiCode": "TX",
 					"countryCodeAlpha2": "US"
 				}
@@ -95,8 +130,8 @@
 			"locations": [
 				{
 					"cityName": "Buenos Aires",
-					"latitude": -34.002,
-					"longitude": -58.002,
+					"latitude": -34.6131,
+					"longitude": -58.3772,
 					"stateAnsiCode": "",
 					"countryCodeAlpha2": "AR"
 				}
@@ -106,10 +141,20 @@
 			"locations": [
 				{
 					"cityName": "New York City",
-					"latitude": 40.002,
-					"longitude": -74.002,
+					"latitude": 40.7143,
+					"longitude": -74.0060,
 					"stateAnsiCode": "NY",
 					"countryCodeAlpha2": "US"
+				}
+			]
+		},
+		"empty": {
+			"locations": [
+				{
+					"cityName": "",
+					"latitude": 0,
+					"longitude": 0,
+					"countryCodeAlpha2": ""
 				}
 			]
 		},
@@ -117,10 +162,19 @@
 			"locations": [
 				{
 					"cityName": "",
-					"latitude": 32.002,
-					"longitude": -96.002,
-					"stateAnsiCode": "TX",
-					"countryCodeAlpha2": "US"
+					"latitude": 23.878,
+					"longitude": 26.487,
+					"countryCodeAlpha2": "EG"
+				}
+			]
+		},
+		"emptyLocation": {
+			"locations": [
+				{
+					"cityName": "El-Rashda",
+					"latitude": 23.878,
+					"longitude": 26.487,
+					"countryCodeAlpha2": "EG"
 				}
 			]
 		}
@@ -144,12 +198,12 @@
 				}
 			},
 			"location": {
-				"latitude": 32.003,
-				"longitude": -96.003
+				"latitude": 32.7831,
+				"longitude": -96.8067
 			},
 			"traits": {
 				"autonomousSystemNumber": 20003,
-				"isp": "psychz networks"
+				"isp": "The Constant Company LLC"
 			}
 		},
 		"argentina": {
@@ -165,12 +219,12 @@
 				}
 			},
 			"location": {
-				"latitude": -34.003,
-				"longitude": -58.003
+				"latitude": -34.6131,
+				"longitude": -58.3772
 			},
 			"traits": {
 				"autonomousSystemNumber": 61003,
-				"isp": "interbs s.r.l."
+				"isp": "InterBS S.R.L. (BAEHOST)"
 			}
 		},
 		"newYork": {
@@ -186,31 +240,59 @@
 				}
 			},
 			"location": {
-				"latitude": 40.003,
-				"longitude": -74.003
+				"latitude": 40.7143,
+				"longitude": -74.0060
 			},
 			"traits": {
 				"autonomousSystemNumber": 80003,
-				"isp": "psychz networks"
+				"isp": "The Constant Company LLC"
 			}
 		},
-		"emptyCity": {
+		"empty": {
 			"continent": {
-				"code": "NA"
+				"code": "0"
 			},
 			"country": {
-				"isoCode": "US"
+				"isoCode": "0"
 			},
 			"city": {
 				"names": {}
 			},
 			"location": {
-				"latitude": 32.003,
-				"longitude": -96.003
+				"latitude": 0,
+				"longitude": 0
+			}
+		},
+		"emptyCity": {
+			"continent": {
+				"code": "AF"
 			},
-			"traits": {
-				"autonomousSystemNumber": 20003,
-				"isp": "psychz networks"
+			"country": {
+				"isoCode": "EG"
+			},
+			"city": {
+				"names": {}
+			},
+			"location": {
+				"latitude": 23.878,
+				"longitude": 26.487
+			}
+		},
+		"emptyLocation": {
+			"continent": {
+				"code": "AF"
+			},
+			"country": {
+				"isoCode": "EG"
+			},
+			"city": {
+				"names": {
+					"en": "El-Rashda"
+				}
+			},
+			"location": {
+				"latitude": 23.878,
+				"longitude": 26.487
 			}
 		},
 		"emptyNetwork": {
@@ -231,8 +313,8 @@
 				}
 			},
 			"location": {
-				"latitude": 32.003,
-				"longitude": -96.003
+				"latitude": 32.7831,
+				"longitude": -96.8067
 			},
 			"traits": {
 				"autonomousSystemNumber": 0,
@@ -245,55 +327,69 @@
 			"city": "Dallas",
 			"region": "Texas",
 			"country": "US",
-			"loc": "32.004,-96.004",
-			"org": "AS20004 Psychz Networks"
+			"loc": "32.7831,-96.8067",
+			"org": "AS20004 The Constant Company LLC"
 		},
 		"argentina": {
 			"city": "Buenos Aires",
 			"region": "Pernambuco",
-			"country": "BR",
-			"loc": "-34.004,-58.004",
+			"country": "AR",
+			"loc": "-34.6131,-58.3772",
 			"org": "AS61004 InterBS S.R.L. (BAEHOST)"
+		},
+		"empty": {
+			"city": "",
+			"region": "",
+			"country": "",
+			"loc": "",
+			"org": ""
 		},
 		"emptyCity": {
 			"city": "",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.004,-96.004",
-			"org": "AS20004 Psychz Networks"
+			"region": "",
+			"country": "EG",
+			"loc": "23.878,26.487",
+			"org": ""
+		},
+		"emptyLocation": {
+			"city": "El-Rashda",
+			"region": "",
+			"country": "EG",
+			"loc": "23.878,26.487",
+			"org": ""
 		},
 		"newYork": {
 			"city": "The New York City",
 			"region": "New York",
 			"country": "US",
-			"loc": "40.004,-74.004",
-			"org": "AS80004 InterBS S.R.L. (BAEHOST)"
+			"loc": "40.7143,-74.0060",
+			"org": "AS80004 The Constant Company LLC"
 		},
 		"washington": {
 			"city": "Washington",
 			"region": "Washington, D.C.",
 			"country": "US",
-			"loc": "38.8951,-77.0364",
+			"loc": "38.89539,-77.039476",
 			"org": "AS701 Verizon Business"
 		},
 		"emptyNetwork": {
 			"city": "Dallas",
 			"region": "Texas",
 			"country": "US",
-			"loc": "32.004,-96.004",
+			"loc": "32.7831,-96.8067",
 			"org": ""
 		},
 		"undefinedNetwork": {
 			"city": "Dallas",
 			"region": "Texas",
 			"country": "US",
-			"loc": "32.004,-96.004"
+			"loc": "32.7831,-96.8067"
 		}
 	},
 	"fastly": {
 		"default": {
 			"as": {
-				"name": "psychz networks",
+				"name": "The Constant Company LLC",
 				"number": 20005
 			},
 			"geo-digitalelement": {
@@ -302,14 +398,14 @@
 				"country_code": "US",
 				"country_code3": "USA",
 				"country_name": "united states",
-				"latitude": 32.005,
-				"longitude": -96.005,
+				"latitude": 32.7831,
+				"longitude": -96.8067,
 				"region": "TX"
 			}
 		},
 		"argentina": {
 			"as": {
-				"name": "interbs s.r.l.",
+				"name": "InterBS S.R.L. (BAEHOST)",
 				"number": 61005
 			},
 			"geo-digitalelement": {
@@ -318,14 +414,14 @@
 				"country_code": "AR",
 				"country_code3": "ARG",
 				"country_name": "argentina",
-				"latitude": -34.005,
-				"longitude": -58.005,
+				"latitude": -34.6131,
+				"longitude": -58.3772,
 				"region": "C"
 			}
 		},
 		"newYork": {
 			"as": {
-				"name": "psychz networks",
+				"name": "The Constant Company LLC",
 				"number": 80005
 			},
 			"geo-digitalelement": {
@@ -334,8 +430,8 @@
 				"country_code": "US",
 				"country_code3": "USA",
 				"country_name": "united states",
-				"latitude": 40.005,
-				"longitude": -74.005,
+				"latitude": 40.7143,
+				"longitude": -74.0060,
 				"region": "NY"
 			}
 		},
@@ -355,25 +451,53 @@
 				"region": "10"
 			}
 		},
+		"empty": {
+			"geo-digitalelement": {
+				"city": "",
+				"continent_code": "",
+				"country_code": "",
+				"country_code3": "",
+				"country_name": "",
+				"latitude": 0,
+				"longitude": 0,
+				"region": ""
+			}
+		},
 		"emptyCity": {
 			"as": {
-				"name": "psychz networks",
+				"name": "The Constant Company LLC",
 				"number": 20005
 			},
 			"geo-digitalelement": {
 				"city": "",
-				"continent_code": "NA",
-				"country_code": "US",
-				"country_code3": "USA",
-				"country_name": "united states",
-				"latitude": 32.005,
-				"longitude": -96.005,
-				"region": "TX"
+				"continent_code": "AF",
+				"country_code": "EG",
+				"country_code3": "EGY",
+				"country_name": "egypt",
+				"latitude": 23.878,
+				"longitude": 26.487,
+				"region": ""
+			}
+		},
+		"emptyLocation": {
+			"as": {
+				"name": "The Constant Company LLC",
+				"number": 20005
+			},
+			"geo-digitalelement": {
+				"city": "El-Rashda",
+				"continent_code": "AF",
+				"country_code": "EG",
+				"country_code3": "EGY",
+				"country_name": "egypt",
+				"latitude": 23.878,
+				"longitude": 26.487,
+				"region": ""
 			}
 		},
 		"noClient": {
 			"as": {
-				"name": "psychz networks",
+				"name": "The Constant Company LLC",
 				"number": 20005
 			},
 			"geo-digitalelement": {
@@ -382,14 +506,14 @@
 				"country_code": "US",
 				"country_code3": "USA",
 				"country_name": "united states",
-				"latitude": 32.005,
-				"longitude": -96.005,
+				"latitude": 32.7831,
+				"longitude": -96.8067,
 				"region": "TX"
 			}
 		},
 		"reserved": {
 			"as": {
-				"name": "interbs s.r.l.",
+				"name": "InterBS S.R.L. (BAEHOST)",
 				"number": 61005
 			},
 			"geo-digitalelement": {
@@ -398,14 +522,14 @@
 				"country_code": "AR",
 				"country_code3": "ARG",
 				"country_name": "argentina",
-				"latitude": -34.005,
-				"longitude": -58.005,
+				"latitude": -34.6131,
+				"longitude": -58.3772,
 				"region": "C"
 			}
 		},
 		"private": {
 			"as": {
-				"name": "interbs s.r.l.",
+				"name": "InterBS S.R.L. (BAEHOST)",
 				"number": 61005
 			},
 			"geo-digitalelement": {
@@ -414,8 +538,8 @@
 				"country_code": "AR",
 				"country_code3": "ARG",
 				"country_name": "argentina",
-				"latitude": -34.005,
-				"longitude": -58.005,
+				"latitude": -34.6131,
+				"longitude": -58.3772,
 				"region": "C"
 			}
 		}
