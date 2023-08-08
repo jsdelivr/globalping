@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import Bluebird from 'bluebird';
 import got from 'got';
 import AdmZip from 'adm-zip';
 import csvParser from 'csv-parser';
@@ -75,7 +76,7 @@ export const populateCitiesList = async () => {
 
 	geonamesCities = new Map(cities.map(city => ([ city.geonameId, { ...city, population: parseInt(city.population, 10) }])));
 
-	await Promise.all(cities.map(async (city: City) => {
+	await Bluebird.map(cities, async (city) => {
 		const { geonameId, latitude, longitude } = city;
 
 		await redis.geoAdd('gp:cities', [{
@@ -83,7 +84,7 @@ export const populateCitiesList = async () => {
 			latitude: parseFloat(latitude),
 			longitude: parseFloat(longitude),
 		}]);
-	}));
+	}, { concurrency: 1000 });
 };
 
 const throttledPopulateCitiesList = throttle(async () => {
