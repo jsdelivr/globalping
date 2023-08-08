@@ -10,7 +10,7 @@ Output:
 
 Currently we have 5 geo ip info providers: "ipinfo", "ip2location", "maxmind", "ipmap", "fastly". We pass the ip to every and get data from each of them (error or not found results are filtered out).
 
-Data state:
+New data state:
 ```js
 {
   "ipinfo": {
@@ -53,45 +53,55 @@ Data state:
 
 ### Step 2
 
-Get approximated city. Every provider has lat/long and country info, so for every provider we are:
-- searching in geonames db in radius of 30 km using providers's lat/long;
-- filtering the result cities to be in same country as the provider's one;
-- if there are multiple cities we are searching for the one with the biggest population;
-- result is an approximated city, it is written to the provider's "city" field;
-- if no approximated city was found provider is removed.
+Apply city approximation. For every provider we are checking if it's city field value is in the [popular DC cities list](../src/lib/geoip/dc-cities.json). 
 
-Data state:
+If value is in the list, then city approximation is not required and city value from provider is kept.
+
+Otherwise, we are applying city approximation:
+- searching in geonames db in radius of 30 km using lat/long value from provider;
+- filtering the result cities to be in same country as the provider's one;
+- if there are multiple cities we are choosing city with the biggest population;
+- result is an approximated city, it is written to the provider's "city" field;
+- if no approximated city was found provider's original value is kept.
+
+New data state:
 ```js
 {
   "ipinfo": {
     "country": "US",
-    "city": "San Jose", // approximated city is "San Jose", so it is set instead of "Cupertino"
+    "city": "San Jose", // provider's "Cupertino" city is not in the DC cities list and approximated city is "San Jose", so "San Jose" is a new city value
     "lat": 37.323,
     "long": -122.03218,
     "asn": "0001"
   },
   "ip2location": {
     "country": "US",
-    "city": "Los Angeles", // approximated city is "Los Angeles", so it is set instead of "Long Beach"
+    "city": "Los Angeles", // provider's "Long Beach" city is not in the DC cities list and approximated city is "Los Angeles", so "Los Angeles" is a new city value
     "lat": 33.790287, 
     "long": -118.193769,
     "asn": "0002"
   },
   "maxmind": {
     "country": "US",
-    "city": "Los Angeles", // approximated city is "Los Angeles", so no changes here
+    "city": "Los Angeles", // provider's "Los Angeles" city is in the DC cities list so that value is kept
     "lat": 34.0544,
     "long": -118.2441,
     "asn": "0003"
   },
   "ipmap": {
     "country": "US",
-    "city": "San Jose", // approximated city is "San Jose", so it is set instead of "Santa Clara"
+    "city": "Santa Clara", // provider's "Santa Clara" city is in the DC cities list so that value is kept
     "lat": 37.3541,
     "long": -121.9552,
     "asn": "0004"
   },
-  // "fastly" was removed because no city was found for it's lat: 36.837866, long: -123.341544
+  "fastly": {
+    "country": "US",
+    "city": "San Jose", // provider's "San Jose" city is in the DC cities list so that value is kept
+    "lat": 36.837866,
+    "long": -123.341544,
+    "asn": "0005"
+  },
 }
 ```
 
@@ -103,7 +113,7 @@ Sorting rules are:
 - if there are several groups of the same size, group with the most prioritized provider goes first
 - groups are sorted internally by the priority of providers
 
-Data state:
+New data state:
 ```js
 {
   "ipinfo": { // group "San Jose", provider has the top priority
@@ -113,12 +123,12 @@ Data state:
     "long": -122.03218,
     "asn": "0001"
   },
-  "ipmap": { // group "San Jose", provider moved to the second place as its group goes first
+  "fastly": { // group "San Jose", provider moved to the second place as its group goes first
     "country": "US",
-    "city": "San Jose", 
-    "lat": 37.3541,
-    "long": -121.9552,
-    "asn": "0004"
+    "city": "San Jose",
+    "lat": 36.837866,
+    "long": -123.341544,
+    "asn": "0005"
   },
   "ip2location": { // group "Los Angeles"
     "country": "US",
@@ -134,6 +144,13 @@ Data state:
     "long": -118.2441,
     "asn": "0003"
   },
+  "ipmap": { // group "Santa Clara", provider moved to the last place as there is only one provider in "Santa Clara" group
+    "country": "US",
+    "city": "Santa Clara",
+    "lat": 37.3541,
+    "long": -121.9552,
+    "asn": "0004"
+  },
 }
 ```
 
@@ -141,6 +158,7 @@ Data state:
 
 Pick the first item from the result list. Data from "ipinfo" wins. It's values ("city", "asn", and other metadata) will be used to describe the probe.
 
+Final result:
 ```js
 {
   "ipinfo": {
