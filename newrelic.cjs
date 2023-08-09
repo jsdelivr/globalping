@@ -16,6 +16,12 @@ exports.config = {
 	distributed_tracing: {
 		enabled: true,
 	},
+	transaction_events: {
+		max_samples_stored: 100,
+		attributes: {
+			enabled: false,
+		},
+	},
 	allow_all_headers: true,
 	attributes: {
 		exclude: [
