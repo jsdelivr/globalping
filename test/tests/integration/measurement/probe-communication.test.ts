@@ -312,6 +312,7 @@ describe('Create measurement request', () => {
 				expect(response.body[0]).to.deep.include({
 					status: 'initializing',
 					version: '0.14.0',
+					nodeVersion: 'v18.17.0',
 					location: {
 						continent: 'NA',
 						region: 'Northern America',

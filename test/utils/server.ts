@@ -25,6 +25,7 @@ export const addFakeProbe = async (events: Record<string, any> = {}): Promise<So
 			reconnectionDelayMax: 500,
 			query: {
 				version: '0.14.0',
+				nodeVersion: 'v18.17.0',
 			},
 		});
 
