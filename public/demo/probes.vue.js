@@ -17,6 +17,10 @@ const probes = () => ({
 
 			return probe.status !== 'ready' ? 'orange' : 'green';
 		},
+		getNodeVersion (index) {
+			const probe = this.probes[index];
+			return probe.nodeVersion ? `[${probe.nodeVersion}]` : '';
+		},
 		getReadyStatus (index) {
 			const probe = this.probes[index];
 			return probe.status ? `[${probe.status.toUpperCase()}]` : '';
@@ -68,7 +72,7 @@ const probes = () => ({
 			<ul>
 				<li v-for="(probe, index) in probes">
 					<div :style="{ color: getReadyColor(index) }">
-						[{{ probe.version }}] {{ getReadyStatus(index) }} {{ getHost(index) }} {{ getIpAddress(index) }} {{ parsedLocation(index) }} -- {{ probe.location.network }} {{ getTags(index) }}
+						[{{ probe.version }}] {{ getNodeVersion(index) }} {{ getReadyStatus(index) }} {{ getHost(index) }} {{ getIpAddress(index) }} {{ parsedLocation(index) }} -- {{ probe.location.network }} {{ getTags(index) }}
 					</div>
 				</li>
 			</ul>

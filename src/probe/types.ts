@@ -34,7 +34,8 @@ export type Tag = {
 export type Probe = {
 	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'ping-test-failed' | 'sigterm';
 	client: string;
-	version: string | undefined;
+	version: string;
+	nodeVersion: string;
 	ipAddress: string;
 	host: string;
 	location: ProbeLocation;

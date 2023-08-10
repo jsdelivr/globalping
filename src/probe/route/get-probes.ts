@@ -17,6 +17,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 	ctx.body = sockets.map((socket: Socket) => ({
 		status: isAdmin ? socket.data.probe.status : undefined,
 		version: socket.data.probe.version,
+		nodeVersion: isAdmin ? socket.data.probe.nodeVersion : undefined,
 		location: {
 			continent: socket.data.probe.location.continent,
 			region: socket.data.probe.location.region,
