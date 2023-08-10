@@ -36,10 +36,10 @@ const fakeIpForDebug = () => {
 
 const geoipClient = createGeoipClient();
 
-const findProbeVersion = (socket: Socket) => String(socket.handshake.query['version']);
-
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
-	const version = findProbeVersion(socket);
+	const version = String(socket.handshake.query['version']);
+
+	const nodeVersion = String(socket.handshake.query['nodeVersion']);
 
 	const host = process.env['HOSTNAME'] ?? '';
 
@@ -92,6 +92,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	return {
 		client: socket.id,
 		version,
+		nodeVersion,
 		ipAddress: clientIp,
 		host,
 		location,
