@@ -1,5 +1,5 @@
 import * as process from 'node:process';
-import { fetchSockets } from '../server.js';
+import { fetchSocketsUntrottled } from '../server.js';
 import { scopedLogger } from '../../logger.js';
 import { InternalError } from '../../internal-error.js';
 
@@ -10,7 +10,7 @@ export const verifyIpLimit = async (ip: string, socketId: string): Promise<void>
 		return;
 	}
 
-	const socketList = await fetchSockets({ forceRefresh: true });
+	const socketList = await fetchSocketsUntrottled();
 	const previousSocket = socketList.find(s => s.data.probe.ipAddress === ip && s.id !== socketId);
 
 	if (previousSocket) {

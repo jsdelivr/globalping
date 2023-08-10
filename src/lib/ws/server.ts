@@ -65,3 +65,13 @@ export const fetchSockets = async (options?: {forceRefresh: true}) => {
 };
 
 export type ThrottledFetchSockets = typeof fetchSockets;
+
+export const fetchSocketsUntrottled = async () => {
+	if (!io) {
+		throw new Error('WS server not initialized yet');
+	}
+
+	const sockets = await io.of(PROBES_NAMESPACE).fetchSockets();
+
+	return sockets;
+};
