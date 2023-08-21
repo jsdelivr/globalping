@@ -5,7 +5,7 @@ import type { DefaultEventsMap } from 'socket.io/dist/typed-events';
 import type { Probe } from '../../probe/types.js';
 import { getRedisClient } from '../redis/client.js';
 import { reconnectProbes } from './helper/reconnect-probes.js';
-import throttle from './helper/throttle.js';
+import { throttle, LRUOptions } from './helper/throttle.js';
 import { scopedLogger } from '../logger.js';
 
 export type SocketData = {
@@ -19,7 +19,7 @@ const TIME_UNTIL_VM_BECOMES_HEALTHY = 8000;
 const logger = scopedLogger('ws-server');
 
 let io: WsServer;
-let throttledFetchSockets: (options?: {forceRefresh: true}) => Promise<RemoteSocket<DefaultEventsMap, SocketData>[]>;
+let throttledFetchSockets: (options?: LRUOptions) => Promise<RemoteSocket<DefaultEventsMap, SocketData>[]>;
 
 export const initWsServer = async () => {
 	const pubClient = getRedisClient().duplicate();
@@ -54,7 +54,7 @@ export const getWsServer = (): WsServer => {
 	return io;
 };
 
-export const fetchSockets = async (options?: {forceRefresh: true}) => {
+export const fetchSockets = async (options?: LRUOptions) => {
 	if (!io || !throttledFetchSockets) {
 		throw new Error('WS server not initialized yet');
 	}

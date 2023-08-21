@@ -1,7 +1,8 @@
 import * as process from 'node:process';
-import { fetchSocketsUntrottled } from '../server.js';
+import { fetchSockets } from '../server.js';
 import { scopedLogger } from '../../logger.js';
 import { InternalError } from '../../internal-error.js';
+import type { LRUOptions } from './throttle.js';
 
 const logger = scopedLogger('ws:limit');
 
@@ -10,7 +11,14 @@ export const verifyIpLimit = async (ip: string, socketId: string): Promise<void>
 		return;
 	}
 
-	const socketList = await fetchSocketsUntrottled();
+	const status: LRUOptions['status'] = {};
+	let socketList = await fetchSockets({ forceRefresh: true, status });
+
+	// If another fetchSockets was already 'inflight' during our fetchSockets call, result socketList may be stale, so we need to refetch it
+	if (status.fetch === 'inflight') {
+		socketList = await fetchSockets({ forceRefresh: true });
+	}
+
 	const previousSocket = socketList.find(s => s.data.probe.ipAddress === ip && s.id !== socketId);
 
 	if (previousSocket) {
