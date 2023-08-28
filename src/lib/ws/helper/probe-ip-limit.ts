@@ -14,7 +14,7 @@ export const verifyIpLimit = async (ip: string, socketId: string): Promise<void>
 	const status: LRUOptions['status'] = {};
 	let socketList = await fetchSockets({ forceRefresh: true, status });
 
-	// If another fetchSockets was already 'inflight' during our fetchSockets call, result socketList may be stale, so we need to refetch it
+	// If another fetchSockets was already 'inflight' at the moment of a new fetchSockets call, result socketList may be stale, so we need to refetch it.
 	if (status.fetch === 'inflight') {
 		socketList = await fetchSockets({ forceRefresh: true });
 	}
