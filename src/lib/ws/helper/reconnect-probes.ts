@@ -1,6 +1,6 @@
 import type { ThrottledFetchSockets } from '../server';
 
-const TIME_TO_RECONNECT_PROBES = 60_000;
+const TIME_TO_RECONNECT_PROBES = 2 * 60 * 1000;
 
 export const reconnectProbes = async (fetchSockets: ThrottledFetchSockets) => { // passing fetchSockets in arguments to avoid cycle dependency
 	const sockets = await fetchSockets();

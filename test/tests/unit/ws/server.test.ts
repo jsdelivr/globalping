@@ -43,7 +43,7 @@ describe('ws server', () => {
 
 	it('initWsServer should reconnect the probes on start', async () => {
 		await initWsServer();
-		await sandbox.clock.tickAsync(8000 + 60_000 + 1000);
+		await sandbox.clock.tickAsync(8000 + 2 * 60_000 + 1000);
 
 		expect(io.adapter.callCount).to.equal(1);
 		expect(redisClient.connect.callCount).to.equal(2);
