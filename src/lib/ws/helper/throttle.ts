@@ -1,5 +1,6 @@
 import { LRUCache } from 'lru-cache';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LRUOptions = LRUCache.FetchOptions<object, any, unknown>;
 
 export const throttle = <Value>(func: () => Promise<Value>, time: number) => {

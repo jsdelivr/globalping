@@ -2,19 +2,18 @@
 import nock from 'nock';
 import { expect } from 'chai';
 import request, { type SuperTest, type Test } from 'supertest';
-import * as td from 'testdouble';
 import type { Socket } from 'socket.io-client';
-import { getTestServer, addFakeProbe as addProbe, deleteFakeProbe } from '../../../utils/server.js';
+import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../../utils/server.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 
 describe('Get Probes', () => {
 	let requestAgent: SuperTest<Test>;
-	let addFakeProbe: () => Promise<Socket>;
 	const probes: Socket[] = [];
+	let addProbe: () => Promise<Socket>;
 
 	before(async () => {
-		addFakeProbe = async () => {
-			const probe = await addProbe();
+		addProbe = async () => {
+			const probe = await addFakeProbe();
 			probes.push(probe);
 			return probe;
 		};
@@ -26,10 +25,6 @@ describe('Get Probes', () => {
 	afterEach(async () => {
 		nock.cleanAll();
 		await Promise.all(probes.map(probe => deleteFakeProbe(probe)));
-	});
-
-	after(() => {
-		td.reset();
 	});
 
 	describe('probes not connected', () => {
@@ -48,7 +43,7 @@ describe('Get Probes', () => {
 		it('should not detect probes if they are not ready', async () => {
 			nockGeoIpProviders();
 
-			await addFakeProbe();
+			await addProbe();
 
 			await requestAgent.get('/v1/probes')
 				.send()
@@ -62,7 +57,7 @@ describe('Get Probes', () => {
 		it('should detect 1 probe in "ready: true" status', async () => {
 			nockGeoIpProviders({ maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
 
-			const probe = await addFakeProbe();
+			const probe = await addProbe();
 			probe.emit('probe:status:update', 'ready');
 
 			await requestAgent.get('/v1/probes')
@@ -93,8 +88,8 @@ describe('Get Probes', () => {
 			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
 			nockGeoIpProviders();
 
-			const probe1 = await addFakeProbe();
-			const probe2 = await addFakeProbe();
+			const probe1 = await addProbe();
+			const probe2 = await addProbe();
 			probe1.emit('probe:status:update', 'ready');
 			probe2.emit('probe:status:update', 'ready');
 
@@ -145,9 +140,9 @@ describe('Get Probes', () => {
 			nockGeoIpProviders();
 			nockGeoIpProviders({ ip2location: 'newYork', ipmap: 'argentina', maxmind: 'newYork', ipinfo: 'newYork', fastly: 'newYork' });
 
-			const probe1 = await addFakeProbe();
-			const probe2 = await addFakeProbe();
-			const probe3 = await addFakeProbe();
+			const probe1 = await addProbe();
+			const probe2 = await addProbe();
+			const probe3 = await addProbe();
 			probe1.emit('probe:status:update', 'ready');
 			probe2.emit('probe:status:update', 'ready');
 			probe3.emit('probe:status:update', 'ready');
@@ -214,8 +209,8 @@ describe('Get Probes', () => {
 			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
 			nockGeoIpProviders();
 
-			const probe1 = await addFakeProbe();
-			await addFakeProbe();
+			const probe1 = await addProbe();
+			await addProbe();
 			probe1.emit('probe:status:update', 'ready');
 
 			await requestAgent.get('/v1/probes')
@@ -245,7 +240,7 @@ describe('Get Probes', () => {
 		it('should add extra info if admin key is provided', async () => {
 			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
 
-			const probe = await addFakeProbe();
+			const probe = await addProbe();
 			probe.emit('probe:status:update', 'ready');
 
 			await requestAgent.get('/v1/probes?adminkey=admin')

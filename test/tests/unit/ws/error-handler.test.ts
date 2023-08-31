@@ -12,6 +12,10 @@ class MockSocket {
 
 	public request: any = {};
 
+	public handshake: any = {
+		query: {},
+	};
+
 	constructor (public id: string) {}
 
 	emit (event: string, payload: string | Record<string, unknown>) {
