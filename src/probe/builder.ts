@@ -17,6 +17,7 @@ import getProbeIp from '../lib/get-probe-ip.js';
 import { getRegion } from '../lib/ip-ranges.js';
 import type { Probe, ProbeLocation, Tag } from './types.js';
 import { verifyIpLimit } from '../lib/ws/helper/probe-ip-limit.js';
+import { fakeLookup } from '../lib/geoip/fake-client.js';
 
 const geoipClient = createGeoipClient();
 
@@ -39,7 +40,9 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	let ipInfo;
 
-	if (!isIpPrivate(clientIp)) {
+	if (process.env['FAKE_PROBE_IP'] === 'probe') {
+		ipInfo = fakeLookup();
+	} else if (!isIpPrivate(clientIp)) {
 		ipInfo = await geoipClient.lookup(clientIp);
 	}
 
