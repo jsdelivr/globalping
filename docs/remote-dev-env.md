@@ -13,7 +13,6 @@ REDIS_MAX_MEMORY=500mb
 # Copy and enter the repository
 git clone https://github.com/jsdelivr/globalping.git
 cd globalping/
-git checkout dev-env
 
 # Add redis config lines
 echo "requirepass $REDIS_PASSWORD" >> redis.conf
@@ -25,7 +24,7 @@ sudo sh get-docker.sh
 
 # Allow to run docker without sudo
 sudo su -c "sudo usermod -aG docker ubuntu && exit" -
-echo "Please, login back and proceed"
+echo "Need to relogin, please get back and proceed"
 exit
 
 # Start docker compose
@@ -88,6 +87,7 @@ PORT=3002 HOSTNAME=3002 REDIS_URL=redis://:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE
 ```bash
 # Update that variables before start
 API_HOST=<your_value>
+PROBES_COUNT=10
 
 # Install node
 sudo apt-get install -y ca-certificates curl gnupg
@@ -118,6 +118,9 @@ sudo dpkg --extract "/tmp/expect.deb" /
 # Update the configuration
 sed -i "s|'ws://localhost:3000'|'ws://$API_HOST'|" config/development.cjs
 
-# Run the probes
-FAKE_PROBE_IP=1 NODE_ENV=development node dist/index.js
+# Auto start the probes
+sudo npm i -g pm2
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+FAKE_PROBE_IP=1 NODE_ENV=development PROBES_COUNT=$PROBES_COUNT pm2 start dist/index.js
+pm2 save
 ```
