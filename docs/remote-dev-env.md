@@ -24,11 +24,12 @@ sudo sh get-docker.sh
 
 # Allow to run docker without sudo
 sudo su -c "sudo usermod -aG docker ubuntu && exit" -
-echo "Need to relogin, please get back and proceed"
-exit
 
-# Start docker compose
-docker compose up -d
+# Relogin and start
+echo "Need to relogin, please get back and run:
+cd globalping/ && docker compose up -d
+"
+exit
 ```
 
 ## API
@@ -76,18 +77,19 @@ npm run build
 
 # Run the app
 echo 'Run 2 app instances using:
-PORT=3001 HOSTNAME=3001 REDIS_URL=redis://:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production FAKE_PROBE_IP=probe NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
+PORT=3001 HOSTNAME=3001 REDIS_URL=redis://default:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production ADMIN_KEY=admin FAKE_PROBE_IP=probe NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
 and
-PORT=3002 HOSTNAME=3002 REDIS_URL=redis://:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production FAKE_PROBE_IP=probe NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
+PORT=3002 HOSTNAME=3002 REDIS_URL=redis://default:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production ADMIN_KEY=admin FAKE_PROBE_IP=probe NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
 '
 ```
 
 ## Probe
 
 ```bash
-# Update that variables before start
+# Update that variables before start.
 API_HOST=<your_value>
-PROBES_COUNT=10
+FAKE_PROBE_IP=1
+PROBES_COUNT=300
 
 # Install node
 sudo apt-get install -y ca-certificates curl gnupg
@@ -118,6 +120,6 @@ sudo dpkg --extract "/tmp/expect.deb" /
 # Auto start the probes
 sudo npm i -g pm2
 sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
-FAKE_PROBE_IP=1 NODE_ENV=development PROBES_COUNT=$PROBES_COUNT API_HOST=$API_HOST pm2 start dist/index.js
+FAKE_PROBE_IP=$FAKE_PROBE_IP NODE_ENV=development PROBES_COUNT=$PROBES_COUNT API_HOST=ws://$API_HOST pm2 start dist/index.js
 pm2 save
 ```
