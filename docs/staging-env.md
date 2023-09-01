@@ -1,11 +1,12 @@
-# Running a development environment on a remote host
+# Running a remote staging environment
 
-This guide outlines the steps to set up and run a development environment on a remote host. It is aimed to be used mostly for performance benchmarking. The environment consists of three parts: Redis, API, and Probes. For every part there is a bash script which prepares and runs everything. Every script is executed on a separate Ubuntu server.
+This guide outlines the steps to set up and run a staging environment on a remote host. It is aimed to be used mostly for performance benchmarking. The environment consists of three parts: Redis, API, and Probes. For every part there is a bash script which prepares and runs everything. Every script is executed on a separate Ubuntu server.
 
 ## Redis
 
+Starts a redis db inside docker. Make sure port 6379 is open for connections.
+
 ```bash
-# Make sure port 6379 is open
 # Update that variables before start
 REDIS_PASSWORD=<your_value>
 REDIS_MAX_MEMORY=500mb
@@ -34,8 +35,9 @@ exit
 
 ## API
 
+Runs 2 API instances on ports 3001 and 3002 behind the haproxy on port 80. Geoip client is mocked so all probes get same location. `FAKE_PROBE_IP=probe` makes API to use fake ip provided by the probe.
+
 ```bash
-# Here we are running 2 API instances on ports 3001 and 3002 behind the haproxy on port 80
 # Update that variables before start
 REDIS_PASSWORD=<your_value>
 REDIS_HOST=<your_value>
@@ -85,8 +87,10 @@ PORT=3002 HOSTNAME=3002 REDIS_URL=redis://default:$REDIS_PASSWORD@$REDIS_HOST:63
 
 ## Probe
 
+Runs `PROBES_COUNT` number of probe processes. They all get a random fake ip which is passed to the API. Value of the `FAKE_PROBE_IP` is the first octet of the fake ip. Each probe process requires ~40mb of RAM.
+
 ```bash
-# Update that variables before start.
+# Update that variables before start
 API_HOST=<your_value>
 FAKE_PROBE_IP=1
 PROBES_COUNT=300
