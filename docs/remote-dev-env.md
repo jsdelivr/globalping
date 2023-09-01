@@ -10,24 +10,23 @@ This guide outlines the steps to set up and run a development environment on a r
 REDIS_PASSWORD=<your_value>
 REDIS_MAX_MEMORY=500mb
 
+# Copy and enter the repository
+git clone https://github.com/jsdelivr/globalping.git
+cd globalping/
+git checkout dev-env
+
+# Add redis config lines
+echo "requirepass $REDIS_PASSWORD" >> redis.conf
+echo "maxmemory $REDIS_MAX_MEMORY" >> redis.conf
+
 # Install docker
 curl -fsSL https://get.docker.com -o get-docker.sh
 sudo sh get-docker.sh
 
 # Allow to run docker without sudo
-sudo sh -eux <<EOF
-# Install newuidmap & newgidmap binaries
-apt-get install -y uidmap
-EOF
-dockerd-rootless-setuptool.sh install
-
-# Copy and enter the repository
-git clone https://github.com/jsdelivr/globalping.git
-cd globalping/
-
-# Add redis config lines
-echo "requirepass $REDIS_PASSWORD" >> redis.conf
-echo "maxmemory $REDIS_MAX_MEMORY" >> redis.conf
+sudo su -c "sudo usermod -aG docker ubuntu && exit" -
+echo "Please, login back and proceed"
+exit
 
 # Start docker compose
 docker compose up -d
@@ -78,9 +77,9 @@ npm run build
 
 # Run the app
 echo "Run 2 app instances using:
-PORT=3001 REDIS_URL=redis://:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production FAKE_PROBE_IP=probe NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
+PORT=3001 HOSTNAME=3001 REDIS_URL=redis://:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production FAKE_PROBE_IP=probe NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
 and
-PORT=3002 REDIS_URL=redis://:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production FAKE_PROBE_IP=probe NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
+PORT=3002 HOSTNAME=3002 REDIS_URL=redis://:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production FAKE_PROBE_IP=probe NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
 "
 ```
 
@@ -104,6 +103,17 @@ git clone https://github.com/jsdelivr/globalping-probe.git
 cd globalping-probe
 npm i
 npm run build
+
+# Install unbuffer
+ARCHLOCAL=$(dpkg --print-architecture)
+curl "http://ftp.nl.debian.org/debian/pool/main/e/expect/tcl-expect_5.45.4-2+b1_${ARCHLOCAL}.deb" -o "/tmp/tcl-expect.deb"
+sudo dpkg --extract "/tmp/tcl-expect.deb" /
+curl "http://ftp.nl.debian.org/debian/pool/main/t/tcl8.6/libtcl8.6_8.6.11+dfsg-1_${ARCHLOCAL}.deb" -o "/tmp/libtcl.deb"
+sudo dpkg --extract "/tmp/libtcl.deb" /
+curl "http://ftp.nl.debian.org/debian/pool/main/t/tcl8.6/tcl8.6_8.6.11+dfsg-1_${ARCHLOCAL}.deb" -o "/tmp/tcl.deb"
+sudo dpkg --extract "/tmp/tcl.deb" /
+curl "http://ftp.nl.debian.org/debian/pool/main/e/expect/expect_5.45.4-2+b1_${ARCHLOCAL}.deb" -o "/tmp/expect.deb"
+sudo dpkg --extract "/tmp/expect.deb" /
 
 # Update the configuration
 sed -i "s|'ws://localhost:3000'|'ws://$API_HOST'|" config/development.cjs
