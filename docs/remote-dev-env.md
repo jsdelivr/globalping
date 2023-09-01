@@ -75,11 +75,11 @@ npm i
 npm run build
 
 # Run the app
-echo "Run 2 app instances using:
+echo 'Run 2 app instances using:
 PORT=3001 HOSTNAME=3001 REDIS_URL=redis://:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production FAKE_PROBE_IP=probe NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
 and
 PORT=3002 HOSTNAME=3002 REDIS_URL=redis://:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production FAKE_PROBE_IP=probe NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
-"
+'
 ```
 
 ## Probe
@@ -115,12 +115,9 @@ sudo dpkg --extract "/tmp/tcl.deb" /
 curl "http://ftp.nl.debian.org/debian/pool/main/e/expect/expect_5.45.4-2+b1_${ARCHLOCAL}.deb" -o "/tmp/expect.deb"
 sudo dpkg --extract "/tmp/expect.deb" /
 
-# Update the configuration
-sed -i "s|'ws://localhost:3000'|'ws://$API_HOST'|" config/development.cjs
-
 # Auto start the probes
 sudo npm i -g pm2
 sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
-FAKE_PROBE_IP=1 NODE_ENV=development PROBES_COUNT=$PROBES_COUNT pm2 start dist/index.js
+FAKE_PROBE_IP=1 NODE_ENV=development PROBES_COUNT=$PROBES_COUNT API_HOST=$API_HOST pm2 start dist/index.js
 pm2 save
 ```
