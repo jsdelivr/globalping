@@ -1,4 +1,3 @@
-import * as process from 'node:process';
 import { fetchSockets } from '../server.js';
 import { scopedLogger } from '../../logger.js';
 import { InternalError } from '../../internal-error.js';
@@ -7,7 +6,7 @@ import type { LRUOptions } from './throttle.js';
 const logger = scopedLogger('ws:limit');
 
 export const verifyIpLimit = async (ip: string, socketId: string): Promise<void> => {
-	if (process.env['FAKE_PROBE_IP']) {
+	if (process.env['FAKE_PROBE_IP'] === 'api') {
 		return;
 	}
 

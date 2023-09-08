@@ -25,7 +25,7 @@ Once the API is live, you can spin up a probe instance by running as described a
 
 ### Environment variables
 - `PORT=3000` environment variable can start the API on another port (default is 3000)
-- `FAKE_PROBE_IP=1` environment variable can be used to make debug easier. When defined, every Probe
+- `FAKE_PROBE_IP=api` environment variable can be used to make debug easier. When defined, every Probe
   that connects to the API will get an IP address from the list of predefined "real" addresses.
 
 ### Testing

@@ -10,7 +10,7 @@ import getProbeIp from '../../get-probe-ip.js';
 const logger = scopedLogger('probe-metadata');
 
 export const probeMetadata = errorHandler(async (socket: Socket, next: (error?: ExtendedError) => void) => {
-	const clientIp = getProbeIp(socket.request);
+	const clientIp = getProbeIp(socket);
 
 	try {
 		socket.data['probe'] = await buildProbe(socket);

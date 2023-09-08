@@ -1,5 +1,4 @@
 import * as process from 'node:process';
-import _ from 'lodash';
 import type { Socket } from 'socket.io';
 import { isIpPrivate } from '../lib/private-ip.js';
 import semver from 'semver';
@@ -18,21 +17,7 @@ import getProbeIp from '../lib/get-probe-ip.js';
 import { getRegion } from '../lib/ip-ranges.js';
 import type { Probe, ProbeLocation, Tag } from './types.js';
 import { verifyIpLimit } from '../lib/ws/helper/probe-ip-limit.js';
-
-const fakeIpForDebug = () => {
-	return _.sample([
-		'18.200.0.1', // aws-eu-west-1
-		'34.140.0.10', // gcp-europe-west1
-		'95.155.94.127',
-		'65.49.22.66',
-		'185.229.226.83',
-		'51.158.22.211',
-		'131.255.7.26',
-		'213.136.174.80',
-		'94.214.253.78',
-		'79.205.97.254',
-	]);
-};
+import { fakeLookup } from '../lib/geoip/fake-client.js';
 
 const geoipClient = createGeoipClient();
 
@@ -43,7 +28,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const host = process.env['HOSTNAME'] ?? '';
 
-	const clientIp = process.env['FAKE_PROBE_IP'] ? fakeIpForDebug() : getProbeIp(socket.request);
+	const clientIp = getProbeIp(socket);
 
 	if (!clientIp) {
 		throw new Error('failed to detect ip address of connected probe');
@@ -55,7 +40,9 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	let ipInfo;
 
-	if (!isIpPrivate(clientIp)) {
+	if (process.env['FAKE_PROBE_IP'] === 'probe') {
+		ipInfo = fakeLookup();
+	} else if (!isIpPrivate(clientIp)) {
 		ipInfo = await geoipClient.lookup(clientIp);
 	}
 

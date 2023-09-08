@@ -12,11 +12,9 @@ scenarios:
   - name: "Ping 100 probes"
     flow:
       - post:
-          url: "/measurements"
+          url: "/v1/measurements?adminkey=admin"
           json:
             target: "google.com"
-            type: "ping"
-            measurementOptions:
-              packets: 16
+            type: "mtr"
             limit: "{{ $processEnvironment.LIMIT }}"
             locations: []

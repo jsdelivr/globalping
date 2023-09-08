@@ -6,12 +6,13 @@ import fs from 'node:fs';
 // Config
 
 const config = {
-	host: 'https://api.globalping.io/v1',
-	delay: 300, // Time to wait between measurements
+	host: 'http://localhost:3000',
+	delay: 5 * 60, // Time to wait between measurements
 	measurements: [
-		{ probes: 100, rps: 1, duration: 240 },
-		{ probes: 100, rps: 2, duration: 240 },
-		{ probes: 100, rps: 5, duration: 240 },
+		{ probes: 200, rps: 1, duration: 2 * 60 },
+		{ probes: 300, rps: 1, duration: 2 * 60 },
+		{ probes: 500, rps: 1, duration: 2 * 60 },
+		{ probes: 500, rps: 2, duration: 2 * 60 },
 	],
 };
 
