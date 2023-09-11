@@ -2,7 +2,7 @@ import _ from 'lodash';
 import config from 'config';
 import newrelic from 'newrelic';
 import type { CacheInterface } from '../cache/cache-interface.js';
-import { InternalError } from '../internal-error.js';
+import { ProbeError } from '../probe-error.js';
 import type { ProbeLocation } from '../../probe/types.js';
 import RedisCache from '../cache/redis-cache.js';
 import { getRedisClient } from '../redis/client.js';
@@ -58,7 +58,7 @@ export default class GeoipClient {
 				);
 
 				if (ip2location.status === 'fulfilled' && ip2location.value.isProxy && !isAddrWhitelisted(addr)) {
-					throw new InternalError('vpn detected', true);
+					throw new ProbeError('vpn detected');
 				}
 
 				return fulfilled.filter(Boolean).flat();
@@ -67,14 +67,14 @@ export default class GeoipClient {
 		const resultsWithCities = results.filter(s => s.city);
 
 		if (resultsWithCities.length === 0 || (resultsWithCities.length === 1 && resultsWithCities[0]?.provider === 'fastly')) {
-			throw new InternalError(`unresolvable geoip: ${addr}`, true);
+			throw new ProbeError(`unresolvable geoip: ${addr}`);
 		}
 
 		const [ match, ranked ] = this.bestMatch('normalizedCity', results);
 		const networkMatch = this.matchNetwork(match, ranked);
 
 		if (!networkMatch) {
-			throw new InternalError(`unresolvable geoip: ${addr}`, true);
+			throw new ProbeError(`unresolvable geoip: ${addr}`);
 		}
 
 		const region = this.matchRegion(match);
