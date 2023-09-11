@@ -2,7 +2,7 @@ import type { Socket } from 'socket.io';
 import type { ExtendedError } from 'socket.io/dist/namespace.js';
 import { WsError } from '../ws-error.js';
 import { buildProbe } from '../../../probe/builder.js';
-import { InternalError } from '../../internal-error.js';
+import { ProbeError } from '../../probe-error.js';
 import { errorHandler } from '../helper/error-handler.js';
 import { scopedLogger } from '../../logger.js';
 import getProbeIp from '../../get-probe-ip.js';
@@ -19,7 +19,7 @@ export const probeMetadata = errorHandler(async (socket: Socket, next: (error?: 
 		logger.error(error);
 		let message = 'failed to collect probe metadata';
 
-		if (error instanceof InternalError && error?.expose) {
+		if (error instanceof ProbeError) {
 			message = error.message;
 		}
 

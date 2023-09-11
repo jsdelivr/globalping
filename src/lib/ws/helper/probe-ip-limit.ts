@@ -1,6 +1,6 @@
 import { fetchSockets } from '../server.js';
 import { scopedLogger } from '../../logger.js';
-import { InternalError } from '../../internal-error.js';
+import { ProbeError } from '../../probe-error.js';
 import type { LRUOptions } from './throttle.js';
 
 const logger = scopedLogger('ws:limit');
@@ -22,6 +22,6 @@ export const verifyIpLimit = async (ip: string, socketId: string): Promise<void>
 
 	if (previousSocket) {
 		logger.info(`ws client ${socketId} has reached the concurrent IP limit.`, { message: previousSocket.data.probe.ipAddress });
-		throw new InternalError('ip limit', true);
+		throw new ProbeError('ip limit');
 	}
 };

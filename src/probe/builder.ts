@@ -11,7 +11,7 @@ import {
 	getContinentAliases,
 	getRegionAliases,
 } from '../lib/location/location.js';
-import { InternalError } from '../lib/internal-error.js';
+import { ProbeError } from '../lib/probe-error.js';
 import { createGeoipClient } from '../lib/geoip/client.js';
 import getProbeIp from '../lib/get-probe-ip.js';
 import { getRegion } from '../lib/ip-ranges.js';
@@ -35,7 +35,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	}
 
 	if (!semver.satisfies(version, '>=0.9.0')) {
-		throw new InternalError(`invalid probe version (${version})`, true);
+		throw new ProbeError(`invalid probe version (${version})`);
 	}
 
 	let ipInfo;
