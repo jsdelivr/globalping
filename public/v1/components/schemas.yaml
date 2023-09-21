@@ -1,0 +1,1200 @@
+components:
+  schemas:
+    AsnCode:
+      type: integer
+      description: An autonomous system number.
+    CountryCode:
+      type: string
+      description: An ISO 3166-1 alpha-2 country code.
+    ContinentCode:
+      type: string
+      enum:
+        - AF
+        - AN
+        - AS
+        - EU
+        - NA
+        - OC
+        - SA
+    CityName:
+      type: string
+      description: A city name in English.
+    CreateMeasurementResponse:
+      type: object
+      required:
+        - id
+        - probesCount
+      properties:
+        id:
+          type: string
+        probesCount:
+          $ref: 'schemas.yaml#/components/schemas/MeasurementProbesCount'
+    Latitude:
+      type: number
+    Longitude:
+      type: number
+    MeasurementLimit:
+      type: integer
+      description: |
+        Specifies the maximum number of probes that run the measurement.
+        The result count might be lower if there aren't enough probes available in the specified locations.
+      minimum: 1
+      maximum: 500
+      default: 1
+    MeasurementLocationOption:
+      type: object
+      additionalProperties: false
+      properties:
+        continent:
+          $ref: 'schemas.yaml#/components/schemas/ContinentCode'
+        region:
+          $ref: 'schemas.yaml#/components/schemas/RegionName'
+        country:
+          $ref: 'schemas.yaml#/components/schemas/CountryCode'
+        state:
+          $ref: 'schemas.yaml#/components/schemas/StateCode'
+        city:
+          $ref: 'schemas.yaml#/components/schemas/CityName'
+        asn:
+          $ref: 'schemas.yaml#/components/schemas/AsnCode'
+        network:
+          $ref: 'schemas.yaml#/components/schemas/NetworkName'
+        tags:
+          $ref: 'schemas.yaml#/components/schemas/Tags'
+        magic:
+          type: string
+          description: |
+            Fuzzy matching based on the `country`, `city`, `state`, `continent`, `region`, `asn` (using `AS` prefix, e.g., `AS123`), `tags`, and `network` values.
+            Includes the full names, ISO codes (where applicable), and common aliases.
+            Multiple conditions can be combined using the `+` character.
+        limit:
+          type: integer
+          description: |
+            Mutually exclusive with the global `limit`.
+            Specifies the maximum number of probes that run the measurement in this location.
+          minimum: 1
+          maximum: 200
+          default: 1
+    MeasurementLocations:
+      type: array
+      description: |
+        An array of locations from which to run the measurement.
+        Each object specifies a location using one or multiple keys.
+      items:
+        $ref: 'schemas.yaml#/components/schemas/MeasurementLocationOption'
+    MeasurementOptions:
+      anyOf:
+        - $ref: 'schemas.yaml#/components/schemas/MeasurementPingOptions'
+        - $ref: 'schemas.yaml#/components/schemas/MeasurementTracerouteOptions'
+        - $ref: 'schemas.yaml#/components/schemas/MeasurementDnsOptions'
+        - $ref: 'schemas.yaml#/components/schemas/MeasurementMtrOptions'
+        - $ref: 'schemas.yaml#/components/schemas/MeasurementHttpOptions'
+    MeasurementOptionsConditions:
+      allOf:
+        - if:
+            type: object
+            properties:
+              type:
+                const: ping
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: 'schemas.yaml#/components/schemas/MeasurementPingOptions'
+        - if:
+            type: object
+            properties:
+              type:
+                const: traceroute
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: 'schemas.yaml#/components/schemas/MeasurementTracerouteOptions'
+        - if:
+            type: object
+            properties:
+              type:
+                const: dns
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: 'schemas.yaml#/components/schemas/MeasurementDnsOptions'
+        - if:
+            type: object
+            properties:
+              type:
+                const: mtr
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: 'schemas.yaml#/components/schemas/MeasurementMtrOptions'
+        - if:
+            type: object
+            properties:
+              type:
+                const: http
+          then:
+            type: object
+            properties:
+              measurementOptions:
+                $ref: 'schemas.yaml#/components/schemas/MeasurementHttpOptions'
+    MeasurementResultsConditions:
+      allOf:
+        - if:
+            type: object
+            properties:
+              type:
+                const: ping
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: 'schemas.yaml#/components/schemas/FinishedPingTestResult'
+        - if:
+            type: object
+            properties:
+              type:
+                const: traceroute
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: 'schemas.yaml#/components/schemas/FinishedTracerouteTestResult'
+        - if:
+            type: object
+            properties:
+              type:
+                const: dns
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: 'schemas.yaml#/components/schemas/FinishedDnsTestResult'
+        - if:
+            type: object
+            properties:
+              type:
+                const: mtr
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: 'schemas.yaml#/components/schemas/FinishedMtrTestResult'
+        - if:
+            type: object
+            properties:
+              type:
+                const: http
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      type: object
+                      properties:
+                        status:
+                          const: finished
+
+          then:
+            type: object
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    result:
+                      $ref: 'schemas.yaml#/components/schemas/FinishedHttpTestResult'
+    MeasurementPingOptions:
+      type: object
+      title: PingOptions
+      additionalProperties: false
+      properties:
+        packets:
+          type: integer
+          default: 3
+          minimum: 1
+          maximum: 16
+    MeasurementTracerouteOptions:
+      type: object
+      title: TracerouteOptions
+      additionalProperties: false
+      properties:
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 80
+        protocol:
+          type: string
+          enum:
+            - ICMP
+            - TCP
+            - UDP
+          default: ICMP
+    MeasurementDnsOptions:
+      type: object
+      title: DnsOptions
+      additionalProperties: false
+      properties:
+        query:
+          type: object
+          description: The DNS query properties.
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              enum:
+                - A
+                - AAAA
+                - ANY
+                - CNAME
+                - DNSKEY
+                - DS
+                - MX
+                - NS
+                - NSEC
+                - PTR
+                - RRSIG
+                - SOA
+                - TXT
+                - SRV
+              default: A
+        resolver:
+          $ref: 'schemas.yaml#/components/schemas/MeasurementResolver'
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 53
+        protocol:
+          type: string
+          enum:
+            - TCP
+            - UDP
+          default: UDP
+        trace:
+          type: boolean
+          description: |
+            Toggles tracing of the delegation path from the root servers down to the target domain name.
+          default: false
+    MeasurementMtrOptions:
+      type: object
+      title: MtrOptions
+      additionalProperties: false
+      properties:
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 80
+        protocol:
+          type: string
+          enum:
+            - ICMP
+            - TCP
+            - UDP
+          default: ICMP
+        packets:
+          type: integer
+          default: 3
+          minimum: 1
+          maximum: 16
+    MeasurementHttpOptions:
+      type: object
+      title: HttpOptions
+      additionalProperties: false
+      properties:
+        request:
+          type: object
+          description: The HTTP request properties.
+          additionalProperties: false
+          properties:
+            host:
+              type: string
+              description: |
+                An optional override for the `Host` header. The default value is based on the `target`.
+            path:
+              type: string
+            query:
+              type: string
+            method:
+              type: string
+              enum:
+                - HEAD
+                - GET
+              default: HEAD
+            headers:
+              type: object
+              description: |
+                Additional request headers. Note that the `Host` and `User-Agent` are reserved and internally overridden.
+              additionalProperties:
+                type: string
+        resolver:
+          $ref: 'schemas.yaml#/components/schemas/MeasurementResolver'
+        port:
+          type: integer
+          minimum: 0
+          maximum: 65535
+          default: 80
+        protocol:
+          type: string
+          enum:
+            - HTTP
+            - HTTPS
+            - HTTP2
+          default: HTTPS
+    MeasurementProbesCount:
+      type: integer
+      description: The number of probes that performed the measurement. Smaller or equal to `limit`.
+    MeasurementResolver:
+      description: A DNS resolver to use for the query. Defaults to the probe's system resolver.
+      anyOf:
+        - type: string
+          format: ipv4
+          description: An IPv4 address.
+        - type: string
+          format: hostname
+          description: A Fully Qualified Domain Name (FQDN).
+    MeasurementResultItem:
+      type: object
+      required:
+        - probe
+        - result
+      properties:
+        probe:
+          allOf:
+            - $ref: 'schemas.yaml#/components/schemas/ProbeLocation'
+            - type: object
+              description: Information about the probe that performed this test.
+              required:
+                - tags
+                - resolvers
+              properties:
+                tags:
+                  $ref: 'schemas.yaml#/components/schemas/Tags'
+                resolvers:
+                  $ref: 'schemas.yaml#/components/schemas/ProbeResolvers'
+        result:
+          $ref: 'schemas.yaml#/components/schemas/TestResult'
+    MeasurementStatus:
+      type: string
+      description: The measurement status. Any value other than `in-progress` is final.
+      enum:
+        - in-progress
+        - finished
+    MeasurementTarget:
+      type: string
+      description: |
+        A public endpoint on which the measurement is executed.
+        Typically a hostname or an IPv4 address. The exact format depends on the measurement type.
+    MeasurementType:
+      type: string
+      enum:
+        - ping
+        - traceroute
+        - dns
+        - mtr
+        - http
+    MeasurementRequest:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/MeasurementOptionsConditions'
+        - type: object
+          additionalProperties: false
+          required:
+            - type
+            - target
+          properties:
+            type:
+              $ref: 'schemas.yaml#/components/schemas/MeasurementType'
+            target:
+              $ref: 'schemas.yaml#/components/schemas/MeasurementTarget'
+            inProgressUpdates:
+              type: boolean
+              description: |
+                Specifies if the results of the measurement should be updated while being in progress.
+                If `false`, results are populated to the measurement object only after the test finishes.
+                If `true`, partial results are returned as soon as they are available and can be presented to the user in real-time.
+                Note that only the top 5 tests from the results array will update in real-time.
+              default: false
+            locations:
+              $ref: 'schemas.yaml#/components/schemas/MeasurementLocations'
+            limit:
+              $ref: 'schemas.yaml#/components/schemas/MeasurementLimit'
+            measurementOptions:
+              $ref: 'schemas.yaml#/components/schemas/MeasurementOptions'
+    MeasurementResponse:
+      type: object
+      required:
+        - id
+        - type
+        - status
+        - createdAt
+        - updatedAt
+        - target
+        - probesCount
+        - results
+      properties:
+        id:
+          type: string
+        type:
+          $ref: 'schemas.yaml#/components/schemas/MeasurementType'
+        target:
+          $ref: 'schemas.yaml#/components/schemas/MeasurementTarget'
+        status:
+          $ref: 'schemas.yaml#/components/schemas/MeasurementStatus'
+        createdAt:
+          type: string
+          format: date-time
+          description: Time when the measurement was created.
+        updatedAt:
+          type: string
+          format: date-time
+          description: Time when the measurement was last updated.
+        probesCount:
+          $ref: 'schemas.yaml#/components/schemas/MeasurementProbesCount'
+        locations:
+          allOf:
+            - $ref: 'schemas.yaml#/components/schemas/MeasurementLocations'
+            - description: The locations specified when creating the measurement.
+        limit:
+          allOf:
+            - $ref: 'schemas.yaml#/components/schemas/MeasurementLimit'
+            - description: The limit specified when creating the measurement if different from default.
+        measurementOptions:
+          allOf:
+            - $ref: 'schemas.yaml#/components/schemas/MeasurementOptions'
+            - description: The options specified when creating the measurement if different from default.
+        results:
+          type: array
+          description: The measurement results.
+          items:
+            $ref: 'schemas.yaml#/components/schemas/MeasurementResultItem'
+    NetworkName:
+      type: string
+      description: A network name.
+    NullableInteger:
+      type:
+        - integer
+        - 'null'
+    NullableNumber:
+      type:
+        - number
+        - 'null'
+    Probe:
+      type: object
+      required:
+        - version
+        - location
+        - tags
+        - resolvers
+      properties:
+        version:
+          type: string
+          description: Probe version.
+        location:
+          $ref: 'schemas.yaml#/components/schemas/ProbeLocation'
+        tags:
+          $ref: 'schemas.yaml#/components/schemas/Tags'
+        resolvers:
+          $ref: 'schemas.yaml#/components/schemas/ProbeResolvers'
+    ProbeLocation:
+      type: object
+      required:
+        - continent
+        - region
+        - country
+        - city
+        - asn
+        - network
+        - latitude
+        - longitude
+      properties:
+        continent:
+          $ref: 'schemas.yaml#/components/schemas/ContinentCode'
+        region:
+          $ref: 'schemas.yaml#/components/schemas/RegionName'
+        country:
+          $ref: 'schemas.yaml#/components/schemas/CountryCode'
+        state:
+          $ref: 'schemas.yaml#/components/schemas/StateCode'
+        city:
+          $ref: 'schemas.yaml#/components/schemas/CityName'
+        asn:
+          $ref: 'schemas.yaml#/components/schemas/AsnCode'
+        network:
+          $ref: 'schemas.yaml#/components/schemas/NetworkName'
+        latitude:
+          $ref: 'schemas.yaml#/components/schemas/Latitude'
+        longitude:
+          $ref: 'schemas.yaml#/components/schemas/Longitude'
+    ProbeResolver:
+      anyOf:
+        - type: string
+          format: ipv4
+          description: An IPv4 address.
+        - type: string
+          const: private
+          description: Indicates the resolver points to a private IP address.
+    ProbeResolvers:
+      type: array
+      description: A list of default DNS resolvers configured on the probe.
+      items:
+        $ref: 'schemas.yaml#/components/schemas/ProbeResolver'
+    Probes:
+      type: array
+      items:
+        $ref: 'schemas.yaml#/components/schemas/Probe'
+    RegionName:
+      type: string
+      description: |
+        A Geographic Region name based on the
+        UN [Standard Country or Area Codes for Statistical Use (M49)](https://unstats.un.org/unsd/methodology/m49/).
+      enum:
+        - Northern Africa
+        - Eastern Africa
+        - Middle Africa
+        - Southern Africa
+        - Western Africa
+
+        - Caribbean
+        - Central America
+        - South America
+        - Northern America
+
+        - Central Asia
+        - Eastern Asia
+        - South-eastern Asia
+        - Southern Asia
+        - Western Asia
+
+        - Eastern Europe
+        - Northern Europe
+        - Southern Europe
+        - Western Europe
+
+        - Australia and New Zealand
+        - Melanesia
+        - Micronesia
+        - Polynesia
+    ResolvedAddress:
+      type: string
+      description: The resolved IP address of the `target`.
+    ResolvedHostname:
+      type:
+        - string
+        - 'null'
+      format: hostname
+      description: The resolved hostname of the `target`.
+    StateCode:
+      type:
+        - string
+        - 'null'
+      description: Only for US states. A two-letter state code based on ISO 3166-2.
+    StatsRttMin:
+      type: number
+      description: The lowest `rtt` value.
+    StatsRttMinNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableNumber'
+        - description: The lowest `rtt` value.
+    StatsRttAvg:
+      type: number
+      description: The average `rtt` value.
+    StatsRttAvgNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableNumber'
+        - description: The average `rtt` value.
+    StatsRttMax:
+      type: number
+      description: The highest `rtt` value.
+    StatsRttMaxNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableNumber'
+        - description: The highest `rtt` value.
+    StatsPacketsTotal:
+      type: integer
+      description: The number of sent packets.
+    StatsPacketsRcv:
+      type: integer
+      description: The number of received packets.
+    StatsPacketsDrop:
+      type: integer
+      description: The number of dropped packets (`total` - `rcv`).
+    StatsPacketsLoss:
+      type: number
+      description: The percentage of dropped packets.
+    StatsJitterMin:
+      type: number
+      description: The lowest jitter value.
+    StatsJitterAvg:
+      type: number
+      description: The average jitter value.
+    StatsJitterMax:
+      type: number
+      description: The highest jitter value.
+    StatsStDev:
+      type: number
+      description: The standard deviation of the `rtt` values.
+    Tags:
+      type: array
+      description: |
+        An array of additional values that can be used to target the probe.
+        Probes hosted in [AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)
+        and [Google Cloud](https://cloud.google.com/compute/docs/regions-zones#available) are automatically assigned the service region code.
+      items:
+        type: string
+    TestResult:
+      anyOf:
+        - $ref: 'schemas.yaml#/components/schemas/InProgressTestResult'
+        - $ref: 'schemas.yaml#/components/schemas/FailedTestResult'
+        - $ref: 'schemas.yaml#/components/schemas/FinishedPingTestResult'
+        - $ref: 'schemas.yaml#/components/schemas/FinishedTracerouteTestResult'
+        - $ref: 'schemas.yaml#/components/schemas/FinishedDnsTestResult'
+        - $ref: 'schemas.yaml#/components/schemas/FinishedMtrTestResult'
+        - $ref: 'schemas.yaml#/components/schemas/FinishedHttpTestResult'
+    BaseFinishedTestResult:
+      type: object
+      required:
+        - status
+        - rawOutput
+      properties:
+        status:
+          $ref: 'schemas.yaml#/components/schemas/FinishedTestStatus'
+        rawOutput:
+          $ref: 'schemas.yaml#/components/schemas/TestRawOutput'
+    InProgressTestResult:
+      type: object
+      title: InProgressTestResult
+      description: |
+        Represents an `in-progress` test where most fields are not available.
+      required:
+        - status
+        - rawOutput
+      properties:
+        status:
+          $ref: 'schemas.yaml#/components/schemas/InProgressTestStatus'
+        rawOutput:
+          $ref: 'schemas.yaml#/components/schemas/TestRawOutput'
+    FailedTestResult:
+      type: object
+      title: FailedTestResult
+      description: |
+        Represents a `failed` test where most fields are not available.
+      required:
+        - status
+        - rawOutput
+      properties:
+        status:
+          $ref: 'schemas.yaml#/components/schemas/FailedTestStatus'
+        rawOutput:
+          $ref: 'schemas.yaml#/components/schemas/TestRawOutput'
+    FinishedPingTestResult:
+      title: FinishedPingTestResult
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/BaseFinishedTestResult'
+        - type: object
+          required:
+            - resolvedAddress
+            - resolvedHostname
+            - stats
+            - timings
+          properties:
+            resolvedAddress:
+              $ref: 'schemas.yaml#/components/schemas/ResolvedAddress'
+            resolvedHostname:
+              $ref: 'schemas.yaml#/components/schemas/ResolvedHostname'
+            stats:
+              type: object
+              description: |
+                Summary `rtt` and packet loss statistics.
+                All times are in milliseconds.
+              required:
+                - min
+                - avg
+                - max
+                - total
+                - rcv
+                - drop
+                - loss
+              properties:
+                min:
+                  $ref: 'schemas.yaml#/components/schemas/StatsRttMinNullable'
+                avg:
+                  $ref: 'schemas.yaml#/components/schemas/StatsRttAvgNullable'
+                max:
+                  $ref: 'schemas.yaml#/components/schemas/StatsRttMaxNullable'
+                total:
+                  $ref: 'schemas.yaml#/components/schemas/StatsPacketsTotal'
+                rcv:
+                  $ref: 'schemas.yaml#/components/schemas/StatsPacketsRcv'
+                drop:
+                  $ref: 'schemas.yaml#/components/schemas/StatsPacketsDrop'
+                loss:
+                  $ref: 'schemas.yaml#/components/schemas/StatsPacketsLoss'
+            timings:
+              type: array
+              description: |
+                Details for each sent packet. 
+                All times are in milliseconds.
+              items:
+                type: object
+                required:
+                  - rtt
+                  - ttl
+                properties:
+                  rtt:
+                    $ref: 'schemas.yaml#/components/schemas/TimingPacketRtt'
+                  ttl:
+                    $ref: 'schemas.yaml#/components/schemas/TimingPacketTtl'
+    FinishedTracerouteTestResult:
+      title: FinishedTracerouteTestResult
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/BaseFinishedTestResult'
+        - type: object
+          required:
+            - resolvedAddress
+            - resolvedHostname
+            - hops
+          properties:
+            resolvedAddress:
+              $ref: 'schemas.yaml#/components/schemas/ResolvedAddress'
+            resolvedHostname:
+              $ref: 'schemas.yaml#/components/schemas/ResolvedHostname'
+            hops:
+              type: array
+              description: Details for each hop.
+              items:
+                type: object
+                required:
+                  - resolvedAddress
+                  - resolvedHostname
+                  - timings
+                properties:
+                  resolvedAddress:
+                    $ref: 'schemas.yaml#/components/schemas/ResolvedAddress'
+                  resolvedHostname:
+                    $ref: 'schemas.yaml#/components/schemas/ResolvedHostname'
+                  timings:
+                    type: array
+                    description: |
+                      Details for each sent packet.
+                      All times are in milliseconds.
+                    items:
+                      type: object
+                      required:
+                        - rtt
+                      properties:
+                        rtt:
+                          $ref: 'schemas.yaml#/components/schemas/TimingPacketRtt'
+    FinishedDnsTestResult:
+      title: FinishedDnsTestResult
+      anyOf:
+        - $ref: 'schemas.yaml#/components/schemas/FinishedSimpleDnsTestResult'
+        - $ref: 'schemas.yaml#/components/schemas/FinishedTraceDnsTestResult'
+    DnsStatusCode:
+      type: integer
+      description: The DNS [response code](https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#table-dns-parameters-6).
+    DnsStatusCodeName:
+      type: string
+      description: The DNS [response code name](https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml#table-dns-parameters-6).
+    HttpStatusCode:
+      type: integer
+      description: The HTTP response status code.
+    HttpStatusCodeName:
+      type: string
+      description: The HTTP response status code name.
+    FinishedSimpleDnsTestResult:
+      title: FinishedSimpleDnsTestResult
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/BaseFinishedTestResult'
+        - type: object
+          required:
+            - statusCode
+            - statusCodeName
+          properties:
+            statusCode:
+              $ref: 'schemas.yaml#/components/schemas/DnsStatusCode'
+            statusCodeName:
+              $ref: 'schemas.yaml#/components/schemas/DnsStatusCodeName'
+        - $ref: 'schemas.yaml#/components/schemas/DnsTestHopResult'
+    FinishedTraceDnsTestResult:
+      title: FinishedTraceDnsTestResult
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/BaseFinishedTestResult'
+        - type: object
+          required:
+            - hops
+          properties:
+            hops:
+              type: array
+              items:
+                $ref: 'schemas.yaml#/components/schemas/DnsTestHopResult'
+    DnsTestHopResult:
+      type: object
+      required:
+        - resolver
+        - answers
+        - timings
+      properties:
+        resolver:
+          type: string
+          description: The hostname or IP of the resolver that answered the query.
+        answers:
+          type: array
+          description: The list of received resource records.
+          items:
+            $ref: 'schemas.yaml#/components/schemas/DnsTestAnswer'
+        timings:
+          type: object
+          required:
+            - total
+          properties:
+            total:
+              type: number
+              description: The total query time in milliseconds.
+    DnsTestAnswer:
+      type: object
+      required:
+        - name
+        - type
+        - ttl
+        - class
+        - value
+      properties:
+        name:
+          type: string
+          description: The record domain name.
+        type:
+          type: string
+          description: The record type.
+        ttl:
+          type: integer
+          description: The record TTL in seconds.
+        class:
+          type: string
+          description: The record class.
+        value:
+          type: string
+          description: The record value.
+    FinishedMtrTestResult:
+      title: FinishedMtrTestResult
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/BaseFinishedTestResult'
+        - type: object
+          required:
+            - resolvedAddress
+            - resolvedHostname
+            - hops
+          properties:
+            resolvedAddress:
+              $ref: 'schemas.yaml#/components/schemas/ResolvedAddress'
+            resolvedHostname:
+              $ref: 'schemas.yaml#/components/schemas/ResolvedHostname'
+            hops:
+              type: array
+              items:
+                type: object
+                required:
+                  - resolvedAddress
+                  - resolvedHostname
+                  - asn
+                  - timings
+                  - stats
+                properties:
+                  resolvedAddress:
+                    allOf:
+                      - $ref: 'schemas.yaml#/components/schemas/ResolvedAddress'
+                      - description: The resolved IP address of this hop.
+                  resolvedHostname:
+                    allOf:
+                      - $ref: 'schemas.yaml#/components/schemas/ResolvedHostname'
+                      - description: The resolved hostname of this hop.
+                  asn:
+                    type: array
+                    description: The list of ASNs assigned to this hop.
+                    items:
+                      type: integer
+                  stats:
+                    type: object
+                    description: |
+                      Summary `rtt` and packet loss statistics.
+                      All times are in milliseconds.
+                    required:
+                      - min
+                      - avg
+                      - max
+                      - stDev
+                      - jMin
+                      - jAvg
+                      - jMax
+                      - total
+                      - rcv
+                      - drop
+                      - loss
+                    properties:
+                      min:
+                        $ref: 'schemas.yaml#/components/schemas/StatsRttMin'
+                      avg:
+                        $ref: 'schemas.yaml#/components/schemas/StatsRttAvg'
+                      max:
+                        $ref: 'schemas.yaml#/components/schemas/StatsRttMax'
+                      stDev:
+                        $ref: 'schemas.yaml#/components/schemas/StatsStDev'
+                      jMin:
+                        $ref: 'schemas.yaml#/components/schemas/StatsJitterMin'
+                      jAvg:
+                        $ref: 'schemas.yaml#/components/schemas/StatsJitterAvg'
+                      jMax:
+                        $ref: 'schemas.yaml#/components/schemas/StatsJitterMax'
+                      total:
+                        $ref: 'schemas.yaml#/components/schemas/StatsPacketsTotal'
+                      rcv:
+                        $ref: 'schemas.yaml#/components/schemas/StatsPacketsRcv'
+                      drop:
+                        $ref: 'schemas.yaml#/components/schemas/StatsPacketsDrop'
+                      loss:
+                        $ref: 'schemas.yaml#/components/schemas/StatsPacketsLoss'
+                  timings:
+                    type: array
+                    description: |
+                      Details for each sent packet. 
+                      All times are in milliseconds.
+                    items:
+                      type: object
+                      required:
+                        - rtt
+                      properties:
+                        rtt:
+                          $ref: 'schemas.yaml#/components/schemas/TimingPacketRtt'
+    FinishedHttpTestResult:
+      title: FinishedHttpTestResult
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/BaseFinishedTestResult'
+        - type: object
+          required:
+            - rawHeaders
+            - rawBody
+            - headers
+            - resolvedAddress
+            - statusCode
+            - statusCodeName
+            - timings
+            - tls
+          properties:
+            rawHeaders:
+              type: string
+              description: The raw HTTP response headers.
+            rawBody:
+              type: string
+              description: The raw HTTP response body. Only the first 10 kb are returned.
+            headers:
+              type: object
+              description: The HTTP response headers.
+              additionalProperties:
+                type: string
+            statusCode:
+              $ref: 'schemas.yaml#/components/schemas/HttpStatusCode'
+            statusCodeName:
+              $ref: 'schemas.yaml#/components/schemas/HttpStatusCodeName'
+            resolvedAddress:
+              $ref: 'schemas.yaml#/components/schemas/ResolvedAddress'
+            timings:
+              type: object
+              required:
+                - total
+                - dns
+                - tcp
+                - tls
+                - firstByte
+                - download
+              properties:
+                total:
+                  $ref: 'schemas.yaml#/components/schemas/TimingHttpTotalNullable'
+                dns:
+                  $ref: 'schemas.yaml#/components/schemas/TimingHttpDnsNullable'
+                tcp:
+                  $ref: 'schemas.yaml#/components/schemas/TimingHttpTcpNullable'
+                tls:
+                  $ref: 'schemas.yaml#/components/schemas/TimingHttpTlsNullable'
+                firstByte:
+                  $ref: 'schemas.yaml#/components/schemas/TimingHttpFirstByteNullable'
+                download:
+                  $ref: 'schemas.yaml#/components/schemas/TimingHttpDownloadNullable'
+            tls:
+              oneOf:
+                - $ref: 'schemas.yaml#/components/schemas/TlsCertificate'
+                - type: 'null'
+    TestRawOutput:
+      type: string
+      description: |
+        The raw output can be presented to users but is not meant to be parsed clients.
+        Please use the individual values provided in other fields for automated processing.
+    BaseTestStatus:
+      type: string
+      description: The test status. Any value other than `in-progress` is final.
+    InProgressTestStatus:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/BaseTestStatus'
+        - const: in-progress
+    FinishedTestStatus:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/BaseTestStatus'
+        - const: finished
+    FailedTestStatus:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/BaseTestStatus'
+        - const: failed
+    TimingPacketRtt:
+      type: number
+      description: The round-trip time for this packet.
+    TimingPacketTtl:
+      type: number
+      description: The packet time-to-live value.
+    TimingHttpTotalNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
+        - description: The total HTTP request time.
+    TimingHttpDnsNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
+        - description: The time required to perform the DNS lookup.
+    TimingHttpTcpNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
+        - description: The time from performing the DNS lookup to establishing the TCP connection.
+    TimingHttpTlsNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
+        - description: The time from establishing the TCP connection to establishing the TLS session.
+    TimingHttpFirstByteNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
+        - description: The time from establishing the TCP/TLS connection to the first response byte.
+    TimingHttpDownloadNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
+        - description: The time from the first byte to downloading the whole response.
+    TlsCertificate:
+      type: object
+      description: The TLS session information.
+      required:
+        - authorized
+        - createdAt
+        - expiresAt
+        - subject
+        - issuer
+      properties:
+        authorized:
+          type: boolean
+          description: |
+            `true` if the certificate is valid and signed by a trusted authority, `false` otherwise.
+        error:
+          type: string
+          description: |
+            The reason for rejecting the certificate if `authorized` is `false`.
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        subject:
+          $ref: 'schemas.yaml#/components/schemas/TlsCertificateSubject'
+        issuer:
+          $ref: 'schemas.yaml#/components/schemas/TlsCertificateIssuer'
+    TlsCertificateIssuer:
+      type: object
+      required:
+        - C
+        - O
+        - CN
+      properties:
+        C:
+          type: string
+          description: The issuer's country.
+        O:
+          type: string
+          description: The issuer's organization.
+        CN:
+          type: string
+          description: The issuer's common name.
+    TlsCertificateSubject:
+      type: object
+      required:
+        - CN
+        - alt
+      properties:
+        CN:
+          type: string
+          description: The subject's common name.
+        alt:
+          type: string
+          description: The subject's alternative names.

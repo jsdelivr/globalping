@@ -7,6 +7,7 @@
 	"dependencies": {
 		"@koa/router": "^12.0.0",
 		"@maxmind/geoip2-node": "^3.5.0",
+		"@redocly/openapi-core": "^1.2.0",
 		"@socket.io/redis-adapter": "^8.1.0",
 		"adm-zip": "^0.5.10",
 		"any-ascii": "^0.3.2",
@@ -44,6 +45,7 @@
 		"@apideck/portman": "^1.22.0",
 		"@apidevtools/swagger-parser": "^10.1.0",
 		"@martin-kolarik/eslint-config": "^7.1.6",
+		"@redocly/cli": "^1.2.0",
 		"@stoplight/spectral-cli": "^6.6.0",
 		"@tsconfig/node18-strictest-esm": "^1.0.1",
 		"@types/adm-zip": "^0.5.0",
@@ -126,7 +128,7 @@
 		"test:mocha:dev": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test FAKE_PROBE_IP=api NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false mocha",
 		"test:perf": "tsx test-perf/index.ts",
 		"test:portman": "TEST_DONT_RESTART_WORKERS=1 start-test 'npm run start:test' http://localhost:3000/health 'npm run test:portman:create && npm run test:portman:run' 2> /dev/null || E=$?; rm -rf tmp; exit $E;",
-		"test:portman:create": "portman --cliOptionsFile test/tests/contract/portman-cli.json",
+		"test:portman:create": "mkdir -p tmp && redocly bundle public/v1/spec.yaml > tmp/spec.yaml && portman --cliOptionsFile test/tests/contract/portman-cli.json",
 		"test:portman:run": "newman run tmp/converted/globalpingApi.json -e test/tests/contract/newman-env.json --ignore-redirects"
 	},
 	"lint-staged": {

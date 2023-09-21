@@ -15,6 +15,7 @@ import { registerGetProbesRoute } from '../../probe/route/get-probes.js';
 import { registerGetMeasurementRoute } from '../../measurement/route/get-measurement.js';
 import { registerCreateMeasurementRoute } from '../../measurement/route/create-measurement.js';
 import { registerHealthRoute } from '../../health/route/get.js';
+import { registerSpecRoute } from './spec.js';
 import { errorHandler } from './error-handler.js';
 import { defaultJson } from './middleware/default-json.js';
 import { errorHandlerMw } from './middleware/error-handler.js';
@@ -47,6 +48,8 @@ const apiRouter = new Router({ strict: true, sensitive: true });
 apiRouter.prefix('/v1')
 	.use(isAdminMw);
 
+// GET /spec.yaml
+registerSpecRoute(apiRouter);
 // POST /measurements
 registerCreateMeasurementRoute(apiRouter);
 // GET /measurements/:id

@@ -1,0 +1,19 @@
+components:
+  headers:
+    MeasurementLocation:
+      description: A link to the newly created measurement.
+      schema:
+        type: string
+        format: uri
+    RateLimitLimit:
+      description: The number of requests available in a given time window.
+      schema:
+        type: integer
+    RateLimitRemaining:
+      description: The number of requests remaining in the current time window.
+      schema:
+        type: integer
+    RateLimitReset:
+      description: The number of seconds until the limit is reset.
+      schema:
+        type: integer
