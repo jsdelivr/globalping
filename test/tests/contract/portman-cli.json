@@ -1,5 +1,5 @@
 {
-	"local": "public/v1/spec.yaml",
+	"local": "tmp/spec.yaml",
 	"baseUrl": "http://localhost:3000",
 	"portmanConfigFile": "test/tests/contract/portman-config.json"
 }

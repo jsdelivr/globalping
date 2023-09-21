@@ -2,10 +2,16 @@ import _ from 'lodash';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import SwaggerParser from '@apidevtools/swagger-parser';
+import * as openApiCore from '@redocly/openapi-core';
 import betterAjvErrors from 'better-ajv-errors';
 
 export default async ({ specPath, ajvBodyOptions = {}, ajvHeadersOptions = {} }) => {
-	let refs = await SwaggerParser.resolve(specPath);
+	let bundled = await openApiCore.bundle({
+		ref: specPath,
+		config: await openApiCore.createConfig({}),
+	});
+
+	let refs = await SwaggerParser.resolve(bundled.bundle.parsed);
 	let spec = refs.get(refs.paths()[0]);
 	let specPaths = Object.keys(spec.paths).map((path) => {
 		return {
