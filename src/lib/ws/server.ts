@@ -12,6 +12,8 @@ export type SocketData = {
 	probe: Probe;
 };
 
+export type ProbeSocket = RemoteSocket<DefaultEventsMap, SocketData>;
+
 export type WsServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 
 export const PROBES_NAMESPACE = '/probes';
@@ -19,7 +21,7 @@ const TIME_UNTIL_VM_BECOMES_HEALTHY = 8000;
 const logger = scopedLogger('ws-server');
 
 let io: WsServer;
-let throttledFetchSockets: (options?: LRUOptions) => Promise<RemoteSocket<DefaultEventsMap, SocketData>[]>;
+let throttledFetchSockets: (options?: LRUOptions) => Promise<ProbeSocket[]>;
 
 export const initWsServer = async () => {
 	const pubClient = getRedisClient().duplicate();
@@ -36,7 +38,7 @@ export const initWsServer = async () => {
 
 	io.adapter(createAdapter(pubClient, subClient));
 
-	throttledFetchSockets = throttle<Array<RemoteSocket<DefaultEventsMap, SocketData>>>(
+	throttledFetchSockets = throttle<ProbeSocket[]>(
 		io.of(PROBES_NAMESPACE).fetchSockets.bind(io.of(PROBES_NAMESPACE)),
 		config.get<number>('ws.fetchSocketsCacheTTL'),
 	);
