@@ -18,6 +18,7 @@ import { getRegion } from '../lib/ip-ranges.js';
 import type { Probe, ProbeLocation, Tag } from './types.js';
 import { verifyIpLimit } from '../lib/ws/helper/probe-ip-limit.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
+import { adoptedProbes } from '../lib/adopted-probes/adopted-probes.js';
 
 const geoipClient = createGeoipClient();
 
@@ -26,11 +27,13 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const nodeVersion = String(socket.handshake.query['nodeVersion']);
 
+	const id = String(socket.handshake.query['id']);
+
 	const host = process.env['HOSTNAME'] ?? '';
 
-	const clientIp = getProbeIp(socket);
+	const ip = getProbeIp(socket);
 
-	if (!clientIp) {
+	if (!ip) {
 		throw new Error('failed to detect ip address of connected probe');
 	}
 
@@ -42,19 +45,21 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	if (process.env['FAKE_PROBE_IP'] === 'probe') {
 		ipInfo = fakeLookup();
-	} else if (!isIpPrivate(clientIp)) {
-		ipInfo = await geoipClient.lookup(clientIp);
+	} else if (!isIpPrivate(ip)) {
+		ipInfo = await geoipClient.lookup(ip);
 	}
 
 	if (!ipInfo) {
-		throw new Error(`couldn't detect probe location for ip ${clientIp}`);
+		throw new Error(`couldn't detect probe location for ip ${ip}`);
 	}
 
-	await verifyIpLimit(clientIp, socket.id);
+	await verifyIpLimit(ip, socket.id);
+
+	await adoptedProbes.syncProbeData(ip, id);
 
 	const location = getLocation(ipInfo);
 
-	const tags = getTags(clientIp);
+	const tags = getTags(ip);
 
 	// Storing index as string[][] so every category will have it's exact position in the index array across all probes
 	const index = [
@@ -80,7 +85,8 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		client: socket.id,
 		version,
 		nodeVersion,
-		ipAddress: clientIp,
+		id,
+		ipAddress: ip,
 		host,
 		location,
 		index,

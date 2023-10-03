@@ -313,6 +313,7 @@ describe('Create measurement request', () => {
 					status: 'initializing',
 					version: '0.14.0',
 					nodeVersion: 'v18.17.0',
+					id: '1-1-1-1-1',
 					location: {
 						continent: 'NA',
 						region: 'Northern America',

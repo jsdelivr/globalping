@@ -14,6 +14,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		status: isAdmin ? socket.data.probe.status : undefined,
 		version: socket.data.probe.version,
 		nodeVersion: isAdmin ? socket.data.probe.nodeVersion : undefined,
+		id: isAdmin ? socket.data.probe.id : undefined,
 		location: {
 			continent: socket.data.probe.location.continent,
 			region: socket.data.probe.location.region,
