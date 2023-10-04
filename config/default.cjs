@@ -11,6 +11,9 @@ module.exports = {
 			tls: false,
 		},
 	},
+	sql: {
+		url: 'mysql://root:@localhost:3306/directus',
+	},
 	admin: {
 		key: '',
 	},

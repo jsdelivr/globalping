@@ -18,7 +18,7 @@ import { getRegion } from '../lib/ip-ranges.js';
 import type { Probe, ProbeLocation, Tag } from './types.js';
 import { verifyIpLimit } from '../lib/ws/helper/probe-ip-limit.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
-import { adoptedProbes } from '../lib/adopted-probes/adopted-probes.js';
+import { adoptedProbes } from '../lib/adopted-probes.js';
 
 const geoipClient = createGeoipClient();
 
@@ -27,7 +27,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const nodeVersion = String(socket.handshake.query['nodeVersion']);
 
-	const id = String(socket.handshake.query['id']);
+	const uuid = String(socket.handshake.query['uuid']);
 
 	const host = process.env['HOSTNAME'] ?? '';
 
@@ -55,7 +55,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	await verifyIpLimit(ip, socket.id);
 
-	await adoptedProbes.syncProbeData(ip, id);
+	await adoptedProbes.syncProbeIds(ip, uuid);
 
 	const location = getLocation(ipInfo);
 
@@ -85,7 +85,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		client: socket.id,
 		version,
 		nodeVersion,
-		id,
+		uuid,
 		ipAddress: ip,
 		host,
 		location,

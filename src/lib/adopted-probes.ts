@@ -1,8 +1,10 @@
 import type { Knex } from 'knex';
-import { scopedLogger } from '../logger.js';
-import { client } from '../sql/client.js';
+import { scopedLogger } from './logger.js';
+import { client } from './sql/client.js';
 
 const logger = scopedLogger('adopted-probes');
+
+const TABLE_NAME = 'adopted_probes';
 
 type AdoptedProbe = {
   ip: string;
@@ -21,7 +23,7 @@ export class AdoptedProbes {
 		this.scheduleSync();
 	}
 
-	async syncProbeData (probeIp: string, probeUuid: string) {
+	async syncProbeIds (probeIp: string, probeUuid: string) {
 		const adoptedProbeByIp = this.adoptedProbesByIp.get(probeIp);
 
 		if (adoptedProbeByIp && adoptedProbeByIp.uuid === probeUuid) { // Probe is synced
@@ -39,18 +41,18 @@ export class AdoptedProbes {
 	}
 
 	private async updateUuid (ip: string, uuid: string) {
-		await this.sql('adopted_probes').where({ ip }).update({ uuid });
+		await this.sql(TABLE_NAME).where({ ip }).update({ uuid });
 	}
 
 	private async updateIp (ip: string, uuid: string) {
-		await this.sql('adopted_probes').where({ uuid }).update({ ip });
+		await this.sql(TABLE_NAME).where({ uuid }).update({ ip });
 	}
 
 	private async syncDashboardData () {
-		const probes = await this.sql.select<AdoptedProbe[]>('ip', 'uuid').from('adopted_probes');
+		const probes = await this.sql(TABLE_NAME).select<AdoptedProbe[]>('ip', 'uuid');
+		// Storing city as emtpy string until https://github.com/jsdelivr/globalping/issues/427 is implemented
 		this.adoptedProbesByIp = new Map(probes.map(probe => [ probe.ip, { uuid: probe.uuid, city: '' }]));
 		this.adoptedProbesByUuid = new Map(probes.map(probe => [ probe.uuid, { ip: probe.ip, city: '' }]));
-		console.log('this.adoptedProbes', this.adoptedProbesByIp);
 	}
 
 	scheduleSync () {

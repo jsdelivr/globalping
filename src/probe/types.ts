@@ -36,7 +36,7 @@ export type Probe = {
 	client: string;
 	version: string;
 	nodeVersion: string;
-	id: string;
+	uuid: string;
 	ipAddress: string;
 	host: string;
 	location: ProbeLocation;

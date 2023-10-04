@@ -26,7 +26,7 @@ export const addFakeProbe = async (events: Record<string, any> = {}): Promise<So
 			query: {
 				version: '0.14.0',
 				nodeVersion: 'v18.17.0',
-				id: '1-1-1-1-1',
+				uuid: '1-1-1-1-1',
 			},
 		});
 

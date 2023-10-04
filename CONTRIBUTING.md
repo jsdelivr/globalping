@@ -10,16 +10,16 @@ Hi! We're really excited that you're interested in contributing! Before submitti
 
 ## Project setup
 
-In order to run the Globalping API locally you will need Node.js 18 and Redis with [RedisJSON](https://oss.redis.com/redisjson/) module (included in docker-compose.yml file). You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
+In order to run the Globalping API locally you will need Node.js 18 and Redis with [RedisJSON](https://oss.redis.com/redisjson/) module and MariaDB. All of them are included in docker-compose.yml file. You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
 
 The API uses 3000 port by default. This can be overridden by `PORT` environment variable.
 
 You can run the project by following these steps:
 
 1. Clone this repository.
-2. `docker-compose up -d` - Run Redis
+2. `docker-compose up -d` - Run Redis and MariaDB
 3. `npm install`
-4. Run `npm run dev`
+4. Run `npm run start:dev`
 
 Once the API is live, you can spin up a probe instance by running as described at https://github.com/jsdelivr/globalping-probe/blob/master/CONTRIBUTING.md.
 
@@ -40,5 +40,7 @@ Most IDEs have plugins integrating the used linter (eslint), including support f
 
 ### Environment variables
 
-- `NEW_RELIC_LICENSE_KEY={value}` environment variable should be used in production to send APM metrics to new relic
-- `NEW_RELIC_APP_NAME={value}` environment variable should be used in production to send APM mentrics to new relic
+- `NEW_RELIC_LICENSE_KEY={value}` used in production to send APM metrics to new relic
+- `NEW_RELIC_APP_NAME={value}` used in production to send APM mentrics to new relic
+- `NEW_RELIC_ENABLED=false` useid in development to disable newrelic monitoring
+- `FAKE_PROBE_IP={api|probe}` used in development to either use a random fake ip from the API or a fake ip from Probe

@@ -30,12 +30,4 @@ export class CodeSender {
 	}
 }
 
-let sender: CodeSender;
-
-export const getCodeSender = () => {
-	if (!sender) {
-		sender = new CodeSender(fetchSockets);
-	}
-
-	return sender;
-};
+export const codeSender = new CodeSender(fetchSockets);
