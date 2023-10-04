@@ -3,6 +3,10 @@ import requestIp from 'request-ip';
 import type { Socket } from 'socket.io';
 
 const getProbeIp = (socket: Socket) => {
+	if (process.env['NODE_ENV'] === 'test') {
+		return '1.2.3.4';
+	}
+
 	// Use random ip assigned by the API
 	if (process.env['FAKE_PROBE_IP'] === 'api') {
 		return _.sample([
@@ -16,7 +20,6 @@ const getProbeIp = (socket: Socket) => {
 			'213.136.174.80',
 			'94.214.253.78',
 			'79.205.97.254',
-			'65.19.141.130',
 		]);
 	}
 

@@ -13,4 +13,4 @@ CREATE TABLE IF NOT EXISTS adopted_probes (
   uuid VARCHAR(255)
 );
 
-INSERT IGNORE INTO adopted_probes (id, userId, ip) VALUES ('1', '6191378', '65.19.141.130');
+INSERT IGNORE INTO adopted_probes (id, userId, ip) VALUES ('1', '6191378', '79.205.97.254');

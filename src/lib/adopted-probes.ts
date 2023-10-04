@@ -26,7 +26,7 @@ export class AdoptedProbes {
 	async syncProbeIds (probeIp: string, probeUuid: string) {
 		const adoptedProbeByIp = this.adoptedProbesByIp.get(probeIp);
 
-		if (adoptedProbeByIp && adoptedProbeByIp.uuid === probeUuid) { // Probe is synced
+		if (adoptedProbeByIp && adoptedProbeByIp.uuid === probeUuid) { // Probe ids are synced
 			return;
 		} else if (adoptedProbeByIp) { // Uuid is wrong
 			await this.updateUuid(probeIp, probeUuid);
@@ -35,7 +35,7 @@ export class AdoptedProbes {
 
 		const adoptedProbeByUuid = this.adoptedProbesByUuid.get(probeUuid);
 
-		if (adoptedProbeByUuid) { // Probe not found by ip but found by uuid, ip is wrong
+		if (adoptedProbeByUuid) { // Probe not found by ip but found by uuid => ip is wrong
 			await this.updateIp(probeIp, probeUuid);
 		}
 	}
