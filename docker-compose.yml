@@ -12,7 +12,9 @@ services:
   mariadb:
     image: mariadb:latest
     environment:
-    - MARIADB_ALLOW_EMPTY_ROOT_PASSWORD=1
+    - MARIADB_RANDOM_ROOT_PASSWORD=1
+    - MARIADB_USER=directus
+    - MARIADB_PASSWORD=password
     ports:
       - "3306:3306"
     volumes:

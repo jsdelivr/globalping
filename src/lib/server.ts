@@ -19,11 +19,10 @@ export const createServer = async (): Promise<Server> => {
 	await populateIpWhiteList();
 	// Populate cities info
 	await populateCitiesList();
-	// Populate adopted probes info and start regular sync
-	await adoptedProbes.startSync();
-
 
 	await initWsServer();
+
+	adoptedProbes.scheduleSync();
 
 	const { getWsServer } = await import('./ws/server.js');
 	const { getHttpServer } = await import('./http/server.js');

@@ -12,19 +12,16 @@ const sqlStub = sinon.stub().returns({
 	select: selectStub,
 	where: whereStub,
 });
-let clock: sinon.SinonSandbox['clock'];
+let sandbox: sinon.SinonSandbox;
 
 describe('AdoptedProbes', () => {
-	before(() => {
-		clock = sinon.useFakeTimers();
-	});
-
 	beforeEach(() => {
+		sandbox = sinon.createSandbox({ useFakeTimers: true });
 		sinon.resetHistory();
 	});
 
 	afterEach(() => {
-		clock.restore();
+		sandbox.restore();
 	});
 
 	it('startSync method should sync the data and start regular syncs', async () => {
@@ -34,16 +31,15 @@ describe('AdoptedProbes', () => {
 			uuid: '1-1-1-1-1',
 		}]);
 
-		await adoptedProbes.startSync();
+		adoptedProbes.scheduleSync();
 
+		expect(sqlStub.callCount).to.equal(0);
+		expect(selectStub.callCount).to.equal(0);
+		await sandbox.clock.tickAsync(5500);
 		expect(sqlStub.callCount).to.equal(1);
 		expect(sqlStub.args[0]).deep.equal([ 'adopted_probes' ]);
 		expect(selectStub.callCount).to.equal(1);
 		expect(selectStub.args[0]).deep.equal([ 'ip', 'uuid' ]);
-
-		await clock.tickAsync(5500);
-		expect(sqlStub.callCount).to.equal(2);
-		expect(selectStub.callCount).to.equal(2);
 	});
 
 	it('syncProbeIds method should do nothing if probe was not found either by ip or uuid', async () => {
@@ -53,7 +49,9 @@ describe('AdoptedProbes', () => {
 			uuid: '1-1-1-1-1',
 		}]);
 
-		await adoptedProbes.startSync();
+		adoptedProbes.scheduleSync();
+		await sandbox.clock.tickAsync(5500);
+
 		await adoptedProbes.syncProbeIds('2.2.2.2', '2-2-2-2-2');
 
 		expect(whereStub.callCount).to.equal(0);
@@ -67,7 +65,9 @@ describe('AdoptedProbes', () => {
 			uuid: '1-1-1-1-1',
 		}]);
 
-		await adoptedProbes.startSync();
+		adoptedProbes.scheduleSync();
+		await sandbox.clock.tickAsync(5500);
+
 		await adoptedProbes.syncProbeIds('1.1.1.1', '1-1-1-1-1');
 
 		expect(whereStub.callCount).to.equal(0);
@@ -81,7 +81,9 @@ describe('AdoptedProbes', () => {
 			uuid: '1-1-1-1-1',
 		}]);
 
-		await adoptedProbes.startSync();
+		adoptedProbes.scheduleSync();
+		await sandbox.clock.tickAsync(5500);
+
 		await adoptedProbes.syncProbeIds('1.1.1.1', '2-2-2-2-2');
 
 		expect(whereStub.callCount).to.equal(1);
@@ -97,7 +99,9 @@ describe('AdoptedProbes', () => {
 			uuid: '1-1-1-1-1',
 		}]);
 
-		await adoptedProbes.startSync();
+		adoptedProbes.scheduleSync();
+		await sandbox.clock.tickAsync(5500);
+
 		await adoptedProbes.syncProbeIds('2.2.2.2', '1-1-1-1-1');
 
 		expect(whereStub.callCount).to.equal(1);

@@ -37,7 +37,7 @@ describe('Adoption code', () => {
 			})
 			.expect(200).expect((response) => {
 				expect(response.body).to.deep.equal({
-					result: 'Code was sent to the probe',
+					result: 'Code was sent to the probe.',
 				});
 			});
 

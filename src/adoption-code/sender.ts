@@ -15,7 +15,7 @@ export class CodeSender {
 
 		this.sendToSocket(socket, request.code);
 
-		return 'Code was sent to the probe';
+		return 'Code was sent to the probe.';
 	}
 
 	private async findSocketByIp (ip: string) {

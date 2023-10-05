@@ -18,9 +18,12 @@ export class AdoptedProbes {
 
 	constructor (private readonly sql: Knex) {}
 
-	async startSync () {
-		await this.syncDashboardData();
-		this.scheduleSync();
+	scheduleSync () {
+		setTimeout(() => {
+			this.syncDashboardData()
+				.finally(() => this.scheduleSync())
+				.catch(error => logger.error(error));
+		}, 5000);
 	}
 
 	async syncProbeIds (probeIp: string, probeUuid: string) {
@@ -53,14 +56,6 @@ export class AdoptedProbes {
 		// Storing city as emtpy string until https://github.com/jsdelivr/globalping/issues/427 is implemented
 		this.adoptedProbesByIp = new Map(probes.map(probe => [ probe.ip, { uuid: probe.uuid, city: '' }]));
 		this.adoptedProbesByUuid = new Map(probes.map(probe => [ probe.uuid, { ip: probe.ip, city: '' }]));
-	}
-
-	scheduleSync () {
-		setTimeout(() => {
-			this.syncDashboardData()
-				.finally(() => this.scheduleSync())
-				.catch(error => logger.error(error));
-		}, 5000);
 	}
 }
 

@@ -12,7 +12,7 @@ module.exports = {
 		},
 	},
 	sql: {
-		url: 'mysql://root:@localhost:3306/directus',
+		url: 'mysql://directus:password@localhost:3306/directus',
 	},
 	admin: {
 		key: '',
