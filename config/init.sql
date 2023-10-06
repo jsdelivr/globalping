@@ -1,0 +1,15 @@
+CREATE DATABASE IF NOT EXISTS directus;
+USE directus;
+
+CREATE TABLE IF NOT EXISTS adopted_probes (
+  id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_created CHAR(36),
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  user_updated CHAR(36),
+  date_updated TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  userId VARCHAR(255) NOT NULL,
+  ip VARCHAR(255) NOT NULL,
+  uuid VARCHAR(255),
+  lastSyncDate DATE
+);
+INSERT IGNORE INTO adopted_probes (id, userId, ip) VALUES ('1', '6191378', '79.205.97.254');

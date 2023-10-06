@@ -14,6 +14,7 @@ import cjsDependencies from '../../cjs-dependencies.cjs';
 import { registerGetProbesRoute } from '../../probe/route/get-probes.js';
 import { registerGetMeasurementRoute } from '../../measurement/route/get-measurement.js';
 import { registerCreateMeasurementRoute } from '../../measurement/route/create-measurement.js';
+import { registerSendCodeRoute } from '../../adoption-code/route/adoption-code.js';
 import { registerHealthRoute } from '../../health/route/get.js';
 import { registerSpecRoute } from './spec.js';
 import { errorHandler } from './error-handler.js';
@@ -56,6 +57,8 @@ registerCreateMeasurementRoute(apiRouter);
 registerGetMeasurementRoute(apiRouter);
 // GET /probes
 registerGetProbesRoute(apiRouter);
+// POST /send-code
+registerSendCodeRoute(apiRouter);
 
 const healthRouter = new Router({ strict: true, sensitive: true });
 // GET /health
