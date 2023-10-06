@@ -147,6 +147,104 @@ Examples:
 
 The location field can process all kinds of different types of location matching, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`.
 
+## Best practices and Tips
+
+Learn to use Globalping in the most optimal way! All examples below are based on our CLI tool for simplicity.
+
+### Magic field
+All of our integrations are using the same API and our "magic" field as location input. 
+
+This means that when you type that you want to run a ping from Germany in our CLI or our website, your input (Germany) gets processed by the magic parser of our API.
+
+This is the best way to interact with the Globalping platform as it maintains a consistent and simple user experience and allows you to reuse the same logic and parameters across all of our tools.
+
+> If you as a developer want a stricter and more predictable control over the selected probes and user input, then you have the option to use [the strict parser](https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements) that expects you to define every city, country and tag in a standardized way.
+
+The magic field supports a wide range of possible parameters and location combinations logic, including but not limited to continents, regions, countries, cities, ASNs, ISP names, cloud region names as well as system and user defined tags.
+
+###  The World
+The `world` location is special and uses a pseudo-random algorithm to select probes randomly while [maintaining certain proportions](https://github.com/jsdelivr/globalping/blob/master/config/default.cjs#L47) per continent.
+
+Note that when you provide no location at all then the system will use "world" internally by default.
+
+This means that if you request a measurement `from world --limit 100` the system will try to return back: 5 probes from Africa, 15 from Asia, 30 from Europe, 10 from Oceania, 30 from North America and 10 from South America.
+
+### Basic location targeting
+
+It's very simple to get started, in most cases you can simply type whatever feels right. 
+Some examples:
+
+- `from usa` or `from united states` - This will result in a random probe in USA
+- `from new york` -  A random probe in NYC
+- `from aws` - A random probe hosted with Amazon
+
+In the above cases since no limit parameter is specified you will only get 1 probe. In most cases when you select a large region you will expect to get multiple answers, make sure you set your limit accordingly.
+
+- `from north america` will return either USA or Canada. But:
+- `from north america --limit 2` will return both
+
+Other acceptable location examples:
+
+- europe, africa, asia
+- east asia, north europe, eastern europe
+- greece, canada, mexico, japan
+- california, texas
+- frankfurt, dallas, sydney
+- as396982, as16509
+- comcast, google, ovh, orange, t-mobile
+
+### Stack filters
+
+You can also combine multiple locations and use them as filters to increase the accuracy of your tests. For this purpose we use the plus symbol +.
+
+- `from comcast+california` will return a probe that is both hosted with Comcast and located in CA.
+- `from google+europe` will return a random probe hosted with Google Cloud in Europe, or if you want to be more specific but dont remember the cloud region name:
+- `from google+germany` will return a probe with Google Cloud Germany
+
+You can combine as many parameters as you want too
+
+- `from cogent+europe+datacenter` will return a probe hosted with Cogent, located in Europe and tagged as a datacenter probe. Or you could use `eyeball` to do the opposite.
+
+### Multiple locations
+
+To select multiple locations in a single request you can use a comma. And of course you can combine filters and multiple locations at the same time.
+
+- `from amazon+france,ovh+france --limit 2` will return a probe hosted with AWS in France and a probe hosted with OVH in France
+
+You can use this functionality to also define your own "world".
+
+- `from germany, greece, uk, usa, canada, japan, china, south africa --limit 20` will return probes from all of the above countries in roughly equal proportions to fit the limit of 20. 
+
+The limit parameter is global and applies to the location as a whole, not allowing the API to return more than the limit. If you need to define custom limits per location you need to use our API directly instead of the magic field.
+
+
+### System tags (eyeball networks and more)
+
+Many probes are going to be tagged by our system. At the moment this includes:
+
+- Cloud regions for Google Cloud and AWS. e.g. `aws-eu-west-1` and `gcp-us-south1` They follow each provider's naming scheme and are prefixed by their name.
+- Eyeball and datacenter networks. e.g. `eyeball-network` and `datacenter-network` Unlike datacenter hosted probes, eyeball network are probes hosted with ISP providers that offer internet access to regular people and small businesses. 
+
+### No UUIDs
+
+Our probes don't expose any unique IDs to target. The recommended way to narrow down your results is to use filters and even stack them together.
+
+This way popular locations such as `from Amsterdam` or `from AWS` will be automatically load-balanced among multiple probes in the same location and avoid overloading any specific one.
+
+### Best effort results
+
+When requesting a specific number of probes there is no guarantee that the API will respond back with the exact same amount. Keep this in mind and use it to your benefit.
+
+### Probe availability
+
+Globalping only exposes and allows users to interact with online probes. A probe is considered online and becomes available via our API when:
+
+- It's up-to-date. A probe running an older version will be forced to auto-update before it becomes available.
+- Passes quality control tests. Every probe must first pass a test to ensure it's connected to a reasonably stable network with no packet loss. This test is then repeated on a schedule and will take a probe offline if it fails the QA test.
+
+This is completely automated and managed by our platform.
+
+
 ## Join the Network - Run a probe
 
 Globalping relies on the community to help us expand our network of probes. So while we run our own probes in key locations we still need help from both corporate partners and individials. Consider joining our network and helping everyone by running a probe (or many). 
