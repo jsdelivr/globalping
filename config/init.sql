@@ -13,7 +13,3 @@ CREATE TABLE IF NOT EXISTS adopted_probes (
   lastSyncDate DATE
 );
 INSERT IGNORE INTO adopted_probes (id, userId, ip) VALUES ('1', '6191378', '79.205.97.254');
-
-CREATE USER IF NOT EXISTS 'directus';
-GRANT ALL PRIVILEGES ON `directus`.* TO 'directus';
-FLUSH PRIVILEGES;

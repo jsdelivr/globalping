@@ -26,6 +26,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Shutdown Ubuntu MySQL
+        run: sudo service mysql stop
+
+      - name: Setup MariaDB
+        uses: getong/mariadb-action@v1.1
+        with:
+          mariadb version: '10.11.5'
+          mysql user: 'directus'
+          mysql password: 'password'
+          mysql database: 'directus'
+
+      - name: Init MariaDB
+        run: |
+          sleep 5
+          mysql -u directus -ppassword --database=directus --protocol=tcp < config/init.sql
+
       - uses: actions/setup-node@v3
         with:
           node-version: 18.x
