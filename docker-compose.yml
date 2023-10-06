@@ -10,7 +10,7 @@ services:
     command: /usr/local/etc/redis/redis.conf
 
   mariadb:
-    image: mariadb:latest
+    image: mariadb:10.11.5
     environment:
     - MARIADB_RANDOM_ROOT_PASSWORD=1
     - MARIADB_USER=directus
