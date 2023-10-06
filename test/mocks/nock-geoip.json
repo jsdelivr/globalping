@@ -328,7 +328,10 @@
 			"region": "Texas",
 			"country": "US",
 			"loc": "32.7831,-96.8067",
-			"org": "AS20004 The Constant Company LLC"
+			"org": "AS20004 The Constant Company LLC",
+			"privacy": {
+				"hosting": true
+			}
 		},
 		"argentina": {
 			"city": "Buenos Aires",
@@ -363,14 +366,20 @@
 			"region": "New York",
 			"country": "US",
 			"loc": "40.7143,-74.0060",
-			"org": "AS80004 The Constant Company LLC"
+			"org": "AS80004 The Constant Company LLC",
+			"privacy": {
+				"hosting": true
+			}
 		},
 		"washington": {
 			"city": "Washington",
 			"region": "Washington, D.C.",
 			"country": "US",
 			"loc": "38.89539,-77.039476",
-			"org": "AS701 Verizon Business"
+			"org": "AS701 Verizon Business",
+			"privacy": {
+				"hosting": false
+			}
 		},
 		"emptyNetwork": {
 			"city": "Dallas",

@@ -54,7 +54,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const location = getLocation(ipInfo);
 
-	const tags = getTags(clientIp);
+	const tags = getTags(clientIp, ipInfo);
 
 	// Storing index as string[][] so every category will have it's exact position in the index array across all probes
 	const index = [
@@ -112,7 +112,7 @@ const getLocation = (ipInfo: ProbeLocation): ProbeLocation => ({
 	normalizedNetwork: ipInfo.normalizedNetwork,
 });
 
-const getTags = (clientIp: string) => {
+const getTags = (clientIp: string, ipInfo: ProbeLocation) => {
 	const tags: Tag[] = [];
 	const cloudRegion = getRegion(clientIp);
 
@@ -120,6 +120,18 @@ const getTags = (clientIp: string) => {
 		tags.push({
 			type: 'system',
 			value: cloudRegion,
+		});
+	}
+
+	if (ipInfo.isHosting === true) {
+		tags.push({
+			type: 'system',
+			value: 'datacenter-network',
+		});
+	} else if (ipInfo.isHosting === false) {
+		tags.push({
+			type: 'system',
+			value: 'eyeball-network',
 		});
 	}
 
