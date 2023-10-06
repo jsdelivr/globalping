@@ -8,8 +8,8 @@ const logger = scopedLogger('adopted-probes');
 const TABLE_NAME = 'adopted_probes';
 
 type AdoptedProbe = {
-  ip: string;
-  uuid: string;
+	ip: string;
+	uuid: string;
 	lastSyncDate: string;
 }
 
