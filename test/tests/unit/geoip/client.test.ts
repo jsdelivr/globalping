@@ -50,6 +50,7 @@ describe('geoip service', () => {
 				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
+				isHosting: true,
 			});
 		});
 	});
@@ -72,6 +73,7 @@ describe('geoip service', () => {
 			longitude: -58.3772,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
+			isHosting: true,
 		});
 	});
 
@@ -97,6 +99,7 @@ describe('geoip service', () => {
 			longitude: -58.3772,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
+			isHosting: undefined,
 		});
 	});
 
@@ -118,6 +121,7 @@ describe('geoip service', () => {
 			longitude: -96.8067,
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
+			isHosting: undefined,
 		});
 	});
 
@@ -139,6 +143,7 @@ describe('geoip service', () => {
 			longitude: -96.8067,
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
+			isHosting: undefined,
 		});
 	});
 
@@ -160,6 +165,7 @@ describe('geoip service', () => {
 			longitude: -58.3772,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
+			isHosting: undefined,
 		});
 	});
 
@@ -181,6 +187,7 @@ describe('geoip service', () => {
 			longitude: -58.3772,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
+			isHosting: undefined,
 		});
 	});
 
@@ -215,6 +222,7 @@ describe('geoip service', () => {
 			longitude: 26.487,
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
+			isHosting: undefined,
 		});
 	});
 
@@ -236,6 +244,7 @@ describe('geoip service', () => {
 			longitude: 12.371563,
 			network: 'Hetzner Online GmbH',
 			normalizedNetwork: 'hetzner online gmbh',
+			isHosting: undefined,
 		});
 	});
 
@@ -257,6 +266,7 @@ describe('geoip service', () => {
 			longitude: 12.371563,
 			network: 'Hetzner Online GmbH',
 			normalizedNetwork: 'hetzner online gmbh',
+			isHosting: undefined,
 		});
 	});
 
@@ -278,6 +288,7 @@ describe('geoip service', () => {
 			longitude: -96.8067,
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
+			isHosting: true,
 		});
 	});
 
@@ -299,6 +310,7 @@ describe('geoip service', () => {
 			longitude: -58.3772,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
+			isHosting: undefined,
 		});
 	});
 
@@ -320,6 +332,7 @@ describe('geoip service', () => {
 			longitude: -74.0060,
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
+			isHosting: true,
 		});
 	});
 
@@ -341,6 +354,7 @@ describe('geoip service', () => {
 			longitude: -96.8067,
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
+			isHosting: undefined,
 		});
 	});
 
@@ -363,6 +377,7 @@ describe('geoip service', () => {
 				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
+				isHosting: undefined,
 			});
 		});
 
@@ -384,6 +399,7 @@ describe('geoip service', () => {
 				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
+				isHosting: undefined,
 			});
 		});
 
@@ -405,6 +421,7 @@ describe('geoip service', () => {
 				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
+				isHosting: undefined,
 			});
 		});
 
@@ -426,6 +443,7 @@ describe('geoip service', () => {
 				longitude: -77.039476,
 				network: 'Psychz Networks',
 				normalizedNetwork: 'psychz networks',
+				isHosting: undefined,
 			});
 
 			nockGeoIpProviders({ ip2location: 'empty', ipmap: 'empty', maxmind: 'empty', ipinfo: 'washington', fastly: 'empty' });
@@ -445,6 +463,7 @@ describe('geoip service', () => {
 				longitude: -77.039476,
 				network: 'Verizon Business',
 				normalizedNetwork: 'verizon business',
+				isHosting: false,
 			});
 		});
 
@@ -480,6 +499,7 @@ describe('geoip service', () => {
 				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
+				isHosting: true,
 			});
 		});
 
@@ -501,6 +521,7 @@ describe('geoip service', () => {
 				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
+				isHosting: true,
 			});
 		});
 
@@ -530,6 +551,7 @@ describe('geoip service', () => {
 				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
+				isHosting: true,
 			});
 		});
 
