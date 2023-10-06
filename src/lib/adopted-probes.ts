@@ -1,6 +1,7 @@
 import type { Knex } from 'knex';
 import { scopedLogger } from './logger.js';
 import { client } from './sql/client.js';
+import { fetchSockets } from './ws/server.js';
 
 const logger = scopedLogger('adopted-probes');
 
@@ -9,14 +10,18 @@ const TABLE_NAME = 'adopted_probes';
 type AdoptedProbe = {
   ip: string;
   uuid: string;
-  city: string;
+	lastSyncDate: string;
 }
 
 export class AdoptedProbes {
 	private adoptedProbesByIp: Map<AdoptedProbe['ip'], Omit<AdoptedProbe, 'ip'>> = new Map();
-	private adoptedProbesByUuid: Map<AdoptedProbe['uuid'], Omit<AdoptedProbe, 'uuid'>> = new Map();
+	private connectedIpToUuid: Map<string, string> = new Map();
+	private connectedUuidToIp: Map<string, string> = new Map();
 
-	constructor (private readonly sql: Knex) {}
+	constructor (
+		private readonly sql: Knex,
+		private readonly fetchWsSockets: typeof fetchSockets,
+	) {}
 
 	scheduleSync () {
 		setTimeout(() => {
@@ -26,20 +31,50 @@ export class AdoptedProbes {
 		}, 5000);
 	}
 
-	async syncProbeIds (probeIp: string, probeUuid: string) {
-		const adoptedProbeByIp = this.adoptedProbesByIp.get(probeIp);
+	private async syncDashboardData () {
+		const allSockets = await this.fetchWsSockets();
+		this.connectedIpToUuid = new Map(allSockets.map(socket => [ socket.data.probe.ipAddress, socket.data.probe.uuid ]));
+		this.connectedUuidToIp = new Map(allSockets.map(socket => [ socket.data.probe.uuid, socket.data.probe.ipAddress ]));
 
-		if (adoptedProbeByIp && adoptedProbeByIp.uuid === probeUuid) { // Probe ids are synced
-			return;
-		} else if (adoptedProbeByIp) { // Uuid is wrong
-			await this.updateUuid(probeIp, probeUuid);
+		const adoptedProbes = await this.sql(TABLE_NAME).select<AdoptedProbe[]>('ip', 'uuid', 'lastSyncDate');
+		this.adoptedProbesByIp = new Map(adoptedProbes.map(({ ip, uuid, lastSyncDate }) => [ ip, { uuid, lastSyncDate }]));
+		await Promise.all(adoptedProbes.map(({ ip, uuid }) => this.syncProbeIds(ip, uuid)));
+		await Promise.all(adoptedProbes.map(({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate)));
+	}
+
+	private async syncProbeIds (ip: string, uuid: string) {
+		const connectedUuid = this.connectedIpToUuid.get(ip);
+
+		if (connectedUuid && connectedUuid === uuid) { // ip and uuid are synced
 			return;
 		}
 
-		const adoptedProbeByUuid = this.adoptedProbesByUuid.get(probeUuid);
+		if (connectedUuid && connectedUuid !== uuid) { // uuid was found, but it is outdated
+			await this.updateUuid(ip, connectedUuid);
+			return;
+		}
 
-		if (adoptedProbeByUuid) { // Probe not found by ip but found by uuid => ip is wrong
-			await this.updateIp(probeIp, probeUuid);
+		const connectedIp = this.connectedUuidToIp.get(uuid);
+
+		if (connectedIp) { // data was found by uuid, but not found by ip, therefore ip is outdated
+			await this.updateIp(connectedIp, uuid);
+		}
+	}
+
+	private async updateSyncDate (ip: string, lastSyncDate: string) {
+		if (this.isToday(lastSyncDate)) {
+			return;
+		}
+
+		const probeIsConnected = this.connectedIpToUuid.has(ip);
+
+		if (probeIsConnected) {
+			await this.updateLastSyncDate(ip);
+			return;
+		}
+
+		if (this.isMoreThan30DaysAgo(lastSyncDate)) {
+			await this.deleteAdoptedProbe(ip);
 		}
 	}
 
@@ -51,12 +86,29 @@ export class AdoptedProbes {
 		await this.sql(TABLE_NAME).where({ uuid }).update({ ip });
 	}
 
-	private async syncDashboardData () {
-		const probes = await this.sql(TABLE_NAME).select<AdoptedProbe[]>('ip', 'uuid');
-		// Storing city as emtpy string until https://github.com/jsdelivr/globalping/issues/427 is implemented
-		this.adoptedProbesByIp = new Map(probes.map(probe => [ probe.ip, { uuid: probe.uuid, city: '' }]));
-		this.adoptedProbesByUuid = new Map(probes.map(probe => [ probe.uuid, { ip: probe.ip, city: '' }]));
+	private async updateLastSyncDate (ip: string) {
+		await this.sql(TABLE_NAME).where({ ip }).update({ lastSyncDate: new Date() });
+	}
+
+	private async deleteAdoptedProbe (ip: string) {
+		await this.sql(TABLE_NAME).where({ ip }).delete();
+	}
+
+	private isToday (dateString: string) {
+		const currentDate = new Date();
+		const currentDateString = currentDate.toISOString().split('T')[0];
+		return dateString === currentDateString;
+	}
+
+	private isMoreThan30DaysAgo (dateString: string) {
+		const inputDate = new Date(dateString);
+		const currentDate = new Date();
+
+		const timeDifference = currentDate.getTime() - inputDate.getTime();
+		const daysDifference = timeDifference / (24 * 3600 * 1000);
+
+		return daysDifference > 30;
 	}
 }
 
-export const adoptedProbes = new AdoptedProbes(client);
+export const adoptedProbes = new AdoptedProbes(client, fetchSockets);
