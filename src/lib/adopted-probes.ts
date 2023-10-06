@@ -1,4 +1,6 @@
 import type { Knex } from 'knex';
+import Bluebird from 'bluebird';
+
 import { scopedLogger } from './logger.js';
 import { client } from './sql/client.js';
 import { fetchSockets } from './ws/server.js';
@@ -36,8 +38,8 @@ export class AdoptedProbes {
 		this.connectedUuidToIp = new Map(allSockets.map(socket => [ socket.data.probe.uuid, socket.data.probe.ipAddress ]));
 
 		const adoptedProbes = await this.sql(TABLE_NAME).select<AdoptedProbe[]>('ip', 'uuid', 'lastSyncDate');
-		await Promise.all(adoptedProbes.map(({ ip, uuid }) => this.syncProbeIds(ip, uuid)));
-		await Promise.all(adoptedProbes.map(({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate)));
+		await Bluebird.map(adoptedProbes, ({ ip, uuid }) => this.syncProbeIds(ip, uuid), { concurrency: 8 });
+		await Bluebird.map(adoptedProbes, ({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate), { concurrency: 8 });
 	}
 
 	private async syncProbeIds (ip: string, uuid: string) {
