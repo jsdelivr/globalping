@@ -17,7 +17,8 @@ components:
               "longitude": -77.4875
             },
             "tags": [
-              "aws-us-east-1"
+              "aws-us-east-1",
+              "datacenter-network"
             ],
             "resolvers": [
               "private"
@@ -106,7 +107,9 @@ components:
                 "longitude": 174.76667,
                 "latitude": -36.86667,
                 "network": "Zappie Host LLC",
-                "tags": [ ],
+                "tags": [
+                  "datacenter-network"
+                ],
                 "resolvers": [
                   "1.1.1.1",
                   "8.8.8.8"
@@ -146,7 +149,9 @@ components:
                 "longitude": 151.207052,
                 "latitude": -33.86778,
                 "network": "OVH SAS",
-                "tags": [ ],
+                "tags": [
+                  "datacenter-network"
+                ],
                 "resolvers": [
                   "213.186.33.99"
                 ]
@@ -195,7 +200,9 @@ components:
                 "longitude": 151.207052,
                 "latitude": -33.86778,
                 "network": "G-Core Labs S.A.",
-                "tags": [ ],
+                "tags": [
+                  "datacenter-network"
+                ],
                 "resolvers": [
                   "8.8.8.8"
                 ]
@@ -352,7 +359,9 @@ components:
                 "longitude": 28.04355,
                 "latitude": -26.20225,
                 "network": "G-Core Labs S.A.",
-                "tags": [ ],
+                "tags": [
+                  "datacenter-network"
+                ],
                 "resolvers": [
                   "private"
                 ]
@@ -417,7 +426,9 @@ components:
                 "longitude": 126.977207,
                 "latitude": 37.566309,
                 "network": "Psychz Networks",
-                "tags": [ ],
+                "tags": [
+                  "datacenter-network"
+                ],
                 "resolvers": [
                   "8.8.8.8",
                   "8.8.4.4"

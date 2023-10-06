@@ -126,7 +126,7 @@ describe('Get Probes', () => {
 								longitude: -96.8067,
 								network: 'The Constant Company LLC',
 							},
-							tags: [],
+							tags: [ 'datacenter-network' ],
 							resolvers: [],
 						},
 					]);
@@ -135,17 +135,20 @@ describe('Get Probes', () => {
 				});
 		});
 
-		it('should detect 3 probes in "ready: true" status', async () => {
+		it('should detect 4 probes in "ready: true" status', async () => {
 			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
 			nockGeoIpProviders();
 			nockGeoIpProviders({ ip2location: 'newYork', ipmap: 'argentina', maxmind: 'newYork', ipinfo: 'newYork', fastly: 'newYork' });
+			nockGeoIpProviders({ ip2location: 'washington', ipmap: 'argentina', maxmind: 'default', ipinfo: 'washington', fastly: 'newYork' });
 
 			const probe1 = await addProbe();
 			const probe2 = await addProbe();
 			const probe3 = await addProbe();
+			const probe4 = await addProbe();
 			probe1.emit('probe:status:update', 'ready');
 			probe2.emit('probe:status:update', 'ready');
 			probe3.emit('probe:status:update', 'ready');
+			probe4.emit('probe:status:update', 'ready');
 
 			await requestAgent.get('/v1/probes')
 				.send()
@@ -180,7 +183,7 @@ describe('Get Probes', () => {
 								longitude: -96.8067,
 								network: 'The Constant Company LLC',
 							},
-							tags: [],
+							tags: [ 'datacenter-network' ],
 							resolvers: [],
 						},
 						{
@@ -196,7 +199,23 @@ describe('Get Probes', () => {
 								longitude: -74.0060,
 								network: 'The Constant Company LLC',
 							},
-							tags: [],
+							tags: [ 'datacenter-network' ],
+							resolvers: [],
+						},
+						{
+							version: '0.14.0',
+							location: {
+								asn: 701,
+								city: 'Washington',
+								continent: 'NA',
+								country: 'US',
+								latitude: 38.89539,
+								longitude: -77.039476,
+								network: 'Verizon Business',
+								region: 'Northern America',
+								state: 'DC',
+							},
+							tags: [ 'eyeball-network' ],
 							resolvers: [],
 						},
 					]);

@@ -709,6 +709,7 @@ components:
         An array of additional values that can be used to target the probe.
         Probes hosted in [AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)
         and [Google Cloud](https://cloud.google.com/compute/docs/regions-zones#available) are automatically assigned the service region code.
+        Probes are also automatically assigned `datacenter-network` and `eyeball-network` tags to distinguish between datacenter and end-user locations.
       items:
         type: string
     TestResult:
