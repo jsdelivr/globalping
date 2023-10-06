@@ -1,7 +1,7 @@
 import config from 'config';
 import _ from 'lodash';
 import type { Location } from '../lib/location/types';
-import type { Socket } from './router.js';
+import type { ProbeSocket } from '../lib/ws/server';
 import type { ProbeLocation } from './types';
 
 /*
@@ -17,7 +17,7 @@ const locationKeyMap = [
 ];
 
 export class SocketsLocationFilter {
-	static magicFilter (sockets: Socket[], magicLocation: string) {
+	static magicFilter (sockets: ProbeSocket[], magicLocation: string) {
 		let filteredSockets = sockets;
 		const keywords = magicLocation.split('+');
 
@@ -43,24 +43,24 @@ export class SocketsLocationFilter {
 		return filteredSockets;
 	}
 
-	static getExactIndexPosition (socket: Socket, value: string) {
+	static getExactIndexPosition (socket: ProbeSocket, value: string) {
 		return socket.data.probe.index.findIndex(category => category.some(index => index === value.replaceAll('-', ' ').trim()));
 	}
 
-	static getIndexPosition (socket: Socket, value: string) {
+	static getIndexPosition (socket: ProbeSocket, value: string) {
 		return socket.data.probe.index.findIndex(category => category.some(index => index.includes(value.replaceAll('-', ' ').trim())));
 	}
 
-	static hasTag (socket: Socket, tag: string) {
+	static hasTag (socket: ProbeSocket, tag: string) {
 		return socket.data.probe.tags.some(({ type, value }) => type === 'system' && value === tag);
 	}
 
-	public filterGloballyDistibuted (sockets: Socket[], limit: number): Socket[] {
+	public filterGloballyDistibuted (sockets: ProbeSocket[], limit: number): ProbeSocket[] {
 		const distribution = this.getDistibutionConfig();
 		return this.filterByLocationAndWeight(sockets, distribution, limit);
 	}
 
-	public filterByLocation (sockets: Socket[], location: Location): Socket[] {
+	public filterByLocation (sockets: ProbeSocket[], location: Location): ProbeSocket[] {
 		if (location.magic === 'world') {
 			return _.shuffle(this.filterGloballyDistibuted(sockets, sockets.length));
 		}
@@ -85,8 +85,8 @@ export class SocketsLocationFilter {
 		return isMagicSorting ? this.magicSort(filteredSockets, location.magic!) : _.shuffle(filteredSockets);
 	}
 
-	public filterByLocationAndWeight (sockets: Socket[], distribution: Map<Location, number>, limit: number): Socket[] {
-		const groupedByLocation = new Map<Location, Socket[]>();
+	public filterByLocationAndWeight (sockets: ProbeSocket[], distribution: Map<Location, number>, limit: number): ProbeSocket[] {
+		const groupedByLocation = new Map<Location, ProbeSocket[]>();
 
 		for (const [ location ] of distribution) {
 			const foundSockets = this.filterByLocation(sockets, location);
@@ -96,7 +96,7 @@ export class SocketsLocationFilter {
 			}
 		}
 
-		const pickedSockets = new Set<Socket>();
+		const pickedSockets = new Set<ProbeSocket>();
 
 		while (groupedByLocation.size > 0 && pickedSockets.size < limit) {
 			const selectedCount = pickedSockets.size;
@@ -129,8 +129,8 @@ export class SocketsLocationFilter {
 		return [ ...pickedSockets ];
 	}
 
-	private magicSort (sockets: Socket[], magicString: string): Socket[] {
-		const getClosestIndexPosition = (socket: Socket) => {
+	private magicSort (sockets: ProbeSocket[], magicString: string): ProbeSocket[] {
+		const getClosestIndexPosition = (socket: ProbeSocket) => {
 			const keywords = magicString.split('+');
 			const closestIndexPosition = keywords.reduce((smallesIndex, keyword) => {
 				const indexPosition = SocketsLocationFilter.getIndexPosition(socket, keyword);

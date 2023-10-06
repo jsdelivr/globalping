@@ -6,6 +6,7 @@ import { populateMemList as populateMemMalwareList } from './malware/client.js';
 import { populateMemList as populateMemIpRangesList } from './ip-ranges.js';
 import { populateMemList as populateIpWhiteList } from './geoip/whitelist.js';
 import { populateCitiesList } from './geoip/city-approximation.js';
+import { adoptedProbes } from './adopted-probes.js';
 
 export const createServer = async (): Promise<Server> => {
 	await initRedis();
@@ -20,6 +21,8 @@ export const createServer = async (): Promise<Server> => {
 	await populateCitiesList();
 
 	await initWsServer();
+
+	adoptedProbes.scheduleSync();
 
 	const { getWsServer } = await import('./ws/server.js');
 	const { getHttpServer } = await import('./http/server.js');

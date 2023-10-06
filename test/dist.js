@@ -3,11 +3,11 @@ import cluster from 'node:cluster';
 import { describe, it } from 'node:test';
 
 if (!cluster.isPrimary) {
-	import('../dist/index.js');
+	import('../dist/src/index.js');
 } else {
 	describe('dist build', () => {
 		it('loads and doesn\'t crash', async () => {
-			await import('../dist/index.js');
+			await import('../dist/src/index.js');
 
 			await new Promise((resolve, reject) => {
 				setTimeout(resolve, 10000).unref();

@@ -1,14 +1,10 @@
 import _ from 'lodash';
-import type { RemoteSocket } from 'socket.io';
-import type { DefaultEventsMap } from 'socket.io/dist/typed-events';
-import type { SocketData } from '../lib/ws/server.js';
+import type { ProbeSocket } from '../lib/ws/server.js';
 import { fetchSockets } from '../lib/ws/server.js';
 import type { LocationWithLimit } from '../measurement/types.js';
 import type { Location } from '../lib/location/types.js';
 import type { Probe } from './types.js';
 import { SocketsLocationFilter } from './sockets-location-filter.js';
-
-export type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
 export class ProbeRouter {
 	constructor (
@@ -21,7 +17,7 @@ export class ProbeRouter {
 		globalLimit = 1,
 	): Promise<Probe[]> {
 		const sockets = await this.fetchSockets();
-		let filtered: Socket[] = [];
+		let filtered: ProbeSocket[] = [];
 
 		if (locations.some(l => l.limit)) {
 			filtered = this.findWithLocationLimit(sockets, locations);
@@ -34,24 +30,24 @@ export class ProbeRouter {
 		return filtered.map(s => s.data.probe);
 	}
 
-	private async fetchSockets (): Promise<Socket[]> {
+	private async fetchSockets (): Promise<ProbeSocket[]> {
 		const sockets = await this.fetchWsSockets();
 		return sockets.filter(s => s.data.probe.status === 'ready');
 	}
 
-	private findGloballyDistributed (sockets: Socket[], limit: number): Socket[] {
+	private findGloballyDistributed (sockets: ProbeSocket[], limit: number): ProbeSocket[] {
 		return this.socketsFilter.filterGloballyDistibuted(sockets, limit);
 	}
 
-	private findWithGlobalLimit (sockets: Socket[], locations: Location[], limit: number): Socket[] {
+	private findWithGlobalLimit (sockets: ProbeSocket[], locations: Location[], limit: number): ProbeSocket[] {
 		const weight = Math.floor(100 / locations.length);
 		const distribution = new Map(locations.map(l => [ l, weight ]));
 
 		return this.socketsFilter.filterByLocationAndWeight(sockets, distribution, limit);
 	}
 
-	private findWithLocationLimit (sockets: Socket[], locations: LocationWithLimit[]): Socket[] {
-		const grouped = new Map<LocationWithLimit, Socket[]>();
+	private findWithLocationLimit (sockets: ProbeSocket[], locations: LocationWithLimit[]): ProbeSocket[] {
+		const grouped = new Map<LocationWithLimit, ProbeSocket[]>();
 
 		for (const location of locations) {
 			const { limit, ...l } = location;
@@ -62,7 +58,7 @@ export class ProbeRouter {
 			}
 		}
 
-		const picked = new Set<Socket>();
+		const picked = new Set<ProbeSocket>();
 
 		for (const [ loc, soc ] of grouped) {
 			for (const s of _.take(soc, loc.limit)) {

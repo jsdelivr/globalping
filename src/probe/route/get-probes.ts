@@ -1,10 +1,6 @@
 import type { DefaultContext, DefaultState, ParameterizedContext } from 'koa';
 import type Router from '@koa/router';
-import type { RemoteSocket } from 'socket.io';
-import type { DefaultEventsMap } from 'socket.io/dist/typed-events';
-import { fetchSockets, type SocketData } from '../../lib/ws/server.js';
-
-type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
+import { fetchSockets, type ProbeSocket } from '../../lib/ws/server.js';
 
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
 	const { isAdmin } = ctx;
@@ -14,10 +10,11 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		sockets = sockets.filter(socket => socket.data.probe.status === 'ready');
 	}
 
-	ctx.body = sockets.map((socket: Socket) => ({
+	ctx.body = sockets.map((socket: ProbeSocket) => ({
 		status: isAdmin ? socket.data.probe.status : undefined,
 		version: socket.data.probe.version,
 		nodeVersion: isAdmin ? socket.data.probe.nodeVersion : undefined,
+		uuid: isAdmin ? socket.data.probe.uuid : undefined,
 		location: {
 			continent: socket.data.probe.location.continent,
 			region: socket.data.probe.location.region,

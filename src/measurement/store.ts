@@ -155,7 +155,7 @@ export class MeasurementStore {
 
 	removeDefaults (measurement: MeasurementRecord, request: MeasurementRequest): Partial<MeasurementRecord> {
 		const defaults = getDefaults(request);
-		// Remove `"limit": 1` from locations. E.g. [{"country": "US", "limit": 1}] => [{"country": "US"}]
+		// Removes `"limit": 1` from locations. E.g. [{"country": "US", "limit": 1}] => [{"country": "US"}]
 		measurement.locations = measurement.locations.map(location => location.limit === 1 ? _.omit(location, 'limit') : location);
 
 		return substractObjects(measurement, defaults) as Partial<MeasurementRecord>;

@@ -8,3 +8,14 @@ services:
     volumes:
       - ./config/redis.conf:/usr/local/etc/redis/redis.conf
     command: /usr/local/etc/redis/redis.conf
+
+  mariadb:
+    image: mariadb:10.11.5
+    environment:
+    - MARIADB_RANDOM_ROOT_PASSWORD=1
+    - MARIADB_USER=directus
+    - MARIADB_PASSWORD=password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./config/init.sql:/docker-entrypoint-initdb.d/init.sql
