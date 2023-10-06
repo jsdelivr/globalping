@@ -31,11 +31,11 @@ describe('AdoptedProbes', () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
 		selectStub.resolves([{ ip: '1.1.1.1', uuid: '1-1-1-1-1', lastSyncDate: '1970-01-01' }]);
 
-		adoptedProbes.scheduleSync();
-
 		expect(sqlStub.callCount).to.equal(0);
 		expect(selectStub.callCount).to.equal(0);
-		await sandbox.clock.tickAsync(5000);
+
+		await adoptedProbes.syncDashboardData();
+
 		expect(sqlStub.callCount).to.equal(1);
 		expect(sqlStub.args[0]).deep.equal([ 'adopted_probes' ]);
 		expect(selectStub.callCount).to.equal(1);
@@ -47,8 +47,7 @@ describe('AdoptedProbes', () => {
 		selectStub.resolves([{ ip: '1.1.1.1', uuid: '1-1-1-1-1', lastSyncDate: '1970-01-01' }]);
 		fetchSocketsStub.resolves([{ data: { probe: { ipAddress: '1.1.1.1', uuid: '2-2-2-2-2' } } }]);
 
-		adoptedProbes.scheduleSync();
-		await sandbox.clock.tickAsync(5000);
+		await adoptedProbes.syncDashboardData();
 
 		expect(whereStub.callCount).to.equal(1);
 		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
@@ -61,8 +60,7 @@ describe('AdoptedProbes', () => {
 		selectStub.resolves([{ ip: '1.1.1.1', uuid: '1-1-1-1-1', lastSyncDate: '1970-01-01' }]);
 		fetchSocketsStub.resolves([{ data: { probe: { ipAddress: '2.2.2.2', uuid: '1-1-1-1-1' } } }]);
 
-		adoptedProbes.scheduleSync();
-		await sandbox.clock.tickAsync(5000);
+		await adoptedProbes.syncDashboardData();
 
 		expect(whereStub.callCount).to.equal(1);
 		expect(whereStub.args[0]).to.deep.equal([{ uuid: '1-1-1-1-1' }]);
@@ -75,8 +73,7 @@ describe('AdoptedProbes', () => {
 		selectStub.resolves([{ ip: '1.1.1.1', uuid: '1-1-1-1-1', lastSyncDate: '1969-12-15' }]);
 		fetchSocketsStub.resolves([]);
 
-		adoptedProbes.scheduleSync();
-		await sandbox.clock.tickAsync(5000);
+		await adoptedProbes.syncDashboardData();
 
 		expect(whereStub.callCount).to.equal(0);
 		expect(updateStub.callCount).to.equal(0);
@@ -88,8 +85,7 @@ describe('AdoptedProbes', () => {
 		selectStub.resolves([{ ip: '1.1.1.1', uuid: '1-1-1-1-1', lastSyncDate: '1969-11-15' }]);
 		fetchSocketsStub.resolves([]);
 
-		adoptedProbes.scheduleSync();
-		await sandbox.clock.tickAsync(5000);
+		await adoptedProbes.syncDashboardData();
 
 		expect(whereStub.callCount).to.equal(1);
 		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
@@ -103,8 +99,7 @@ describe('AdoptedProbes', () => {
 		selectStub.resolves([{ ip: '1.1.1.1', uuid: '1-1-1-1-1', lastSyncDate: '1970-01-01' }]);
 		fetchSocketsStub.resolves([{ data: { probe: { ipAddress: '1.1.1.1', uuid: '1-1-1-1-1' } } }]);
 
-		adoptedProbes.scheduleSync();
-		await sandbox.clock.tickAsync(5000);
+		await adoptedProbes.syncDashboardData();
 
 		expect(whereStub.callCount).to.equal(0);
 		expect(updateStub.callCount).to.equal(0);
@@ -115,8 +110,7 @@ describe('AdoptedProbes', () => {
 		selectStub.resolves([{ ip: '1.1.1.1', uuid: '1-1-1-1-1', lastSyncDate: '1969-12-31' }]);
 		fetchSocketsStub.resolves([{ data: { probe: { ipAddress: '1.1.1.1', uuid: '1-1-1-1-1' } } }]);
 
-		adoptedProbes.scheduleSync();
-		await sandbox.clock.tickAsync(5000);
+		await adoptedProbes.syncDashboardData();
 
 		expect(whereStub.callCount).to.equal(1);
 		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
@@ -130,8 +124,7 @@ describe('AdoptedProbes', () => {
 		selectStub.resolves([{ ip: '1.1.1.1', uuid: '1-1-1-1-1', lastSyncDate: '1969-11-15' }]);
 		fetchSocketsStub.resolves([{ data: { probe: { ipAddress: '1.1.1.1', uuid: '1-1-1-1-1' } } }]);
 
-		adoptedProbes.scheduleSync();
-		await sandbox.clock.tickAsync(5000);
+		await adoptedProbes.syncDashboardData();
 
 		expect(whereStub.callCount).to.equal(1);
 		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
@@ -145,8 +138,7 @@ describe('AdoptedProbes', () => {
 		selectStub.resolves([{ ip: '1.1.1.1', uuid: '1-1-1-1-1', lastSyncDate: '1970-01-01' }]);
 		fetchSocketsStub.resolves([{ data: { probe: { ipAddress: '1.1.1.1', uuid: '1-1-1-1-1' } } }]);
 
-		adoptedProbes.scheduleSync();
-		await sandbox.clock.tickAsync(5000);
+		await adoptedProbes.syncDashboardData();
 
 		expect(whereStub.callCount).to.equal(0);
 		expect(updateStub.callCount).to.equal(0);

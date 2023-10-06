@@ -30,7 +30,7 @@ export class AdoptedProbes {
 		}, 5000);
 	}
 
-	private async syncDashboardData () {
+	async syncDashboardData () {
 		const allSockets = await this.fetchWsSockets();
 		this.connectedIpToUuid = new Map(allSockets.map(socket => [ socket.data.probe.ipAddress, socket.data.probe.uuid ]));
 		this.connectedUuidToIp = new Map(allSockets.map(socket => [ socket.data.probe.uuid, socket.data.probe.ipAddress ]));
