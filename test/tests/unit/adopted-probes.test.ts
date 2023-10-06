@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Knex } from 'knex';
+import type { Knex } from 'knex';
 import * as sinon from 'sinon';
 import { AdoptedProbes } from '../../../src/lib/adopted-probes.js';
 

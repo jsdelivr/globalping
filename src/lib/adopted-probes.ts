@@ -14,7 +14,6 @@ type AdoptedProbe = {
 }
 
 export class AdoptedProbes {
-	private adoptedProbesByIp: Map<AdoptedProbe['ip'], Omit<AdoptedProbe, 'ip'>> = new Map();
 	private connectedIpToUuid: Map<string, string> = new Map();
 	private connectedUuidToIp: Map<string, string> = new Map();
 
@@ -37,7 +36,6 @@ export class AdoptedProbes {
 		this.connectedUuidToIp = new Map(allSockets.map(socket => [ socket.data.probe.uuid, socket.data.probe.ipAddress ]));
 
 		const adoptedProbes = await this.sql(TABLE_NAME).select<AdoptedProbe[]>('ip', 'uuid', 'lastSyncDate');
-		this.adoptedProbesByIp = new Map(adoptedProbes.map(({ ip, uuid, lastSyncDate }) => [ ip, { uuid, lastSyncDate }]));
 		await Promise.all(adoptedProbes.map(({ ip, uuid }) => this.syncProbeIds(ip, uuid)));
 		await Promise.all(adoptedProbes.map(({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate)));
 	}
@@ -62,18 +60,18 @@ export class AdoptedProbes {
 	}
 
 	private async updateSyncDate (ip: string, lastSyncDate: string) {
-		if (this.isToday(lastSyncDate)) {
+		if (this.isToday(lastSyncDate)) { // date is already synced
 			return;
 		}
 
 		const probeIsConnected = this.connectedIpToUuid.has(ip);
 
-		if (probeIsConnected) {
+		if (probeIsConnected) { // date is old, but probe is connected, therefore updating the sync date
 			await this.updateLastSyncDate(ip);
 			return;
 		}
 
-		if (this.isMoreThan30DaysAgo(lastSyncDate)) {
+		if (this.isMoreThan30DaysAgo(lastSyncDate)) { // probe wasn't connected for >30 days, removing adoption
 			await this.deleteAdoptedProbe(ip);
 		}
 	}

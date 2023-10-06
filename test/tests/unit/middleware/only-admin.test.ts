@@ -13,7 +13,7 @@ beforeEach(() => {
 describe('rate limit middleware', () => {
 	it('should reject requests with "isAdmin" false', async () => {
 		const ctx = { isAdmin: false } as unknown as Context;
-		const err = await onlyAdmin()(ctx, next).catch(err => err);
+		const err = await onlyAdmin()(ctx, next).catch((err: unknown) => err);
 		expect(err).to.deep.equal(createHttpError(403, 'Forbidden', { type: 'access_forbidden' }));
 		expect(next.callCount).to.equal(0);
 	});
