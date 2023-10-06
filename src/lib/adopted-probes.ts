@@ -29,7 +29,7 @@ export class AdoptedProbes {
 			this.syncDashboardData()
 				.finally(() => this.scheduleSync())
 				.catch(error => logger.error(error));
-		}, 5000);
+		}, 60_000);
 	}
 
 	async syncDashboardData () {
