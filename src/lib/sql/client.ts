@@ -1,7 +1,6 @@
-import config from 'config';
 import knex, { Knex } from 'knex';
+import knexfile from '../../../knexfile.js';
 
-export const client: Knex = knex({
-	client: 'mysql',
-	connection: config.get<string>('sql.url'),
-});
+const env = process.env['NODE_ENV'] || 'development';
+
+export const client: Knex = knex(knexfile[env] || {});
