@@ -1,6 +1,4 @@
-import type { Socket } from 'socket.io';
 import { getMetricsAgent } from '../metrics.js';
-import type { Probe } from '../../probe/types.js';
 import { handleMeasurementAck } from '../../measurement/handler/ack.js';
 import { handleMeasurementResult } from '../../measurement/handler/result.js';
 import { handleMeasurementProgress } from '../../measurement/handler/progress.js';
@@ -8,7 +6,7 @@ import { handleStatusUpdate } from '../../probe/handler/status.js';
 import { handleDnsUpdate } from '../../probe/handler/dns.js';
 import { handleStatsReport } from '../../probe/handler/stats.js';
 import { scopedLogger } from '../logger.js';
-import { getWsServer, PROBES_NAMESPACE } from './server.js';
+import { getWsServer, PROBES_NAMESPACE, ServerSocket } from './server.js';
 import { probeMetadata } from './middleware/probe-metadata.js';
 import { errorHandler } from './helper/error-handler.js';
 import { subscribeWithHandler } from './helper/subscribe-handler.js';
@@ -20,8 +18,8 @@ const metricsAgent = getMetricsAgent();
 io
 	.of(PROBES_NAMESPACE)
 	.use(probeMetadata)
-	.on('connect', errorHandler(async (socket: Socket) => {
-		const probe = socket.data['probe'] as Probe;
+	.on('connect', errorHandler(async (socket: ServerSocket) => {
+		const probe = socket.data.probe;
 		socket.emit('api:connect:location', probe.location);
 		logger.info(`ws client ${socket.id} connected from ${probe.location.city}, ${probe.location.country} [${probe.ipAddress} - ${probe.location.network}]`);
 

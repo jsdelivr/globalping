@@ -1,4 +1,4 @@
-import type { ThrottledFetchSockets } from '../server';
+import type { ThrottledFetchSockets } from '../server.js';
 
 const TIME_TO_RECONNECT_PROBES = 2 * 60 * 1000;
 

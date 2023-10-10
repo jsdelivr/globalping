@@ -1,18 +1,14 @@
 import * as sinon from 'sinon';
 import _ from 'lodash';
 import { expect } from 'chai';
-import type { RemoteSocket } from 'socket.io';
 import * as td from 'testdouble';
-import type { DefaultEventsMap } from 'socket.io/dist/typed-events.js';
 
 import { ProbeRouter } from '../../../../src/probe/router.js';
-import type { SocketData } from '../../../../src/lib/ws/server.js';
+import type { RemoteProbeSocket } from '../../../../src/lib/ws/server.js';
 import type { DeepPartial } from '../../../types.js';
 import type { Probe, ProbeLocation } from '../../../../src/probe/types.js';
 import type { Location } from '../../../../src/lib/location/types.js';
 import { getRegionByCountry } from '../../../../src/lib/location/location.js';
-
-type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
 
 const defaultLocation = {
 	continent: '',
@@ -35,14 +31,14 @@ describe('probe router', () => {
 	const geoLookupMock = sinon.stub();
 	const getRegionMock = sinon.stub();
 	const router = new ProbeRouter(fetchSocketsMock);
-	let buildProbe: (socket: Socket) => Promise<Probe>;
+	let buildProbe: (socket: RemoteProbeSocket) => Promise<Probe>;
 
 	const buildSocket = async (
 		id: string,
 		location: Partial<ProbeLocation>,
 		status: Probe['status'] = 'ready',
-	): Promise<Socket> => {
-		const socket: DeepPartial<Socket> = {
+	): Promise<RemoteProbeSocket> => {
+		const socket: DeepPartial<RemoteProbeSocket> = {
 			id,
 			handshake: {
 				query: {
@@ -54,17 +50,17 @@ describe('probe router', () => {
 		geoLookupMock.resolves({ ...defaultLocation, ...location });
 
 		socket.data!.probe = {
-			...await buildProbe(socket as Socket),
+			...await buildProbe(socket as RemoteProbeSocket),
 			status,
 		};
 
-		return socket as unknown as Socket;
+		return socket as unknown as RemoteProbeSocket;
 	};
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/geoip/client.ts', { createGeoipClient: () => ({ lookup: geoLookupMock }) });
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: getRegionMock });
-		buildProbe = (await import('../../../../src/probe/builder.js')).buildProbe as unknown as (socket: Socket) => Promise<Probe>;
+		buildProbe = (await import('../../../../src/probe/builder.js')).buildProbe as unknown as (socket: RemoteProbeSocket) => Promise<Probe>;
 	});
 
 	beforeEach(() => {
@@ -83,7 +79,7 @@ describe('probe router', () => {
 
 	describe('route with location limit', () => {
 		it('should find probes for each location', async () => {
-			const sockets: Array<DeepPartial<Socket>> = [
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
 				await buildSocket('socket-1', { continent: 'EU', country: 'UA' }),
 				await buildSocket('socket-2', { continent: 'EU', country: 'PL' }),
 				await buildSocket('socket-3', { continent: 'EU', country: 'PL' }),
@@ -105,7 +101,7 @@ describe('probe router', () => {
 		});
 
 		it('should return 1 probe if location limit is not set', async () => {
-			const sockets: Array<DeepPartial<Socket>> = [
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
 				await buildSocket('socket-1', { continent: 'EU', country: 'UA' }),
 				await buildSocket('socket-2', { continent: 'EU', country: 'PL' }),
 				await buildSocket('socket-3', { continent: 'EU', country: 'PL' }),
@@ -129,7 +125,7 @@ describe('probe router', () => {
 		});
 
 		it('should shuffle result probes', async () => {
-			const sockets: Array<DeepPartial<Socket>> = [
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
 				await buildSocket('socket-1', { continent: 'EU', country: 'UA' }),
 				await buildSocket('socket-2', { continent: 'EU', country: 'PL' }),
 				await buildSocket('socket-3', { continent: 'EU', country: 'LV' }),
@@ -161,7 +157,7 @@ describe('probe router', () => {
 
 	describe('probe readiness', () => {
 		it('should find 2 probes', async () => {
-			const sockets: Array<DeepPartial<Socket>> = [
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
 				await buildSocket('socket-1', { continent: 'EU', country: 'GB' }, 'unbuffer-missing'),
 				await buildSocket('socket-2', { continent: 'EU', country: 'PL' }, 'unbuffer-missing'),
 				await buildSocket('socket-4', { continent: 'EU', country: 'GB' }),
@@ -185,8 +181,6 @@ describe('probe router', () => {
 	});
 
 	describe('route globally distributed', () => {
-		type Socket = RemoteSocket<DefaultEventsMap, SocketData>;
-
 		it('should find probes when each group is full', async () => {
 			const sockets = await Promise.all([ 'AF', 'AS', 'EU', 'OC', 'NA', 'SA' ]
 				.flatMap(continent => _.range(50).map(i => buildSocket(`${continent}-${i}`, { continent }))));
@@ -206,7 +200,7 @@ describe('probe router', () => {
 		});
 
 		it('should find probes when some groups are not full', async () => {
-			const sockets: DeepPartial<Socket[]> = await Promise.all([
+			const sockets: DeepPartial<RemoteProbeSocket[]> = await Promise.all([
 				..._.range(15).map(i => buildSocket(`AF-${i}`, { continent: 'AF' })),
 				..._.range(15).map(i => buildSocket(`AS-${i}`, { continent: 'AS' })),
 				..._.range(20).map(i => buildSocket(`EU-${i}`, { continent: 'EU' })),
@@ -230,7 +224,7 @@ describe('probe router', () => {
 		});
 
 		it('should return exactly the same number of probes if limit can\'t be divided evenly', async () => {
-			const sockets: DeepPartial<Socket[]> = await Promise.all([
+			const sockets: DeepPartial<RemoteProbeSocket[]> = await Promise.all([
 				..._.range(5).map(i => buildSocket(`AF-${i}`, { continent: 'AF' })),
 				..._.range(5).map(i => buildSocket(`NA-${i}`, { continent: 'NA' })),
 				..._.range(5).map(i => buildSocket(`SA-${i}`, { continent: 'SA' })),
@@ -243,7 +237,7 @@ describe('probe router', () => {
 		});
 
 		it('should find when probes not enough', async () => {
-			const sockets: DeepPartial<Socket[]> = await Promise.all([
+			const sockets: DeepPartial<RemoteProbeSocket[]> = await Promise.all([
 				..._.range(15).map(i => buildSocket(`AF-${i}`, { continent: 'AF' })),
 				..._.range(20).map(i => buildSocket(`EU-${i}`, { continent: 'EU' })),
 				..._.range(10).map(i => buildSocket(`OC-${i}`, { continent: 'OC' })),
@@ -263,7 +257,7 @@ describe('probe router', () => {
 		});
 
 		it('should shuffle result probes', async () => {
-			const sockets: Array<DeepPartial<Socket>> = [
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
 				await buildSocket('socket-1', { continent: 'EU', country: 'UA' }),
 				await buildSocket('socket-2', { continent: 'EU', country: 'PL' }),
 				await buildSocket('socket-3', { continent: 'EU', country: 'LV' }),
@@ -291,7 +285,7 @@ describe('probe router', () => {
 
 	describe('route with global limit', () => {
 		it('should find probes even in overlapping locations', async () => {
-			const cache: Record<string, Socket> = {};
+			const cache: Record<string, RemoteProbeSocket> = {};
 			const memoizedBuildSocket = async (id: string, location: ProbeLocation) => {
 				const cached = cache[location.country];
 
@@ -304,7 +298,7 @@ describe('probe router', () => {
 				return socket;
 			};
 
-			const euSockets: Socket[] = [];
+			const euSockets: RemoteProbeSocket[] = [];
 
 			for (const i of _.range(10_000)) {
 				// eslint-disable-next-line no-await-in-loop
@@ -313,7 +307,7 @@ describe('probe router', () => {
 			}
 
 			const uaSocket = await buildSocket(`UA-${1}`, { continent: 'EU', country: 'UA' });
-			const sockets: DeepPartial<Socket[]> = [ ...euSockets, uaSocket ];
+			const sockets: DeepPartial<RemoteProbeSocket[]> = [ ...euSockets, uaSocket ];
 			const locations: Location[] = [
 				{ continent: 'EU' },
 				{ country: 'UA' },
@@ -330,7 +324,7 @@ describe('probe router', () => {
 		});
 
 		it('should evenly distribute probes', async () => {
-			const sockets: DeepPartial<Socket[]> = await Promise.all([
+			const sockets: DeepPartial<RemoteProbeSocket[]> = await Promise.all([
 				..._.range(100).map(i => buildSocket(`PL-${i}`, { country: 'PL' })),
 				..._.range(100).map(i => buildSocket(`UA-${i}`, { country: 'UA' })),
 				..._.range(100).map(i => buildSocket(`NL-${i}`, { country: 'NL' })),
@@ -353,7 +347,7 @@ describe('probe router', () => {
 		});
 
 		it('should shuffle result probes', async () => {
-			const sockets: Array<DeepPartial<Socket>> = [
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
 				await buildSocket('socket-1', { continent: 'EU', country: 'UA' }),
 				await buildSocket('socket-2', { continent: 'EU', country: 'PL' }),
 				await buildSocket('socket-3', { continent: 'EU', country: 'LV' }),
@@ -397,7 +391,7 @@ describe('probe router', () => {
 		};
 
 		it('should find probe by normalizedCity value', async () => {
-			const sockets: DeepPartial<Socket[]> = [
+			const sockets: DeepPartial<RemoteProbeSocket[]> = [
 				await buildSocket(String(Date.now), location),
 			];
 
@@ -414,7 +408,7 @@ describe('probe router', () => {
 		});
 
 		it('should not find probe by continent alias if it is used not in magic field', async () => {
-			const sockets: DeepPartial<Socket[]> = [
+			const sockets: DeepPartial<RemoteProbeSocket[]> = [
 				await buildSocket('socket-1', location),
 			];
 
@@ -426,7 +420,7 @@ describe('probe router', () => {
 		});
 
 		it('should not find probe by region alias if it is used not in magic field', async () => {
-			const sockets: DeepPartial<Socket[]> = [
+			const sockets: DeepPartial<RemoteProbeSocket[]> = [
 				await buildSocket('socket-1', { normalizedRegion: 'northern africa', region: 'Northern Africa' }),
 			];
 
@@ -452,7 +446,7 @@ describe('probe router', () => {
 		};
 
 		it('should return match (continent alias)', async () => {
-			const sockets: DeepPartial<Socket[]> = [
+			const sockets: DeepPartial<RemoteProbeSocket[]> = [
 				await buildSocket(String(Date.now()), location),
 			];
 
@@ -465,7 +459,7 @@ describe('probe router', () => {
 		});
 
 		it('should return match (region alias)', async () => {
-			const sockets: DeepPartial<Socket[]> = [
+			const sockets: DeepPartial<RemoteProbeSocket[]> = [
 				await buildSocket('socket-1', { normalizedRegion: 'northern africa', region: 'Northern Africa' }),
 			];
 
@@ -478,7 +472,7 @@ describe('probe router', () => {
 		});
 
 		it('should not return match (non-existing region alias)', async () => {
-			const sockets: DeepPartial<Socket[]> = [
+			const sockets: DeepPartial<RemoteProbeSocket[]> = [
 				await buildSocket('socket-1', { normalizedRegion: 'southern africa', region: 'Southern Africa' }),
 			];
 
@@ -490,7 +484,7 @@ describe('probe router', () => {
 		});
 
 		it('should return match (country alias)', async () => {
-			const sockets: DeepPartial<Socket[]> = [
+			const sockets: DeepPartial<RemoteProbeSocket[]> = [
 				await buildSocket('socket-1', location),
 			];
 
@@ -507,7 +501,7 @@ describe('probe router', () => {
 		});
 
 		it('should return match (magic nested)', async () => {
-			const sockets: DeepPartial<Socket[]> = [
+			const sockets: DeepPartial<RemoteProbeSocket[]> = [
 				await buildSocket(String(Date.now()), location),
 			];
 
@@ -524,7 +518,7 @@ describe('probe router', () => {
 		});
 
 		it('should return result sorted by priority of magic fields in case of partial match', async () => {
-			const sockets: Array<DeepPartial<Socket>> = [
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
 				await buildSocket('socket-3', { country: 'CZ', normalizedCity: 'praga', normalizedNetwork: 'ultra development networks' }),
 				await buildSocket('socket-2', { country: 'RS', normalizedCity: 'belgrade', normalizedNetwork: 'belgrade networks' }),
 				await buildSocket('socket-1', { country: 'DE', normalizedCity: 'berlin', normalizedNetwork: 'berlin networks' }),
@@ -543,7 +537,7 @@ describe('probe router', () => {
 		});
 
 		it('should ignore low-priority partial matches if there is an exact match', async () => {
-			const sockets: Array<DeepPartial<Socket>> = [
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
 				await buildSocket('socket-3', { country: 'VN', normalizedCity: 'hanoi', normalizedNetwork: 'ultra networks' }),
 				await buildSocket('socket-2', { country: 'RU', normalizedCity: 'vnukovo', normalizedNetwork: 'super networks' }),
 				await buildSocket('socket-1', { country: 'HU', normalizedCity: 'budapest', normalizedNetwork: '23VNet Kft' }),
@@ -560,7 +554,7 @@ describe('probe router', () => {
 		});
 
 		it('should ignore high-priority partial matches if there is an exact match', async () => {
-			const sockets: Array<DeepPartial<Socket>> = [
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
 				await buildSocket('socket-1', { country: 'PL', normalizedCity: 'warsaw', normalizedNetwork: 'super networks' }),
 				await buildSocket('socket-2', { country: 'PL', normalizedCity: 'warsaw', normalizedNetwork: 'wars networks' }),
 				await buildSocket('socket-3', { country: 'PL', normalizedCity: 'poznan', normalizedNetwork: 'wars' }),
@@ -577,7 +571,7 @@ describe('probe router', () => {
 		});
 
 		it('should ignore same-level partial matches if there is an exact match', async () => {
-			const sockets: Array<DeepPartial<Socket>> = [
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
 				await buildSocket('socket-1', { country: 'US', normalizedCity: 'new york' }),
 				await buildSocket('socket-2', { country: 'GB', normalizedCity: 'york' }),
 			];
@@ -593,7 +587,7 @@ describe('probe router', () => {
 		});
 
 		it('should shuffle result considering priority of magic fields', async () => {
-			const sockets: Array<DeepPartial<Socket>> = [
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
 				await buildSocket('socket-3', { normalizedCity: 'praga1', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
 				await buildSocket('socket-3', { normalizedCity: 'praga2', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
 				await buildSocket('socket-3', { normalizedCity: 'praga3', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
@@ -649,7 +643,7 @@ describe('probe router', () => {
 		});
 
 		it('should shuffle result in case of exact match', async () => {
-			const sockets: Array<DeepPartial<Socket>> = [
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
 				await buildSocket('socket-3', { normalizedCity: 'praga1', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
 				await buildSocket('socket-3', { normalizedCity: 'praga2', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
 				await buildSocket('socket-3', { normalizedCity: 'praga3', country: 'CZ', normalizedNetwork: 'ultra development networks' }),
@@ -687,7 +681,7 @@ describe('probe router', () => {
 		describe('Location type - Network', () => {
 			for (const testCase of [ 'a-virgin', 'virgin', 'media' ]) {
 				it(`should match network - ${testCase}`, async () => {
-					const sockets: DeepPartial<Socket[]> = [
+					const sockets: DeepPartial<RemoteProbeSocket[]> = [
 						await buildSocket(String(Date.now()), location),
 					];
 
@@ -708,7 +702,7 @@ describe('probe router', () => {
 		describe('Location type - ASN', () => {
 			for (const testCase of [ '5089', 'as5089' ]) {
 				it(`should match ASN - ${testCase}`, async () => {
-					const sockets: DeepPartial<Socket[]> = [
+					const sockets: DeepPartial<RemoteProbeSocket[]> = [
 						await buildSocket(String(Date.now()), location),
 					];
 
@@ -739,7 +733,7 @@ describe('probe router', () => {
 						network: 'Google Cloud',
 					};
 
-					const sockets: DeepPartial<Socket[]> = [
+					const sockets: DeepPartial<RemoteProbeSocket[]> = [
 						await buildSocket(String(Date.now()), location),
 					];
 
@@ -761,7 +755,7 @@ describe('probe router', () => {
 			for (const testCase of [ 'aws-eu', 'west 1' ]) {
 				it(`should match tag - ${testCase}`, async () => {
 					getRegionMock.returns('aws-eu-west-1');
-					const sockets: DeepPartial<Socket[]> = [
+					const sockets: DeepPartial<RemoteProbeSocket[]> = [
 						await buildSocket(String(Date.now()), location),
 					];
 
@@ -793,7 +787,7 @@ describe('probe router', () => {
 
 		it('should return match for existing tag', async () => {
 			getRegionMock.returns('aws-eu-west-1');
-			const sockets: DeepPartial<Socket[]> = [
+			const sockets: DeepPartial<RemoteProbeSocket[]> = [
 				await buildSocket(String(Date.now()), location),
 			];
 
@@ -811,7 +805,7 @@ describe('probe router', () => {
 
 		it('should return 0 matches for partial tag value', async () => {
 			getRegionMock.returns('aws-eu-west-1');
-			const sockets: DeepPartial<Socket[]> = [
+			const sockets: DeepPartial<RemoteProbeSocket[]> = [
 				await buildSocket(String(Date.now()), location),
 			];
 

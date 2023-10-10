@@ -9,7 +9,7 @@ import { scopedLogger } from './logger.js';
 const logger = scopedLogger('metrics');
 
 export class MetricsAgent {
-	private interval: NodeJS.Timer | undefined;
+	private interval: NodeJS.Timeout | undefined;
 
 	constructor (
 		private readonly io: SocketServer,

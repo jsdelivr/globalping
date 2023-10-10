@@ -1,8 +1,8 @@
 import config from 'config';
 import _ from 'lodash';
-import type { Location } from '../lib/location/types';
-import type { ProbeSocket } from '../lib/ws/server';
-import type { ProbeLocation } from './types';
+import type { Location } from '../lib/location/types.js';
+import type { RemoteProbeSocket } from '../lib/ws/server.js';
+import type { ProbeLocation } from './types.js';
 
 /*
  * [
@@ -17,7 +17,7 @@ const locationKeyMap = [
 ];
 
 export class SocketsLocationFilter {
-	static magicFilter (sockets: ProbeSocket[], magicLocation: string) {
+	static magicFilter (sockets: RemoteProbeSocket[], magicLocation: string) {
 		let filteredSockets = sockets;
 		const keywords = magicLocation.split('+');
 
@@ -43,24 +43,24 @@ export class SocketsLocationFilter {
 		return filteredSockets;
 	}
 
-	static getExactIndexPosition (socket: ProbeSocket, value: string) {
+	static getExactIndexPosition (socket: RemoteProbeSocket, value: string) {
 		return socket.data.probe.index.findIndex(category => category.some(index => index === value.replaceAll('-', ' ').trim()));
 	}
 
-	static getIndexPosition (socket: ProbeSocket, value: string) {
+	static getIndexPosition (socket: RemoteProbeSocket, value: string) {
 		return socket.data.probe.index.findIndex(category => category.some(index => index.includes(value.replaceAll('-', ' ').trim())));
 	}
 
-	static hasTag (socket: ProbeSocket, tag: string) {
+	static hasTag (socket: RemoteProbeSocket, tag: string) {
 		return socket.data.probe.tags.some(({ type, value }) => type === 'system' && value === tag);
 	}
 
-	public filterGloballyDistibuted (sockets: ProbeSocket[], limit: number): ProbeSocket[] {
+	public filterGloballyDistibuted (sockets: RemoteProbeSocket[], limit: number): RemoteProbeSocket[] {
 		const distribution = this.getDistibutionConfig();
 		return this.filterByLocationAndWeight(sockets, distribution, limit);
 	}
 
-	public filterByLocation (sockets: ProbeSocket[], location: Location): ProbeSocket[] {
+	public filterByLocation (sockets: RemoteProbeSocket[], location: Location): RemoteProbeSocket[] {
 		if (location.magic === 'world') {
 			return _.shuffle(this.filterGloballyDistibuted(sockets, sockets.length));
 		}
@@ -85,8 +85,8 @@ export class SocketsLocationFilter {
 		return isMagicSorting ? this.magicSort(filteredSockets, location.magic!) : _.shuffle(filteredSockets);
 	}
 
-	public filterByLocationAndWeight (sockets: ProbeSocket[], distribution: Map<Location, number>, limit: number): ProbeSocket[] {
-		const groupedByLocation = new Map<Location, ProbeSocket[]>();
+	public filterByLocationAndWeight (sockets: RemoteProbeSocket[], distribution: Map<Location, number>, limit: number): RemoteProbeSocket[] {
+		const groupedByLocation = new Map<Location, RemoteProbeSocket[]>();
 
 		for (const [ location ] of distribution) {
 			const foundSockets = this.filterByLocation(sockets, location);
@@ -96,7 +96,7 @@ export class SocketsLocationFilter {
 			}
 		}
 
-		const pickedSockets = new Set<ProbeSocket>();
+		const pickedSockets = new Set<RemoteProbeSocket>();
 
 		while (groupedByLocation.size > 0 && pickedSockets.size < limit) {
 			const selectedCount = pickedSockets.size;
@@ -129,8 +129,8 @@ export class SocketsLocationFilter {
 		return [ ...pickedSockets ];
 	}
 
-	private magicSort (sockets: ProbeSocket[], magicString: string): ProbeSocket[] {
-		const getClosestIndexPosition = (socket: ProbeSocket) => {
+	private magicSort (sockets: RemoteProbeSocket[], magicString: string): RemoteProbeSocket[] {
+		const getClosestIndexPosition = (socket: RemoteProbeSocket) => {
 			const keywords = magicString.split('+');
 			const closestIndexPosition = keywords.reduce((smallesIndex, keyword) => {
 				const indexPosition = SocketsLocationFilter.getIndexPosition(socket, keyword);
