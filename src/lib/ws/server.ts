@@ -1,7 +1,8 @@
 import config from 'config';
-import { type RemoteSocket, Server } from 'socket.io';
+import { type RemoteSocket, Server, Socket } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
-import type { DefaultEventsMap } from 'socket.io/dist/typed-events';
+// eslint-disable-next-line n/no-missing-import
+import type { DefaultEventsMap } from 'socket.io/dist/typed-events.js';
 import type { Probe } from '../../probe/types.js';
 import { getRedisClient } from '../redis/client.js';
 import { reconnectProbes } from './helper/reconnect-probes.js';
@@ -12,7 +13,9 @@ export type SocketData = {
 	probe: Probe;
 };
 
-export type ProbeSocket = RemoteSocket<DefaultEventsMap, SocketData>;
+export type RemoteProbeSocket = RemoteSocket<DefaultEventsMap, SocketData>;
+
+export type ServerSocket = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 
 export type WsServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 
@@ -21,7 +24,7 @@ const TIME_UNTIL_VM_BECOMES_HEALTHY = 8000;
 const logger = scopedLogger('ws-server');
 
 let io: WsServer;
-let throttledFetchSockets: (options?: LRUOptions) => Promise<ProbeSocket[]>;
+let throttledFetchSockets: (options?: LRUOptions) => Promise<RemoteProbeSocket[]>;
 
 export const initWsServer = async () => {
 	const pubClient = getRedisClient().duplicate();
@@ -38,7 +41,7 @@ export const initWsServer = async () => {
 
 	io.adapter(createAdapter(pubClient, subClient));
 
-	throttledFetchSockets = throttle<ProbeSocket[]>(
+	throttledFetchSockets = throttle<RemoteProbeSocket[]>(
 		io.of(PROBES_NAMESPACE).fetchSockets.bind(io.of(PROBES_NAMESPACE)),
 		config.get<number>('ws.fetchSocketsCacheTTL'),
 	);

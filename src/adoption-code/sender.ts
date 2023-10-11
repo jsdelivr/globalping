@@ -1,6 +1,6 @@
 
 import createHttpError from 'http-errors';
-import { fetchSockets, ProbeSocket } from '../lib/ws/server.js';
+import { fetchSockets, RemoteProbeSocket } from '../lib/ws/server.js';
 import type { AdoptionCodeRequest } from './types.js';
 
 export class CodeSender {
@@ -23,7 +23,7 @@ export class CodeSender {
 		return sockets.find(socket => socket.data.probe.ipAddress === ip);
 	}
 
-	private sendToSocket (sockets: ProbeSocket, code: string) {
+	private sendToSocket (sockets: RemoteProbeSocket, code: string) {
 		sockets.emit('probe:adoption:code', {
 			code,
 		});

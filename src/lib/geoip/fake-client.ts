@@ -1,4 +1,4 @@
-import type { ProbeLocation } from '../../probe/types';
+import type { ProbeLocation } from '../../probe/types.js';
 
 export const fakeLookup = (): ProbeLocation => {
 	return {

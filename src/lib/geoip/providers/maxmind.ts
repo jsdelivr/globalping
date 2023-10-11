@@ -1,7 +1,7 @@
 import config from 'config';
 import newrelic from 'newrelic';
 import { type City, WebServiceClient } from '@maxmind/geoip2-node';
-import type { WebServiceClientError } from '@maxmind/geoip2-node/dist/src/types';
+import type { WebServiceClientError } from '@maxmind/geoip2-node/dist/src/types.js';
 import type { LocationInfo } from '../client.js';
 import {
 	normalizeCityName,

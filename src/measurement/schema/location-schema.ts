@@ -3,12 +3,11 @@ import anyAscii from 'any-ascii';
 import Joi from 'joi';
 import config from 'config';
 
-import geoLists from 'countries-list';
+import { continents, countries } from 'countries-list';
 import { states } from '../../lib/location/states.js';
 import { regionNames } from '../../lib/location/regions.js';
 import { GLOBAL_DEFAULTS } from './utils.js';
 
-const { continents, countries } = geoLists;
 const measurementConfig = config.get<{limits: {global: number; location: number}}>('measurement');
 
 const normalizeValue = (value: string): string => anyAscii(value);

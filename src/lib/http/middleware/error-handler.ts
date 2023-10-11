@@ -1,7 +1,7 @@
 import createHttpError from 'http-errors';
 import newrelic from 'newrelic';
 import { scopedLogger } from '../../logger.js';
-import type { ExtendedMiddleware } from '../../../types';
+import type { ExtendedMiddleware } from '../../../types.js';
 
 const logger = scopedLogger('error-handler-mw');
 

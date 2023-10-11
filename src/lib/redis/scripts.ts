@@ -1,5 +1,5 @@
 import { defineScript } from 'redis';
-import type { MeasurementRecord, MeasurementResultMessage } from '../../measurement/types';
+import type { MeasurementRecord, MeasurementResultMessage } from '../../measurement/types.js';
 
 type CountScript = {
 	NUMBER_OF_KEYS: number;

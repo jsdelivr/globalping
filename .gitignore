@@ -5,7 +5,7 @@ node_modules/
 coverage/
 dist/
 tmp/
-config/local.cjs
+config/local*
 data/DOMAIN_BLACKLIST.json
 data/IP_BLACKLIST.json
 data/AWS_IP_RANGES.json

@@ -22,7 +22,7 @@ describe('Get health', () => {
 	});
 
 	beforeEach(() => {
-		sandbox = sinon.createSandbox({ useFakeTimers: true });
+		sandbox = sinon.createSandbox({ useFakeTimers: { shouldAdvanceTime: true } });
 		exitStub = sandbox.stub(process, 'exit');
 	});
 
