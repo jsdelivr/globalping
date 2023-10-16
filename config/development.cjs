@@ -7,4 +7,7 @@ module.exports = {
 	admin: {
 		key: 'admin',
 	},
+	systemApi: {
+		key: 'system',
+	},
 };

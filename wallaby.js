@@ -18,6 +18,7 @@ export default function wallaby () {
 			'test/setup.ts',
 			'test/types.ts',
 			'package.json',
+			'knexfile.js',
 			'data/GCP_IP_RANGES.json',
 			'data/AWS_IP_RANGES.json',
 			'data/DOMAIN_BLACKLIST.json',

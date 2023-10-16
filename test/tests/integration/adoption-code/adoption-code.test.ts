@@ -30,7 +30,7 @@ describe('Adoption code', () => {
 	});
 
 	it('should send code to the requested probe', async () => {
-		await requestAgent.post('/v1/adoption-code?adminkey=admin')
+		await requestAgent.post('/v1/adoption-code?systemkey=system')
 			.send({
 				ip: '1.2.3.4',
 				code: '123456',
@@ -46,7 +46,7 @@ describe('Adoption code', () => {
 	});
 
 	it('should return 403 for non-admins', async () => {
-		await requestAgent.post('/v1/adoption-code?adminkey=wrongkey')
+		await requestAgent.post('/v1/adoption-code?systemkey=wrongkey')
 			.send({
 				ip: '1.2.3.4',
 				code: '123456',
@@ -59,7 +59,7 @@ describe('Adoption code', () => {
 	});
 
 	it('should return 422 if probe not found', async () => {
-		await requestAgent.post('/v1/adoption-code?adminkey=admin')
+		await requestAgent.post('/v1/adoption-code?systemkey=system')
 			.send({
 				ip: '9.9.9.9',
 				code: '123456',
