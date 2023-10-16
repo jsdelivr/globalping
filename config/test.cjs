@@ -7,6 +7,9 @@ module.exports = {
 	admin: {
 		key: 'admin',
 	},
+	systemApi: {
+		key: 'system',
+	},
 	geoip: {
 		cache: {
 			ttl: 1, // 1 ms ttl here to disable redis cache in tests

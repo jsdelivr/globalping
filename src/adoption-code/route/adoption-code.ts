@@ -4,7 +4,7 @@ import type { AdoptionCodeRequest } from '../types.js';
 import { bodyParser } from '../../lib/http/middleware/body-parser.js';
 import { validate } from '../../lib/http/middleware/validate.js';
 import { schema } from '../schema.js';
-import { onlyAdmin } from '../../lib/http/middleware/only-admin.js';
+import { isSystem } from '../../lib/http/middleware/is-system.js';
 import { codeSender } from '../sender.js';
 
 const handle = async (ctx: Context): Promise<void> => {
@@ -17,5 +17,5 @@ const handle = async (ctx: Context): Promise<void> => {
 };
 
 export const registerSendCodeRoute = (router: Router): void => {
-	router.post('/adoption-code', '/adoption-code', onlyAdmin(), bodyParser(), validate(schema), handle);
+	router.post('/adoption-code', '/adoption-code', isSystem(), bodyParser(), validate(schema), handle);
 };
