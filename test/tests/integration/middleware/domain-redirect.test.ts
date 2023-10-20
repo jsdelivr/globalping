@@ -21,7 +21,7 @@ describe('domain redirect', () => {
 				.set('Host', 'globalping.io')
 				.expect(301)
 				.expect((response: Response) => {
-					expect(response.header.location).to.equal('https://jsdelivr.com/globalping');
+					expect(response.header.location).to.equal('https://jsdelivr.com/globalping/v1/probes');
 				});
 		});
 
