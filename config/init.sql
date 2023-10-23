@@ -10,6 +10,15 @@ CREATE TABLE IF NOT EXISTS adopted_probes (
   userId VARCHAR(255) NOT NULL,
   ip VARCHAR(255) NOT NULL,
   uuid VARCHAR(255),
-  lastSyncDate DATE
+  lastSyncDate DATE,
+  status VARCHAR(255),
+  version VARCHAR(255),
+  country VARCHAR(255),
+  city VARCHAR(255),
+	latitude FLOAT,
+	longitude FLOAT,
+	asn INTEGER,
+  network VARCHAR(255)
 );
+
 INSERT IGNORE INTO adopted_probes (id, userId, ip) VALUES ('1', '6191378', '79.205.97.254');
