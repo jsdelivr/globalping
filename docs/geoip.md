@@ -23,7 +23,7 @@ New data state:
   "ip2location": {
     "country": "US",
     "city": "Long Beach",
-    "lat": 33.790287, 
+    "lat": 33.790287,
     "long": -118.193769,
     "asn": "0002"
   },
@@ -53,7 +53,7 @@ New data state:
 
 ### Step 2
 
-Apply city approximation. For every provider we are checking if it's city field value is in the [popular DC cities list](../src/lib/geoip/dc-cities.json). 
+Apply city approximation. For every provider we are checking if it's city field value is in the [DC cities list](../src/lib/geoip/dc-cities.json).
 
 If value is in the list, then city approximation is not required and city value from provider is kept.
 
@@ -77,7 +77,7 @@ New data state:
   "ip2location": {
     "country": "US",
     "city": "Los Angeles", // provider's "Long Beach" city is not in the DC cities list and approximated city is "Los Angeles", so "Los Angeles" is a new city value
-    "lat": 33.790287, 
+    "lat": 33.790287,
     "long": -118.193769,
     "asn": "0002"
   },
@@ -132,8 +132,8 @@ New data state:
   },
   "ip2location": { // group "Los Angeles"
     "country": "US",
-    "city": "Los Angeles", 
-    "lat": 33.790287, 
+    "city": "Los Angeles",
+    "lat": 33.790287,
     "long": -118.193769,
     "asn": "0002"
   },

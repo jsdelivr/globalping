@@ -12,9 +12,10 @@ services:
   mariadb:
     image: mariadb:10.11.5
     environment:
-    - MARIADB_RANDOM_ROOT_PASSWORD=1
-    - MARIADB_USER=directus
-    - MARIADB_PASSWORD=password
+      - MARIADB_DATABASE=directus
+      - MARIADB_USER=directus
+      - MARIADB_PASSWORD=password
+      - MARIADB_RANDOM_ROOT_PASSWORD=1
     ports:
       - "3306:3306"
     volumes:
