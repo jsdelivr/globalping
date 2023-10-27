@@ -15,6 +15,8 @@ type AdoptedProbe = {
 	ip: string;
 	uuid: string;
 	lastSyncDate: string;
+	tags: string[];
+	isCustomCity: boolean;
 	status: string;
 	version: string;
 	country: string;
@@ -29,14 +31,38 @@ export class AdoptedProbes {
 	private connectedIpToProbe: Map<string, Probe> = new Map();
 	private connectedUuidToIp: Map<string, string> = new Map();
 	private readonly adoptedFieldToConnectedField = {
-		status: 'status',
-		version: 'version',
-		country: 'location.country',
-		city: 'location.city',
-		latitude: 'location.latitude',
-		longitude: 'location.longitude',
-		asn: 'location.asn',
-		network: 'location.network',
+		status: {
+			connectedField: 'status',
+			shouldUpdateIfCustomCity: true,
+		},
+		version: {
+			connectedField: 'version',
+			shouldUpdateIfCustomCity: true,
+		},
+		asn: {
+			connectedField: 'location.asn',
+			shouldUpdateIfCustomCity: true,
+		},
+		network: {
+			connectedField: 'location.network',
+			shouldUpdateIfCustomCity: true,
+		},
+		country: {
+			connectedField: 'location.country',
+			shouldUpdateIfCustomCity: false,
+		},
+		city: {
+			connectedField: 'location.city',
+			shouldUpdateIfCustomCity: false,
+		},
+		latitude: {
+			connectedField: 'location.latitude',
+			shouldUpdateIfCustomCity: false,
+		},
+		longitude: {
+			connectedField: 'location.longitude',
+			shouldUpdateIfCustomCity: false,
+		},
 	};
 
 	constructor (
@@ -57,7 +83,7 @@ export class AdoptedProbes {
 		this.connectedIpToProbe = new Map(allSockets.map(socket => [ socket.data.probe.ipAddress, socket.data.probe ]));
 		this.connectedUuidToIp = new Map(allSockets.map(socket => [ socket.data.probe.uuid, socket.data.probe.ipAddress ]));
 
-		const adoptedProbes = await this.sql(TABLE_NAME).select<AdoptedProbe[]>('ip', 'uuid', 'lastSyncDate', ...Object.keys(this.adoptedFieldToConnectedField));
+		const adoptedProbes = await this.sql(TABLE_NAME).select<AdoptedProbe[]>('ip', 'uuid', 'lastSyncDate', 'isCustomCity', 'tags', ...Object.keys(this.adoptedFieldToConnectedField));
 		await Bluebird.map(adoptedProbes, ({ ip, uuid }) => this.syncProbeIds(ip, uuid), { concurrency: 8 });
 		await Bluebird.map(adoptedProbes, adoptedProbe => this.syncProbeData(adoptedProbe), { concurrency: 8 });
 		await Bluebird.map(adoptedProbes, ({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate), { concurrency: 8 });
@@ -84,6 +110,7 @@ export class AdoptedProbes {
 
 	private async syncProbeData (adoptedProbe: AdoptedProbe) {
 		const connectedProbe = this.connectedIpToProbe.get(adoptedProbe.ip);
+		const isCustomCity = adoptedProbe.isCustomCity;
 
 		if (!connectedProbe) {
 			return;
@@ -91,7 +118,11 @@ export class AdoptedProbes {
 
 		const updateObject: Record<string, string | number> = {};
 
-		Object.entries(this.adoptedFieldToConnectedField).forEach(([ adoptedField, connectedField ]) => {
+		Object.entries(this.adoptedFieldToConnectedField).forEach(([ adoptedField, { connectedField, shouldUpdateIfCustomCity }]) => {
+			if (isCustomCity && !shouldUpdateIfCustomCity) {
+				return;
+			}
+
 			const adoptedValue = _.get(adoptedProbe, adoptedField) as string | number;
 			const connectedValue = _.get(connectedProbe, connectedField) as string | number;
 
