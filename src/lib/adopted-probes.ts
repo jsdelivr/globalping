@@ -4,7 +4,7 @@ import _ from 'lodash';
 
 import { scopedLogger } from './logger.js';
 import { client } from './sql/client.js';
-import { fetchConnectedSockets } from './ws/server.js';
+import { fetchRawSockets } from './ws/server.js';
 import type { Probe } from '../probe/types.js';
 
 const logger = scopedLogger('adopted-probes');
@@ -68,7 +68,7 @@ export class AdoptedProbes {
 
 	constructor (
 		private readonly sql: Knex,
-		private readonly fetchWsSockets: typeof fetchConnectedSockets,
+		private readonly fetchSockets: typeof fetchRawSockets,
 	) {}
 
 	getAdoptedIpToProbe () {
@@ -84,7 +84,7 @@ export class AdoptedProbes {
 	}
 
 	async syncDashboardData () {
-		const allSockets = await this.fetchWsSockets();
+		const allSockets = await this.fetchSockets();
 		this.connectedIpToProbe = new Map(allSockets.map(socket => [ socket.data.probe.ipAddress, socket.data.probe ]));
 		this.connectedUuidToIp = new Map(allSockets.map(socket => [ socket.data.probe.uuid, socket.data.probe.ipAddress ]));
 
@@ -196,4 +196,4 @@ export class AdoptedProbes {
 	}
 }
 
-export const adoptedProbes = new AdoptedProbes(client, fetchConnectedSockets);
+export const adoptedProbes = new AdoptedProbes(client, fetchRawSockets);

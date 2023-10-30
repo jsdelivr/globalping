@@ -5,7 +5,7 @@ import { expect } from 'chai';
 const disconnect = sinon.stub();
 const fetchSockets = sinon.stub().resolves([{ disconnect }, {	disconnect }]);
 
-describe('fetchSockets', () => {
+describe('reconnectProbes', () => {
 	let sandbox: sinon.SinonSandbox;
 	let reconnectProbes;
 
@@ -29,7 +29,7 @@ describe('fetchSockets', () => {
 		td.reset();
 	});
 
-	it('multiple calls to fetchSockets should result in one socket.io fetchSockets call', async () => {
+	it('should disconnect every probe in configured time', async () => {
 		reconnectProbes();
 
 		expect(fetchSockets.callCount).to.equal(0);

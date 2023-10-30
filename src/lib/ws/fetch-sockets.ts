@@ -1,13 +1,13 @@
 import config from 'config';
 import { throttle, LRUOptions } from './helper/throttle.js';
-import { fetchConnectedSockets, RemoteProbeSocket } from './server.js';
+import { fetchRawSockets, RemoteProbeSocket } from './server.js';
 import { adoptedProbes } from '../adopted-probes.js';
 
 const throttledFetchSockets = throttle<RemoteProbeSocket[]>(
 	async () => {
-		const connected = await fetchConnectedSockets();
+		const connected = await fetchRawSockets();
 		const adopted = adoptedProbes.getAdoptedIpToProbe();
-		console.log('adopted', adopted.size);
+		console.log('adopted', adopted);
 		return connected;
 	},
 	config.get<number>('ws.fetchSocketsCacheTTL'),

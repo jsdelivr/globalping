@@ -43,7 +43,7 @@ export const getWsServer = (): WsServer => {
 	return io;
 };
 
-export const fetchConnectedSockets = async () => {
+export const fetchRawSockets = async () => {
 	if (!io) {
 		throw new Error('WS server not initialized yet');
 	}
