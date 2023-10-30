@@ -24,8 +24,8 @@ export class CodeSender {
 		return sockets.find(socket => socket.data.probe.ipAddress === ip);
 	}
 
-	private sendToSocket (sockets: RemoteProbeSocket, code: string) {
-		sockets.emit('probe:adoption:code', {
+	private sendToSocket (socket: RemoteProbeSocket, code: string) {
+		socket.emit('probe:adoption:code', {
 			code,
 		});
 	}

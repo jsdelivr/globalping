@@ -58,24 +58,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const tags = getTags(ip, ipInfo);
 
-	// Storing index as string[][] so every category will have it's exact position in the index array across all probes
-	const index = [
-		[ location.country ],
-		[ getCountryIso3ByIso2(location.country) ],
-		[ getCountryByIso(location.country) ],
-		getCountryAliases(location.country),
-		[ location.normalizedCity ],
-		location.state ? [ location.state ] : [],
-		location.state ? [ getStateNameByIso(location.state) ] : [],
-		[ location.continent ],
-		getContinentAliases(location.continent),
-		[ location.region ],
-		getRegionAliases(location.region),
-		[ `as${location.asn}` ],
-		tags.filter(tag => tag.type === 'system').map(tag => tag.value),
-		[ location.normalizedNetwork ],
-		getNetworkAliases(location.normalizedNetwork),
-	].map(category => category.map(s => s.toLowerCase().replaceAll('-', ' ')));
+	const index = getIndex(location, tags);
 
 	// Todo: add validation and handle missing or partial data
 	return {
@@ -98,6 +81,29 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		},
 		status: 'initializing',
 	};
+};
+
+const getIndex = (location: ProbeLocation, tags: Tag[]) => {
+	// Storing index as string[][] so every category will have it's exact position in the index array across all probes
+	const index = [
+		[ location.country ],
+		[ getCountryIso3ByIso2(location.country) ],
+		[ getCountryByIso(location.country) ],
+		getCountryAliases(location.country),
+		[ location.normalizedCity ],
+		location.state ? [ location.state ] : [],
+		location.state ? [ getStateNameByIso(location.state) ] : [],
+		[ location.continent ],
+		getContinentAliases(location.continent),
+		[ location.region ],
+		getRegionAliases(location.region),
+		[ `as${location.asn}` ],
+		tags.filter(tag => tag.type === 'system').map(tag => tag.value),
+		[ location.normalizedNetwork ],
+		getNetworkAliases(location.normalizedNetwork),
+	].map(category => category.map(s => s.toLowerCase().replaceAll('-', ' ')));
+
+	return index;
 };
 
 const getLocation = (ipInfo: ProbeLocation): ProbeLocation => ({

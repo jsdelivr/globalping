@@ -11,20 +11,20 @@ const logger = scopedLogger('adopted-probes');
 
 const TABLE_NAME = 'adopted_probes';
 
-type AdoptedProbe = {
+export type AdoptedProbe = {
 	ip: string;
-	uuid: string;
+	uuid?: string;
 	lastSyncDate: string;
-	tags: string[];
-	isCustomCity: boolean;
-	status: string;
-	version: string;
-	country: string;
-	city: string;
-	latitude: number;
-	longitude: number;
-	asn: number;
-	network: string;
+	tags?: string[];
+	isCustomCity: number;
+	status?: string;
+	version?: string;
+	country?: string;
+	city?: string;
+	latitude?: number;
+	longitude?: number;
+	asn?: number;
+	network?: string;
 }
 
 export class AdoptedProbes {
@@ -80,7 +80,7 @@ export class AdoptedProbes {
 			this.syncDashboardData()
 				.finally(() => this.scheduleSync())
 				.catch(error => logger.error(error));
-		}, 60_000);
+		}, 10_000);
 	}
 
 	async syncDashboardData () {
@@ -95,7 +95,7 @@ export class AdoptedProbes {
 		await Bluebird.map(adoptedProbes, ({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate), { concurrency: 8 });
 	}
 
-	private async syncProbeIds (ip: string, uuid: string) {
+	private async syncProbeIds (ip: string, uuid?: string) {
 		const connectedProbe = this.connectedIpToProbe.get(ip);
 
 		if (connectedProbe && connectedProbe.uuid === uuid) { // ip and uuid are synced
@@ -107,7 +107,7 @@ export class AdoptedProbes {
 			return;
 		}
 
-		const connectedIp = this.connectedUuidToIp.get(uuid);
+		const connectedIp = uuid && this.connectedUuidToIp.get(uuid);
 
 		if (connectedIp) { // data was found by uuid, but not found by ip, therefore ip is outdated
 			await this.updateIp(connectedIp, uuid);
