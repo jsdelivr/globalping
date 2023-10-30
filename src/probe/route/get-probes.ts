@@ -1,6 +1,7 @@
 import type { DefaultContext, DefaultState, ParameterizedContext } from 'koa';
 import type Router from '@koa/router';
-import { fetchSockets, type RemoteProbeSocket } from '../../lib/ws/server.js';
+import type { RemoteProbeSocket } from '../../lib/ws/server.js';
+import { fetchSockets } from '../../lib/ws/fetch-sockets.js';
 
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
 	const { isAdmin } = ctx;

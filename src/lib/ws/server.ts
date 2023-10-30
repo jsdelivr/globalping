@@ -1,13 +1,9 @@
-import config from 'config';
 import { type RemoteSocket, Server, Socket } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 // eslint-disable-next-line n/no-missing-import
 import type { DefaultEventsMap } from 'socket.io/dist/typed-events.js';
 import type { Probe } from '../../probe/types.js';
 import { getRedisClient } from '../redis/client.js';
-import { reconnectProbes } from './helper/reconnect-probes.js';
-import { throttle, LRUOptions } from './helper/throttle.js';
-import { scopedLogger } from '../logger.js';
 
 export type SocketData = {
 	probe: Probe;
@@ -20,11 +16,8 @@ export type ServerSocket = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEve
 export type WsServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 
 export const PROBES_NAMESPACE = '/probes';
-const TIME_UNTIL_VM_BECOMES_HEALTHY = 8000;
-const logger = scopedLogger('ws-server');
 
 let io: WsServer;
-let throttledFetchSockets: (options?: LRUOptions) => Promise<RemoteProbeSocket[]>;
 
 export const initWsServer = async () => {
 	const pubClient = getRedisClient().duplicate();
@@ -40,15 +33,6 @@ export const initWsServer = async () => {
 	});
 
 	io.adapter(createAdapter(pubClient, subClient));
-
-	throttledFetchSockets = throttle<RemoteProbeSocket[]>(
-		io.of(PROBES_NAMESPACE).fetchSockets.bind(io.of(PROBES_NAMESPACE)),
-		config.get<number>('ws.fetchSocketsCacheTTL'),
-	);
-
-	setTimeout(() => {
-		reconnectProbes(fetchSockets).catch(error => logger.error(error));
-	}, TIME_UNTIL_VM_BECOMES_HEALTHY);
 };
 
 export const getWsServer = (): WsServer => {
@@ -59,14 +43,12 @@ export const getWsServer = (): WsServer => {
 	return io;
 };
 
-export const fetchSockets = async (options?: LRUOptions) => {
-	if (!io || !throttledFetchSockets) {
+export const fetchConnectedSockets = async () => {
+	if (!io) {
 		throw new Error('WS server not initialized yet');
 	}
 
-	const sockets = await throttledFetchSockets(options);
+	const sockets = await io.of(PROBES_NAMESPACE).fetchSockets();
 
 	return sockets;
 };
-
-export type ThrottledFetchSockets = typeof fetchSockets;

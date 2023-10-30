@@ -4,7 +4,7 @@ import _ from 'lodash';
 
 import { scopedLogger } from './logger.js';
 import { client } from './sql/client.js';
-import { fetchSockets } from './ws/server.js';
+import { fetchConnectedSockets } from './ws/server.js';
 import type { Probe } from '../probe/types.js';
 
 const logger = scopedLogger('adopted-probes');
@@ -30,6 +30,7 @@ type AdoptedProbe = {
 export class AdoptedProbes {
 	private connectedIpToProbe: Map<string, Probe> = new Map();
 	private connectedUuidToIp: Map<string, string> = new Map();
+	private adoptedIpToProbe: Map<string, AdoptedProbe> = new Map();
 	private readonly adoptedFieldToConnectedField = {
 		status: {
 			connectedField: 'status',
@@ -67,8 +68,12 @@ export class AdoptedProbes {
 
 	constructor (
 		private readonly sql: Knex,
-		private readonly fetchWsSockets: typeof fetchSockets,
+		private readonly fetchWsSockets: typeof fetchConnectedSockets,
 	) {}
+
+	getAdoptedIpToProbe () {
+		return this.adoptedIpToProbe;
+	}
 
 	scheduleSync () {
 		setTimeout(() => {
@@ -84,6 +89,7 @@ export class AdoptedProbes {
 		this.connectedUuidToIp = new Map(allSockets.map(socket => [ socket.data.probe.uuid, socket.data.probe.ipAddress ]));
 
 		const adoptedProbes = await this.sql(TABLE_NAME).select<AdoptedProbe[]>('ip', 'uuid', 'lastSyncDate', 'isCustomCity', 'tags', ...Object.keys(this.adoptedFieldToConnectedField));
+		this.adoptedIpToProbe = new Map(adoptedProbes.map(probe => [ probe.ip, probe ]));
 		await Bluebird.map(adoptedProbes, ({ ip, uuid }) => this.syncProbeIds(ip, uuid), { concurrency: 8 });
 		await Bluebird.map(adoptedProbes, adoptedProbe => this.syncProbeData(adoptedProbe), { concurrency: 8 });
 		await Bluebird.map(adoptedProbes, ({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate), { concurrency: 8 });
@@ -190,4 +196,4 @@ export class AdoptedProbes {
 	}
 }
 
-export const adoptedProbes = new AdoptedProbes(client, fetchSockets);
+export const adoptedProbes = new AdoptedProbes(client, fetchConnectedSockets);

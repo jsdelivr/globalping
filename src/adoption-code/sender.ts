@@ -1,6 +1,7 @@
 
 import createHttpError from 'http-errors';
-import { fetchSockets, RemoteProbeSocket } from '../lib/ws/server.js';
+import type { RemoteProbeSocket } from '../lib/ws/server.js';
+import { fetchSockets } from '../lib/ws/fetch-sockets.js';
 import type { AdoptionCodeRequest } from './types.js';
 
 export class CodeSender {

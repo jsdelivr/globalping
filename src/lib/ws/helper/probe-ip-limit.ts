@@ -1,4 +1,4 @@
-import { fetchSockets } from '../server.js';
+import { fetchSockets } from '../fetch-sockets.js';
 import { scopedLogger } from '../../logger.js';
 import { ProbeError } from '../../probe-error.js';
 import type { LRUOptions } from './throttle.js';

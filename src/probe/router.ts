@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import type { RemoteProbeSocket } from '../lib/ws/server.js';
-import { fetchSockets } from '../lib/ws/server.js';
+import { fetchSockets } from '../lib/ws/fetch-sockets.js';
 import type { LocationWithLimit } from '../measurement/types.js';
 import type { Location } from '../lib/location/types.js';
 import type { Probe } from './types.js';
