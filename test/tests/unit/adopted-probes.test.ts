@@ -40,7 +40,7 @@ describe('AdoptedProbes', () => {
 		expect(sqlStub.args[0]).deep.equal([ 'adopted_probes' ]);
 		expect(selectStub.callCount).to.equal(1);
 
-		expect(selectStub.args[0]).deep.equal([ 'ip', 'uuid', 'lastSyncDate', 'status', 'version', 'country', 'city', 'latitude', 'longitude', 'asn', 'network' ]);
+		expect(selectStub.args[0]).deep.equal([ 'ip', 'uuid', 'lastSyncDate', 'isCustomCity', 'tags', 'status', 'version', 'asn', 'network', 'country', 'city', 'latitude', 'longitude' ]);
 	});
 
 	it('class should update uuid if it is wrong', async () => {

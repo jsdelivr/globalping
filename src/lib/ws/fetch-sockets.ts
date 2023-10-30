@@ -14,12 +14,7 @@ const throttledFetchSockets = throttle<RemoteProbeSocket[]>(
 );
 
 export const fetchSockets = async (options?: LRUOptions) => {
-	if (!throttledFetchSockets) {
-		throw new Error('throttledFetchSockets not initialized yet');
-	}
-
 	const sockets = await throttledFetchSockets(options);
-
 	return sockets;
 };
 
