@@ -11,7 +11,9 @@ const whereStub = sinon.stub().returns({
 	delete: deleteStub,
 });
 const sqlStub = sinon.stub().returns({
-	select: selectStub,
+	join: sinon.stub().returns({
+		select: selectStub,
+	}),
 	where: whereStub,
 });
 const fetchSocketsStub = sinon.stub().resolves([]);
@@ -40,7 +42,24 @@ describe('AdoptedProbes', () => {
 		expect(sqlStub.args[0]).deep.equal([ 'adopted_probes' ]);
 		expect(selectStub.callCount).to.equal(1);
 
-		expect(selectStub.args[0]).deep.equal([ 'ip', 'uuid', 'lastSyncDate', 'isCustomCity', 'tags', 'status', 'version', 'asn', 'network', 'country', 'city', 'latitude', 'longitude' ]);
+		expect(selectStub.args[0]).deep.equal([
+			{
+				username: 'directus_users.last_name',
+				ip: 'adopted_probes.ip',
+				uuid: 'adopted_probes.uuid',
+				lastSyncDate: 'adopted_probes.lastSyncDate',
+				isCustomCity: 'adopted_probes.isCustomCity',
+				tags: 'adopted_probes.tags',
+				status: 'adopted_probes.status',
+				version: 'adopted_probes.version',
+				asn: 'adopted_probes.asn',
+				network: 'adopted_probes.network',
+				country: 'adopted_probes.country',
+				city: 'adopted_probes.city',
+				latitude: 'adopted_probes.latitude',
+				longitude: 'adopted_probes.longitude',
+			},
+		]);
 	});
 
 	it('class should update uuid if it is wrong', async () => {

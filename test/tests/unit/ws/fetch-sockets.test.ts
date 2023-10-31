@@ -2,7 +2,7 @@ import * as sinon from 'sinon';
 import * as td from 'testdouble';
 import { expect } from 'chai';
 
-const fetchRawSockets = sinon.stub();
+const fetchRawSockets = sinon.stub().resolves([]);
 const getAdoptedIpToProbe = sinon.stub();
 
 describe('fetchSockets', () => {
@@ -11,10 +11,10 @@ describe('fetchSockets', () => {
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ws/server.ts', { fetchRawSockets });
 		await td.replaceEsm('../../../../src/lib/adopted-probes.ts', { adoptedProbes: { getAdoptedIpToProbe } });
-		({ fetchSockets } = await import('../../../../src/lib/ws/fetch-sockets.js'));
 	});
 
-	beforeEach(() => {
+	beforeEach(async () => {
+		({ fetchSockets } = await import('../../../../src/lib/ws/fetch-sockets.js'));
 		sinon.resetHistory();
 	});
 
@@ -72,6 +72,7 @@ describe('fetchSockets', () => {
 		}]);
 
 		getAdoptedIpToProbe.returns(new Map([ [ '1.1.1.1', {
+			username: 'jimaek',
 			ip: '1.1.1.1',
 			uuid: 'c873cd81-5ede-4fff-9314-5905ad2bdb58',
 			lastSyncDate: '2023-10-29T21:00:00.000Z',
@@ -125,12 +126,12 @@ describe('fetchSockets', () => {
 							[ 'western europe' ],
 							[ 'western europe', 'west europe' ],
 							[ 'as12876' ],
-							[ 'datacenter network', 'u baderfall my tag 1' ],
+							[ 'datacenter network', 'u jimaek my tag 1' ],
 							[ 'scaleway s.a.s.' ],
 							[],
 						],
 						resolvers: [ 'private' ],
-						tags: [{ type: 'system', value: 'datacenter-network' }, { type: 'user', value: 'u-baderfall-my-tag-1' }],
+						tags: [{ type: 'system', value: 'datacenter-network' }, { type: 'user', value: 'u-jimaek-my-tag-1' }],
 						stats: { cpu: { count: 8, load: [] }, jobs: { count: 0 } },
 						status: 'ready',
 					},
