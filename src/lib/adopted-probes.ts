@@ -9,9 +9,11 @@ import type { Probe } from '../probe/types.js';
 
 const logger = scopedLogger('adopted-probes');
 
-const TABLE_NAME = 'adopted_probes';
+const ADOPTED_PROBES_TABLE = 'adopted_probes';
+const USERS_TABLE = 'directus_users';
 
 export type AdoptedProbe = {
+	username: string;
 	ip: string;
 	uuid?: string;
 	lastSyncDate: string;
@@ -93,17 +95,32 @@ export class AdoptedProbes {
 		this.connectedIpToProbe = new Map(allSockets.map(socket => [ socket.data.probe.ipAddress, socket.data.probe ]));
 		this.connectedUuidToIp = new Map(allSockets.map(socket => [ socket.data.probe.uuid, socket.data.probe.ipAddress ]));
 
-		const rows = await this.sql(TABLE_NAME).select<Row[]>('ip', 'uuid', 'lastSyncDate', 'isCustomCity', 'tags', ...Object.keys(this.adoptedFieldToConnectedField));
+		const adoptedProbes = await this.fetchAdoptedProbes();
+		this.adoptedIpToProbe = new Map(adoptedProbes.map(probe => [ probe.ip, probe ]));
+		await Bluebird.map(adoptedProbes, ({ ip, uuid }) => this.syncProbeIds(ip, uuid), { concurrency: 8 });
+		await Bluebird.map(adoptedProbes, adoptedProbe => this.syncProbeData(adoptedProbe), { concurrency: 8 });
+		await Bluebird.map(adoptedProbes, ({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate), { concurrency: 8 });
+	}
+
+	private async fetchAdoptedProbes () {
+		const rows = await this.sql(ADOPTED_PROBES_TABLE)
+			.join(USERS_TABLE, `${ADOPTED_PROBES_TABLE}.userId`, '=', `${USERS_TABLE}.id`)
+			.select<Row[]>({
+				username: `${USERS_TABLE}.last_name`,
+				ip: `${ADOPTED_PROBES_TABLE}.ip`,
+				uuid: `${ADOPTED_PROBES_TABLE}.uuid`,
+				lastSyncDate: `${ADOPTED_PROBES_TABLE}.lastSyncDate`,
+				isCustomCity: `${ADOPTED_PROBES_TABLE}.isCustomCity`,
+				tags: `${ADOPTED_PROBES_TABLE}.tags`,
+				...Object.fromEntries(Object.keys(this.adoptedFieldToConnectedField).map(field => [ field, `${ADOPTED_PROBES_TABLE}.${field}` ])),
+			});
+
 		const adoptedProbes: AdoptedProbe[] = rows.map(row => ({
 			...row,
 			tags: row.tags ? JSON.parse(row.tags) as string[] : [],
 			isCustomCity: Boolean(row.isCustomCity),
 		}));
-
-		this.adoptedIpToProbe = new Map(adoptedProbes.map(probe => [ probe.ip, probe ]));
-		await Bluebird.map(adoptedProbes, ({ ip, uuid }) => this.syncProbeIds(ip, uuid), { concurrency: 8 });
-		await Bluebird.map(adoptedProbes, adoptedProbe => this.syncProbeData(adoptedProbe), { concurrency: 8 });
-		await Bluebird.map(adoptedProbes, ({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate), { concurrency: 8 });
+		return adoptedProbes;
 	}
 
 	private async syncProbeIds (ip: string, uuid?: string) {
@@ -171,23 +188,23 @@ export class AdoptedProbes {
 	}
 
 	private async updateUuid (ip: string, uuid: string) {
-		await this.sql(TABLE_NAME).where({ ip }).update({ uuid });
+		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update({ uuid });
 	}
 
 	private async updateIp (ip: string, uuid: string) {
-		await this.sql(TABLE_NAME).where({ uuid }).update({ ip });
+		await this.sql(ADOPTED_PROBES_TABLE).where({ uuid }).update({ ip });
 	}
 
 	private async updateProbeData (ip: string, updateObject: Record<string, string | number>) {
-		await this.sql(TABLE_NAME).where({ ip }).update(updateObject);
+		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update(updateObject);
 	}
 
 	private async updateLastSyncDate (ip: string) {
-		await this.sql(TABLE_NAME).where({ ip }).update({ lastSyncDate: new Date() });
+		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update({ lastSyncDate: new Date() });
 	}
 
 	private async deleteAdoptedProbe (ip: string) {
-		await this.sql(TABLE_NAME).where({ ip }).delete();
+		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).delete();
 	}
 
 	private isToday (dateString: string) {

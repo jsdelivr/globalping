@@ -42,7 +42,7 @@ const addAdoptedProbesData = (connectedProbes: RemoteProbeSocket[], AdoptedIpToP
 
 		const newTags = adopted.tags && adopted.tags.length ? [
 			...connected.data.probe.tags,
-			...adopted.tags.map(tag => ({ type: 'user' as const, value: `u-baderfall-${tag}` })),
+			...adopted.tags.map(tag => ({ type: 'user' as const, value: `u-${adopted.username}-${tag}` })),
 		] : connected.data.probe.tags;
 
 		const result = {
