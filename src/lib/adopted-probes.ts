@@ -16,7 +16,7 @@ export type AdoptedProbe = {
 	uuid?: string;
 	lastSyncDate: string;
 	tags?: string[];
-	isCustomCity: number;
+	isCustomCity: boolean;
 	status?: string;
 	version?: string;
 	country?: string;
@@ -25,6 +25,11 @@ export type AdoptedProbe = {
 	longitude?: number;
 	asn?: number;
 	network?: string;
+}
+
+type Row = Omit<AdoptedProbe, 'isCustomCity' | 'tags'> & {
+	tags: string;
+	isCustomCity: number;
 }
 
 export class AdoptedProbes {
@@ -80,7 +85,7 @@ export class AdoptedProbes {
 			this.syncDashboardData()
 				.finally(() => this.scheduleSync())
 				.catch(error => logger.error(error));
-		}, 10_000);
+		}, 60_000);
 	}
 
 	async syncDashboardData () {
@@ -88,7 +93,13 @@ export class AdoptedProbes {
 		this.connectedIpToProbe = new Map(allSockets.map(socket => [ socket.data.probe.ipAddress, socket.data.probe ]));
 		this.connectedUuidToIp = new Map(allSockets.map(socket => [ socket.data.probe.uuid, socket.data.probe.ipAddress ]));
 
-		const adoptedProbes = await this.sql(TABLE_NAME).select<AdoptedProbe[]>('ip', 'uuid', 'lastSyncDate', 'isCustomCity', 'tags', ...Object.keys(this.adoptedFieldToConnectedField));
+		const rows = await this.sql(TABLE_NAME).select<Row[]>('ip', 'uuid', 'lastSyncDate', 'isCustomCity', 'tags', ...Object.keys(this.adoptedFieldToConnectedField));
+		const adoptedProbes: AdoptedProbe[] = rows.map(row => ({
+			...row,
+			tags: row.tags ? JSON.parse(row.tags) as string[] : [],
+			isCustomCity: Boolean(row.isCustomCity),
+		}));
+
 		this.adoptedIpToProbe = new Map(adoptedProbes.map(probe => [ probe.ip, probe ]));
 		await Bluebird.map(adoptedProbes, ({ ip, uuid }) => this.syncProbeIds(ip, uuid), { concurrency: 8 });
 		await Bluebird.map(adoptedProbes, adoptedProbe => this.syncProbeData(adoptedProbe), { concurrency: 8 });

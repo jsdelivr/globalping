@@ -13,15 +13,20 @@ import {
 } from '../lib/location/location.js';
 import { ProbeError } from '../lib/probe-error.js';
 import { createGeoipClient } from '../lib/geoip/client.js';
+import type GeoipClient from '../lib/geoip/client.js';
 import getProbeIp from '../lib/get-probe-ip.js';
 import { getRegion } from '../lib/ip-ranges.js';
 import type { Probe, ProbeLocation, Tag } from './types.js';
 import { verifyIpLimit } from '../lib/ws/helper/probe-ip-limit.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
 
-const geoipClient = createGeoipClient();
+let geoipClient: GeoipClient;
 
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
+	if (!geoipClient) {
+		geoipClient = createGeoipClient();
+	}
+
 	const version = String(socket.handshake.query['version']);
 
 	const nodeVersion = String(socket.handshake.query['nodeVersion']);
@@ -83,7 +88,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	};
 };
 
-const getIndex = (location: ProbeLocation, tags: Tag[]) => {
+export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
 	// Storing index as string[][] so every category will have it's exact position in the index array across all probes
 	const index = [
 		[ location.country ],
@@ -98,7 +103,7 @@ const getIndex = (location: ProbeLocation, tags: Tag[]) => {
 		[ location.region ],
 		getRegionAliases(location.region),
 		[ `as${location.asn}` ],
-		tags.filter(tag => tag.type === 'system').map(tag => tag.value),
+		tags.map(tag => tag.value),
 		[ location.normalizedNetwork ],
 		getNetworkAliases(location.normalizedNetwork),
 	].map(category => category.map(s => s.toLowerCase().replaceAll('-', ' ')));
