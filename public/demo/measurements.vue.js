@@ -176,7 +176,7 @@ const app = () => ({
 			const locations = this.query.locations.map(({ limit, fields }) => ({
 				fields: fields.map(field => ({
 					...field,
-					value: field.type === 'tags' ? field.value.split(',') : field.value,
+					value: field.type === 'tags' ? field.value.split(',').map(tag => tag.trim()) : field.value,
 				})),
 				...(limit ? { limit } : {}),
 			}));
