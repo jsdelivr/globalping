@@ -37,7 +37,15 @@ describe('Adoption code', () => {
 			})
 			.expect(200).expect((response) => {
 				expect(response.body).to.deep.equal({
-					result: 'Code was sent to the probe.',
+					uuid: '1-1-1-1-1',
+					version: '0.14.0',
+					status: 'initializing',
+					city: 'Dallas',
+					country: 'US',
+					latitude: 32.7831,
+					longitude: -96.8067,
+					asn: 20004,
+					network: 'The Constant Company LLC',
 				});
 			});
 

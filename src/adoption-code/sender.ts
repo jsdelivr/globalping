@@ -7,7 +7,7 @@ import type { AdoptionCodeRequest } from './types.js';
 export class CodeSender {
 	constructor (private readonly fetchWsSockets: typeof fetchSockets) {}
 
-	async sendCode (request: AdoptionCodeRequest): Promise<string> {
+	async sendCode (request: AdoptionCodeRequest): Promise<RemoteProbeSocket> {
 		const socket = await this.findSocketByIp(request.ip);
 
 		if (!socket) {
@@ -16,7 +16,7 @@ export class CodeSender {
 
 		this.sendToSocket(socket, request.code);
 
-		return 'Code was sent to the probe.';
+		return socket;
 	}
 
 	private async findSocketByIp (ip: string) {
