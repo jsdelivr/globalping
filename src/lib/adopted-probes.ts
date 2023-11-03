@@ -85,7 +85,7 @@ export class AdoptedProbes {
 	getUpdatedLocation (probe: Probe) {
 		const adoptedProbe = this.getByIp(probe.ipAddress);
 
-		if (!adoptedProbe || !adoptedProbe.isCustomCity) {
+		if (!adoptedProbe || !adoptedProbe.isCustomCity || adoptedProbe.country !== probe.location.country) {
 			return probe.location;
 		}
 
@@ -149,10 +149,11 @@ export class AdoptedProbes {
 			tags: row.tags ? JSON.parse(row.tags) as string[] : [],
 			isCustomCity: Boolean(row.isCustomCity),
 		}));
+
 		return adoptedProbes;
 	}
 
-	private async syncProbeIds (ip: string, uuid?: string) {
+	private async syncProbeIds (ip: string, uuid: string) {
 		const connectedProbe = this.connectedIpToProbe.get(ip);
 
 		if (connectedProbe && connectedProbe.uuid === uuid) { // ip and uuid are synced
@@ -164,7 +165,7 @@ export class AdoptedProbes {
 			return;
 		}
 
-		const connectedIp = uuid && this.connectedUuidToIp.get(uuid);
+		const connectedIp = this.connectedUuidToIp.get(uuid);
 
 		if (connectedIp) { // data was found by uuid, but not found by ip, therefore ip is outdated
 			await this.updateIp(connectedIp, uuid);
