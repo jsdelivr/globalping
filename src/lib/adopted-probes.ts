@@ -1,11 +1,11 @@
 import type { Knex } from 'knex';
 import Bluebird from 'bluebird';
 import _ from 'lodash';
-
 import { scopedLogger } from './logger.js';
 import { client } from './sql/client.js';
 import { fetchRawSockets } from './ws/server.js';
 import type { Probe } from '../probe/types.js';
+import { normalizePublicName } from './geoip/utils.js';
 
 const logger = scopedLogger('adopted-probes');
 
@@ -15,18 +15,18 @@ const USERS_TABLE = 'directus_users';
 export type AdoptedProbe = {
 	username: string;
 	ip: string;
-	uuid?: string;
+	uuid: string;
 	lastSyncDate: string;
-	tags?: string[];
+	tags: string[];
 	isCustomCity: boolean;
-	status?: string;
-	version?: string;
-	country?: string;
+	status: string;
+	version: string;
+	country: string;
 	city?: string;
 	latitude?: number;
 	longitude?: number;
-	asn?: number;
-	network?: string;
+	asn: number;
+	network: string;
 }
 
 type Row = Omit<AdoptedProbe, 'isCustomCity' | 'tags'> & {
@@ -78,8 +78,37 @@ export class AdoptedProbes {
 		private readonly fetchSockets: typeof fetchRawSockets,
 	) {}
 
-	getAdoptedIpToProbe () {
-		return this.adoptedIpToProbe;
+	getByIp (ip: string) {
+		return this.adoptedIpToProbe.get(ip);
+	}
+
+	getUpdatedLocation (probe: Probe) {
+		const adoptedProbe = this.getByIp(probe.ipAddress);
+
+		if (!adoptedProbe || !adoptedProbe.isCustomCity) {
+			return probe.location;
+		}
+
+		return {
+			...probe.location,
+			city: adoptedProbe.city!,
+			normalizedCity: normalizePublicName(adoptedProbe.city!),
+			latitude: adoptedProbe.latitude!,
+			longitude: adoptedProbe.longitude!,
+		};
+	}
+
+	getUpdatedTags (probe: Probe) {
+		const adoptedProbe = this.getByIp(probe.ipAddress);
+
+		if (!adoptedProbe || !adoptedProbe.tags.length) {
+			return probe.tags;
+		}
+
+		return [
+			...probe.tags,
+			...adoptedProbe.tags.map(tag => ({ type: 'user' as const, value: `u-${adoptedProbe.username}-${tag}` })),
+		];
 	}
 
 	scheduleSync () {

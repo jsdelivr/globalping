@@ -23,6 +23,7 @@ export const createServer = async (): Promise<Server> => {
 
 	await initWsServer();
 
+	await adoptedProbes.syncDashboardData();
 	adoptedProbes.scheduleSync();
 
 	reconnectProbes();

@@ -1,63 +1,52 @@
 import config from 'config';
 import { throttle, LRUOptions } from './helper/throttle.js';
 import { fetchRawSockets, RemoteProbeSocket } from './server.js';
-import { type AdoptedProbe, adoptedProbes } from '../adopted-probes.js';
+import { adoptedProbes } from '../adopted-probes.js';
 import { getIndex } from '../../probe/builder.js';
-import type { ProbeLocation } from '../../probe/types.js';
-import { normalizePublicName } from '../geoip/utils.js';
 
 const throttledFetchSockets = throttle<RemoteProbeSocket[]>(
 	async () => {
-		const connected = await fetchRawSockets();
-		const adopted = adoptedProbes.getAdoptedIpToProbe();
-		const withAdoptedData = addAdoptedProbesData(connected, adopted);
+		const sockets = await fetchRawSockets();
+		const withAdoptedData = addAdoptedProbesData(sockets);
 		return withAdoptedData;
 	},
 	config.get<number>('ws.fetchSocketsCacheTTL'),
 );
 
-const addAdoptedProbesData = (connectedProbes: RemoteProbeSocket[], AdoptedIpToProbe: Map<string, AdoptedProbe>) => {
-	return connectedProbes.map((connected) => {
-		const ip = connected.data.probe.ipAddress;
-		const adopted = AdoptedIpToProbe.get(ip);
+const addAdoptedProbesData = (sockets: RemoteProbeSocket[]) => {
+	return sockets.map((socket) => {
+		const adopted = adoptedProbes.getByIp(socket.data.probe.ipAddress);
 
 		if (!adopted) {
-			return connected;
+			return socket;
 		}
 
 		const isCustomCity = adopted.isCustomCity;
 		const hasUserTags = adopted.tags && adopted.tags.length;
 
 		if (!isCustomCity && !hasUserTags) {
-			return connected;
+			return socket;
 		}
 
-		const newLocation: ProbeLocation = isCustomCity ? {
-			...connected.data.probe.location,
-			city: adopted.city!,
-			normalizedCity: normalizePublicName(adopted.city!),
-			latitude: adopted.latitude!,
-			longitude: adopted.longitude!,
-		} : connected.data.probe.location;
+		const newLocation = adoptedProbes.getUpdatedLocation(socket.data.probe);
 
-		const newTags = adopted.tags && adopted.tags.length ? [
-			...connected.data.probe.tags,
-			...adopted.tags.map(tag => ({ type: 'user' as const, value: `u-${adopted.username}-${tag}` })),
-		] : connected.data.probe.tags;
+		const newTags = adoptedProbes.getUpdatedTags(socket.data.probe);
 
 		const result = {
-			...connected,
+			...socket,
 			data: {
-				...connected.data,
+				...socket.data,
 				probe: {
-					...connected.data.probe,
+					...socket.data.probe,
 					location: newLocation,
 					tags: newTags,
 					index: getIndex(newLocation, newTags),
-				} },
+				},
+			},
 		} as RemoteProbeSocket;
-		// We need to copy prototype to the 'result' object, to methods like 'disconnect' are available
-		Object.setPrototypeOf(result, Object.getPrototypeOf(connected) as object);
+
+		// We need to copy prototype to the 'result' object, so socket methods like 'disconnect' are available
+		Object.setPrototypeOf(result, Object.getPrototypeOf(socket) as object);
 
 		return result;
 	});
