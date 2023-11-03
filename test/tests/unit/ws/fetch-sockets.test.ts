@@ -6,14 +6,16 @@ import type { LRUOptions } from '../../../../src/lib/ws/helper/throttle.js';
 import type { RemoteProbeSocket } from '../../../../src/lib/ws/server.js';
 
 const fetchRawSockets = sinon.stub().resolves([]);
-const getAdoptedIpToProbe = sinon.stub();
+const getByIp = sinon.stub();
+const getUpdatedLocation = sinon.stub();
+const getUpdatedTags = sinon.stub();
 
 describe('fetchSockets', () => {
 	let fetchSockets: (options?: LRUOptions) => Promise<RemoteProbeSocket[]>;
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ws/server.ts', { fetchRawSockets });
-		await td.replaceEsm('../../../../src/lib/adopted-probes.ts', { adoptedProbes: { getAdoptedIpToProbe } });
+		await td.replaceEsm('../../../../src/lib/adopted-probes.ts', { adoptedProbes: { getByIp, getUpdatedLocation, getUpdatedTags } });
 	});
 
 	beforeEach(async () => {
@@ -74,7 +76,7 @@ describe('fetchSockets', () => {
 			},
 		}]);
 
-		getAdoptedIpToProbe.returns(new Map([ [ '1.1.1.1', {
+		getByIp.returns({
 			username: 'jimaek',
 			ip: '1.1.1.1',
 			uuid: 'c873cd81-5ede-4fff-9314-5905ad2bdb58',
@@ -89,7 +91,24 @@ describe('fetchSockets', () => {
 			city: 'Marseille',
 			latitude: 43.29695,
 			longitude: 5.38107,
-		}] ]));
+		});
+
+		getUpdatedLocation.returns({
+			continent: 'EU',
+			region: 'Western Europe',
+			normalizedRegion: 'western europe',
+			country: 'FR',
+			state: undefined,
+			city: 'Marseille',
+			normalizedCity: 'marseille',
+			asn: 12876,
+			latitude: 43.29695,
+			longitude: 5.38107,
+			network: 'SCALEWAY S.A.S.',
+			normalizedNetwork: 'scaleway s.a.s.',
+		});
+
+		getUpdatedTags.returns([{ type: 'system', value: 'datacenter-network' }, { type: 'user', value: 'u-jimaek-my-tag-1' }]);
 
 		const result = await fetchSockets();
 		expect(result).to.deep.equal([
