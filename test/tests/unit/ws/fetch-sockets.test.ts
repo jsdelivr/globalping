@@ -2,11 +2,14 @@ import * as sinon from 'sinon';
 import * as td from 'testdouble';
 import { expect } from 'chai';
 
+import type { LRUOptions } from '../../../../src/lib/ws/helper/throttle.js';
+import type { RemoteProbeSocket } from '../../../../src/lib/ws/server.js';
+
 const fetchRawSockets = sinon.stub().resolves([]);
 const getAdoptedIpToProbe = sinon.stub();
 
 describe('fetchSockets', () => {
-	let fetchSockets;
+	let fetchSockets: (options?: LRUOptions) => Promise<RemoteProbeSocket[]>;
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ws/server.ts', { fetchRawSockets });

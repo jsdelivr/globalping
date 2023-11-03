@@ -7,7 +7,7 @@ const fetchSockets = sinon.stub().resolves([{ disconnect }, {	disconnect }]);
 
 describe('reconnectProbes', () => {
 	let sandbox: sinon.SinonSandbox;
-	let reconnectProbes;
+	let reconnectProbes: () => void;
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ws/fetch-sockets.ts', {
