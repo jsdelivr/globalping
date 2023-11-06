@@ -21,11 +21,11 @@ describe('compression', () => {
 		});
 
 		it('should include compression headers', async () => {
-			nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).times(10).reply(200, geoIpMocks['ipmap'].default);
-			nock('https://api.ip2location.io').get(/.*/).times(10).reply(200, geoIpMocks['ip2location'].default);
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).times(10).reply(200, geoIpMocks['fastly'].default);
-			nock('https://ipinfo.io').get(/.*/).times(10).reply(200, geoIpMocks['ipinfo'].default);
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).times(10).reply(200, geoIpMocks['maxmind'].default);
+			nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).times(10).reply(200, geoIpMocks.ipmap.default);
+			nock('https://api.ip2location.io').get(/.*/).times(10).reply(200, geoIpMocks.ip2location.default);
+			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).times(10).reply(200, geoIpMocks.fastly.default);
+			nock('https://ipinfo.io').get(/.*/).times(10).reply(200, geoIpMocks.ipinfo.default);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).times(10).reply(200, geoIpMocks.maxmind.default);
 			probes = await Promise.all(Array.from({ length: 10 }).map(() => addFakeProbe()));
 
 			for (const probe of probes) {
