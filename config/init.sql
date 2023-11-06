@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS adopted_probes (
   ip VARCHAR(255) NOT NULL,
   uuid VARCHAR(255),
   lastSyncDate DATE,
+	isCustomCity TINYINT,
+	tags LONGTEXT,
   status VARCHAR(255),
   version VARCHAR(255),
   country VARCHAR(255),
@@ -26,5 +28,34 @@ CREATE TABLE IF NOT EXISTS directus_users (
   last_name VARCHAR(50)
 );
 
-INSERT IGNORE INTO adopted_probes (id, userId, ip) VALUES ('1', '6191378', '79.205.97.254');
-INSERT IGNORE INTO directus_users (id, last_name) VALUES ('9981f785-d216-4358-a4d0-b71e54986199', '6191378');
+INSERT IGNORE INTO adopted_probes (
+	id,
+	userId,
+	lastSyncDate,
+	ip,
+	uuid,
+	isCustomCity,
+	country,
+	city,
+	latitude,
+	longitude
+) VALUES (
+	'1',
+	'1834071',
+	CURRENT_DATE,
+	'51.158.22.211',
+	'',
+	1,
+	'FR',
+	'Marseille',
+	'43.29695',
+	'5.38107'
+);
+
+INSERT IGNORE INTO directus_users (
+	id,
+	last_name
+) VALUES (
+	'1834071',
+	'jimaek'
+);

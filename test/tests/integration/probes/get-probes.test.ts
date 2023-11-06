@@ -269,6 +269,8 @@ describe('Get Probes', () => {
 					expect(response.body[0]).to.deep.include({
 						version: '0.14.0',
 						host: '',
+						ipAddress: '1.2.3.4',
+						uuid: '1-1-1-1-1',
 						location: {
 							continent: 'SA',
 							region: 'South America',
