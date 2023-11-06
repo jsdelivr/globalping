@@ -42,5 +42,8 @@ Most IDEs have plugins integrating the used linter (eslint), including support f
 
 - `NEW_RELIC_LICENSE_KEY={value}` used in production to send APM metrics to new relic
 - `NEW_RELIC_APP_NAME={value}` used in production to send APM mentrics to new relic
-- `NEW_RELIC_ENABLED=false` useid in development to disable newrelic monitoring
+- `NEW_RELIC_ENABLED=false` used in development to disable newrelic monitoring
 - `FAKE_PROBE_IP={api|probe}` used in development to either use a random fake ip from the API or a fake ip from Probe
+- `ADMIN_KEY={value}` used to access additional information over the API
+- `SYSTEM_API_KEY={value}` used for integration with the dashboard
+- `DB_CONNECTION={value}` database connection string in the form of `mysql://user:password@host:port/db-name`
