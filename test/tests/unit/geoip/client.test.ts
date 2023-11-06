@@ -3,8 +3,10 @@ import mockFs from 'mock-fs';
 import { expect } from 'chai';
 import GeoipClient, { type LocationInfo } from '../../../../src/lib/geoip/client.js';
 import NullCache from '../../../../src/lib/cache/null-cache.js';
-import nockGeoIpProviders, { geoIpMocks } from '../../../utils/nock-geo-ip.js';
+import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import type { CacheInterface } from '../../../../src/lib/cache/cache-interface.js';
+import geoIpMocks from '../../../mocks/nock-geoip.json' assert { type: 'json' };
+
 
 const MOCK_IP = '131.255.7.26';
 

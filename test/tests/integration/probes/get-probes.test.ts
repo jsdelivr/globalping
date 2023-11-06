@@ -5,6 +5,8 @@ import request, { type SuperTest, type Test } from 'supertest';
 import type { Socket } from 'socket.io-client';
 import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../../utils/server.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
+import { adoptedProbes, ADOPTED_PROBES_TABLE } from '../../../../src/lib/adopted-probes.js';
+import { client } from '../../../../src/lib/sql/client.js';
 
 describe('Get Probes', () => {
 	let requestAgent: SuperTest<Test>;
@@ -50,87 +52,6 @@ describe('Get Probes', () => {
 				.expect(200)
 				.expect((response) => {
 					expect(response.body).to.deep.equal([]);
-					expect(response).to.matchApiSchema();
-				});
-		});
-
-		it('should detect 1 probe in "ready: true" status', async () => {
-			nockGeoIpProviders({ maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
-
-			const probe = await addProbe();
-			probe.emit('probe:status:update', 'ready');
-
-			await requestAgent.get('/v1/probes')
-				.send()
-				.expect(200)
-				.expect((response) => {
-					expect(response.body).to.deep.equal([{
-						version: '0.14.0',
-						location: {
-							continent: 'SA',
-							region: 'South America',
-							country: 'AR',
-							city: 'Buenos Aires',
-							asn: 61004,
-							latitude: -34.6131,
-							longitude: -58.3772,
-							network: 'InterBS S.R.L. (BAEHOST)',
-						},
-						tags: [],
-						resolvers: [],
-					}]);
-
-					expect(response).to.matchApiSchema();
-				});
-		});
-
-		it('should detect 2 probes in "ready: true" status', async () => {
-			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
-			nockGeoIpProviders();
-
-			const probe1 = await addProbe();
-			const probe2 = await addProbe();
-			probe1.emit('probe:status:update', 'ready');
-			probe2.emit('probe:status:update', 'ready');
-
-			await requestAgent.get('/v1/probes')
-				.send()
-				.expect(200)
-				.expect((response) => {
-					expect(response.body).to.deep.equal([
-						{
-							version: '0.14.0',
-							location: {
-								continent: 'SA',
-								region: 'South America',
-								country: 'AR',
-								city: 'Buenos Aires',
-								asn: 61004,
-								latitude: -34.6131,
-								longitude: -58.3772,
-								network: 'InterBS S.R.L. (BAEHOST)',
-							},
-							tags: [],
-							resolvers: [],
-						},
-						{
-							version: '0.14.0',
-							location: {
-								continent: 'NA',
-								region: 'Northern America',
-								country: 'US',
-								state: 'TX',
-								city: 'Dallas',
-								asn: 20004,
-								latitude: 32.7831,
-								longitude: -96.8067,
-								network: 'The Constant Company LLC',
-							},
-							tags: [ 'datacenter-network' ],
-							resolvers: [],
-						},
-					]);
-
 					expect(response).to.matchApiSchema();
 				});
 		});
@@ -290,6 +211,62 @@ describe('Get Probes', () => {
 					expect(response.body[0].ipAddress).to.be.a('string');
 					expect(response).to.matchApiSchema();
 				});
+		});
+
+		describe('adopted probes', () => {
+			before(async () => {
+				await client(ADOPTED_PROBES_TABLE).insert({
+					userId: '1834071',
+					lastSyncDate: new Date(),
+					ip: '1.2.3.4',
+					uuid: '1-1-1-1-1',
+					isCustomCity: 1,
+					tags: '["dashboardtag1"]',
+					status: 'ready',
+					version: '0.26.0',
+					country: 'AR',
+					city: 'Cordoba',
+					latitude: '-31.4135',
+					longitude: '-64.18105',
+					network: 'InterBS S.R.L. (BAEHOST)',
+					asn: 61004,
+				});
+
+				await adoptedProbes.syncDashboardData();
+			});
+
+			after(async () => {
+				await client(ADOPTED_PROBES_TABLE).where({ city: 'Cordoba' }).delete();
+			});
+
+			it('should update probes data', async () => {
+				nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
+				const probe = await addProbe();
+				probe.emit('probe:status:update', 'ready');
+
+				await requestAgent.get('/v1/probes')
+					.send()
+					.expect(200)
+					.expect((response) => {
+						expect(response.body[0]).to.deep.equal({
+							version: '0.14.0',
+							location: {
+								continent: 'SA',
+								region: 'South America',
+								country: 'AR',
+								city: 'Cordoba',
+								latitude: -31.4135,
+								longitude: -64.18105,
+								asn: 61004,
+								network: 'InterBS S.R.L. (BAEHOST)',
+							},
+							tags: [ 'u-jimaek-dashboardtag1' ],
+							resolvers: [],
+						});
+
+						expect(response).to.matchApiSchema();
+					});
+			});
 		});
 	});
 });

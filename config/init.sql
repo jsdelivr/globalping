@@ -10,17 +10,17 @@ CREATE TABLE IF NOT EXISTS adopted_probes (
   userId VARCHAR(255) NOT NULL,
   ip VARCHAR(255) NOT NULL,
   uuid VARCHAR(255),
-  lastSyncDate DATE,
-	isCustomCity TINYINT,
+  lastSyncDate DATE NOT NULL,
+	isCustomCity TINYINT DEFAULT 0,
 	tags LONGTEXT,
-  status VARCHAR(255),
-  version VARCHAR(255),
-  country VARCHAR(255),
+  status VARCHAR(255) NOT NULL,
+  version VARCHAR(255) NOT NULL,
+  country VARCHAR(255) NOT NULL,
   city VARCHAR(255),
-	latitude FLOAT,
-	longitude FLOAT,
-	asn INTEGER,
-  network VARCHAR(255)
+	latitude FLOAT(10, 5),
+	longitude FLOAT(10, 5),
+	asn INTEGER NOT NULL,
+  network VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS directus_users (
@@ -29,27 +29,35 @@ CREATE TABLE IF NOT EXISTS directus_users (
 );
 
 INSERT IGNORE INTO adopted_probes (
-	id,
 	userId,
 	lastSyncDate,
 	ip,
 	uuid,
 	isCustomCity,
+	tags,
+	status,
+	version,
 	country,
 	city,
 	latitude,
-	longitude
+	longitude,
+	network,
+	asn
 ) VALUES (
-	'1',
 	'1834071',
 	CURRENT_DATE,
 	'51.158.22.211',
-	'',
+	'c77f021d-23ff-440a-aa96-35e82c73e731',
 	1,
+	'["mytag1"]',
+	'ready',
+	'0.26.0',
 	'FR',
 	'Marseille',
 	'43.29695',
-	'5.38107'
+	'5.38107',
+	'SCALEWAY S.A.S.',
+	12876
 );
 
 INSERT IGNORE INTO directus_users (

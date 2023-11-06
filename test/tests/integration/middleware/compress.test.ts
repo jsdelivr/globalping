@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import nock from 'nock';
 import type { Socket } from 'socket.io-client';
 import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../../utils/server.js';
-import { geoIpMocks } from '../../../utils/nock-geo-ip.js';
+import geoIpMocks from '../../../mocks/nock-geoip.json' assert { type: 'json' };
 
 describe('compression', () => {
 	let requestAgent: any;

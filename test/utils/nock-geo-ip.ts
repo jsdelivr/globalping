@@ -1,7 +1,5 @@
-import * as fs from 'node:fs';
 import nock from 'nock';
-
-export const geoIpMocks = JSON.parse(fs.readFileSync('./test/mocks/nock-geoip.json').toString()) as Record<string, any>;
+import geoIpMocks from '../mocks/nock-geoip.json' assert { type: 'json' };
 
 type ProviderToMockname = {
   ipmap?: string;

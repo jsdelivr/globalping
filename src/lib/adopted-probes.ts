@@ -9,7 +9,7 @@ import { normalizePublicName } from './geoip/utils.js';
 
 const logger = scopedLogger('adopted-probes');
 
-const ADOPTED_PROBES_TABLE = 'adopted_probes';
+export const ADOPTED_PROBES_TABLE = 'adopted_probes';
 const USERS_TABLE = 'directus_users';
 
 export type AdoptedProbe = {
