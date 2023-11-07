@@ -13,14 +13,12 @@ const getUpdatedTags = sinon.stub();
 describe('fetchSockets', () => {
 	let fetchSockets: (options?: LRUOptions) => Promise<RemoteProbeSocket[]>;
 
-	before(async () => {
+	beforeEach(async () => {
+		sinon.resetHistory();
+		td.reset();
 		await td.replaceEsm('../../../../src/lib/ws/server.ts', { fetchRawSockets });
 		await td.replaceEsm('../../../../src/lib/adopted-probes.ts', { adoptedProbes: { getByIp, getUpdatedLocation, getUpdatedTags } });
-	});
-
-	beforeEach(async () => {
 		({ fetchSockets } = await import('../../../../src/lib/ws/fetch-sockets.js'));
-		sinon.resetHistory();
 	});
 
 	after(() => {
@@ -160,6 +158,17 @@ describe('fetchSockets', () => {
 				},
 			},
 		]);
+	});
+
+	it('should return same socket object if there is no adoption data or it is not edited', async () => {
+		const socket1 = { id: '1', data: { probe: { ipAddress: '' } } };
+		const socket2 = { id: '2', data: { probe: { ipAddress: '' } } };
+		fetchRawSockets.resolves([ socket1, socket2 ]);
+		getByIp.onCall(0).returns(undefined);
+		getByIp.onCall(1).returns({ isCustomCity: false, tags: [] });
+		const result = await fetchSockets();
+		expect(result[0]).to.equal(socket1);
+		expect(result[1]).to.equal(socket2);
 	});
 
 	it('multiple calls to fetchSockets should result in one socket.io fetchSockets call', async () => {
