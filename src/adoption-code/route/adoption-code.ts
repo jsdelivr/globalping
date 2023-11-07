@@ -16,6 +16,7 @@ const handle = async (ctx: Context): Promise<void> => {
 		version: socket.data.probe.version,
 		status: socket.data.probe.status,
 		city: socket.data.probe.location.city,
+		state: socket.data.probe.location.state,
 		country: socket.data.probe.location.country,
 		latitude: socket.data.probe.location.latitude,
 		longitude: socket.data.probe.location.longitude,

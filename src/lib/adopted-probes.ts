@@ -10,7 +10,7 @@ import { normalizePublicName } from './geoip/utils.js';
 const logger = scopedLogger('adopted-probes');
 
 export const ADOPTED_PROBES_TABLE = 'adopted_probes';
-const USERS_TABLE = 'directus_users';
+export const USERS_TABLE = 'directus_users';
 
 export type AdoptedProbe = {
 	username: string;
@@ -23,6 +23,7 @@ export type AdoptedProbe = {
 	version: string;
 	country: string;
 	city?: string;
+	state?: string;
 	latitude?: number;
 	longitude?: number;
 	asn: number;
@@ -63,6 +64,10 @@ export class AdoptedProbes {
 			connectedField: 'location.city',
 			shouldUpdateIfCustomCity: false,
 		},
+		state: {
+			connectedField: 'location.state',
+			shouldUpdateIfCustomCity: false,
+		},
 		latitude: {
 			connectedField: 'location.latitude',
 			shouldUpdateIfCustomCity: false,
@@ -95,6 +100,7 @@ export class AdoptedProbes {
 			normalizedCity: normalizePublicName(adoptedProbe.city!),
 			latitude: adoptedProbe.latitude!,
 			longitude: adoptedProbe.longitude!,
+			...(adoptedProbe.state && { state: adoptedProbe.state }),
 		};
 	}
 

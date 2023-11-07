@@ -111,6 +111,7 @@ describe('AdoptedProbes', () => {
 				network: 'adopted_probes.network',
 				country: 'adopted_probes.country',
 				city: 'adopted_probes.city',
+				state: 'adopted_probes.state',
 				latitude: 'adopted_probes.latitude',
 				longitude: 'adopted_probes.longitude',
 			},

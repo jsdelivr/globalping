@@ -13,12 +13,15 @@ import {
 
 import chaiOas from './plugins/oas/index.js';
 import { getRedisClient, initRedis } from '../src/lib/redis/client.js';
+import { client } from '../src/lib/sql/client.js';
+import { USERS_TABLE } from '../src/lib/adopted-probes.js';
 
 before(async () => {
 	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../public/v1/spec.yaml') }));
 	await initRedis();
 	const redis = getRedisClient();
 	await redis.flushDb();
+	await client(USERS_TABLE).insert({ id: '1834071', last_name: 'jimaek' }).onConflict().ignore();
 
 	nock.disableNetConnect();
 	nock.enableNetConnect('127.0.0.1');

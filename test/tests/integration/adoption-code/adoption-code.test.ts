@@ -41,6 +41,7 @@ describe('Adoption code', () => {
 					version: '0.14.0',
 					status: 'initializing',
 					city: 'Dallas',
+					state: 'TX',
 					country: 'US',
 					latitude: 32.7831,
 					longitude: -96.8067,

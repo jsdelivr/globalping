@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS adopted_probes (
   version VARCHAR(255) NOT NULL,
   country VARCHAR(255) NOT NULL,
   city VARCHAR(255),
+  state VARCHAR(255),
 	latitude FLOAT(10, 5),
 	longitude FLOAT(10, 5),
 	asn INTEGER NOT NULL,
