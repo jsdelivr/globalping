@@ -109,7 +109,7 @@
 		"utf-8-validate": "^6.0.3"
 	},
 	"scripts": {
-		"build": "tsc && npm run download:files",
+		"build": "tsc && npm run download:files && cp -r public dist",
 		"coverage": "npm run clean && NODE_ENV=test FAKE_PROBE_IP=api NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false c8 mocha",
 		"clean": "rimraf coverage",
 		"download:files": "tsx src/lib/download-files.ts",
