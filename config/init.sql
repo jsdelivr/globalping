@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS adopted_probes (
 
 CREATE TABLE IF NOT EXISTS directus_users (
   id CHAR(36),
-  last_name VARCHAR(50)
+  github VARCHAR(255)
 );
 
 INSERT IGNORE INTO adopted_probes (
@@ -63,7 +63,7 @@ INSERT IGNORE INTO adopted_probes (
 
 INSERT IGNORE INTO directus_users (
 	id,
-	last_name
+	github
 ) VALUES (
 	'1834071',
 	'jimaek'

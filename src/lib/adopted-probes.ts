@@ -141,7 +141,7 @@ export class AdoptedProbes {
 		const rows = await this.sql(ADOPTED_PROBES_TABLE)
 			.join(USERS_TABLE, `${ADOPTED_PROBES_TABLE}.userId`, '=', `${USERS_TABLE}.id`)
 			.select<Row[]>({
-				username: `${USERS_TABLE}.last_name`,
+				username: `${USERS_TABLE}.github`,
 				ip: `${ADOPTED_PROBES_TABLE}.ip`,
 				uuid: `${ADOPTED_PROBES_TABLE}.uuid`,
 				lastSyncDate: `${ADOPTED_PROBES_TABLE}.lastSyncDate`,

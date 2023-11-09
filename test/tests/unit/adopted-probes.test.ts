@@ -99,7 +99,7 @@ describe('AdoptedProbes', () => {
 
 		expect(selectStub.args[0]).deep.equal([
 			{
-				username: 'directus_users.last_name',
+				username: 'directus_users.github',
 				ip: 'adopted_probes.ip',
 				uuid: 'adopted_probes.uuid',
 				lastSyncDate: 'adopted_probes.lastSyncDate',
