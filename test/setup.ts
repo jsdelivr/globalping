@@ -21,7 +21,7 @@ before(async () => {
 	await initRedis();
 	const redis = getRedisClient();
 	await redis.flushDb();
-	await client(USERS_TABLE).insert({ id: '1834071', github: 'jimaek' }).onConflict().ignore();
+	await client(USERS_TABLE).insert({ id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959', github: 'jimaek' }).onConflict().ignore();
 
 	nock.disableNetConnect();
 	nock.enableNetConnect('127.0.0.1');

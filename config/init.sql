@@ -45,7 +45,7 @@ INSERT IGNORE INTO adopted_probes (
 	network,
 	asn
 ) VALUES (
-	'1834071',
+	'89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 	CURRENT_DATE,
 	'51.158.22.211',
 	'c77f021d-23ff-440a-aa96-35e82c73e731',
@@ -65,6 +65,6 @@ INSERT IGNORE INTO directus_users (
 	id,
 	github
 ) VALUES (
-	'1834071',
+	'89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 	'jimaek'
 );
