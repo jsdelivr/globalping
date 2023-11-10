@@ -83,7 +83,7 @@ describe('AdoptedProbes', () => {
 
 	it('syncDashboardData method should sync the data', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe }]);
+		selectStub.resolves([ defaultAdoptedProbe ]);
 
 		expect(sqlStub.callCount).to.equal(0);
 		expect(selectStub.callCount).to.equal(0);
@@ -120,7 +120,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should update uuid if it is wrong', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe }]);
+		selectStub.resolves([ defaultAdoptedProbe ]);
 		fetchSocketsStub.resolves([{ data: { probe: { ...defaultConnectedProbe, uuid: '2-2-2-2-2' } } }]);
 
 		await adoptedProbes.syncDashboardData();
@@ -133,7 +133,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should update ip if it is wrong', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe }]);
+		selectStub.resolves([ defaultAdoptedProbe ]);
 		fetchSocketsStub.resolves([{ data: { probe: { ...defaultConnectedProbe, ipAddress: '2.2.2.2' } } }]);
 
 		await adoptedProbes.syncDashboardData();
@@ -172,7 +172,7 @@ describe('AdoptedProbes', () => {
 	it('class should update lastSyncDate if probe is connected and lastSyncDate < 30 days away', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
 		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: '1969-12-31' }]);
-		fetchSocketsStub.resolves([{ data: { probe: { ...defaultConnectedProbe } } }]);
+		fetchSocketsStub.resolves([{ data: { probe: defaultConnectedProbe } }]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -186,7 +186,7 @@ describe('AdoptedProbes', () => {
 	it('class should update lastSyncDate if probe is connected and lastSyncDate > 30 days away', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
 		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: '1969-11-15' }]);
-		fetchSocketsStub.resolves([{ data: { probe: { ...defaultConnectedProbe } } }]);
+		fetchSocketsStub.resolves([{ data: { probe: defaultConnectedProbe } }]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -199,8 +199,8 @@ describe('AdoptedProbes', () => {
 
 	it('class should update lastSyncDate should not update anything if lastSyncDate is today', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe }]);
-		fetchSocketsStub.resolves([{ data: { probe: { ...defaultConnectedProbe } } }]);
+		selectStub.resolves([ defaultAdoptedProbe ]);
+		fetchSocketsStub.resolves([{ data: { probe: defaultConnectedProbe } }]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -211,7 +211,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should update probe meta info if it is outdated and "isCustomCity: false"', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe }]);
+		selectStub.resolves([ defaultAdoptedProbe ]);
 
 		fetchSocketsStub.resolves([{
 			data: {
@@ -295,8 +295,20 @@ describe('AdoptedProbes', () => {
 
 	it('class should not update probe meta info if it is actual', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe }]);
-		fetchSocketsStub.resolves([{ data: {	probe: { ...defaultConnectedProbe } } }]);
+		selectStub.resolves([ defaultAdoptedProbe ]);
+		fetchSocketsStub.resolves([{ data: {	probe: defaultConnectedProbe } }]);
+
+		await adoptedProbes.syncDashboardData();
+
+		expect(whereStub.callCount).to.equal(0);
+		expect(updateStub.callCount).to.equal(0);
+		expect(deleteStub.callCount).to.equal(0);
+	});
+
+	it('class should treat null and undefined values as equal', async () => {
+		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
+		selectStub.resolves([{ ...defaultAdoptedProbe, state: null }]);
+		fetchSocketsStub.resolves([{ data: {	probe: defaultConnectedProbe } }]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -307,7 +319,7 @@ describe('AdoptedProbes', () => {
 
 	it('getByIp method should return adopted probe data', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe }]);
+		selectStub.resolves([ defaultAdoptedProbe ]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -326,7 +338,7 @@ describe('AdoptedProbes', () => {
 		}]);
 
 		await adoptedProbes.syncDashboardData();
-		const updatedLocation = adoptedProbes.getUpdatedLocation({ ...defaultConnectedProbe });
+		const updatedLocation = adoptedProbes.getUpdatedLocation(defaultConnectedProbe);
 		expect(updatedLocation).to.deep.equal({
 			continent: 'EU',
 			region: 'Northern Europe',
@@ -375,10 +387,10 @@ describe('AdoptedProbes', () => {
 
 	it('getUpdatedTags method should return updated tags', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe }]);
+		selectStub.resolves([ defaultAdoptedProbe ]);
 
 		await adoptedProbes.syncDashboardData();
-		const updatedTags = adoptedProbes.getUpdatedTags({ ...defaultConnectedProbe });
+		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
 		expect(updatedTags).to.deep.equal([{ type: 'user', value: 'u-jimaek-dashboardtag' }]);
 	});
 

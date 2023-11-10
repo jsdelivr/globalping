@@ -196,6 +196,10 @@ export class AdoptedProbes {
 			const adoptedValue = _.get(adoptedProbe, adoptedField) as string | number;
 			const connectedValue = _.get(connectedProbe, connectedField) as string | number;
 
+			if (!adoptedValue && !connectedValue) {
+				return;
+			}
+
 			if (adoptedValue !== connectedValue) {
 				updateObject[adoptedField] = connectedValue;
 			}
