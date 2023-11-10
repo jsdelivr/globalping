@@ -91,29 +91,28 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		expect(sqlStub.callCount).to.equal(1);
-		expect(sqlStub.args[0]).deep.equal([ 'adopted_probes' ]);
+		expect(sqlStub.args[0]).deep.equal([{ probes: 'adopted_probes' }]);
 		expect(joinStub.callCount).to.equal(1);
-		expect(joinStub.args[0]).deep.equal([ 'directus_users', 'adopted_probes.userId', '=', 'directus_users.id' ]);
-
+		expect(joinStub.args[0]).deep.equal([{ users: 'directus_users' }, 'probes.userId', '=', 'users.id' ]);
 		expect(selectStub.callCount).to.equal(1);
 
 		expect(selectStub.args[0]).deep.equal([
 			{
-				username: 'directus_users.github',
-				ip: 'adopted_probes.ip',
-				uuid: 'adopted_probes.uuid',
-				lastSyncDate: 'adopted_probes.lastSyncDate',
-				isCustomCity: 'adopted_probes.isCustomCity',
-				tags: 'adopted_probes.tags',
-				status: 'adopted_probes.status',
-				version: 'adopted_probes.version',
-				asn: 'adopted_probes.asn',
-				network: 'adopted_probes.network',
-				country: 'adopted_probes.country',
-				city: 'adopted_probes.city',
-				state: 'adopted_probes.state',
-				latitude: 'adopted_probes.latitude',
-				longitude: 'adopted_probes.longitude',
+				username: 'users.github',
+				ip: 'probes.ip',
+				uuid: 'probes.uuid',
+				lastSyncDate: 'probes.lastSyncDate',
+				isCustomCity: 'probes.isCustomCity',
+				tags: 'probes.tags',
+				status: 'probes.status',
+				version: 'probes.version',
+				asn: 'probes.asn',
+				network: 'probes.network',
+				country: 'probes.country',
+				city: 'probes.city',
+				state: 'probes.state',
+				latitude: 'probes.latitude',
+				longitude: 'probes.longitude',
 			},
 		]);
 	});

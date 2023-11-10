@@ -80,7 +80,7 @@ export class AdoptedProbes {
 
 	constructor (
 		private readonly sql: Knex,
-		private readonly fetchSockets: typeof fetchRawSockets,
+		private readonly fetchSocketsRaw: typeof fetchRawSockets,
 	) {}
 
 	getByIp (ip: string) {
@@ -126,7 +126,7 @@ export class AdoptedProbes {
 	}
 
 	async syncDashboardData () {
-		const allSockets = await this.fetchSockets();
+		const allSockets = await this.fetchSocketsRaw();
 		this.connectedIpToProbe = new Map(allSockets.map(socket => [ socket.data.probe.ipAddress, socket.data.probe ]));
 		this.connectedUuidToIp = new Map(allSockets.map(socket => [ socket.data.probe.uuid, socket.data.probe.ipAddress ]));
 
@@ -138,16 +138,16 @@ export class AdoptedProbes {
 	}
 
 	private async fetchAdoptedProbes () {
-		const rows = await this.sql(ADOPTED_PROBES_TABLE)
-			.join(USERS_TABLE, `${ADOPTED_PROBES_TABLE}.userId`, '=', `${USERS_TABLE}.id`)
+		const rows = await this.sql({ probes: ADOPTED_PROBES_TABLE })
+			.join({ users: USERS_TABLE }, `probes.userId`, '=', `users.id`)
 			.select<Row[]>({
-				username: `${USERS_TABLE}.github`,
-				ip: `${ADOPTED_PROBES_TABLE}.ip`,
-				uuid: `${ADOPTED_PROBES_TABLE}.uuid`,
-				lastSyncDate: `${ADOPTED_PROBES_TABLE}.lastSyncDate`,
-				isCustomCity: `${ADOPTED_PROBES_TABLE}.isCustomCity`,
-				tags: `${ADOPTED_PROBES_TABLE}.tags`,
-				...Object.fromEntries(Object.keys(this.adoptedFieldToConnectedField).map(field => [ field, `${ADOPTED_PROBES_TABLE}.${field}` ])),
+				username: `users.github`,
+				ip: `probes.ip`,
+				uuid: `probes.uuid`,
+				lastSyncDate: `probes.lastSyncDate`,
+				isCustomCity: `probes.isCustomCity`,
+				tags: `probes.tags`,
+				...Object.fromEntries(Object.keys(this.adoptedFieldToConnectedField).map(field => [ field, `probes.${field}` ])),
 			});
 
 		const adoptedProbes: AdoptedProbe[] = rows.map(row => ({
@@ -196,7 +196,7 @@ export class AdoptedProbes {
 			const adoptedValue = _.get(adoptedProbe, adoptedField) as string | number;
 			const connectedValue = _.get(connectedProbe, connectedField) as string | number;
 
-			if (!adoptedValue && !connectedValue) {
+			if (!adoptedValue && !connectedValue) { // undefined and null values are treated equal and don't require sync
 				return;
 			}
 
