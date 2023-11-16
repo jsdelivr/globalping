@@ -146,7 +146,7 @@ describe('fetchSockets', () => {
 							[ 'western europe' ],
 							[ 'western europe', 'west europe' ],
 							[ 'as12876' ],
-							[ 'datacenter network', 'u jimaek my tag 1' ],
+							[ 'datacenter network' ],
 							[ 'scaleway s.a.s.' ],
 							[],
 						],

@@ -35,9 +35,6 @@ describe('Create measurement', () => {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{ country: 'US' }],
-					measurementOptions: {
-						packets: 4,
-					},
 					limit: 2,
 				})
 				.expect(422)
@@ -83,9 +80,6 @@ describe('Create measurement', () => {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{ country: 'US' }],
-					measurementOptions: {
-						packets: 4,
-					},
 					limit: 2,
 				})
 				.expect(422)
@@ -112,9 +106,6 @@ describe('Create measurement', () => {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{ country: 'US' }],
-					measurementOptions: {
-						packets: 4,
-					},
 					limit: 2,
 				})
 				.expect(422)
@@ -139,9 +130,6 @@ describe('Create measurement', () => {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{ country: 'US' }],
-					measurementOptions: {
-						packets: 4,
-					},
 					limit: 2,
 				})
 				.expect(202)
@@ -197,9 +185,6 @@ describe('Create measurement', () => {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{ country: 'US', limit: 2 }],
-					measurementOptions: {
-						packets: 4,
-					},
 				})
 				.expect(202)
 				.expect((response) => {
@@ -287,9 +272,6 @@ describe('Create measurement', () => {
 				.send({
 					type: 'ping',
 					target: 'example.com',
-					measurementOptions: {
-						packets: 4,
-					},
 					limit: 2,
 				})
 				.expect(202)
@@ -307,9 +289,6 @@ describe('Create measurement', () => {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{ magic: 'world', limit: 2 }],
-					measurementOptions: {
-						packets: 4,
-					},
 				})
 				.expect(202)
 				.expect((response) => {
@@ -326,9 +305,6 @@ describe('Create measurement', () => {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{ magic: 'Na' }],
-					measurementOptions: {
-						packets: 4,
-					},
 				})
 				.expect(202)
 				.expect((response) => {
@@ -345,9 +321,6 @@ describe('Create measurement', () => {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{ magic: 'GCP-us-West4', limit: 2 }],
-					measurementOptions: {
-						packets: 4,
-					},
 				})
 				.expect(202)
 				.expect((response) => {
@@ -364,9 +337,6 @@ describe('Create measurement', () => {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{ magic: 'non-existing-tag', limit: 2 }],
-					measurementOptions: {
-						packets: 4,
-					},
 				})
 				.expect(422)
 				.expect((response) => {
@@ -390,9 +360,6 @@ describe('Create measurement', () => {
 					type: 'ping',
 					target: 'example.com',
 					locations: [{ tags: [ 'gcp-us-west4' ], limit: 2 }],
-					measurementOptions: {
-						packets: 4,
-					},
 				})
 				.expect(202)
 				.expect((response) => {
@@ -411,7 +378,7 @@ describe('Create measurement', () => {
 					ip: '1.2.3.4',
 					uuid: '1-1-1-1-1',
 					isCustomCity: 1,
-					tags: '["dashboard_tag"]',
+					tags: '["dashboard-tag"]',
 					status: 'ready',
 					version: '0.26.0',
 					country: 'US',
@@ -435,9 +402,6 @@ describe('Create measurement', () => {
 						type: 'ping',
 						target: 'example.com',
 						locations: [{ city: 'Oklahoma City', limit: 2 }],
-						measurementOptions: {
-							packets: 4,
-						},
 					})
 					.expect(202)
 					.expect((response) => {
@@ -448,15 +412,12 @@ describe('Create measurement', () => {
 					});
 			});
 
-			it('should create measurement with adopted "tags: ["u-jimaek-dashboard_tag"]" location', async () => {
+			it('should create measurement with adopted "tags: ["u-jimaek-dashboard-tag"]" location', async () => {
 				await requestAgent.post('/v1/measurements')
 					.send({
 						type: 'ping',
 						target: 'example.com',
-						locations: [{ tags: [ 'u-jimaek-dashboard_tag' ], limit: 2 }],
-						measurementOptions: {
-							packets: 4,
-						},
+						locations: [{ tags: [ 'u-jimaek-dashboard-tag' ], limit: 2 }],
 					})
 					.expect(202)
 					.expect((response) => {
@@ -464,6 +425,18 @@ describe('Create measurement', () => {
 						expect(response.header.location).to.exist;
 						expect(response.body.probesCount).to.equal(1);
 						expect(response).to.matchApiSchema();
+					});
+			});
+
+			it('should not use create measurement with adopted tag in magic field "magic: ["u-jimaek-dashboard-tag"]" location', async () => {
+				await requestAgent.post('/v1/measurements')
+					.send({
+						type: 'ping',
+						target: 'example.com',
+						locations: [{ magic: 'u-jimaek-dashboard-tag', limit: 2 }],
+					})
+					.expect(422).expect((response) => {
+						expect(response.body.error.message).to.equal('No suitable probes found.');
 					});
 			});
 		});

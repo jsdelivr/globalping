@@ -103,7 +103,7 @@ export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
 		[ location.region ],
 		getRegionAliases(location.region),
 		[ `as${location.asn}` ],
-		tags.map(tag => tag.value),
+		tags.filter(tag => tag.type === 'system').map(tag => tag.value),
 		[ location.normalizedNetwork ],
 		getNetworkAliases(location.normalizedNetwork),
 	].map(category => category.map(s => s.toLowerCase().replaceAll('-', ' ')));
