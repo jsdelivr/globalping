@@ -16,12 +16,13 @@ export type AdoptedProbe = {
 	username: string;
 	ip: string;
 	uuid: string;
-	lastSyncDate: string;
+	lastSyncDate: Date;
 	tags: string[];
 	isCustomCity: boolean;
 	status: string;
 	version: string;
 	country: string;
+	countryOfEditedCity?: string;
 	city?: string;
 	state?: string;
 	latitude?: number;
@@ -58,7 +59,7 @@ export class AdoptedProbes {
 		},
 		country: {
 			connectedField: 'location.country',
-			shouldUpdateIfCustomCity: false,
+			shouldUpdateIfCustomCity: true,
 		},
 		city: {
 			connectedField: 'location.city',
@@ -90,7 +91,7 @@ export class AdoptedProbes {
 	getUpdatedLocation (probe: Probe) {
 		const adoptedProbe = this.getByIp(probe.ipAddress);
 
-		if (!adoptedProbe || !adoptedProbe.isCustomCity || adoptedProbe.country !== probe.location.country) {
+		if (!adoptedProbe || !adoptedProbe.isCustomCity || adoptedProbe.countryOfEditedCity !== probe.location.country) {
 			return probe.location;
 		}
 
@@ -139,14 +140,15 @@ export class AdoptedProbes {
 
 	private async fetchAdoptedProbes () {
 		const rows = await this.sql({ probes: ADOPTED_PROBES_TABLE })
-			.join({ users: USERS_TABLE }, `probes.userId`, '=', `users.id`)
+			.join({ users: USERS_TABLE }, 'probes.userId', '=', 'users.id')
 			.select<Row[]>({
-				username: `users.github`,
-				ip: `probes.ip`,
-				uuid: `probes.uuid`,
-				lastSyncDate: `probes.lastSyncDate`,
-				isCustomCity: `probes.isCustomCity`,
-				tags: `probes.tags`,
+				username: 'users.github',
+				ip: 'probes.ip',
+				uuid: 'probes.uuid',
+				lastSyncDate: 'probes.lastSyncDate',
+				isCustomCity: 'probes.isCustomCity',
+				countryOfEditedCity: 'probes.countryOfEditedCity',
+				tags: 'probes.tags',
 				...Object.fromEntries(Object.keys(this.adoptedFieldToConnectedField).map(field => [ field, `probes.${field}` ])),
 			});
 
@@ -206,11 +208,11 @@ export class AdoptedProbes {
 		});
 
 		if (!_.isEmpty(updateObject)) {
-			await this.updateProbeData(adoptedProbe.ip, updateObject);
+			await this.updateProbeData(adoptedProbe, updateObject);
 		}
 	}
 
-	private async updateSyncDate (ip: string, lastSyncDate: string) {
+	private async updateSyncDate (ip: string, lastSyncDate: Date) {
 		if (this.isToday(lastSyncDate)) { // date is already synced
 			return;
 		}
@@ -228,36 +230,59 @@ export class AdoptedProbes {
 	}
 
 	private async updateUuid (ip: string, uuid: string) {
+		const adoptedProbe = this.adoptedIpToProbe.get(ip);
+
+		if (adoptedProbe) { adoptedProbe.uuid = uuid; }
+
 		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update({ uuid });
 	}
 
 	private async updateIp (ip: string, uuid: string) {
+		const entry = [ ...this.adoptedIpToProbe.entries() ].find(([ , adoptedProbe ]) => adoptedProbe.uuid === uuid);
+
+		if (entry) {
+			const [ prevIp, adoptedProbe ] = entry;
+			adoptedProbe.ip = ip;
+			this.adoptedIpToProbe.delete(prevIp);
+			this.adoptedIpToProbe.set(ip, adoptedProbe);
+		}
+
 		await this.sql(ADOPTED_PROBES_TABLE).where({ uuid }).update({ ip });
 	}
 
-	private async updateProbeData (ip: string, updateObject: Record<string, string | number>) {
-		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update(updateObject);
+	private async updateProbeData (adoptedProbe: AdoptedProbe, updateObject: Record<string, string | number>) {
+		for (const [ field, value ] of Object.entries(updateObject)) {
+			(adoptedProbe as unknown as Record<string, string | number>)[field] = value;
+		}
+
+		await this.sql(ADOPTED_PROBES_TABLE).where({ ip: adoptedProbe.ip }).update(updateObject);
 	}
 
 	private async updateLastSyncDate (ip: string) {
-		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update({ lastSyncDate: new Date() });
+		const date = new Date();
+		const adoptedProbe = this.adoptedIpToProbe.get(ip);
+
+		if (adoptedProbe) {
+			adoptedProbe.lastSyncDate = date;
+		}
+
+		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update({ lastSyncDate: date });
 	}
 
 	private async deleteAdoptedProbe (ip: string) {
 		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).delete();
 	}
 
-	private isToday (dateString: string) {
+	private isToday (date: Date) {
 		const currentDate = new Date();
-		const currentDateString = currentDate.toISOString().split('T')[0];
-		return dateString === currentDateString;
+		currentDate.setHours(0, 0, 0, 0);
+		return date.getTime() === currentDate.getTime();
 	}
 
-	private isMoreThan30DaysAgo (dateString: string) {
-		const inputDate = new Date(dateString);
+	private isMoreThan30DaysAgo (date: Date) {
 		const currentDate = new Date();
 
-		const timeDifference = currentDate.getTime() - inputDate.getTime();
+		const timeDifference = currentDate.getTime() - date.getTime();
 		const daysDifference = timeDifference / (24 * 3600 * 1000);
 
 		return daysDifference > 30;
