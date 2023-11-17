@@ -5,7 +5,7 @@ import { scopedLogger } from './logger.js';
 import { client } from './sql/client.js';
 import { fetchRawSockets } from './ws/server.js';
 import type { Probe } from '../probe/types.js';
-import { normalizePublicName } from './geoip/utils.js';
+import { normalizeFromPublicName } from './geoip/utils.js';
 
 const logger = scopedLogger('adopted-probes');
 
@@ -97,7 +97,7 @@ export class AdoptedProbes {
 		return {
 			...probe.location,
 			city: adoptedProbe.city!,
-			normalizedCity: normalizePublicName(adoptedProbe.city!),
+			normalizedCity: normalizeFromPublicName(adoptedProbe.city!),
 			latitude: adoptedProbe.latitude!,
 			longitude: adoptedProbe.longitude!,
 			...(adoptedProbe.state && { state: adoptedProbe.state }),
