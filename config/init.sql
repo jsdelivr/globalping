@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS adopted_probes (
 	longitude FLOAT(10, 5),
 	asn INTEGER NOT NULL,
   network VARCHAR(255) NOT NULL,
-  countryOfEditedCity VARCHAR(255)
+  countryOfCustomCity VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS directus_users (
@@ -45,7 +45,7 @@ INSERT IGNORE INTO adopted_probes (
 	longitude,
 	network,
 	asn,
-	countryOfEditedCity
+	countryOfCustomCity
 ) VALUES (
 	'89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 	CURRENT_DATE,

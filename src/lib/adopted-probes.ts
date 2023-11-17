@@ -11,8 +11,10 @@ const logger = scopedLogger('adopted-probes');
 
 export const ADOPTED_PROBES_TABLE = 'adopted_probes';
 export const USERS_TABLE = 'directus_users';
+export const NOTIFICATIONS_TABLE = 'directus_notifications';
 
 export type AdoptedProbe = {
+	userId: string;
 	username: string;
 	ip: string;
 	uuid: string;
@@ -22,7 +24,7 @@ export type AdoptedProbe = {
 	status: string;
 	version: string;
 	country: string;
-	countryOfEditedCity?: string;
+	countryOfCustomCity?: string;
 	city?: string;
 	state?: string;
 	latitude?: number;
@@ -91,7 +93,7 @@ export class AdoptedProbes {
 	getUpdatedLocation (probe: Probe) {
 		const adoptedProbe = this.getByIp(probe.ipAddress);
 
-		if (!adoptedProbe || !adoptedProbe.isCustomCity || adoptedProbe.countryOfEditedCity !== probe.location.country) {
+		if (!adoptedProbe || !adoptedProbe.isCustomCity || adoptedProbe.countryOfCustomCity !== probe.location.country) {
 			return probe.location;
 		}
 
@@ -123,7 +125,7 @@ export class AdoptedProbes {
 			this.syncDashboardData()
 				.finally(() => this.scheduleSync())
 				.catch(error => logger.error(error));
-		}, 60_000);
+		}, 10_000);
 	}
 
 	async syncDashboardData () {
@@ -143,11 +145,12 @@ export class AdoptedProbes {
 			.join({ users: USERS_TABLE }, 'probes.userId', '=', 'users.id')
 			.select<Row[]>({
 				username: 'users.github',
+				userId: 'probes.userId',
 				ip: 'probes.ip',
 				uuid: 'probes.uuid',
 				lastSyncDate: 'probes.lastSyncDate',
 				isCustomCity: 'probes.isCustomCity',
-				countryOfEditedCity: 'probes.countryOfEditedCity',
+				countryOfCustomCity: 'probes.countryOfCustomCity',
 				tags: 'probes.tags',
 				...Object.fromEntries(Object.keys(this.adoptedFieldToConnectedField).map(field => [ field, `probes.${field}` ])),
 			});
@@ -206,6 +209,11 @@ export class AdoptedProbes {
 				updateObject[adoptedField] = connectedValue;
 			}
 		});
+
+		// if country of probe changes, but there is a custom city in prev country, send notification to user
+		if (updateObject['country'] && adoptedProbe.country === adoptedProbe.countryOfCustomCity) {
+			await this.sendNotification(adoptedProbe, connectedProbe);
+		}
 
 		if (!_.isEmpty(updateObject)) {
 			await this.updateProbeData(adoptedProbe, updateObject);
@@ -271,6 +279,14 @@ export class AdoptedProbes {
 
 	private async deleteAdoptedProbe (ip: string) {
 		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).delete();
+	}
+
+	private async sendNotification (adoptedProbe: AdoptedProbe, connectedProbe: Probe) {
+		await this.sql(NOTIFICATIONS_TABLE).insert({
+			recipient: adoptedProbe.userId,
+			subject: 'Adopted probe country change',
+			message: `Globalping API detected that your adopted probe with ip: ${adoptedProbe.ip} is located at "${connectedProbe.location.country}". So its country value changed from "${adoptedProbe.country}" to "${connectedProbe.location.country}", and previous custom city value "${adoptedProbe.city}" is not applied right now.\n\nIf this change is not right please report in [that issue](https://github.com/jsdelivr/globalping/issues/268).`,
+		});
 	}
 
 	private isToday (date: Date) {
