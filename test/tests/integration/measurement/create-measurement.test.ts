@@ -173,7 +173,43 @@ describe('Create measurement', () => {
 				});
 		});
 
-		it('should create measurement with location limit', async () => {
+		it('should create measurement with location limit (continent)', async () => {
+			probe.emit('probe:status:update', 'ready');
+
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{ continent: 'NA', limit: 2 }],
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+				});
+		});
+
+		it('should create measurement with location limit (region)', async () => {
+			probe.emit('probe:status:update', 'ready');
+
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{ region: 'Northern America', limit: 2 }],
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+				});
+		});
+
+		it('should create measurement with location limit (country)', async () => {
 			probe.emit('probe:status:update', 'ready');
 
 			await requestAgent.post('/v1/measurements')
@@ -184,6 +220,78 @@ describe('Create measurement', () => {
 					measurementOptions: {
 						packets: 4,
 					},
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+				});
+		});
+
+		it('should create measurement with location limit (state)', async () => {
+			probe.emit('probe:status:update', 'ready');
+
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{ state: 'TX', limit: 2 }],
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+				});
+		});
+
+		it('should create measurement with location limit (city)', async () => {
+			probe.emit('probe:status:update', 'ready');
+
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{ city: 'Dallas', limit: 2 }],
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+				});
+		});
+
+		it('should create measurement with location limit (asn)', async () => {
+			probe.emit('probe:status:update', 'ready');
+
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{ asn: 20004, limit: 2 }],
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+				});
+		});
+
+		it('should create measurement with location limit (network)', async () => {
+			probe.emit('probe:status:update', 'ready');
+
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{ network: 'The Constant Company LLC', limit: 2 }],
 				})
 				.expect(202)
 				.expect((response) => {

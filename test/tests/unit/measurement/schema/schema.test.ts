@@ -230,6 +230,34 @@ describe('command schema', async () => {
 
 				expect(valid.value![0].magic).to.equal('petah tiqva');
 			});
+
+			it('should correct region value (non-lowercase)', () => {
+				const input = [
+					{
+						region: 'Northern America',
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.value![0].region).to.not.equal(input[0]!.region);
+				expect(valid.value![0].region).to.equal('northern america');
+			});
+
+			it('should fail (wrong region)', () => {
+				const input = [
+					{
+						region: 'Wrong Region',
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.error).to.exist;
+				expect(valid.error!.message).to.equal('"[0].region" must be one of [Northern Africa, Eastern Africa, Middle Africa, Southern Africa, Western Africa, Caribbean, Central America, South America, Northern America, Central Asia, Eastern Asia, South-eastern Asia, Southern Asia, Western Asia, Eastern Europe, Northern Europe, Southern Europe, Western Europe, Australia and New Zealand, Melanesia, Micronesia, Polynesia]');
+			});
 		});
 
 		describe('magic', () => {
@@ -1128,7 +1156,7 @@ describe('command schema', async () => {
 		});
 	});
 
-	describe('http schema', () => {
+	describe('http', () => {
 		it('should fail (unsupported resolver format)', () => {
 			const input = {
 				type: 'http',
