@@ -231,10 +231,10 @@ describe('command schema', async () => {
 				expect(valid.value![0].magic).to.equal('petah tiqva');
 			});
 
-			it('should correct region value (non-lowercase)', () => {
+			it('should correct region value (lowercase)', () => {
 				const input = [
 					{
-						region: 'Northern America',
+						region: 'northern america',
 						limit: 1,
 					},
 				];
@@ -242,7 +242,7 @@ describe('command schema', async () => {
 				const valid = locationSchema.validate(input);
 
 				expect(valid.value![0].region).to.not.equal(input[0]!.region);
-				expect(valid.value![0].region).to.equal('northern america');
+				expect(valid.value![0].region).to.equal('Northern America');
 			});
 
 			it('should fail (wrong region)', () => {

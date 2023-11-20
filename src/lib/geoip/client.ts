@@ -14,15 +14,10 @@ import { fastlyLookup } from './providers/fastly.js';
 import { maxmindLookup } from './providers/maxmind.js';
 import { ipmapLookup } from './providers/ipmap.js';
 import { type Ip2LocationBundledResponse, ip2LocationLookup } from './providers/ip2location.js';
-import { normalizeRegionName } from './utils.js';
 
-export type LocationInfo = Omit<ProbeLocation, 'region' | 'normalizedRegion'>;
+export type LocationInfo = Omit<ProbeLocation, 'region'>;
 type Provider = 'ipmap' | 'ip2location' | 'ipinfo' | 'maxmind' | 'fastly';
 export type LocationInfoWithProvider = LocationInfo & {provider: Provider};
-export type RegionInfo = {
-	region: string;
-	normalizedRegion: string;
-};
 export type NetworkInfo = {
 	network: string;
 	normalizedNetwork: string;
@@ -79,15 +74,14 @@ export default class GeoipClient {
 			throw new ProbeError(`unresolvable geoip: ${addr}`);
 		}
 
-		const region = this.matchRegion(match);
+		const region = getRegionByCountry(match.country);
 
 		return {
 			continent: match.continent,
 			country: match.country,
 			state: match.state,
 			city: match.city,
-			region: region.region,
-			normalizedRegion: region.normalizedRegion,
+			region,
 			normalizedCity: match.normalizedCity,
 			asn: Number(networkMatch.asn),
 			latitude: Number(match.latitude),
@@ -95,15 +89,6 @@ export default class GeoipClient {
 			network: networkMatch.network,
 			normalizedNetwork: networkMatch.normalizedNetwork,
 			isHosting,
-		};
-	}
-
-	private matchRegion (best: LocationInfo): RegionInfo {
-		const region = getRegionByCountry(best.country);
-
-		return {
-			region,
-			normalizedRegion: normalizeRegionName(region),
 		};
 	}
 

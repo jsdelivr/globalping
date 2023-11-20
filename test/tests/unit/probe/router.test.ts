@@ -16,7 +16,6 @@ const defaultLocation = {
 	state: undefined,
 	city: '',
 	region: '',
-	normalizedRegion: '',
 	normalizedCity: '',
 	asn: 43_939,
 	latitude: 50.0787,
@@ -421,14 +420,14 @@ describe('probe router', () => {
 
 		it('should not find probe by region alias if it is used not in magic field', async () => {
 			const sockets: DeepPartial<RemoteProbeSocket[]> = [
-				await buildSocket('socket-1', { normalizedRegion: 'northern africa', region: 'Northern Africa' }),
+				await buildSocket('socket-1', { region: 'Northern Africa' }),
 			];
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([{ region: 'northern africa' }], 100);
+			const probes = await router.findMatchingProbes([{ region: 'Northern Africa' }], 100);
 			expect(probes.length).to.equal(1);
-			const probes2 = await router.findMatchingProbes([{ region: 'north africa' }], 100);
+			const probes2 = await router.findMatchingProbes([{ region: 'North Africa' }], 100);
 			expect(probes2.length).to.equal(0);
 		});
 	});
@@ -460,7 +459,7 @@ describe('probe router', () => {
 
 		it('should return match (region alias)', async () => {
 			const sockets: DeepPartial<RemoteProbeSocket[]> = [
-				await buildSocket('socket-1', { normalizedRegion: 'northern africa', region: 'Northern Africa' }),
+				await buildSocket('socket-1', { region: 'Northern Africa' }),
 			];
 
 			fetchSocketsMock.resolves(sockets as never);
@@ -473,7 +472,7 @@ describe('probe router', () => {
 
 		it('should not return match (non-existing region alias)', async () => {
 			const sockets: DeepPartial<RemoteProbeSocket[]> = [
-				await buildSocket('socket-1', { normalizedRegion: 'southern africa', region: 'Southern Africa' }),
+				await buildSocket('socket-1', { region: 'Southern Africa' }),
 			];
 
 			fetchSocketsMock.resolves(sockets as never);

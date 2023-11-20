@@ -7,7 +7,6 @@ export const fakeLookup = (): ProbeLocation => {
 		state: undefined,
 		city: 'Buenos Aires',
 		region: 'South America',
-		normalizedRegion: 'south america',
 		normalizedCity: 'buenos aires',
 		asn: 61003,
 		latitude: -34.6131,

@@ -51,7 +51,6 @@ describe('Create measurement request', () => {
 		expect(locationHandlerStub.firstCall.args).to.deep.equal([{
 			continent: 'NA',
 			region: 'Northern America',
-			normalizedRegion: 'northern america',
 			country: 'US',
 			state: 'TX',
 			city: 'Dallas',
