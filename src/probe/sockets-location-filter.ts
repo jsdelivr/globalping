@@ -11,7 +11,6 @@ import type { ProbeLocation } from './types.js';
  *
  * */
 const locationKeyMap = [
-	[ 'region', 'normalizedRegion' ],
 	[ 'network', 'normalizedNetwork' ],
 	[ 'city', 'normalizedCity' ],
 ];

@@ -69,8 +69,8 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		location.state ? [ getStateNameByIso(location.state) ] : [],
 		[ location.continent ],
 		getContinentAliases(location.continent),
-		[ location.normalizedRegion ],
-		getRegionAliases(location.normalizedRegion),
+		[ location.region ],
+		getRegionAliases(location.region),
 		[ `as${location.asn}` ],
 		tags.filter(tag => tag.type === 'system').map(tag => tag.value),
 		[ location.normalizedNetwork ],
@@ -103,7 +103,6 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 const getLocation = (ipInfo: ProbeLocation): ProbeLocation => ({
 	continent: ipInfo.continent,
 	region: ipInfo.region,
-	normalizedRegion: ipInfo.normalizedRegion,
 	country: ipInfo.country,
 	state: ipInfo.state,
 	city: ipInfo.city,
