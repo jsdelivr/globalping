@@ -382,6 +382,7 @@ describe('Create measurement', () => {
 					status: 'ready',
 					version: '0.26.0',
 					country: 'US',
+					countryOfCustomCity: 'US',
 					city: 'Oklahoma City',
 					latitude: '35.46756',
 					longitude: '-97.51643',

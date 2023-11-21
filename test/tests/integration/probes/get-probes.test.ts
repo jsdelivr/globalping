@@ -225,6 +225,7 @@ describe('Get Probes', () => {
 					status: 'ready',
 					version: '0.26.0',
 					country: 'AR',
+					countryOfCustomCity: 'AR',
 					city: 'Cordoba',
 					latitude: '-31.4135',
 					longitude: '-64.18105',

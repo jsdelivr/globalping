@@ -5,15 +5,17 @@ import { AdoptedProbes } from '../../../src/lib/adopted-probes.js';
 import type { Probe } from '../../../src/probe/types.js';
 
 const defaultAdoptedProbe = {
+	userId: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
 	username: 'jimaek',
 	ip: '1.1.1.1',
 	uuid: '1-1-1-1-1',
-	lastSyncDate: '1970-01-01',
+	lastSyncDate: new Date('1970-01-01'),
 	tags: '["dashboardtag"]',
 	isCustomCity: 0,
 	status: 'ready',
 	version: '0.26.0',
 	country: 'IE',
+	countryOfCustomCity: '',
 	city: 'Dublin',
 	latitude: 53.3331,
 	longitude: -6.2489,
@@ -57,6 +59,7 @@ const defaultConnectedProbe: Probe = {
 const selectStub = sinon.stub();
 const updateStub = sinon.stub();
 const deleteStub = sinon.stub();
+const insertStub = sinon.stub();
 const whereStub = sinon.stub().returns({
 	update: updateStub,
 	delete: deleteStub,
@@ -67,6 +70,7 @@ const joinStub = sinon.stub().returns({
 const sqlStub = sinon.stub().returns({
 	join: joinStub,
 	where: whereStub,
+	insert: insertStub,
 });
 const fetchSocketsStub = sinon.stub().resolves([]);
 let sandbox: sinon.SinonSandbox;
@@ -75,6 +79,8 @@ describe('AdoptedProbes', () => {
 	beforeEach(() => {
 		sandbox = sinon.createSandbox({ useFakeTimers: true });
 		sinon.resetHistory();
+		selectStub.resolves([ defaultAdoptedProbe ]);
+		fetchSocketsStub.resolves([{ data: {	probe: defaultConnectedProbe } }]);
 	});
 
 	afterEach(() => {
@@ -83,7 +89,6 @@ describe('AdoptedProbes', () => {
 
 	it('syncDashboardData method should sync the data', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([ defaultAdoptedProbe ]);
 
 		expect(sqlStub.callCount).to.equal(0);
 		expect(selectStub.callCount).to.equal(0);
@@ -98,6 +103,7 @@ describe('AdoptedProbes', () => {
 
 		expect(selectStub.args[0]).deep.equal([
 			{
+				userId: 'probes.userId',
 				username: 'users.github',
 				ip: 'probes.ip',
 				uuid: 'probes.uuid',
@@ -109,6 +115,7 @@ describe('AdoptedProbes', () => {
 				asn: 'probes.asn',
 				network: 'probes.network',
 				country: 'probes.country',
+				countryOfCustomCity: 'probes.countryOfCustomCity',
 				city: 'probes.city',
 				state: 'probes.state',
 				latitude: 'probes.latitude',
@@ -119,7 +126,6 @@ describe('AdoptedProbes', () => {
 
 	it('class should update uuid if it is wrong', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([ defaultAdoptedProbe ]);
 		fetchSocketsStub.resolves([{ data: { probe: { ...defaultConnectedProbe, uuid: '2-2-2-2-2' } } }]);
 
 		await adoptedProbes.syncDashboardData();
@@ -132,7 +138,6 @@ describe('AdoptedProbes', () => {
 
 	it('class should update ip if it is wrong', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([ defaultAdoptedProbe ]);
 		fetchSocketsStub.resolves([{ data: { probe: { ...defaultConnectedProbe, ipAddress: '2.2.2.2' } } }]);
 
 		await adoptedProbes.syncDashboardData();
@@ -145,7 +150,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should do nothing if adopted probe was not found and lastSyncDate < 30 days away', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: '1969-12-15' }]);
+		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: new Date('1969-12-15') }]);
 		fetchSocketsStub.resolves([]);
 
 		await adoptedProbes.syncDashboardData();
@@ -157,7 +162,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should delete adoption if adopted probe was not found and lastSyncDate > 30 days away', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: '1969-11-15' }]);
+		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: new Date('1969-11-15') }]);
 		fetchSocketsStub.resolves([]);
 
 		await adoptedProbes.syncDashboardData();
@@ -170,8 +175,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should update lastSyncDate if probe is connected and lastSyncDate < 30 days away', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: '1969-12-31' }]);
-		fetchSocketsStub.resolves([{ data: { probe: defaultConnectedProbe } }]);
+		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: new Date('1969-12-31') }]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -184,8 +188,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should update lastSyncDate if probe is connected and lastSyncDate > 30 days away', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: '1969-11-15' }]);
-		fetchSocketsStub.resolves([{ data: { probe: defaultConnectedProbe } }]);
+		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: new Date('1969-11-15') }]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -198,8 +201,6 @@ describe('AdoptedProbes', () => {
 
 	it('class should update lastSyncDate should not update anything if lastSyncDate is today', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([ defaultAdoptedProbe ]);
-		fetchSocketsStub.resolves([{ data: { probe: defaultConnectedProbe } }]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -210,7 +211,6 @@ describe('AdoptedProbes', () => {
 
 	it('class should update probe meta info if it is outdated and "isCustomCity: false"', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([ defaultAdoptedProbe ]);
 
 		fetchSocketsStub.resolves([{
 			data: {
@@ -252,9 +252,60 @@ describe('AdoptedProbes', () => {
 		}]);
 	});
 
+	it('class should update country and send notification if country of the probe changes', async () => {
+		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
+		selectStub.resolves([{ ...defaultAdoptedProbe, countryOfCustomCity: 'IE', isCustomCity: true }]);
+
+		fetchSocketsStub.resolves([{
+			data: {
+				probe: {
+					ipAddress: '1.1.1.1',
+					uuid: '1-1-1-1-1',
+					status: 'initializing',
+					version: '0.27.0',
+					nodeVersion: 'v18.17.0',
+					location: {
+						continent: 'EU',
+						region: 'Northern Europe',
+						country: 'GB',
+						city: 'London',
+						asn: 20473,
+						latitude: 51.50853,
+						longitude: -0.12574,
+						network: 'The Constant Company, LLC',
+					},
+				},
+			},
+		}]);
+
+		await adoptedProbes.syncDashboardData();
+
+		expect(insertStub.callCount).to.equal(1);
+
+		expect(insertStub.args[0]).to.deep.equal([{
+			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
+			subject: 'Adopted probe country change',
+			message: 'Globalping API detected that your adopted probe with ip: 1.1.1.1 is located at "GB". So its country value changed from "IE" to "GB", and previous custom city value "Dublin" is not applied right now.\n\nIf this change is not right please report in [that issue](https://github.com/jsdelivr/globalping/issues/268).',
+		}]);
+
+		expect(whereStub.callCount).to.equal(1);
+		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
+		expect(updateStub.callCount).to.equal(1);
+
+		expect(updateStub.args[0]).to.deep.equal([
+			{
+				status: 'initializing',
+				version: '0.27.0',
+				asn: 20473,
+				network: 'The Constant Company, LLC',
+				country: 'GB',
+			},
+		]);
+	});
+
 	it('class should partially update probe meta info if it is outdated and "isCustomCity: true"', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([{ ...defaultAdoptedProbe, isCustomCity: true }]);
+		selectStub.resolves([{ ...defaultAdoptedProbe, countryOfCustomCity: 'IE', isCustomCity: true }]);
 
 		fetchSocketsStub.resolves([{
 			data: {
@@ -287,6 +338,7 @@ describe('AdoptedProbes', () => {
 		expect(updateStub.args[0]).to.deep.equal([{
 			status: 'initializing',
 			version: '0.27.0',
+			country: 'GB',
 			asn: 20473,
 			network: 'The Constant Company, LLC',
 		}]);
@@ -294,8 +346,6 @@ describe('AdoptedProbes', () => {
 
 	it('class should not update probe meta info if it is actual', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([ defaultAdoptedProbe ]);
-		fetchSocketsStub.resolves([{ data: {	probe: defaultConnectedProbe } }]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -307,7 +357,6 @@ describe('AdoptedProbes', () => {
 	it('class should treat null and undefined values as equal', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
 		selectStub.resolves([{ ...defaultAdoptedProbe, state: null }]);
-		fetchSocketsStub.resolves([{ data: {	probe: defaultConnectedProbe } }]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -318,7 +367,6 @@ describe('AdoptedProbes', () => {
 
 	it('getByIp method should return adopted probe data', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([ defaultAdoptedProbe ]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -331,6 +379,7 @@ describe('AdoptedProbes', () => {
 		selectStub.resolves([{
 			...defaultAdoptedProbe,
 			city: 'Dundalk',
+			countryOfCustomCity: 'IE',
 			isCustomCity: true,
 			latitude: 54,
 			longitude: -6.41667,
@@ -353,11 +402,12 @@ describe('AdoptedProbes', () => {
 		});
 	});
 
-	it('getUpdatedLocation method should return same location object if country is different', async () => {
+	it('getUpdatedLocation method should return same location object if connected.country !== adopted.countryOfCustomCity', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
 		selectStub.resolves([{
 			...defaultAdoptedProbe,
-			country: 'GB',
+			country: 'IE',
+			countryOfCustomCity: 'GB',
 			city: 'London',
 			isCustomCity: true,
 			latitude: 51.50853,
@@ -366,7 +416,7 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 		const updatedLocation = adoptedProbes.getUpdatedLocation(defaultConnectedProbe);
-		expect(updatedLocation).to.equal(updatedLocation);
+		expect(updatedLocation).to.equal(defaultConnectedProbe.location);
 	});
 
 	it('getUpdatedLocation method should return same location object if "isCustomCity: false"', async () => {
@@ -386,7 +436,6 @@ describe('AdoptedProbes', () => {
 
 	it('getUpdatedTags method should return updated tags', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
-		selectStub.resolves([ defaultAdoptedProbe ]);
 
 		await adoptedProbes.syncDashboardData();
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);

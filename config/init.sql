@@ -61,7 +61,7 @@ INSERT IGNORE INTO adopted_probes (
 	'5.38107',
 	'SCALEWAY S.A.S.',
 	12876,
-	'FR
+	'FR'
 );
 
 INSERT IGNORE INTO directus_users (

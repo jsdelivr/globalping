@@ -291,8 +291,7 @@ export class AdoptedProbes {
 
 	private isToday (date: Date) {
 		const currentDate = new Date();
-		currentDate.setHours(0, 0, 0, 0);
-		return date.getTime() === currentDate.getTime();
+		return date.toDateString() === currentDate.toDateString();
 	}
 
 	private isMoreThan30DaysAgo (date: Date) {
