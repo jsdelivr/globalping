@@ -125,7 +125,7 @@ export class AdoptedProbes {
 			this.syncDashboardData()
 				.finally(() => this.scheduleSync())
 				.catch(error => logger.error(error));
-		}, 10_000);
+		}, 60_000);
 	}
 
 	async syncDashboardData () {
@@ -133,11 +133,10 @@ export class AdoptedProbes {
 		this.connectedIpToProbe = new Map(allSockets.map(socket => [ socket.data.probe.ipAddress, socket.data.probe ]));
 		this.connectedUuidToIp = new Map(allSockets.map(socket => [ socket.data.probe.uuid, socket.data.probe.ipAddress ]));
 
-		const adoptedProbes = await this.fetchAdoptedProbes();
-		this.adoptedIpToProbe = new Map(adoptedProbes.map(probe => [ probe.ip, probe ]));
-		await Bluebird.map(adoptedProbes, ({ ip, uuid }) => this.syncProbeIds(ip, uuid), { concurrency: 8 });
-		await Bluebird.map(adoptedProbes, adoptedProbe => this.syncProbeData(adoptedProbe), { concurrency: 8 });
-		await Bluebird.map(adoptedProbes, ({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate), { concurrency: 8 });
+		await this.fetchAdoptedProbes();
+		await Bluebird.map(this.adoptedIpToProbe.values(), ({ ip, uuid }) => this.syncProbeIds(ip, uuid), { concurrency: 8 });
+		await Bluebird.map(this.adoptedIpToProbe.values(), adoptedProbe => this.syncProbeData(adoptedProbe), { concurrency: 8 });
+		await Bluebird.map(this.adoptedIpToProbe.values(), ({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate), { concurrency: 8 });
 	}
 
 	private async fetchAdoptedProbes () {
@@ -161,7 +160,7 @@ export class AdoptedProbes {
 			isCustomCity: Boolean(row.isCustomCity),
 		}));
 
-		return adoptedProbes;
+		this.adoptedIpToProbe = new Map(adoptedProbes.map(probe => [ probe.ip, probe ]));
 	}
 
 	private async syncProbeIds (ip: string, uuid: string) {
@@ -238,14 +237,14 @@ export class AdoptedProbes {
 	}
 
 	private async updateUuid (ip: string, uuid: string) {
+		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update({ uuid });
 		const adoptedProbe = this.adoptedIpToProbe.get(ip);
 
 		if (adoptedProbe) { adoptedProbe.uuid = uuid; }
-
-		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update({ uuid });
 	}
 
 	private async updateIp (ip: string, uuid: string) {
+		await this.sql(ADOPTED_PROBES_TABLE).where({ uuid }).update({ ip });
 		const entry = [ ...this.adoptedIpToProbe.entries() ].find(([ , adoptedProbe ]) => adoptedProbe.uuid === uuid);
 
 		if (entry) {
@@ -254,38 +253,39 @@ export class AdoptedProbes {
 			this.adoptedIpToProbe.delete(prevIp);
 			this.adoptedIpToProbe.set(ip, adoptedProbe);
 		}
-
-		await this.sql(ADOPTED_PROBES_TABLE).where({ uuid }).update({ ip });
 	}
 
 	private async updateProbeData (adoptedProbe: AdoptedProbe, updateObject: Record<string, string | number>) {
+		await this.sql(ADOPTED_PROBES_TABLE).where({ ip: adoptedProbe.ip }).update(updateObject);
+
 		for (const [ field, value ] of Object.entries(updateObject)) {
 			(adoptedProbe as unknown as Record<string, string | number>)[field] = value;
 		}
-
-		await this.sql(ADOPTED_PROBES_TABLE).where({ ip: adoptedProbe.ip }).update(updateObject);
 	}
 
 	private async updateLastSyncDate (ip: string) {
 		const date = new Date();
+		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update({ lastSyncDate: date });
 		const adoptedProbe = this.adoptedIpToProbe.get(ip);
 
 		if (adoptedProbe) {
 			adoptedProbe.lastSyncDate = date;
 		}
-
-		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update({ lastSyncDate: date });
 	}
 
 	private async deleteAdoptedProbe (ip: string) {
 		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).delete();
+		this.adoptedIpToProbe.delete(ip);
 	}
 
 	private async sendNotification (adoptedProbe: AdoptedProbe, connectedProbe: Probe) {
-		await this.sql(NOTIFICATIONS_TABLE).insert({
+		await this.sql.raw(`
+			INSERT INTO directus_notifications (recipient, subject, message) SELECT :recipient, :subject, :message
+			WHERE NOT EXISTS (SELECT 1 FROM directus_notifications WHERE recipient = :recipient AND message = :message AND DATE(timestamp) = CURRENT_DATE)
+		`, {
 			recipient: adoptedProbe.userId,
 			subject: 'Adopted probe country change',
-			message: `Globalping API detected that your adopted probe with ip: ${adoptedProbe.ip} is located at "${connectedProbe.location.country}". So its country value changed from "${adoptedProbe.country}" to "${connectedProbe.location.country}", and previous custom city value "${adoptedProbe.city}" is not applied right now.\n\nIf this change is not right please report in [that issue](https://github.com/jsdelivr/globalping/issues/268).`,
+			message: `Globalping API detected that your adopted probe with ip: ${adoptedProbe.ip} is located at "${connectedProbe.location.country}". So its country value changed from "${adoptedProbe.country}" to "${connectedProbe.location.country}", and custom city value "${adoptedProbe.city}" is not applied right now.\n\nIf this change is not right please report in [that issue](https://github.com/jsdelivr/globalping/issues/268).`,
 		});
 	}
 
