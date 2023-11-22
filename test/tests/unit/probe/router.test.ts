@@ -380,7 +380,6 @@ describe('probe router', () => {
 		const location = {
 			continent: 'NA',
 			region: getRegionByCountry('US'),
-			normalizedRegion: 'northern america',
 			country: 'US',
 			state: 'NY',
 			city: 'The New York City',

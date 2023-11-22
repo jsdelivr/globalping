@@ -30,6 +30,14 @@ CREATE TABLE IF NOT EXISTS directus_users (
   github VARCHAR(255)
 );
 
+CREATE TABLE IF NOT EXISTS directus_notifications (
+  id CHAR(10),
+  recipient CHAR(36),
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  subject VARCHAR(255),
+  message TEXT
+);
+
 INSERT IGNORE INTO adopted_probes (
 	userId,
 	lastSyncDate,

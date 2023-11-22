@@ -38,7 +38,6 @@ describe('fetchSockets', () => {
 					location: {
 						continent: 'EU',
 						region: 'Western Europe',
-						normalizedRegion: 'western europe',
 						country: 'FR',
 						state: undefined,
 						city: 'Paris',
@@ -94,7 +93,6 @@ describe('fetchSockets', () => {
 		getUpdatedLocation.returns({
 			continent: 'EU',
 			region: 'Western Europe',
-			normalizedRegion: 'western europe',
 			country: 'FR',
 			state: undefined,
 			city: 'Marseille',
@@ -122,7 +120,6 @@ describe('fetchSockets', () => {
 						location: {
 							continent: 'EU',
 							region: 'Western Europe',
-							normalizedRegion: 'western europe',
 							country: 'FR',
 							state: undefined,
 							city: 'Marseille',

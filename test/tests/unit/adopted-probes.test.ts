@@ -32,7 +32,6 @@ const defaultConnectedProbe: Probe = {
 	location: {
 		continent: 'EU',
 		region: 'Northern Europe',
-		normalizedRegion: 'northern europe',
 		country: 'IE',
 		city: 'Dublin',
 		normalizedCity: 'dublin',
@@ -59,7 +58,7 @@ const defaultConnectedProbe: Probe = {
 const selectStub = sinon.stub();
 const updateStub = sinon.stub();
 const deleteStub = sinon.stub();
-const insertStub = sinon.stub();
+const rawStub = sinon.stub();
 const whereStub = sinon.stub().returns({
 	update: updateStub,
 	delete: deleteStub,
@@ -70,8 +69,8 @@ const joinStub = sinon.stub().returns({
 const sqlStub = sinon.stub().returns({
 	join: joinStub,
 	where: whereStub,
-	insert: insertStub,
-});
+}) as sinon.SinonStub<any[], any> & {raw: any};
+sqlStub.raw = rawStub;
 const fetchSocketsStub = sinon.stub().resolves([]);
 let sandbox: sinon.SinonSandbox;
 
@@ -280,13 +279,13 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(insertStub.callCount).to.equal(1);
+		expect(rawStub.callCount).to.equal(1);
 
-		expect(insertStub.args[0]).to.deep.equal([{
+		expect(rawStub.args[0]![1]).to.deep.equal({
 			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
 			subject: 'Adopted probe country change',
-			message: 'Globalping API detected that your adopted probe with ip: 1.1.1.1 is located at "GB". So its country value changed from "IE" to "GB", and previous custom city value "Dublin" is not applied right now.\n\nIf this change is not right please report in [that issue](https://github.com/jsdelivr/globalping/issues/268).',
-		}]);
+			message: 'Globalping API detected that your adopted probe with ip: 1.1.1.1 is located at "GB". So its country value changed from "IE" to "GB", and custom city value "Dublin" is not applied right now.\n\nIf this change is not right please report in [that issue](https://github.com/jsdelivr/globalping/issues/268).',
+		});
 
 		expect(whereStub.callCount).to.equal(1);
 		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
@@ -390,7 +389,6 @@ describe('AdoptedProbes', () => {
 		expect(updatedLocation).to.deep.equal({
 			continent: 'EU',
 			region: 'Northern Europe',
-			normalizedRegion: 'northern europe',
 			country: 'IE',
 			city: 'Dundalk',
 			normalizedCity: 'dundalk',
