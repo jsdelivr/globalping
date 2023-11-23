@@ -4,26 +4,26 @@ info:
   summary: The public Globalping API.
   description: |
     Monitor, debug, and benchmark your internet infrastructure from a globally distributed network of probes.
-    
+
     ## Client guidelines
-    
+
     If you implement an application interacting with the API, please consider the "client guidelines"
     section of each endpoint below to provide the best UX and reduce the chance of your application breaking in the future.
-    
+
     ### General guidelines for non-browser based apps:
 
     - Set a `User-Agent` header. The recommended format and approach is [as here](https://github.com/jsdelivr/data.jsdelivr.com/blob/60c5154d26c403ba9dd403a8ddc5e42a31931f0d/config/default.js#L9).
     - Set an `Accept-Encoding` header with a value of either `br` (preferred) or `gzip`, depending on what your client can support. The compression has a significant impact on the response size.
     - When requesting the measurement status, implement ETag-based client-side caching using the `ETag`/`If-None-Match` headers.
-    
+
     ## Endpoints
-    
+
     https://api.globalping.io/v1/
   version: 1.0.0
   termsOfService: https://github.com/jsdelivr/globalping
   contact:
     url: https://github.com/jsdelivr/globalping/issues
-    email: dak@prospectone.io
+    email: d@jsdelivr.com
   license:
     name: Open Software License 3.0
     identifier: OSL-3.0
@@ -42,7 +42,7 @@ paths:
         Creates a new measurement with the configured parameters.
         The measurement runs asynchronously and its current state can be retrieved
         at the URL returned in the `Location` header.
-        
+
         ### Client guidelines
 
         - Set the `inProgressUpdates` option to `true` if the application is running in interactive mode so that the user sees the results right away.
@@ -82,9 +82,9 @@ paths:
         Retrieves data of an existing measurement.
         A link to this endpoint is returned in the `Location` response header when creating the measurement.
         The measurement is typically available for up to 7 days after creation.
-        
+
         ### Client guidelines
-        
+
         - Use the following algorithm for measurement result pooling:
           1. Request the measurement status.
           2. If the status is `in-progress`, wait 500 ms and repeat from step 1. Note that it is important to wait 500 ms *after* receiving the response, instead of simply using an "every 500 ms" interval. For large measurements, the request itself may take a few hundred milliseconds to complete.
