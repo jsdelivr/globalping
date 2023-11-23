@@ -380,7 +380,6 @@ describe('probe router', () => {
 		const location = {
 			continent: 'NA',
 			region: getRegionByCountry('US'),
-			normalizedRegion: 'northern america',
 			country: 'US',
 			state: 'NY',
 			city: 'The New York City',
@@ -817,6 +816,27 @@ describe('probe router', () => {
 			const probes = await router.findMatchingProbes(locations, 100);
 
 			expect(probes.length).to.equal(0);
+		});
+
+		it('should return match for user tag', async () => {
+			const socket = await buildSocket(String(Date.now()), location);
+			socket.data.probe.tags = [
+				...socket.data.probe.tags,
+				{ type: 'user', value: 'u-jimaek-dashboardtag' },
+			];
+
+			const sockets: DeepPartial<RemoteProbeSocket[]> = [ socket ];
+
+			const locations: Location[] = [
+				{ tags: [ 'u-jimaek-dashboardtag' ] },
+			];
+
+			fetchSocketsMock.resolves(sockets as never);
+
+			const probes = await router.findMatchingProbes(locations, 100);
+
+			expect(probes.length).to.equal(1);
+			expect(probes[0]!.location.country).to.equal('GB');
 		});
 	});
 });

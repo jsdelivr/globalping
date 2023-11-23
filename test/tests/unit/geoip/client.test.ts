@@ -3,8 +3,10 @@ import mockFs from 'mock-fs';
 import { expect } from 'chai';
 import GeoipClient, { type LocationInfo } from '../../../../src/lib/geoip/client.js';
 import NullCache from '../../../../src/lib/cache/null-cache.js';
-import nockGeoIpProviders, { geoIpMocks } from '../../../utils/nock-geo-ip.js';
+import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import type { CacheInterface } from '../../../../src/lib/cache/cache-interface.js';
+import geoIpMocks from '../../../mocks/nock-geoip.json' assert { type: 'json' };
+
 
 const MOCK_IP = '131.255.7.26';
 
@@ -78,8 +80,8 @@ describe('geoip service', () => {
 	it('should choose top prioritized provider if some providers are down', async () => {
 		nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).reply(400);
 		nock('https://api.ip2location.io').get(/.*/).reply(400);
-		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, geoIpMocks['fastly'].argentina);
-		nock('https://ipinfo.io').get(/.*/).reply(200, geoIpMocks['ipinfo'].argentina);
+		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, geoIpMocks.fastly.argentina);
+		nock('https://ipinfo.io').get(/.*/).reply(200, geoIpMocks.ipinfo.argentina);
 		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(400);
 
 		const info = await client.lookup(MOCK_IP);
@@ -187,7 +189,7 @@ describe('geoip service', () => {
 	it('should fail when only fastly reports the data', async () => {
 		nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).reply(400);
 		nock('https://api.ip2location.io').get(/.*/).reply(400);
-		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, geoIpMocks['fastly'].default);
+		nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(200, geoIpMocks.fastly.default);
 		nock('https://ipinfo.io').get(/.*/).reply(400);
 		nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(400);
 

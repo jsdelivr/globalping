@@ -15,7 +15,7 @@ services:
       - MARIADB_DATABASE=directus
       - MARIADB_USER=directus
       - MARIADB_PASSWORD=password
-      - MARIADB_RANDOM_ROOT_PASSWORD=1
+      - MARIADB_ROOT_PASSWORD=root
     ports:
       - "3306:3306"
     volumes:

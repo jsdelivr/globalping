@@ -51,7 +51,7 @@ export class SocketsLocationFilter {
 	}
 
 	static hasTag (socket: RemoteProbeSocket, tag: string) {
-		return socket.data.probe.tags.some(({ type, value }) => type === 'system' && value === tag);
+		return socket.data.probe.tags.some(({ value }) => value === tag);
 	}
 
 	public filterGloballyDistibuted (sockets: RemoteProbeSocket[], limit: number): RemoteProbeSocket[] {

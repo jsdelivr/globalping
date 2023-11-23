@@ -10,6 +10,7 @@ import { getWsServer, PROBES_NAMESPACE, ServerSocket } from './server.js';
 import { probeMetadata } from './middleware/probe-metadata.js';
 import { errorHandler } from './helper/error-handler.js';
 import { subscribeWithHandler } from './helper/subscribe-handler.js';
+import { adoptedProbes } from '../adopted-probes.js';
 
 const io = getWsServer();
 const logger = scopedLogger('gateway');
@@ -20,8 +21,10 @@ io
 	.use(probeMetadata)
 	.on('connect', errorHandler(async (socket: ServerSocket) => {
 		const probe = socket.data.probe;
-		socket.emit('api:connect:location', probe.location);
-		logger.info(`ws client ${socket.id} connected from ${probe.location.city}, ${probe.location.country} [${probe.ipAddress} - ${probe.location.network}]`);
+		const location = adoptedProbes.getUpdatedLocation(probe);
+
+		socket.emit('api:connect:location', location);
+		logger.info(`ws client ${socket.id} connected from ${location.city}, ${location.country} [${probe.ipAddress} - ${location.network}]`);
 
 		// Handlers
 		socket.on('probe:status:update', handleStatusUpdate(probe));
