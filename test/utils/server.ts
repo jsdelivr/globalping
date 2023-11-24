@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { io, type Socket } from 'socket.io-client';
@@ -17,9 +18,9 @@ export const getTestServer = async (): Promise<Server> => {
 	return app;
 };
 
-export const addFakeProbe = async (events: Record<string, any> = {}): Promise<Socket> => {
+export const addFakeProbe = async (events: object = {}, options: object = {}): Promise<Socket> => {
 	const socket = await new Promise<Socket>((resolve) => {
-		const client = io(url, {
+		const client = io(url, _.merge({
 			transports: [ 'websocket' ],
 			reconnectionDelay: 100,
 			reconnectionDelayMax: 500,
@@ -27,8 +28,10 @@ export const addFakeProbe = async (events: Record<string, any> = {}): Promise<So
 				version: '0.14.0',
 				nodeVersion: 'v18.17.0',
 				uuid: '1-1-1-1-1',
+				isHardware: 'undefined',
+				hardwareDevice: 'undefined',
 			},
-		});
+		}, options));
 
 		for (const [ event, listener ] of Object.entries(events)) {
 			client.on(event, listener);

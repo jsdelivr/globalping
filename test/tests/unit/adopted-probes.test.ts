@@ -41,6 +41,8 @@ const defaultConnectedProbe: Probe = {
 		network: 'Amazon.com, Inc.',
 		normalizedNetwork: 'amazon.com, inc.',
 	},
+	isHardware: false,
+	hardwareDevice: null,
 	tags: [],
 	index: [],
 	client: '',

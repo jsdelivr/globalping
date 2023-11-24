@@ -16,6 +16,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		version: socket.data.probe.version,
 		nodeVersion: isAdmin ? socket.data.probe.nodeVersion : undefined,
 		uuid: isAdmin ? socket.data.probe.uuid : undefined,
+		ipAddress: isAdmin ? socket.data.probe.ipAddress : undefined,
 		location: {
 			continent: socket.data.probe.location.continent,
 			region: socket.data.probe.location.region,
@@ -28,8 +29,9 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 			network: socket.data.probe.location.network,
 		},
 		tags: socket.data.probe.tags.map(({ value }) => value),
+		...(isAdmin && socket.data.probe.isHardware ? { isHardware: socket.data.probe.isHardware } : null),
+		...(isAdmin && socket.data.probe.hardwareDevice ? { hardwareDevice: socket.data.probe.hardwareDevice } : null),
 		resolvers: socket.data.probe.resolvers,
-		ipAddress: isAdmin ? socket.data.probe.ipAddress : undefined,
 		host: isAdmin ? socket.data.probe.host : undefined,
 		stats: isAdmin ? socket.data.probe.stats : undefined,
 	}));

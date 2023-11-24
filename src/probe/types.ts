@@ -37,6 +37,8 @@ export type Probe = {
 	version: string;
 	nodeVersion: string;
 	uuid: string;
+	isHardware: boolean;
+	hardwareDevice: string | null;
 	ipAddress: string;
 	host: string;
 	location: ProbeLocation;
