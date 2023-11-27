@@ -4,6 +4,7 @@ import { expect } from 'chai';
 
 import type { LRUOptions } from '../../../../src/lib/ws/helper/throttle.js';
 import type { RemoteProbeSocket } from '../../../../src/lib/ws/server.js';
+import type { Probe } from '../../../../src/probe/types.js';
 
 const fetchRawSockets = sinon.stub().resolves([]);
 const getByIp = sinon.stub();
@@ -65,11 +66,13 @@ describe('fetchSockets', () => {
 						[ 'scaleway s.a.s.' ],
 						[],
 					],
+					isHardware: false,
+					hardwareDevice: null,
 					resolvers: [ 'private' ],
 					tags: [{ type: 'system', value: 'datacenter-network' }],
 					stats: { cpu: { count: 8, load: [] }, jobs: { count: 0 } },
 					status: 'ready',
-				},
+				} as Probe,
 			},
 		}]);
 
@@ -147,11 +150,13 @@ describe('fetchSockets', () => {
 							[ 'scaleway s.a.s.' ],
 							[],
 						],
+						isHardware: false,
+						hardwareDevice: null,
 						resolvers: [ 'private' ],
 						tags: [{ type: 'system', value: 'datacenter-network' }, { type: 'user', value: 'u-jimaek-my-tag-1' }],
 						stats: { cpu: { count: 8, load: [] }, jobs: { count: 0 } },
 						status: 'ready',
-					},
+					} as Probe,
 				},
 			},
 		]);

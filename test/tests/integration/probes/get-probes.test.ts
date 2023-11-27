@@ -11,11 +11,11 @@ import { client } from '../../../../src/lib/sql/client.js';
 describe('Get Probes', () => {
 	let requestAgent: SuperTest<Test>;
 	const probes: Socket[] = [];
-	let addProbe: () => Promise<Socket>;
+	let addProbe: (events?: object, options?: object) => Promise<Socket>;
 
 	before(async () => {
-		addProbe = async () => {
-			const probe = await addFakeProbe();
+		addProbe = async (events = {}, options = {}) => {
+			const probe = await addFakeProbe(events, options);
 			probes.push(probe);
 			return probe;
 		};
@@ -187,11 +187,12 @@ describe('Get Probes', () => {
 				.send()
 				.expect(200)
 				.expect((response) => {
-					expect(response.body[0]).to.deep.include({
+					expect(response.body[0]).to.deep.equal({
 						version: '0.14.0',
 						host: '',
 						ipAddress: '1.2.3.4',
 						uuid: '1-1-1-1-1',
+						nodeVersion: 'v18.17.0',
 						location: {
 							continent: 'SA',
 							region: 'South America',
@@ -206,6 +207,26 @@ describe('Get Probes', () => {
 						status: 'ready',
 						tags: [],
 						resolvers: [],
+					});
+
+					expect(response.body[0].ipAddress).to.be.a('string');
+					expect(response).to.matchApiSchema();
+				});
+		});
+
+		it('should add hardware info if admin key is provided and there is hardware info', async () => {
+			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
+
+			const probe = await addProbe({}, { query: { isHardware: 'true', hardwareDevice: 'v1' } });
+			probe.emit('probe:status:update', 'ready');
+
+			await requestAgent.get('/v1/probes?adminkey=admin')
+				.send()
+				.expect(200)
+				.expect((response) => {
+					expect(response.body[0]).to.deep.include({
+						isHardware: true,
+						hardwareDevice: 'v1',
 					});
 
 					expect(response.body[0].ipAddress).to.be.a('string');

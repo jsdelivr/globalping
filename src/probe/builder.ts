@@ -33,6 +33,11 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const uuid = String(socket.handshake.query['uuid']);
 
+	const isHardware = socket.handshake.query['isHardware'] === 'true' || socket.handshake.query['isHardware'] === '1';
+
+	const hardwareDeviceValue = socket.handshake.query['hardwareDevice'];
+	const hardwareDevice = (!hardwareDeviceValue || hardwareDeviceValue === 'undefined') ? null : String(hardwareDeviceValue);
+
 	const host = process.env['HOSTNAME'] ?? '';
 
 	const ip = getProbeIp(socket);
@@ -71,6 +76,8 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		version,
 		nodeVersion,
 		uuid,
+		isHardware,
+		hardwareDevice,
 		ipAddress: ip,
 		host,
 		location,
