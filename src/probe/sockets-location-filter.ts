@@ -51,7 +51,7 @@ export class SocketsLocationFilter {
 	}
 
 	static hasTag (socket: RemoteProbeSocket, tag: string) {
-		return socket.data.probe.tags.some(({ value }) => value === tag);
+		return socket.data.probe.tags.some(({ value }) => value.toLowerCase() === tag);
 	}
 
 	public filterGloballyDistibuted (sockets: RemoteProbeSocket[], limit: number): RemoteProbeSocket[] {
