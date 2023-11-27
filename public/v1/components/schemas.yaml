@@ -1043,6 +1043,7 @@ components:
           required:
             - rawHeaders
             - rawBody
+            - truncated
             - headers
             - resolvedAddress
             - statusCode
