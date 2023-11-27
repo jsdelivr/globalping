@@ -803,7 +803,7 @@ components:
             timings:
               type: array
               description: |
-                Details for each sent packet. 
+                Details for each sent packet.
                 All times are in milliseconds.
               items:
                 type: object
@@ -1026,7 +1026,7 @@ components:
                   timings:
                     type: array
                     description: |
-                      Details for each sent packet. 
+                      Details for each sent packet.
                       All times are in milliseconds.
                     items:
                       type: object
@@ -1043,6 +1043,7 @@ components:
           required:
             - rawHeaders
             - rawBody
+            - truncated
             - headers
             - resolvedAddress
             - statusCode
@@ -1056,6 +1057,10 @@ components:
             rawBody:
               type: string
               description: The raw HTTP response body. Only the first 10 kb are returned.
+            truncated:
+              type: boolean
+              description: |
+                `true` if `rawBody` was truncated due to being too big, `false` otherwise.
             headers:
               type: object
               description: The HTTP response headers.

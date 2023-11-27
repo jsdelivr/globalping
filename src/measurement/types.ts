@@ -143,6 +143,7 @@ type HttpResult = TestResult & {
 	headers: Record<string, string>;
 	rawHeaders: string;
 	rawBody: string;
+	truncated: boolean;
 	statusCode: number;
 	timings: Record<string, number>;
 	tls: {
