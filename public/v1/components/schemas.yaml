@@ -1059,7 +1059,8 @@ components:
               description: The raw HTTP response body. Only the first 10 kb are returned.
             truncated:
               type: boolean
-              description: `true` if `rawBody` was truncated due to being too big, `false` otherwise.
+              description: |
+                `true` if `rawBody` was truncated due to being too big, `false` otherwise.
             headers:
               type: object
               description: The HTTP response headers.
