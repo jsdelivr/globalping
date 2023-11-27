@@ -378,7 +378,7 @@ describe('Create measurement', () => {
 					ip: '1.2.3.4',
 					uuid: '1-1-1-1-1',
 					isCustomCity: 1,
-					tags: '["dashboard-tag"]',
+					tags: '["Dashboard-Tag"]',
 					status: 'ready',
 					version: '0.26.0',
 					country: 'US',
@@ -419,6 +419,22 @@ describe('Create measurement', () => {
 						type: 'ping',
 						target: 'example.com',
 						locations: [{ tags: [ 'u-jimaek-dashboard-tag' ], limit: 2 }],
+					})
+					.expect(202)
+					.expect((response) => {
+						expect(response.body.id).to.exist;
+						expect(response.header.location).to.exist;
+						expect(response.body.probesCount).to.equal(1);
+						expect(response).to.matchApiSchema();
+					});
+			});
+
+			it('should create measurement with adopted "tags: ["u-jimaek-Dashboard-Tag"]" in any letter case', async () => {
+				await requestAgent.post('/v1/measurements')
+					.send({
+						type: 'ping',
+						target: 'example.com',
+						locations: [{ tags: [ 'u-jimaek-Dashboard-Tag' ], limit: 2 }],
 					})
 					.expect(202)
 					.expect((response) => {

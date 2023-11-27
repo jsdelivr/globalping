@@ -245,6 +245,20 @@ describe('command schema', async () => {
 				expect(valid.value![0].region).to.equal('Northern America');
 			});
 
+			it('should correct tag value (lowercase)', () => {
+				const input = [
+					{
+						tags: [ 'DifferentCase-tag' ],
+						limit: 1,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.value![0].tags).to.not.equal(input[0]!.tags);
+				expect(valid.value![0].tags).to.deep.equal([ 'differentcase-tag' ]);
+			});
+
 			it('should fail (wrong region)', () => {
 				const input = [
 					{

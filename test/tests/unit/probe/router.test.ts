@@ -822,13 +822,13 @@ describe('probe router', () => {
 			const socket = await buildSocket(String(Date.now()), location);
 			socket.data.probe.tags = [
 				...socket.data.probe.tags,
-				{ type: 'user', value: 'u-jimaek-dashboardtag' },
+				{ type: 'user', value: 'u-MartinKolarik-DashboardTag' },
 			];
 
 			const sockets: DeepPartial<RemoteProbeSocket[]> = [ socket ];
 
 			const locations: Location[] = [
-				{ tags: [ 'u-jimaek-dashboardtag' ] },
+				{ tags: [ 'u-martinkolarik-dashboardtag' ] },
 			];
 
 			fetchSocketsMock.resolves(sockets as never);
