@@ -53,13 +53,14 @@ export const recordResult: RecordResultScript = defineScript({
 	local data = KEYS[3]
 	local date = KEYS[4]
 	local key = 'gp:measurement:'..measurementId
+	local awaitingKey = 'gp:measurement:probes_awaiting:'..measurementId
 
-	local probesAwaiting = redis.call('GET', key..':probes_awaiting')
+	local probesAwaiting = redis.call('GET', awaitingKey)
 	if not probesAwaiting then
 		return
 	end
 
-	probesAwaiting = redis.call('DECR', key..':probes_awaiting')
+	probesAwaiting = redis.call('DECR', awaitingKey)
 	redis.call('JSON.SET', key, '$.results['..testId..'].result', data)
 	redis.call('JSON.SET', key, '$.updatedAt', date)
 
@@ -68,7 +69,7 @@ export const recordResult: RecordResultScript = defineScript({
 	end
 
 	redis.call('HDEL', 'gp:in-progress', measurementId)
-	redis.call('DEL', key..':probes_awaiting')
+	redis.call('DEL', awaitingKey)
 	redis.call('JSON.SET', key, '$.status', '"finished"')
 
 	return redis.call('JSON.GET', key)

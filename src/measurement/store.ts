@@ -10,14 +10,8 @@ import { getDefaults } from './schema/utils.js';
 
 const logger = scopedLogger('store');
 
-export const getMeasurementKey = (id: string, suffix: 'probes_awaiting' | undefined = undefined): string => {
-	let key = `gp:measurement:${id}`;
-
-	if (suffix) {
-		key += `:${suffix}`;
-	}
-
-	return key;
+export const getMeasurementKey = (id: string, suffix: string | undefined = undefined): string => {
+	return `gp:measurement:${suffix ? suffix + ':' : ''}${id}`;
 };
 
 const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unknown> = {}) => {
@@ -73,7 +67,9 @@ export class MeasurementStore {
 		await Promise.all([
 			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
 			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.length, { EX: probesAwaitingTtl }),
+			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', probes.map(probe => probe.ipAddress)),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
+			this.redis.expire(getMeasurementKey(id, 'ips'), config.get<number>('measurement.resultTTL')),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
 		]);
 
