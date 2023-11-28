@@ -21,7 +21,7 @@ const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, un
 		const value1 = obj1[key];
 		const value2 = obj2[key];
 
-		if (_.isPlainObject(value1)) {
+		if (_.isPlainObject(value1) && _.isPlainObject(value2)) {
 			const difference = substractObjects(value1 as Record<string, unknown>, value2 as Record<string, unknown>);
 
 			if (!_.isEmpty(difference)) {
@@ -93,6 +93,12 @@ export class MeasurementStore {
 		]);
 	}
 
+	async getIpsByMeasurementId (id: string): Promise<string[]> {
+		const key = getMeasurementKey(id, 'ips');
+		const ips = await this.redis.json.get(key) as string[] | null;
+		return ips || [];
+	}
+
 	async markFinishedByTimeout (ids: string[]): Promise<void> {
 		if (ids.length === 0) {
 			return;
@@ -151,8 +157,11 @@ export class MeasurementStore {
 
 	removeDefaults (measurement: MeasurementRecord, request: MeasurementRequest): Partial<MeasurementRecord> {
 		const defaults = getDefaults(request);
+
 		// Removes `"limit": 1` from locations. E.g. [{"country": "US", "limit": 1}] => [{"country": "US"}]
-		measurement.locations = measurement.locations.map(location => location.limit === 1 ? _.omit(location, 'limit') : location);
+		if (_.isArray(measurement.locations)) {
+			measurement.locations = measurement.locations.map(location => location.limit === 1 ? _.omit(location, 'limit') : location);
+		}
 
 		return substractObjects(measurement, defaults) as Partial<MeasurementRecord>;
 	}

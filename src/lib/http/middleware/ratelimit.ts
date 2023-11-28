@@ -12,21 +12,21 @@ const setResponseHeaders = (ctx: Context, response: RateLimiterRes) => {
 };
 
 export const rateLimitHandler = () => async (ctx: Context, next: Next) => {
-	const { isAdmin } = ctx;
+	// const { isAdmin } = ctx;
 	const clientIp = requestIp.getClientIp(ctx.req) ?? '';
-	const request = ctx.request.body as MeasurementRequest;
-	const limit = request.locations.some(l => l.limit) ? request.locations.reduce((sum, { limit = 1 }) => sum + limit, 0) : request.limit;
+	// const request = ctx.request.body as MeasurementRequest;
+	// const limit = request.locations.some(l => l.limit) ? request.locations.reduce((sum, { limit = 1 }) => sum + limit, 0) : request.limit;
 
-	if (isAdmin) {
-		return next();
-	}
+	// if (isAdmin) {
+	// 	return next();
+	// }
 
-	const currentState = await rateLimiter.get(clientIp) ?? defaultState as RateLimiterRes;
+	// const currentState = await rateLimiter.get(clientIp) ?? defaultState as RateLimiterRes;
 
-	if (currentState.remainingPoints < limit) {
-		setResponseHeaders(ctx, currentState);
-		throw createHttpError(429, 'API rate limit exceeded.', { type: 'rate_limit_exceeded' });
-	}
+	// if (currentState.remainingPoints < limit) {
+	// 	setResponseHeaders(ctx, currentState);
+	// 	throw createHttpError(429, 'API rate limit exceeded.', { type: 'rate_limit_exceeded' });
+	// }
 
 	await next();
 	const response = ctx.response.body as object & { probesCount?: number };

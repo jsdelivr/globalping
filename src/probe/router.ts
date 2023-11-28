@@ -5,21 +5,25 @@ import type { LocationWithLimit } from '../measurement/types.js';
 import type { Location } from '../lib/location/types.js';
 import type { Probe } from './types.js';
 import { SocketsLocationFilter } from './sockets-location-filter.js';
+import { getMeasurementStore } from '../measurement/store.js';
 
 export class ProbeRouter {
-	constructor (
-		private readonly fetchWsSockets: typeof fetchSockets,
-		private readonly socketsFilter = new SocketsLocationFilter(),
-	) {}
+	private readonly socketsFilter = new SocketsLocationFilter();
+
+	private readonly store = getMeasurementStore();
+
+	constructor (private readonly fetchWsSockets: typeof fetchSockets) {}
 
 	public async findMatchingProbes (
-		locations: LocationWithLimit[] = [],
+		locations: LocationWithLimit[] | string = [],
 		globalLimit = 1,
 	): Promise<Probe[]> {
 		const sockets = await this.fetchSockets();
 		let filtered: RemoteProbeSocket[] = [];
 
-		if (locations.some(l => l.limit)) {
+		if (typeof locations === 'string') {
+			filtered = await this.findWithMeasurementId(sockets, locations);
+		} else if (locations.some(l => l.limit)) {
 			filtered = this.findWithLocationLimit(sockets, locations);
 		} else if (locations.length > 0) {
 			filtered = this.findWithGlobalLimit(sockets, locations, globalLimit);
@@ -67,6 +71,11 @@ export class ProbeRouter {
 		}
 
 		return [ ...picked ];
+	}
+
+	private async findWithMeasurementId (sockets: RemoteProbeSocket[], measurementId: string): Promise<RemoteProbeSocket[]> {
+		const ips = await this.store.getIpsByMeasurementId(measurementId);
+		return sockets.filter(socket => ips.includes(socket.data.probe.ipAddress));
 	}
 }
 

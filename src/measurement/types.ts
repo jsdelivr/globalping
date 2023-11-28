@@ -176,7 +176,7 @@ export type MeasurementRequest = {
 	type: 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 	target: string;
 	measurementOptions: MeasurementOptions;
-	locations: LocationWithLimit[];
+	locations: LocationWithLimit[] | string;
 	limit: number;
 	inProgressUpdates: boolean;
 };
@@ -207,7 +207,7 @@ export type MeasurementRecord = {
 	target: string;
 	limit: number;
 	probesCount: number;
-	locations: LocationWithLimit[];
+	locations: LocationWithLimit[] | string;
 	measurementOptions?: MeasurementOptions;
 	results: MeasurementResult[];
 };
