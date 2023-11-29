@@ -1,6 +1,6 @@
 import got from 'got';
 import config from 'config';
-import { getContinentByCountry, getStateIsoByName } from '../../location/location.js';
+import { getContinentByCountry, getRegionByCountry, getStateIsoByName } from '../../location/location.js';
 import type { LocationInfo } from '../client.js';
 import {
 	normalizeCityName,
@@ -34,6 +34,7 @@ export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 
 	return {
 		continent: result.country ? getContinentByCountry(result.country) : '',
+		region: result.country ? getRegionByCountry(result.country) : '',
 		state: result.country === 'US' && result.region ? getStateIsoByName(result.region) : null,
 		country: result.country ?? '',
 		city: normalizeCityNamePublic(city),

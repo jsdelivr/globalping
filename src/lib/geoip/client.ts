@@ -7,7 +7,6 @@ import type { ProbeLocation } from '../../probe/types.js';
 import RedisCache from '../cache/redis-cache.js';
 import { getRedisClient } from '../redis/client.js';
 import { scopedLogger } from '../logger.js';
-import { getRegionByCountry } from '../location/location.js';
 import { isAddrWhitelisted } from './whitelist.js';
 import { ipinfoLookup } from './providers/ipinfo.js';
 import { fastlyLookup } from './providers/fastly.js';
@@ -16,8 +15,8 @@ import { ipmapLookup } from './providers/ipmap.js';
 import { type Ip2LocationBundledResponse, ip2LocationLookup } from './providers/ip2location.js';
 import { isHostingOverrides } from './overrides.js';
 
-export type LocationInfo = Omit<ProbeLocation, 'region'>;
 type Provider = 'ipmap' | 'ip2location' | 'ipinfo' | 'maxmind' | 'fastly';
+export type LocationInfo = ProbeLocation & {isHosting: boolean | null};
 export type LocationInfoWithProvider = LocationInfo & {provider: Provider};
 export type NetworkInfo = {
 	network: string;
@@ -32,7 +31,7 @@ export const createGeoipClient = (): GeoipClient => new GeoipClient(new RedisCac
 export default class GeoipClient {
 	constructor (private readonly cache: CacheInterface) {}
 
-	async lookup (addr: string): Promise<ProbeLocation> {
+	async lookup (addr: string): Promise<LocationInfo> {
 		let isHosting = null;
 		const results = await Promise
 			.allSettled([
@@ -82,14 +81,12 @@ export default class GeoipClient {
 			}
 		}
 
-		const region = getRegionByCountry(match.country);
-
 		return {
 			continent: match.continent,
 			country: match.country,
 			state: match.state,
 			city: match.city,
-			region,
+			region: match.region,
 			normalizedCity: match.normalizedCity,
 			asn: Number(networkMatch.asn),
 			latitude: Number(match.latitude),

@@ -10,7 +10,6 @@ export type ProbeLocation = {
 	state: string | null;
 	network: string;
 	normalizedNetwork: string;
-	isHosting: boolean | null;
 };
 
 export type ProbeStats = {

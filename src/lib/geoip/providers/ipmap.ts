@@ -1,5 +1,5 @@
 import got from 'got';
-import { getContinentByCountry } from '../../location/location.js';
+import { getContinentByCountry, getRegionByCountry } from '../../location/location.js';
 import type { LocationInfo } from '../client.js';
 import {
 	normalizeCityName,
@@ -24,6 +24,7 @@ export const ipmapLookup = async (addr: string): Promise<LocationInfo> => {
 
 	return {
 		continent: location.countryCodeAlpha2 ? getContinentByCountry(location.countryCodeAlpha2) : '',
+		region: location.countryCodeAlpha2 ? getRegionByCountry(location.countryCodeAlpha2) : '',
 		state: location.countryCodeAlpha2 === 'US' && location.stateAnsiCode ? location.stateAnsiCode : null,
 		country: location.countryCodeAlpha2 ?? '',
 		city: normalizeCityNamePublic(city),

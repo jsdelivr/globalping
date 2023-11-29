@@ -200,10 +200,6 @@ export class AdoptedProbes {
 			const adoptedValue = _.get(adoptedProbe, adoptedField) as string | number;
 			const connectedValue = _.get(connectedProbe, connectedField) as string | number;
 
-			if (!adoptedValue && !connectedValue) { // undefined and null values are treated equal and don't require sync
-				return;
-			}
-
 			if (adoptedValue !== connectedValue) {
 				updateObject[adoptedField] = connectedValue;
 			}

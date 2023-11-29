@@ -1,4 +1,5 @@
 import got from 'got';
+import { getRegionByCountry } from '../../location/location.js';
 import { getCity } from '../city-approximation.js';
 import type { LocationInfo } from '../client.js';
 import {
@@ -38,6 +39,7 @@ export const fastlyLookup = async (addr: string): Promise<LocationInfo> => {
 
 	return {
 		continent: data.continent_code,
+		region: getRegionByCountry(data.country_code),
 		country: data.country_code,
 		state: data.country_code === 'US' ? data.region : null,
 		city: normalizeCityNamePublic(city),

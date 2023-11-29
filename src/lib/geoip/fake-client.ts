@@ -1,10 +1,10 @@
-import type { ProbeLocation } from '../../probe/types.js';
+import type { LocationInfo } from './client.js';
 
-export const fakeLookup = (): ProbeLocation => {
+export const fakeLookup = (): LocationInfo => {
 	return {
 		continent: 'SA',
 		country: 'AR',
-		state: undefined,
+		state: null,
 		city: 'Buenos Aires',
 		region: 'South America',
 		normalizedCity: 'buenos aires',
@@ -13,5 +13,6 @@ export const fakeLookup = (): ProbeLocation => {
 		longitude: -58.3772,
 		network: 'InterBS S.R.L. (BAEHOST)',
 		normalizedNetwork: 'interbs s.r.l. (baehost)',
+		isHosting: null,
 	};
 };

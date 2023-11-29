@@ -2,6 +2,7 @@ import got from 'got';
 import config from 'config';
 import {
 	getContinentByCountry,
+	getRegionByCountry,
 	getStateIsoByName,
 } from '../../location/location.js';
 import type { LocationInfo } from '../client.js';
@@ -50,6 +51,7 @@ export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundle
 
 	const location = {
 		continent: result.country_code ? getContinentByCountry(result.country_code) : '',
+		region: result.country_code ? getRegionByCountry(result.country_code) : '',
 		state: result.country_code === 'US' && result.region_name ? getStateIsoByName(result.region_name) : null,
 		country: result.country_code ?? '',
 		city: normalizeCityNamePublic(city),
