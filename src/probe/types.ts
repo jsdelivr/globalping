@@ -32,7 +32,7 @@ export type Tag = {
 };
 
 export type Probe = {
-	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'ping-test-failed' | 'sigterm';
+	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'ping-test-failed' | 'sigterm' | 'offline';
 	client: string;
 	version: string;
 	nodeVersion: string;

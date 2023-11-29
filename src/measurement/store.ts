@@ -5,7 +5,7 @@ import type { Probe } from '../probe/types.js';
 import type { RedisClient } from '../lib/redis/client.js';
 import { getRedisClient } from '../lib/redis/client.js';
 import { scopedLogger } from '../lib/logger.js';
-import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage } from './types.js';
+import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType } from './types.js';
 import { getDefaults } from './schema/utils.js';
 
 const logger = scopedLogger('store');
@@ -38,8 +38,12 @@ const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, un
 export class MeasurementStore {
 	constructor (private readonly redis: RedisClient) {}
 
-	async getMeasurementResults (id: string): Promise<string> {
+	async getMeasurement (id: string): Promise<string> {
 		return this.redis.sendCommand([ 'JSON.GET', getMeasurementKey(id) ]);
+	}
+
+	async getMeasurementJson (id: string): Promise<MeasurementRecord> {
+		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord;
 	}
 
 	async createMeasurement (request: MeasurementRequest, probes: Probe[]): Promise<string> {
@@ -66,7 +70,7 @@ export class MeasurementStore {
 
 		await Promise.all([
 			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
-			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.length, { EX: probesAwaitingTtl }),
+			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.filter(probe => probe.status !== 'offline').length, { EX: probesAwaitingTtl }),
 			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', probes.map(probe => probe.ipAddress)),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
 			this.redis.expire(getMeasurementKey(id, 'ips'), config.get<number>('measurement.resultTTL')),
@@ -166,7 +170,7 @@ export class MeasurementStore {
 		return substractObjects(measurement, defaults) as Partial<MeasurementRecord>;
 	}
 
-	probesToResults (probes: Probe[], type: string) {
+	probesToResults (probes: Probe[], type: RequestType) {
 		const results = probes.map(probe => ({
 			probe: {
 				continent: probe.location.continent,
@@ -181,13 +185,20 @@ export class MeasurementStore {
 				tags: probe.tags.map(({ value }) => value),
 				resolvers: probe.resolvers,
 			},
-			result: this.getInitialResult(type),
+			result: this.getInitialResult(type, probe.status),
 		} as MeasurementResult));
 
 		return results;
 	}
 
-	getInitialResult (type: string) {
+	getInitialResult (type: RequestType, status: Probe['status']) {
+		if (status === 'offline') {
+			return {
+				status: 'failed',
+				rawOutput: 'This probe is currently offline. Please try again later.',
+			};
+		}
+
 		if (type === 'http') {
 			return {
 				status: 'in-progress',
