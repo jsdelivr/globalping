@@ -7,10 +7,10 @@ export type ProbeLocation = {
 	asn: number;
 	latitude: number;
 	longitude: number;
-	state?: string | undefined;
+	state: string | null;
 	network: string;
 	normalizedNetwork: string;
-	isHosting?: boolean | undefined;
+	isHosting: boolean | null;
 };
 
 export type ProbeStats = {

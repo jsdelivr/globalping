@@ -34,7 +34,7 @@ export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 
 	return {
 		continent: result.country ? getContinentByCountry(result.country) : '',
-		state: result.country === 'US' && result.region ? getStateIsoByName(result.region) : undefined,
+		state: result.country === 'US' && result.region ? getStateIsoByName(result.region) : null,
 		country: result.country ?? '',
 		city: normalizeCityNamePublic(city),
 		normalizedCity: normalizeCityName(city),
@@ -43,6 +43,6 @@ export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 		longitude: Number(lon),
 		network,
 		normalizedNetwork: normalizeNetworkName(network),
-		isHosting: result.privacy?.hosting,
+		isHosting: result.privacy?.hosting ?? null,
 	};
 };

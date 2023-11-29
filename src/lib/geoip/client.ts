@@ -33,7 +33,7 @@ export default class GeoipClient {
 	constructor (private readonly cache: CacheInterface) {}
 
 	async lookup (addr: string): Promise<ProbeLocation> {
-		let isHosting = undefined;
+		let isHosting = null;
 		const results = await Promise
 			.allSettled([
 				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
@@ -43,7 +43,7 @@ export default class GeoipClient {
 				this.lookupWithCache<LocationInfo>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
 			.then(([ ipinfo, ip2location, maxmind, ipmap, fastly ]) => {
-				isHosting = ip2location.status === 'fulfilled' ? ip2location.value.isHosting : undefined;
+				isHosting = ip2location.status === 'fulfilled' ? ip2location.value.isHosting : null;
 				const fulfilled: (LocationInfoWithProvider | null)[] = [];
 
 				// Providers here are pushed in a desc prioritized order

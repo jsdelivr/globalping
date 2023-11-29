@@ -50,7 +50,7 @@ export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundle
 
 	const location = {
 		continent: result.country_code ? getContinentByCountry(result.country_code) : '',
-		state: result.country_code === 'US' && result.region_name ? getStateIsoByName(result.region_name) : undefined,
+		state: result.country_code === 'US' && result.region_name ? getStateIsoByName(result.region_name) : null,
 		country: result.country_code ?? '',
 		city: normalizeCityNamePublic(city),
 		normalizedCity: normalizeCityName(city),
@@ -59,6 +59,7 @@ export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundle
 		longitude: result.longitude ?? 0,
 		network: result.as ?? '',
 		normalizedNetwork: normalizeNetworkName(result.as ?? ''),
+		isHosting: null,
 	};
 
 	return {
