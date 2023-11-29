@@ -26,7 +26,7 @@ export type ProbeStats = {
 };
 
 export type Tag = {
-	type: 'system' | 'admin' | 'user';
+	type: 'system' | 'admin' | 'user' | 'offline';
 	value: string;
 };
 

@@ -5,6 +5,7 @@ import type { Location } from '../lib/location/types.js';
 import type { Probe } from './types.js';
 import { ProbesLocationFilter } from './probes-location-filter.js';
 import { getMeasurementStore } from '../measurement/store.js';
+import { normalizeFromPublicName, normalizeNetworkName } from '../lib/geoip/utils.js';
 
 export class ProbeRouter {
 	private readonly probesFilter = new ProbesLocationFilter();
@@ -110,17 +111,17 @@ export class ProbeRouter {
 						region: prevTest.probe.region,
 						country: prevTest.probe.country,
 						city: prevTest.probe.city,
-						normalizedCity: prevTest.probe.city.toLowerCase(),
+						normalizedCity: normalizeFromPublicName(prevTest.probe.city),
 						asn: prevTest.probe.asn,
 						latitude: prevTest.probe.latitude,
 						longitude: prevTest.probe.longitude,
-						state: prevTest.probe.state ?? undefined,
+						state: prevTest.probe.state,
 						network: prevTest.probe.network,
-						normalizedNetwork: prevTest.probe.network.toLowerCase(),
+						normalizedNetwork: normalizeNetworkName(prevTest.probe.network),
 					},
 					index: [],
 					resolvers: prevTest.probe.resolvers,
-					tags: prevTest.probe.tags.map(tag => ({ value: tag, type: 'system' })),
+					tags: prevTest.probe.tags.map(tag => ({ value: tag, type: 'offline' })),
 					stats: {
 						cpu: {
 							count: 0,
