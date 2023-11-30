@@ -64,7 +64,7 @@ describe('geoip service', () => {
 		expect(info).to.deep.equal({
 			continent: 'SA',
 			country: 'AR',
-			state: undefined,
+			state: null,
 			city: 'Buenos Aires',
 			region: 'South America',
 			normalizedCity: 'buenos aires',
@@ -89,7 +89,7 @@ describe('geoip service', () => {
 		expect(info).to.deep.equal({
 			continent: 'SA',
 			country: 'AR',
-			state: undefined,
+			state: null,
 			city: 'Buenos Aires',
 			region: 'South America',
 			normalizedCity: 'buenos aires',
@@ -98,7 +98,7 @@ describe('geoip service', () => {
 			longitude: -58.3772,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
-			isHosting: undefined,
+			isHosting: null,
 		});
 	});
 
@@ -119,7 +119,7 @@ describe('geoip service', () => {
 			longitude: -96.8067,
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
-			isHosting: undefined,
+			isHosting: null,
 		});
 	});
 
@@ -140,7 +140,7 @@ describe('geoip service', () => {
 			longitude: -96.8067,
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
-			isHosting: undefined,
+			isHosting: null,
 		});
 	});
 
@@ -152,7 +152,7 @@ describe('geoip service', () => {
 		expect(info).to.deep.equal({
 			continent: 'SA',
 			country: 'AR',
-			state: undefined,
+			state: null,
 			city: 'Buenos Aires',
 			region: 'South America',
 			normalizedCity: 'buenos aires',
@@ -173,7 +173,7 @@ describe('geoip service', () => {
 		expect(info).to.deep.equal({
 			continent: 'SA',
 			country: 'AR',
-			state: undefined,
+			state: null,
 			city: 'Buenos Aires',
 			region: 'South America',
 			normalizedCity: 'buenos aires',
@@ -182,7 +182,7 @@ describe('geoip service', () => {
 			longitude: -58.3772,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
-			isHosting: undefined,
+			isHosting: null,
 		});
 	});
 
@@ -207,7 +207,7 @@ describe('geoip service', () => {
 		expect(info).to.deep.equal({
 			continent: 'AF',
 			country: 'EG',
-			state: undefined,
+			state: null,
 			city: 'El-Rashda',
 			region: 'Northern Africa',
 			normalizedCity: 'el-rashda',
@@ -216,7 +216,7 @@ describe('geoip service', () => {
 			longitude: 26.487,
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
-			isHosting: undefined,
+			isHosting: null,
 		});
 	});
 
@@ -228,7 +228,7 @@ describe('geoip service', () => {
 		expect(info).to.deep.equal({
 			continent: 'EU',
 			country: 'DE',
-			state: undefined,
+			state: null,
 			city: 'Falkenstein',
 			region: 'Western Europe',
 			normalizedCity: 'falkenstein',
@@ -237,7 +237,7 @@ describe('geoip service', () => {
 			longitude: 12.371563,
 			network: 'Hetzner Online GmbH',
 			normalizedNetwork: 'hetzner online gmbh',
-			isHosting: undefined,
+			isHosting: null,
 		});
 	});
 
@@ -249,7 +249,7 @@ describe('geoip service', () => {
 		expect(info).to.deep.equal({
 			continent: 'EU',
 			country: 'DE',
-			state: undefined,
+			state: null,
 			city: 'Zwickau',
 			region: 'Western Europe',
 			normalizedCity: 'zwickau',
@@ -258,7 +258,7 @@ describe('geoip service', () => {
 			longitude: 12.371563,
 			network: 'Hetzner Online GmbH',
 			normalizedNetwork: 'hetzner online gmbh',
-			isHosting: undefined,
+			isHosting: null,
 		});
 	});
 
@@ -291,7 +291,7 @@ describe('geoip service', () => {
 		expect(info).to.deep.equal({
 			continent: 'SA',
 			country: 'AR',
-			state: undefined,
+			state: null,
 			city: 'Buenos Aires',
 			region: 'South America',
 			normalizedCity: 'buenos aires',
@@ -300,7 +300,7 @@ describe('geoip service', () => {
 			longitude: -58.3772,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
-			isHosting: undefined,
+			isHosting: null,
 		});
 	});
 
@@ -342,7 +342,7 @@ describe('geoip service', () => {
 			longitude: -96.8067,
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
-			isHosting: undefined,
+			isHosting: null,
 		});
 	});
 
@@ -364,7 +364,7 @@ describe('geoip service', () => {
 				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
-				isHosting: undefined,
+				isHosting: null,
 			});
 		});
 
@@ -385,7 +385,7 @@ describe('geoip service', () => {
 				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
-				isHosting: undefined,
+				isHosting: null,
 			});
 		});
 
@@ -406,7 +406,7 @@ describe('geoip service', () => {
 				longitude: -96.8067,
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
-				isHosting: undefined,
+				isHosting: null,
 			});
 		});
 
@@ -446,7 +446,7 @@ describe('geoip service', () => {
 				longitude: -77.039476,
 				network: 'Verizon Business',
 				normalizedNetwork: 'verizon business',
-				isHosting: undefined,
+				isHosting: null,
 			});
 		});
 

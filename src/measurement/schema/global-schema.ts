@@ -13,7 +13,7 @@ export const schema = Joi.object({
 	type: Joi.string().valid('ping', 'traceroute', 'dns', 'mtr', 'http').insensitive().required(),
 	target: targetSchema,
 	measurementOptions: measurementSchema,
-	locations: Joi.alternatives().try(locationSchema, Joi.string()),
+	locations: locationSchema,
 	limit: Joi.number().min(1).max(measurementConfig.limits.global).default(GLOBAL_DEFAULTS.limit),
 	inProgressUpdates: Joi.bool().default(GLOBAL_DEFAULTS.inProgressUpdates),
 });

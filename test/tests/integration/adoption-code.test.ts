@@ -3,8 +3,8 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import type { Socket } from 'socket.io-client';
 import request from 'supertest';
-import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../../utils/server.js';
-import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
+import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../utils/server.js';
+import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 
 let probe: Socket;
 const app = await getTestServer();
