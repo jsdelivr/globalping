@@ -1,7 +1,7 @@
 import config from 'config';
 import _ from 'lodash';
 import cryptoRandomString from 'crypto-random-string';
-import type { Probe } from '../probe/types.js';
+import type { OfflineProbe, Probe } from '../probe/types.js';
 import type { RedisClient } from '../lib/redis/client.js';
 import { getRedisClient } from '../lib/redis/client.js';
 import { scopedLogger } from '../lib/logger.js';
@@ -46,11 +46,11 @@ export class MeasurementStore {
 		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord;
 	}
 
-	async createMeasurement (request: MeasurementRequest, probes: Probe[]): Promise<string> {
+	async createMeasurement (request: MeasurementRequest, probes: Map<number, Probe>, probesAndOfflineProbes: (Probe | OfflineProbe)[]): Promise<string> {
 		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
 
-		const results = this.probesToResults(probes, request.type);
+		const results = this.probesToResults(probesAndOfflineProbes, request.type);
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
 		const startTime = new Date();
 		const measurement: MeasurementRecord = {
@@ -61,7 +61,7 @@ export class MeasurementStore {
 			updatedAt: startTime.toISOString(),
 			target: request.target,
 			limit: request.limit,
-			probesCount: probes.length,
+			probesCount: probesAndOfflineProbes.length,
 			locations: request.locations,
 			measurementOptions: request.measurementOptions,
 			results,
@@ -70,8 +70,8 @@ export class MeasurementStore {
 
 		await Promise.all([
 			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
-			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.filter(probe => probe.status !== 'offline').length, { EX: probesAwaitingTtl }),
-			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', probes.map(probe => probe.ipAddress)),
+			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.size, { EX: probesAwaitingTtl }),
+			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', probesAndOfflineProbes.map(probe => probe.ipAddress)),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
 			this.redis.expire(getMeasurementKey(id, 'ips'), config.get<number>('measurement.resultTTL')),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
@@ -170,7 +170,7 @@ export class MeasurementStore {
 		return substractObjects(measurement, defaults) as Partial<MeasurementRecord>;
 	}
 
-	probesToResults (probes: Probe[], type: RequestType) {
+	probesToResults (probes: (Probe | OfflineProbe)[], type: RequestType) {
 		const results = probes.map(probe => ({
 			probe: {
 				continent: probe.location.continent,
@@ -191,7 +191,7 @@ export class MeasurementStore {
 		return results;
 	}
 
-	getInitialResult (type: RequestType, status: Probe['status']) {
+	getInitialResult (type: RequestType, status: Probe['status'] | OfflineProbe['status']) {
 		if (status === 'offline') {
 			return {
 				status: 'failed',

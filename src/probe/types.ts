@@ -31,7 +31,7 @@ export type Tag = {
 };
 
 export type Probe = {
-	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'ping-test-failed' | 'sigterm' | 'offline';
+	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'ping-test-failed' | 'sigterm';
 	client: string;
 	version: string;
 	nodeVersion: string;
@@ -46,3 +46,30 @@ export type Probe = {
 	tags: Tag[];
 	stats: ProbeStats;
 };
+
+type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;
+
+export type OfflineProbe = Modify<Probe, {
+	status: 'offline';
+	client: null;
+	version: null;
+	nodeVersion: null;
+	uuid: null;
+	isHardware: false;
+	hardwareDevice: null;
+	ipAddress: string;
+	host: null;
+	index: [];
+	tags: {
+		value: string;
+	}[];
+	stats: {
+		cpu: {
+			count: 0;
+			load: [];
+		};
+		jobs: {
+			count: 0
+		};
+	};
+}>

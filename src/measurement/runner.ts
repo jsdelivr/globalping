@@ -24,20 +24,20 @@ export class MeasurementRunner {
 
 	async run (ctx: Context): Promise<{measurementId: string; probesCount: number;}> {
 		const request = ctx.request.body as MeasurementRequest;
-		const probes = await this.router.findMatchingProbes(request.locations, request.limit);
+		const { probesMap, probesAndOfflineProbes } = await this.router.findMatchingProbes(request.locations, request.limit);
 
-		if (probes.length === 0) {
+		if (probesAndOfflineProbes.length === 0) {
 			throw createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' });
 		}
 
-		await checkRateLimits(ctx, probes.filter(probe => probe.status !== 'offline').length);
+		await checkRateLimits(ctx, probesMap.size);
 
-		const measurementId = await this.store.createMeasurement(request, probes);
+		const measurementId = await this.store.createMeasurement(request, probesMap, probesAndOfflineProbes);
 
-		this.sendToProbes(measurementId, probes, request);
+		this.sendToProbes(measurementId, probesMap, request);
 		this.metrics.recordMeasurement(request.type);
 
-		return { measurementId, probesCount: probes.length };
+		return { measurementId, probesCount: probesAndOfflineProbes.length };
 	}
 
 	async recordProgress (data: MeasurementProgressMessage): Promise<void> {
@@ -52,10 +52,10 @@ export class MeasurementRunner {
 		}
 	}
 
-	private sendToProbes (measurementId: string, probes: Probe[], request: MeasurementRequest) {
+	private sendToProbes (measurementId: string, probesMap: Map<number, Probe>, request: MeasurementRequest) {
 		let inProgressProbes = 0;
 		const maxInProgressProbes = config.get<number>('measurement.maxInProgressProbes');
-		probes.forEach((probe, index) => {
+		probesMap.forEach((probe, index) => {
 			const inProgressUpdates = request.inProgressUpdates && inProgressProbes++ < maxInProgressProbes;
 			this.io.of('probes').to(probe.client).emit('probe:measurement:request', {
 				measurementId,

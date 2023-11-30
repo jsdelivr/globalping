@@ -170,8 +170,6 @@ export type LocationWithLimit = Location & {limit?: number};
  * Measurement Objects
  */
 
-type MeasurementStatus = 'in-progress' | 'finished';
-
 export type MeasurementRequest = {
 	type: 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 	target: string;
@@ -201,7 +199,7 @@ export type MeasurementResult = {
 export type MeasurementRecord = {
 	id: string;
 	type: MeasurementRequest['type'];
-	status: MeasurementStatus;
+	status: 'in-progress' | 'finished';
 	createdAt: string;
 	updatedAt: string;
 	target: string;

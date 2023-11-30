@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import { fetchSockets } from '../lib/ws/fetch-sockets.js';
-import type { LocationWithLimit, MeasurementRecord } from '../measurement/types.js';
+import type { LocationWithLimit, MeasurementRecord, MeasurementResult } from '../measurement/types.js';
 import type { Location } from '../lib/location/types.js';
-import type { Probe } from './types.js';
+import type { OfflineProbe, Probe } from './types.js';
 import { ProbesLocationFilter } from './probes-location-filter.js';
 import { getMeasurementStore } from '../measurement/store.js';
 import { normalizeFromPublicName, normalizeNetworkName } from '../lib/geoip/utils.js';
@@ -17,21 +17,28 @@ export class ProbeRouter {
 	public async findMatchingProbes (
 		locations: LocationWithLimit[] | string = [],
 		globalLimit = 1,
-	): Promise<Probe[]> {
-		const probes = await this.fetchProbes();
-		let filtered: Probe[] = [];
+	) {
+		const connectedProbes = await this.fetchProbes();
+		let probesMap: Map<number, Probe>;
+		let probesAndOfflineProbes: (Probe | OfflineProbe)[] = [];
 
 		if (typeof locations === 'string') {
-			filtered = await this.findWithMeasurementId(probes, locations);
+			({ probesMap, probesAndOfflineProbes } = await this.findWithMeasurementId(connectedProbes, locations));
 		} else if (locations.some(l => l.limit)) {
-			filtered = this.findWithLocationLimit(probes, locations);
+			const filtered = this.findWithLocationLimit(connectedProbes, locations);
+			probesAndOfflineProbes = filtered;
+			probesMap = new Map(filtered.entries());
 		} else if (locations.length > 0) {
-			filtered = this.findWithGlobalLimit(probes, locations, globalLimit);
+			const filtered = this.findWithGlobalLimit(connectedProbes, locations, globalLimit);
+			probesAndOfflineProbes = filtered;
+			probesMap = new Map(filtered.entries());
 		} else {
-			filtered = this.findGloballyDistributed(probes, globalLimit);
+			const filtered = this.findGloballyDistributed(connectedProbes, globalLimit);
+			probesAndOfflineProbes = filtered;
+			probesMap = new Map(filtered.entries());
 		}
 
-		return filtered;
+		return { probesMap, probesAndOfflineProbes };
 	}
 
 	private async fetchProbes (): Promise<Probe[]> {
@@ -73,69 +80,83 @@ export class ProbeRouter {
 		return [ ...picked ];
 	}
 
-	private async findWithMeasurementId (probes: Probe[], measurementId: string): Promise<Probe[]> {
+	private async findWithMeasurementId (connectedProbes: Probe[], measurementId: string) {
+		const ipToConnectedProbe = new Map(connectedProbes.map(probe => [ probe.ipAddress, probe ]));
 		let prevMeasurement: MeasurementRecord | undefined;
 		const prevIps = await this.store.getIpsByMeasurementId(measurementId);
-		const ipToProbe = new Map(probes.map(probe => [ probe.ipAddress, probe ]));
-		const result: Probe[] = [];
+
+		const probesMap: Map<number, Probe> = new Map();
+		const probesAndOfflineProbes: (Probe | OfflineProbe)[] = [];
+
+		const emptyResult = { probesMap: new Map(), probesAndOfflineProbes: [] } as {
+			probesMap: Map<number, Probe>;
+			probesAndOfflineProbes: (Probe | OfflineProbe)[];
+		};
 
 		for (let i = 0; i < prevIps.length; i++) {
 			const ip = prevIps[i]!;
-			const probe = ipToProbe.get(ip);
+			const connectedProbe = ipToConnectedProbe.get(ip);
 
-			if (probe) {
-				result.push(probe);
+			if (connectedProbe) {
+				probesMap.set(i, connectedProbe);
+				probesAndOfflineProbes.push(connectedProbe);
 			} else {
 				if (!prevMeasurement) {
 					prevMeasurement = await this.store.getMeasurementJson(measurementId);
 
-					if (!prevMeasurement) { return []; }
+					if (!prevMeasurement) {
+						return emptyResult;
+					}
 				}
 
 				const prevTest = prevMeasurement.results[i];
 
-				if (!prevTest) { return []; }
+				if (!prevTest) {
+					return emptyResult;
+				}
 
-				const offlineProbe: Probe = {
-					status: 'offline',
-					client: '',
-					version: '',
-					nodeVersion: '',
-					uuid: '',
-					isHardware: false,
-					hardwareDevice: null,
-					ipAddress: ip,
-					host: '',
-					location: {
-						continent: prevTest.probe.continent,
-						region: prevTest.probe.region,
-						country: prevTest.probe.country,
-						city: prevTest.probe.city,
-						normalizedCity: normalizeFromPublicName(prevTest.probe.city),
-						asn: prevTest.probe.asn,
-						latitude: prevTest.probe.latitude,
-						longitude: prevTest.probe.longitude,
-						state: prevTest.probe.state,
-						network: prevTest.probe.network,
-						normalizedNetwork: normalizeNetworkName(prevTest.probe.network),
-					},
-					index: [],
-					resolvers: prevTest.probe.resolvers,
-					tags: prevTest.probe.tags.map(tag => ({ value: tag, type: 'offline' })),
-					stats: {
-						cpu: {
-							count: 0,
-							load: [],
-						},
-						jobs: { count: 0 },
-					},
-				};
-				result.push(offlineProbe);
+				const offlineProbe = this.testToOfflineProbe(prevTest, ip);
+				probesAndOfflineProbes.push(offlineProbe);
 			}
 		}
 
-		return result;
+		return { probesMap, probesAndOfflineProbes };
 	}
+
+	private testToOfflineProbe = (test: MeasurementResult, ip: string): OfflineProbe => ({
+		status: 'offline',
+		client: null,
+		version: null,
+		nodeVersion: null,
+		uuid: null,
+		isHardware: false,
+		hardwareDevice: null,
+		ipAddress: ip,
+		host: null,
+		location: {
+			continent: test.probe.continent,
+			region: test.probe.region,
+			country: test.probe.country,
+			city: test.probe.city,
+			normalizedCity: normalizeFromPublicName(test.probe.city),
+			asn: test.probe.asn,
+			latitude: test.probe.latitude,
+			longitude: test.probe.longitude,
+			state: test.probe.state,
+			network: test.probe.network,
+			normalizedNetwork: normalizeNetworkName(test.probe.network),
+		},
+		index: [],
+		resolvers: test.probe.resolvers,
+		tags: test.probe.tags.map(tag => ({ value: tag, type: 'offline' })),
+		stats: {
+			cpu: {
+				count: 0,
+				load: [],
+			},
+			jobs: { count: 0 },
+		},
+	});
 }
 
 // Factory
