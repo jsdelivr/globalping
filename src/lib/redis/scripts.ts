@@ -4,7 +4,7 @@ import type { MeasurementRecord, MeasurementResultMessage } from '../../measurem
 type CountScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
-	transformArguments (key: string): Array<string>;
+	transformArguments (key: string): string[];
 	transformReply (reply: number): number;
 } & {
 	SHA1: string;
@@ -19,9 +19,19 @@ export type RecordResultScript = {
 	SHA1: string;
 };
 
+export type MarkFinishedScript = {
+	NUMBER_OF_KEYS: number;
+	SCRIPT: string;
+	transformArguments (measurementId: string): string[];
+	transformReply (): null;
+} & {
+	SHA1: string;
+};
+
 export type RedisScripts = {
 	count: CountScript;
 	recordResult: RecordResultScript;
+	markFinished: MarkFinishedScript;
 };
 
 export const count: CountScript = defineScript({
@@ -79,5 +89,24 @@ export const recordResult: RecordResultScript = defineScript({
 	},
 	transformReply (reply) {
 		return JSON.parse(reply) as MeasurementRecord | null;
+	},
+});
+
+export const markFinished: MarkFinishedScript = defineScript({
+	NUMBER_OF_KEYS: 1,
+	SCRIPT: `
+	local measurementId = KEYS[1]
+	local key = 'gp:measurement:'..measurementId
+	local awaitingKey = 'gp:measurement:probes_awaiting:'..measurementId
+
+	redis.call('HDEL', 'gp:in-progress', measurementId)
+	redis.call('DEL', awaitingKey)
+	redis.call('JSON.SET', key, '$.status', '"finished"')
+	`,
+	transformArguments (measurementId) {
+		return [ measurementId ];
+	},
+	transformReply () {
+		return null;
 	},
 });

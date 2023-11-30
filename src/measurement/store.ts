@@ -5,7 +5,7 @@ import type { OfflineProbe, Probe } from '../probe/types.js';
 import type { RedisClient } from '../lib/redis/client.js';
 import { getRedisClient } from '../lib/redis/client.js';
 import { scopedLogger } from '../lib/logger.js';
-import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType } from './types.js';
+import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType, MeasurementResultMessage } from './types.js';
 import { getDefaults } from './schema/utils.js';
 
 const logger = scopedLogger('store');
@@ -44,6 +44,12 @@ export class MeasurementStore {
 
 	async getMeasurementJson (id: string): Promise<MeasurementRecord> {
 		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord;
+	}
+
+	async getIpsByMeasurementId (id: string): Promise<string[]> {
+		const key = getMeasurementKey(id, 'ips');
+		const ips = await this.redis.json.get(key) as string[] | null;
+		return ips || [];
 	}
 
 	async createMeasurement (request: MeasurementRequest, probes: Map<number, Probe>, probesAndOfflineProbes: (Probe | OfflineProbe)[]): Promise<string> {
@@ -97,10 +103,18 @@ export class MeasurementStore {
 		]);
 	}
 
-	async getIpsByMeasurementId (id: string): Promise<string[]> {
-		const key = getMeasurementKey(id, 'ips');
-		const ips = await this.redis.json.get(key) as string[] | null;
-		return ips || [];
+	async storeMeasurementResult (data: MeasurementResultMessage) {
+		const record = await this.redis.recordResult(data.measurementId, data.testId, data.result);
+
+		if (record) {
+			await this.markFinished(data.measurementId);
+		}
+
+		return record;
+	}
+
+	async markFinished (id: string) {
+		await this.redis.markFinished(id);
 	}
 
 	async markFinishedByTimeout (ids: string[]): Promise<void> {
