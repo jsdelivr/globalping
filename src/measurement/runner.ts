@@ -9,7 +9,7 @@ import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
 import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage } from './types.js';
-import { checkRateLimits } from '../lib/ratelimiter.js';
+import { checkRateLimit } from '../lib/ratelimiter.js';
 
 export class MeasurementRunner {
 	constructor (
@@ -21,18 +21,18 @@ export class MeasurementRunner {
 
 	async run (ctx: Context): Promise<{measurementId: string; probesCount: number;}> {
 		const request = ctx.request.body as MeasurementRequest;
-		const { probesMap, probesAndOfflineProbes } = await this.router.findMatchingProbes(request.locations, request.limit);
+		const { onlineProbesMap, allProbes } = await this.router.findMatchingProbes(request.locations, request.limit);
 
-		if (probesAndOfflineProbes.length === 0) {
+		if (allProbes.length === 0) {
 			throw createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' });
 		}
 
-		await checkRateLimits(ctx, probesMap.size);
+		await checkRateLimit(ctx, onlineProbesMap.size);
 
-		const measurementId = await this.store.createMeasurement(request, probesMap, probesAndOfflineProbes);
+		const measurementId = await this.store.createMeasurement(request, onlineProbesMap, allProbes);
 
-		if (probesMap.size) {
-			this.sendToProbes(measurementId, probesMap, request);
+		if (onlineProbesMap.size) {
+			this.sendToProbes(measurementId, onlineProbesMap, request);
 			// If all selected probes are offline, immediately mark measurement as finished
 		} else {
 			await this.store.markFinished(measurementId);
@@ -40,7 +40,7 @@ export class MeasurementRunner {
 
 		this.metrics.recordMeasurement(request.type);
 
-		return { measurementId, probesCount: probesAndOfflineProbes.length };
+		return { measurementId, probesCount: allProbes.length };
 	}
 
 	async recordProgress (data: MeasurementProgressMessage): Promise<void> {
@@ -55,10 +55,10 @@ export class MeasurementRunner {
 		}
 	}
 
-	private sendToProbes (measurementId: string, probesMap: Map<number, Probe>, request: MeasurementRequest) {
+	private sendToProbes (measurementId: string, onlineProbesMap: Map<number, Probe>, request: MeasurementRequest) {
 		let inProgressProbes = 0;
 		const maxInProgressProbes = config.get<number>('measurement.maxInProgressProbes');
-		probesMap.forEach((probe, index) => {
+		onlineProbesMap.forEach((probe, index) => {
 			const inProgressUpdates = request.inProgressUpdates && inProgressProbes++ < maxInProgressProbes;
 			this.io.of('probes').to(probe.client).emit('probe:measurement:request', {
 				measurementId,

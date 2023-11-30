@@ -26,7 +26,7 @@ export type ProbeStats = {
 };
 
 export type Tag = {
-	type: 'system' | 'admin' | 'user' | 'offline';
+	type: 'system' | 'admin' | 'user';
 	value: string;
 };
 
@@ -61,6 +61,7 @@ export type OfflineProbe = Modify<Probe, {
 	host: null;
 	index: [];
 	tags: {
+		type: 'offline';
 		value: string;
 	}[];
 	stats: {

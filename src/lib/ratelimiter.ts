@@ -21,7 +21,7 @@ const setRateLimitHeaders = (ctx: Context, result: RateLimiterRes) => {
 	ctx.set('X-RateLimit-Remaining', `${result.remainingPoints}`);
 };
 
-export const checkRateLimits = async (ctx: Context, numberOfProbes: number) => {
+export const checkRateLimit = async (ctx: Context, numberOfProbes: number) => {
 	if (ctx['isAdmin']) {
 		return;
 	}
