@@ -127,6 +127,7 @@ describe('measurement store', () => {
 				limit: 1,
 				inProgressUpdates: false,
 			},
+			new Map([ [ 0, getProbe('id') ] ]),
 			[ getProbe('id') ],
 		);
 
@@ -182,6 +183,7 @@ describe('measurement store', () => {
 				limit: 1,
 				inProgressUpdates: false,
 			},
+			new Map([ [ 0, getProbe('id') ] ]),
 			[ getProbe('id') ],
 		);
 
@@ -234,14 +236,15 @@ describe('measurement store', () => {
 				limit: 4,
 				inProgressUpdates: false,
 			},
+			new Map([ getProbe('z'), getProbe('10'), getProbe('x'), getProbe('0') ].entries()),
 			[ getProbe('z'), getProbe('10'), getProbe('x'), getProbe('0') ],
 		);
 
 		expect(redisMock.hSet.callCount).to.equal(1);
 		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', 'measurementid', 1678000000000 ]);
 		expect(redisMock.set.callCount).to.equal(1);
-		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid:probes_awaiting', 4, { EX: 35 }]);
-		expect(redisMock.json.set.callCount).to.equal(1);
+		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:measurement:probes_awaiting:measurementid', 4, { EX: 35 }]);
+		expect(redisMock.json.set.callCount).to.equal(2);
 
 		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid', '$', {
 			id: 'measurementid',
@@ -318,7 +321,7 @@ describe('measurement store', () => {
 			}],
 		}]);
 
-		expect(redisMock.expire.callCount).to.equal(1);
+		expect(redisMock.expire.callCount).to.equal(2);
 		expect(redisMock.expire.args[0]).to.deep.equal([ 'gp:measurement:measurementid', 604800 ]);
 	});
 
@@ -349,6 +352,7 @@ describe('measurement store', () => {
 				limit: 2,
 				inProgressUpdates: false,
 			},
+			new Map([ [ 0, getProbe('id') ] ]),
 			[ getProbe('id') ],
 		);
 
@@ -393,7 +397,7 @@ describe('measurement store', () => {
 			}],
 		}]);
 
-		expect(redisMock.expire.callCount).to.equal(1);
+		expect(redisMock.expire.callCount).to.equal(2);
 		expect(redisMock.expire.args[0]).to.deep.equal([ 'gp:measurement:measurementid', 604800 ]);
 	});
 
@@ -416,6 +420,7 @@ describe('measurement store', () => {
 				locations: [],
 				inProgressUpdates: false,
 			},
+			new Map([ [ 0, getProbe('id') ] ]),
 			[ getProbe('id') ],
 		);
 
@@ -450,7 +455,7 @@ describe('measurement store', () => {
 			}],
 		}]);
 
-		expect(redisMock.expire.callCount).to.equal(1);
+		expect(redisMock.expire.callCount).to.equal(2);
 		expect(redisMock.expire.args[0]).to.deep.equal([ 'gp:measurement:measurementid', 604800 ]);
 	});
 

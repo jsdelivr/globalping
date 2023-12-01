@@ -52,7 +52,7 @@ export class MeasurementStore {
 		return ips || [];
 	}
 
-	async createMeasurement (request: MeasurementRequest, probes: Map<number, Probe>, allProbes: (Probe | OfflineProbe)[]): Promise<string> {
+	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, Probe>, allProbes: (Probe | OfflineProbe)[]): Promise<string> {
 		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
 
@@ -76,11 +76,11 @@ export class MeasurementStore {
 
 		await Promise.all([
 			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
-			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.size, { EX: probesAwaitingTtl }),
-			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', allProbes.map(probe => probe.ipAddress)),
+			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: probesAwaitingTtl }),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
-			this.redis.expire(getMeasurementKey(id, 'ips'), config.get<number>('measurement.resultTTL')),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
+			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', allProbes.map(probe => probe.ipAddress)),
+			this.redis.expire(getMeasurementKey(id, 'ips'), config.get<number>('measurement.resultTTL')),
 		]);
 
 		return id;

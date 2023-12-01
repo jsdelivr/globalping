@@ -68,7 +68,7 @@ export class ProbesLocationFilter {
 		Object.keys(location).forEach((key) => {
 			if (key === 'tags') {
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				probes = probes.filter(probe => location.tags!.every(tag => ProbesLocationFilter.hasTag(probe, tag)));
+				filteredProbes = probes.filter(probe => location.tags!.every(tag => ProbesLocationFilter.hasTag(probe, tag)));
 			} else if (key === 'magic') {
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				filteredProbes = ProbesLocationFilter.magicFilter(filteredProbes, location.magic!);

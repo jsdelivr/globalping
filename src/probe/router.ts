@@ -4,15 +4,16 @@ import type { LocationWithLimit, MeasurementRecord, MeasurementResult } from '..
 import type { Location } from '../lib/location/types.js';
 import type { OfflineProbe, Probe } from './types.js';
 import { ProbesLocationFilter } from './probes-location-filter.js';
-import { getMeasurementStore } from '../measurement/store.js';
+import { getMeasurementStore, MeasurementStore } from '../measurement/store.js';
 import { normalizeFromPublicName, normalizeNetworkName } from '../lib/geoip/utils.js';
 
 export class ProbeRouter {
 	private readonly probesFilter = new ProbesLocationFilter();
 
-	private readonly store = getMeasurementStore();
-
-	constructor (private readonly fetchWsSockets: typeof fetchSockets) {}
+	constructor (
+		private readonly fetchWsSockets: typeof fetchSockets,
+		private readonly store: MeasurementStore,
+	) {}
 
 	public async findMatchingProbes (
 		locations: LocationWithLimit[] | string = [],
@@ -165,7 +166,7 @@ let router: ProbeRouter;
 
 export const getProbeRouter = () => {
 	if (!router) {
-		router = new ProbeRouter(fetchSockets);
+		router = new ProbeRouter(fetchSockets, getMeasurementStore());
 	}
 
 	return router;
