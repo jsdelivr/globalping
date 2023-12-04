@@ -9,13 +9,14 @@ import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
 import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage } from './types.js';
-import { checkRateLimit } from '../lib/ratelimiter.js';
+import { rateLimit } from '../lib/ratelimiter.js';
 
 export class MeasurementRunner {
 	constructor (
 		private readonly io: Server,
 		private readonly store: MeasurementStore,
 		private readonly router: ProbeRouter,
+		private readonly checkRateLimit: typeof rateLimit,
 		private readonly metrics: MetricsAgent,
 	) {}
 
@@ -27,7 +28,7 @@ export class MeasurementRunner {
 			throw createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' });
 		}
 
-		await checkRateLimit(ctx, onlineProbesMap.size);
+		await this.checkRateLimit(ctx, onlineProbesMap.size);
 
 		const measurementId = await this.store.createMeasurement(request, onlineProbesMap, allProbes);
 
@@ -80,7 +81,7 @@ let runner: MeasurementRunner;
 
 export const getMeasurementRunner = () => {
 	if (!runner) {
-		runner = new MeasurementRunner(getWsServer(), getMeasurementStore(), getProbeRouter(), getMetricsAgent());
+		runner = new MeasurementRunner(getWsServer(), getMeasurementStore(), getProbeRouter(), rateLimit, getMetricsAgent());
 	}
 
 	return runner;

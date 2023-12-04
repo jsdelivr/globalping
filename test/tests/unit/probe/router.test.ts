@@ -32,8 +32,8 @@ describe('probe router', () => {
 	const store = {
 		getIpsByMeasurementId: sinon.stub(),
 		getMeasurement: sinon.stub(),
-	} as unknown as MeasurementStore;
-	const router = new ProbeRouter(fetchSocketsMock, store);
+	};
+	const router = new ProbeRouter(fetchSocketsMock, store as unknown as MeasurementStore);
 	let buildProbe: (socket: RemoteProbeSocket) => Promise<Probe>;
 	let sandbox: sinon.SinonSandbox;
 
@@ -851,6 +851,108 @@ describe('probe router', () => {
 			const { allProbes } = await router.findMatchingProbes(locations, 100);
 			expect(allProbes.length).to.equal(1);
 			expect(allProbes[0]!.location.country).to.equal('GB');
+		});
+	});
+
+	describe('route with measurement id string', async () => {
+		it('should find probes by prev measurement id', async () => {
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
+				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+			store.getIpsByMeasurementId.resolves([ '1.2.3.4' ]);
+
+			store.getMeasurement.resolves({
+				results: [{
+					probe: {
+						continent: 'EU',
+						country: 'PL',
+						city: 'Warsaw',
+						network: 'Liberty Global B.V.',
+						tags: [],
+					},
+				}],
+			});
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes('measurementid');
+
+			expect(store.getIpsByMeasurementId.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurement.callCount).to.equal(0);
+			expect(allProbes[0]!.location.country).to.equal('PL');
+			expect(allProbes[0]!.status).to.equal('ready');
+			expect(onlineProbesMap.get(0)?.location.country).to.equal('PL');
+		});
+
+		it('should replace non-connected probes with offline probe data', async () => {
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
+				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+			store.getIpsByMeasurementId.resolves([ '9.9.9.9' ]);
+
+			store.getMeasurement.resolves({
+				results: [{
+					probe: {
+						continent: 'EU',
+						country: 'PL',
+						city: 'Warsaw',
+						network: 'Liberty Global B.V.',
+						tags: [],
+					},
+				}],
+			});
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes('measurementid');
+
+			expect(store.getIpsByMeasurementId.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(allProbes.length).to.equal(1);
+			expect(allProbes[0]!.location.country).to.equal('PL');
+			expect(allProbes[0]!.status).to.equal('offline');
+			expect(onlineProbesMap.size).to.equal(0);
+		});
+
+		it('should return empty data if measurement ips wasn\'t found', async () => {
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
+				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+			store.getIpsByMeasurementId.resolves([]);
+
+			store.getMeasurement.resolves({
+				results: [{
+					probe: {
+						continent: 'EU',
+						country: 'PL',
+						city: 'Warsaw',
+						network: 'Liberty Global B.V.',
+						tags: [],
+					},
+				}],
+			});
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes('measurementid');
+
+			expect(store.getIpsByMeasurementId.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(allProbes.length).to.equal(0);
+			expect(onlineProbesMap.size).to.equal(0);
+		});
+
+		it('should return empty data if measurement itself wasn\'t found', async () => {
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
+				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+			store.getIpsByMeasurementId.resolves([ '9.9.9.9' ]);
+
+			store.getMeasurement.resolves(null);
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes('measurementid');
+
+			expect(store.getIpsByMeasurementId.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(allProbes.length).to.equal(0);
+			expect(onlineProbesMap.size).to.equal(0);
 		});
 	});
 });

@@ -48,8 +48,8 @@ export class MeasurementStore {
 		return this.redis.sendCommand([ 'JSON.GET', getMeasurementKey(id) ]);
 	}
 
-	async getMeasurement (id: string): Promise<MeasurementRecord> {
-		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord;
+	async getMeasurement (id: string) {
+		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord | null;
 	}
 
 	async getIpsByMeasurementId (id: string): Promise<string[]> {

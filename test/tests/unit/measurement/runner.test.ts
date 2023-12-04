@@ -9,6 +9,7 @@ import { MetricsAgent } from '../../../../src/lib/metrics.js';
 import type { Probe } from '../../../../src/probe/types.js';
 import type { MeasurementRunner } from '../../../../src/measurement/runner.js';
 import type { MeasurementRecord, MeasurementResultMessage } from '../../../../src/measurement/types.js';
+import createHttpError from 'http-errors';
 
 const getProbe = (id: number) => ({ client: id } as unknown as Probe);
 
@@ -26,24 +27,21 @@ describe('MeasurementRunner', () => {
 	const store = sinon.createStubInstance(MeasurementStore);
 	const router = sinon.createStubInstance(ProbeRouter);
 	const metrics = sinon.createStubInstance(MetricsAgent);
+	const rateLimit = sinon.stub();
 	let runner: MeasurementRunner;
 	let testId: number;
 
 	before(async () => {
 		td.replaceEsm('crypto-random-string', null, () => testId++);
 		const { MeasurementRunner } = await import('../../../../src/measurement/runner.js');
-		runner = new MeasurementRunner(io, store, router, metrics);
+		runner = new MeasurementRunner(io, store, router, rateLimit, metrics);
 	});
 
 	beforeEach(() => {
-		emit.reset();
-		to.reset();
+		sinon.resetHistory();
 		to.returns({ emit });
 		io.of.returns({ to } as any);
-		router.findMatchingProbes.reset();
-		store.createMeasurement.reset();
 		store.createMeasurement.resolves('measurementid');
-		metrics.recordMeasurement.reset();
 		testId = 0;
 	});
 
@@ -256,5 +254,87 @@ describe('MeasurementRunner', () => {
 		expect(metrics.recordMeasurementTime.callCount).to.equal(1);
 		expect(metrics.recordMeasurementTime.args[0]).to.deep.equal([ 'ping', 25000 ]);
 		sandbox.restore();
+	});
+
+	it('should call ratelimiter with the number of online probes', async () => {
+		router.findMatchingProbes.resolves({
+			onlineProbesMap: new Map([ getProbe(0) ].entries()),
+			allProbes: [ getProbe(0), getProbe(1) ],
+		});
+
+		const ctx = {
+			set,
+			req,
+			request: {
+				body: {
+					type: 'ping',
+					target: 'jsdelivr.com',
+					measurementOptions: {
+						packets: 3,
+					},
+					locations: [],
+					limit: 10,
+					inProgressUpdates: false,
+				},
+			},
+		} as unknown as Context;
+
+		await runner.run(ctx);
+
+		expect(rateLimit.callCount).to.equal(1);
+		expect(rateLimit.args[0]).to.deep.equal([ ctx, 1 ]);
+	});
+
+	it('should throw 422 error if no probes found', async () => {
+		router.findMatchingProbes.resolves({
+			onlineProbesMap: new Map([].entries()),
+			allProbes: [],
+		});
+
+		const err = await runner.run({
+			set,
+			req,
+			request: {
+				body: {
+					type: 'ping',
+					target: 'jsdelivr.com',
+					measurementOptions: {
+						packets: 3,
+					},
+					locations: [],
+					limit: 10,
+					inProgressUpdates: false,
+				},
+			},
+		} as unknown as Context).catch((err: unknown) => err);
+		expect(err).to.deep.equal(createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' }));
+		expect(store.markFinished.callCount).to.equal(0);
+	});
+
+	it('should immideately call store.markFinished if there are no online probes', async () => {
+		router.findMatchingProbes.resolves({
+			onlineProbesMap: new Map([].entries()),
+			allProbes: [ getProbe(0) ],
+		});
+
+		await runner.run({
+			set,
+			req,
+			request: {
+				body: {
+					type: 'ping',
+					target: 'jsdelivr.com',
+					measurementOptions: {
+						packets: 3,
+					},
+					locations: [],
+					limit: 10,
+					inProgressUpdates: false,
+				},
+			},
+		} as unknown as Context);
+
+		expect(store.markFinished.callCount).to.equal(1);
+		expect(store.markFinished.args[0]).to.deep.equal([ 'measurementid' ]);
 	});
 });

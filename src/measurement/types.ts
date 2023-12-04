@@ -18,7 +18,7 @@ type PingTiming = {
 	ttl: number;
 };
 
-type PingResult = TestResult & {
+export type PingResult = TestResult & {
 	timings: PingTiming[];
 	stats: {
 		min: number;
