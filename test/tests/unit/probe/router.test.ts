@@ -31,7 +31,7 @@ describe('probe router', () => {
 	const getRegionMock = sinon.stub();
 	const store = {
 		getIpsByMeasurementId: sinon.stub(),
-		getMeasurementJson: sinon.stub(),
+		getMeasurement: sinon.stub(),
 	} as unknown as MeasurementStore;
 	const router = new ProbeRouter(fetchSocketsMock, store);
 	let buildProbe: (socket: RemoteProbeSocket) => Promise<Probe>;

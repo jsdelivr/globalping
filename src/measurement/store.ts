@@ -44,11 +44,11 @@ const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, un
 export class MeasurementStore {
 	constructor (private readonly redis: RedisClient) {}
 
-	async getMeasurement (id: string): Promise<string> {
+	async getMeasurementString (id: string): Promise<string> {
 		return this.redis.sendCommand([ 'JSON.GET', getMeasurementKey(id) ]);
 	}
 
-	async getMeasurementJson (id: string): Promise<MeasurementRecord> {
+	async getMeasurement (id: string): Promise<MeasurementRecord> {
 		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord;
 	}
 

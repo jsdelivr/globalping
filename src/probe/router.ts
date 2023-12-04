@@ -103,7 +103,7 @@ export class ProbeRouter {
 				allProbes.push(connectedProbe);
 			} else {
 				if (!prevMeasurement) {
-					prevMeasurement = await this.store.getMeasurementJson(measurementId);
+					prevMeasurement = await this.store.getMeasurement(measurementId);
 
 					if (!prevMeasurement) {
 						return emptyResult;
