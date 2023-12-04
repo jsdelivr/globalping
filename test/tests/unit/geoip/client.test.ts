@@ -161,7 +161,7 @@ describe('geoip service', () => {
 			longitude: -58.3772,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
-			isHosting: undefined,
+			isHosting: true,
 		});
 	});
 
@@ -427,7 +427,7 @@ describe('geoip service', () => {
 				longitude: -77.039476,
 				network: 'Psychz Networks',
 				normalizedNetwork: 'psychz networks',
-				isHosting: undefined,
+				isHosting: true,
 			});
 
 			nockGeoIpProviders({ ip2location: 'empty', ipmap: 'empty', maxmind: 'empty', ipinfo: 'washington', fastly: 'empty' });
@@ -446,7 +446,7 @@ describe('geoip service', () => {
 				longitude: -77.039476,
 				network: 'Verizon Business',
 				normalizedNetwork: 'verizon business',
-				isHosting: false,
+				isHosting: undefined,
 			});
 		});
 

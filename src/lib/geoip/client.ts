@@ -14,6 +14,7 @@ import { fastlyLookup } from './providers/fastly.js';
 import { maxmindLookup } from './providers/maxmind.js';
 import { ipmapLookup } from './providers/ipmap.js';
 import { type Ip2LocationBundledResponse, ip2LocationLookup } from './providers/ip2location.js';
+import { isHostingOverrides } from './overrides.js';
 
 export type LocationInfo = Omit<ProbeLocation, 'region'>;
 type Provider = 'ipmap' | 'ip2location' | 'ipinfo' | 'maxmind' | 'fastly';
@@ -42,7 +43,7 @@ export default class GeoipClient {
 				this.lookupWithCache<LocationInfo>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
 			.then(([ ipinfo, ip2location, maxmind, ipmap, fastly ]) => {
-				isHosting = ipinfo.status === 'fulfilled' ? ipinfo.value.isHosting : undefined;
+				isHosting = ip2location.status === 'fulfilled' ? ip2location.value.isHosting : undefined;
 				const fulfilled: (LocationInfoWithProvider | null)[] = [];
 
 				// Providers here are pushed in a desc prioritized order
@@ -72,6 +73,13 @@ export default class GeoipClient {
 
 		if (!networkMatch) {
 			throw new ProbeError(`unresolvable geoip: ${addr}`);
+		}
+
+		for (const override of isHostingOverrides) {
+			if (override.normalizedNetwork.test(networkMatch.normalizedNetwork)) {
+				isHosting = override.isHosting;
+				break;
+			}
 		}
 
 		const region = getRegionByCountry(match.country);

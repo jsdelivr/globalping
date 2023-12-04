@@ -25,12 +25,16 @@ type Ip2LocationResponse = {
 	longitude?: number;
 	as?: string;
 	is_proxy?: boolean;
+	usage_type?: string;
 };
 
 export type Ip2LocationBundledResponse = {
 	location: LocationInfo,
+	isHosting: boolean | undefined,
 	isProxy: boolean,
 };
+
+const HOSTING_USAGE_TYPES = [ 'CDN', 'DCH' ];
 
 export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundledResponse> => {
 	const result = await got(`https://api.ip2location.io`, {
@@ -58,6 +62,7 @@ export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundle
 
 	return {
 		location,
+		isHosting: result.usage_type ? HOSTING_USAGE_TYPES.includes(result.usage_type) : undefined,
 		isProxy: result.is_proxy ?? false,
 	};
 };
