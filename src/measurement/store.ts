@@ -11,7 +11,13 @@ import { getDefaults } from './schema/utils.js';
 const logger = scopedLogger('store');
 
 export const getMeasurementKey = (id: string, suffix: string | undefined = undefined): string => {
-	return `gp:measurement:${suffix ? suffix + ':' : ''}${id}`;
+	let key = `gp:measurement:${id}`;
+
+	if (suffix) {
+		key += `:${suffix}`;
+	}
+
+	return key;
 };
 
 const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unknown> = {}) => {

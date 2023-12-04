@@ -243,7 +243,7 @@ describe('measurement store', () => {
 		expect(redisMock.hSet.callCount).to.equal(1);
 		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', 'measurementid', 1678000000000 ]);
 		expect(redisMock.set.callCount).to.equal(1);
-		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:measurement:probes_awaiting:measurementid', 4, { EX: 35 }]);
+		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid:probes_awaiting', 4, { EX: 35 }]);
 		expect(redisMock.json.set.callCount).to.equal(2);
 
 		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid', '$', {

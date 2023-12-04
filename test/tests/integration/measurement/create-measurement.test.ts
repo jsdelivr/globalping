@@ -370,6 +370,96 @@ describe('Create measurement', () => {
 				});
 		});
 
+		it('should create measurement with another measurement id location', async () => {
+			let measurementId;
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+				})
+				.expect(202)
+				.expect((response) => {
+					measurementId = response.body.id;
+				});
+
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: measurementId,
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+				});
+		});
+
+		it('should create measurement with measurement id created from measurement id', async () => {
+			let measurementId1;
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+				})
+				.expect(202)
+				.expect((response) => {
+					measurementId1 = response.body.id;
+				});
+
+			let measurementId2;
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: measurementId1,
+				})
+				.expect(202)
+				.expect((response) => {
+					measurementId2 = response.body.id;
+				});
+
+
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: measurementId2,
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+				});
+		});
+
+		it('should respond with error if there is no requested measurement id', async () => {
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: 'nonExistingMeasurementId',
+				})
+				.expect(422)
+				.expect((response) => {
+					expect(response.body).to.deep.equal({
+						error: {
+							message: 'No suitable probes found.',
+							type: 'no_probes_found',
+						},
+						links: {
+							documentation: 'https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements',
+						},
+					});
+
+					expect(response).to.matchApiSchema();
+				});
+		});
+
 		describe('adopted probes', () => {
 			before(async () => {
 				await client(ADOPTED_PROBES_TABLE).insert({
