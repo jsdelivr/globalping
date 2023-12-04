@@ -34,6 +34,7 @@ export type Ip2LocationBundledResponse = {
 	isProxy: boolean,
 };
 
+// https://blog.ip2location.com/knowledge-base/what-is-usage-type/
 const HOSTING_USAGE_TYPES = [ 'CDN', 'DCH' ];
 
 export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundledResponse> => {
