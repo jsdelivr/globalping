@@ -8,7 +8,8 @@
 			"longitude": -96.8067,
 			"asn": "20001",
 			"as": "The Constant Company LLC",
-			"is_proxy": false
+			"is_proxy": false,
+			"usage_type": "DCH"
 		},
 		"argentina": {
 			"country_code": "AR",
@@ -28,7 +29,8 @@
 			"longitude": -74.0060,
 			"asn": "80001",
 			"as": "The Constant Company LLC",
-			"is_proxy": false
+			"is_proxy": false,
+			"usage_type": "CDN"
 		},
 		"washington": {
 			"country_code": "US",
@@ -37,7 +39,8 @@
 			"latitude": 38.89539,
 			"longitude": -77.039476,
 			"asn": "40676",
-			"as": "Psychz Networks"
+			"as": "Psychz Networks",
+			"usage_type": "ISP"
 		},
 		"falkenstein": {
 			"country_code": "DE",
@@ -102,7 +105,8 @@
 			"longitude": -96.8067,
 			"asn": "20001",
 			"as": "The Constant Company LLC",
-			"is_proxy": true
+			"is_proxy": true,
+			"usage_type": "DCH"
 		},
 		"noVpn": {
 			"country_code": "US",
@@ -111,7 +115,8 @@
 			"latitude": 32.7831,
 			"longitude": -96.8067,
 			"asn": "20001",
-			"as": "The Constant Company LLC"
+			"as": "The Constant Company LLC",
+			"usage_type": "DCH"
 		}
 	},
 	"ipmap": {
