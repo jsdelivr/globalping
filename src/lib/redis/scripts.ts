@@ -78,10 +78,6 @@ export const recordResult: RecordResultScript = defineScript({
 		return
 	end
 
-	redis.call('HDEL', 'gp:in-progress', measurementId)
-	redis.call('DEL', awaitingKey)
-	redis.call('JSON.SET', key, '$.status', '"finished"')
-
 	return redis.call('JSON.GET', key)
 	`,
 	transformArguments (measurementId, testId, data) {
