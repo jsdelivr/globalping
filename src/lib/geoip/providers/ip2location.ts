@@ -31,7 +31,6 @@ type Ip2LocationResponse = {
 
 export type Ip2LocationBundledResponse = {
 	location: LocationInfo,
-	isHosting: boolean | undefined,
 	isProxy: boolean,
 };
 
@@ -61,12 +60,11 @@ export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundle
 		longitude: result.longitude ?? 0,
 		network: result.as ?? '',
 		normalizedNetwork: normalizeNetworkName(result.as ?? ''),
-		isHosting: null,
+		isHosting: result.usage_type ? HOSTING_USAGE_TYPES.includes(result.usage_type) : null,
 	};
 
 	return {
 		location,
-		isHosting: result.usage_type ? HOSTING_USAGE_TYPES.includes(result.usage_type) : undefined,
 		isProxy: result.is_proxy ?? false,
 	};
 };

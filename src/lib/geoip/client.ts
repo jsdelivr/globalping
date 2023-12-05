@@ -42,7 +42,7 @@ export default class GeoipClient {
 				this.lookupWithCache<LocationInfo>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
 			.then(([ ipinfo, ip2location, maxmind, ipmap, fastly ]) => {
-				isHosting = ip2location.status === 'fulfilled' ? ip2location.value.isHosting : null;
+				isHosting = ip2location.status === 'fulfilled' ? ip2location.value.location.isHosting : null;
 				const fulfilled: (LocationInfoWithProvider | null)[] = [];
 
 				// Providers here are pushed in a desc prioritized order
