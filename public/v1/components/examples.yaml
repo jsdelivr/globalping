@@ -75,6 +75,14 @@ components:
             "packets": 6
           }
         }
+    createMeasurementPingLocationsMeasurementId:
+      summary: 'ping: previous measurement id'
+      value:
+        {
+          "type": "ping",
+          "target": "cdn.jsdelivr.net",
+          "locations": "1wzMrzLBZfaPoT1c"
+        }
     createMeasurementResponse:
       value:
         {

@@ -76,12 +76,14 @@ components:
           maximum: 200
           default: 1
     MeasurementLocations:
-      type: array
-      description: |
-        An array of locations from which to run the measurement.
-        Each object specifies a location using one or multiple keys.
-      items:
-        $ref: 'schemas.yaml#/components/schemas/MeasurementLocationOption'
+      oneOf:
+        - type: array
+          description: |
+            An array of locations from which to run the measurement. Each object specifies a location using one or multiple keys.
+          items:
+            $ref: 'schemas.yaml#/components/schemas/MeasurementLocationOption'
+        - type: string
+          description: Id of a previous measurement. Probes of that measurement in the same order are used to create a new measurement. Only probes are copied, measurement type and options may be any and should still be specified in request.
     MeasurementOptions:
       anyOf:
         - $ref: 'schemas.yaml#/components/schemas/MeasurementPingOptions'

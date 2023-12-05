@@ -47,6 +47,7 @@ paths:
 
         - Set the `inProgressUpdates` option to `true` if the application is running in interactive mode so that the user sees the results right away.
           - If the application is interactive by default but also implements a "CI" mode to be used in scripts, do not set the flag in the CI mode.
+        - To use the same probes in different measurements pass id of the first measurement to the `locations` option.
       requestBody:
         content:
           application/json:
@@ -61,6 +62,8 @@ paths:
                 $ref: 'components/examples.yaml#/components/examples/createMeasurementPingLocationsMagic'
               pingCustom:
                 $ref: 'components/examples.yaml#/components/examples/createMeasurementPingCustom'
+              pingLocationsMeasurementId:
+                $ref: 'components/examples.yaml#/components/examples/createMeasurementPingLocationsMeasurementId'
       responses:
         '202':
           $ref: 'components/responses.yaml#/components/responses/measurements202'
