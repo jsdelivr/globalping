@@ -2,54 +2,116 @@
 
 
 <p align="center">
-    <b>Better understand your network routing, fix anycast issues, monitor your CDN and DNS performance,<br/>
-        do uptime monitoring and build your own network tools for personal or public use. </b>
+    <b>Gain insights into your network routing from any location in the world!<br />
+    Troubleshoot anycast issues, monitor CDN and DNS performance, perform uptime monitoring,<br />and build your own network tools for personal or public use.</b>
     <br/>
     <br />
 </p>
 
 ## Invitation to contribute!
+Everyone is welcome to contribute – here are some ways you can get involved:
+- Suggest ideas for new features.
+- Submit pull requests and fixes for existing issues.
+- Help us with quality control and testing across systems. Report any problems, bugs, or bad user experience you find.
+- Contribute to the documentation.
+- Write tutorials and articles and help spread the word about Globalping on your blog or other platforms.
 
-Everyone is welcome to contribute. Some suggestions:
-- Ideas for new features
-- PRs and fixes for existing problems
-- Quality control and testing of all systems. Report any problems, bugs or bad UX you find
-- Documentation. Our readme and documentation need some polish
-- Tutorials and articles. Consider writing about our project on your blog or twitter
-
-Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
+Refer to [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
 
 ## The Globalping Platform
+Globalping allows anyone to run networking commands such as ping, traceroute, dig, and mtr on probes distributed around the globe. Our goal is to provide a free, user-friendly API for everyone to build interesting networking tools and services.
 
-Globalping is a platform that allows anyone to run networking commands such as ping, traceroute, dig and mtr on probes distributed all around the world. Our goal is to provide a free and simple API for everyone out there to build interesting networking tools and services. 
+Many users are likely seeking alternative ways to use the platform rather than directly working with the API. Therefore, to make Globalping accessible to all kinds of users, we're constantly expanding and improving our tools, all of which leverage the full potential of the Globalping API:
 
-We don't expect most of our users to work with the API directly; instead, we constantly expand and improve our powerful yet simple tools that take full advantage of all the functionality that the Globalping API has to offer. If you're an advanced user, we recommend getting started with the [Globalping CLI](#globalping-cli), or if you prefer a visual representation of the data then our [web-tools](#web-based-tools) might be a better place to get started.
+- [CLI tool](#globalping-cli) for people who feel at home in their terminal
+- [Web tools](#web-based-tools---globalping-website) for on-the-go testing and visual presentations
+- [Slack app](#slack-app) for bringing network testing capabilities into your Slack workspace
+- [GitHub bot](#github-bot) for adding network test results to public GitHub issues
 
-Learn more about Globalping on our website [www.jsdelivr.com/globalping](https://www.jsdelivr.com/globalping)
+Discover more about Globalping on our website [www.jsdelivr.com/globalping](https://www.jsdelivr.com/globalping)
 
-## Major sponsors
-
-We thank our sponsors who contribute to the development of Globalping and help us expand the network of probes.
+## Our major donors
+We thank our donors who contribute to the development of Globalping and help us expand our probe network!
 
 | <img src="https://gcore.com/favicon.ico" width="15" height="15"> [Gcore](https://gcore.com) | <img src="https://xtom.com/favicon.ico" width="15" height="15"> [xTom](https://xtom.com) | <img src="https://www.edisglobal.com/favicon.png" width="15" height="15"> [Edis Global](https://www.edisglobal.com) |
 |---|---|---|
 
-Consider [running our probe software](https://github.com/jsdelivr/globalping-probe) on your network of servers or [sponsor a batch of hardware probes](https://docs.google.com/document/d/1xIe-BaZ-6mmkjN1yMH5Kauw3FTXADrB79w4pnJ4SLa4/edit#heading=h.tmcgof2zm3yh) with your own stickers and swag included to ship to your users or distribute at conferences.
-Stand out among the sea of water bottles and pens!
+### Support the Globalping community and platform 
+We welcome any individual or company interested in supporting Globalping's growth and our mission to make the internet a faster place for everyone. 
+Here are some ways you can help:
 
-## Quick Start - Run your first test
+- [Run multiple probes](https://github.com/jsdelivr/globalping-probe): Globalping relies on a globally distributed network of probes for running network measurement requests. We're happy to list anyone who can host at least six probes as a donor on GitHub and our website.
+- [Become a GitHub sponsor](https://www.jsdelivr.com/sponsors): By becoming a GitHub sponsor of [jsDelivr](https://github.com/jsdelivr), you are supporting both the jsDelivr CDN and the Globalping platform. Sponsors contributing $10 or more per month can request a hardware probe to install in their home or office.
+- [Become a hardware probe provider](https://docs.google.com/document/d/1xIe-BaZ-6mmkjN1yMH5Kauw3FTXADrB79w4pnJ4SLa4/edit#heading=h.tmcgof2zm3yh): Sponsor a batch of co-branded hardware probes, including your own stickers and swag, to ship to your users or hand out at conferences.
 
-You can begin using the platform in a few different ways:
+## Get started writing tests
+While we offer [different tools and integrations](#available-globalping-tools-and-integrations) for running tests with Globalping, we make sure that they provide a consistent experience. This also means that writing tests looks almost identical whether you're using the CLI tool or the Slack app, for example. 
 
-### [Web Based Tools - Globalping website](https://www.jsdelivr.com/globalping)
+Follow this structure when writing tests:
+
+`globalping [command] [target] from [location] [flags]`
+
+Let's look at each component:
+
+##### Initiating a command
+The way you initiate Globalping depends on the tool or integration you're using. For example, use `globalping` with the CLI tool, while using `@globalping` with the GitHub bot. Refer to the list of integrations below to learn how to use each in detail.
+
+##### Available test commands
+Globalping supports the following commands:
+- ping
+- traceroute
+- mtr
+- dns (similar to dig)
+- http (similar to curl GET and HEAD)
+
+##### Target
+The target represents the destination for your test. This can be a domain name or an IP address for most test types.
+
+##### Location
+The location field can process different locations, including continents, regions, countries, cities, US states, and ASNs (prefixed by "AS," e.g., `from AS80085`). 
+In general, our aim is to enable you to provide whatever location feels right.
+
+Some examples:
+- `from usa` or `from united states` - A random probe in the USA
+- `from new york` -  A random probe in NYC
+- `from aws` - A random probe hosted with Amazon
+
+> [!NOTE]
+> Providing no location defaults to `world`, selecting a probe from a random location.
+
+Other location examples:
+- europe, africa, asia
+- east asia, north europe, eastern europe
+- greece, canada, mexico, japan
+- california, texas
+- frankfurt, dallas, sydney
+- as396982, as16509
+- comcast, google, ovh, orange, t-mobile
+
+##### Flags
+All network test commands share some flags but also have unique ones. To learn more, run `--help` with the respective test type. For example, to find out more about `ping`, run:
+
+`globalping ping --help`
+
+**The limit flag**
+The `--limit` flag is probably one of the most useful flags when starting with Globalping. It determines the number of tests to run, which is set to one (1) by default. 
+
+For example:
+- `from north america` selects one probe in either USA or Canada.
+- `from north america --limit 2` selects one probe in USA **and** one in Canada.
+
+## Available Globalping tools and integrations
+In this section, we'll introduce you to the various tools and integrations with which you can use Globalping.
+
+### [Web-based tools - Globalping website](https://www.jsdelivr.com/globalping)
 [![globalping latency test from google cloud](https://github.com/jsdelivr/globalping/assets/1834071/760c9031-9292-4e2a-9901-68ef7f0745ca)](https://www.jsdelivr.com/globalping)
 
-Our website is the best way to get started. You can start running tests immediatly and learn more about how different parts of the system work. 
-For example our magic location field can accept not just locations but also cloud regions, ISP providers and even combine filters using the + symbol.
+Our website offers the fastest way to get started. Run tests instantly from anywhere and experiment with the different options for different test types. For each test, you can view the probes used on a map and get a detailed view of the individual test results below.
 
 ### [Globalping CLI](https://github.com/jsdelivr/globalping-cli)
+Upgrade your network debugging capabilities by installing the Globalping CLI tool. Get access to our global network of probes without leaving your terminal!
 
-Install our CLI tool to upgrade your network debugging capabilities. Get access to a global network of probes without leaving your command line!
+Install the CLI on Linux, macOS, or Windows using the command for your package manager:
 
 ```
 #Ubuntu
@@ -70,7 +132,7 @@ OR
 choco install globalping
 ```
 
-And then run your tests in a familiar way:
+And then run your tests:
 
 ```
 $ globalping traceroute google.com from Western Europe --limit 2
@@ -90,12 +152,12 @@ traceroute to google.com (142.250.185.78), 20 hops max, 60 byte packets
 ...
 ```
 
-[Learn more about Globalping CLI in the dedicated repo](https://github.com/jsdelivr/globalping-cli)
+Learn more about the Globalping CLI [in its repository](https://github.com/jsdelivr/globalping-cli)
 
 ### Globalping REST API
+If you want to build something custom or simply learn more about all the available options and data we provide, check out the Globalping REST API.
 
-If you're building something custom  or simply want to learn more about all the available options and data we provide check out the Globalping REST API.
-It's as simple as: 
+Creating a new measurement test is as simple as:
 
 ```
 POST https://api.globalping.io/v1/measurements
@@ -114,203 +176,174 @@ POST https://api.globalping.io/v1/measurements
 
 
 ### Slack App
-
-Install our Slack App to interact with the Globalping platform without ever leaving Slack. Allow your NOC, OPS and Support teams to quickly debug networking issues and discuss the results.
+Improve collaboration in your workspace by installing our Slack app, enabling everyone to interact with Globalping without leaving Slack. The app is especially handy for NOC, OPS, and Support teams collaborating on debugging networking issues and discussing results.
 
 <a href="https://bots.globalping.io/slack/install"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
 
-It supports a human friendly interface for issuing commands. To begin simply type `/globalping help`.
+  
+To initiate a command with the Globalping Slack app, use the slash command `/globalping`. Apart from that, you can use the same test command structure as with our other tools and integrations. For example, to get started, type `/globalping help`.
 
-Examples:
+Example commands to try:
 ```
-/globalping {command} {target} from {location} --limit {number of probes}
 /globalping ping 8.8.8.8 from Germany
 /globalping traceroute jsdelivr.com from South America --limit 2
-/globalping help
 ```
+>[!Important]
+> To make the app post test results in Slack Threads, mention it using `@globalping`. For example,  `@globalping ping google.com
 
-The location field can process all kinds of different types of location matching, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`. 
-You can also combine filters, e.g. `from hetzner+Finland` will ensure the results come from a probe that matches both parameters.
-Providing no location will default to "world" which will match a probe from a random location in the world.
-
-You can even mention it in threads using `@globalping ping google.com`
+Learn more about the Slack app [on our blog](https://www.jsdelivr.com/blog/network-troubleshooting-in-slack-made-easy-with-globalping/).
 
 ### GitHub Bot
+Automatically post network test results into any **public** GitHub issue with our GitHub bot. Mention it with `@globalping`, followed by the command you want to run. Otherwise, you can follow the same test command structure as with our other tools and integrations.
 
-Our GitHub bot can by triggered by simply mentioning it in any public GitHub issue. It supports a human friendly format of issuing commands and follows the existing Slack and CLI formatting logic allowing you to easily move between integrations. 
-
-Examples:
+Example commands to try:
 ```
 @globalping ping 8.8.8.8 from Germany
 @globalping traceroute jsdelivr.com from South America --limit 2
 ```
 
-The location field can process all kinds of different types of location matching, including continents, regions, countries, cities, US states and ASNs. ASNs must be prefixed by "AS", e.g. `from AS80085`.
+Learn more about the GitHub bot [on our blog](https://dev.to/globalping/supercharge-your-gitops-workflows-with-the-globalping-github-bot-341a).
 
-## Best practices and Tips
+## Best practices and tips
+Learn to use Globalping in the most optimal way!
 
-Learn to use Globalping in the most optimal way! All examples below are based on our CLI tool for simplicity.
+### Test with "magic" 🧙
+All integrations connect to the same API and use our "magic" field as location input.
+This maintains a consistent and straightforward user experience, allowing you to reuse logic and parameters across all tools.
 
-### Magic field
-All of our integrations are using the same API and our "magic" field as location input. 
+So, for example, when you run a test from "Germany" using the CLI or Slack app, our API's magic parser processes the location.
 
-This means that when you type that you want to run a ping from Germany in our CLI or our website, your input (Germany) gets processed by the magic parser of our API.
+> [!Note]
+> Developers who want stricter and more predictable control over the selected probes and user input can use the individual location parameters [when making an API call](https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements), which expect you to provide each city, country, and tag in a standardized way.
 
-This is the best way to interact with the Globalping platform as it maintains a consistent and simple user experience and allows you to reuse the same logic and parameters across all of our tools.
+The magic field supports a wide range of parameters and location combinations, including countries, continents, cities, US states, regions (Western Europe), ASNs, ISP names, eyeball or data center tags, and cloud region names (us-east-2).
 
-> If you as a developer want a stricter and more predictable control over the selected probes and user input, then you have the option to use [the strict parser](https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements) that expects you to define every city, country and tag in a standardized way.
+### Understand the "world" location 🌍
 
-The magic field supports a wide range of possible parameters and location combinations logic, including but not limited to continents, regions, countries, cities, ASNs, ISP names, cloud region names as well as system and user defined tags.
+The `world` location uses a pseudo-random algorithm to select probes while [maintaining certain proportions](https://github.com/jsdelivr/globalping/blob/master/config/default.cjs#L47) per continent.
 
-###  The World
-The `world` location is special and uses a pseudo-random algorithm to select probes randomly while [maintaining certain proportions](https://github.com/jsdelivr/globalping/blob/master/config/default.cjs#L47) per continent.
+> [!Important]
+> If you provide no location, the system defaults to using "world".
+  
+For example, when requesting tests `from world --limit 100`, the system aims to return probes proportionally from Africa (5 probes), Asia (15 probes), Europe (30 probes), Oceania (10 probes), North America (30 probes), and South America (10 probes).
 
-Note that when you provide no location at all then the system will use "world" internally by default.
+### Level up your location-picking game 📍
+You can use and combine different ways to run tests on multiple locations at once or fine-tune the location from where to pick a probe.  
 
-This means that if you request a measurement `from world --limit 100` the system will try to return back: 5 probes from Africa, 15 from Asia, 30 from Europe, 10 from Oceania, 30 from North America and 10 from South America.
+#### Define multiple locations
+To run tests at multiple locations, list them with a comma, for example:
 
-### Basic location targeting
+- `from Berlin,South America,Idaho --limit 4`.
 
-It's very simple to get started, in most cases you can simply type whatever feels right. 
-Some examples:
+You can also define your own "world" location, for example:
 
-- `from usa` or `from united states` - This will result in a random probe in USA
-- `from new york` -  A random probe in NYC
-- `from aws` - A random probe hosted with Amazon
+- `from germany, greece, uk, usa, canada, japan, china, south africa --limit 20` 
+returns probes from these countries in roughly equal proportions to meet the limit of 20.
 
-In the above cases since no limit parameter is specified you will only get 1 probe. In most cases when you select a large region you will expect to get multiple answers, make sure you set your limit accordingly.
+>[!Important]
+>The limit parameter is global and applies to the location as a whole, not allowing the API to return more than the limit. If you want to set custom limits per location, use our API directly instead of the "magic" field.
 
-- `from north america` will return either USA or Canada. But:
-- `from north america --limit 2` will return both
+#### Define location filters
+You can combine multiple locations using the plus symbol `+`, and use them as filters to define your desired probe locations more accurately. 
 
-Other acceptable location examples:
+Examples:
+- `from comcast+california` returns a probe on the Comcast network in California.
+- `from google+europe` returns a Google Cloud probe in Europe. 
+- `from google+germany` returns a Google Cloud probe in Germany (useful if you forget the cloud region name!).
 
-- europe, africa, asia
-- east asia, north europe, eastern europe
-- greece, canada, mexico, japan
-- california, texas
-- frankfurt, dallas, sydney
-- as396982, as16509
-- comcast, google, ovh, orange, t-mobile
+Naturally, you can combine as many parameters as you like:
+- `from cogent+europe+datacenter` returns a probe hosted at Cogent in Europe, tagged as a data center probe. Or you could use the `eyeball` tag to target probes that aren't part of a data center.
 
-### Stack filters
+#### Leverage system tags (eyeball networks and more)
+We have our system tag probes to help differentiate between probes and the network they belong to. 
 
-You can also combine multiple locations and use them as filters to increase the accuracy of your tests. For this purpose we use the plus symbol +.
+The following tags are currently available to you:
+- **Google Cloud and AWS cloud region names**. These tags follow the respective provider's naming scheme and are prefixed with their name, for example, `aws-eu-west-1` and `gcp-us-south1`.
+- **Eyeball and data center network tags**. System tags include `eyeball` for probes hosted with ISPs that provide internet access to regular people and small businesses. As the name suggests, `datacenter` tags are intended for probes hosted in a data center.
+#### Combine everything
+When determining the location from which to run a test, you can take advantage of all the location-specific features described above and combine them.
 
-- `from comcast+california` will return a probe that is both hosted with Comcast and located in CA.
-- `from google+europe` will return a random probe hosted with Google Cloud in Europe, or if you want to be more specific but dont remember the cloud region name:
-- `from google+germany` will return a probe with Google Cloud Germany
+Example:
+- `from amazon+france,ovh+france --limit 2` returns a probe hosted on AWS in France and a probe hosted on OVH in France.
 
-You can combine as many parameters as you want too
+### Things to keep in mind
 
-- `from cogent+europe+datacenter` will return a probe hosted with Cogent, located in Europe and tagged as a datacenter probe. Or you could use `eyeball` to do the opposite.
+#### Probes share no UUIDs
+Our probes don't expose unique IDs that you can use to target them explicitly. Instead, we recommend fine-tuning probe selection by using and combining filters as described in the best practice section above.
 
-### Multiple locations
+>[!NOTE]
+> This ensures that popular locations, like `from Amsterdam` or `from AWS`, are automatically load-balanced across multiple probes within the same location, preventing the overload of specific probes.
 
-To select multiple locations in a single request you can use a comma. And of course you can combine filters and multiple locations at the same time.
+#### Test result variability
+When requesting a specific number of probes, there is no guarantee that the API will respond with the exact amount.
 
-- `from amazon+france,ovh+france --limit 2` will return a probe hosted with AWS in France and a probe hosted with OVH in France
+#### Probe availability rules
+Globalping exposes and lets you interact with probes that are currently **online**. 
 
-You can use this functionality to also define your own "world".
+Here's when a probe is considered online and available through our API:
+- **It's up-to-date.** A probe running an older version will be forced to auto-update before it becomes available.
+- **It passes quality control tests.** Every probe must pass a test, ensuring it's connected to a reasonably stable network without packet loss. This test is done regularly; if a probe fails, it gets taken offline.
 
-- `from germany, greece, uk, usa, canada, japan, china, south africa --limit 20` will return probes from all of the above countries in roughly equal proportions to fit the limit of 20. 
+This whole process is completely automated and managed by our platform.
 
-The limit parameter is global and applies to the location as a whole, not allowing the API to return more than the limit. If you need to define custom limits per location you need to use our API directly instead of the magic field.
+## Join the network – Run a virtual probe
+Globalping relies on the community to expand its probe network. While we maintain our own probes in key locations, we welcome any support from both corporate partners and individuals. 
+[Join our network](https://github.com/jsdelivr/globalping-probe) and help make the internet faster for everyone by running a virtual probe (or several).
 
+### Quick start guide
+You can run a Globalping probe on any machine that can run a Docker container, supporting x86 and ARM architectures. For example, you can use a rented VPS, a dedicated server with spare capacity, or even your locally hosted Raspberry PI.
 
-### System tags (eyeball networks and more)
-
-Many probes are going to be tagged by our system. At the moment this includes:
-
-- Cloud regions for Google Cloud and AWS. e.g. `aws-eu-west-1` and `gcp-us-south1` They follow each provider's naming scheme and are prefixed by their name.
-- Eyeball and datacenter networks. e.g. `eyeball-network` and `datacenter-network` Unlike datacenter hosted probes, eyeball network are probes hosted with ISP providers that offer internet access to regular people and small businesses. 
-
-### No UUIDs
-
-Our probes don't expose any unique IDs to target. The recommended way to narrow down your results is to use filters and even stack them together.
-
-This way popular locations such as `from Amsterdam` or `from AWS` will be automatically load-balanced among multiple probes in the same location and avoid overloading any specific one.
-
-### Best effort results
-
-When requesting a specific number of probes there is no guarantee that the API will respond back with the exact same amount. Keep this in mind and use it to your benefit.
-
-### Probe availability
-
-Globalping only exposes and allows users to interact with online probes. A probe is considered online and becomes available via our API when:
-
-- It's up-to-date. A probe running an older version will be forced to auto-update before it becomes available.
-- Passes quality control tests. Every probe must first pass a test to ensure it's connected to a reasonably stable network with no packet loss. This test is then repeated on a schedule and will take a probe offline if it fails the QA test.
-
-This is completely automated and managed by our platform.
-
-
-## Join the Network - Run a probe
-
-Globalping relies on the community to help us expand our network of probes. So while we run our own probes in key locations we still need help from both corporate partners and individials. Consider joining our network and helping everyone by running a probe (or many). 
-You can do it on a rented VPS or Dedicated server that has available capacity or even on a locally hosted Raspberry pi. The only requirement is having an internet accessible device able to run docker containers.
-
-It's as simple as running this command:
+Use this command to create and run the Globalping probe container:
 
 ```
 docker run -d --log-driver local --network host --restart=always --name globalping-probe ghcr.io/jsdelivr/globalping-probe
 ```
-And it works for both x86 and ARM architectures. 
-[Podman related instructions.](https://github.com/jsdelivr/globalping-probe#podman-alternative)
+Find instructions for Podman [here](https://github.com/jsdelivr/globalping-probe#podman-alternative) 
 
-Notes:
-- The probe doesn't open any ports or accept any incoming connections. It can only establish a connection with our API.
-- We include regularly updated lists and databases of domains and IPs that are associated with malware or potentially dangerous content and completely ban them on the API  level
-- The tests scale to the amount of available CPU cores. Our code is very lightweight and shouldn't use too many of your resources, so in most cases we recommend running our probe as is. But if you're worried you can use `--cpuset-cpus="0-2"` to limit the number of available cores.
-- We rate-limit all users on the API level to avoid the abuse of network
-- No local network tests are allowed, only public endpoints.
+### Notes on probe security and customization
+- Probes don't open ports or accept incoming connections. They can only connect with our API.
+- We work with regularly updated lists and databases of domains and IPs associated with malware or potentially dangerous content and completely ban them at the API  level.
+- The API is rate-limited to prevent users from abusing the network.
+- Only public endpoints are permitted for testing; no local network tests are allowed.
+- Tests scale based on available CPU cores. Our code is very lightweight and shouldn't use too many of your resources. Therefore, in most cases, we recommend running our probe as is. However, if you want more control, you can use `--cpuset-cpus="0-2"` with your Docker command to set the number of cores.
 
-Read more about the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) in the dedicated repo.
-
+Learn more in the [Globalping Probe respository](https://github.com/jsdelivr/globalping-probe).
 
 ## Limits | WIP
-
-Our platform has multiple limits to avoid abusive behaviour and at the same time motivate people to contribute to the sustainability of our platform.
+To maintain a sustainable environment, our platform implements several usage limits to prevent abusive behavior while encouraging contributions. Here's an overview:
 
 #### Global limits
+These limits apply per IP address for all Globalping users:
 
-These limits are applied per IP address regardless if an API key supplied or not.
+- 100 POST requests per minute per IP. No GET limits are implemented to support "real-time" use cases.
+- A single measurement is limited to 200 probes per location and 500 total probes.
 
-- 100 POST requests per minute per IP. No GET limits are implemented to support "real-time" use-cases.
-- A single measurement is limited to 200 probes per location and 500 total probes
+#### Unauthenticated users
+Anyone can connect to and use our API without requiring any credentials.
+For users without authentication, we limit the number of tests an IP address can run:
 
+- 100 tests per hour 
 
-#### Un-authenticated users
+>[!note]
+> A test is defined as a successful measurement the platform runs and returns to the user. For example, a limit of 10 tests means that users can either run 10 measurements with the probe limit set to 1 per measurement or a single measurement with the probe limit set to 10.
 
-Anybody can connect to our API and start using it with no credentials required.
-In this case we limit the amount of tests an IP address can run. A single test is defined as a succesful measurement we run and return to the user.
-A limit of 10 tests means the user can run either 10 measurements with the probe limit set to 1 per measurement, or a single measurement with the probe limit set to 10.
+#### Registered jsDelivr users – Free
+All registered jsDelivr users get an API key for authentication, granting them higher limits:
 
-- 100 tests per hour
+- 200 tests per hour
 
+#### GitHub Sponsors
+As a GitHub Sponsor of jsDelivr, your contributions help us continue the development of all projects under the [jsDelivr Organization](https://github.com/jsdelivr).
 
-#### Registered jsDelivr users - Free
-
-All registered jsDelivr users get an API key they can use to authenticate themselves and get higher limits
-
-- 200 measurements per hour
-  
-
-#### GitHub Sponsors - Contribute to the development of the project
-
-By becoming a sponsor of jsDelivr you automatically help us sustain both the jsDelivr CDN and the Globalping platform.
-Your contributions will be used to help us continue the development of all projects under the [jsDelivr Organization](https://github.com/jsdelivr)
-
-You can do this by registering on jsdelivr.com and becoming a GitHub sponsor. 
-We will then automatically upgrade your account to get a higher limit as defined in each of the available plans.
-
+As a thanks, we upgrade your account to receive higher limits.
 
 #### Custom limits
-
 Feel free to reach out if you need a custom limit for your API key.
-We're more than happy to provide higher limits to researchers, non-profits and other open source projects.
 
+We're happy to provide higher limits for researchers, non-profits, and other open-source projects.
+
+## Support and feedback
+If you are stuck or want to give us your feedback, please [open a new issue](https://github.com/jsdelivr/globalping/issues).
 
 ## Development
-
 Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
