@@ -83,7 +83,9 @@ components:
           items:
             $ref: 'schemas.yaml#/components/schemas/MeasurementLocationOption'
         - type: string
-          description: Id of a previous measurement. Probes of that measurement in the same order are used to create a new measurement. Only probes are copied, measurement type and options may be any and should still be specified in request.
+          description: |
+            `id` of a previous measurement - its probes are reused for the new measurement and returned in the same order.
+            Measurement type and options are not reused and need to be specified in request.
     MeasurementOptions:
       anyOf:
         - $ref: 'schemas.yaml#/components/schemas/MeasurementPingOptions'
