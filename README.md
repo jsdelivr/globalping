@@ -51,6 +51,10 @@ Follow this structure when writing tests:
 
 `globalping [command] [target] from [location] [flags]`
 
+Examples:
+- `globalping ping google.com from aws`
+- `globalping ping google.com from Berlin, South America --limit 2`
+
 Let's look at each component:
 
 ##### Initiating a command
