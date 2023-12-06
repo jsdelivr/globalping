@@ -21,7 +21,7 @@ Refer to [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
 ## The Globalping Platform
 Globalping allows anyone to run networking commands such as ping, traceroute, dig, and mtr on probes distributed around the globe. Our goal is to provide a free, user-friendly API for everyone to build interesting networking tools and services.
 
-Many users are likely seeking alternative ways to use the platform rather than directly working with the API. Therefore, to make Globalping accessible to all kinds of users, we're constantly expanding and improving our tools, all of which leverage the full potential of the Globalping API:
+Many users will likely prefer alternative ways to use the platform rather than working directly with the API. Therefore, to make Globalping accessible to all kinds of users, we're constantly expanding and improving our tools, all of which leverage the full potential of the Globalping API:
 
 - [CLI tool](#globalping-cli) for people who feel at home in their terminal
 - [Web tools](#web-based-tools---globalping-website) for on-the-go testing and visual presentations
@@ -93,7 +93,7 @@ All network test commands share some flags but also have unique ones. To learn m
 
 `globalping ping --help`
 
-**The limit flag**
+###### The limit flag
 The `--limit` flag is probably one of the most useful flags when starting with Globalping. It determines the number of tests to run, which is set to one (1) by default. 
 
 For example:
@@ -189,7 +189,7 @@ Example commands to try:
 /globalping traceroute jsdelivr.com from South America --limit 2
 ```
 >[!Important]
-> To make the app post test results in Slack Threads, mention it using `@globalping`. For example,  `@globalping ping google.com
+> To make the app post test results in Slack Threads, mention it using `@globalping`. For example,  `@globalping ping google.com`
 
 Learn more about the Slack app [on our blog](https://www.jsdelivr.com/blog/network-troubleshooting-in-slack-made-easy-with-globalping/).
 
@@ -271,8 +271,7 @@ Example:
 #### Probes share no UUIDs
 Our probes don't expose unique IDs that you can use to target them explicitly. Instead, we recommend fine-tuning probe selection by using and combining filters as described in the best practice section above.
 
->[!NOTE]
-> This ensures that popular locations, like `from Amsterdam` or `from AWS`, are automatically load-balanced across multiple probes within the same location, preventing the overload of specific probes.
+This ensures that popular locations, like `from Amsterdam` or `from AWS`, are automatically load-balanced across multiple probes within the same location, preventing the overload of specific probes.
 
 #### Test result variability
 When requesting a specific number of probes, there is no guarantee that the API will respond with the exact amount.
