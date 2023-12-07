@@ -45,6 +45,11 @@ Here are some ways you can help:
 - [Become a GitHub sponsor](https://www.jsdelivr.com/sponsors): By becoming a GitHub sponsor of [jsDelivr](https://github.com/jsdelivr), you are supporting both the jsDelivr CDN and the Globalping platform. Sponsors contributing $10 or more per month can request a hardware probe to install in their home or office.
 - [Become a hardware probe provider](https://docs.google.com/document/d/1xIe-BaZ-6mmkjN1yMH5Kauw3FTXADrB79w4pnJ4SLa4/edit#heading=h.tmcgof2zm3yh): Sponsor a batch of co-branded hardware probes, including your own stickers and swag, to ship to your users or hand out at conferences.
 
+## Quick start – Run your first test
+Whether you're new to network testing or are a seasoned pro, getting started with Globalping is straightforward. Let's check out two ways to run your first test:
+
+- run a ping request to google.com from a probe in New York
+
 ### Web-based tools
 Our web form is perfect for users who prefer to work with UIs or want to run tests from any device with a browser.
 
