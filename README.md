@@ -47,12 +47,11 @@ Here are some ways you can help:
 
 ## Quick start – Run your first test
 Whether you're new to network testing or are a seasoned pro, getting started with Globalping is straightforward. Let's check out two ways to run your first test:
-
 - run a ping request to google.com from a probe in New York
 
 ### Web-based tools
 Our web form is perfect for users who prefer to work with UIs or want to run tests from any device with a browser.
-
+![globalping-quickstart-ping-ny](https://github.com/inventarSarah/globalping-main/assets/789476/430bd0fc-4e52-4003-9c56-b6fa64cba6e0)
 Follow these steps to create your test:
 1. Head to [our website](https://www.jsdelivr.com/globalping)
 2. Use the form at the top of the page to configure the test case:
@@ -61,20 +60,20 @@ Follow these steps to create your test:
 	3. Location: New York
 	4. Limit: 1
 3. Click "Run Test" 
-4. View the used probe in New York on the map below the form and review the ping result beneath the map:
+4. View the used probe in New York on the map below the form and review the ping result beneath the map.
 
 ### CLI tool
 If you prefer to work from your terminal, the CLI tool is the ideal choice for using Globalping.
 
 Follow these steps to create the test:
 1. Install the CLI using your favorite package manager as described [here](#globalping-cli)
-2. Test if everything works by running `globalping --help`
+2. Test if everything works by running `global ping --help`
 3. Write and run the test case described above:
-	1. `globalping ping google.com from New York`
-4. Instantly review the ping result:
+	1. `global ping ping google.com from New York`
+4. Instantly review the result:
 
 ```
-$ globalping ping google.com from New York
+$ global ping ping google.com from New York
 > NA, US, (NY), New York, ASN:63473, HostHatch, LLC
 > PING  (142.251.40.142) 56(84) bytes of data.
 64 bytes from lga25s80-in-f14.1e100.net (142.251.40.142): icmp_seq=1 ttl=57 time=1.73 ms
