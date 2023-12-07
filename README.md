@@ -186,7 +186,7 @@ Some examples:
 - `from usa` or `from united states` - A random probe in the USA
 - `from new york` -  A random probe in NYC
 - `from aws` - A random probe hosted with Amazon
-- `from {MEASUREMENT ID}` - Selects the same probes that were used for the specified measurement
+- `from WZIAtMx4LLhzit02` - Selects the same probes that were used for the specified measurement
 
 > [!NOTE]
 > Providing no location defaults to `world`, selecting a probe from a random location.
@@ -230,15 +230,11 @@ The magic field supports a wide range of parameters and location combinations, i
 You can also provide the "magic" field with a measurement ID to have the API select the same probes used in a previous measurement. 
 
 For example:
-- `EXAMPLE`
+- `from WZIAtMx4LLhzit02`
 
-You can find the measurement ID in every Globalping measurement result:
-```
-Example
-```
+You can get the measurement ID in every Globalping measurement result bei using the `--share` or `--reuse` flags.
+
 This feature is particularly useful, for example, if you want to test different API endpoints with the same probes to better compare data. It is also great for troubleshooting, as you can use it to retest certain "problematic" probes or run continuous tests with the same probe and stitch the results together.
->[!NOTE]
->You can also leverage the respective parameter in our API instead of the magic field. 
 
 ### Understand the "world" location 🌍
 
