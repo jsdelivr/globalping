@@ -27,11 +27,12 @@ Many users will likely prefer alternative ways to use the platform rather than w
 - [Web tools](#web-based-tools---globalping-website) for on-the-go testing and visual presentations
 - [Slack app](#slack-app) for bringing network testing capabilities into your Slack workspace
 - [GitHub bot](#github-bot) for adding network test results to public GitHub issues
+- [Find more integrations on our website](https://www.jsdelivr.com/globalping/integrations)
 
-Discover more about Globalping on our website [www.jsdelivr.com/globalping](https://www.jsdelivr.com/globalping)
+Learn more about Globalping on [www.jsdelivr.com/globalping](https://www.jsdelivr.com/globalping)
 
-## Our major donors
-We thank our donors who contribute to the development of Globalping and help us expand our probe network!
+## Our major sponsors
+We thank our sponsors who contribute to the development of Globalping and help us expand our probe network!
 
 | <img src="https://gcore.com/favicon.ico" width="15" height="15"> [Gcore](https://gcore.com) | <img src="https://xtom.com/favicon.ico" width="15" height="15"> [xTom](https://xtom.com) | <img src="https://www.edisglobal.com/favicon.png" width="15" height="15"> [Edis Global](https://www.edisglobal.com) |
 |---|---|---|
@@ -44,7 +45,45 @@ Here are some ways you can help:
 - [Become a GitHub sponsor](https://www.jsdelivr.com/sponsors): By becoming a GitHub sponsor of [jsDelivr](https://github.com/jsdelivr), you are supporting both the jsDelivr CDN and the Globalping platform. Sponsors contributing $10 or more per month can request a hardware probe to install in their home or office.
 - [Become a hardware probe provider](https://docs.google.com/document/d/1xIe-BaZ-6mmkjN1yMH5Kauw3FTXADrB79w4pnJ4SLa4/edit#heading=h.tmcgof2zm3yh): Sponsor a batch of co-branded hardware probes, including your own stickers and swag, to ship to your users or hand out at conferences.
 
-## Get started writing tests
+### Web-based tools
+Our web form is perfect for users who prefer to work with UIs or want to run tests from any device with a browser.
+
+Follow these steps to create your test:
+1. Head to [our website](https://www.jsdelivr.com/globalping)
+2. Use the form at the top of the page to configure the test case:
+	1. Test type: ping
+	2. Target: google.com 
+	3. Location: New York
+	4. Limit: 1
+3. Click "Run Test" 
+4. View the used probe in New York on the map below the form and review the ping result beneath the map:
+
+### CLI tool
+If you prefer to work from your terminal, the CLI tool is the ideal choice for using Globalping.
+
+Follow these steps to create the test:
+1. Install the CLI using your favorite package manager as described [here](#globalping-cli)
+2. Test if everything works by running `globalping --help`
+3. Write and run the test case described above:
+	1. `globalping ping google.com from New York`
+4. Instantly review the ping result:
+
+```
+$ globalping ping google.com from New York
+> NA, US, (NY), New York, ASN:63473, HostHatch, LLC
+> PING  (142.251.40.142) 56(84) bytes of data.
+64 bytes from lga25s80-in-f14.1e100.net (142.251.40.142): icmp_seq=1 ttl=57 time=1.73 ms
+64 bytes from lga25s80-in-f14.1e100.net (142.251.40.142): icmp_seq=2 ttl=57 time=1.64 ms
+64 bytes from lga25s80-in-f14.1e100.net (142.251.40.142): icmp_seq=3 ttl=57 time=1.66 ms
+
+---  ping statistics --- 
+3 packets transmitted, 3 received, 0% packet loss, time 402ms
+rtt min/avg/max/mdev = 1.641/1.679/1.733/0.039 ms   
+```
+
+There's so much more you can do with Globalping! Learn the basics, discover more integrations for different use cases, and tips to help you get the most out of our platform.
+
+## How to write networking tests with Globalping
 While we offer [different tools and integrations](#available-globalping-tools-and-integrations) for running tests with Globalping, we make sure that they provide a consistent experience. This also means that writing tests looks almost identical whether you're using the CLI tool or the Slack app, for example. 
 
 Follow this structure when writing tests:
