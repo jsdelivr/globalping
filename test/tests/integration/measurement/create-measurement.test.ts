@@ -124,7 +124,33 @@ describe('Create measurement', () => {
 				});
 		});
 
+		it('should create measurement with a single probe by default', async () => {
+			let id;
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+					id = response.body.id;
+				});
+
+			await requestAgent.get(`/v1/measurements/${id}`)
+				.expect(200)
+				.expect((response) => {
+					expect(response.body.limit).to.not.exist;
+					expect(response.body.locations).to.not.exist;
+					expect(response).to.matchApiSchema();
+				});
+		});
+
 		it('should create measurement with global limit', async () => {
+			let id;
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -137,6 +163,15 @@ describe('Create measurement', () => {
 					expect(response.body.id).to.exist;
 					expect(response.header.location).to.exist;
 					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+					id = response.body.id;
+				});
+
+			await requestAgent.get(`/v1/measurements/${id}`)
+				.expect(200)
+				.expect((response) => {
+					expect(response.body.limit).to.equal(2);
+					expect(response.body.locations).to.deep.equal([{ country: 'US' }]);
 					expect(response).to.matchApiSchema();
 				});
 		});
@@ -371,7 +406,7 @@ describe('Create measurement', () => {
 		});
 
 		it('should create measurement with another measurement id location', async () => {
-			let measurementId;
+			let id;
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -379,14 +414,15 @@ describe('Create measurement', () => {
 				})
 				.expect(202)
 				.expect((response) => {
-					measurementId = response.body.id;
+					id = response.body.id;
 				});
 
+			let id2;
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
 					target: 'example.com',
-					locations: measurementId,
+					locations: id,
 				})
 				.expect(202)
 				.expect((response) => {
@@ -394,11 +430,61 @@ describe('Create measurement', () => {
 					expect(response.header.location).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
+					id2 = response.body.id;
+				});
+
+			await requestAgent.get(`/v1/measurements/${id2}`)
+				.expect(200)
+				.expect((response) => {
+					expect(response.body.limit).to.not.exist;
+					expect(response.body.locations).to.not.exist;
+					expect(response).to.matchApiSchema();
+				});
+		});
+
+		it('should create measurement with another measurement id location and copy its limit and locations', async () => {
+			let id;
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					limit: 10,
+					locations: [{
+						continent: 'NA',
+					}],
+				})
+				.expect(202)
+				.expect((response) => {
+					id = response.body.id;
+				});
+
+			let id2;
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: id,
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+					id2 = response.body.id;
+				});
+
+			await requestAgent.get(`/v1/measurements/${id2}`)
+				.expect(200)
+				.expect((response) => {
+					expect(response.body.limit).to.equal(10);
+					expect(response.body.locations).to.deep.equal([{ continent: 'NA' }]);
+					expect(response).to.matchApiSchema();
 				});
 		});
 
 		it('should create measurement with measurement id created from measurement id', async () => {
-			let measurementId1;
+			let id1;
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -406,19 +492,19 @@ describe('Create measurement', () => {
 				})
 				.expect(202)
 				.expect((response) => {
-					measurementId1 = response.body.id;
+					id1 = response.body.id;
 				});
 
-			let measurementId2;
+			let id2;
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
 					target: 'example.com',
-					locations: measurementId1,
+					locations: id1,
 				})
 				.expect(202)
 				.expect((response) => {
-					measurementId2 = response.body.id;
+					id2 = response.body.id;
 				});
 
 
@@ -426,7 +512,7 @@ describe('Create measurement', () => {
 				.send({
 					type: 'ping',
 					target: 'example.com',
-					locations: measurementId2,
+					locations: id2,
 				})
 				.expect(202)
 				.expect((response) => {
@@ -442,7 +528,7 @@ describe('Create measurement', () => {
 				.send({
 					type: 'ping',
 					target: 'example.com',
-					locations: 'nonExistingMeasurementId',
+					locations: 'nonExistingid',
 				})
 				.expect(422)
 				.expect((response) => {

@@ -30,7 +30,7 @@ describe('probe router', () => {
 	const geoLookupMock = sinon.stub();
 	const getRegionMock = sinon.stub();
 	const store = {
-		getIpsByMeasurementId: sinon.stub(),
+		getMeasurementIps: sinon.stub(),
 		getMeasurement: sinon.stub(),
 	};
 	const router = new ProbeRouter(fetchSocketsMock, store as unknown as MeasurementStore);
@@ -897,7 +897,7 @@ describe('probe router', () => {
 				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
 			];
 			fetchSocketsMock.resolves(sockets as never);
-			store.getIpsByMeasurementId.resolves([ '1.2.3.4' ]);
+			store.getMeasurementIps.resolves([ '1.2.3.4' ]);
 
 			store.getMeasurement.resolves({
 				results: [{
@@ -913,7 +913,7 @@ describe('probe router', () => {
 
 			const { onlineProbesMap, allProbes } = await router.findMatchingProbes('measurementid');
 
-			expect(store.getIpsByMeasurementId.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
 			expect(store.getMeasurement.callCount).to.equal(0);
 			expect(allProbes[0]!.location.country).to.equal('PL');
 			expect(allProbes[0]!.status).to.equal('ready');
@@ -925,7 +925,7 @@ describe('probe router', () => {
 				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
 			];
 			fetchSocketsMock.resolves(sockets as never);
-			store.getIpsByMeasurementId.resolves([ '9.9.9.9' ]);
+			store.getMeasurementIps.resolves([ '9.9.9.9' ]);
 
 			store.getMeasurement.resolves({
 				results: [{
@@ -941,7 +941,7 @@ describe('probe router', () => {
 
 			const { onlineProbesMap, allProbes } = await router.findMatchingProbes('measurementid');
 
-			expect(store.getIpsByMeasurementId.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
 			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
 			expect(allProbes.length).to.equal(1);
 			expect(allProbes[0]!.location.country).to.equal('PL');
@@ -954,7 +954,7 @@ describe('probe router', () => {
 				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
 			];
 			fetchSocketsMock.resolves(sockets as never);
-			store.getIpsByMeasurementId.resolves([]);
+			store.getMeasurementIps.resolves([]);
 
 			store.getMeasurement.resolves({
 				results: [{
@@ -970,7 +970,7 @@ describe('probe router', () => {
 
 			const { onlineProbesMap, allProbes } = await router.findMatchingProbes('measurementid');
 
-			expect(store.getIpsByMeasurementId.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
 			expect(allProbes.length).to.equal(0);
 			expect(onlineProbesMap.size).to.equal(0);
 		});
@@ -980,13 +980,13 @@ describe('probe router', () => {
 				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
 			];
 			fetchSocketsMock.resolves(sockets as never);
-			store.getIpsByMeasurementId.resolves([ '9.9.9.9' ]);
+			store.getMeasurementIps.resolves([ '9.9.9.9' ]);
 
 			store.getMeasurement.resolves(null);
 
 			const { onlineProbesMap, allProbes } = await router.findMatchingProbes('measurementid');
 
-			expect(store.getIpsByMeasurementId.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
 			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
 			expect(allProbes.length).to.equal(0);
 			expect(onlineProbesMap.size).to.equal(0);

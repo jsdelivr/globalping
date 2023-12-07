@@ -83,7 +83,7 @@ export class ProbeRouter {
 
 	private async findWithMeasurementId (connectedProbes: Probe[], measurementId: string) {
 		const ipToConnectedProbe = new Map(connectedProbes.map(probe => [ probe.ipAddress, probe ]));
-		const prevIps = await this.store.getIpsByMeasurementId(measurementId);
+		const prevIps = await this.store.getMeasurementIps(measurementId);
 
 		const onlineProbesMap: Map<number, Probe> = new Map();
 		const allProbes: (Probe | OfflineProbe)[] = [];

@@ -203,9 +203,9 @@ export type MeasurementRecord = {
 	createdAt: string;
 	updatedAt: string;
 	target: string;
-	limit: number;
+	limit?: number;
 	probesCount: number;
-	locations: LocationWithLimit[] | string;
+	locations?: LocationWithLimit[];
 	measurementOptions?: MeasurementOptions;
 	results: MeasurementResult[];
 };

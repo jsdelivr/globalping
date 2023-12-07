@@ -5,7 +5,7 @@ import type { OfflineProbe, Probe } from '../probe/types.js';
 import type { RedisClient } from '../lib/redis/client.js';
 import { getRedisClient } from '../lib/redis/client.js';
 import { scopedLogger } from '../lib/logger.js';
-import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType, MeasurementResultMessage } from './types.js';
+import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType, MeasurementResultMessage, LocationWithLimit } from './types.js';
 import { getDefaults } from './schema/utils.js';
 
 const logger = scopedLogger('store');
@@ -52,44 +52,66 @@ export class MeasurementStore {
 		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord | null;
 	}
 
-	async getIpsByMeasurementId (id: string): Promise<string[]> {
-		const key = getMeasurementKey(id, 'ips');
-		const ips = await this.redis.json.get(key) as string[] | null;
+	async getMeasurementIps (id: string): Promise<string[]> {
+		const ips = await this.redis.json.get(getMeasurementKey(id, 'ips')) as string[] | null;
 		return ips || [];
+	}
+
+	async getLimitAndLocations (id: string) {
+		const response = await this.redis.json.get(getMeasurementKey(id), { path: [ '$.limit', '$.locations' ] }) as {
+			'$.limit': number[];
+			'$.locations': LocationWithLimit[][];
+		} | null;
+
+		return {
+			limit: response ? response['$.limit'][0] : undefined,
+			locations: response ? response['$.locations'][0] : undefined,
+		};
 	}
 
 	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, Probe>, allProbes: (Probe | OfflineProbe)[]): Promise<string> {
 		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
 
-		const results = this.probesToResults(allProbes, request.type);
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
 		const startTime = new Date();
-		const measurement: MeasurementRecord = {
-			id,
-			type: request.type,
-			status: 'in-progress',
-			createdAt: startTime.toISOString(),
-			updatedAt: startTime.toISOString(),
-			target: request.target,
-			limit: request.limit,
-			probesCount: allProbes.length,
-			locations: request.locations,
-			measurementOptions: request.measurementOptions,
-			results,
-		};
-		const measurementWithoutDefaults = this.removeDefaults(measurement, request);
+		const measurement = await this.getInitialMeasurement(id, request, allProbes, startTime);
 
 		await Promise.all([
 			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
 			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: probesAwaitingTtl }),
-			this.redis.json.set(key, '$', measurementWithoutDefaults),
+			this.redis.json.set(key, '$', measurement),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
 			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', allProbes.map(probe => probe.ipAddress)),
 			this.redis.expire(getMeasurementKey(id, 'ips'), config.get<number>('measurement.resultTTL')),
 		]);
 
 		return id;
+	}
+
+	async getInitialMeasurement (id: string, request: MeasurementRequest, allProbes: (Probe | OfflineProbe)[], startTime: Date) {
+		const results = this.probesToResults(allProbes, request.type);
+
+		const { limit, locations } = typeof request.locations === 'string'
+			? await this.getLimitAndLocations(request.locations)
+			: { limit: request.limit, locations: request.locations };
+
+		const measurement: Partial<MeasurementRecord> = {
+			id,
+			type: request.type,
+			status: 'in-progress',
+			createdAt: startTime.toISOString(),
+			updatedAt: startTime.toISOString(),
+			target: request.target,
+			...(limit && { limit }),
+			probesCount: allProbes.length,
+			...(locations && { locations }),
+			measurementOptions: request.measurementOptions,
+			results,
+		};
+		const measurementWithoutDefaults = this.removeDefaults(measurement, request);
+
+		return measurementWithoutDefaults;
 	}
 
 	async storeMeasurementProgress (data: MeasurementProgressMessage): Promise<void> {
@@ -179,7 +201,7 @@ export class MeasurementStore {
 		}, intervalTime);
 	}
 
-	removeDefaults (measurement: MeasurementRecord, request: MeasurementRequest): Partial<MeasurementRecord> {
+	removeDefaults (measurement: Partial<MeasurementRecord>, request: MeasurementRequest): Partial<MeasurementRecord> {
 		const defaults = getDefaults(request);
 
 		// Removes `"limit": 1` from locations. E.g. [{"country": "US", "limit": 1}] => [{"country": "US"}]
