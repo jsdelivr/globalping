@@ -122,7 +122,7 @@ Some examples:
 - `from usa` or `from united states` - A random probe in the USA
 - `from new york` -  A random probe in NYC
 - `from aws` - A random probe hosted with Amazon
-`from {MEASUREMENT ID}` - Selects the same probes that were used for the specified measurement
+- `from {MEASUREMENT ID}` - Selects the same probes that were used for the specified measurement
 
 > [!NOTE]
 > Providing no location defaults to `world`, selecting a probe from a random location.
