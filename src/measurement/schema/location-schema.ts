@@ -25,7 +25,7 @@ export const schema = Joi.alternatives().try(
 		city: Joi.string().min(1).max(128).lowercase().custom(normalizeValue),
 		network: Joi.string().min(1).max(128).lowercase().custom(normalizeValue),
 		asn: Joi.number().integer().positive(),
-		magic: Joi.string().min(1).lowercase().custom(normalizeValue),
+		magic: Joi.string().min(1).custom(normalizeValue),
 		tags: Joi.array().items(Joi.string().min(1).max(128).lowercase().custom(normalizeValue)),
 		limit: Joi.number().min(1).max(measurementConfig.limits.location).when(Joi.ref('/limit'), {
 			is: Joi.exist(),

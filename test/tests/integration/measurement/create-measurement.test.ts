@@ -523,6 +523,43 @@ describe('Create measurement', () => {
 				});
 		});
 
+		it('should create measurement with another measurement id location passed in magic field', async () => {
+			let id;
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+				})
+				.expect(202)
+				.expect((response) => {
+					id = response.body.id;
+				});
+
+			let id2;
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{ magic: id }],
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+					id2 = response.body.id;
+				});
+
+			await requestAgent.get(`/v1/measurements/${id2}`)
+				.expect(200)
+				.expect((response) => {
+					expect(response.body.limit).to.not.exist;
+					expect(response.body.locations).to.not.exist;
+					expect(response).to.matchApiSchema();
+				});
+		});
+
 		it('should respond with error if there is no requested measurement id', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({

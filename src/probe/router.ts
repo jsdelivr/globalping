@@ -20,26 +20,34 @@ export class ProbeRouter {
 		globalLimit = 1,
 	) {
 		const connectedProbes = await this.fetchProbes();
-		let onlineProbesMap: Map<number, Probe>;
-		let allProbes: (Probe | OfflineProbe)[] = [];
 
 		if (typeof locations === 'string') {
-			({ onlineProbesMap, allProbes } = await this.findWithMeasurementId(connectedProbes, locations));
-		} else if (locations.some(l => l.limit)) {
-			const filtered = this.findWithLocationLimit(connectedProbes, locations);
-			allProbes = filtered;
-			onlineProbesMap = new Map(filtered.entries());
-		} else if (locations.length > 0) {
-			const filtered = this.findWithGlobalLimit(connectedProbes, locations, globalLimit);
-			allProbes = filtered;
-			onlineProbesMap = new Map(filtered.entries());
-		} else {
-			const filtered = this.findGloballyDistributed(connectedProbes, globalLimit);
-			allProbes = filtered;
-			onlineProbesMap = new Map(filtered.entries());
+			return this.findWithMeasurementId(connectedProbes, locations);
 		}
 
-		return { onlineProbesMap, allProbes };
+		if (locations.some(l => l.limit)) {
+			const filtered = this.findWithLocationLimit(connectedProbes, locations);
+			return this.processFiltered(filtered, connectedProbes, locations);
+		}
+
+		if (locations.length > 0) {
+			const filtered = this.findWithGlobalLimit(connectedProbes, locations, globalLimit);
+			return this.processFiltered(filtered, connectedProbes, locations);
+		}
+
+		const filtered = this.findGloballyDistributed(connectedProbes, globalLimit);
+		return this.processFiltered(filtered, connectedProbes, locations);
+	}
+
+	private async processFiltered (filtered: Probe[], connectedProbes: Probe[], locations: LocationWithLimit[]) {
+		if (filtered.length === 0 && locations.length === 1 && locations[0]?.magic) {
+			return this.findWithMeasurementId(connectedProbes, locations[0].magic);
+		}
+
+		return {
+			allProbes: filtered,
+			onlineProbesMap: new Map(filtered.entries()),
+		};
 	}
 
 	private async fetchProbes (): Promise<Probe[]> {

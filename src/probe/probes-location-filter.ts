@@ -42,11 +42,11 @@ export class ProbesLocationFilter {
 	}
 
 	static getExactIndexPosition (probe: Probe, value: string) {
-		return probe.index.findIndex(category => category.some(index => index === value.replaceAll('-', ' ').trim()));
+		return probe.index.findIndex(category => category.some(index => index === value.toLowerCase().replaceAll('-', ' ').trim()));
 	}
 
 	static getIndexPosition (probe: Probe, value: string) {
-		return probe.index.findIndex(category => category.some(index => index.includes(value.replaceAll('-', ' ').trim())));
+		return probe.index.findIndex(category => category.some(index => index.includes(value.toLowerCase().replaceAll('-', ' ').trim())));
 	}
 
 	static hasTag (probe: Probe, tag: string) {
