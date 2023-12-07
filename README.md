@@ -45,111 +45,8 @@ Here are some ways you can help:
 - [Become a GitHub sponsor](https://github.com/sponsors/jsdelivr): By becoming a GitHub sponsor of [jsDelivr](https://github.com/jsdelivr), you are supporting both the jsDelivr CDN and the Globalping platform. Sponsors contributing $10 or more per month can request a hardware probe to install in their home or office.
 - [Become a hardware probe provider](https://docs.google.com/document/d/1xIe-BaZ-6mmkjN1yMH5Kauw3FTXADrB79w4pnJ4SLa4/edit#heading=h.tmcgof2zm3yh): Sponsor a batch of co-branded hardware probes, including your own stickers and swag, to ship to your users or hand out at conferences.
 
-## Quick start – Run your first test
-Whether you're new to network testing or are a seasoned pro, getting started with Globalping is straightforward. Let's check out two ways to run your first test:
-- run a ping request to google.com from a probe in New York
-
-### Web-based tools
-Our web form is perfect for users who prefer to work with UIs or want to run tests from any device with a browser.
-![globalping-quickstart-ping-ny](https://github.com/inventarSarah/globalping-main/assets/789476/430bd0fc-4e52-4003-9c56-b6fa64cba6e0)
-Follow these steps to create your test:
-1. Head to [our website](https://www.jsdelivr.com/globalping)
-2. Use the form at the top of the page to configure the test case:
-	1. Test type: ping
-	2. Target: google.com 
-	3. Location: New York
-	4. Limit: 1
-3. Click "Run Test" 
-4. View the used probe in New York on the map below the form and review the ping result beneath the map.
-
-### CLI tool
-If you prefer to work from your terminal, the CLI tool is the ideal choice for using Globalping.
-
-Follow these steps to create the test:
-1. Install the CLI using your favorite package manager as described [here](#globalping-cli)
-2. Test if everything works by running `global ping --help`
-3. Write and run the test case described above:
-	1. `global ping ping google.com from New York`
-4. Instantly review the result:
-
-```
-$ global ping ping google.com from New York
-> NA, US, (NY), New York, ASN:63473, HostHatch, LLC
-> PING  (142.251.40.142) 56(84) bytes of data.
-64 bytes from lga25s80-in-f14.1e100.net (142.251.40.142): icmp_seq=1 ttl=57 time=1.73 ms
-64 bytes from lga25s80-in-f14.1e100.net (142.251.40.142): icmp_seq=2 ttl=57 time=1.64 ms
-64 bytes from lga25s80-in-f14.1e100.net (142.251.40.142): icmp_seq=3 ttl=57 time=1.66 ms
-
----  ping statistics --- 
-3 packets transmitted, 3 received, 0% packet loss, time 402ms
-rtt min/avg/max/mdev = 1.641/1.679/1.733/0.039 ms   
-```
-
-There's so much more you can do with Globalping! Learn the basics, discover more integrations for different use cases, and tips to help you get the most out of our platform.
-
-## How to write networking tests with Globalping
-While we offer [different tools and integrations](#available-globalping-tools-and-integrations) for running tests with Globalping, we make sure that they provide a consistent experience. This also means that writing tests looks almost identical whether you're using the CLI tool or the Slack app, for example. 
-
-Follow this structure when writing tests:
-
-`globalping [command] [target] from [location] [flags]`
-
-Examples:
-- `globalping ping google.com from aws`
-- `globalping ping google.com from Berlin, South America --limit 2`
-
-Let's look at each component:
-
-##### Initiating a command
-The way you initiate Globalping depends on the tool or integration you're using. For example, use `globalping` with the CLI tool, while using `@globalping` with the GitHub bot. Refer to the list of integrations below to learn how to use each in detail.
-
-##### Available test commands
-Globalping supports the following commands:
-- ping
-- traceroute
-- mtr
-- dns (similar to dig)
-- http (similar to curl GET and HEAD)
-
-##### Target
-The target represents the destination for your test. This can be a domain name or an IP address for most test types.
-
-##### Location
-The location field can process different locations, including continents, regions, countries, cities, US states, and ASNs (prefixed by "AS," e.g., `from AS80085`). You can also specify measurement IDs from previous tests to reuse the same probes. 
-In general, our aim is to enable you to provide whatever location feels right.
-
-Some examples:
-- `from usa` or `from united states` - A random probe in the USA
-- `from new york` -  A random probe in NYC
-- `from aws` - A random probe hosted with Amazon
-- `from {MEASUREMENT ID}` - Selects the same probes that were used for the specified measurement
-
-> [!NOTE]
-> Providing no location defaults to `world`, selecting a probe from a random location.
-
-Other location examples:
-- europe, africa, asia
-- east asia, north europe, eastern europe
-- greece, canada, mexico, japan
-- california, texas
-- frankfurt, dallas, sydney
-- as396982, as16509
-- comcast, google, ovh, orange, t-mobile
-
-##### Flags
-All network test commands share some flags but also have unique ones. To learn more, run `--help` with the respective test type. For example, to find out more about `ping`, run:
-
-`globalping ping --help`
-
-###### The limit flag
-The `--limit` flag is probably one of the most useful flags when starting with Globalping. It determines the number of tests to run, which is set to one (1) by default. 
-
-For example:
-- `from north america` selects one probe in either USA or Canada.
-- `from north america --limit 2` selects one probe in USA **and** one in Canada.
-
-## Available Globalping tools and integrations
-In this section, we'll introduce you to the various tools and integrations with which you can use Globalping.
+##  Quick start – Run your first tests 
+Whether you're new to network testing or are a seasoned pro, getting started with Globalping is straightforward. Let's check out how you can run your first tests using our various tools and integrations:
 
 ### [Web-based tools - Globalping website](https://www.jsdelivr.com/globalping)
 [![globalping latency test from google cloud](https://github.com/jsdelivr/globalping/assets/1834071/760c9031-9292-4e2a-9901-68ef7f0745ca)](https://www.jsdelivr.com/globalping)
@@ -228,16 +125,19 @@ Improve collaboration in your workspace by installing our Slack app, enabling ev
 
 <a href="https://bots.globalping.io/slack/install"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
 
-  
 To initiate a command with the Globalping Slack app, use the slash command `/globalping`. Apart from that, you can use the same test command structure as with our other tools and integrations. For example, to get started, type `/globalping help`.
 
 Example commands to try:
 ```
+
 /globalping ping 8.8.8.8 from Germany
+
 /globalping traceroute jsdelivr.com from South America --limit 2
+
 ```
+
 >[!Important]
-> To make the app post test results in Slack Threads, mention it using `@globalping`. For example,  `@globalping ping google.com`
+> To make the app post test results in Slack Threads, mention it using `@globalping`. For example,  `@globalping ping google.com`
 
 Learn more about the Slack app [on our blog](https://www.jsdelivr.com/blog/network-troubleshooting-in-slack-made-easy-with-globalping/).
 
@@ -251,6 +151,66 @@ Example commands to try:
 ```
 
 Learn more about the GitHub bot [on our blog](https://dev.to/globalping/supercharge-your-gitops-workflows-with-the-globalping-github-bot-341a).
+
+## How to write networking tests with Globalping
+While we offer different tools and integrations for running tests with Globalping, we make sure that they provide a consistent experience. This also means that writing tests looks almost identical whether you're using the CLI tool or the Slack app, for example.
+Follow this structure when writing tests:
+
+`globalping [command] [target] from [location] [flags]`
+
+Examples:
+- `globalping ping google.com from aws`
+- `globalping ping google.com from Berlin, South America --limit 2`
+
+Let's look at each component:
+
+##### Initiating a command
+The way you initiate Globalping depends on the tool or integration you're using. For example, use `globalping` with the CLI tool, while using `@globalping` with the GitHub bot. Refer to the list of integrations above to learn how to use each in more detail.
+
+##### Available test commands
+Globalping supports the following commands:
+- ping
+- traceroute
+- mtr
+- dns (similar to dig)
+- http (similar to curl GET and HEAD)
+
+##### Target
+The target represents the destination for your test. This can be a domain name or an IP address for most test types.
+
+##### Location
+The location field can process different locations, including continents, regions, countries, cities, US states, and ASNs (prefixed by "AS," e.g., `from AS80085`). You can also specify measurement IDs from previous tests to reuse the same probes. 
+In general, our aim is to enable you to provide whatever location feels right.
+
+Some examples:
+- `from usa` or `from united states` - A random probe in the USA
+- `from new york` -  A random probe in NYC
+- `from aws` - A random probe hosted with Amazon
+- `from {MEASUREMENT ID}` - Selects the same probes that were used for the specified measurement
+
+> [!NOTE]
+> Providing no location defaults to `world`, selecting a probe from a random location.
+
+Other location examples:
+- europe, africa, asia
+- east asia, north europe, eastern europe
+- greece, canada, mexico, japan
+- california, texas
+- frankfurt, dallas, sydney
+- as396982, as16509
+- comcast, google, ovh, orange, t-mobile
+
+##### Flags
+All network test commands share some flags but also have unique ones. To learn more, run `--help` with the respective test type. For example, to find out more about `ping`, run:
+
+`globalping ping --help`
+
+###### The limit flag
+The `--limit` flag is probably one of the most useful flags when starting with Globalping. It determines the number of tests to run, which is set to one (1) by default. 
+
+For example:
+- `from north america` selects one probe in either USA or Canada.
+- `from north america --limit 2` selects one probe in USA **and** one in Canada.
 
 ## Best practices and tips
 Learn to use Globalping in the most optimal way!
