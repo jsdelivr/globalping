@@ -236,7 +236,7 @@ export class MeasurementStore {
 	getInitialResult (type: RequestType, status: Probe['status'] | OfflineProbe['status']) {
 		if (status === 'offline') {
 			return {
-				status: 'failed',
+				status: 'offline',
 				rawOutput: 'This probe is currently offline. Please try again later.',
 			};
 		}

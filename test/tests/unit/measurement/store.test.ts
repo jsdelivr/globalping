@@ -373,7 +373,7 @@ describe('measurement store', () => {
 							resolvers: [],
 						},
 						result: {
-							status: 'failed',
+							status: 'offline',
 							rawOutput: 'This probe is currently offline. Please try again later.',
 						},
 					},
