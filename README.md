@@ -265,6 +265,20 @@ So, for example, when you run a test from "Germany" using the CLI or Slack app, 
 
 The magic field supports a wide range of parameters and location combinations, including countries, continents, cities, US states, regions (Western Europe), ASNs, ISP names, eyeball or data center tags, and cloud region names (us-east-2).
 
+### Re-select probes ♻️
+You can also provide the "magic" field with a measurement ID to have the API select the same probes used in a previous measurement. 
+
+For example:
+- `EXAMPLE`
+
+You can find the measurement ID in every Globalping measurement result:
+```
+Example
+```
+This feature is particularly useful, for example, if you want to test different API endpoints with the same probes to better compare data. It is also great for troubleshooting, as you can use it to retest certain "problematic" probes or run continuous tests with the same probe and stitch the results together.
+>[!NOTE]
+>You can also leverage the respective parameter in our API instead of the magic field. 
+
 ### Understand the "world" location 🌍
 
 The `world` location uses a pseudo-random algorithm to select probes while [maintaining certain proportions](https://github.com/jsdelivr/globalping/blob/master/config/default.cjs#L47) per continent.
