@@ -115,13 +115,14 @@ Globalping supports the following commands:
 The target represents the destination for your test. This can be a domain name or an IP address for most test types.
 
 ##### Location
-The location field can process different locations, including continents, regions, countries, cities, US states, and ASNs (prefixed by "AS," e.g., `from AS80085`). 
+The location field can process different locations, including continents, regions, countries, cities, US states, and ASNs (prefixed by "AS," e.g., `from AS80085`). You can also specify measurement IDs from previous tests to reuse the same probes. 
 In general, our aim is to enable you to provide whatever location feels right.
 
 Some examples:
 - `from usa` or `from united states` - A random probe in the USA
 - `from new york` -  A random probe in NYC
 - `from aws` - A random probe hosted with Amazon
+`from {MEASUREMENT ID}` - Selects the same probes that were used for the specified measurement
 
 > [!NOTE]
 > Providing no location defaults to `world`, selecting a probe from a random location.
@@ -330,7 +331,7 @@ Example:
 ### Things to keep in mind
 
 #### Probes share no UUIDs
-Our probes don't expose unique IDs that you can use to target them explicitly. Instead, we recommend fine-tuning probe selection by using and combining filters as described in the best practice section above.
+Our probes don't expose unique IDs that you can use to target them explicitly. Our probes don't expose unique IDs that you can use to target them explicitly. Instead, we recommend fine-tuning the probe selection by using and combining filters or specifying IDs from previous measurements, as described in the best practice section above.
 
 This ensures that popular locations, like `from Amsterdam` or `from AWS`, are automatically load-balanced across multiple probes within the same location, preventing the overload of specific probes.
 
