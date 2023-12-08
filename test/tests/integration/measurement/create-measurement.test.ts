@@ -585,6 +585,57 @@ describe('Create measurement', () => {
 				});
 		});
 
+		describe('offline probes', () => {
+			after(() => {
+				probe.emit('probe:status:update', 'ready');
+			});
+
+			it('should create measurement with offline test result if requested probe is offline', async () => {
+				let id;
+				await requestAgent.post('/v1/measurements')
+					.send({
+						type: 'ping',
+						target: 'example.com',
+						limit: 2,
+						locations: [{
+							continent: 'NA',
+						}],
+					})
+					.expect(202)
+					.expect((response) => {
+						id = response.body.id;
+					});
+
+				probe.emit('probe:status:update', 'ping-test-failed');
+
+				let id2;
+				await requestAgent.post('/v1/measurements')
+					.send({
+						type: 'ping',
+						target: 'example.com',
+						locations: id,
+					})
+					.expect(202)
+					.expect((response) => {
+						expect(response.body.id).to.exist;
+						expect(response.header.location).to.exist;
+						expect(response.body.probesCount).to.equal(1);
+						expect(response).to.matchApiSchema();
+						id2 = response.body.id;
+					});
+
+				await requestAgent.get(`/v1/measurements/${id2}`)
+					.expect(200)
+					.expect((response) => {
+						expect(response.body.limit).to.equal(2);
+						expect(response.body.locations).to.deep.equal([{ continent: 'NA' }]);
+						expect(response.body.results[0].result.status).to.equal('offline');
+						expect(response.body.results[0].result.rawOutput).to.equal('This probe is currently offline. Please try again later.');
+						expect(response).to.matchApiSchema();
+					});
+			});
+		});
+
 		describe('adopted probes', () => {
 			before(async () => {
 				await client(ADOPTED_PROBES_TABLE).insert({
