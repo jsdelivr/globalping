@@ -45,32 +45,39 @@ describe('MeasurementRunner', () => {
 		testId = 0;
 	});
 
+	after(() => {
+		td.reset();
+	});
+
 	it('should run measurement for the required amount of probes', async () => {
+		const request = {
+			type: 'ping' as const,
+			target: 'jsdelivr.com',
+			measurementOptions: {
+				packets: 3,
+			},
+			locations: [],
+			limit: 10,
+			inProgressUpdates: false,
+		};
+
 		router.findMatchingProbes.resolves({
 			onlineProbesMap: new Map([ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ].entries()),
 			allProbes: [ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ],
+			request,
 		});
 
 		await runner.run({
 			set,
 			req,
 			request: {
-				body: {
-					type: 'ping',
-					target: 'jsdelivr.com',
-					measurementOptions: {
-						packets: 3,
-					},
-					locations: [],
-					limit: 10,
-					inProgressUpdates: false,
-				},
+				body: request,
 			},
 		} as unknown as Context);
 
 
 		expect(router.findMatchingProbes.callCount).to.equal(1);
-		expect(router.findMatchingProbes.args[0]).to.deep.equal([ [], 10 ]);
+		expect(router.findMatchingProbes.args[0]).to.deep.equal([ request ]);
 		expect(store.createMeasurement.callCount).to.equal(1);
 
 		expect(store.createMeasurement.args[0]).to.deep.equal([
@@ -145,31 +152,34 @@ describe('MeasurementRunner', () => {
 	});
 
 	it('should send `inProgressUpdates: true` to the first N probes if requested', async () => {
+		const request = {
+			type: 'ping'as const,
+			target: 'jsdelivr.com',
+			measurementOptions: {
+				packets: 3,
+			},
+			locations: [],
+			limit: 10,
+			inProgressUpdates: true,
+		};
+
 		router.findMatchingProbes.resolves({
 			onlineProbesMap: new Map([ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ].entries()),
 			allProbes: [ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ],
+			request,
 		});
 
 		await runner.run({
 			set,
 			req,
 			request: {
-				body: {
-					type: 'ping',
-					target: 'jsdelivr.com',
-					measurementOptions: {
-						packets: 3,
-					},
-					locations: [],
-					limit: 10,
-					inProgressUpdates: true,
-				},
+				body: request,
 			},
 		} as unknown as Context);
 
 
 		expect(router.findMatchingProbes.callCount).to.equal(1);
-		expect(router.findMatchingProbes.args[0]).to.deep.equal([ [], 10 ]);
+		expect(router.findMatchingProbes.args[0]).to.deep.equal([ request ]);
 		expect(store.createMeasurement.callCount).to.equal(1);
 
 		expect(store.createMeasurement.args[0]).to.deep.equal([
@@ -257,25 +267,28 @@ describe('MeasurementRunner', () => {
 	});
 
 	it('should call ratelimiter with the number of online probes', async () => {
+		const request = {
+			type: 'ping' as const,
+			target: 'jsdelivr.com',
+			measurementOptions: {
+				packets: 3,
+			},
+			locations: [],
+			limit: 10,
+			inProgressUpdates: false,
+		};
+
 		router.findMatchingProbes.resolves({
 			onlineProbesMap: new Map([ getProbe(0) ].entries()),
 			allProbes: [ getProbe(0), getProbe(1) ],
+			request,
 		});
 
 		const ctx = {
 			set,
 			req,
 			request: {
-				body: {
-					type: 'ping',
-					target: 'jsdelivr.com',
-					measurementOptions: {
-						packets: 3,
-					},
-					locations: [],
-					limit: 10,
-					inProgressUpdates: false,
-				},
+				body: request,
 			},
 		} as unknown as Context;
 
@@ -286,25 +299,28 @@ describe('MeasurementRunner', () => {
 	});
 
 	it('should throw 422 error if no probes found', async () => {
+		const request = {
+			type: 'ping' as const,
+			target: 'jsdelivr.com',
+			measurementOptions: {
+				packets: 3,
+			},
+			locations: [],
+			limit: 10,
+			inProgressUpdates: false,
+		};
+
 		router.findMatchingProbes.resolves({
 			onlineProbesMap: new Map([].entries()),
 			allProbes: [],
+			request,
 		});
 
 		const err = await runner.run({
 			set,
 			req,
 			request: {
-				body: {
-					type: 'ping',
-					target: 'jsdelivr.com',
-					measurementOptions: {
-						packets: 3,
-					},
-					locations: [],
-					limit: 10,
-					inProgressUpdates: false,
-				},
+				body: request,
 			},
 		} as unknown as Context).catch((err: unknown) => err);
 		expect(err).to.deep.equal(createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' }));
@@ -312,25 +328,28 @@ describe('MeasurementRunner', () => {
 	});
 
 	it('should immideately call store.markFinished if there are no online probes', async () => {
+		const request = {
+			type: 'ping' as const,
+			target: 'jsdelivr.com',
+			measurementOptions: {
+				packets: 3,
+			},
+			locations: [],
+			limit: 10,
+			inProgressUpdates: false,
+		};
+
 		router.findMatchingProbes.resolves({
 			onlineProbesMap: new Map([].entries()),
 			allProbes: [ getProbe(0) ],
+			request,
 		});
 
 		await runner.run({
 			set,
 			req,
 			request: {
-				body: {
-					type: 'ping',
-					target: 'jsdelivr.com',
-					measurementOptions: {
-						packets: 3,
-					},
-					locations: [],
-					limit: 10,
-					inProgressUpdates: false,
-				},
+				body: request,
 			},
 		} as unknown as Context);
 

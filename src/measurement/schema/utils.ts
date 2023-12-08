@@ -52,7 +52,13 @@ export const globalIpOptions: {version: string[]; cidr: PresenceMode} = { versio
 
 export const GLOBAL_DEFAULTS = {
 	locations: [],
-	limit: (request: MeasurementRequest) => request.locations.length || 1,
+	limit: (request: MeasurementRequest) => {
+		if (typeof request.locations === 'string') {
+			return 1;
+		}
+
+		return request.locations?.length || 1;
+	},
 	inProgressUpdates: false,
 };
 

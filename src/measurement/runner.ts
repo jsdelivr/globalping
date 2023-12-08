@@ -8,7 +8,7 @@ import type { Probe } from '../probe/types.js';
 import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
-import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage } from './types.js';
+import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage, UserRequest } from './types.js';
 import { rateLimit } from '../lib/ratelimiter.js';
 
 export class MeasurementRunner {
@@ -21,8 +21,8 @@ export class MeasurementRunner {
 	) {}
 
 	async run (ctx: Context): Promise<{measurementId: string; probesCount: number;}> {
-		const request = ctx.request.body as MeasurementRequest;
-		const { onlineProbesMap, allProbes } = await this.router.findMatchingProbes(request.locations, request.limit);
+		const userRequest = ctx.request.body as UserRequest;
+		const { onlineProbesMap, allProbes, request } = await this.router.findMatchingProbes(userRequest);
 
 		if (allProbes.length === 0) {
 			throw createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' });

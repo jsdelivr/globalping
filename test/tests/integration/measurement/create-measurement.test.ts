@@ -529,6 +529,8 @@ describe('Create measurement', () => {
 				.send({
 					type: 'ping',
 					target: 'example.com',
+					limit: 2,
+					locations: [{ country: 'US' }],
 				})
 				.expect(202)
 				.expect((response) => {
@@ -554,8 +556,8 @@ describe('Create measurement', () => {
 			await requestAgent.get(`/v1/measurements/${id2}`)
 				.expect(200)
 				.expect((response) => {
-					expect(response.body.limit).to.not.exist;
-					expect(response.body.locations).to.not.exist;
+					expect(response.body.limit).to.equal(2);
+					expect(response.body.locations).to.deep.equal([{ country: 'US' }]);
 					expect(response).to.matchApiSchema();
 				});
 		});

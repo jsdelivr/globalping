@@ -170,12 +170,17 @@ export type LocationWithLimit = Location & {limit?: number};
  * Measurement Objects
  */
 
+export type UserRequest = Omit<MeasurementRequest, 'locations' | 'limit'> & {
+	locations: LocationWithLimit[] | string;
+	limit: number;
+}
+
 export type MeasurementRequest = {
 	type: 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 	target: string;
 	measurementOptions: MeasurementOptions;
-	locations: LocationWithLimit[] | string;
-	limit: number;
+	locations: LocationWithLimit[] | undefined;
+	limit: number | undefined;
 	inProgressUpdates: boolean;
 };
 
