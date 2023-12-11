@@ -2,10 +2,13 @@ import _ from 'lodash';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { io, type Socket } from 'socket.io-client';
+import { scopedLogger } from '../../src/lib/logger.js';
 import { createServer } from '../../src/lib/server.js';
 
 let app: Server;
 let url: string;
+
+const logger = scopedLogger('test-server');
 
 export const getTestServer = async (): Promise<Server> => {
 	if (!app) {
@@ -36,6 +39,8 @@ export const addFakeProbe = async (events: object = {}, options: object = {}): P
 		for (const [ event, listener ] of Object.entries(events)) {
 			client.on(event, listener);
 		}
+
+		client.on('connect_error', (error: Error) => logger.error(error));
 
 		client.on('connect', () => {
 			resolve(client);

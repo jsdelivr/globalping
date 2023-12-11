@@ -1,16 +1,16 @@
 import config from 'config';
 import _ from 'lodash';
 import cryptoRandomString from 'crypto-random-string';
-import type { Probe } from '../probe/types.js';
+import type { OfflineProbe, Probe } from '../probe/types.js';
 import type { RedisClient } from '../lib/redis/client.js';
 import { getRedisClient } from '../lib/redis/client.js';
 import { scopedLogger } from '../lib/logger.js';
-import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage } from './types.js';
+import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType, MeasurementResultMessage } from './types.js';
 import { getDefaults } from './schema/utils.js';
 
 const logger = scopedLogger('store');
 
-export const getMeasurementKey = (id: string, suffix: 'probes_awaiting' | undefined = undefined): string => {
+export const getMeasurementKey = (id: string, suffix: string | undefined = undefined): string => {
 	let key = `gp:measurement:${id}`;
 
 	if (suffix) {
@@ -27,7 +27,7 @@ const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, un
 		const value1 = obj1[key];
 		const value2 = obj2[key];
 
-		if (_.isPlainObject(value1)) {
+		if (_.isPlainObject(value1) && _.isPlainObject(value2)) {
 			const difference = substractObjects(value1 as Record<string, unknown>, value2 as Record<string, unknown>);
 
 			if (!_.isEmpty(difference)) {
@@ -44,27 +44,37 @@ const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, un
 export class MeasurementStore {
 	constructor (private readonly redis: RedisClient) {}
 
-	async getMeasurementResults (id: string): Promise<string> {
+	async getMeasurementString (id: string): Promise<string> {
 		return this.redis.sendCommand([ 'JSON.GET', getMeasurementKey(id) ]);
 	}
 
-	async createMeasurement (request: MeasurementRequest, probes: Probe[]): Promise<string> {
+	async getMeasurement (id: string) {
+		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord | null;
+	}
+
+	async getMeasurementIps (id: string): Promise<string[]> {
+		const ips = await this.redis.json.get(getMeasurementKey(id, 'ips')) as string[] | null;
+		return ips || [];
+	}
+
+	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, Probe>, allProbes: (Probe | OfflineProbe)[]): Promise<string> {
 		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
 
-		const results = this.probesToResults(probes, request.type);
 		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
 		const startTime = new Date();
-		const measurement: MeasurementRecord = {
+		const results = this.probesToResults(allProbes, request.type);
+
+		const measurement: Partial<MeasurementRecord> = {
 			id,
 			type: request.type,
 			status: 'in-progress',
 			createdAt: startTime.toISOString(),
 			updatedAt: startTime.toISOString(),
 			target: request.target,
-			limit: request.limit,
-			probesCount: probes.length,
-			locations: request.locations,
+			...(request.limit && { limit: request.limit }),
+			probesCount: allProbes.length,
+			...(request.locations && { locations: request.locations }),
 			measurementOptions: request.measurementOptions,
 			results,
 		};
@@ -72,9 +82,11 @@ export class MeasurementStore {
 
 		await Promise.all([
 			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
-			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), probes.length, { EX: probesAwaitingTtl }),
+			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: probesAwaitingTtl }),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
+			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', allProbes.map(probe => probe.ipAddress)),
+			this.redis.expire(getMeasurementKey(id, 'ips'), config.get<number>('measurement.resultTTL')),
 		]);
 
 		return id;
@@ -95,6 +107,20 @@ export class MeasurementStore {
 			...progressUpdatePromises,
 			this.redis.json.set(key, '$.updatedAt', new Date().toISOString()),
 		]);
+	}
+
+	async storeMeasurementResult (data: MeasurementResultMessage) {
+		const record = await this.redis.recordResult(data.measurementId, data.testId, data.result);
+
+		if (record) {
+			await this.markFinished(data.measurementId);
+		}
+
+		return record;
+	}
+
+	async markFinished (id: string) {
+		await this.redis.markFinished(id);
 	}
 
 	async markFinishedByTimeout (ids: string[]): Promise<void> {
@@ -153,15 +179,18 @@ export class MeasurementStore {
 		}, intervalTime);
 	}
 
-	removeDefaults (measurement: MeasurementRecord, request: MeasurementRequest): Partial<MeasurementRecord> {
+	removeDefaults (measurement: Partial<MeasurementRecord>, request: MeasurementRequest): Partial<MeasurementRecord> {
 		const defaults = getDefaults(request);
+
 		// Removes `"limit": 1` from locations. E.g. [{"country": "US", "limit": 1}] => [{"country": "US"}]
-		measurement.locations = measurement.locations.map(location => location.limit === 1 ? _.omit(location, 'limit') : location);
+		if (_.isArray(measurement.locations)) {
+			measurement.locations = measurement.locations.map(location => location.limit === 1 ? _.omit(location, 'limit') : location);
+		}
 
 		return substractObjects(measurement, defaults) as Partial<MeasurementRecord>;
 	}
 
-	probesToResults (probes: Probe[], type: string) {
+	probesToResults (probes: (Probe | OfflineProbe)[], type: RequestType) {
 		const results = probes.map(probe => ({
 			probe: {
 				continent: probe.location.continent,
@@ -176,13 +205,20 @@ export class MeasurementStore {
 				tags: probe.tags.map(({ value }) => value),
 				resolvers: probe.resolvers,
 			},
-			result: this.getInitialResult(type),
+			result: this.getInitialResult(type, probe.status),
 		} as MeasurementResult));
 
 		return results;
 	}
 
-	getInitialResult (type: string) {
+	getInitialResult (type: RequestType, status: Probe['status'] | OfflineProbe['status']) {
+		if (status === 'offline') {
+			return {
+				status: 'offline',
+				rawOutput: 'This probe is currently offline. Please try again later.',
+			};
+		}
+
 		if (type === 'http') {
 			return {
 				status: 'in-progress',

@@ -6,7 +6,7 @@ import type { Location } from '../lib/location/types.js';
 
 type TestResult = {
 	rawOutput: string;
-	status: 'in-progress' | 'finished' | 'failed';
+	status: 'in-progress' | 'finished' | 'failed' | 'offline';
 };
 
 type PingTest = {
@@ -18,7 +18,7 @@ type PingTiming = {
 	ttl: number;
 };
 
-type PingResult = TestResult & {
+export type PingResult = TestResult & {
 	timings: PingTiming[];
 	stats: {
 		min: number;
@@ -170,14 +170,17 @@ export type LocationWithLimit = Location & {limit?: number};
  * Measurement Objects
  */
 
-type MeasurementStatus = 'in-progress' | 'finished';
+export type UserRequest = Omit<MeasurementRequest, 'locations' | 'limit'> & {
+	locations: LocationWithLimit[] | string;
+	limit: number;
+}
 
 export type MeasurementRequest = {
 	type: 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 	target: string;
 	measurementOptions: MeasurementOptions;
-	locations: LocationWithLimit[];
-	limit: number;
+	locations: LocationWithLimit[] | undefined;
+	limit: number | undefined;
 	inProgressUpdates: boolean;
 };
 
@@ -201,13 +204,13 @@ export type MeasurementResult = {
 export type MeasurementRecord = {
 	id: string;
 	type: MeasurementRequest['type'];
-	status: MeasurementStatus;
+	status: 'in-progress' | 'finished';
 	createdAt: string;
 	updatedAt: string;
 	target: string;
-	limit: number;
+	limit?: number;
 	probesCount: number;
-	locations: LocationWithLimit[];
+	locations?: LocationWithLimit[];
 	measurementOptions?: MeasurementOptions;
 	results: MeasurementResult[];
 };

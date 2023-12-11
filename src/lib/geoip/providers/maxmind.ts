@@ -9,6 +9,7 @@ import {
 	normalizeNetworkName,
 } from '../utils.js';
 import { getCity } from '../city-approximation.js';
+import { getRegionByCountry } from '../../location/location.js';
 
 const client = new WebServiceClient(config.get('maxmind.accountId'), config.get('maxmind.licenseKey'));
 
@@ -39,8 +40,9 @@ export const maxmindLookup = async (addr: string): Promise<LocationInfo> => {
 
 	return {
 		continent: data.continent?.code ?? '',
+		region: data.country?.isoCode ? getRegionByCountry(data.country?.isoCode) : '',
 		country: data.country?.isoCode ?? '',
-		state: data.country?.isoCode === 'US' ? data.subdivisions?.map(s => s.isoCode)[0] ?? '' : undefined,
+		state: data.country?.isoCode === 'US' ? data.subdivisions?.map(s => s.isoCode)[0] ?? '' : null,
 		city: normalizeCityNamePublic(city),
 		normalizedCity: normalizeCityName(city),
 		asn: data.traits?.autonomousSystemNumber ?? 0,
@@ -48,5 +50,6 @@ export const maxmindLookup = async (addr: string): Promise<LocationInfo> => {
 		longitude: data.location?.longitude ?? 0,
 		network: data.traits?.isp ?? '',
 		normalizedNetwork: normalizeNetworkName(data.traits?.isp ?? ''),
+		isHosting: null,
 	};
 };

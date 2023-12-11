@@ -76,12 +76,18 @@ components:
           maximum: 200
           default: 1
     MeasurementLocations:
-      type: array
-      description: |
-        An array of locations from which to run the measurement.
-        Each object specifies a location using one or multiple keys.
-      items:
-        $ref: 'schemas.yaml#/components/schemas/MeasurementLocationOption'
+      oneOf:
+        - type: array
+          description: |
+            An array of locations from which to run the measurement. Each object specifies a location using one or multiple keys.
+          items:
+            $ref: 'schemas.yaml#/components/schemas/MeasurementLocationOption'
+        - type: string
+          description: |
+            `id` of a previous measurement - its probes are reused for the new measurement and returned in the same order.
+            Measurement type and options are not reused and need to be specified in the request.
+            Note that this option only works for the lifetime of the original measurement
+            and will result in a `422` response for expired or invalid `id` values.
     MeasurementOptions:
       anyOf:
         - $ref: 'schemas.yaml#/components/schemas/MeasurementPingOptions'
@@ -571,6 +577,7 @@ components:
         - continent
         - region
         - country
+        - state
         - city
         - asn
         - network
@@ -716,6 +723,7 @@ components:
       anyOf:
         - $ref: 'schemas.yaml#/components/schemas/InProgressTestResult'
         - $ref: 'schemas.yaml#/components/schemas/FailedTestResult'
+        - $ref: 'schemas.yaml#/components/schemas/OfflineTestResult'
         - $ref: 'schemas.yaml#/components/schemas/FinishedPingTestResult'
         - $ref: 'schemas.yaml#/components/schemas/FinishedTracerouteTestResult'
         - $ref: 'schemas.yaml#/components/schemas/FinishedDnsTestResult'
@@ -755,6 +763,20 @@ components:
       properties:
         status:
           $ref: 'schemas.yaml#/components/schemas/FailedTestStatus'
+        rawOutput:
+          $ref: 'schemas.yaml#/components/schemas/TestRawOutput'
+    OfflineTestResult:
+      type: object
+      title: OfflineTestResult
+      description: |
+        Represents an `offline` test where the requested probe is currently offline and most fields are not available.
+        Only possible when passing an `id` of a previous measurement to the `locations` field.
+      required:
+        - status
+        - rawOutput
+      properties:
+        status:
+          $ref: 'schemas.yaml#/components/schemas/OfflineTestStatus'
         rawOutput:
           $ref: 'schemas.yaml#/components/schemas/TestRawOutput'
     FinishedPingTestResult:
@@ -1118,6 +1140,10 @@ components:
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/BaseTestStatus'
         - const: failed
+    OfflineTestStatus:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/BaseTestStatus'
+        - const: offline
     TimingPacketRtt:
       type: number
       description: The round-trip time for this packet.

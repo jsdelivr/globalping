@@ -228,7 +228,7 @@ describe('command schema', async () => {
 
 				const valid = locationSchema.validate(input);
 
-				expect(valid.value![0].magic).to.equal('petah tiqva');
+				expect(valid.value![0].magic).to.equal('Petah Tiqva');
 			});
 
 			it('should correct region value (lowercase)', () => {

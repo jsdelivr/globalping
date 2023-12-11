@@ -4,16 +4,18 @@ import { expect } from 'chai';
 import * as td from 'testdouble';
 
 import { ProbeRouter } from '../../../../src/probe/router.js';
+import { getRegionByCountry } from '../../../../src/lib/location/location.js';
 import type { RemoteProbeSocket } from '../../../../src/lib/ws/server.js';
 import type { DeepPartial } from '../../../types.js';
 import type { Probe, ProbeLocation } from '../../../../src/probe/types.js';
 import type { Location } from '../../../../src/lib/location/types.js';
-import { getRegionByCountry } from '../../../../src/lib/location/location.js';
+import type { MeasurementStore } from '../../../../src/measurement/store.js';
+import type { UserRequest } from '../../../../src/measurement/types.js';
 
 const defaultLocation = {
 	continent: '',
 	country: 'PL',
-	state: undefined,
+	state: null,
 	city: '',
 	region: '',
 	normalizedCity: '',
@@ -25,12 +27,16 @@ const defaultLocation = {
 };
 
 describe('probe router', () => {
-	const sandbox = sinon.createSandbox();
 	const fetchSocketsMock = sinon.stub();
 	const geoLookupMock = sinon.stub();
 	const getRegionMock = sinon.stub();
-	const router = new ProbeRouter(fetchSocketsMock);
+	const store = {
+		getMeasurementIps: sinon.stub().resolves([]),
+		getMeasurement: sinon.stub(),
+	};
+	const router = new ProbeRouter(fetchSocketsMock, store as unknown as MeasurementStore);
 	let buildProbe: (socket: RemoteProbeSocket) => Promise<Probe>;
+	let sandbox: sinon.SinonSandbox;
 
 	const buildSocket = async (
 		id: string,
@@ -57,6 +63,7 @@ describe('probe router', () => {
 	};
 
 	before(async () => {
+		sandbox = sinon.createSandbox();
 		await td.replaceEsm('../../../../src/lib/geoip/client.ts', { createGeoipClient: () => ({ lookup: geoLookupMock }) });
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: getRegionMock });
 		buildProbe = (await import('../../../../src/probe/builder.js')).buildProbe as unknown as (socket: RemoteProbeSocket) => Promise<Probe>;
@@ -64,15 +71,12 @@ describe('probe router', () => {
 
 	beforeEach(() => {
 		sandbox.reset();
-	});
-
-	afterEach(() => {
-		geoLookupMock.reset();
-		fetchSocketsMock.reset();
-		getRegionMock.reset();
+		sinon.resetHistory();
+		store.getMeasurementIps.resolves([]);
 	});
 
 	after(() => {
+		sandbox.restore();
 		td.reset();
 	});
 
@@ -87,16 +91,21 @@ describe('probe router', () => {
 			];
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([
+			const userRequest = { locations: [
 				{ country: 'UA', limit: 2 },
 				{ country: 'PL', limit: 2 },
-			]);
+			] } as UserRequest;
 
+			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes(userRequest);
+
+			expect(request).to.equal(userRequest);
+			expect(onlineProbesMap.size).to.equal(4);
 			expect(fetchSocketsMock.calledOnce).to.be.true;
 			expect(fetchSocketsMock.firstCall.args).to.deep.equal([]);
-			expect(probes.length).to.equal(4);
-			expect(probes.filter(p => p.location.country === 'UA').length).to.equal(2);
-			expect(probes.filter(p => p.location.country === 'PL').length).to.equal(2);
+			expect(allProbes.length).to.equal(4);
+			expect(onlineProbesMap.size).to.equal(4);
+			expect(allProbes.filter(p => p.location.country === 'UA').length).to.equal(2);
+			expect(allProbes.filter(p => p.location.country === 'PL').length).to.equal(2);
 		});
 
 		it('should return 1 probe if location limit is not set', async () => {
@@ -110,17 +119,40 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [
 				{ country: 'UA', limit: 2 },
 				{ country: 'PL' },
-			]);
+			] } as UserRequest);
 
 			expect(fetchSocketsMock.calledOnce).to.be.true;
 			expect(fetchSocketsMock.firstCall.args).to.deep.equal([]);
 
-			expect(probes.length).to.equal(3);
-			expect(probes.filter(p => p.location.country === 'UA').length).to.equal(2);
-			expect(probes.filter(p => p.location.country === 'PL').length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(3);
+			expect(allProbes.length).to.equal(3);
+			expect(allProbes.filter(p => p.location.country === 'UA').length).to.equal(2);
+			expect(allProbes.filter(p => p.location.country === 'PL').length).to.equal(1);
+		});
+
+		it('should return 1 probe if global limit is not set', async () => {
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
+				await buildSocket('socket-1', { continent: 'EU', country: 'UA' }),
+				await buildSocket('socket-2', { continent: 'EU', country: 'PL' }),
+				await buildSocket('socket-3', { continent: 'EU', country: 'PL' }),
+				await buildSocket('socket-4', { continent: 'NA', country: 'UA' }),
+				await buildSocket('socket-5', { continent: 'EU', country: 'PL' }),
+			];
+
+			fetchSocketsMock.resolves(sockets as never);
+
+			const userRequest = { locations: [] } as unknown as UserRequest;
+			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes(userRequest);
+
+			expect(request).to.equal(userRequest);
+			expect(fetchSocketsMock.calledOnce).to.be.true;
+			expect(fetchSocketsMock.firstCall.args).to.deep.equal([]);
+
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes.length).to.equal(1);
 		});
 
 		it('should shuffle result probes', async () => {
@@ -138,15 +170,17 @@ describe('probe router', () => {
 			];
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes1 = await router.findMatchingProbes([
+			const { allProbes: probes1, onlineProbesMap: online1 } = await router.findMatchingProbes({ locations: [
 				{ continent: 'EU', limit: 10 },
-			]);
-			const probes2 = await router.findMatchingProbes([
+			] } as UserRequest);
+			const { allProbes: probes2, onlineProbesMap: online2 } = await router.findMatchingProbes({ locations: [
 				{ continent: 'EU', limit: 10 },
-			]);
+			] } as UserRequest);
 
 			expect(fetchSocketsMock.calledTwice).to.be.true;
+			expect(online1.size).to.equal(10);
 			expect(probes1.length).to.equal(10);
+			expect(online2.size).to.equal(10);
 			expect(probes2.length).to.equal(10);
 			const countries1 = probes1.map(probe => probe.location.country);
 			const countries2 = probes2.map(probe => probe.location.country);
@@ -165,17 +199,18 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [
 				{ country: 'GB', limit: 2 },
 				{ country: 'PL', limit: 2 },
-			]);
+			] } as UserRequest);
 
 			expect(fetchSocketsMock.calledOnce).to.be.true;
 			expect(fetchSocketsMock.firstCall.args).to.deep.equal([]);
 
-			expect(probes.length).to.equal(2);
-			expect(probes.filter(p => p.location.country === 'GB').length).to.equal(1);
-			expect(probes.filter(p => p.location.country === 'PL').length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(2);
+			expect(allProbes.length).to.equal(2);
+			expect(allProbes.filter(p => p.location.country === 'GB').length).to.equal(1);
+			expect(allProbes.filter(p => p.location.country === 'PL').length).to.equal(1);
 		});
 	});
 
@@ -186,10 +221,11 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([], 100);
-			const grouped = _.groupBy(probes, 'location.continent');
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [], limit: 100 } as unknown as UserRequest);
+			const grouped = _.groupBy(allProbes, 'location.continent');
 
-			expect(probes.length).to.equal(100);
+			expect(onlineProbesMap.size).to.equal(100);
+			expect(allProbes.length).to.equal(100);
 			expect(grouped['AF']?.length).to.equal(5);
 			expect(grouped['AS']?.length).to.equal(15);
 			expect(grouped['EU']?.length).to.equal(30);
@@ -210,10 +246,11 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([], 100);
-			const grouped = _.groupBy(probes, 'location.continent');
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [], limit: 100 } as unknown as UserRequest);
+			const grouped = _.groupBy(allProbes, 'location.continent');
 
-			expect(probes.length).to.equal(100);
+			expect(allProbes.length).to.equal(100);
+			expect(onlineProbesMap.size).to.equal(100);
 			expect(grouped['AF']?.length).to.equal(13);
 			expect(grouped['AS']?.length).to.equal(15);
 			expect(grouped['EU']?.length).to.equal(20);
@@ -231,8 +268,9 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([{ continent: 'AF' }, { continent: 'NA' }, { continent: 'SA' }], 7);
-			expect(probes.length).to.equal(7);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [{ continent: 'AF' }, { continent: 'NA' }, { continent: 'SA' }], limit: 7 } as UserRequest);
+			expect(allProbes.length).to.equal(7);
+			expect(onlineProbesMap.size).to.equal(7);
 		});
 
 		it('should find when probes not enough', async () => {
@@ -245,10 +283,11 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([], 100);
-			const grouped = _.groupBy(probes, 'location.continent');
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [], limit: 100 } as unknown as UserRequest);
+			const grouped = _.groupBy(allProbes, 'location.continent');
 
-			expect(probes.length).to.equal(65);
+			expect(allProbes.length).to.equal(65);
+			expect(onlineProbesMap.size).to.equal(65);
 			expect(grouped['AF']?.length).to.equal(15);
 			expect(grouped['EU']?.length).to.equal(20);
 			expect(grouped['OC']?.length).to.equal(10);
@@ -270,8 +309,8 @@ describe('probe router', () => {
 			];
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes1 = await router.findMatchingProbes([], 100);
-			const probes2 = await router.findMatchingProbes([], 100);
+			const { allProbes: probes1 } = await router.findMatchingProbes({ locations: [], limit: 100 } as unknown as UserRequest);
+			const { allProbes: probes2 } = await router.findMatchingProbes({ locations: [], limit: 100 } as unknown as UserRequest);
 
 			expect(fetchSocketsMock.calledTwice).to.be.true;
 			expect(probes1.length).to.equal(10);
@@ -289,7 +328,16 @@ describe('probe router', () => {
 				const cached = cache[location.country];
 
 				if (cached) {
-					return { ...cached };
+					return {
+						...cached,
+						data: {
+							...cached.data,
+							probe: {
+								...cached.data.probe,
+							},
+						},
+						id,
+					};
 				}
 
 				const socket = await buildSocket(id, location);
@@ -314,10 +362,11 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes(locations, 100);
-			const grouped = _.groupBy(probes, 'location.country');
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
+			const grouped = _.groupBy(allProbes, 'location.country');
 
-			expect(probes.length).to.equal(100);
+			expect(allProbes.length).to.equal(100);
+			expect(onlineProbesMap.size).to.equal(100);
 			expect(grouped['PL']?.length).to.equal(99);
 			expect(grouped['UA']?.length).to.equal(1);
 		});
@@ -336,10 +385,11 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes(locations, 100);
-			const grouped = _.groupBy(probes, 'location.country');
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
+			const grouped = _.groupBy(allProbes, 'location.country');
 
-			expect(probes.length).to.equal(100);
+			expect(allProbes.length).to.equal(100);
+			expect(onlineProbesMap.size).to.equal(100);
 			expect(grouped['PL']?.length).to.equal(34);
 			expect(grouped['UA']?.length).to.equal(33);
 			expect(grouped['NL']?.length).to.equal(33);
@@ -360,16 +410,14 @@ describe('probe router', () => {
 			];
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes1 = await router.findMatchingProbes([
-				{ continent: 'EU' },
-			], 100);
-			const probes2 = await router.findMatchingProbes([
-				{ continent: 'EU' },
-			], 100);
+			const { allProbes: probes1, onlineProbesMap: online1 } = await router.findMatchingProbes({ locations: [{ continent: 'EU' }], limit: 100 } as unknown as UserRequest);
+			const { allProbes: probes2, onlineProbesMap: online2 } = await router.findMatchingProbes({ locations: [{ continent: 'EU' }], limit: 100 } as unknown as UserRequest);
 
 			expect(fetchSocketsMock.calledTwice).to.be.true;
 			expect(probes1.length).to.equal(10);
+			expect(online1.size).to.equal(10);
 			expect(probes2.length).to.equal(10);
+			expect(online2.size).to.equal(10);
 			const countries1 = probes1.map(probe => probe.location.country);
 			const countries2 = probes2.map(probe => probe.location.country);
 			expect(countries1).to.not.deep.equal(countries2);
@@ -399,10 +447,11 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes(locations, 100);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
 
-			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.country).to.equal('US');
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes[0]!.location.country).to.equal('US');
 		});
 
 		it('should not find probe by continent alias if it is used not in magic field', async () => {
@@ -411,9 +460,10 @@ describe('probe router', () => {
 			];
 
 			fetchSocketsMock.resolves(sockets as never);
-			const probes = await router.findMatchingProbes([{ continent: 'NA' }], 100);
-			expect(probes.length).to.equal(1);
-			const probes2 = await router.findMatchingProbes([{ continent: 'North America' }], 100);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [{ continent: 'NA' }], limit: 100 } as unknown as UserRequest);
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			const { allProbes: probes2 } = await router.findMatchingProbes({ locations: [{ continent: 'North America' }], limit: 100 } as unknown as UserRequest);
 			expect(probes2.length).to.equal(0);
 		});
 
@@ -424,9 +474,10 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([{ region: 'Northern Africa' }], 100);
-			expect(probes.length).to.equal(1);
-			const probes2 = await router.findMatchingProbes([{ region: 'North Africa' }], 100);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [{ region: 'Northern Africa' }], limit: 100 } as unknown as UserRequest);
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			const { allProbes: probes2 } = await router.findMatchingProbes({ locations: [{ region: 'North Africa' }], limit: 100 } as unknown as UserRequest);
 			expect(probes2.length).to.equal(0);
 		});
 	});
@@ -436,7 +487,7 @@ describe('probe router', () => {
 			continent: 'EU',
 			region: getRegionByCountry('GB'),
 			country: 'GB',
-			state: undefined,
+			state: null,
 			city: 'London',
 			normalizedCity: 'london',
 			asn: 5089,
@@ -450,10 +501,11 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([{ magic: 'europe' }], 100);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [{ magic: 'europe' }], limit: 100 } as unknown as UserRequest);
 
-			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.country).to.equal('GB');
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes[0]!.location.country).to.equal('GB');
 		});
 
 		it('should return match (region alias)', async () => {
@@ -463,10 +515,11 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([{ magic: 'north africa' }], 100);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [{ magic: 'north africa' }], limit: 100 } as unknown as UserRequest);
 
-			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.region).to.equal('Northern Africa');
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes[0]!.location.region).to.equal('Northern Africa');
 		});
 
 		it('should not return match (non-existing region alias)', async () => {
@@ -476,9 +529,10 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([{ magic: 'south africa' }], 100);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [{ magic: 'south africa' }], limit: 100 } as unknown as UserRequest);
 
-			expect(probes.length).to.equal(0);
+			expect(allProbes.length).to.equal(0);
+			expect(onlineProbesMap.size).to.equal(0);
 		});
 
 		it('should return match (country alias)', async () => {
@@ -492,10 +546,11 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes(locations, 100);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
 
-			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.country).to.equal('GB');
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes[0]!.location.country).to.equal('GB');
 		});
 
 		it('should return match (magic nested)', async () => {
@@ -509,10 +564,11 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes(locations, 100);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
 
-			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.country).to.equal('GB');
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes[0]!.location.country).to.equal('GB');
 		});
 
 		it('should return result sorted by priority of magic fields in case of partial match', async () => {
@@ -523,15 +579,16 @@ describe('probe router', () => {
 			];
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [
 				{ magic: 'd' },
-			], 100);
+			], limit: 100 } as unknown as UserRequest);
 
 			expect(fetchSocketsMock.calledOnce).to.be.true;
-			expect(probes.length).to.equal(3);
-			expect(probes[0]!.location.country).to.equal('DE');
-			expect(probes[1]!.location.country).to.equal('RS');
-			expect(probes[2]!.location.country).to.equal('CZ');
+			expect(allProbes.length).to.equal(3);
+			expect(onlineProbesMap.size).to.equal(3);
+			expect(allProbes[0]!.location.country).to.equal('DE');
+			expect(allProbes[1]!.location.country).to.equal('RS');
+			expect(allProbes[2]!.location.country).to.equal('CZ');
 		});
 
 		it('should ignore low-priority partial matches if there is an exact match', async () => {
@@ -542,13 +599,14 @@ describe('probe router', () => {
 			];
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [
 				{ magic: 'vn' },
-			], 100);
+			], limit: 100 } as unknown as UserRequest);
 
 			expect(fetchSocketsMock.calledOnce).to.be.true;
-			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.country).to.equal('VN');
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes[0]!.location.country).to.equal('VN');
 		});
 
 		it('should ignore high-priority partial matches if there is an exact match', async () => {
@@ -559,13 +617,14 @@ describe('probe router', () => {
 			];
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [
 				{ magic: 'wars' },
-			], 100);
+			], limit: 100 } as unknown as UserRequest);
 
 			expect(fetchSocketsMock.calledOnce).to.be.true;
-			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.normalizedCity).to.equal('poznan');
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes[0]!.location.normalizedCity).to.equal('poznan');
 		});
 
 		it('should ignore same-level partial matches if there is an exact match', async () => {
@@ -575,13 +634,14 @@ describe('probe router', () => {
 			];
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes([
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [
 				{ magic: 'york' },
-			], 100);
+			], limit: 100 } as unknown as UserRequest);
 
 			expect(fetchSocketsMock.calledOnce).to.be.true;
-			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.country).to.equal('GB');
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes[0]!.location.country).to.equal('GB');
 		});
 
 		it('should shuffle result considering priority of magic fields', async () => {
@@ -619,16 +679,18 @@ describe('probe router', () => {
 			];
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes1 = await router.findMatchingProbes([
+			const { allProbes: probes1, onlineProbesMap: online1 } = await router.findMatchingProbes({ locations: [
 				{ magic: 'd' },
-			], 100);
-			const probes2 = await router.findMatchingProbes([
+			], limit: 100 } as unknown as UserRequest);
+			const { allProbes: probes2, onlineProbesMap: online2 } = await router.findMatchingProbes({ locations: [
 				{ magic: 'd' },
-			], 100);
+			], limit: 100 } as unknown as UserRequest);
 
 			expect(fetchSocketsMock.calledTwice).to.be.true;
 			expect(probes1.length).to.equal(30);
+			expect(online1.size).to.equal(30);
 			expect(probes2.length).to.equal(30);
+			expect(online2.size).to.equal(30);
 			expect(probes1.slice(0, 9).every(probe => probe.location.country === 'DE')).to.be.true;
 			expect(probes2.slice(0, 9).every(probe => probe.location.country === 'DE')).to.be.true;
 			expect(probes1.slice(0, 9).map(probe => probe.location.normalizedCity)).to.not.deep.equal(probes2.slice(0, 9).map(probe => probe.location.normalizedCity));
@@ -661,16 +723,18 @@ describe('probe router', () => {
 			];
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes1 = await router.findMatchingProbes([
+			const { allProbes: probes1, onlineProbesMap: online1 } = await router.findMatchingProbes({ locations: [
 				{ magic: 'de' },
-			], 100);
-			const probes2 = await router.findMatchingProbes([
+			], limit: 100 } as unknown as UserRequest);
+			const { allProbes: probes2, onlineProbesMap: online2 } = await router.findMatchingProbes({ locations: [
 				{ magic: 'de' },
-			], 100);
+			], limit: 100 } as unknown as UserRequest);
 
 			expect(fetchSocketsMock.calledTwice).to.be.true;
 			expect(probes1.length).to.equal(10);
+			expect(online1.size).to.equal(10);
 			expect(probes2.length).to.equal(10);
+			expect(online2.size).to.equal(10);
 			expect(probes1.slice(0, 9).every(probe => probe.location.country === 'DE')).to.be.true;
 			expect(probes2.slice(0, 9).every(probe => probe.location.country === 'DE')).to.be.true;
 			expect(probes1.slice(0, 9).map(probe => probe.location.normalizedCity)).to.not.deep.equal(probes2.slice(0, 9).map(probe => probe.location.normalizedCity));
@@ -689,10 +753,11 @@ describe('probe router', () => {
 
 					fetchSocketsMock.resolves(sockets as never);
 
-					const probes = await router.findMatchingProbes(locations, 100);
+					const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
 
-					expect(probes.length).to.equal(1);
-					expect(probes[0]!.location.country).to.equal('GB');
+					expect(allProbes.length).to.equal(1);
+					expect(onlineProbesMap.size).to.equal(1);
+					expect(allProbes[0]!.location.country).to.equal('GB');
 				});
 			}
 		});
@@ -710,10 +775,11 @@ describe('probe router', () => {
 
 					fetchSocketsMock.resolves(sockets as never);
 
-					const probes = await router.findMatchingProbes(locations, 100);
+					const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
 
-					expect(probes.length).to.equal(1);
-					expect(probes[0]!.location.country).to.equal('GB');
+					expect(allProbes.length).to.equal(1);
+					expect(onlineProbesMap.size).to.equal(1);
+					expect(allProbes[0]!.location.country).to.equal('GB');
 				});
 			}
 		});
@@ -741,10 +807,11 @@ describe('probe router', () => {
 
 					fetchSocketsMock.resolves(sockets as never);
 
-					const probes = await router.findMatchingProbes(locations, 100);
+					const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
 
-					expect(probes.length).to.equal(1);
-					expect(probes[0]!.location.country).to.equal('US');
+					expect(allProbes.length).to.equal(1);
+					expect(onlineProbesMap.size).to.equal(1);
+					expect(allProbes[0]!.location.country).to.equal('US');
 				});
 			}
 		});
@@ -763,10 +830,11 @@ describe('probe router', () => {
 
 					fetchSocketsMock.resolves(sockets as never);
 
-					const probes = await router.findMatchingProbes(locations, 100);
+					const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
 
-					expect(probes.length).to.equal(1);
-					expect(probes[0]!.location.country).to.equal('GB');
+					expect(allProbes.length).to.equal(1);
+					expect(onlineProbesMap.size).to.equal(1);
+					expect(allProbes[0]!.location.country).to.equal('GB');
 				});
 			}
 		});
@@ -777,7 +845,7 @@ describe('probe router', () => {
 			continent: 'EU',
 			region: getRegionByCountry('GB'),
 			country: 'GB',
-			state: undefined,
+			state: null,
 			city: 'london',
 			asn: 5089,
 			network: 'a-virgin media',
@@ -795,10 +863,11 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes(locations, 100);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
 
-			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.country).to.equal('GB');
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes[0]!.location.country).to.equal('GB');
 		});
 
 		it('should return 0 matches for partial tag value', async () => {
@@ -813,9 +882,9 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes(locations, 100);
-
-			expect(probes.length).to.equal(0);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
+			expect(allProbes.length).to.equal(0);
+			expect(onlineProbesMap.size).to.equal(0);
 		});
 
 		it('should return match for user tag', async () => {
@@ -833,10 +902,194 @@ describe('probe router', () => {
 
 			fetchSocketsMock.resolves(sockets as never);
 
-			const probes = await router.findMatchingProbes(locations, 100);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes[0]!.location.country).to.equal('GB');
+		});
+	});
 
-			expect(probes.length).to.equal(1);
-			expect(probes[0]!.location.country).to.equal('GB');
+	describe('route with measurement id string', async () => {
+		it('should find probes by prev measurement id', async () => {
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
+				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+			store.getMeasurementIps.resolves([ '1.2.3.4' ]);
+
+			store.getMeasurement.resolves({
+				results: [{
+					probe: {
+						continent: 'EU',
+						country: 'PL',
+						city: 'Warsaw',
+						network: 'Liberty Global B.V.',
+						tags: [],
+					},
+				}],
+			});
+
+			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: 'measurementid' } as UserRequest);
+
+			expect(request).to.deep.equal({ limit: undefined, locations: undefined });
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(allProbes[0]!.location.country).to.equal('PL');
+			expect(allProbes[0]!.status).to.equal('ready');
+			expect(onlineProbesMap.get(0)?.location.country).to.equal('PL');
+		});
+
+		it('should find probes by prev measurement id in magic field', async () => {
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
+				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+			store.getMeasurementIps.resolves([ '1.2.3.4' ]);
+
+			store.getMeasurement.resolves({
+				results: [{
+					probe: {
+						continent: 'EU',
+						country: 'PL',
+						city: 'Warsaw',
+						network: 'Liberty Global B.V.',
+						tags: [],
+					},
+				}],
+			});
+
+			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: [{ magic: 'measurementid' }] } as UserRequest);
+
+			expect(request).to.deep.equal({ limit: undefined, locations: undefined });
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(allProbes[0]!.location.country).to.equal('PL');
+			expect(allProbes[0]!.status).to.equal('ready');
+			expect(onlineProbesMap.get(0)?.location.country).to.equal('PL');
+		});
+
+		it('should not find probes without errors by prev measurement id in magic field if no such measurement found', async () => {
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
+				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+
+			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: [{ magic: 'measurementid' }] } as UserRequest);
+
+			expect(request).to.deep.equal({ locations: [{ magic: 'measurementid' }] });
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(allProbes.length).to.equal(0);
+			expect(onlineProbesMap.size).to.equal(0);
+		});
+
+		it('should return proper values for locations and limit in request object', async () => {
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
+				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+			store.getMeasurementIps.resolves([ '1.2.3.4', '1.2.3.4' ]);
+
+			store.getMeasurement.resolves({
+				limit: 2,
+				locations: [{
+					continent: 'EU',
+				}],
+				results: [{
+					probe: {
+						continent: 'EU',
+						country: 'PL',
+						city: 'Warsaw',
+						network: 'Liberty Global B.V.',
+						tags: [],
+					},
+				}, {
+					probe: {
+						continent: 'EU',
+						country: 'PL',
+						city: 'Warsaw',
+						network: 'Liberty Global B.V.',
+						tags: [],
+					},
+				}],
+			});
+
+			const { request } = await router.findMatchingProbes({ locations: [{ magic: 'measurementid' }] } as UserRequest);
+
+			expect(request).to.deep.equal({ locations: [{ continent: 'EU' }], limit: 2 });
+		});
+
+		it('should replace non-connected probes with offline probe data', async () => {
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
+				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+			store.getMeasurementIps.resolves([ '9.9.9.9' ]);
+
+			store.getMeasurement.resolves({
+				results: [{
+					probe: {
+						continent: 'EU',
+						country: 'PL',
+						city: 'Warsaw',
+						network: 'Liberty Global B.V.',
+						tags: [],
+					},
+				}],
+			});
+
+			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: 'measurementid' } as UserRequest);
+
+			expect(request).to.deep.equal({ locations: undefined, limit: undefined });
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(allProbes.length).to.equal(1);
+			expect(allProbes[0]!.location.country).to.equal('PL');
+			expect(allProbes[0]!.status).to.equal('offline');
+			expect(onlineProbesMap.size).to.equal(0);
+		});
+
+		it('should return empty data if measurement ips wasn\'t found', async () => {
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
+				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+			store.getMeasurementIps.resolves([]);
+
+			store.getMeasurement.resolves({
+				results: [{
+					probe: {
+						continent: 'EU',
+						country: 'PL',
+						city: 'Warsaw',
+						network: 'Liberty Global B.V.',
+						tags: [],
+					},
+				}],
+			});
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: 'measurementid' } as UserRequest);
+
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(allProbes.length).to.equal(0);
+			expect(onlineProbesMap.size).to.equal(0);
+		});
+
+		it('should return empty data if measurement itself wasn\'t found', async () => {
+			const sockets: Array<DeepPartial<RemoteProbeSocket>> = [
+				await buildSocket('socket-1', { continent: 'EU', country: 'PL' }),
+			];
+			fetchSocketsMock.resolves(sockets as never);
+			store.getMeasurementIps.resolves([ '9.9.9.9' ]);
+
+			store.getMeasurement.resolves(null);
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: 'measurementid' } as UserRequest);
+
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(allProbes.length).to.equal(0);
+			expect(onlineProbesMap.size).to.equal(0);
 		});
 	});
 });

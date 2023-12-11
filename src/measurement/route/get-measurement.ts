@@ -12,7 +12,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		return;
 	}
 
-	const result = await store.getMeasurementResults(id);
+	const result = await store.getMeasurementString(id);
 
 	if (!result) {
 		ctx.status = 404;

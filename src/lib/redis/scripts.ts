@@ -4,7 +4,7 @@ import type { MeasurementRecord, MeasurementResultMessage } from '../../measurem
 type CountScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
-	transformArguments (key: string): Array<string>;
+	transformArguments (key: string): string[];
 	transformReply (reply: number): number;
 } & {
 	SHA1: string;
@@ -19,9 +19,19 @@ export type RecordResultScript = {
 	SHA1: string;
 };
 
+export type MarkFinishedScript = {
+	NUMBER_OF_KEYS: number;
+	SCRIPT: string;
+	transformArguments (measurementId: string): string[];
+	transformReply (): null;
+} & {
+	SHA1: string;
+};
+
 export type RedisScripts = {
 	count: CountScript;
 	recordResult: RecordResultScript;
+	markFinished: MarkFinishedScript;
 };
 
 export const count: CountScript = defineScript({
@@ -53,23 +63,20 @@ export const recordResult: RecordResultScript = defineScript({
 	local data = KEYS[3]
 	local date = KEYS[4]
 	local key = 'gp:measurement:'..measurementId
+	local awaitingKey = key..':probes_awaiting'
 
-	local probesAwaiting = redis.call('GET', key..':probes_awaiting')
+	local probesAwaiting = redis.call('GET', awaitingKey)
 	if not probesAwaiting then
 		return
 	end
 
-	probesAwaiting = redis.call('DECR', key..':probes_awaiting')
+	probesAwaiting = redis.call('DECR', awaitingKey)
 	redis.call('JSON.SET', key, '$.results['..testId..'].result', data)
 	redis.call('JSON.SET', key, '$.updatedAt', date)
 
 	if probesAwaiting ~= 0 then
 		return
 	end
-
-	redis.call('HDEL', 'gp:in-progress', measurementId)
-	redis.call('DEL', key..':probes_awaiting')
-	redis.call('JSON.SET', key, '$.status', '"finished"')
 
 	return redis.call('JSON.GET', key)
 	`,
@@ -78,5 +85,24 @@ export const recordResult: RecordResultScript = defineScript({
 	},
 	transformReply (reply) {
 		return JSON.parse(reply) as MeasurementRecord | null;
+	},
+});
+
+export const markFinished: MarkFinishedScript = defineScript({
+	NUMBER_OF_KEYS: 1,
+	SCRIPT: `
+	local measurementId = KEYS[1]
+	local key = 'gp:measurement:'..measurementId
+	local awaitingKey = key..':probes_awaiting'
+
+	redis.call('HDEL', 'gp:in-progress', measurementId)
+	redis.call('DEL', awaitingKey)
+	redis.call('JSON.SET', key, '$.status', '"finished"')
+	`,
+	transformArguments (measurementId) {
+		return [ measurementId ];
+	},
+	transformReply () {
+		return null;
 	},
 });
