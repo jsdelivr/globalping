@@ -16,11 +16,20 @@ exports.config = {
 	distributed_tracing: {
 		enabled: true,
 	},
+	span_events: {
+		max_samples_stored: 100,
+	},
 	transaction_events: {
 		max_samples_stored: 100,
 		attributes: {
 			enabled: false,
 		},
+	},
+	rules: {
+		ignore: [
+			'^/socket.io/.*/xhr-polling/', // default item
+			'^/health',
+		],
 	},
 	allow_all_headers: true,
 	attributes: {
