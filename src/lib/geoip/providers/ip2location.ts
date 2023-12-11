@@ -2,6 +2,7 @@ import got from 'got';
 import config from 'config';
 import {
 	getContinentByCountry,
+	getRegionByCountry,
 	getStateIsoByName,
 } from '../../location/location.js';
 import type { LocationInfo } from '../client.js';
@@ -30,7 +31,6 @@ type Ip2LocationResponse = {
 
 export type Ip2LocationBundledResponse = {
 	location: LocationInfo,
-	isHosting: boolean | undefined,
 	isProxy: boolean,
 };
 
@@ -50,7 +50,8 @@ export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundle
 
 	const location = {
 		continent: result.country_code ? getContinentByCountry(result.country_code) : '',
-		state: result.country_code === 'US' && result.region_name ? getStateIsoByName(result.region_name) : undefined,
+		region: result.country_code ? getRegionByCountry(result.country_code) : '',
+		state: result.country_code === 'US' && result.region_name ? getStateIsoByName(result.region_name) : null,
 		country: result.country_code ?? '',
 		city: normalizeCityNamePublic(city),
 		normalizedCity: normalizeCityName(city),
@@ -59,11 +60,11 @@ export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundle
 		longitude: result.longitude ?? 0,
 		network: result.as ?? '',
 		normalizedNetwork: normalizeNetworkName(result.as ?? ''),
+		isHosting: result.usage_type ? HOSTING_USAGE_TYPES.includes(result.usage_type) : null,
 	};
 
 	return {
 		location,
-		isHosting: result.usage_type ? HOSTING_USAGE_TYPES.includes(result.usage_type) : undefined,
 		isProxy: result.is_proxy ?? false,
 	};
 };

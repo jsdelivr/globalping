@@ -1,42 +1,47 @@
+import type { Context } from 'koa';
 import config from 'config';
 import type { Server } from 'socket.io';
 import createHttpError from 'http-errors';
 import { getWsServer } from '../lib/ws/server.js';
-import type { RedisClient } from '../lib/redis/client.js';
-import { getRedisClient } from '../lib/redis/client.js';
 import { getProbeRouter, type ProbeRouter } from '../probe/router.js';
 import type { Probe } from '../probe/types.js';
 import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
-import type {
-	MeasurementRequest,
-	MeasurementResultMessage,
-	MeasurementProgressMessage,
-} from './types.js';
+import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage, UserRequest } from './types.js';
+import { rateLimit } from '../lib/ratelimiter.js';
 
 export class MeasurementRunner {
 	constructor (
 		private readonly io: Server,
-		private readonly redis: RedisClient,
 		private readonly store: MeasurementStore,
 		private readonly router: ProbeRouter,
+		private readonly checkRateLimit: typeof rateLimit,
 		private readonly metrics: MetricsAgent,
 	) {}
 
-	async run (request: MeasurementRequest): Promise<{measurementId: string; probesCount: number;}> {
-		const probes = await this.router.findMatchingProbes(request.locations, request.limit);
+	async run (ctx: Context): Promise<{measurementId: string; probesCount: number;}> {
+		const userRequest = ctx.request.body as UserRequest;
+		const { onlineProbesMap, allProbes, request } = await this.router.findMatchingProbes(userRequest);
 
-		if (probes.length === 0) {
+		if (allProbes.length === 0) {
 			throw createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' });
 		}
 
-		const measurementId = await this.store.createMeasurement(request, probes);
+		await this.checkRateLimit(ctx, onlineProbesMap.size);
 
-		this.sendToProbes(measurementId, probes, request);
+		const measurementId = await this.store.createMeasurement(request, onlineProbesMap, allProbes);
+
+		if (onlineProbesMap.size) {
+			this.sendToProbes(measurementId, onlineProbesMap, request);
+			// If all selected probes are offline, immediately mark measurement as finished
+		} else {
+			await this.store.markFinished(measurementId);
+		}
+
 		this.metrics.recordMeasurement(request.type);
 
-		return { measurementId, probesCount: probes.length };
+		return { measurementId, probesCount: allProbes.length };
 	}
 
 	async recordProgress (data: MeasurementProgressMessage): Promise<void> {
@@ -44,17 +49,17 @@ export class MeasurementRunner {
 	}
 
 	async recordResult (data: MeasurementResultMessage): Promise<void> {
-		const record = await this.redis.recordResult(data.measurementId, data.testId, data.result);
+		const record = await this.store.storeMeasurementResult(data);
 
 		if (record) {
 			this.metrics.recordMeasurementTime(record.type, Date.now() - new Date(record.createdAt).getTime());
 		}
 	}
 
-	private sendToProbes (measurementId: string, probes: Probe[], request: MeasurementRequest) {
+	private sendToProbes (measurementId: string, onlineProbesMap: Map<number, Probe>, request: MeasurementRequest) {
 		let inProgressProbes = 0;
 		const maxInProgressProbes = config.get<number>('measurement.maxInProgressProbes');
-		probes.forEach((probe, index) => {
+		onlineProbesMap.forEach((probe, index) => {
 			const inProgressUpdates = request.inProgressUpdates && inProgressProbes++ < maxInProgressProbes;
 			this.io.of('probes').to(probe.client).emit('probe:measurement:request', {
 				measurementId,
@@ -76,7 +81,7 @@ let runner: MeasurementRunner;
 
 export const getMeasurementRunner = () => {
 	if (!runner) {
-		runner = new MeasurementRunner(getWsServer(), getRedisClient(), getMeasurementStore(), getProbeRouter(), getMetricsAgent());
+		runner = new MeasurementRunner(getWsServer(), getMeasurementStore(), getProbeRouter(), rateLimit, getMetricsAgent());
 	}
 
 	return runner;

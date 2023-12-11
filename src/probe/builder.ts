@@ -12,7 +12,7 @@ import {
 	getRegionAliases,
 } from '../lib/location/location.js';
 import { ProbeError } from '../lib/probe-error.js';
-import { createGeoipClient } from '../lib/geoip/client.js';
+import { createGeoipClient, LocationInfo } from '../lib/geoip/client.js';
 import type GeoipClient from '../lib/geoip/client.js';
 import getProbeIp from '../lib/get-probe-ip.js';
 import { getRegion } from '../lib/ip-ranges.js';
@@ -118,7 +118,7 @@ export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
 	return index;
 };
 
-const getLocation = (ipInfo: ProbeLocation): ProbeLocation => ({
+const getLocation = (ipInfo: LocationInfo): ProbeLocation => ({
 	continent: ipInfo.continent,
 	region: ipInfo.region,
 	country: ipInfo.country,
@@ -132,7 +132,7 @@ const getLocation = (ipInfo: ProbeLocation): ProbeLocation => ({
 	normalizedNetwork: ipInfo.normalizedNetwork,
 });
 
-const getTags = (clientIp: string, ipInfo: ProbeLocation) => {
+const getTags = (clientIp: string, ipInfo: LocationInfo) => {
 	const tags: Tag[] = [];
 	const cloudRegion = getRegion(clientIp);
 

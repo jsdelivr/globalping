@@ -7,10 +7,9 @@ export type ProbeLocation = {
 	asn: number;
 	latitude: number;
 	longitude: number;
-	state?: string | undefined;
+	state: string | null;
 	network: string;
 	normalizedNetwork: string;
-	isHosting?: boolean | undefined;
 };
 
 export type ProbeStats = {
@@ -47,3 +46,31 @@ export type Probe = {
 	tags: Tag[];
 	stats: ProbeStats;
 };
+
+type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;
+
+export type OfflineProbe = Modify<Probe, {
+	status: 'offline';
+	client: null;
+	version: null;
+	nodeVersion: null;
+	uuid: null;
+	isHardware: false;
+	hardwareDevice: null;
+	ipAddress: string;
+	host: null;
+	index: [];
+	tags: {
+		type: 'offline';
+		value: string;
+	}[];
+	stats: {
+		cpu: {
+			count: 0;
+			load: [];
+		};
+		jobs: {
+			count: 0
+		};
+	};
+}>
