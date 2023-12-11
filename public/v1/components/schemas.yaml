@@ -85,7 +85,9 @@ components:
         - type: string
           description: |
             `id` of a previous measurement - its probes are reused for the new measurement and returned in the same order.
-            Measurement type and options are not reused and need to be specified in request.
+            Measurement type and options are not reused and need to be specified in the request.
+            Note that this option only works for the lifetime of the original measurement
+            and will result in a `422` response for expired or invalid `id` values.
     MeasurementOptions:
       anyOf:
         - $ref: 'schemas.yaml#/components/schemas/MeasurementPingOptions'
@@ -767,7 +769,8 @@ components:
       type: object
       title: OfflineTestResult
       description: |
-        Represents an `offline` test where requested probe is currently offline. Only possible when id of the previous measurement was passed to the `locations` field.
+        Represents an `offline` test where the requested probe is currently offline and most fields are not available.
+        Only possible when passing an `id` of a previous measurement to the `locations` field.
       required:
         - status
         - rawOutput
