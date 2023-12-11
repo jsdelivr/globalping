@@ -152,8 +152,9 @@ Example commands to try:
 
 Learn more about the GitHub bot [on our blog](https://dev.to/globalping/supercharge-your-gitops-workflows-with-the-globalping-github-bot-341a).
 
-## How to write networking tests with Globalping
+## Globalping command structure
 While we offer different tools and integrations for running tests with Globalping, we make sure that they provide a consistent experience. This also means that writing tests looks almost identical whether you're using the CLI tool or the Slack app, for example.
+
 Follow this structure when writing tests:
 
 `globalping [command] [target] from [location] [flags]`
@@ -163,10 +164,6 @@ Examples:
 - `globalping ping google.com from Berlin, South America --limit 2`
 
 Let's look at each component:
-
-##### Initiating a command
-The way you initiate Globalping depends on the tool or integration you're using. For example, use `globalping` with the CLI tool, while using `@globalping` with the GitHub bot. Refer to the list of integrations above to learn how to use each in more detail.
-
 ##### Available test commands
 Globalping supports the following commands:
 - ping
@@ -174,22 +171,67 @@ Globalping supports the following commands:
 - mtr
 - dns (similar to dig)
 - http (similar to curl GET and HEAD)
-
 ##### Target
 The target represents the destination for your test. This can be a domain name or an IP address for most test types.
-
 ##### Location
-The location field can process different locations, including continents, regions, countries, cities, US states, and ASNs (prefixed by "AS," e.g., `from AS80085`). You can also specify measurement IDs from previous tests to reuse the same probes. 
-In general, our aim is to enable you to provide whatever location feels right.
+The location field can process different locations, including continents, regions, countries, cities, US states, and ASNs (prefixed by "AS," e.g., `from AS80085`). You can also specify measurement IDs from previous tests to reuse the same probes.
+>[!TIP]
+>Check out our [best pracises and tips](#basic-location-targeting-) to learn how to define locations effectively. 
+##### Flags
+All network test commands share some flags but also have unique ones. To learn more, run `--help` with the respective test type. 
 
-Some examples:
+## Best practices and tips
+Learn to use Globalping in the most optimal way!
+
+### Test with "magic" 🧙
+All integrations connect to the same API and use our "magic" field as location input.
+This is the best way to interact with Globalping, as it maintains a consistent and straightforward user experience, allowing you to reuse logic and parameters across all tools.
+
+So, for example, when you run a test from "Germany" using the CLI, Slack app, or any other official integration, our API's magic parser processes the location.
+
+> [!Note]
+> Developers who want stricter and more predictable control over the selected probes and user input can use the individual location parameters [when making an API call](https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements), which expect you to provide each city, country, and tag in a standardized way.
+
+The magic field supports a wide range of parameters and location combinations, including countries, continents, cities, US states, regions (Western Europe), ASNs, ISP names, eyeball or data center tags, and cloud region names (us-east-2).
+
+### Re-select probes ♻️
+You can also provide the "magic" field with a measurement ID to have the API select the same probes used in a previous measurement. 
+
+> [!IMPORTANT]
+> This is a best-effort action, and if some of the probes are no longer online, they will be missing from the new results. Additionally, as measurements expire (lifetime depends on user type), you should not hard-code measurement IDs, as new tests will break after a measurement expires.
+
+For example:
+- `from WZIAtMx4LLhzit02`
+
+You can obtain the measurement ID through the "share" functionality. For example, use `--share` in the CLI, find the "Share URL" section at the bottom of the web results or receive it by calling the API directly.
+
+Some practical use cases:
+- Increase the reliability of network endpoint comparisons, such as CDN, DNS, and edge compute benchmarking, as well as provider comparisons.
+- Support troubleshooting by preselecting the probes in problematic networks and running different tests, with different parameters if needed but with the same probes, until your issue is solved.
+- Emualte a continuously running ping or mtr by reusing probes and stitching together the output of different measurements into a single output. 
+
+### Understand the "world" location 🌍
+
+The `world` location is special and uses a pseudo-random algorithm to select probes while [maintaining certain proportions](https://github.com/jsdelivr/globalping/blob/master/config/default.cjs#L47) per continent.
+
+> [!Important]
+> If you provide no location, the system defaults to using "world".
+  
+For example, when requesting tests `from world --limit 100`, the system aims to return probes proportionally from Africa (5 probes), Asia (15 probes), Europe (30 probes), Oceania (10 probes), North America (30 probes), and South America (10 probes).
+
+### Basic location targeting 📍
+Our aim is to enable you to provide whatever location feels right – some examples:
 - `from usa` or `from united states` - A random probe in the USA
 - `from new york` -  A random probe in NYC
 - `from aws` - A random probe hosted with Amazon
 - `from WZIAtMx4LLhzit02` - Selects the same probes that were used for the specified measurement
 
-> [!NOTE]
-> Providing no location defaults to `world`, selecting a probe from a random location.
+We'd only get one probe in these examples because we didn't specify a limit. But, if you select a large region, for instance, you expect to get multiple results.
+Use the `--limit` flag to define the number of tests to run, which is set to one (1) by default.
+
+For example:
+- `from north america` selects one probe in either USA or Canada.
+- `from north america --limit 2` selects one probe in USA **and** one in Canada.
 
 Other location examples:
 - europe, africa, asia
@@ -200,89 +242,41 @@ Other location examples:
 - as396982, as16509
 - comcast, google, ovh, orange, t-mobile
 
-##### Flags
-All network test commands share some flags but also have unique ones. To learn more, run `--help` with the respective test type. For example, to find out more about `ping`, run:
+> [!NOTE]
+> Providing no location defaults to `world`, selecting a probe from a random location.
+### Stack location filters 🍔
+You can combine multiple locations using the plus symbol `+`, and use them as filters to define your desired probe locations more accurately.
 
-`globalping ping --help`
+Examples:
+- `from comcast+california` returns a probe on the Comcast network in California.
+- `from google+europe` returns a Google Cloud probe in Europe.
+- `from google+germany` returns a Google Cloud probe in Germany (useful if you forget the cloud region name!).
 
-###### The limit flag
-The `--limit` flag is probably one of the most useful flags when starting with Globalping. It determines the number of tests to run, which is set to one (1) by default. 
-
-For example:
-- `from north america` selects one probe in either USA or Canada.
-- `from north america --limit 2` selects one probe in USA **and** one in Canada.
-
-## Best practices and tips
-Learn to use Globalping in the most optimal way!
-
-### Test with "magic" 🧙
-All integrations connect to the same API and use our "magic" field as location input.
-This maintains a consistent and straightforward user experience, allowing you to reuse logic and parameters across all tools.
-
-So, for example, when you run a test from "Germany" using the CLI or Slack app, our API's magic parser processes the location.
-
-> [!Note]
-> Developers who want stricter and more predictable control over the selected probes and user input can use the individual location parameters [when making an API call](https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements), which expect you to provide each city, country, and tag in a standardized way.
-
-The magic field supports a wide range of parameters and location combinations, including countries, continents, cities, US states, regions (Western Europe), ASNs, ISP names, eyeball or data center tags, and cloud region names (us-east-2).
-
-### Re-select probes ♻️
-You can also provide the "magic" field with a measurement ID to have the API select the same probes used in a previous measurement. 
-
-For example:
-- `from WZIAtMx4LLhzit02`
-
-You can get the measurement ID in every Globalping measurement result bei using the `--share` or `--reuse` flags.
-
-This feature is particularly useful, for example, if you want to test different API endpoints with the same probes to better compare data. It is also great for troubleshooting, as you can use it to retest certain "problematic" probes or run continuous tests with the same probe and stitch the results together.
-
-### Understand the "world" location 🌍
-
-The `world` location uses a pseudo-random algorithm to select probes while [maintaining certain proportions](https://github.com/jsdelivr/globalping/blob/master/config/default.cjs#L47) per continent.
-
-> [!Important]
-> If you provide no location, the system defaults to using "world".
-  
-For example, when requesting tests `from world --limit 100`, the system aims to return probes proportionally from Africa (5 probes), Asia (15 probes), Europe (30 probes), Oceania (10 probes), North America (30 probes), and South America (10 probes).
-
-### Level up your location-picking game 📍
-You can use and combine different ways to run tests on multiple locations at once or fine-tune the location from where to pick a probe.  
-
-#### Define multiple locations
-To run tests at multiple locations, list them with a comma, for example:
+You can combine as many parameters as you like:
+- `from cogent+europe+datacenter` returns a probe hosted at Cogent in Europe, tagged as a data center probe. Or you could use the `eyeball` tag to target probes that aren't part of a data center.
+### Define multiple locations 🌐
+To run tests at multiple locations in a single request, list them with a comma, for example:
 
 - `from Berlin,South America,Idaho --limit 4`.
 
+Naturally, you can combine filters and multiple locations at the same time:
+
+- `from amazon+france,ovh+france --limit 2` returns a probe hosted on AWS in France and a probe hosted on OVH in France.
+
 You can also define your own "world" location, for example:
 
-- `from germany, greece, uk, usa, canada, japan, china, south africa --limit 20` 
+- `from germany, greece, uk, usa, canada, japan, china, south africa --limit 20`
+
 returns probes from these countries in roughly equal proportions to meet the limit of 20.
 
 >[!Important]
 >The limit parameter is global and applies to the location as a whole, not allowing the API to return more than the limit. If you want to set custom limits per location, use our API directly instead of the "magic" field.
 
-#### Define location filters
-You can combine multiple locations using the plus symbol `+`, and use them as filters to define your desired probe locations more accurately. 
+### Leverage system tags (eyeball networks and more) 🏷️
+Many probes are going to be tagged by our system. At the moment, this includes:
 
-Examples:
-- `from comcast+california` returns a probe on the Comcast network in California.
-- `from google+europe` returns a Google Cloud probe in Europe. 
-- `from google+germany` returns a Google Cloud probe in Germany (useful if you forget the cloud region name!).
-
-Naturally, you can combine as many parameters as you like:
-- `from cogent+europe+datacenter` returns a probe hosted at Cogent in Europe, tagged as a data center probe. Or you could use the `eyeball` tag to target probes that aren't part of a data center.
-
-#### Leverage system tags (eyeball networks and more)
-We have our system tag probes to help differentiate between probes and the network they belong to. 
-
-The following tags are currently available to you:
-- **Google Cloud and AWS cloud region names**. These tags follow the respective provider's naming scheme and are prefixed with their name, for example, `aws-eu-west-1` and `gcp-us-south1`.
-- **Eyeball and data center network tags**. System tags include `eyeball` for probes hosted with ISPs that provide internet access to regular people and small businesses. As the name suggests, `datacenter` tags are intended for probes hosted in a data center.
-#### Combine everything
-When determining the location from which to run a test, you can take advantage of all the location-specific features described above and combine them.
-
-Example:
-- `from amazon+france,ovh+france --limit 2` returns a probe hosted on AWS in France and a probe hosted on OVH in France.
+- **Google Cloud and AWS cloud region names**. For example, `aws-eu-west-1` and `gcp-us-south1`. These tags follow the respective provider's naming scheme and are prefixed with their name.
+- **Eyeball and data center network tags**. `eyeball` and `datacenter`. `eyeball` probes are hosted with ISPs that provide internet access to regular people and small businesses. As the name suggests, `datacenter` tags are intended for probes hosted in a data center.
 
 ### Things to keep in mind
 
@@ -303,26 +297,26 @@ Here's when a probe is considered online and available through our API:
 
 This whole process is completely automated and managed by our platform.
 
-## Join the network – Run a virtual probe
+## Join the network – Run a probe
 Globalping relies on the community to expand its probe network. While we maintain our own probes in key locations, we welcome any support from both corporate partners and individuals. 
-[Join our network](https://github.com/jsdelivr/globalping-probe) and help make the internet faster for everyone by running a virtual probe (or several).
+[Join our network](https://github.com/jsdelivr/globalping-probe) and help make the internet faster for everyone by running a probe (or several).
 
-### Quick start guide
-You can run a Globalping probe on any machine that can run a Docker container, supporting x86 and ARM architectures. For example, you can use a rented VPS, a dedicated server with spare capacity, or even your locally hosted Raspberry PI.
+### Setup instructions
+You can run a Globalping probe on any internet-accessible device that can run a Docker container. For example, you can use a rented VPS, a dedicated server with spare capacity, or even your locally hosted Raspberry PI.
 
 Use this command to create and run the Globalping probe container:
 
 ```
 docker run -d --log-driver local --network host --restart=always --name globalping-probe ghcr.io/jsdelivr/globalping-probe
 ```
-Find instructions for Podman [here](https://github.com/jsdelivr/globalping-probe#podman-alternative) 
+And it works on x86 and ARM architectures. [Podman instructions](https://github.com/jsdelivr/globalping-probe#podman-alternative)
 
-### Notes on probe security and customization
-- Probes don't open ports or accept incoming connections. They can only connect with our API.
-- We work with regularly updated lists and databases of domains and IPs associated with malware or potentially dangerous content and completely ban them at the API  level.
-- The API is rate-limited to prevent users from abusing the network.
-- Only public endpoints are permitted for testing; no local network tests are allowed.
-- Tests scale based on available CPU cores. Our code is very lightweight and shouldn't use too many of your resources. Therefore, in most cases, we recommend running our probe as is. However, if you want more control, you can use `--cpuset-cpus="0-2"` with your Docker command to set the number of cores.
+Notes on probe security and customization
+- Probes don't open any ports or accept any incoming connections. They can only establish a connection with our API.
+- We include regularly updated lists and databases of domains and IPs associated with malware or potentially dangerous content and completely ban them at the API  level.
+- We rate-limited all users on the API level to prevent the abuse of the network.
+- No local network tests are allowed, only public endpoints.
+- Tests scale to the amount of available CPU cores. Our code is very lightweight and shouldn't use too many of your resources. Therefore, in most cases, we recommend running our probe as is. However, if you're worried, you can use `--cpuset-cpus="0-2"` with your Docker command to limit the number of available cores.
 
 Learn more in the [Globalping Probe respository](https://github.com/jsdelivr/globalping-probe).
 
