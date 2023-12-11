@@ -194,21 +194,21 @@ So, for example, when you run a test from "Germany" using the CLI, Slack app, or
 
 The magic field supports a wide range of parameters and location combinations, including countries, continents, cities, US states, regions (Western Europe), ASNs, ISP names, eyeball or data center tags, and cloud region names (us-east-2).
 
-### Re-select probes ♻️
+### Reselect probes ♻️
 You can also provide the "magic" field with a measurement ID to have the API select the same probes used in a previous measurement. 
-
-> [!IMPORTANT]
-> This is a best-effort action, and if some of the probes are no longer online, they will be missing from the new results. Additionally, as measurements expire (lifetime depends on user type), you should not hard-code measurement IDs, as new tests will break after a measurement expires.
 
 For example:
 - `from WZIAtMx4LLhzit02`
+
+> [!IMPORTANT]
+> This is a best-effort action, and if some of the probes are no longer online, they will be missing from the new results. Additionally, as measurements expire (lifetime depends on user type), you should not hard-code measurement IDs, as new tests will break after a measurement expires.
 
 You can obtain the measurement ID through the "share" functionality. For example, use `--share` in the CLI, find the "Share URL" section at the bottom of the web results or receive it by calling the API directly.
 
 Some practical use cases:
 - Increase the reliability of network endpoint comparisons, such as CDN, DNS, and edge compute benchmarking, as well as provider comparisons.
 - Support troubleshooting by preselecting the probes in problematic networks and running different tests, with different parameters if needed but with the same probes, until your issue is solved.
-- Emualte a continuously running ping or mtr by reusing probes and stitching together the output of different measurements into a single output. 
+- Emulate a continuously running ping or mtr by reusing probes and stitching together the output of different measurements into a single output. 
 
 ### Understand the "world" location 🌍
 
@@ -314,14 +314,14 @@ And it works on x86 and ARM architectures. [Podman instructions](https://github.
 Notes on probe security and customization
 - Probes don't open any ports or accept any incoming connections. They can only establish a connection with our API.
 - We include regularly updated lists and databases of domains and IPs associated with malware or potentially dangerous content and completely ban them at the API  level.
+- Tests scale to the amount of available CPU cores. Our code is very lightweight and shouldn't use too many of your resources. Therefore, in most cases, we recommend running our probe as is. However, if you're worried, you can use `--cpuset-cpus="0-2"` with your Docker command to limit the number of available cores.
 - We rate-limited all users on the API level to prevent the abuse of the network.
 - No local network tests are allowed, only public endpoints.
-- Tests scale to the amount of available CPU cores. Our code is very lightweight and shouldn't use too many of your resources. Therefore, in most cases, we recommend running our probe as is. However, if you're worried, you can use `--cpuset-cpus="0-2"` with your Docker command to limit the number of available cores.
 
 Learn more in the [Globalping Probe respository](https://github.com/jsdelivr/globalping-probe).
 
 ## Limits | WIP
-To maintain a sustainable environment, our platform implements several usage limits to prevent abusive behavior while encouraging contributions. Here's an overview:
+Our platform has multiple limits to prevent abusive behaviour while motivating people to contribute to the sustainability of our platform. Here's an overview:
 
 #### Global limits
 These limits apply per IP address for all Globalping users:
