@@ -177,8 +177,6 @@ The target represents the destination for your test. This can be a domain name o
 The location field can process different locations, including continents, regions, countries, cities, US states, and ASNs (prefixed by "AS," e.g., `from AS80085`). You can also specify measurement IDs from previous tests to reuse the same probes.
 >[!TIP]
 >Check out our [best pracises and tips](#basic-location-targeting-) to learn how to define locations effectively. 
-##### Flags
-All network test commands share some flags but also have unique ones. To learn more, run `--help` with the respective test type. 
 
 ## Best practices and tips
 Learn to use Globalping in the most optimal way!
@@ -281,11 +279,11 @@ Many probes are going to be tagged by our system. At the moment, this includes:
 ### Things to keep in mind
 
 #### Probes share no UUIDs
-Our probes don't expose unique IDs that you can use to target them explicitly. Our probes don't expose unique IDs that you can use to target them explicitly. Instead, we recommend fine-tuning the probe selection by using and combining filters or specifying IDs from previous measurements, as described in the best practice section above.
+Our probes don't expose unique IDs that you can use to target them explicitly. Instead, we recommend fine-tuning the probe selection by using and combining filters or specifying IDs from previous measurements, as described in the best practice section above.
 
 This ensures that popular locations, like `from Amsterdam` or `from AWS`, are automatically load-balanced across multiple probes within the same location, preventing the overload of specific probes.
 
-#### Test result variability
+#### Best-effort results
 When requesting a specific number of probes, there is no guarantee that the API will respond with the exact amount.
 
 #### Probe availability rules
@@ -294,6 +292,7 @@ Globalping exposes and lets you interact with probes that are currently **online
 Here's when a probe is considered online and available through our API:
 - **It's up-to-date.** A probe running an older version will be forced to auto-update before it becomes available.
 - **It passes quality control tests.** Every probe must pass a test, ensuring it's connected to a reasonably stable network without packet loss. This test is done regularly; if a probe fails, it gets taken offline.
+- **It's not behind a VPN**. We block probes that we detect are hosted behind VPNs or other proxying techniques, as they would report incorrect latency and routing data, making them unusable.
 
 This whole process is completely automated and managed by our platform.
 
