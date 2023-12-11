@@ -153,9 +153,9 @@ Example commands to try:
 Learn more about the GitHub bot [on our blog](https://dev.to/globalping/supercharge-your-gitops-workflows-with-the-globalping-github-bot-341a).
 
 ## Globalping command structure
-While we offer different tools and integrations for running tests with Globalping, we make sure that they provide a consistent experience. This also means that writing tests looks almost identical whether you're using the CLI tool or the Slack app, for example.
+We make sure that all integrations and tools provide a consistent experience, so writing tests looks almost identical whether you're using the CLI tool, the Slack app, or another official integration.
 
-Follow this structure when writing tests:
+Follow this structure when writing measurement commands:
 
 `globalping [command] [target] from [location] [flags]`
 
@@ -163,9 +163,9 @@ Examples:
 - `globalping ping google.com from aws`
 - `globalping ping google.com from Berlin, South America --limit 2`
 
-Let's look at each component:
-##### Available test commands
-Globalping supports the following commands:
+Let's look at the components:
+##### Available test types
+Globalping supports the following:
 - ping
 - traceroute
 - mtr
