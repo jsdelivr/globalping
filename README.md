@@ -239,6 +239,7 @@ Other location examples:
 - frankfurt, dallas, sydney
 - as396982, as16509
 - comcast, google, ovh, orange, t-mobile
+- eyeball, datacenter
 
 > [!NOTE]
 > Providing no location defaults to `world`, selecting a probe from a random location.
