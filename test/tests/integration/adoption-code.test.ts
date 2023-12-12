@@ -1,18 +1,21 @@
+import type { Server } from 'node:http';
 import nock from 'nock';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import type { Socket } from 'socket.io-client';
-import request from 'supertest';
+import request, { type SuperTest, type Test } from 'supertest';
 import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 
-let probe: Socket;
-const app = await getTestServer();
-const requestAgent = request(app);
-const adoptionCodeStub = sinon.stub();
-
 describe('Adoption code', () => {
+	let app: Server;
+	let requestAgent: SuperTest<Test>;
+	let probe: Socket;
+	const adoptionCodeStub = sinon.stub();
+
 	before(async () => {
+		app = await getTestServer();
+		requestAgent = request(app);
 		nockGeoIpProviders();
 
 		probe = await addFakeProbe({
