@@ -276,8 +276,8 @@ export class AdoptedProbes {
 
 	private async sendNotification (adoptedProbe: AdoptedProbe, connectedProbe: Probe) {
 		await this.sql.raw(`
-			INSERT INTO directus_notifications (recipient, subject, message) SELECT :recipient, :subject, :message
-			WHERE NOT EXISTS (SELECT 1 FROM directus_notifications WHERE recipient = :recipient AND message = :message AND DATE(timestamp) = CURRENT_DATE)
+			INSERT INTO ${NOTIFICATIONS_TABLE} (recipient, subject, message) SELECT :recipient, :subject, :message
+			WHERE NOT EXISTS (SELECT 1 FROM ${NOTIFICATIONS_TABLE} WHERE recipient = :recipient AND message = :message AND DATE(timestamp) = CURRENT_DATE)
 		`, {
 			recipient: adoptedProbe.userId,
 			subject: 'Adopted probe country change',
