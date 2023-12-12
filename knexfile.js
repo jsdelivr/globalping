@@ -21,9 +21,6 @@ export default _.merge({}, ...[ 'development', 'production', 'staging', 'test' ]
 			seeds: {
 				directory: `./seeds/${environment}`,
 			},
-			migrations: {
-				directory: `./migrations/${environment}`,
-			},
 		},
 	};
 }));
