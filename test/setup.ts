@@ -16,6 +16,10 @@ import chaiOas from './plugins/oas/index.js';
 import { getRedisClient, initRedis } from '../src/lib/redis/client.js';
 import { client as sql } from '../src/lib/sql/client.js';
 
+if (process.env['NODE_ENV'] !== 'test') {
+	throw new Error(`NODE_ENV is not 'test' but '${process.env['NODE_ENV']}'.`);
+}
+
 before(async () => {
 	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../public/v1/spec.yaml') }));
 
