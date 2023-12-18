@@ -18,7 +18,6 @@ import { getRedisClient, initRedis } from '../src/lib/redis/client.js';
 import { client as sql } from '../src/lib/sql/client.js';
 
 const dbConfig = config.get<{ connection: { database: string, host: string } }>('db');
-console.log(dbConfig);
 
 if (!dbConfig.connection.database.endsWith('-test') && dbConfig.connection.host !== 'localhost') {
 	throw new Error(`Database name for test env needs to end with "-test" or the host must be "localhost". Got "${dbConfig.connection.database}"@"${dbConfig.connection.host}".`);
