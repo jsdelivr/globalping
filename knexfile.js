@@ -18,6 +18,9 @@ export default _.merge({}, ...[ 'development', 'production', 'staging', 'test' ]
 				propagateCreateError: false,
 			},
 			acquireConnectionTimeout: 10000,
+			seeds: {
+				directory: `./seeds/${environment}`,
+			},
 		},
 	};
 }));

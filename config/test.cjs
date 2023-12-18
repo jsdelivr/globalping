@@ -4,6 +4,12 @@ module.exports = {
 			tls: false,
 		},
 	},
+	db: {
+		connection: {
+			database: 'directus-test',
+			multipleStatements: true,
+		},
+	},
 	admin: {
 		key: 'admin',
 	},
