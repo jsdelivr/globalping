@@ -29,7 +29,7 @@ jobs:
         ports:
           - 3306:3306
         env:
-          MARIADB_DATABASE: directus
+          MARIADB_DATABASE: directus-test
           MARIADB_USER: directus
           MARIADB_PASSWORD: password
           MARIADB_RANDOM_ROOT_PASSWORD: 1

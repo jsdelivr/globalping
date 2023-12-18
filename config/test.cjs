@@ -6,6 +6,7 @@ module.exports = {
 	},
 	db: {
 		connection: {
+			database: 'directus-test',
 			multipleStatements: true,
 		},
 	},

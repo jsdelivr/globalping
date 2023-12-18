@@ -1,3 +1,4 @@
+import config from 'config';
 import Bluebird from 'bluebird';
 import chai from 'chai';
 import nock from 'nock';
@@ -16,8 +17,11 @@ import chaiOas from './plugins/oas/index.js';
 import { getRedisClient, initRedis } from '../src/lib/redis/client.js';
 import { client as sql } from '../src/lib/sql/client.js';
 
-if (process.env['NODE_ENV'] !== 'test') {
-	throw new Error(`NODE_ENV is not 'test' but '${process.env['NODE_ENV']}'.`);
+const dbConfig = config.get<{ connection: { database: string, host: string } }>('db');
+console.log(dbConfig);
+
+if (!dbConfig.connection.database.endsWith('-test') && dbConfig.connection.host !== 'localhost') {
+	throw new Error(`Database name for test env needs to end with "-test" or the host must be "localhost". Got "${dbConfig.connection.database}"@"${dbConfig.connection.host}".`);
 }
 
 before(async () => {
