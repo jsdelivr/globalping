@@ -13,7 +13,13 @@ module.exports = {
 	},
 	db: {
 		type: 'mysql',
-		connection: 'mysql://directus:password@localhost:3306/directus',
+		connection: {
+			host: 'localhost',
+			user: 'directus',
+			password: 'password',
+			database: 'directus',
+			port: 3306,
+		},
 	},
 	admin: {
 		key: '',

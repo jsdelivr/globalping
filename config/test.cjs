@@ -4,6 +4,11 @@ module.exports = {
 			tls: false,
 		},
 	},
+	db: {
+		connection: {
+			multipleStatements: true,
+		},
+	},
 	admin: {
 		key: 'admin',
 	},
