@@ -12,6 +12,8 @@ export default function wallaby () {
 			'src/**/*.json',
 			'config/*',
 			'public/**/*.yaml',
+			'seeds/**/*',
+			'migrations/**/*',
 			'test/utils/**/*.ts',
 			'test/mocks/**/*',
 			'test/plugins/**/*',

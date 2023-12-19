@@ -22,6 +22,7 @@ import { defaultJson } from './middleware/default-json.js';
 import { errorHandlerMw } from './middleware/error-handler.js';
 import { corsHandler } from './middleware/cors.js';
 import { isAdminMw } from './middleware/is-admin.js';
+import { isSystemMw } from './middleware/is-system.js';
 import domainRedirect from './middleware/domain-redirect.js';
 import { docsLink } from './middleware/docs-link.js';
 import type { CustomContext } from '../../types.js';
@@ -47,7 +48,8 @@ rootRouter.get<object, CustomContext>('/', '/', (ctx) => {
 const apiRouter = new Router({ strict: true, sensitive: true });
 
 apiRouter.prefix('/v1')
-	.use(isAdminMw);
+	.use(isAdminMw)
+	.use(isSystemMw);
 
 // GET /spec.yaml
 registerSpecRoute(apiRouter);

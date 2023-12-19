@@ -1,8 +1,7 @@
 import type { Context } from 'koa';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
-import createHttpError from 'http-errors';
-import { isSystem } from '../../../../src/lib/http/middleware/is-system.js';
+import { isSystemMw } from '../../../../src/lib/http/middleware/is-system.js';
 
 const next = sinon.stub();
 
@@ -11,23 +10,21 @@ beforeEach(() => {
 });
 
 describe('rate limit middleware', () => {
-	it('should reject requests without "systemkey" parameter', async () => {
+	it('should set to "false" for requests without "systemkey" parameter', async () => {
 		const ctx = { query: {} } as unknown as Context;
-		const err = await isSystem()(ctx, next).catch((err: unknown) => err);
-		expect(err).to.deep.equal(createHttpError(403, 'Forbidden', { type: 'access_forbidden' }));
-		expect(next.callCount).to.equal(0);
+		await isSystemMw(ctx, next);
+		expect(ctx['isSystem']).to.equal(false);
 	});
 
-	it('should reject requests with invalid "systemkey" parameter', async () => {
+	it('should set to "false" for requests with invalid "systemkey" parameter', async () => {
 		const ctx = { query: { systemkey: 'wrongkey' } } as unknown as Context;
-		const err = await isSystem()(ctx, next).catch((err: unknown) => err);
-		expect(err).to.deep.equal(createHttpError(403, 'Forbidden', { type: 'access_forbidden' }));
-		expect(next.callCount).to.equal(0);
+		await isSystemMw(ctx, next);
+		expect(ctx['isSystem']).to.equal(false);
 	});
 
-	it('should accept requests with valid "systemkey" parameter', async () => {
+	it('should set to "true" for requests with valid "systemkey" parameter', async () => {
 		const ctx = { query: { systemkey: 'system' } } as unknown as Context;
-		await isSystem()(ctx, next);
-		expect(next.callCount).to.equal(1);
+		await isSystemMw(ctx, next);
+		expect(ctx['isSystem']).to.equal(true);
 	});
 });

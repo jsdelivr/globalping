@@ -57,7 +57,7 @@ describe('Adoption code', () => {
 		expect(adoptionCodeStub.args[0]).to.deep.equal([{ code: '123456' }]);
 	});
 
-	it('should return 403 for non-admins', async () => {
+	it('should return 403 for wrong system key', async () => {
 		await requestAgent.post('/v1/adoption-code?systemkey=wrongkey')
 			.send({
 				ip: '1.2.3.4',
