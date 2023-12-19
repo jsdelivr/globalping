@@ -2,11 +2,10 @@ import config from 'config';
 import _ from 'lodash';
 import cryptoRandomString from 'crypto-random-string';
 import type { OfflineProbe, Probe } from '../probe/types.js';
-import type { RedisClient } from '../lib/redis/client.js';
-import { getRedisClient } from '../lib/redis/client.js';
 import { scopedLogger } from '../lib/logger.js';
 import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType, MeasurementResultMessage } from './types.js';
 import { getDefaults } from './schema/utils.js';
+import { getPersistentRedisClient, PersistentRedisClient } from '../lib/redis/persistent-client.js';
 
 const logger = scopedLogger('store');
 
@@ -42,7 +41,7 @@ const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, un
 };
 
 export class MeasurementStore {
-	constructor (private readonly redis: RedisClient) {}
+	constructor (private readonly redis: PersistentRedisClient) {}
 
 	async getMeasurementString (id: string): Promise<string> {
 		return this.redis.sendCommand([ 'JSON.GET', getMeasurementKey(id) ]);
@@ -239,7 +238,7 @@ let store: MeasurementStore;
 
 export const getMeasurementStore = () => {
 	if (!store) {
-		store = new MeasurementStore(getRedisClient());
+		store = new MeasurementStore(getPersistentRedisClient());
 		store.scheduleCleanup();
 	}
 
