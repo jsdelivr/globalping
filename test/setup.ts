@@ -27,7 +27,8 @@ if (!dbConfig.connection.database.endsWith('-test') && dbConfig.connection.host 
 before(async () => {
 	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../public/v1/spec.yaml') }));
 
-	await initRedisClient();
+	const redisClient = await initRedisClient();
+	await redisClient.flushDb();
 	const persistentRedisClient = await initPersistentRedisClient();
 	await persistentRedisClient.flushDb();
 
