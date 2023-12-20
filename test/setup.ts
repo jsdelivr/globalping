@@ -15,7 +15,7 @@ import {
 } from './utils/populate-static-files.js';
 import chaiOas from './plugins/oas/index.js';
 import { initRedisClient } from '../src/lib/redis/client.js';
-import { getPersistentRedisClient, initPersistentRedisClient } from '../src/lib/redis/persistent-client.js';
+import { initPersistentRedisClient } from '../src/lib/redis/persistent-client.js';
 import { client as sql } from '../src/lib/sql/client.js';
 
 const dbConfig = config.get<{ connection: { database: string, host: string } }>('db');
@@ -28,8 +28,7 @@ before(async () => {
 	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../public/v1/spec.yaml') }));
 
 	await initRedisClient();
-	await initPersistentRedisClient();
-	const persistentRedisClient = getPersistentRedisClient();
+	const persistentRedisClient = await initPersistentRedisClient();
 	await persistentRedisClient.flushDb();
 
 	await dropAllTables(sql);

@@ -17,6 +17,7 @@ let redis: PersistentRedisClient;
 
 export const initPersistentRedisClient = async () => {
 	redis = await createPersistentRedisClient();
+	return redis;
 };
 
 export const createPersistentRedisClient = async (options?: RedisClientOptions): Promise<PersistentRedisClient> => {

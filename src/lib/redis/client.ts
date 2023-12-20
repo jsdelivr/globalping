@@ -17,7 +17,7 @@ let redis: RedisClient;
 
 export const initRedisClient = async () => {
 	redis = await createRedisClient();
-	await redis.flushDb();
+	return redis;
 };
 
 const createRedisClient = async (options?: RedisClientOptions): Promise<RedisClient> => {
