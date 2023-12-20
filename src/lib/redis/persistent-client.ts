@@ -7,7 +7,7 @@ import {
 	type RedisFunctions,
 } from 'redis';
 import { scopedLogger } from '../logger.js';
-import { count, recordResult, markFinished, type RedisScripts } from './scripts.js';
+import { scripts, type RedisScripts } from './scripts.js';
 
 const logger = scopedLogger('persistent-redis-client');
 
@@ -26,7 +26,7 @@ export const createPersistentRedisClient = async (options?: RedisClientOptions):
 		...options,
 		database: 1,
 		name: 'persistent',
-		scripts: { count, recordResult, markFinished },
+		scripts,
 	});
 
 	client
