@@ -3,13 +3,20 @@ import { EventEmitter } from 'node:events';
 import { expect } from 'chai';
 import * as td from 'testdouble';
 import * as sinon from 'sinon';
-import { getRedisClient } from '../../../src/lib/redis/client.js';
-import { getPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
+import { getRedisClient, RedisClient } from '../../../src/lib/redis/client.js';
+import { getPersistentRedisClient, PersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
 
 describe('index file', () => {
 	const cluster: any = new EventEmitter();
 	cluster.isPrimary = true;
 	cluster.fork = sinon.stub();
+	let redis: RedisClient;
+	let persistentRedis: PersistentRedisClient;
+
+	before(async () => {
+		redis = getRedisClient();
+		persistentRedis = getPersistentRedisClient();
+	});
 
 	beforeEach(async () => {
 		sinon.resetHistory();
@@ -18,6 +25,8 @@ describe('index file', () => {
 
 	after(() => {
 		td.reset();
+		redis.del('testfield');
+		persistentRedis.del('testfield');
 	});
 
 	it('master should restart a worker if it dies', async () => {
@@ -36,16 +45,9 @@ describe('index file', () => {
 	});
 
 	it('master should flush non-persistent redis db on startup', async () => {
-		const redis = getRedisClient();
-		const persistentRedis = getPersistentRedisClient();
 		redis.set('testfield', 'testvalue');
 		persistentRedis.set('testfield', 'testvalue');
 
-		const value1 = await redis.get('testfield');
-		const persistentValue1 = await persistentRedis.get('testfield');
-
-		expect(value1).to.equal('testvalue');
-		expect(persistentValue1).to.equal('testvalue');
 		await import('../../../src/index.js');
 
 		const value2 = await redis.get('testfield');

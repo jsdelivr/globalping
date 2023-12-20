@@ -14,8 +14,8 @@ import {
 	populateNockCitiesList,
 } from './utils/populate-static-files.js';
 import chaiOas from './plugins/oas/index.js';
-import { getRedisClient, initRedisClient } from '../src/lib/redis/client.js';
-import { getPersistentRedisClient, initPersistentRedisClient } from '../src/lib/redis/persistent-client.js';
+import { initRedisClient } from '../src/lib/redis/client.js';
+import { initPersistentRedisClient } from '../src/lib/redis/persistent-client.js';
 import { client as sql } from '../src/lib/sql/client.js';
 
 const dbConfig = config.get<{ connection: { database: string, host: string } }>('db');
@@ -44,13 +44,6 @@ before(async () => {
 	await populateIpRangeList();
 	await populateMemList();
 	await populateNockCitiesList();
-});
-
-after(async () => {
-	const redisClient = getRedisClient();
-	await redisClient.flushDb();
-	const persistentRedisClient = await getPersistentRedisClient();
-	await persistentRedisClient.flushDb();
 });
 
 const dropAllTables = async (sql: Knex) => {
