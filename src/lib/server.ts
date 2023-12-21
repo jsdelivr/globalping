@@ -1,5 +1,5 @@
 import type { Server } from 'node:http';
-import { initRedis } from './redis/client.js';
+import { initRedisClient } from './redis/client.js';
 import { initWsServer } from './ws/server.js';
 import { getMetricsAgent } from './metrics.js';
 import { populateMemList as populateMemMalwareList } from './malware/client.js';
@@ -8,9 +8,11 @@ import { populateMemList as populateIpWhiteList } from './geoip/whitelist.js';
 import { populateCitiesList } from './geoip/city-approximation.js';
 import { adoptedProbes } from './adopted-probes.js';
 import { reconnectProbes } from './ws/helper/reconnect-probes.js';
+import { initPersistentRedisClient } from './redis/persistent-client.js';
 
 export const createServer = async (): Promise<Server> => {
-	await initRedis();
+	await initRedisClient();
+	await initPersistentRedisClient();
 
 	// Populate memory malware list
 	await populateMemMalwareList();

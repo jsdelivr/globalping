@@ -6,7 +6,7 @@
  */
 
 import fs from 'node:fs';
-import { getRedisClient, initRedis } from '../src/lib/redis/client.js';
+import { getRedisClient, initRedisClient } from '../src/lib/redis/client.js';
 import { LocationInfo, createGeoipClient } from '../src/lib/geoip/client.js';
 import { normalizeCityName } from '../src/lib/geoip/utils.js';
 import { fastlyLookup } from '../src/lib/geoip/providers/fastly.js';
@@ -19,7 +19,7 @@ import sheet from './known-probes.json' assert { type: 'json' };
 import { populateCitiesList } from '../src/lib/geoip/city-approximation.js';
 
 await populateIpWhiteList();
-await initRedis();
+await initRedisClient();
 await populateCitiesList();
 const geoIpClient = createGeoipClient();
 

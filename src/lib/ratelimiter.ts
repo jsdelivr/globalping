@@ -3,10 +3,10 @@ import type { Context } from 'koa';
 import { RateLimiterRedis } from 'rate-limiter-flexible';
 import requestIp from 'request-ip';
 import type { RateLimiterRes } from 'rate-limiter-flexible';
-import { createRedisClient } from './redis/client.js';
+import { createPersistentRedisClient } from './redis/persistent-client.js';
 import createHttpError from 'http-errors';
 
-const redisClient = await createRedisClient({ legacyMode: true });
+const redisClient = await createPersistentRedisClient({ legacyMode: true });
 
 const rateLimiter = new RateLimiterRedis({
 	storeClient: redisClient,
