@@ -24,7 +24,7 @@ const createRedisClient = async (options?: RedisClientOptions): Promise<RedisCli
 	const client = createClient({
 		...config.util.toObject(config.get('redis')) as RedisClientOptions,
 		...options,
-		database: 0,
+		database: 1,
 		name: 'non-persistent',
 		scripts,
 	});

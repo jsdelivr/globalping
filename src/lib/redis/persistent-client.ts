@@ -24,7 +24,7 @@ export const createPersistentRedisClient = async (options?: RedisClientOptions):
 	const client = createClient({
 		...config.util.toObject(config.get('redis')) as RedisClientOptions,
 		...options,
-		database: 1,
+		database: 0,
 		name: 'persistent',
 		scripts,
 	});
