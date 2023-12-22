@@ -334,6 +334,22 @@ describe('Create measurement', () => {
 				});
 		});
 
+		it('should create measurement with "magic: World" location in any case', async () => {
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					locations: [{ magic: 'World', limit: 2 }],
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header.location).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+				});
+		});
+
 		it('should create measurement with "magic" value in any case', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({

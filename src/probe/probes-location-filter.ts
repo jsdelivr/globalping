@@ -59,7 +59,7 @@ export class ProbesLocationFilter {
 	}
 
 	public filterByLocation (probes: Probe[], location: Location): Probe[] {
-		if (location.magic === 'world') {
+		if (location.magic?.toLowerCase() === 'world') {
 			return _.shuffle(this.filterGloballyDistibuted(probes, probes.length));
 		}
 
