@@ -46,4 +46,4 @@ Most IDEs have plugins integrating the used linter (eslint), including support f
 - `FAKE_PROBE_IP={api|probe}` used in development to either use a random fake ip from the API or a fake ip from Probe
 - `ADMIN_KEY={value}` used to access additional information over the API
 - `SYSTEM_API_KEY={value}` used for integration with the dashboard
-- `DB_CONNECTION={value}` database connection string in the form of `mysql://user:password@host:port/db-name`
+- `DB_CONNECTION_HOST`, `DB_CONNECTION_USER`, `DB_CONNECTION_PASSWORD`, and `DB_CONNECTION_DATABASE` database connection details
