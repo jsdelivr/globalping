@@ -4,19 +4,19 @@ import type { RemoteProbeSocket } from '../../lib/ws/server.js';
 import { fetchSockets } from '../../lib/ws/fetch-sockets.js';
 
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
-	const { isAdmin } = ctx;
+	const { isAdmin, isSystem } = ctx;
 	let sockets = await fetchSockets();
 
-	if (!isAdmin) {
+	if (!isAdmin && !isSystem) {
 		sockets = sockets.filter(socket => socket.data.probe.status === 'ready');
 	}
 
 	ctx.body = sockets.map((socket: RemoteProbeSocket) => ({
-		status: isAdmin ? socket.data.probe.status : undefined,
+		status: (isAdmin || isSystem) ? socket.data.probe.status : undefined,
 		version: socket.data.probe.version,
 		nodeVersion: isAdmin ? socket.data.probe.nodeVersion : undefined,
 		uuid: isAdmin ? socket.data.probe.uuid : undefined,
-		ipAddress: isAdmin ? socket.data.probe.ipAddress : undefined,
+		ipAddress: (isAdmin || isSystem) ? socket.data.probe.ipAddress : undefined,
 		location: {
 			continent: socket.data.probe.location.continent,
 			region: socket.data.probe.location.region,

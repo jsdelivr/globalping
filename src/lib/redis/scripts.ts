@@ -10,7 +10,7 @@ type CountScript = {
 	SHA1: string;
 };
 
-export type RecordResultScript = {
+type RecordResultScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
 	transformArguments (measurementId: string, testId: string, data: MeasurementResultMessage['result']): string[];
@@ -19,7 +19,7 @@ export type RecordResultScript = {
 	SHA1: string;
 };
 
-export type MarkFinishedScript = {
+type MarkFinishedScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
 	transformArguments (measurementId: string): string[];
@@ -34,7 +34,7 @@ export type RedisScripts = {
 	markFinished: MarkFinishedScript;
 };
 
-export const count: CountScript = defineScript({
+const count: CountScript = defineScript({
 	NUMBER_OF_KEYS: 1,
 	SCRIPT: `
 	local cursor = 0
@@ -55,7 +55,7 @@ export const count: CountScript = defineScript({
 	},
 });
 
-export const recordResult: RecordResultScript = defineScript({
+const recordResult: RecordResultScript = defineScript({
 	NUMBER_OF_KEYS: 4,
 	SCRIPT: `
 	local measurementId = KEYS[1]
@@ -88,7 +88,7 @@ export const recordResult: RecordResultScript = defineScript({
 	},
 });
 
-export const markFinished: MarkFinishedScript = defineScript({
+const markFinished: MarkFinishedScript = defineScript({
 	NUMBER_OF_KEYS: 1,
 	SCRIPT: `
 	local measurementId = KEYS[1]
@@ -106,3 +106,5 @@ export const markFinished: MarkFinishedScript = defineScript({
 		return null;
 	},
 });
+
+export const scripts: RedisScripts = { count, recordResult, markFinished };

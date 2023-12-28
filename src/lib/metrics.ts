@@ -2,9 +2,9 @@ import process from 'node:process';
 import type { Server as SocketServer } from 'socket.io';
 import newrelic from 'newrelic';
 
-import { getRedisClient, type RedisClient } from './redis/client.js';
 import { getWsServer, PROBES_NAMESPACE } from './ws/server.js';
 import { scopedLogger } from './logger.js';
+import { getPersistentRedisClient, PersistentRedisClient } from './redis/persistent-client.js';
 
 const logger = scopedLogger('metrics');
 
@@ -13,7 +13,7 @@ export class MetricsAgent {
 
 	constructor (
 		private readonly io: SocketServer,
-		private readonly redis: RedisClient,
+		private readonly redis: PersistentRedisClient,
 	) {}
 
 	run (): void {
@@ -62,7 +62,7 @@ let agent: MetricsAgent;
 
 export const getMetricsAgent = () => {
 	if (!agent) {
-		agent = new MetricsAgent(getWsServer(), getRedisClient());
+		agent = new MetricsAgent(getWsServer(), getPersistentRedisClient());
 	}
 
 	return agent;
