@@ -660,7 +660,7 @@ describe('Create measurement', () => {
 					ip: '1.2.3.4',
 					uuid: '1-1-1-1-1',
 					isCustomCity: 1,
-					tags: '["Dashboard-Tag"]',
+					tags: '[{"prefix":"jsdelivr","value":"Dashboard-Tag"}]',
 					status: 'ready',
 					version: '0.26.0',
 					country: 'US',
@@ -695,12 +695,12 @@ describe('Create measurement', () => {
 					});
 			});
 
-			it('should create measurement with adopted "tags: ["u-jimaek-dashboard-tag"]" location', async () => {
+			it('should create measurement with adopted "tags: ["u-jsdelivr-dashboard-tag"]" location', async () => {
 				await requestAgent.post('/v1/measurements')
 					.send({
 						type: 'ping',
 						target: 'example.com',
-						locations: [{ tags: [ 'u-jimaek-dashboard-tag' ], limit: 2 }],
+						locations: [{ tags: [ 'u-jsdelivr-dashboard-tag' ], limit: 2 }],
 					})
 					.expect(202)
 					.expect((response) => {
@@ -711,12 +711,12 @@ describe('Create measurement', () => {
 					});
 			});
 
-			it('should create measurement with adopted "tags: ["u-jimaek-Dashboard-Tag"]" in any letter case', async () => {
+			it('should create measurement with adopted "tags: ["u-jsdelivr-Dashboard-Tag"]" in any letter case', async () => {
 				await requestAgent.post('/v1/measurements')
 					.send({
 						type: 'ping',
 						target: 'example.com',
-						locations: [{ tags: [ 'u-jimaek-Dashboard-Tag' ], limit: 2 }],
+						locations: [{ tags: [ 'u-jsdelivr-Dashboard-Tag' ], limit: 2 }],
 					})
 					.expect(202)
 					.expect((response) => {
@@ -727,12 +727,12 @@ describe('Create measurement', () => {
 					});
 			});
 
-			it('should not use create measurement with adopted tag in magic field "magic: ["u-jimaek-dashboard-tag"]" location', async () => {
+			it('should not use create measurement with adopted tag in magic field "magic: ["u-jsdelivr-dashboard-tag"]" location', async () => {
 				await requestAgent.post('/v1/measurements')
 					.send({
 						type: 'ping',
 						target: 'example.com',
-						locations: [{ magic: 'u-jimaek-dashboard-tag', limit: 2 }],
+						locations: [{ magic: 'u-jsdelivr-dashboard-tag', limit: 2 }],
 					})
 					.expect(422).expect((response) => {
 						expect(response.body.error.message).to.equal('No suitable probes found.');

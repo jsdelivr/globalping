@@ -19,7 +19,7 @@ export type AdoptedProbe = {
 	uuid: string;
 	lastSyncDate: Date;
 	tags: {
-		prefix: string;
+		type: 'user';
 		value: string;
 	}[];
 	isCustomCity: boolean;
@@ -118,7 +118,7 @@ export class AdoptedProbes {
 
 		return [
 			...probe.tags,
-			...adoptedProbe.tags.map(tag => ({ type: 'user' as const, value: `u-${tag.prefix}-${tag.value}` })),
+			...adoptedProbe.tags,
 		];
 	}
 
@@ -144,9 +144,11 @@ export class AdoptedProbes {
 	private async fetchAdoptedProbes () {
 		const rows = await this.sql({ probes: ADOPTED_PROBES_TABLE }).select<Row[]>();
 
+
 		const adoptedProbes: AdoptedProbe[] = rows.map(row => ({
 			...row,
-			tags: row.tags ? JSON.parse(row.tags) as {prefix: string; value: string;}[] : [],
+			tags: (row.tags ? JSON.parse(row.tags) as {prefix: string; value: string;}[] : [])
+				.map(({ prefix, value }) => ({ type: 'user' as const, value: `u-${prefix}-${value}` })),
 			isCustomCity: Boolean(row.isCustomCity),
 		}));
 
