@@ -10,7 +10,6 @@ import { normalizeFromPublicName } from './geoip/utils.js';
 const logger = scopedLogger('adopted-probes');
 
 export const ADOPTED_PROBES_TABLE = 'adopted_probes';
-export const USERS_TABLE = 'directus_users';
 export const NOTIFICATIONS_TABLE = 'directus_notifications';
 
 export type AdoptedProbe = {
@@ -19,7 +18,10 @@ export type AdoptedProbe = {
 	ip: string;
 	uuid: string;
 	lastSyncDate: Date;
-	tags: string[];
+	tags: {
+		type: 'user';
+		value: string;
+	}[];
 	isCustomCity: boolean;
 	status: string;
 	version: string;
@@ -116,7 +118,7 @@ export class AdoptedProbes {
 
 		return [
 			...probe.tags,
-			...adoptedProbe.tags.map(tag => ({ type: 'user' as const, value: `u-${adoptedProbe.username}-${tag}` })),
+			...adoptedProbe.tags,
 		];
 	}
 
@@ -140,23 +142,13 @@ export class AdoptedProbes {
 	}
 
 	private async fetchAdoptedProbes () {
-		const rows = await this.sql({ probes: ADOPTED_PROBES_TABLE })
-			.join({ users: USERS_TABLE }, 'probes.userId', '=', 'users.id')
-			.select<Row[]>({
-				username: 'users.github',
-				userId: 'probes.userId',
-				ip: 'probes.ip',
-				uuid: 'probes.uuid',
-				lastSyncDate: 'probes.lastSyncDate',
-				isCustomCity: 'probes.isCustomCity',
-				countryOfCustomCity: 'probes.countryOfCustomCity',
-				tags: 'probes.tags',
-				...Object.fromEntries(Object.keys(this.adoptedFieldToConnectedField).map(field => [ field, `probes.${field}` ])),
-			});
+		const rows = await this.sql({ probes: ADOPTED_PROBES_TABLE }).select<Row[]>();
+
 
 		const adoptedProbes: AdoptedProbe[] = rows.map(row => ({
 			...row,
-			tags: row.tags ? JSON.parse(row.tags) as string[] : [],
+			tags: (row.tags ? JSON.parse(row.tags) as {prefix: string; value: string;}[] : [])
+				.map(({ prefix, value }) => ({ type: 'user' as const, value: `u-${prefix}-${value}` })),
 			isCustomCity: Boolean(row.isCustomCity),
 		}));
 

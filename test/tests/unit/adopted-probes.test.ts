@@ -10,7 +10,7 @@ const defaultAdoptedProbe = {
 	ip: '1.1.1.1',
 	uuid: '1-1-1-1-1',
 	lastSyncDate: new Date('1970-01-01'),
-	tags: '["dashboardtag"]',
+	tags: '[{"prefix":"jimaek","value":"dashboardtag"}]',
 	isCustomCity: 0,
 	status: 'ready',
 	version: '0.26.0',
@@ -67,11 +67,8 @@ const whereStub = sinon.stub().returns({
 	update: updateStub,
 	delete: deleteStub,
 });
-const joinStub = sinon.stub().returns({
-	select: selectStub,
-});
 const sqlStub = sinon.stub().returns({
-	join: joinStub,
+	select: selectStub,
 	where: whereStub,
 }) as sinon.SinonStub<any[], any> & {raw: any};
 sqlStub.raw = rawStub;
@@ -100,31 +97,7 @@ describe('AdoptedProbes', () => {
 
 		expect(sqlStub.callCount).to.equal(1);
 		expect(sqlStub.args[0]).deep.equal([{ probes: 'adopted_probes' }]);
-		expect(joinStub.callCount).to.equal(1);
-		expect(joinStub.args[0]).deep.equal([{ users: 'directus_users' }, 'probes.userId', '=', 'users.id' ]);
 		expect(selectStub.callCount).to.equal(1);
-
-		expect(selectStub.args[0]).deep.equal([
-			{
-				userId: 'probes.userId',
-				username: 'users.github',
-				ip: 'probes.ip',
-				uuid: 'probes.uuid',
-				lastSyncDate: 'probes.lastSyncDate',
-				isCustomCity: 'probes.isCustomCity',
-				tags: 'probes.tags',
-				status: 'probes.status',
-				version: 'probes.version',
-				asn: 'probes.asn',
-				network: 'probes.network',
-				country: 'probes.country',
-				countryOfCustomCity: 'probes.countryOfCustomCity',
-				city: 'probes.city',
-				state: 'probes.state',
-				latitude: 'probes.latitude',
-				longitude: 'probes.longitude',
-			},
-		]);
 	});
 
 	it('class should update uuid if it is wrong', async () => {
@@ -377,7 +350,7 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		const adoptedProbe = adoptedProbes.getByIp('1.1.1.1');
-		expect(adoptedProbe).to.deep.equal({ ...defaultAdoptedProbe, tags: [ 'dashboardtag' ], isCustomCity: false });
+		expect(adoptedProbe).to.deep.equal({ ...defaultAdoptedProbe, tags: [{ type: 'user', value: 'u-jimaek-dashboardtag' }], isCustomCity: false });
 	});
 
 	it('getUpdatedLocation method should return updated location', async () => {

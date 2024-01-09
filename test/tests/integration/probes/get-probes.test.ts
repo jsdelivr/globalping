@@ -279,7 +279,7 @@ describe('Get Probes', () => {
 					ip: '1.2.3.4',
 					uuid: '1-1-1-1-1',
 					isCustomCity: 1,
-					tags: '["dashboardtag1"]',
+					tags: '[{"prefix":"jimaek","value":"dashboardtag1"}]',
 					status: 'ready',
 					version: '0.26.0',
 					country: 'AR',

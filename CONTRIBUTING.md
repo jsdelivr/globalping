@@ -18,7 +18,7 @@ You can run the project by following these steps:
 
 1. Clone this repository.
 2. `docker-compose up -d` - Run Redis and MariaDB
-3. `npm install`
+3. `npm install && npm run download:files`
 4. Run `npm run start:dev`
 
 Once the API is live, you can spin up a probe instance by running as described at https://github.com/jsdelivr/globalping-probe/blob/master/CONTRIBUTING.md.
