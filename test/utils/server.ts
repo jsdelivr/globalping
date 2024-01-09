@@ -4,6 +4,7 @@ import type { AddressInfo } from 'node:net';
 import { io, type Socket } from 'socket.io-client';
 import { scopedLogger } from '../../src/lib/logger.js';
 import { createServer } from '../../src/lib/server.js';
+import { fetchRawSockets } from '../../src/lib/ws/server.js';
 
 let app: Server;
 let url: string;
@@ -49,6 +50,10 @@ export const addFakeProbe = async (events: object = {}, options: object = {}): P
 	return socket;
 };
 
-export const deleteFakeProbe = async (probe: Socket): Promise<void> => {
-	probe.disconnect();
+export const deleteFakeProbe = async (): Promise<void> => {
+	const sockets = await fetchRawSockets();
+
+	for (const socket of sockets) {
+		socket.disconnect(true);
+	}
 };
