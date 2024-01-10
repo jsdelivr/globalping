@@ -14,6 +14,7 @@ import { maxmindLookup } from './providers/maxmind.js';
 import { ipmapLookup } from './providers/ipmap.js';
 import { type Ip2LocationBundledResponse, ip2LocationLookup } from './providers/ip2location.js';
 import { isHostingOverrides } from './overrides.js';
+import NullCache from '../cache/null-cache.js';
 
 type Provider = 'ipmap' | 'ip2location' | 'ipinfo' | 'maxmind' | 'fastly';
 export type LocationInfo = ProbeLocation & {isHosting: boolean | null};
@@ -26,7 +27,9 @@ export type NetworkInfo = {
 
 const logger = scopedLogger('geoip');
 
-export const createGeoipClient = (): GeoipClient => new GeoipClient(new RedisCache(getRedisClient()));
+export const createGeoipClient = (): GeoipClient => {
+	return new GeoipClient(config.get('geoip.cache.enabled') ? new RedisCache(getRedisClient()) : new NullCache());
+};
 
 export default class GeoipClient {
 	constructor (private readonly cache: CacheInterface) {}
