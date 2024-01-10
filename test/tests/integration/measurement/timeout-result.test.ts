@@ -1,4 +1,4 @@
-import request, { type SuperTest, type Test } from 'supertest';
+import request, { type Agent } from 'supertest';
 import * as td from 'testdouble';
 import nock from 'nock';
 import type { Socket } from 'socket.io-client';
@@ -11,7 +11,7 @@ describe('Timeout results', () => {
 	let addFakeProbe: (events?: Record<string, any>) => Promise<Socket>;
 	let deleteFakeProbes: (socket: Socket) => Promise<void>;
 	let getTestServer;
-	let requestAgent: SuperTest<Test>;
+	let requestAgent: Agent;
 	let sandbox: sinon.SinonSandbox;
 
 	const cryptoRandomString = sinon.stub().returns('measurementid');

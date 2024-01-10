@@ -1,6 +1,6 @@
 
 import { expect } from 'chai';
-import request, { type SuperTest, type Test } from 'supertest';
+import request, { type Agent } from 'supertest';
 import * as td from 'testdouble';
 import nock from 'nock';
 import type { Socket } from 'socket.io-client';
@@ -12,7 +12,7 @@ describe('Create measurement', () => {
 	let addFakeProbe: () => Promise<Socket>;
 	let deleteFakeProbes: (socket: Socket) => Promise<void>;
 	let getTestServer;
-	let requestAgent: SuperTest<Test>;
+	let requestAgent: Agent;
 	let adoptedProbes: AdoptedProbes;
 	let ADOPTED_PROBES_TABLE: string;
 
@@ -134,7 +134,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 					id = response.body.id;
@@ -161,7 +161,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 					id = response.body.id;
@@ -188,7 +188,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -206,7 +206,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -224,7 +224,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -242,7 +242,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -260,7 +260,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -278,7 +278,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -296,7 +296,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -312,7 +312,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -328,7 +328,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -344,7 +344,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -360,7 +360,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -376,7 +376,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -415,7 +415,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -443,7 +443,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 					id2 = response.body.id;
@@ -484,7 +484,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 					id2 = response.body.id;
@@ -533,7 +533,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 				});
@@ -563,7 +563,7 @@ describe('Create measurement', () => {
 				.expect(202)
 				.expect((response) => {
 					expect(response.body.id).to.exist;
-					expect(response.header.location).to.exist;
+					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
 					expect(response).to.matchApiSchema();
 					id2 = response.body.id;
@@ -634,7 +634,7 @@ describe('Create measurement', () => {
 					.expect(202)
 					.expect((response) => {
 						expect(response.body.id).to.exist;
-						expect(response.header.location).to.exist;
+						expect(response.header['location']).to.exist;
 						expect(response.body.probesCount).to.equal(1);
 						expect(response).to.matchApiSchema();
 						id2 = response.body.id;
@@ -689,7 +689,7 @@ describe('Create measurement', () => {
 					.expect(202)
 					.expect((response) => {
 						expect(response.body.id).to.exist;
-						expect(response.header.location).to.exist;
+						expect(response.header['location']).to.exist;
 						expect(response.body.probesCount).to.equal(1);
 						expect(response).to.matchApiSchema();
 					});
@@ -705,7 +705,7 @@ describe('Create measurement', () => {
 					.expect(202)
 					.expect((response) => {
 						expect(response.body.id).to.exist;
-						expect(response.header.location).to.exist;
+						expect(response.header['location']).to.exist;
 						expect(response.body.probesCount).to.equal(1);
 						expect(response).to.matchApiSchema();
 					});
@@ -721,7 +721,7 @@ describe('Create measurement', () => {
 					.expect(202)
 					.expect((response) => {
 						expect(response.body.id).to.exist;
-						expect(response.header.location).to.exist;
+						expect(response.header['location']).to.exist;
 						expect(response.body.probesCount).to.equal(1);
 						expect(response).to.matchApiSchema();
 					});
