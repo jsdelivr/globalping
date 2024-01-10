@@ -10,7 +10,7 @@ export default class RedisCache implements CacheInterface {
 
 	async set (key: string, value: unknown, ttl: number = 0): Promise<void> {
 		try {
-			await this.redis.set(this.buildCacheKey(key), JSON.stringify(value), { PX: ttl ?? 0 });
+			await this.redis.set(this.buildCacheKey(key), JSON.stringify(value), { PX: ttl });
 		} catch (error) {
 			logger.error('Failed to set cache value.', error);
 			newrelic.noticeError(error as Error, { key, ttl });
