@@ -2,13 +2,13 @@ import type { Server } from 'node:http';
 import nock from 'nock';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import request, { type SuperTest, type Test } from 'supertest';
+import request, { type Agent } from 'supertest';
 import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 
 describe('Adoption code', () => {
 	let app: Server;
-	let requestAgent: SuperTest<Test>;
+	let requestAgent: Agent;
 	const adoptionCodeStub = sinon.stub();
 
 	before(async () => {

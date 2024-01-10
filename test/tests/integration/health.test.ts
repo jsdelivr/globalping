@@ -2,7 +2,7 @@ import type { Server } from 'node:http';
 import process from 'node:process';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import request, { type SuperTest, type Test } from 'supertest';
+import request, { type Agent } from 'supertest';
 import { getTestServer } from '../../utils/server.js';
 
 after(() => {
@@ -12,7 +12,7 @@ after(() => {
 
 describe('Get health', () => {
 	let app: Server;
-	let requestAgent: SuperTest<Test>;
+	let requestAgent: Agent;
 	let sandbox: sinon.SinonSandbox;
 	let exitStub: sinon.SinonStub;
 

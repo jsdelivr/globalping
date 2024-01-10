@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import nock from 'nock';
 import { expect } from 'chai';
-import request, { type SuperTest, type Test } from 'supertest';
+import request, { type Agent } from 'supertest';
 import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../../utils/server.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { adoptedProbes, ADOPTED_PROBES_TABLE } from '../../../../src/lib/adopted-probes.js';
 import { client } from '../../../../src/lib/sql/client.js';
 
 describe('Get Probes', () => {
-	let requestAgent: SuperTest<Test>;
+	let requestAgent: Agent;
 
 	before(async () => {
 		const app = await getTestServer();
