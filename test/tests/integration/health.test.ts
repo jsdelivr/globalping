@@ -47,7 +47,7 @@ describe('Get health', () => {
 				sinon.assert.calledOnce(exitStub);
 			});
 
-			process.emit('SIGTERM');
+			process.emit('SIGTERM', 'SIGTERM');
 
 			await requestAgent.get('/health')
 				.send()

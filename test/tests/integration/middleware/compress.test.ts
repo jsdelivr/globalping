@@ -2,7 +2,7 @@ import request, { type Response } from 'supertest';
 import { expect } from 'chai';
 import nock from 'nock';
 import type { Socket } from 'socket.io-client';
-import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../../utils/server.js';
+import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../../utils/server.js';
 import geoIpMocks from '../../../mocks/nock-geoip.json' assert { type: 'json' };
 
 describe('compression', () => {
@@ -17,16 +17,16 @@ describe('compression', () => {
 
 		after(async () => {
 			nock.cleanAll();
-			await Promise.all(probes.map(probe => deleteFakeProbe(probe)));
+			await deleteFakeProbes();
 		});
 
 		it('should include compression headers', async () => {
-			nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).times(10).reply(200, geoIpMocks.ipmap.default);
-			nock('https://api.ip2location.io').get(/.*/).times(10).reply(200, geoIpMocks.ip2location.default);
-			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).times(10).reply(200, geoIpMocks.fastly.default);
-			nock('https://ipinfo.io').get(/.*/).times(10).reply(200, geoIpMocks.ipinfo.default);
-			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).times(10).reply(200, geoIpMocks.maxmind.default);
-			probes = await Promise.all(Array.from({ length: 10 }).map(() => addFakeProbe()));
+			nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).times(3).reply(200, geoIpMocks.ipmap.default);
+			nock('https://api.ip2location.io').get(/.*/).times(3).reply(200, geoIpMocks.ip2location.default);
+			nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).times(3).reply(200, geoIpMocks.fastly.default);
+			nock('https://ipinfo.io').get(/.*/).times(3).reply(200, geoIpMocks.ipinfo.default);
+			nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).times(3).reply(200, geoIpMocks.maxmind.default);
+			probes = await Promise.all(Array.from({ length: 3 }).map(() => addFakeProbe()));
 
 			for (const probe of probes) {
 				probe.emit('probe:status:update', 'ready');
