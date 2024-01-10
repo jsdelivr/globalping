@@ -10,7 +10,7 @@ import type { AdoptedProbes } from '../../../../src/lib/adopted-probes.js';
 
 describe('Create measurement', () => {
 	let addFakeProbe: () => Promise<Socket>;
-	let deleteFakeProbe: (socket: Socket) => Promise<void>;
+	let deleteFakeProbes: (socket: Socket) => Promise<void>;
 	let getTestServer;
 	let requestAgent: SuperTest<Test>;
 	let adoptedProbes: AdoptedProbes;
@@ -18,7 +18,7 @@ describe('Create measurement', () => {
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
-		({ getTestServer, addFakeProbe, deleteFakeProbe } = await import('../../../utils/server.js'));
+		({ getTestServer, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
 		({ adoptedProbes, ADOPTED_PROBES_TABLE } = await import('../../../../src/lib/adopted-probes.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
@@ -68,7 +68,7 @@ describe('Create measurement', () => {
 		});
 
 		after(async () => {
-			await deleteFakeProbe(probe);
+			await deleteFakeProbes(probe);
 			nock.cleanAll();
 		});
 

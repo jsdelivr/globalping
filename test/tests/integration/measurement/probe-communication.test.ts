@@ -9,7 +9,7 @@ import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 describe('Create measurement request', () => {
 	let probe: Socket;
 	let addFakeProbe: (events?: Record<string, any>) => Promise<Socket>;
-	let deleteFakeProbe: (socket: Socket) => Promise<void>;
+	let deleteFakeProbes: (socket: Socket) => Promise<void>;
 	let getTestServer;
 	let requestAgent: SuperTest<Test>;
 
@@ -20,7 +20,7 @@ describe('Create measurement request', () => {
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
-		({ getTestServer, addFakeProbe, deleteFakeProbe } = await import('../../../utils/server.js'));
+		({ getTestServer, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
 	});
@@ -36,7 +36,7 @@ describe('Create measurement request', () => {
 	});
 
 	afterEach(async () => {
-		await deleteFakeProbe(probe);
+		await deleteFakeProbes(probe);
 		nock.cleanAll();
 	});
 

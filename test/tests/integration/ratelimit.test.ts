@@ -4,7 +4,7 @@ import requestIp from 'request-ip';
 import type { RateLimiterRedis } from 'rate-limiter-flexible';
 import { expect } from 'chai';
 import type { Socket } from 'socket.io-client';
-import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../utils/server.js';
+import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 
 describe('rate limiter', () => {
@@ -38,7 +38,7 @@ describe('rate limiter', () => {
 	});
 
 	after(async () => {
-		await deleteFakeProbe(probe);
+		await deleteFakeProbes();
 	});
 
 	describe('headers', () => {
