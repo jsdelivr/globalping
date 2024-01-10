@@ -26,6 +26,7 @@ describe('Create measurement request', () => {
 	});
 
 	beforeEach(async () => {
+		sinon.resetHistory();
 		nockGeoIpProviders();
 
 		probe = await addFakeProbe({
@@ -44,8 +45,17 @@ describe('Create measurement request', () => {
 	});
 
 	it('should send and handle proper events during probe connection', async () => {
-		probe.emit('probe:status:update', 'ready');
 		probe.emit('probe:dns:update', [ '1.1.1.1' ]);
+
+		await requestAgent.post('/v1/measurements').send({
+			type: 'ping',
+			target: 'jsdelivr.com',
+			locations: [{ country: 'US' }],
+			measurementOptions: {
+				packets: 4,
+			},
+		}).expect(422);
+
 		expect(locationHandlerStub.callCount).to.equal(1);
 
 		expect(locationHandlerStub.firstCall.args).to.deep.equal([{
