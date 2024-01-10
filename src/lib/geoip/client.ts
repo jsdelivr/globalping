@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import config from 'config';
-import newrelic from 'newrelic';
 import type { CacheInterface } from '../cache/cache-interface.js';
 import { ProbeError } from '../probe-error.js';
 import type { ProbeLocation } from '../../probe/types.js';
@@ -140,10 +139,7 @@ export default class GeoipClient {
 	}
 
 	public async lookupWithCache<T> (key: string, fn: () => Promise<T>): Promise<T> {
-		const cached = await this.cache.get<T>(key).catch((error: Error) => {
-			logger.error('Failed to get cached geoip info for probe.', error);
-			newrelic.noticeError(error, { key });
-		});
+		const cached = await this.cache.get<T>(key);
 
 		if (cached) {
 			return cached;
@@ -152,10 +148,7 @@ export default class GeoipClient {
 		const info = await fn();
 		const ttl = Number(config.get('geoip.cache.ttl'));
 
-		await this.cache.set(key, info, ttl).catch((error: Error) => {
-			logger.error('Failed to cache geoip info for probe.', error);
-			newrelic.noticeError(error, { key, ttl });
-		});
+		await this.cache.set(key, info, ttl);
 
 		return info;
 	}
