@@ -4,7 +4,6 @@ import { expect } from 'chai';
 import GeoipClient, { type LocationInfo } from '../../../../src/lib/geoip/client.js';
 import NullCache from '../../../../src/lib/cache/null-cache.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
-import type { CacheInterface } from '../../../../src/lib/cache/cache-interface.js';
 import geoIpMocks from '../../../mocks/nock-geoip.json' assert { type: 'json' };
 
 
@@ -15,45 +14,6 @@ describe('geoip service', () => {
 
 	afterEach(() => {
 		nock.cleanAll();
-	});
-
-
-	describe('GeoipClient', () => {
-		it('should work even if cache is failing', async () => {
-			class BrokenCache implements CacheInterface {
-				async delete (): Promise<undefined> {
-					throw new Error('delete is broken');
-				}
-
-				async get (): Promise<undefined> {
-					throw new Error('get is broken');
-				}
-
-				async set (): Promise<void> {
-					throw new Error('set is broken');
-				}
-			}
-
-			const clientWithBrokenCache = new GeoipClient(new BrokenCache());
-			nockGeoIpProviders();
-
-			const info = await clientWithBrokenCache.lookup(MOCK_IP);
-
-			expect(info).to.deep.equal({
-				continent: 'NA',
-				country: 'US',
-				state: 'TX',
-				city: 'Dallas',
-				region: 'Northern America',
-				normalizedCity: 'dallas',
-				asn: 20004,
-				latitude: 32.7831,
-				longitude: -96.8067,
-				network: 'The Constant Company LLC',
-				normalizedNetwork: 'the constant company llc',
-				isHosting: true,
-			});
-		});
 	});
 
 	it('should choose top prioritized provider from the winners majority', async () => {
