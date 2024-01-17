@@ -23,7 +23,7 @@ services:
     env_file:
       - globalping.env
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1/v1/probes"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1/health"]
       interval: 10s
       timeout: 8s
       retries: 2
