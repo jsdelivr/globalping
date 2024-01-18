@@ -3,6 +3,7 @@ import type { Context } from 'koa';
 import type Router from '@koa/router';
 import { getMeasurementRunner } from '../runner.js';
 import { bodyParser } from '../../lib/http/middleware/body-parser.js';
+import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 import { validate } from '../../lib/http/middleware/validate.js';
 import { schema } from '../schema/global-schema.js';
 
@@ -22,5 +23,7 @@ const handle = async (ctx: Context): Promise<void> => {
 };
 
 export const registerCreateMeasurementRoute = (router: Router): void => {
-	router.post('/measurements', '/measurements', bodyParser(), validate(schema), handle);
+	router
+		.options('/measurements', '/measurements', corsAuthHandler())
+		.post('/measurements', '/measurements', bodyParser(), validate(schema), handle);
 };
