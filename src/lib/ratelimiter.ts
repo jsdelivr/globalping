@@ -1,8 +1,7 @@
 import config from 'config';
 import type { Context } from 'koa';
-import { RateLimiterRedis } from 'rate-limiter-flexible';
+import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 import requestIp from 'request-ip';
-import type { RateLimiterRes } from 'rate-limiter-flexible';
 import { createPersistentRedisClient } from './redis/persistent-client.js';
 import createHttpError from 'http-errors';
 
@@ -26,13 +25,19 @@ export const rateLimit = async (ctx: Context, numberOfProbes: number) => {
 		return;
 	}
 
+	const clientIp = requestIp.getClientIp(ctx.req) ?? '';
+
 	try {
-		const clientIp = requestIp.getClientIp(ctx.req) ?? '';
 		const result = await rateLimiter.consume(clientIp, numberOfProbes);
 		setRateLimitHeaders(ctx, result);
 	} catch (error) {
-		setRateLimitHeaders(ctx, error as RateLimiterRes);
-		throw createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
+		if (error instanceof RateLimiterRes) {
+			const result = await rateLimiter.reward(clientIp, numberOfProbes);
+			setRateLimitHeaders(ctx, result);
+			throw createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
+		}
+
+		throw createHttpError(500);
 	}
 };
 
