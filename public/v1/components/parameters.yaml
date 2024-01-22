@@ -1,6 +1,8 @@
 components:
   parameters:
     measurementId:
+      description: The ID of the measurement you want to retrieve.
+      example: nzGzfAGL7sZfUs3c # can be removed if not wanted
       in: path
       name: id
       required: true

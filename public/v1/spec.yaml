@@ -3,25 +3,26 @@ info:
   title: Globalping API
   summary: The public Globalping API.
   description: |
-    Monitor, debug, and benchmark your internet infrastructure from a globally distributed network of probes.
+    The Globalping API allows you to monitor, debug, and benchmark your internet infrastructure using a globally distributed network of probes.
+    
+    The API is public, free to use, and doesn't require authentication.
+    However, it implements rate limits to ensure fair usage and reliability – see the "Limits" section in our [GitHub Readme](https://github.com/jsdelivr/globalping) to learn more about limits and how to increase them.
 
+    Additionally, the API is RESTful, accepts JSON-encoded request bodies, returns JSON-encoded responses, and uses standard HTTP response codes to indicate the success and failure of requests.
     ## Client guidelines
 
-    If you implement an application interacting with the API, please consider the "client guidelines"
-    section of each endpoint below to provide the best UX and reduce the chance of your application breaking in the future.
+    If you're implementing an application that interacts with the API, please refer to the "Client guidelines" section in the description of each endpoint. 
+    This way, you can provide the best UX and reduce the likelihood of your app breaking in the future.
 
-    ### General guidelines for non-browser based apps:
+    ### General guidelines for non-browser-based apps:
 
-    - Set a `User-Agent` header. The recommended format and approach is [as here](https://github.com/jsdelivr/data.jsdelivr.com/blob/60c5154d26c403ba9dd403a8ddc5e42a31931f0d/config/default.js#L9).
-    - Set an `Accept-Encoding` header with a value of either `br` (preferred) or `gzip`, depending on what your client can support. The compression has a significant impact on the response size.
-    - When requesting the measurement status, implement ETag-based client-side caching using the `ETag`/`If-None-Match` headers.
-
-    ## Endpoints
-
-    https://api.globalping.io/v1/
+    - Set a `User-Agent` header. We recommend that you follow the format and approach [described here](https://github.com/jsdelivr/data.jsdelivr.com/blob/60c5154d26c403ba9dd403a8ddc5e42a31931f0d/config/default.js#L9).
+    - Set an `Accept-Encoding` header with a value of either `br` (preferred) or `gzip`, depending on what your client can support. Compression has a significant impact on the response size!
+    - Implement ETag-based client-side caching using the `ETag`/`If-None-Match` headers when requesting the measurement status.
   version: 1.0.0
   termsOfService: https://github.com/jsdelivr/globalping
   contact:
+    name: Support
     url: https://github.com/jsdelivr/globalping/issues
     email: d@jsdelivr.com
   license:
@@ -31,82 +32,88 @@ servers:
   - url: https://api.globalping.io
 tags:
   - name: Measurements
-#    description: TODO: some text can be here if needed
+    description: Provides measurement-related operations.
   - name: Probes
+    description: Provides probe-related operations.
 paths:
   /v1/measurements:
     post:
-      summary: Create measurement
+      summary: Create a measurement.
       operationId: createMeasurement
       description: |
-        Creates a new measurement with the configured parameters.
-        The measurement runs asynchronously and its current state can be retrieved
-        at the URL returned in the `Location` header.
+        Create a new measurement by configuring its attributes via the request body. On success, the endpoint returns the ID of the created measurement.
+
+        > **Note**: The measurement runs asynchronously and you can call up the current state under the URL returned in the `Location` header, for example.
 
         ### Client guidelines
-
-        - Set the `inProgressUpdates` option to `true` if the application is running in interactive mode so that the user sees the results right away.
-          - If the application is interactive by default but also implements a "CI" mode to be used in scripts, do not set the flag in the CI mode.
-        - To perform multiple measurements from exactly the same probes, create a single measurement first, then pass its `id` in the `locations` option for the other measurements.
+         - Set the `inProgressUpdates` option to `true` to have the API return partial results as soon as they are available. 
+        This feature is useful for apps running in an interactive mode where you want users to see the updates and results in real time.
+           - If you're building an app or feature for CI purposes where you want to use the finished measurement results in scripts, make sure that you either do not provide the property `inProgressUpdates` (default value is false) or explicitly set it to `false`.
+         - To perform multiple measurements using identical probes, create and get a single measurement first and then pass its `id` to the `locations` property of your next measurement request.
       requestBody:
+        description: Use the `MeasurementRequest` schema to create a new measurement that meets your requirements.
+        externalDocs:
+          description: Read our best practises on GitHub.
+          url: https://github.com/jsdelivr/globalping
         content:
           application/json:
             schema:
-              $ref: 'components/schemas.yaml#/components/schemas/MeasurementRequest'
+              $ref: "components/schemas.yaml#/components/schemas/MeasurementRequest"
             examples:
               pingLocations:
-                $ref: 'components/examples.yaml#/components/examples/createMeasurementPingLocations'
+                $ref: "components/examples.yaml#/components/examples/createMeasurementPingLocations"
               pingLocationsLimit:
-                $ref: 'components/examples.yaml#/components/examples/createMeasurementPingLocationsLimit'
+                $ref: "components/examples.yaml#/components/examples/createMeasurementPingLocationsLimit"
               pingLocationsMagic:
-                $ref: 'components/examples.yaml#/components/examples/createMeasurementPingLocationsMagic'
+                $ref: "components/examples.yaml#/components/examples/createMeasurementPingLocationsMagic"
               pingCustom:
-                $ref: 'components/examples.yaml#/components/examples/createMeasurementPingCustom'
+                $ref: "components/examples.yaml#/components/examples/createMeasurementPingCustom"
               pingLocationsMeasurementId:
-                $ref: 'components/examples.yaml#/components/examples/createMeasurementPingLocationsMeasurementId'
+                $ref: "components/examples.yaml#/components/examples/createMeasurementPingLocationsMeasurementId"
       responses:
-        '202':
-          $ref: 'components/responses.yaml#/components/responses/measurements202'
-        '400':
-          $ref: 'components/responses.yaml#/components/responses/400'
-        '422':
-          $ref: 'components/responses.yaml#/components/responses/measurements422'
-        '429':
-          $ref: 'components/responses.yaml#/components/responses/measurements429'
+        "202":
+          $ref: "components/responses.yaml#/components/responses/measurements202"
+        "400":
+          $ref: "components/responses.yaml#/components/responses/400"
+        "422":
+          $ref: "components/responses.yaml#/components/responses/measurements422"
+        "429":
+          $ref: "components/responses.yaml#/components/responses/measurements429"
       tags:
         - Measurements
   /v1/measurements/{id}:
     parameters:
-      - $ref: 'components/parameters.yaml#/components/parameters/measurementId'
+      - $ref: "components/parameters.yaml#/components/parameters/measurementId"
     get:
-      summary: Get measurement
+      summary: Get a measurement by ID.
       operationId: getMeasurement
       description: |
-        Retrieves data of an existing measurement.
-        A link to this endpoint is returned in the `Location` response header when creating the measurement.
-        The measurement is typically available for up to 7 days after creation.
+        Get an existing measurement's current status and result by providing its ID. Measurements are typically available for up to 7 days after creation.
+
+        > **Tip**: The "Create a measurement" endpoint returns a URL to this endpoint in the `Location` header!
 
         ### Client guidelines
-
-        - Use the following algorithm for measurement result pooling:
-          1. Request the measurement status.
-          2. If the status is `in-progress`, wait 500 ms and repeat from step 1. Note that it is important to wait 500 ms *after* receiving the response, instead of simply using an "every 500 ms" interval. For large measurements, the request itself may take a few hundred milliseconds to complete.
-          3. If the status is anything else, stop. The measurement is no longer running. Any value other than `in-progress` is final.
+        As it can take a few seconds for a measurement to complete and provide results, you can query the status to determine whether the final results are available. Use the following process:
+          1. Request the measurement to retrieve its `status`.
+          2. If the `status` is `in-progress`, wait 500 milliseconds and start again at step 1. Note that it's important to wait 500 ms _after_ receiving the response rather than using an interval of "every 500ms". This is because, for large measurements, the request can take a few hundred milliseconds to complete, meaning that you won't get any meaningful updates in a shorter query time frame.
+          3. If the `status` has a value **other** than `in-progress`, stop. The measurement is no longer running, and its results are final.
       responses:
-        '200':
-          $ref: 'components/responses.yaml#/components/responses/measurement200'
-        '404':
-          $ref: 'components/responses.yaml#/components/responses/404'
+        "200":
+          $ref: "components/responses.yaml#/components/responses/measurement200"
+        "404":
+          $ref: "components/responses.yaml#/components/responses/404"
       tags:
         - Measurements
   /v1/probes:
     get:
-      summary: List currently connected probes
+      summary: List all probes currently online.
       operationId: listProbes
       description: |
-        Returns a list of all currently connected probes and their metadata.
+        Get a list of all probes currently online and their metadata, such as location and assigned tags.
+
+        > **Note**: Probes don't expose unique IDs that you can use to explicitly select them. Instead, enter location data or the ID of an existing measurement when you create a new measurement to refine the probe selection.
       responses:
-        '200':
-          $ref: 'components/responses.yaml#/components/responses/probes200'
+        "200":
+          $ref: "components/responses.yaml#/components/responses/probes200"
       tags:
         - Probes
