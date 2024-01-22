@@ -1,4 +1,4 @@
-import request, { type SuperTest, type Test } from 'supertest';
+import request, { type Agent } from 'supertest';
 import * as td from 'testdouble';
 import nock from 'nock';
 import type { Socket } from 'socket.io-client';
@@ -9,9 +9,9 @@ import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 describe('Create measurement request', () => {
 	let probe: Socket;
 	let addFakeProbe: (events?: Record<string, any>) => Promise<Socket>;
-	let deleteFakeProbe: (socket: Socket) => Promise<void>;
+	let deleteFakeProbes: (socket: Socket) => Promise<void>;
 	let getTestServer;
-	let requestAgent: SuperTest<Test>;
+	let requestAgent: Agent;
 
 	const locationHandlerStub = sinon.stub();
 	const requestHandlerStub = sinon.stub();
@@ -20,12 +20,13 @@ describe('Create measurement request', () => {
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
-		({ getTestServer, addFakeProbe, deleteFakeProbe } = await import('../../../utils/server.js'));
+		({ getTestServer, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
 	});
 
 	beforeEach(async () => {
+		sinon.resetHistory();
 		nockGeoIpProviders();
 
 		probe = await addFakeProbe({
@@ -35,7 +36,7 @@ describe('Create measurement request', () => {
 	});
 
 	afterEach(async () => {
-		await deleteFakeProbe(probe);
+		await deleteFakeProbes(probe);
 		nock.cleanAll();
 	});
 
@@ -44,8 +45,17 @@ describe('Create measurement request', () => {
 	});
 
 	it('should send and handle proper events during probe connection', async () => {
-		probe.emit('probe:status:update', 'ready');
 		probe.emit('probe:dns:update', [ '1.1.1.1' ]);
+
+		await requestAgent.post('/v1/measurements').send({
+			type: 'ping',
+			target: 'jsdelivr.com',
+			locations: [{ country: 'US' }],
+			measurementOptions: {
+				packets: 4,
+			},
+		}).expect(422);
+
 		expect(locationHandlerStub.callCount).to.equal(1);
 
 		expect(locationHandlerStub.firstCall.args).to.deep.equal([{
@@ -75,7 +85,7 @@ describe('Create measurement request', () => {
 			},
 		}).expect(202).expect((response) => {
 			expect(response.body.id).to.exist;
-			expect(response.header.location).to.exist;
+			expect(response.header['location']).to.exist;
 			expect(response.body.probesCount).to.equal(1);
 			expect(response).to.matchApiSchema();
 		});
@@ -126,7 +136,7 @@ describe('Create measurement request', () => {
 				expect(response).to.matchApiSchema();
 			});
 
-		probe.emit('probe:measurement:ack');
+		probe.emit('probe:measurement:ack', null, () => {});
 
 		probe.emit('probe:measurement:progress', {
 			testId: '0',

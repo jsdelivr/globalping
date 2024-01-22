@@ -3,8 +3,7 @@ import request, { type Response } from 'supertest';
 import requestIp from 'request-ip';
 import type { RateLimiterRedis } from 'rate-limiter-flexible';
 import { expect } from 'chai';
-import type { Socket } from 'socket.io-client';
-import { getTestServer, addFakeProbe, deleteFakeProbe } from '../../utils/server.js';
+import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 
 describe('rate limiter', () => {
@@ -12,7 +11,6 @@ describe('rate limiter', () => {
 	let requestAgent: any;
 	let clientIpv6: string;
 	let rateLimiterInstance: RateLimiterRedis;
-	let probe: Socket;
 
 	before(async () => {
 		app = await getTestServer();
@@ -28,8 +26,13 @@ describe('rate limiter', () => {
 		rateLimiterInstance = rateLimiter.default;
 
 		nockGeoIpProviders();
-		probe = await addFakeProbe();
-		probe.emit('probe:status:update', 'ready');
+		nockGeoIpProviders();
+
+		const probe1 = await addFakeProbe();
+		const probe2 = await addFakeProbe();
+
+		probe1.emit('probe:status:update', 'ready');
+		probe2.emit('probe:status:update', 'ready');
 	});
 
 
@@ -38,7 +41,7 @@ describe('rate limiter', () => {
 	});
 
 	after(async () => {
-		await deleteFakeProbe(probe);
+		await deleteFakeProbes();
 	});
 
 	describe('headers', () => {
@@ -111,6 +114,18 @@ describe('rate limiter', () => {
 			}).expect(429) as Response;
 
 			expect(Number(response.headers['x-ratelimit-remaining'])).to.equal(0);
+		});
+
+		it('should consume all points successfully or none at all (cost > remaining > 0)', async () => {
+			await rateLimiterInstance.set(clientIpv6, 99999, 0); // 1 remaining
+
+			const response = await requestAgent.post('/v1/measurements').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+				limit: 2,
+			}).expect(429) as Response;
+
+			expect(Number(response.headers['x-ratelimit-remaining'])).to.equal(1);
 		});
 	});
 });

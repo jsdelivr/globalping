@@ -18,7 +18,7 @@ module.exports = {
 	},
 	geoip: {
 		cache: {
-			ttl: 1, // 1 ms ttl here to disable redis cache in tests
+			enabled: false,
 		},
 	},
 	ws: {

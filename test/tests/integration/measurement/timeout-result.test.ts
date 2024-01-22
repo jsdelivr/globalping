@@ -1,4 +1,4 @@
-import request, { type SuperTest, type Test } from 'supertest';
+import request, { type Agent } from 'supertest';
 import * as td from 'testdouble';
 import nock from 'nock';
 import type { Socket } from 'socket.io-client';
@@ -9,9 +9,9 @@ import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 describe('Timeout results', () => {
 	let probe: Socket;
 	let addFakeProbe: (events?: Record<string, any>) => Promise<Socket>;
-	let deleteFakeProbe: (socket: Socket) => Promise<void>;
+	let deleteFakeProbes: (socket: Socket) => Promise<void>;
 	let getTestServer;
-	let requestAgent: SuperTest<Test>;
+	let requestAgent: Agent;
 	let sandbox: sinon.SinonSandbox;
 
 	const cryptoRandomString = sinon.stub().returns('measurementid');
@@ -20,7 +20,7 @@ describe('Timeout results', () => {
 		sandbox = sinon.createSandbox({ useFakeTimers: { shouldAdvanceTime: true } });
 		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
-		({ getTestServer, addFakeProbe, deleteFakeProbe } = await import('../../../utils/server.js'));
+		({ getTestServer, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
 	});
@@ -32,7 +32,7 @@ describe('Timeout results', () => {
 	});
 
 	afterEach(async () => {
-		await deleteFakeProbe(probe);
+		await deleteFakeProbes(probe);
 		nock.cleanAll();
 	});
 
@@ -86,41 +86,42 @@ describe('Timeout results', () => {
 
 		await sandbox.clock.tickAsync(60000); // cleanup interval + time to treat measurement as timed out
 
-		for (let i = 0; i < 10; i++) { // need to wait for a few additional event loop cycles, so redis update will be finished
-			await sandbox.clock.nextAsync();
-		}
+		let response;
 
-		await requestAgent.get(`/v1/measurements/measurementid`).send()
-			.expect(200).expect((response) => {
-				expect(response.body).to.deep.include({
-					id: 'measurementid',
-					type: 'ping',
-					status: 'finished',
-					target: 'jsdelivr.com',
-					probesCount: 1,
-					locations: [{ country: 'US' }],
-					measurementOptions: { packets: 4 },
-					results: [
-						{
-							probe: {
-								continent: 'NA',
-								region: 'Northern America',
-								country: 'US',
-								state: 'TX',
-								city: 'Dallas',
-								asn: 20004,
-								longitude: -96.8067,
-								latitude: 32.7831,
-								network: 'The Constant Company LLC',
-								tags: [ 'gcp-us-west4', 'datacenter-network' ],
-								resolvers: [],
-							},
-							result: { status: 'failed', rawOutput: '\n\nThe measurement timed out' },
-						},
-					],
-				});
+		do { // need to wait some time, so redis update will be finished
+			response = await requestAgent.get('/v1/measurements/measurementid').send();
+		} while (response.body.status === 'in-progress');
 
-				expect(response).to.matchApiSchema();
-			});
+		expect(response.status).to.equal(200);
+
+		expect(response.body).to.deep.include({
+			id: 'measurementid',
+			type: 'ping',
+			status: 'finished',
+			target: 'jsdelivr.com',
+			probesCount: 1,
+			locations: [{ country: 'US' }],
+			measurementOptions: { packets: 4 },
+			results: [
+				{
+					probe: {
+						continent: 'NA',
+						region: 'Northern America',
+						country: 'US',
+						state: 'TX',
+						city: 'Dallas',
+						asn: 20004,
+						longitude: -96.8067,
+						latitude: 32.7831,
+						network: 'The Constant Company LLC',
+						tags: [ 'gcp-us-west4', 'datacenter-network' ],
+						resolvers: [],
+					},
+					result: { status: 'failed', rawOutput: '\n\nThe measurement timed out' },
+				},
+			],
+		});
+
+		expect(response).to.matchApiSchema();
 	});
 });

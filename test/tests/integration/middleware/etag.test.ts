@@ -17,7 +17,7 @@ describe('etag', () => {
 		it('should include the header', async () => {
 			const response = await requestAgent.get('/v1/probes').send() as Response;
 
-			expect(response.headers.etag).to.exist;
+			expect(response.headers['etag']).to.exist;
 		});
 	});
 

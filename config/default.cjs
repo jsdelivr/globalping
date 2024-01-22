@@ -29,6 +29,7 @@ module.exports = {
 	},
 	geoip: {
 		cache: {
+			enabled: true,
 			ttl: 3 * 24 * 60 * 60 * 1000, // 3 days
 		},
 	},
