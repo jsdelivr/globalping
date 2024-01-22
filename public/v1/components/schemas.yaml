@@ -423,7 +423,7 @@ components:
               type: object
               description: |
                 Additional request headers to add to the request. The API uses the `Host` and `User-Agent` already internally and therefore overwrites them. 
-                
+
                 > **Note**: Use the `host` property in the same object to define the `Host` header.
               additionalProperties:
                 type: string
@@ -501,6 +501,9 @@ components:
         - http
     MeasurementRequest:
       description: Contains all the required data to create a measurement request.
+      externalDocs:
+        description: Read our best practises on GitHub.
+        url: https://github.com/jsdelivr/globalping
       allOf:
         - $ref: "schemas.yaml#/components/schemas/MeasurementOptionsConditions"
         - type: object
