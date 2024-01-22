@@ -1,6 +1,6 @@
 components:
   responses:
-    "400":
+    '400':
       description: If the API can't process the request due to malformed parameters or other client errors, the response returns the HTTP `400 BAD REQUEST` status code and a JSON response body with more information about the error.
       content:
         application/json:
@@ -35,7 +35,7 @@ components:
                   message: Parameter validation failed.
                   params:
                     measurement: '\"measurement\" does not match any of the allowed types'
-    "404":
+    '404':
       description: If the service can't find the requested resource, the response returns the HTTP `400 NOT FOUND` status code and a JSON response body containing more information about the error.
       content:
         application/json:
@@ -114,48 +114,48 @@ components:
       description: If the API accepts the request for processing, the response returns the status code `202 ACCEPTED` and a JSON response body containing the ID of the newly created measurement. You can use the URL from the `Location` header as a link to view the measurement status.
       headers:
         Location:
-          $ref: "headers.yaml#/components/headers/MeasurementLocation"
+          $ref: 'headers.yaml#/components/headers/MeasurementLocation'
         X-RateLimit-Limit:
-          $ref: "headers.yaml#/components/headers/RateLimitLimit"
+          $ref: 'headers.yaml#/components/headers/RateLimitLimit'
         X-RateLimit-Remaining:
-          $ref: "headers.yaml#/components/headers/RateLimitRemaining"
+          $ref: 'headers.yaml#/components/headers/RateLimitRemaining'
         X-RateLimit-Reset:
-          $ref: "headers.yaml#/components/headers/RateLimitReset"
+          $ref: 'headers.yaml#/components/headers/RateLimitReset'
       content:
         application/json:
           schema:
-            $ref: "schemas.yaml#/components/schemas/CreateMeasurementResponse"
+            $ref: 'schemas.yaml#/components/schemas/CreateMeasurementResponse'
           examples:
-            "0":
-              $ref: "examples.yaml#/components/examples/createMeasurementResponse"
+            '0':
+              $ref: 'examples.yaml#/components/examples/createMeasurementResponse'
     measurement200:
       description: A successful request returns the status code `200 OK` and a JSON response body containing the requested measurement results.
       content:
         application/json:
           schema:
             allOf:
-              - $ref: "schemas.yaml#/components/schemas/MeasurementOptionsConditions"
-              - $ref: "schemas.yaml#/components/schemas/MeasurementResultsConditions"
-              - $ref: "schemas.yaml#/components/schemas/MeasurementResponse"
+              - $ref: 'schemas.yaml#/components/schemas/MeasurementOptionsConditions'
+              - $ref: 'schemas.yaml#/components/schemas/MeasurementResultsConditions'
+              - $ref: 'schemas.yaml#/components/schemas/MeasurementResponse'
           examples:
             pingMeasurement:
-              $ref: "examples.yaml#/components/examples/getPingMeasurementResponse"
+              $ref: 'examples.yaml#/components/examples/getPingMeasurementResponse'
             tracerouteMeasurement:
-              $ref: "examples.yaml#/components/examples/getTracerouteMeasurementResponse"
+              $ref: 'examples.yaml#/components/examples/getTracerouteMeasurementResponse'
             simpleDnsMeasurement:
-              $ref: "examples.yaml#/components/examples/getSimpleDnsMeasurementResponse"
+              $ref: 'examples.yaml#/components/examples/getSimpleDnsMeasurementResponse'
             traceDnsMeasurement:
-              $ref: "examples.yaml#/components/examples/getTraceDnsMeasurementResponse"
+              $ref: 'examples.yaml#/components/examples/getTraceDnsMeasurementResponse'
             mtrMeasurement:
-              $ref: "examples.yaml#/components/examples/getMtrMeasurementResponse"
+              $ref: 'examples.yaml#/components/examples/getMtrMeasurementResponse'
             httpMeasurement:
-              $ref: "examples.yaml#/components/examples/getHttpMeasurementResponse"
+              $ref: 'examples.yaml#/components/examples/getHttpMeasurementResponse'
     probes200:
       description: A successful request returns the status code `200 OK` and a JSON response body containing a list of all currently online probes and their metadata.
       content:
         application/json:
           schema:
-            $ref: "schemas.yaml#/components/schemas/Probes"
+            $ref: 'schemas.yaml#/components/schemas/Probes'
           examples:
-            "0":
-              $ref: "examples.yaml#/components/examples/probes"
+            '0':
+              $ref: 'examples.yaml#/components/examples/probes'
