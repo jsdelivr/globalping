@@ -109,7 +109,8 @@
 		"utf-8-validate": "^6.0.3"
 	},
 	"scripts": {
-		"build": "tsc && npm run download:files && cp -r public dist",
+		"build": "tsc && npm run download:files && npm run commit:hash && cp -r public dist",
+		"commit:hash": "git rev-parse HEAD > data/LAST_API_COMMIT_HASH.txt",
 		"coverage": "npm run clean && NODE_ENV=test FAKE_PROBE_IP=api NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false c8 mocha",
 		"clean": "rimraf coverage",
 		"download:files": "tsx src/lib/download-files.ts",
