@@ -11,6 +11,7 @@ data/IP_BLACKLIST.json
 data/AWS_IP_RANGES.json
 data/GCP_IP_RANGES.json
 data/GEONAMES_CITIES.csv
+data/LAST_API_COMMIT_HASH.txt
 probes-stats/known-result.csv
 probes-stats/known-result.json
 probes-stats/all-result.csv

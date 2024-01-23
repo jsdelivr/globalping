@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import requestIp from 'request-ip';
 import type { Socket } from 'socket.io';
 
@@ -9,7 +8,7 @@ const getProbeIp = (socket: Socket) => {
 
 	// Use random ip assigned by the API
 	if (process.env['FAKE_PROBE_IP'] === 'api') {
-		return _.sample([
+		const samples = [
 			'18.200.0.1',
 			'34.140.0.10',
 			'95.155.94.127',
@@ -20,7 +19,11 @@ const getProbeIp = (socket: Socket) => {
 			'213.136.174.80',
 			'94.214.253.78',
 			'79.205.97.254',
-		]);
+		];
+		// Choosing ip based on the probe uuid to always return the same ip for the same probe.
+		const lastGroup = (socket.handshake.query['uuid'] as string).split('-').pop() || '0';
+		const index = parseInt(lastGroup, 16) % samples.length;
+		return samples[index];
 	}
 
 	// Use fake ip provided by the probe
