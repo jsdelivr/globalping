@@ -2,12 +2,9 @@ version: "3.8"
 
 services:
   redis:
-    image: redislabs/redismod:latest
+    image: redis/redis-stack-server
     ports:
       - "6379:6379"
-    volumes:
-      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
-    command: /usr/local/etc/redis/redis.conf
 
   mariadb:
     image: mariadb:10.11.5
