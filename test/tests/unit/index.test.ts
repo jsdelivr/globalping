@@ -13,6 +13,8 @@ describe('index file', () => {
 	let redis: RedisClient;
 	let persistentRedis: PersistentRedisClient;
 
+	const readFile = sinon.stub().resolves('commitHash');
+
 	before(async () => {
 		redis = getRedisClient();
 		persistentRedis = getPersistentRedisClient();
@@ -21,6 +23,7 @@ describe('index file', () => {
 	beforeEach(async () => {
 		sinon.resetHistory();
 		await td.replaceEsm('node:cluster', null, cluster);
+		await td.replaceEsm('node:fs/promises', { readFile, writeFile: sinon.stub() });
 	});
 
 	after(() => {
@@ -44,15 +47,33 @@ describe('index file', () => {
 		expect(cluster.fork.callCount).to.equal(config.get<number>('server.processes'));
 	});
 
-	it('master should flush non-persistent redis db on startup', async () => {
+	it('master should flush non-persistent redis if commits hashes do not match', async () => {
 		redis.set('testfield', 'testvalue');
 		persistentRedis.set('testfield', 'testvalue');
+		readFile.resolves('oldCommitHash');
+
+		persistentRedis.set('LAST_API_COMMIT_HASH_test', 'commitHash');
 
 		await import('../../../src/index.js');
 
-		const value2 = await redis.get('testfield');
-		const persistentValue2 = await persistentRedis.get('testfield');
-		expect(value2).to.equal(null);
-		expect(persistentValue2).to.equal('testvalue');
+		const value = await redis.get('testfield');
+		const persistentValue = await persistentRedis.get('testfield');
+		expect(value).to.equal(null);
+		expect(persistentValue).to.equal('testvalue');
+	});
+
+	it('master should not flush non-persistent redis if commits hashes match', async () => {
+		redis.set('testfield', 'testvalue');
+		persistentRedis.set('testfield', 'testvalue');
+		readFile.resolves('commitHash');
+
+		persistentRedis.set('LAST_API_COMMIT_HASH_test', 'commitHash');
+
+		await import('../../../src/index.js');
+
+		const value = await redis.get('testfield');
+		const persistentValue = await persistentRedis.get('testfield');
+		expect(value).to.equal('testvalue');
+		expect(persistentValue).to.equal('testvalue');
 	});
 });
