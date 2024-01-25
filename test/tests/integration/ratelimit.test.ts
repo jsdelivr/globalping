@@ -1,16 +1,15 @@
 import type { Server } from 'node:http';
 import request, { type Response } from 'supertest';
 import requestIp from 'request-ip';
-import type { RateLimiterRedis } from 'rate-limiter-flexible';
 import { expect } from 'chai';
 import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
+import { anonymousRateLimiter } from '../../../src/lib/rate-limiter.js';
 
 describe('rate limiter', () => {
 	let app: Server;
 	let requestAgent: any;
 	let clientIpv6: string;
-	let rateLimiterInstance: RateLimiterRedis;
 
 	before(async () => {
 		app = await getTestServer();
@@ -21,9 +20,6 @@ describe('rate limiter', () => {
 		const clientIp = requestIp.getClientIp(httpResponse.req);
 		// Koa sees ipv6-ipv4 monster
 		clientIpv6 = `::ffff:${clientIp ?? '127.0.0.1'}`;
-
-		const rateLimiter = await import('../../../src/lib/rate-limiter.js');
-		rateLimiterInstance = rateLimiter.default;
 
 		nockGeoIpProviders();
 		nockGeoIpProviders();
@@ -37,7 +33,7 @@ describe('rate limiter', () => {
 
 
 	afterEach(async () => {
-		await rateLimiterInstance.delete(clientIpv6);
+		await anonymousRateLimiter.delete(clientIpv6);
 	});
 
 	after(async () => {
@@ -95,7 +91,7 @@ describe('rate limiter', () => {
 
 	describe('access', () => {
 		it('should succeed (limit not reached)', async () => {
-			await rateLimiterInstance.set(clientIpv6, 0, 0);
+			await anonymousRateLimiter.set(clientIpv6, 0, 0);
 
 			const response = await requestAgent.post('/v1/measurements').send({
 				type: 'ping',
@@ -106,7 +102,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should fail (limit reached) (start at 100)', async () => {
-			await rateLimiterInstance.set(clientIpv6, 100000, 0);
+			await anonymousRateLimiter.set(clientIpv6, 100000, 0);
 
 			const response = await requestAgent.post('/v1/measurements').send({
 				type: 'ping',
@@ -117,7 +113,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should consume all points successfully or none at all (cost > remaining > 0)', async () => {
-			await rateLimiterInstance.set(clientIpv6, 99999, 0); // 1 remaining
+			await anonymousRateLimiter.set(clientIpv6, 99999, 0); // 1 remaining
 
 			const response = await requestAgent.post('/v1/measurements').send({
 				type: 'ping',

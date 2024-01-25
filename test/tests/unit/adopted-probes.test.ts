@@ -96,7 +96,7 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		expect(sqlStub.callCount).to.equal(1);
-		expect(sqlStub.args[0]).deep.equal([{ probes: 'gp_adopted_probes' }]);
+		expect(sqlStub.args[0]).deep.equal([ 'gp_adopted_probes' ]);
 		expect(selectStub.callCount).to.equal(1);
 	});
 
