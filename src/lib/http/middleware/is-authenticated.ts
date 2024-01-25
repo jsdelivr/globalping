@@ -13,14 +13,14 @@ export const isAuthenticatedMw = async (ctx: Context, next: Next) => {
 		}
 
 		const origin = ctx.get('Origin');
-		const isValid = await auth.validate(parts[1]!, origin);
+		const userId = await auth.validate(parts[1]!, origin);
 
-		if (!isValid) {
+		if (!userId) {
 			ctx.status = 401;
 			return;
 		}
 
-		ctx['isAuthenticated'] = true;
+		ctx['isAuthenticated'] = userId;
 	}
 
 	return next();

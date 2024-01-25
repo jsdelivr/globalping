@@ -5,10 +5,12 @@ import { scopedLogger } from '../logger.js';
 import { client } from '../sql/client.js';
 
 export const GP_TOKENS_TABLE = 'gp_tokens';
+export const USERS_TABLE = 'directus_users';
 
 const logger = scopedLogger('auth');
 
 type Token = {
+	userId: string,
 	value: string,
 	expire: Date | null,
 	origins: string[],
@@ -63,7 +65,15 @@ export class Auth {
 	}
 
 	async fetchTokens (filter: Partial<Row> = {}) {
-		const rows = await this.sql(GP_TOKENS_TABLE).select<Row[]>('value', 'expire', 'origins', 'date_last_used').where(filter);
+		const rows = await this.sql({ tokens: GP_TOKENS_TABLE })
+			.join({ users: USERS_TABLE }, 'tokens.user_created', '=', 'users.id')
+			.select<Row[]>({
+				userId: 'users.id',
+				value: 'tokens.value',
+				expire: 'tokens.expire',
+				origins: 'tokens.origins',
+				dateLastUser: 'tokens.date_last_used',
+			}).where(filter);
 
 		const tokens: Token[] = rows.map(row => ({
 			...row,
@@ -78,7 +88,7 @@ export class Auth {
 		const hash = createHash('sha256').update(bytes).digest('base64');
 
 		if (this.invalidTokens.get(hash)) {
-			return false;
+			return null;
 		}
 
 		let token = this.validTokens.get(hash);
@@ -88,14 +98,14 @@ export class Auth {
 		}
 
 		if (!token) {
-			return false;
+			return null;
 		}
 
 		if (!this.isValidOrigin(origin, token.origins)) {
-			return false;
+			return null;
 		}
 
-		return true;
+		return token.userId;
 	}
 
 	private isExpired (date: Date) {
