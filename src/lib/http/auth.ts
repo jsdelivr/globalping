@@ -105,7 +105,16 @@ export class Auth {
 			return null;
 		}
 
+		await this.updateLastUsedDate(token);
 		return token.userId;
+	}
+
+	private async updateLastUsedDate (token: Token) {
+		if (!token.date_last_used || !this.isToday(token.date_last_used)) {
+			const date = new Date();
+			await this.sql(GP_TOKENS_TABLE).where({ value: token.value }).update({ date_last_used: date });
+			token.date_last_used = date;
+		}
 	}
 
 	private isExpired (date: Date) {
@@ -116,6 +125,11 @@ export class Auth {
 
 	private isValidOrigin (origin: string, validOrigins: string[]) {
 		return validOrigins.length > 0 ? validOrigins.includes(origin) : true;
+	}
+
+	private isToday (date: Date) {
+		const currentDate = new Date();
+		return date.toDateString() === currentDate.toDateString();
 	}
 }
 
