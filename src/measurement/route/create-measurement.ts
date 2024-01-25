@@ -5,7 +5,7 @@ import { getMeasurementRunner } from '../runner.js';
 import { bodyParser } from '../../lib/http/middleware/body-parser.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 import { validate } from '../../lib/http/middleware/validate.js';
-import { isAuthenticatedMw } from '../../lib/http/middleware/is-authenticated.js';
+import { authenticate } from '../../lib/http/middleware/authenticate.js';
 import { schema } from '../schema/global-schema.js';
 
 const hostConfig = config.get<string>('server.host');
@@ -26,5 +26,5 @@ const handle = async (ctx: Context): Promise<void> => {
 export const registerCreateMeasurementRoute = (router: Router): void => {
 	router
 		.options('/measurements', '/measurements', corsAuthHandler())
-		.post('/measurements', '/measurements', isAuthenticatedMw, bodyParser(), validate(schema), handle);
+		.post('/measurements', '/measurements', authenticate, bodyParser(), validate(schema), handle);
 };
