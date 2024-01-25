@@ -266,7 +266,7 @@ describe('MeasurementRunner', () => {
 		sandbox.restore();
 	});
 
-	it('should call ratelimiter with the number of online probes', async () => {
+	it('should call rate limiter with the number of online probes', async () => {
 		const request = {
 			type: 'ping' as const,
 			target: 'jsdelivr.com',

@@ -22,7 +22,7 @@ describe('rate limiter', () => {
 		// Koa sees ipv6-ipv4 monster
 		clientIpv6 = `::ffff:${clientIp ?? '127.0.0.1'}`;
 
-		const rateLimiter = await import('../../../src/lib/ratelimiter.js');
+		const rateLimiter = await import('../../../src/lib/rate-limiter.js');
 		rateLimiterInstance = rateLimiter.default;
 
 		nockGeoIpProviders();
