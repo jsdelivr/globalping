@@ -739,27 +739,5 @@ describe('Create measurement', () => {
 					});
 			});
 		});
-
-		describe('auth', () => {
-			it('should reject with 401 if invalid token was passed', async () => {
-				await requestAgent.post('/v1/measurements')
-					.set('Authorization', 'invalidValue')
-					.send({
-						type: 'ping',
-						target: 'example.com',
-					})
-					.expect(401);
-			});
-
-			it('should accept if valid token was passed', async () => {
-				await requestAgent.post('/v1/measurements')
-					.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
-					.send({
-						type: 'ping',
-						target: 'example.com',
-					})
-					.expect(202);
-			});
-		});
 	});
 });

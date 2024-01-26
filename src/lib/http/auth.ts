@@ -9,8 +9,8 @@ export const USERS_TABLE = 'directus_users';
 
 const logger = scopedLogger('auth');
 
-type Token = {
-	userId: string,
+export type Token = {
+	user_created: string,
 	value: string,
 	expire: Date | null,
 	origins: string[],
@@ -36,13 +36,19 @@ export class Auth {
 
 	async syncTokens () {
 		const tokens = await this.fetchTokens();
+		const newValidTokens = new TTLCache<string, Token>({ ttl: 2 * 60 * 1000 });
+		const newInvalidTokens = new TTLCache<string, true>({ ttl: 2 * 60 * 1000 });
+
 		tokens.forEach((token) => {
 			if (token.expire && this.isExpired(token.expire)) {
-				this.invalidTokens.set(token.value, true);
+				newInvalidTokens.set(token.value, true);
 			} else {
-				this.validTokens.set(token.value, token);
+				newValidTokens.set(token.value, token);
 			}
 		});
+
+		this.validTokens = newValidTokens;
+		this.invalidTokens = newInvalidTokens;
 	}
 
 	async syncSpecificToken (hash: string) {
@@ -65,15 +71,8 @@ export class Auth {
 	}
 
 	async fetchTokens (filter: Partial<Row> = {}) {
-		const rows = await this.sql({ tokens: GP_TOKENS_TABLE })
-			.join({ users: USERS_TABLE }, 'tokens.user_created', '=', 'users.id')
-			.select<Row[]>({
-				userId: 'users.id',
-				value: 'tokens.value',
-				expire: 'tokens.expire',
-				origins: 'tokens.origins',
-				dateLastUser: 'tokens.date_last_used',
-			}).where(filter);
+		const rows = await this.sql(GP_TOKENS_TABLE)
+			.select<Row[]>([ 'user_created', 'value', 'expire', 'origins', 'date_last_used' ]).where(filter);
 
 		const tokens: Token[] = rows.map(row => ({
 			...row,
@@ -106,7 +105,7 @@ export class Auth {
 		}
 
 		await this.updateLastUsedDate(token);
-		return token.userId;
+		return token.user_created;
 	}
 
 	private async updateLastUsedDate (token: Token) {
