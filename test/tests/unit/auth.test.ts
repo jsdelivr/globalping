@@ -93,4 +93,38 @@ describe('Auth', () => {
 		expect(user).to.equal('user1');
 		expect(selectStub.callCount).to.equal(1);
 	});
+
+	it('should not update date_last_used if it is actual', async () => {
+		const auth = new Auth(sqlStub as unknown as Knex);
+
+		selectStub.resolves([{
+			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			user_created: 'user1',
+			date_last_used: new Date(),
+		}]);
+
+		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+
+		expect(updateStub.callCount).to.equal(0);
+	});
+
+	it('should update date_last_used only once', async () => {
+		const auth = new Auth(sqlStub as unknown as Knex);
+
+		selectStub.resolves([{
+			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			user_created: 'user1',
+		}]);
+
+		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+
+		expect(updateStub.args[0]).to.deep.equal([{ date_last_used: new Date() }]);
+		expect(updateStub.callCount).to.equal(1);
+	});
 });

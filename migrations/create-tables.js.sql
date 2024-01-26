@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS directus_users (
   id CHAR(36),
-  github VARCHAR(255)
+  github_username VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS gp_adopted_probes (

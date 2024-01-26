@@ -9,6 +9,8 @@ export const USERS_TABLE = 'directus_users';
 
 const logger = scopedLogger('auth');
 
+const TOKEN_TTL = 2 * 60 * 1000;
+
 export type Token = {
 	user_created: string,
 	value: string,
@@ -22,8 +24,8 @@ type Row = Omit<Token, 'origins'> & {
 }
 
 export class Auth {
-	private validTokens = new TTLCache<string, Token>({ ttl: 2 * 60 * 1000 });
-	private invalidTokens = new TTLCache<string, true>({ ttl: 2 * 60 * 1000 });
+	private validTokens = new TTLCache<string, Token>({ ttl: TOKEN_TTL });
+	private invalidTokens = new TTLCache<string, true>({ ttl: TOKEN_TTL });
 	constructor (private readonly sql: Knex) {}
 
 	scheduleSync () {
@@ -36,8 +38,8 @@ export class Auth {
 
 	async syncTokens () {
 		const tokens = await this.fetchTokens();
-		const newValidTokens = new TTLCache<string, Token>({ ttl: 2 * 60 * 1000 });
-		const newInvalidTokens = new TTLCache<string, true>({ ttl: 2 * 60 * 1000 });
+		const newValidTokens = new TTLCache<string, Token>({ ttl: TOKEN_TTL });
+		const newInvalidTokens = new TTLCache<string, true>({ ttl: TOKEN_TTL });
 
 		tokens.forEach((token) => {
 			if (token.expire && this.isExpired(token.expire)) {

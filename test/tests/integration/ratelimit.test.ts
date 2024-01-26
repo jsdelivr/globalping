@@ -5,6 +5,8 @@ import { expect } from 'chai';
 import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { anonymousRateLimiter, authenticatedRateLimiter } from '../../../src/lib/rate-limiter.js';
+import { client } from '../../../src/lib/sql/client.js';
+import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
 
 describe('rate limiter', () => {
 	let app: Server;
@@ -29,6 +31,11 @@ describe('rate limiter', () => {
 
 		probe1.emit('probe:status:update', 'ready');
 		probe2.emit('probe:status:update', 'ready');
+
+		await client(GP_TOKENS_TABLE).insert({
+			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+			value: '7emhYIar8eLtwAAjyXUn+h3Cj+Xc9BQcLMC6JAX9fHQ=',
+		});
 	});
 
 
@@ -39,6 +46,7 @@ describe('rate limiter', () => {
 
 	after(async () => {
 		await deleteFakeProbes();
+		await client(GP_TOKENS_TABLE).where({ value: '7emhYIar8eLtwAAjyXUn+h3Cj+Xc9BQcLMC6JAX9fHQ=' }).delete();
 	});
 
 	describe('headers', () => {
