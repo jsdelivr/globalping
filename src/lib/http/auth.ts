@@ -71,8 +71,8 @@ export class Auth {
 	}
 
 	async fetchTokens (filter: Partial<Row> = {}) {
-		const rows = await this.sql(GP_TOKENS_TABLE)
-			.select<Row[]>([ 'user_created', 'value', 'expire', 'origins', 'date_last_used' ]).where(filter);
+		const rows = await this.sql(GP_TOKENS_TABLE).where(filter)
+			.select<Row[]>([ 'user_created', 'value', 'expire', 'origins', 'date_last_used' ]);
 
 		const tokens: Token[] = rows.map(row => ({
 			...row,
