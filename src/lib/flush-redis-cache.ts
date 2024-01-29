@@ -17,9 +17,13 @@ export async function flushRedisCache () {
 	const filePath = path.join(path.resolve(), 'data/LAST_API_COMMIT_HASH.txt');
 
 	const lastCommitHashInRedis = await persistentRedis.get(`LAST_API_COMMIT_HASH_${hostname}`);
-	const currentLastCommitHash = (await readFile(filePath, 'utf8')).trim();
+	const currentLastCommitHash = (await readFile(filePath, 'utf8').catch(() => '')).trim();
 
-	if (lastCommitHashInRedis !== currentLastCommitHash) {
+	if (process.env['NODE_ENV'] === 'production' && !currentLastCommitHash) {
+		throw new Error(`Current commit hash missing in ${filePath}`);
+	}
+
+	if (!currentLastCommitHash || lastCommitHashInRedis !== currentLastCommitHash) {
 		logger.info('Latest commit hash changed. Clearing redis cache.');
 		await redis.flushDb();
 		await persistentRedis.set(`LAST_API_COMMIT_HASH_${hostname}`, currentLastCommitHash);
