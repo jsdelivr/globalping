@@ -9,7 +9,7 @@ import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 describe('Timeout results', () => {
 	let probe: Socket;
 	let addFakeProbe: (events?: Record<string, any>) => Promise<Socket>;
-	let deleteFakeProbes: (socket: Socket) => Promise<void>;
+	let deleteFakeProbes: () => Promise<void>;
 	let getTestServer;
 	let requestAgent: Agent;
 	let sandbox: sinon.SinonSandbox;
@@ -32,7 +32,7 @@ describe('Timeout results', () => {
 	});
 
 	afterEach(async () => {
-		await deleteFakeProbes(probe);
+		await deleteFakeProbes();
 		nock.cleanAll();
 	});
 

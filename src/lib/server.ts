@@ -9,6 +9,7 @@ import { populateCitiesList } from './geoip/city-approximation.js';
 import { adoptedProbes } from './adopted-probes.js';
 import { reconnectProbes } from './ws/helper/reconnect-probes.js';
 import { initPersistentRedisClient } from './redis/persistent-client.js';
+import { auth } from './http/auth.js';
 
 export const createServer = async (): Promise<Server> => {
 	await initRedisClient();
@@ -27,6 +28,9 @@ export const createServer = async (): Promise<Server> => {
 
 	await adoptedProbes.syncDashboardData();
 	adoptedProbes.scheduleSync();
+
+	await auth.syncTokens();
+	auth.scheduleSync();
 
 	reconnectProbes();
 

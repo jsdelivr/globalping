@@ -26,6 +26,7 @@ export default function wallaby () {
 			'data/DOMAIN_BLACKLIST.json',
 			'data/IP_BLACKLIST.json',
 			'data/GEONAMES_CITIES.csv',
+			'data/LAST_API_COMMIT_HASH.txt',
 		],
 		tests: [
 			'test/tests/**/*.test.ts',
