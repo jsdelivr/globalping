@@ -22,7 +22,8 @@
 			"rules": {
 				"@typescript-eslint/no-floating-promises": "off",
 				"no-duplicate-imports": "off",
-				"no-extra-parens": "off"
+				"no-extra-parens": "off",
+				"@typescript-eslint/dot-notation": "off"
 			}
 		},
 		{

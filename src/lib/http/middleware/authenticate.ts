@@ -21,7 +21,7 @@ export const authenticate = async (ctx: Context, next: Next) => {
 			return;
 		}
 
-		ctx['auth'] = userId;
+		ctx.state['userId'] = userId;
 	}
 
 	return next();
