@@ -26,3 +26,5 @@ export const authenticate: ExtendedMiddleware = async (ctx, next) => {
 
 	return next();
 };
+
+export type AuthenticateState = { userId?: string };
