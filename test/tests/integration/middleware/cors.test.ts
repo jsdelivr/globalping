@@ -26,4 +26,18 @@ describe('cors', () => {
 			expect(response.headers['access-control-allow-origin']).to.equal('*');
 		});
 	});
+
+	describe('Access-Control-Allow-Headers header', () => {
+		it('should include the header with value of *', async () => {
+			const response = await requestAgent.get('/v1/').set('Origin', 'elocast.com').send() as Response;
+
+			expect(response.headers['access-control-allow-headers']).to.equal('*');
+		});
+
+		it('should include the header with value of *, Authorization', async () => {
+			const response = await requestAgent.options('/v1/measurements').send() as Response;
+
+			expect(response.headers['access-control-allow-headers']).to.equal('*, Authorization');
+		});
+	});
 });

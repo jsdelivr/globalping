@@ -9,7 +9,7 @@ import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 describe('Create measurement request', () => {
 	let probe: Socket;
 	let addFakeProbe: (events?: Record<string, any>) => Promise<Socket>;
-	let deleteFakeProbes: (socket: Socket) => Promise<void>;
+	let deleteFakeProbes: () => Promise<void>;
 	let getTestServer;
 	let requestAgent: Agent;
 
@@ -36,7 +36,7 @@ describe('Create measurement request', () => {
 	});
 
 	afterEach(async () => {
-		await deleteFakeProbes(probe);
+		await deleteFakeProbes();
 		nock.cleanAll();
 	});
 

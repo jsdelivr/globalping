@@ -1,4 +1,9 @@
-CREATE TABLE IF NOT EXISTS adopted_probes (
+CREATE TABLE IF NOT EXISTS directus_users (
+  id CHAR(36),
+  github_username VARCHAR(255)
+);
+
+CREATE TABLE IF NOT EXISTS gp_adopted_probes (
   id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_created CHAR(36),
   date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -28,4 +33,14 @@ CREATE TABLE IF NOT EXISTS directus_notifications (
   timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   subject VARCHAR(255),
   message TEXT
+);
+
+CREATE TABLE IF NOT EXISTS gp_tokens (
+  id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+	user_created CHAR(36),
+	name VARCHAR(255),
+	value VARCHAR(255),
+	origins LONGTEXT,
+	expire DATE,
+	date_last_used DATE
 );
