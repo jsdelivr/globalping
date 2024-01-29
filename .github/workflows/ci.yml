@@ -52,5 +52,9 @@ jobs:
         run: |
           npm run lint
           npm run coverage
-          npm run test:dist
           npm run test:portman
+      - name: Test Dist
+        run: |
+          rm -rf node_modules
+          npm ci --omit=dev
+          npm run test:dist
