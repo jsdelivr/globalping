@@ -1,4 +1,3 @@
-import type { Context } from 'koa';
 import * as sinon from 'sinon';
 import { Server } from 'socket.io';
 import { expect } from 'chai';
@@ -10,6 +9,7 @@ import type { Probe } from '../../../../src/probe/types.js';
 import type { MeasurementRunner } from '../../../../src/measurement/runner.js';
 import type { MeasurementRecord, MeasurementResultMessage } from '../../../../src/measurement/types.js';
 import createHttpError from 'http-errors';
+import type { ExtendedContext } from '../../../../src/types.js';
 
 const getProbe = (id: number) => ({ client: id } as unknown as Probe);
 
@@ -73,7 +73,7 @@ describe('MeasurementRunner', () => {
 			request: {
 				body: request,
 			},
-		} as unknown as Context);
+		} as unknown as ExtendedContext);
 
 
 		expect(router.findMatchingProbes.callCount).to.equal(1);
@@ -175,7 +175,7 @@ describe('MeasurementRunner', () => {
 			request: {
 				body: request,
 			},
-		} as unknown as Context);
+		} as unknown as ExtendedContext);
 
 
 		expect(router.findMatchingProbes.callCount).to.equal(1);
@@ -266,7 +266,7 @@ describe('MeasurementRunner', () => {
 		sandbox.restore();
 	});
 
-	it('should call ratelimiter with the number of online probes', async () => {
+	it('should call rate limiter with the number of online probes', async () => {
 		const request = {
 			type: 'ping' as const,
 			target: 'jsdelivr.com',
@@ -290,7 +290,7 @@ describe('MeasurementRunner', () => {
 			request: {
 				body: request,
 			},
-		} as unknown as Context;
+		} as unknown as ExtendedContext;
 
 		await runner.run(ctx);
 
@@ -322,7 +322,7 @@ describe('MeasurementRunner', () => {
 			request: {
 				body: request,
 			},
-		} as unknown as Context).catch((err: unknown) => err);
+		} as unknown as ExtendedContext).catch((err: unknown) => err);
 		expect(err).to.deep.equal(createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' }));
 		expect(store.markFinished.callCount).to.equal(0);
 	});
@@ -351,7 +351,7 @@ describe('MeasurementRunner', () => {
 			request: {
 				body: request,
 			},
-		} as unknown as Context);
+		} as unknown as ExtendedContext);
 
 		expect(store.markFinished.callCount).to.equal(1);
 		expect(store.markFinished.args[0]).to.deep.equal([ 'measurementid' ]);

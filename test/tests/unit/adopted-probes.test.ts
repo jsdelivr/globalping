@@ -4,78 +4,78 @@ import * as sinon from 'sinon';
 import { AdoptedProbes } from '../../../src/lib/adopted-probes.js';
 import type { Probe } from '../../../src/probe/types.js';
 
-const defaultAdoptedProbe = {
-	userId: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
-	username: 'jimaek',
-	ip: '1.1.1.1',
-	uuid: '1-1-1-1-1',
-	lastSyncDate: new Date('1970-01-01'),
-	tags: '[{"prefix":"jimaek","value":"dashboardtag"}]',
-	isCustomCity: 0,
-	status: 'ready',
-	version: '0.26.0',
-	country: 'IE',
-	state: null,
-	countryOfCustomCity: '',
-	city: 'Dublin',
-	latitude: 53.3331,
-	longitude: -6.2489,
-	asn: 16509,
-	network: 'Amazon.com, Inc.',
-};
-
-const defaultConnectedProbe: Probe = {
-	ipAddress: '1.1.1.1',
-	uuid: '1-1-1-1-1',
-	status: 'ready',
-	version: '0.26.0',
-	nodeVersion: 'v18.17.0',
-	location: {
-		continent: 'EU',
-		region: 'Northern Europe',
+describe('AdoptedProbes', () => {
+	const defaultAdoptedProbe = {
+		userId: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
+		username: 'jimaek',
+		ip: '1.1.1.1',
+		uuid: '1-1-1-1-1',
+		lastSyncDate: new Date('1970-01-01'),
+		tags: '[{"prefix":"jimaek","value":"dashboardtag"}]',
+		isCustomCity: 0,
+		status: 'ready',
+		version: '0.26.0',
 		country: 'IE',
 		state: null,
+		countryOfCustomCity: '',
 		city: 'Dublin',
-		normalizedCity: 'dublin',
-		asn: 16509,
 		latitude: 53.3331,
 		longitude: -6.2489,
+		asn: 16509,
 		network: 'Amazon.com, Inc.',
-		normalizedNetwork: 'amazon.com, inc.',
-	},
-	isHardware: false,
-	hardwareDevice: null,
-	tags: [],
-	index: [],
-	client: '',
-	host: '',
-	resolvers: [],
-	stats: {
-		cpu: {
-			count: 0,
-			load: [],
+	};
+
+	const defaultConnectedProbe: Probe = {
+		ipAddress: '1.1.1.1',
+		uuid: '1-1-1-1-1',
+		status: 'ready',
+		version: '0.26.0',
+		nodeVersion: 'v18.17.0',
+		location: {
+			continent: 'EU',
+			region: 'Northern Europe',
+			country: 'IE',
+			state: null,
+			city: 'Dublin',
+			normalizedCity: 'dublin',
+			asn: 16509,
+			latitude: 53.3331,
+			longitude: -6.2489,
+			network: 'Amazon.com, Inc.',
+			normalizedNetwork: 'amazon.com, inc.',
 		},
-		jobs: { count: 0 },
-	},
-};
+		isHardware: false,
+		hardwareDevice: null,
+		tags: [],
+		index: [],
+		client: '',
+		host: '',
+		resolvers: [],
+		stats: {
+			cpu: {
+				count: 0,
+				load: [],
+			},
+			jobs: { count: 0 },
+		},
+	};
 
-const selectStub = sinon.stub();
-const updateStub = sinon.stub();
-const deleteStub = sinon.stub();
-const rawStub = sinon.stub();
-const whereStub = sinon.stub().returns({
-	update: updateStub,
-	delete: deleteStub,
-});
-const sqlStub = sinon.stub().returns({
-	select: selectStub,
-	where: whereStub,
-}) as sinon.SinonStub<any[], any> & {raw: any};
-sqlStub.raw = rawStub;
-const fetchSocketsStub = sinon.stub().resolves([]);
-let sandbox: sinon.SinonSandbox;
+	const selectStub = sinon.stub();
+	const updateStub = sinon.stub();
+	const deleteStub = sinon.stub();
+	const rawStub = sinon.stub();
+	const whereStub = sinon.stub().returns({
+		update: updateStub,
+		delete: deleteStub,
+	});
+	const sqlStub = sinon.stub().returns({
+		select: selectStub,
+		where: whereStub,
+	}) as sinon.SinonStub<any[], any> & {raw: any};
+	sqlStub.raw = rawStub;
+	const fetchSocketsStub = sinon.stub().resolves([]);
+	let sandbox: sinon.SinonSandbox;
 
-describe('AdoptedProbes', () => {
 	beforeEach(() => {
 		sandbox = sinon.createSandbox({ useFakeTimers: true });
 		sinon.resetHistory();
@@ -96,7 +96,7 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		expect(sqlStub.callCount).to.equal(1);
-		expect(sqlStub.args[0]).deep.equal([{ probes: 'gp_adopted_probes' }]);
+		expect(sqlStub.args[0]).deep.equal([ 'gp_adopted_probes' ]);
 		expect(selectStub.callCount).to.equal(1);
 	});
 

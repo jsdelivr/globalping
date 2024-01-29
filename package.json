@@ -5,6 +5,7 @@
 	"type": "module",
 	"main": "dist/src/index.js",
 	"dependencies": {
+		"@isaacs/ttlcache": "^1.4.1",
 		"@koa/router": "^12.0.1",
 		"@maxmind/geoip2-node": "^4.2.0",
 		"@redocly/openapi-core": "^1.6.0",

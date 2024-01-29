@@ -47,7 +47,8 @@ module.exports = {
 		fetchSocketsCacheTTL: 1000,
 	},
 	measurement: {
-		rateLimit: 100000,
+		anonymousRateLimit: 100000,
+		authenticatedRateLimit: 250,
 		rateLimitReset: 3600,
 		maxInProgressProbes: 5,
 		// Timeout after which measurement will be marked as finished even if not all probes respond

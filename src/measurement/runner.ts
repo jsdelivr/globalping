@@ -1,4 +1,3 @@
-import type { Context } from 'koa';
 import config from 'config';
 import type { Server } from 'socket.io';
 import createHttpError from 'http-errors';
@@ -9,7 +8,8 @@ import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
 import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage, UserRequest } from './types.js';
-import { rateLimit } from '../lib/ratelimiter.js';
+import { rateLimit } from '../lib/rate-limiter.js';
+import type { ExtendedContext } from '../types.js';
 
 export class MeasurementRunner {
 	constructor (
@@ -20,7 +20,7 @@ export class MeasurementRunner {
 		private readonly metrics: MetricsAgent,
 	) {}
 
-	async run (ctx: Context): Promise<{measurementId: string; probesCount: number;}> {
+	async run (ctx: ExtendedContext): Promise<{measurementId: string; probesCount: number;}> {
 		const userRequest = ctx.request.body as UserRequest;
 		const { onlineProbesMap, allProbes, request } = await this.router.findMatchingProbes(userRequest);
 

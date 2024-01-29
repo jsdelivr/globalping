@@ -10,7 +10,7 @@ import type { AdoptedProbes } from '../../../../src/lib/adopted-probes.js';
 
 describe('Create measurement', () => {
 	let addFakeProbe: () => Promise<Socket>;
-	let deleteFakeProbes: (socket: Socket) => Promise<void>;
+	let deleteFakeProbes: () => Promise<void>;
 	let getTestServer;
 	let requestAgent: Agent;
 	let adoptedProbes: AdoptedProbes;
@@ -68,7 +68,7 @@ describe('Create measurement', () => {
 		});
 
 		after(async () => {
-			await deleteFakeProbes(probe);
+			await deleteFakeProbes();
 			nock.cleanAll();
 		});
 

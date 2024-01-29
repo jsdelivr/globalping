@@ -142,7 +142,7 @@ export class AdoptedProbes {
 	}
 
 	private async fetchAdoptedProbes () {
-		const rows = await this.sql({ probes: ADOPTED_PROBES_TABLE }).select<Row[]>();
+		const rows = await this.sql(ADOPTED_PROBES_TABLE).select<Row[]>();
 
 
 		const adoptedProbes: AdoptedProbe[] = rows.map(row => ({
