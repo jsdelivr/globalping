@@ -4,4 +4,6 @@ import type { DocsLinkContext } from './lib/http/middleware/docs-link.js';
 
 export type CustomState = Koa.DefaultState;
 export type CustomContext = Koa.DefaultContext & DocsLinkContext;
+
+export type ExtendedContext = Router.RouterContext<CustomState, CustomContext>;
 export type ExtendedMiddleware = Router.Middleware<CustomState, CustomContext>;

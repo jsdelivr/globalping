@@ -1,7 +1,7 @@
-import type { Context, Next } from 'koa';
 import { auth } from '../auth.js';
+import type { ExtendedMiddleware } from '../../../types.js';
 
-export const authenticate = async (ctx: Context, next: Next) => {
+export const authenticate: ExtendedMiddleware = async (ctx, next) => {
 	const { headers } = ctx.request;
 
 	if (headers && headers.authorization) {

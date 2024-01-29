@@ -4,6 +4,7 @@ import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 import requestIp from 'request-ip';
 import { createPersistentRedisClient } from './redis/persistent-client.js';
 import createHttpError from 'http-errors';
+import type { ExtendedContext } from '../types.js';
 
 const redisClient = await createPersistentRedisClient({ legacyMode: true });
 
@@ -21,7 +22,7 @@ export const authenticatedRateLimiter = new RateLimiterRedis({
 	duration: config.get<number>('measurement.rateLimitReset'),
 });
 
-export const rateLimit = async (ctx: Context, numberOfProbes: number) => {
+export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) => {
 	if (ctx['isAdmin']) {
 		return;
 	}
