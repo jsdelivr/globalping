@@ -21,7 +21,7 @@ export const authenticate: ExtendedMiddleware = async (ctx, next) => {
 			return;
 		}
 
-		ctx.state['userId'] = userId;
+		ctx.state.userId = userId;
 	}
 
 	return next();

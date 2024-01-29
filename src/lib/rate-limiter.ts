@@ -30,9 +30,9 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 	let rateLimiter: RateLimiterRedis;
 	let id: string;
 
-	if (ctx.state['userId']) {
+	if (ctx.state.userId) {
 		rateLimiter = authenticatedRateLimiter;
-		id = ctx.state['userId'] as string;
+		id = ctx.state.userId;
 	} else {
 		rateLimiter = anonymousRateLimiter;
 		id = requestIp.getClientIp(ctx.req) ?? '';
