@@ -8,7 +8,7 @@ const ALLOWED_LOCATION_TYPES = [ 'continent', 'region', 'country', 'state', 'cit
 const ALLOWED_TRACE_PROTOCOLS = [ 'TCP', 'UDP', 'ICMP' ];
 
 // dns
-const ALLOWED_DNS_TYPES = [ 'A', 'AAAA', 'ANY', 'CNAME', 'DNSKEY', 'DS', 'MX', 'NS', 'NSEC', 'PTR', 'RRSIG', 'SOA', 'TXT', 'SRV' ];
+const ALLOWED_DNS_TYPES = [ 'A', 'AAAA', 'ANY', 'CNAME', 'DNSKEY', 'DS', 'HTTPS', 'MX', 'NS', 'NSEC', 'PTR', 'RRSIG', 'SOA', 'TXT', 'SRV' ];
 const ALLOWED_DNS_PROTOCOLS = [ 'UDP', 'TCP' ];
 
 // mtr
