@@ -324,6 +324,7 @@ components:
                 - CNAME
                 - DNSKEY
                 - DS
+                - HTTPS
                 - MX
                 - NS
                 - NSEC
