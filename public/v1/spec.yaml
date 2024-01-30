@@ -2,27 +2,29 @@ openapi: 3.1.0
 info:
   title: Globalping API
   summary: The public Globalping API.
+  # TODO: update in https://github.com/jsdelivr/globalping/issues/475: However, it implements rate limits to ensure fair usage and reliability – see the "Limits" section in our [GitHub Readme](https://github.com/jsdelivr/globalping) to learn more about limits and how to increase them.
   description: |
     The Globalping API allows you to monitor, debug, and benchmark your internet infrastructure using a globally distributed network of probes.
 
     The API is public, free to use, and doesn't require authentication.
-    However, it implements rate limits to ensure fair usage and reliability – see the "Limits" section in our [GitHub Readme](https://github.com/jsdelivr/globalping) to learn more about limits and how to increase them.
-
     Additionally, the API is RESTful, accepts JSON-encoded request bodies, returns JSON-encoded responses, and uses standard HTTP response codes to indicate the success and failure of requests.
+
+    Root endpoint: https://api.globalping.io
+
     ## Client guidelines
 
-    If you're implementing an application that interacts with the API, please refer to the "Client guidelines" section in the description of each endpoint.
-    This way, you can provide the best UX and reduce the likelihood of your app breaking in the future.
+    If you're implementing an application that interacts with the API, please refer to the "Client guidelines"
+    section in the description of each endpoint. This way, you can provide the best UX and reduce the likelihood
+    of your app breaking in the future.
 
     ### General guidelines for non-browser-based apps:
 
-    - Set a `User-Agent` header. We recommend that you follow the format and approach [described here](https://github.com/jsdelivr/data.jsdelivr.com/blob/60c5154d26c403ba9dd403a8ddc5e42a31931f0d/config/default.js#L9).
-    - Set an `Accept-Encoding` header with a value of either `br` (preferred) or `gzip`, depending on what your client can support. Compression has a significant impact on the response size!
+    - Set a `User-Agent` header. We recommend that you follow the format and approach [used here](https://github.com/jsdelivr/data.jsdelivr.com/blob/60c5154d26c403ba9dd403a8ddc5e42a31931f0d/config/default.js#L9).
+    - Set an `Accept-Encoding` header with a value of either `br` (preferred) or `gzip`, depending on what your client can support. Compression has a significant impact on the response size.
     - Implement ETag-based client-side caching using the `ETag`/`If-None-Match` headers when requesting the measurement status.
   version: 1.0.0
   termsOfService: https://github.com/jsdelivr/globalping
   contact:
-    name: Support
     url: https://github.com/jsdelivr/globalping/issues
     email: d@jsdelivr.com
   license:
@@ -32,26 +34,24 @@ servers:
   - url: https://api.globalping.io
 tags:
   - name: Measurements
-    description: Provides measurement-related operations.
   - name: Probes
-    description: Provides probe-related operations.
 paths:
   /v1/measurements:
     post:
-      summary: Create a measurement.
+      summary: Create a measurement
       operationId: createMeasurement
       description: |
-        Create a new measurement by configuring its attributes via the request body. On success, the endpoint returns the ID of the created measurement.
-
-        > **Note**: The measurement runs asynchronously and you can call up the current state under the URL returned in the `Location` header, for example.
+        Creates a new measurement with parameters set in the request body.
+        The measurement runs asynchronously and you can retrieve its current state at the URL returned in the `Location` header.
 
         ### Client guidelines
-         - Set the `inProgressUpdates` option to `true` to have the API return partial results as soon as they are available.
-        This feature is useful for apps running in an interactive mode where you want users to see the updates and results in real time.
-           - If you're building an app or feature for CI purposes where you want to use the finished measurement results in scripts, make sure that you either do not provide the property `inProgressUpdates` (default value is false) or explicitly set it to `false`.
-         - To perform multiple measurements using identical probes, create and get a single measurement first and then pass its `id` to the `locations` property of your next measurement request.
+
+        - If the application is running in interactive mode, set the `inProgressUpdates` option to `true` to have the API
+          return partial results as soon as they are available. This allows the user to see the measurement progress in real time.
+          - If the application is interactive by default but also implements a "CI" mode for scripting, do not set the flag in the CI mode.
+        - To perform multiple measurements using exactly the same probes, create a single measurement first, then pass its `id` in the `locations` field for the other measurements.
       requestBody:
-        description: Use the `MeasurementRequest` schema to create a new measurement that meets your requirements.
+        description: Use the request body to set the measurement parameters.
         content:
           application/json:
             schema:
@@ -85,18 +85,20 @@ paths:
     parameters:
       - $ref: 'components/parameters.yaml#/components/parameters/measurementId'
     get:
-      summary: Get a measurement by ID.
+      summary: Get a measurement by ID
       operationId: getMeasurement
       description: |
-        Get an existing measurement's current status and result by providing its ID. Measurements are typically available for up to 7 days after creation.
+        Returns the status and results of an existing measurement.
+        Measurements are typically available for up to 7 days after creation.
 
-        > **Tip**: The 'Create a measurement' endpoint returns a URL to this endpoint in the `Location` header!
+        > **Tip**: A link to this endpoint is returned in the `Location` response header when creating the measurement.
 
         ### Client guidelines
-        As it can take a few seconds for a measurement to complete and provide results, you can query the status to determine whether the final results are available. Use the following process:
-          1. Request the measurement to retrieve its `status`.
-          2. If the `status` is `in-progress`, wait 500 milliseconds and start again at step 1. Note that it's important to wait 500 ms _after_ receiving the response rather than using an interval of "every 500ms". This is because, for large measurements, the request can take a few hundred milliseconds to complete, meaning that you won't get any meaningful updates in a shorter query time frame.
-          3. If the `status` has a value **other** than `in-progress`, stop. The measurement is no longer running, and its results are final.
+
+        As it can take a few seconds for a measurement to complete, you should use the following process for retrieving the results:
+          1. Request the measurement to retrieve its status.
+          2. If the status is `in-progress`, wait 500 milliseconds and start again at step 1. Note that it's important to wait 500 ms *after* receiving the response rather than using an "every 500ms" interval as for large measurements, the request itself may take a few hundred milliseconds to complete.
+          3. If the status is anything **other** than `in-progress`, stop. The measurement is no longer running, and its results are final.
       responses:
         '200':
           $ref: 'components/responses.yaml#/components/responses/measurement200'
@@ -106,12 +108,13 @@ paths:
         - Measurements
   /v1/probes:
     get:
-      summary: List all probes currently online.
+      summary: List probes currently online
       operationId: listProbes
       description: |
-        Get a list of all probes currently online and their metadata, such as location and assigned tags.
+        Returns a list of all probes currently online and their metadata, such as location and assigned tags.
 
-        > **Note**: Probes don't expose unique IDs that you can use to explicitly select them. Instead, enter location data or the ID of an existing measurement when you create a new measurement to refine the probe selection.
+        > **Note**: Probes don't expose unique IDs that would allow you to explicitly select them.
+        Instead, specify the requested location or an ID of an existing measurement when creating new measurements.
       responses:
         '200':
           $ref: 'components/responses.yaml#/components/responses/probes200'

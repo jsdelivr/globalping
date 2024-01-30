@@ -1,7 +1,9 @@
 components:
   responses:
     '400':
-      description: If the API can't process the request due to malformed parameters or other client errors, the response returns the HTTP `400 BAD REQUEST` status code and a JSON response body with more information about the error.
+      description: |
+        If the API couldn't process the request due to malformed parameters or other client errors, it returns status `400 Bad Request`
+        and a body with more information about the error. Please modify your request before trying again.
       content:
         application/json:
           schema:
@@ -11,20 +13,20 @@ components:
             properties:
               error:
                 type: object
-                description: Contains information about an error.
+                description: Information about the error.
                 required:
                   - type
                   - message
                 properties:
                   type:
                     type: string
-                    description: The type of the error provided as one string value.
+                    description: The type of the error.
                   message:
                     type: string
-                    description: The human-readable description of the error.
+                    description: A human-readable description of the error.
                   params:
                     type: object
-                    description: Contains additional information.
+                    description: Additional information that might be present if the error is related to a specific parameter or payload field.
                     additionalProperties:
                       type: string
           examples:
@@ -36,7 +38,9 @@ components:
                   params:
                     measurement: '\"measurement\" does not match any of the allowed types'
     '404':
-      description: If the service can't find the requested resource, the response returns the HTTP `400 NOT FOUND` status code and a JSON response body containing more information about the error.
+      description: |
+        If the API couldn't find the requested resource, it returns status `400 Not Found`
+        and a body containing more information about the error.
       content:
         application/json:
           schema:
@@ -61,7 +65,9 @@ components:
                   type: not_found
                   message: Couldn't find the requested item.
     measurements422:
-      description: If the API can't find suitable probes for your request, the response returns the HTTP `422 UNPROCESSABLE CONTENT` status code and a JSON response body with more information about the error. Please modify your request before trying again.
+      description: |
+        If the API couldn't find suitable probes for your request, it returns status `422 Unprocessable Content` and a body with more
+        information about the error. Please modify your request before trying again.
       content:
         application/json:
           schema:
@@ -86,7 +92,9 @@ components:
                   type: no_probes_found
                   message: No suitable probes found.
     measurements429:
-      description: If you've exceeded the API's rate limit, the response returns the status code `429 TOO MANY REQUEST` and a JSON response body containing more information about the error. Please review our [API rate limits](https://github.com/jsdelivr/globalping).
+#      TODO: add Please review our [API rate limits](https://github.com/jsdelivr/globalping).
+      description: |
+        If you've exceeded the API rate limit, you'll receive status `429 Too Many Requests` and a body containing more information about the error.
       content:
         application/json:
           schema:
@@ -111,7 +119,9 @@ components:
                   type: rate_limit_exceeded
                   message: API rate limit exceeded.
     measurements202:
-      description: If the API accepts the request for processing, the response returns the status code `202 ACCEPTED` and a JSON response body containing the ID of the newly created measurement. You can use the URL from the `Location` header as a link to view the measurement status.
+      description: |
+        If the API accepted the request for processing, it returns status `202 Accepted` and a body containing the ID of the newly created measurement.
+        You can use the URL from the `Location` header to retrieve the measurement status.
       headers:
         Location:
           $ref: 'headers.yaml#/components/headers/MeasurementLocation'
@@ -129,7 +139,8 @@ components:
             '0':
               $ref: 'examples.yaml#/components/examples/createMeasurementResponse'
     measurement200:
-      description: A successful request returns the status code `200 OK` and a JSON response body containing the requested measurement results.
+      description: |
+        A successful request returns status `200 OK` and a body containing the requested measurement results.
       content:
         application/json:
           schema:
@@ -151,7 +162,8 @@ components:
             httpMeasurement:
               $ref: 'examples.yaml#/components/examples/getHttpMeasurementResponse'
     probes200:
-      description: A successful request returns the status code `200 OK` and a JSON response body containing a list of all currently online probes and their metadata.
+      description: |
+        A successful request returns status `200 OK` and a body containing a list of all probes currently online and their metadata.
       content:
         application/json:
           schema:
