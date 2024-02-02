@@ -5,6 +5,7 @@ import requestIp from 'request-ip';
 import { createPersistentRedisClient } from './redis/persistent-client.js';
 import createHttpError from 'http-errors';
 import type { ExtendedContext } from '../types.js';
+import { credits } from './credits.js';
 
 const redisClient = await createPersistentRedisClient({ legacyMode: true });
 
@@ -43,6 +44,15 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 		setRateLimitHeaders(ctx, result, rateLimiter);
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
+			if (ctx.state.userId) {
+				const { success, pointsToReward } = await consumeCredits(ctx.state.userId, error, numberOfProbes);
+
+				if (success) {
+					await rateLimiter.reward(id, pointsToReward);
+					return;
+				}
+			}
+
 			const result = await rateLimiter.reward(id, numberOfProbes);
 			setRateLimitHeaders(ctx, result, rateLimiter);
 			throw createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
@@ -56,4 +66,14 @@ const setRateLimitHeaders = (ctx: Context, result: RateLimiterRes, rateLimiter: 
 	ctx.set('X-RateLimit-Reset', `${Math.round(result.msBeforeNext / 1000)}`);
 	ctx.set('X-RateLimit-Limit', `${rateLimiter.points}`);
 	ctx.set('X-RateLimit-Remaining', `${result.remainingPoints}`);
+};
+
+const consumeCredits = async (userId: string, error: RateLimiterRes, numberOfProbes: number) => {
+	const freePoints = config.get<number>('measurement.authenticatedRateLimit');
+	const alreadyUsedPoints = error.consumedPoints - numberOfProbes;
+	const remainingFreePoints = freePoints - alreadyUsedPoints;
+	const requiredPoints = numberOfProbes - remainingFreePoints;
+	const success = await credits.consume(userId, requiredPoints);
+
+	return { success, pointsToReward: numberOfProbes - remainingFreePoints };
 };
