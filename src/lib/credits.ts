@@ -9,7 +9,11 @@ export class Credits {
 
 	async consume (userId: string, credits: number) {
 		try {
-			await this.sql(CREDITS_TABLE).where({ user_id: userId }).update({ amount: this.sql.raw('amount - ?', [ credits ]) });
+			const result = await this.sql(CREDITS_TABLE).where({ user_id: userId }).update({ amount: this.sql.raw('amount - ?', [ credits ]) });
+
+			if (result === 1) {
+				return true;
+			}
 		} catch (error) {
 			if (error && (error as Error & {errno?: number}).errno === ER_CONSTRAINT_FAILED_CODE) {
 				return false;
@@ -18,7 +22,7 @@ export class Credits {
 			throw error;
 		}
 
-		return true;
+		return false;
 	}
 }
 
