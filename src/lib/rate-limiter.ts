@@ -48,7 +48,8 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 				const { success, pointsToReward } = await consumeCredits(ctx.state.userId, error, numberOfProbes);
 
 				if (success) {
-					await rateLimiter.reward(id, pointsToReward);
+					const result = await rateLimiter.reward(id, pointsToReward);
+					setRateLimitHeaders(ctx, result, rateLimiter);
 					return;
 				}
 			}
