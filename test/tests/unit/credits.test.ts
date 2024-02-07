@@ -26,20 +26,18 @@ describe('Credits', () => {
 
 	it(`should return false if row wasn't updated`, async () => {
 		sqlStub.raw.resolves([ [{ amount: null }] ]);
-		selectStub.resolves([{ amount: null }]);
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
-		expect(result).to.deep.equal({ isConsumed: false, remainingCredits: 0 });
+		expect(result).to.deep.equal({ isConsumed: false });
 	});
 
 	it(`should return false if update throws ER_CONSTRAINT_FAILED_CODE`, async () => {
 		const error: Error & {errno?: number} = new Error('constraint');
-		selectStub.resolves([{ amount: 5 }]);
 		error.errno = 4025;
 		sqlStub.raw.rejects(error);
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
-		expect(result).to.deep.equal({ isConsumed: false, remainingCredits: 5 });
+		expect(result).to.deep.equal({ isConsumed: false });
 	});
 
 	it(`should throw if update throws other error`, async () => {

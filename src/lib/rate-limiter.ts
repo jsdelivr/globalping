@@ -44,16 +44,14 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
 			if (ctx.state.userId) {
-				const { isConsumed, consumedCredits, remainingCredits, pointsToReward } = await consumeCredits(ctx, error, numberOfProbes);
+				const { isConsumed, consumedCredits, remainingCredits, pointsToReward } = await consumeCredits(ctx.state.userId, error, numberOfProbes);
 
 				if (isConsumed) {
 					const result = await rateLimiter.reward(id, pointsToReward);
-					setCreditsHeaders(ctx, consumedCredits, remainingCredits);
+					setCreditsHeaders(ctx, consumedCredits!, remainingCredits!);
 					setRateLimitHeaders(ctx, result, rateLimiter);
 					return;
 				}
-
-				setCreditsHeaders(ctx, consumedCredits, remainingCredits);
 			}
 
 			const result = await rateLimiter.reward(id, numberOfProbes);
@@ -65,12 +63,12 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 	}
 };
 
-const consumeCredits = async (ctx: ExtendedContext, rateLimiterRes: RateLimiterRes, numberOfProbes: number) => {
+const consumeCredits = async (userId: string, rateLimiterRes: RateLimiterRes, numberOfProbes: number) => {
 	const freePoints = config.get<number>('measurement.authenticatedRateLimit');
 	const alreadyUsedPoints = rateLimiterRes.consumedPoints - numberOfProbes;
 	const remainingFreePoints = freePoints - alreadyUsedPoints;
 	const requiredPoints = numberOfProbes - remainingFreePoints;
-	const { isConsumed, remainingCredits } = await credits.consume(ctx.state.userId!, requiredPoints);
+	const { isConsumed, remainingCredits } = await credits.consume(userId, requiredPoints);
 
 	if (isConsumed) {
 		return {
@@ -83,9 +81,6 @@ const consumeCredits = async (ctx: ExtendedContext, rateLimiterRes: RateLimiterR
 
 	return {
 		isConsumed: false,
-		consumedCredits: 0,
-		remainingCredits,
-		pointsToReward: 0,
 	};
 };
 

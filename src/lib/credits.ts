@@ -7,7 +7,7 @@ const ER_CONSTRAINT_FAILED_CODE = 4025;
 export class Credits {
 	constructor (private readonly sql: Knex) {}
 
-	async consume (userId: string, credits: number): Promise<{ isConsumed: boolean, remainingCredits: number }> {
+	async consume (userId: string, credits: number): Promise<{ isConsumed: boolean, remainingCredits?: number }> {
 		try {
 			const result = await this.sql.raw<[[{amount: number | null}]]>(`
 				INSERT INTO ?? (user_id, amount)
@@ -20,26 +20,17 @@ export class Credits {
 			const remainingCredits = result[0]?.[0]?.amount;
 
 			if (remainingCredits || remainingCredits === 0) {
-				return this.returnSuccess(remainingCredits);
+				return { isConsumed: true, remainingCredits };
 			}
 
-			return this.returnFail(userId);
+			return { isConsumed: false };
 		} catch (error) {
 			if (error && (error as Error & {errno?: number}).errno === ER_CONSTRAINT_FAILED_CODE) {
-				return this.returnFail(userId);
+				return { isConsumed: false };
 			}
 
 			throw error;
 		}
-	}
-
-	returnSuccess (remainingCredits: number) {
-		return { isConsumed: true, remainingCredits };
-	}
-
-	async returnFail (userId: string) {
-		const result = await this.sql(CREDITS_TABLE).where({ user_id: userId }).select<[{amount: number}]>('amount');
-		return { isConsumed: false, remainingCredits: result[0]?.amount || 0 };
 	}
 }
 
