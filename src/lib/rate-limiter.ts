@@ -1,5 +1,4 @@
 import config from 'config';
-import type { Context } from 'koa';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 import requestIp from 'request-ip';
 import { createPersistentRedisClient } from './redis/persistent-client.js';
@@ -45,13 +44,16 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
 			if (ctx.state.userId) {
-				const { success, pointsToReward } = await consumeCredits(ctx.state.userId, error, numberOfProbes);
+				const { isConsumed, consumedCredits, remainingCredits, pointsToReward } = await consumeCredits(ctx, error, numberOfProbes);
 
-				if (success) {
+				if (isConsumed) {
 					const result = await rateLimiter.reward(id, pointsToReward);
+					setCreditsHeaders(ctx, consumedCredits, remainingCredits);
 					setRateLimitHeaders(ctx, result, rateLimiter);
 					return;
 				}
+
+				setCreditsHeaders(ctx, consumedCredits, remainingCredits);
 			}
 
 			const result = await rateLimiter.reward(id, numberOfProbes);
@@ -63,18 +65,37 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 	}
 };
 
-const setRateLimitHeaders = (ctx: Context, result: RateLimiterRes, rateLimiter: RateLimiterRedis) => {
+const consumeCredits = async (ctx: ExtendedContext, rateLimiterRes: RateLimiterRes, numberOfProbes: number) => {
+	const freePoints = config.get<number>('measurement.authenticatedRateLimit');
+	const alreadyUsedPoints = rateLimiterRes.consumedPoints - numberOfProbes;
+	const remainingFreePoints = freePoints - alreadyUsedPoints;
+	const requiredPoints = numberOfProbes - remainingFreePoints;
+	const { isConsumed, remainingCredits } = await credits.consume(ctx.state.userId!, requiredPoints);
+
+	if (isConsumed) {
+		return {
+			isConsumed,
+			consumedCredits: requiredPoints,
+			remainingCredits,
+			pointsToReward: numberOfProbes - remainingFreePoints,
+		};
+	}
+
+	return {
+		isConsumed: false,
+		consumedCredits: 0,
+		remainingCredits,
+		pointsToReward: 0,
+	};
+};
+
+const setRateLimitHeaders = (ctx: ExtendedContext, result: RateLimiterRes, rateLimiter: RateLimiterRedis) => {
 	ctx.set('X-RateLimit-Reset', `${Math.round(result.msBeforeNext / 1000)}`);
 	ctx.set('X-RateLimit-Limit', `${rateLimiter.points}`);
 	ctx.set('X-RateLimit-Remaining', `${result.remainingPoints}`);
 };
 
-const consumeCredits = async (userId: string, error: RateLimiterRes, numberOfProbes: number) => {
-	const freePoints = config.get<number>('measurement.authenticatedRateLimit');
-	const alreadyUsedPoints = error.consumedPoints - numberOfProbes;
-	const remainingFreePoints = freePoints - alreadyUsedPoints;
-	const requiredPoints = numberOfProbes - remainingFreePoints;
-	const success = await credits.consume(userId, requiredPoints);
-
-	return { success, pointsToReward: numberOfProbes - remainingFreePoints };
+const setCreditsHeaders = (ctx: ExtendedContext, consumedCredits: number, remainingCredits: number) => {
+	ctx.set('X-Credits-Cost', `${consumedCredits}`);
+	ctx.set('X-Credits-Remaining', `${remainingCredits}`);
 };
