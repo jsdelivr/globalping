@@ -44,10 +44,10 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
 			if (ctx.state.userId) {
-				const { isConsumed, consumedCredits, remainingCredits, pointsToReward } = await consumeCredits(ctx.state.userId, error, numberOfProbes);
+				const { isConsumed, consumedCredits, remainingCredits } = await consumeCredits(ctx.state.userId, error, numberOfProbes);
 
 				if (isConsumed) {
-					const result = await rateLimiter.reward(id, pointsToReward);
+					const result = await rateLimiter.reward(id, consumedCredits);
 					setCreditsHeaders(ctx, consumedCredits!, remainingCredits!);
 					setRateLimitHeaders(ctx, result, rateLimiter);
 					return;
@@ -75,7 +75,6 @@ const consumeCredits = async (userId: string, rateLimiterRes: RateLimiterRes, nu
 			isConsumed,
 			consumedCredits: requiredPoints,
 			remainingCredits,
-			pointsToReward: numberOfProbes - remainingFreePoints,
 		};
 	}
 
