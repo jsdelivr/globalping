@@ -4,9 +4,9 @@ import * as sinon from 'sinon';
 import { Credits } from '../../../src/lib/credits.js';
 
 describe('Credits', () => {
-	const updateStub = sinon.stub();
+	const selectStub = sinon.stub();
 	const whereStub = sinon.stub().returns({
-		update: updateStub,
+		select: selectStub,
 	});
 	const sqlStub = sinon.stub().returns({
 		where: whereStub,
@@ -18,31 +18,33 @@ describe('Credits', () => {
 	});
 
 	it('should return true if row was updated', async () => {
-		updateStub.resolves(1);
+		sqlStub.raw.resolves([ [{ amount: 0 }] ]);
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
-		expect(result).to.equal(true);
+		expect(result).to.deep.equal({ isConsumed: true, remainingCredits: 0 });
 	});
 
 	it(`should return false if row wasn't updated`, async () => {
-		updateStub.resolves(0);
+		sqlStub.raw.resolves([ [{ amount: null }] ]);
+		selectStub.resolves([{ amount: null }]);
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
-		expect(result).to.equal(false);
+		expect(result).to.deep.equal({ isConsumed: false, remainingCredits: 0 });
 	});
 
 	it(`should return false if update throws ER_CONSTRAINT_FAILED_CODE`, async () => {
 		const error: Error & {errno?: number} = new Error('constraint');
+		selectStub.resolves([{ amount: 5 }]);
 		error.errno = 4025;
-		updateStub.rejects(error);
+		sqlStub.raw.rejects(error);
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
-		expect(result).to.equal(false);
+		expect(result).to.deep.equal({ isConsumed: false, remainingCredits: 5 });
 	});
 
 	it(`should throw if update throws other error`, async () => {
 		const error = new Error('other error');
-		updateStub.rejects(error);
+		sqlStub.raw.rejects(error);
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10).catch(err => err);
 		expect(result).to.equal(error);
