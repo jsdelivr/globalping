@@ -80,7 +80,7 @@ components:
         }
     createMeasurementPingCustom:
       summary: 'ping: custom options'
-      description: Depending on the measurement `type`, you may pass additional measurement options. In this example, we set the number of packets to send for our ping test. You can find all available options in the request body schema.
+      description: Depending on the measurement `type`, you may provide additional measurement options. In this example, we set the number of packets to send for our ping test. You can find all available options in the request body schema.
       value:
         {
           "type": "ping",
@@ -91,7 +91,7 @@ components:
         }
     createMeasurementPingLocationsMeasurementId:
       summary: 'ping: previous measurement id'
-      description: If you want to reuse probes from a previous measurement, pass its `id` in the `locations` field. Note that some probes may be offline and no longer unavailable - this is indicated in the results.
+      description: If you want to reuse probes from a previous measurement, pass its `id` in the `locations` field. Note that some probes may be offline and no longer unavailable - this will be indicated in the results.
       value:
         {
           "type": "ping",
