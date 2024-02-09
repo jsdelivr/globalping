@@ -17,3 +17,11 @@ components:
       description: The number of seconds until the limit is reset.
       schema:
         type: integer
+    CreditsCost:
+      description: Then number of credits consumed by the request. Shown only when credits are involved.
+      schema:
+        type: integer
+    CreditsRemaining:
+      description: The number of remaining credits for that user. Shown only when credits are involved.
+      schema:
+        type: integer
