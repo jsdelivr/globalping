@@ -1,5 +1,15 @@
 components:
   headers:
+    CreditsCost:
+      description: The number of credits consumed by the request. Returned only when credits were consumed.
+      required: false
+      schema:
+        type: integer
+    CreditsRemaining:
+      description: The number of credits remaining. Returned only when credits were consumed.
+      required: false
+      schema:
+        type: integer
     MeasurementLocation:
       description: A link to the newly created measurement.
       required: true
@@ -19,15 +29,5 @@ components:
     RateLimitReset:
       description: The number of seconds until the limit is reset.
       required: true
-      schema:
-        type: integer
-    CreditsCost:
-      description: Then number of credits consumed by the request. Shown only when credits are involved.
-      required: false
-      schema:
-        type: integer
-    CreditsRemaining:
-      description: The number of remaining credits for that user. Shown only when credits are involved.
-      required: false
       schema:
         type: integer
