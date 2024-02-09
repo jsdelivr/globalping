@@ -2,19 +2,23 @@ components:
   headers:
     MeasurementLocation:
       description: A link to the newly created measurement.
+      required: true
       schema:
         type: string
         format: uri
     RateLimitLimit:
       description: The number of requests available in a given time window.
+      required: true
       schema:
         type: integer
     RateLimitRemaining:
       description: The number of requests remaining in the current time window.
+      required: true
       schema:
         type: integer
     RateLimitReset:
       description: The number of seconds until the limit is reset.
+      required: true
       schema:
         type: integer
     CreditsCost:

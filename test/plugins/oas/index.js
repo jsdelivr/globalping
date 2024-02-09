@@ -130,7 +130,7 @@ export default async ({ specPath, ajvBodyOptions = {}, ajvHeadersOptions = {} })
 					return;
 				}
 
-				const headerOptional = dereference(responseHeadersSpec, header, 'required') === false;
+				const headerOptional = dereference(responseHeadersSpec, header, 'required') !== true;
 
 				if (!response.headers[header.toLowerCase()] && headerOptional) {
 					return;
