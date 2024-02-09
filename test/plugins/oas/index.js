@@ -130,6 +130,12 @@ export default async ({ specPath, ajvBodyOptions = {}, ajvHeadersOptions = {} })
 					return;
 				}
 
+				const headerOptional = dereference(responseHeadersSpec, header, 'required') === false;
+
+				if (!response.headers[header.toLowerCase()] && headerOptional) {
+					return;
+				}
+
 				new chai.Assertion(response.headers, `expected the response to have a header ${header}`).to.have.property(header.toLowerCase());
 
 				let responseHeaderValue = response.headers[header.toLowerCase()];
