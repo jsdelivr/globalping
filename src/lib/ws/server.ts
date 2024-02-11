@@ -32,7 +32,9 @@ export const initWsServer = async () => {
 		pingTimeout: 3000,
 	});
 
-	io.adapter(createAdapter(pubClient, subClient));
+	io.adapter(createAdapter(pubClient, subClient, {
+		publishOnSpecificResponseChannel: true,
+	}));
 };
 
 export const getWsServer = (): WsServer => {
