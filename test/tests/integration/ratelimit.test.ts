@@ -302,6 +302,24 @@ describe('rate limiter', () => {
 			expect(amount).to.equal(1);
 		});
 
+		it('should not consume more paid credits than the cost of the full request', async () => {
+			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 255, 0);
+
+			const response = await requestAgent.post('/v1/measurements')
+				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.send({
+					type: 'ping',
+					target: 'jsdelivr.com',
+					limit: 2,
+				}).expect(202) as Response;
+
+			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
+			expect(response.headers['x-credits-cost']).to.equal('2');
+			expect((response.headers['x-credits-remaining'])).to.equal('8');
+			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			expect(amount).to.equal(8);
+		});
+
 		it('should not consume free credits if there are not enough to satisfy the request', async () => {
 			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 249, 0);
 

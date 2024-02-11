@@ -65,9 +65,7 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 
 const consumeCredits = async (userId: string, rateLimiterRes: RateLimiterRes, numberOfProbes: number) => {
 	const freePoints = config.get<number>('measurement.authenticatedRateLimit');
-	const alreadyUsedPoints = rateLimiterRes.consumedPoints - numberOfProbes;
-	const remainingFreePoints = freePoints - alreadyUsedPoints;
-	const requiredPoints = numberOfProbes - remainingFreePoints;
+	const requiredPoints = Math.min(rateLimiterRes.consumedPoints - freePoints, numberOfProbes);
 	const { isConsumed, remainingCredits } = await credits.consume(userId, requiredPoints);
 
 	if (isConsumed) {
