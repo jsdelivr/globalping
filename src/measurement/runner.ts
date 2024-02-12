@@ -1,7 +1,7 @@
 import config from 'config';
 import type { Server } from 'socket.io';
 import createHttpError from 'http-errors';
-import { getWsServer } from '../lib/ws/server.js';
+import { getWsServer, PROBES_NAMESPACE } from '../lib/ws/server.js';
 import { getProbeRouter, type ProbeRouter } from '../probe/router.js';
 import type { Probe } from '../probe/types.js';
 import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
@@ -61,7 +61,7 @@ export class MeasurementRunner {
 		const maxInProgressProbes = config.get<number>('measurement.maxInProgressProbes');
 		onlineProbesMap.forEach((probe, index) => {
 			const inProgressUpdates = request.inProgressUpdates && inProgressProbes++ < maxInProgressProbes;
-			this.io.of('probes').to(probe.client).emit('probe:measurement:request', {
+			this.io.of(PROBES_NAMESPACE).to(probe.client).emit('probe:measurement:request', {
 				measurementId,
 				testId: index.toString(),
 				measurement: {
