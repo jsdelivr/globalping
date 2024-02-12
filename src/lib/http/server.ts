@@ -10,7 +10,7 @@ import responseTime from 'koa-response-time';
 import koaFavicon from 'koa-favicon';
 import koaStatic from 'koa-static';
 import config from 'config';
-import cjsDependencies from '../../cjs-dependencies.cjs';
+import Koa from 'koa';
 import { registerGetProbesRoute } from '../../probe/route/get-probes.js';
 import { registerGetMeasurementRoute } from '../../measurement/route/get-measurement.js';
 import { registerCreateMeasurementRoute } from '../../measurement/route/create-measurement.js';
@@ -27,7 +27,7 @@ import domainRedirect from './middleware/domain-redirect.js';
 import { docsLink } from './middleware/docs-link.js';
 import type { CustomContext } from '../../types.js';
 
-const app = new cjsDependencies.Koa();
+const app = new Koa();
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
 const docsHost = config.get<string>('server.docsHost');
 
