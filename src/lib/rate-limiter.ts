@@ -44,14 +44,16 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
 			if (ctx.state.userId) {
-				const { isConsumed, consumedCredits, remainingCredits } = await consumeCredits(ctx.state.userId, error, numberOfProbes);
+				const { isConsumed, requiredCredits, remainingCredits } = await consumeCredits(ctx.state.userId, error, numberOfProbes);
 
 				if (isConsumed) {
-					const result = await rateLimiter.reward(id, consumedCredits);
-					setCreditsHeaders(ctx, consumedCredits!, remainingCredits!);
+					const result = await rateLimiter.reward(id, requiredCredits);
+					setConsumedHeaders(ctx, requiredCredits, remainingCredits);
 					setRateLimitHeaders(ctx, result, rateLimiter);
 					return;
 				}
+
+				setRequiredHeaders(ctx, requiredCredits, remainingCredits);
 			}
 
 			const result = await rateLimiter.reward(id, numberOfProbes);
@@ -64,20 +66,14 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 };
 
 const consumeCredits = async (userId: string, rateLimiterRes: RateLimiterRes, numberOfProbes: number) => {
-	const freePoints = config.get<number>('measurement.authenticatedRateLimit');
-	const requiredPoints = Math.min(rateLimiterRes.consumedPoints - freePoints, numberOfProbes);
-	const { isConsumed, remainingCredits } = await credits.consume(userId, requiredPoints);
-
-	if (isConsumed) {
-		return {
-			isConsumed,
-			consumedCredits: requiredPoints,
-			remainingCredits,
-		};
-	}
+	const freeCredits = config.get<number>('measurement.authenticatedRateLimit');
+	const requiredCredits = Math.min(rateLimiterRes.consumedPoints - freeCredits, numberOfProbes);
+	const { isConsumed, remainingCredits } = await credits.consume(userId, requiredCredits);
 
 	return {
-		isConsumed: false,
+		isConsumed,
+		requiredCredits,
+		remainingCredits,
 	};
 };
 
@@ -87,7 +83,12 @@ const setRateLimitHeaders = (ctx: ExtendedContext, result: RateLimiterRes, rateL
 	ctx.set('X-RateLimit-Remaining', `${result.remainingPoints}`);
 };
 
-const setCreditsHeaders = (ctx: ExtendedContext, consumedCredits: number, remainingCredits: number) => {
-	ctx.set('X-Credits-Cost', `${consumedCredits}`);
+const setConsumedHeaders = (ctx: ExtendedContext, consumedCredits: number, remainingCredits: number) => {
+	ctx.set('X-Credits-Consumed', `${consumedCredits}`);
+	ctx.set('X-Credits-Remaining', `${remainingCredits}`);
+};
+
+const setRequiredHeaders = (ctx: ExtendedContext, requiredCredits: number, remainingCredits: number) => {
+	ctx.set('X-Credits-Required', `${requiredCredits}`);
 	ctx.set('X-Credits-Remaining', `${remainingCredits}`);
 };

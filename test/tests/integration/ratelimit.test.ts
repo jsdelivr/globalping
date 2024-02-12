@@ -236,7 +236,8 @@ describe('rate limiter', () => {
 				}).expect(202) as Response;
 
 			expect(response.headers['x-ratelimit-remaining']).to.equal('248');
-			expect(response.headers['x-credits-cost']).to.not.exist;
+			expect(response.headers['x-credits-consumed']).to.not.exist;
+			expect(response.headers['x-credits-required']).to.not.exist;
 			expect(response.headers['x-credits-remaining']).to.not.exist;
 			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(10);
@@ -254,7 +255,8 @@ describe('rate limiter', () => {
 				}).expect(202) as Response;
 
 			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
-			expect(response.headers['x-credits-cost']).to.equal('2');
+			expect(response.headers['x-credits-consumed']).to.equal('2');
+			expect(response.headers['x-credits-required']).to.not.exist;
 			expect((response.headers['x-credits-remaining'])).to.equal('8');
 			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(8);
@@ -272,7 +274,8 @@ describe('rate limiter', () => {
 				}).expect(202) as Response;
 
 			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
-			expect(response.headers['x-credits-cost']).to.equal('1');
+			expect(response.headers['x-credits-consumed']).to.equal('1');
+			expect(response.headers['x-credits-required']).to.not.exist;
 			expect((response.headers['x-credits-remaining'])).to.equal('9');
 			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(9);
@@ -296,8 +299,9 @@ describe('rate limiter', () => {
 				}).expect(429) as Response;
 
 			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
-			expect(response.headers['x-credits-cost']).to.not.exist;
-			expect(response.headers['x-credits-remaining']).to.not.exist;
+			expect(response.headers['x-credits-consumed']).to.not.exist;
+			expect(response.headers['x-credits-required']).to.equal('2');
+			expect(response.headers['x-credits-remaining']).to.equal('1');
 			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(1);
 		});
@@ -314,7 +318,8 @@ describe('rate limiter', () => {
 				}).expect(202) as Response;
 
 			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
-			expect(response.headers['x-credits-cost']).to.equal('2');
+			expect(response.headers['x-credits-consumed']).to.equal('2');
+			expect(response.headers['x-credits-required']).to.not.exist;
 			expect((response.headers['x-credits-remaining'])).to.equal('8');
 			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(8);
@@ -338,8 +343,9 @@ describe('rate limiter', () => {
 				}).expect(429) as Response;
 
 			expect(response.headers['x-ratelimit-remaining']).to.equal('1');
-			expect(response.headers['x-credits-cost']).to.not.exist;
-			expect(response.headers['x-credits-remaining']).to.not.exist;
+			expect(response.headers['x-credits-consumed']).to.not.exist;
+			expect(response.headers['x-credits-required']).to.equal('1');
+			expect(response.headers['x-credits-remaining']).to.equal('0');
 			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(0);
 		});
@@ -360,10 +366,11 @@ describe('rate limiter', () => {
 				}).expect(429) as Response;
 
 			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
-			expect(response.headers['x-credits-cost']).to.not.exist;
-			expect(response.headers['x-credits-remaining']).to.not.exist;
-			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
-			expect(amount).to.equal(null);
+			expect(response.headers['x-credits-consumed']).to.not.exist;
+			expect(response.headers['x-credits-required']).to.equal('2');
+			expect(response.headers['x-credits-remaining']).to.equal('0');
+			const credits = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			expect(credits).to.deep.equal([]);
 		});
 	});
 });
