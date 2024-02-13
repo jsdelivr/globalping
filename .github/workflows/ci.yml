@@ -15,7 +15,7 @@ jobs:
 
     services:
       redis:
-        image: redislabs/rejson:latest
+        image: redis/redis-stack-server:latest
         ports:
           - 6379:6379
         options: >-

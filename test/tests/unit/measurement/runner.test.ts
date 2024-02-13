@@ -40,7 +40,7 @@ describe('MeasurementRunner', () => {
 	beforeEach(() => {
 		sinon.resetHistory();
 		to.returns({ emit });
-		io.of.returns({ to } as any);
+		io.of.withArgs('/probes').returns({ to } as any);
 		store.createMeasurement.resolves('measurementid');
 		testId = 0;
 	});
