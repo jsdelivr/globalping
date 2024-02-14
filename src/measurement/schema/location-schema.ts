@@ -8,7 +8,8 @@ import { states } from '../../lib/location/states.js';
 import { regionNames } from '../../lib/location/regions.js';
 import { GLOBAL_DEFAULTS } from './utils.js';
 
-const measurementConfig = config.get<{limits: {global: number; location: number}}>('measurement');
+const authenticatedTestsPerLocation = config.get<number>('measurement.limits.authenticatedTestsPerLocation');
+const anonymousTestsPerLocation = config.get<number>('measurement.limits.anonymousTestsPerLocation');
 
 const normalizeValue = (value: string): string => anyAscii(value);
 
@@ -27,7 +28,11 @@ export const schema = Joi.alternatives().try(
 		asn: Joi.number().integer().positive(),
 		magic: Joi.string().min(1).custom(normalizeValue),
 		tags: Joi.array().items(Joi.string().min(1).max(128).lowercase().custom(normalizeValue)),
-		limit: Joi.number().min(1).max(measurementConfig.limits.location).when(Joi.ref('/limit'), {
+		limit: Joi.number().min(1).when('$userId', {
+			is: Joi.exist(),
+			then: Joi.number().max(authenticatedTestsPerLocation),
+			otherwise: Joi.number().max(anonymousTestsPerLocation),
+		}).when(Joi.ref('/limit'), {
 			is: Joi.exist(),
 			then: Joi.forbidden().messages({ 'any.unknown': 'limit per location is not allowed when a global limit is set' }),
 			otherwise: Joi.number().default(1),
