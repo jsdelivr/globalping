@@ -125,7 +125,7 @@ describe('command schema', async () => {
 				expect(valid?.error?.details?.[0]?.message).to.equal('"limit" must be less than or equal to 500');
 			});
 
-			it('should pass (locations limit sum is bigger than global limit)', () => {
+			it('should return an error (locations anonymous limit sum is bigger than global limit)', () => {
 				const input = {
 					type: 'ping',
 					target: 'abc.com',
@@ -143,7 +143,28 @@ describe('command schema', async () => {
 
 				const valid = globalSchema.validate(input, { convert: true });
 
-				expect(valid.error).to.not.exist;
+				expect(valid?.error?.details?.[0]?.message).to.equal('Sum of limits must be less than or equal to 500');
+			});
+
+			it('should return an error (locations authenticated limit sum is bigger than global limit)', () => {
+				const input = {
+					type: 'ping',
+					target: 'abc.com',
+					locations: [{
+						country: 'BR',
+						limit: 200,
+					}, {
+						country: 'CZ',
+						limit: 200,
+					}, {
+						country: 'DE',
+						limit: 200,
+					}],
+				};
+
+				const valid = globalSchema.validate(input, { convert: true, context: { userId: '1-1-1-1-1' } });
+
+				expect(valid?.error?.details?.[0]?.message).to.equal('Sum of limits must be less than or equal to 500');
 			});
 		});
 
