@@ -25,10 +25,9 @@ describe('command schema', async () => {
 					type: 'ping',
 					target: 'abc.com',
 					locations: [],
-					measurementOptions: {},
 				};
 
-				const valid = globalSchema.validate(input);
+				const valid = globalSchema.validate(input, { convert: true });
 
 				expect(valid.value.limit).to.equal(1);
 			});
@@ -40,11 +39,10 @@ describe('command schema', async () => {
 					locations: [
 						{ city: 'milan', limit: 1 },
 					],
-					measurementOptions: {},
 					limit: 1,
 				};
 
-				const valid = globalSchema.validate(input);
+				const valid = globalSchema.validate(input, { convert: true });
 
 				expect(valid?.error?.details?.[0]?.message).to.equal('limit per location is not allowed when a global limit is set');
 			});
@@ -57,10 +55,9 @@ describe('command schema', async () => {
 						{ city: 'milan' },
 						{ city: 'london' },
 					],
-					measurementOptions: {},
 				};
 
-				const valid = globalSchema.validate(input);
+				const valid = globalSchema.validate(input, { convert: true });
 
 				expect(valid.value.limit).to.equal(input.locations.length);
 				expect(valid.error).to.not.exist;
@@ -73,12 +70,101 @@ describe('command schema', async () => {
 					locations: [
 						{ city: 'milan' },
 					],
-					measurementOptions: {},
 				};
 
-				const valid = globalSchema.validate(input);
+				const valid = globalSchema.validate(input, { convert: true });
 
 				expect(valid.value.limit).to.equal(1);
+			});
+
+			it('should pass (valid anonymous global limit)', () => {
+				const input = {
+					type: 'ping',
+					target: 'abc.com',
+					limit: 500,
+				};
+
+				const valid = globalSchema.validate(input, { convert: true });
+
+				expect(valid.error).to.not.exist;
+			});
+
+			it('should return an error (invalid anonymous global limit)', () => {
+				const input = {
+					type: 'ping',
+					target: 'abc.com',
+					limit: 501,
+				};
+
+				const valid = globalSchema.validate(input, { convert: true });
+
+				expect(valid?.error?.details?.[0]?.message).to.equal('"limit" must be less than or equal to 500');
+			});
+
+			it('should pass (valid authenticated global limit)', () => {
+				const input = {
+					type: 'ping',
+					target: 'abc.com',
+					limit: 500,
+				};
+
+				const valid = globalSchema.validate(input, { convert: true, context: { userId: '1-1-1-1-1' } });
+
+				expect(valid.error).to.not.exist;
+			});
+
+			it('should return an error (invalid authenticated global limit)', () => {
+				const input = {
+					type: 'ping',
+					target: 'abc.com',
+					limit: 501,
+				};
+
+				const valid = globalSchema.validate(input, { convert: true, context: { userId: '1-1-1-1-1' } });
+
+				expect(valid?.error?.details?.[0]?.message).to.equal('"limit" must be less than or equal to 500');
+			});
+
+			it('should return an error (locations anonymous limit sum is bigger than global limit)', () => {
+				const input = {
+					type: 'ping',
+					target: 'abc.com',
+					locations: [{
+						country: 'BR',
+						limit: 200,
+					}, {
+						country: 'CZ',
+						limit: 200,
+					}, {
+						country: 'DE',
+						limit: 200,
+					}],
+				};
+
+				const valid = globalSchema.validate(input, { convert: true });
+
+				expect(valid?.error?.details?.[0]?.message).to.equal('Sum of limits must be less than or equal to 500');
+			});
+
+			it('should return an error (locations authenticated limit sum is bigger than global limit)', () => {
+				const input = {
+					type: 'ping',
+					target: 'abc.com',
+					locations: [{
+						country: 'BR',
+						limit: 200,
+					}, {
+						country: 'CZ',
+						limit: 200,
+					}, {
+						country: 'DE',
+						limit: 200,
+					}],
+				};
+
+				const valid = globalSchema.validate(input, { convert: true, context: { userId: '1-1-1-1-1' } });
+
+				expect(valid?.error?.details?.[0]?.message).to.equal('Sum of limits must be less than or equal to 500');
 			});
 		});
 
@@ -93,7 +179,7 @@ describe('command schema', async () => {
 						},
 					};
 
-					const valid = globalSchema.validate(input);
+					const valid = globalSchema.validate(input, { convert: true });
 
 					expect(valid.error).to.not.exist;
 				});
@@ -108,7 +194,7 @@ describe('command schema', async () => {
 						},
 					};
 
-					const valid = globalSchema.validate(input);
+					const valid = globalSchema.validate(input, { convert: true });
 
 					expect(valid.error).to.not.exist;
 				});
@@ -128,7 +214,7 @@ describe('command schema', async () => {
 						},
 					};
 
-					const valid = globalSchema.validate(input);
+					const valid = globalSchema.validate(input, { convert: true });
 
 					expect(valid.error).to.not.exist;
 				});
@@ -144,7 +230,7 @@ describe('command schema', async () => {
 						},
 					};
 
-					const valid = globalSchema.validate(input);
+					const valid = globalSchema.validate(input, { convert: true });
 
 					expect(valid.error).to.not.exist;
 				});
@@ -166,7 +252,7 @@ describe('command schema', async () => {
 						},
 					};
 
-					const valid = globalSchema.validate(input);
+					const valid = globalSchema.validate(input, { convert: true });
 
 					expect(valid.error).to.not.exist;
 				});
@@ -316,6 +402,60 @@ describe('command schema', async () => {
 				expect(valid.error).to.not.exist;
 			});
 		});
+
+		describe('limit', () => {
+			it('should pass (valid anonymous location limit)', () => {
+				const input = [
+					{
+						city: 'Warsaw',
+						limit: 200,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid.error).to.not.exist;
+			});
+
+			it('should return an error (invalid anonymous location limit)', () => {
+				const input = [
+					{
+						city: 'Warsaw',
+						limit: 201,
+					},
+				];
+
+				const valid = locationSchema.validate(input);
+
+				expect(valid?.error?.details?.[0]?.message).to.equal('"[0].limit" must be less than or equal to 200');
+			});
+
+			it('should pass (valid authenticated location limit)', () => {
+				const input = [
+					{
+						city: 'Warsaw',
+						limit: 500,
+					},
+				];
+
+				const valid = locationSchema.validate(input, { context: { userId: '1-1-1-1-1' } });
+
+				expect(valid.error).to.not.exist;
+			});
+
+			it('should return an error (invalid authenticated location limit)', () => {
+				const input = [
+					{
+						city: 'Warsaw',
+						limit: 501,
+					},
+				];
+
+				const valid = locationSchema.validate(input, { context: { userId: '1-1-1-1-1' } });
+
+				expect(valid?.error?.details?.[0]?.message).to.equal('"[0].limit" must be less than or equal to 500');
+			});
+		});
 	});
 
 	describe('target validator', () => {
@@ -375,10 +515,9 @@ describe('command schema', async () => {
 			const input = {
 				type: 'ping',
 				target: '192.168.0.101',
-				measurementOptions: {},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Private hostnames are not allowed.');
@@ -388,10 +527,9 @@ describe('command schema', async () => {
 			const input = {
 				type: 'ping',
 				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
-				measurementOptions: {},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
@@ -402,7 +540,7 @@ describe('command schema', async () => {
 				type: 'ping',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"target" is required');
@@ -414,7 +552,7 @@ describe('command schema', async () => {
 				target: 'abc.com',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 		});
@@ -425,7 +563,7 @@ describe('command schema', async () => {
 				target: '_acme-challenge.abc.com',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 		});
@@ -436,7 +574,7 @@ describe('command schema', async () => {
 				target: '1.1.1.1',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 		});
@@ -447,7 +585,7 @@ describe('command schema', async () => {
 				target: '300.300.300.300',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
@@ -459,7 +597,7 @@ describe('command schema', async () => {
 				target: '00517985.widget.windsorbongvape.com',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
@@ -471,7 +609,7 @@ describe('command schema', async () => {
 				target: '100.0.41.228',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
@@ -483,7 +621,7 @@ describe('command schema', async () => {
 				target: 'abc.com',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('ping');
@@ -505,7 +643,7 @@ describe('command schema', async () => {
 				limit: 1,
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
@@ -527,7 +665,7 @@ describe('command schema', async () => {
 				limit: 1,
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
@@ -540,7 +678,7 @@ describe('command schema', async () => {
 				type: 'traceroute',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"target" is required');
@@ -552,7 +690,7 @@ describe('command schema', async () => {
 				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
@@ -564,7 +702,7 @@ describe('command schema', async () => {
 				target: '00517985.widget.windsorbongvape.com',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
@@ -576,7 +714,7 @@ describe('command schema', async () => {
 				target: '100.0.41.228',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
@@ -591,7 +729,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"measurementOptions.port" must be a valid port');
@@ -603,7 +741,7 @@ describe('command schema', async () => {
 				target: 'abc.com',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 		});
@@ -614,7 +752,7 @@ describe('command schema', async () => {
 				target: '_acme-challenge.abc.com',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 		});
@@ -625,7 +763,7 @@ describe('command schema', async () => {
 				target: '1.1.1.1',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 		});
@@ -636,7 +774,7 @@ describe('command schema', async () => {
 				target: '300.300.300.300',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
@@ -651,7 +789,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('traceroute');
@@ -675,7 +813,7 @@ describe('command schema', async () => {
 				locations: [],
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
@@ -698,7 +836,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
@@ -711,7 +849,7 @@ describe('command schema', async () => {
 				type: 'dns',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"target" is required');
@@ -723,7 +861,7 @@ describe('command schema', async () => {
 				target: '1.1.1.1',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided target is not a valid domain name');
@@ -735,7 +873,7 @@ describe('command schema', async () => {
 				target: '00517985.widget.windsorbongvape.com',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
@@ -750,7 +888,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"measurementOptions.resolver" does not match any of the allowed types');
@@ -765,7 +903,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
@@ -780,7 +918,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
@@ -795,7 +933,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"measurementOptions.port" must be a valid port');
@@ -810,7 +948,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 		});
@@ -819,10 +957,9 @@ describe('command schema', async () => {
 			const input = {
 				type: 'dns',
 				target: '_acme-challenge.abc.com',
-				measurementOptions: {},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 		});
@@ -840,7 +977,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('dns');
@@ -861,7 +998,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('dns');
@@ -891,7 +1028,7 @@ describe('command schema', async () => {
 				locations: [],
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
@@ -918,7 +1055,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
@@ -937,7 +1074,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"target" must be a valid ip address of one of the following versions [ipv4] with a forbidden CIDR');
@@ -954,7 +1091,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
@@ -971,7 +1108,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).not.to.exist;
 			expect(valid.value.type).to.equal('dns');
@@ -989,7 +1126,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).not.to.exist;
 			expect(valid.value.type).to.equal('dns');
@@ -1003,7 +1140,7 @@ describe('command schema', async () => {
 				type: 'mtr',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"target" is required');
@@ -1015,7 +1152,7 @@ describe('command schema', async () => {
 				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
@@ -1027,7 +1164,7 @@ describe('command schema', async () => {
 				target: '00517985.widget.windsorbongvape.com',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
@@ -1039,7 +1176,7 @@ describe('command schema', async () => {
 				target: '100.0.41.228',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
@@ -1054,7 +1191,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"measurementOptions.port" must be a valid port');
@@ -1066,7 +1203,7 @@ describe('command schema', async () => {
 				target: 'abc.com',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 		});
@@ -1077,7 +1214,7 @@ describe('command schema', async () => {
 				target: '_acme-challenge.abc.com',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 		});
@@ -1088,7 +1225,7 @@ describe('command schema', async () => {
 				target: '1.1.1.1',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 		});
@@ -1099,7 +1236,7 @@ describe('command schema', async () => {
 				target: '300.300.300.300',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
@@ -1114,7 +1251,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value.type).to.equal('mtr');
@@ -1139,7 +1276,7 @@ describe('command schema', async () => {
 				locations: [],
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
@@ -1163,7 +1300,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
@@ -1189,7 +1326,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"measurementOptions.resolver" must be a valid ip address of one of the following versions [ipv4] with a forbidden CIDR');
@@ -1213,7 +1350,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"measurementOptions.resolver" must be a valid ip address of one of the following versions [ipv4] with a forbidden CIDR');
 		});
@@ -1236,7 +1373,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
@@ -1258,7 +1395,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"measurementOptions.request.method" must be one of [GET, HEAD]');
@@ -1281,7 +1418,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"measurementOptions.protocol" must be one of [HTTP, HTTPS, HTTP2]');
@@ -1293,7 +1430,7 @@ describe('command schema', async () => {
 				target: '00517985.widget.windsorbongvape.com',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
@@ -1305,7 +1442,7 @@ describe('command schema', async () => {
 				target: '100.0.41.228',
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
@@ -1315,10 +1452,9 @@ describe('command schema', async () => {
 			const input = {
 				type: 'http',
 				target: '_sub.domani.com',
-				measurementOptions: {},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 		});
@@ -1332,7 +1468,7 @@ describe('command schema', async () => {
 				},
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"measurementOptions.port" must be a valid port');
@@ -1372,7 +1508,7 @@ describe('command schema', async () => {
 				limit: 1,
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
@@ -1414,7 +1550,7 @@ describe('command schema', async () => {
 				limit: 1,
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
@@ -1443,7 +1579,7 @@ describe('command schema', async () => {
 				limit: 1,
 			};
 
-			const valid = globalSchema.validate(input);
+			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
