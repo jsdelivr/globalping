@@ -56,8 +56,10 @@ module.exports = {
 		// measurement result TTL in redis
 		resultTTL: 7 * 24 * 60 * 60, // 7 days
 		limits: {
-			global: 500,
-			location: 200,
+			anonymousTestsPerLocation: 200,
+			anonymousTestsPerMeasurement: 500,
+			authenticatedTestsPerLocation: 500,
+			authenticatedTestsPerMeasurement: 500,
 		},
 		globalDistribution: {
 			AF: 5,

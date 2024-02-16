@@ -1,10 +1,10 @@
 import config from 'config';
-import type { Context } from 'koa';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 import requestIp from 'request-ip';
 import { createPersistentRedisClient } from './redis/persistent-client.js';
 import createHttpError from 'http-errors';
 import type { ExtendedContext } from '../types.js';
+import { credits } from './credits.js';
 
 const redisClient = await createPersistentRedisClient({ legacyMode: true });
 
@@ -43,6 +43,19 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 		setRateLimitHeaders(ctx, result, rateLimiter);
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
+			if (ctx.state.userId) {
+				const { isConsumed, requiredCredits, remainingCredits } = await consumeCredits(ctx.state.userId, error, numberOfProbes);
+
+				if (isConsumed) {
+					const result = await rateLimiter.reward(id, requiredCredits);
+					setConsumedHeaders(ctx, requiredCredits, remainingCredits);
+					setRateLimitHeaders(ctx, result, rateLimiter);
+					return;
+				}
+
+				setRequiredHeaders(ctx, requiredCredits, remainingCredits);
+			}
+
 			const result = await rateLimiter.reward(id, numberOfProbes);
 			setRateLimitHeaders(ctx, result, rateLimiter);
 			throw createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
@@ -52,8 +65,30 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 	}
 };
 
-const setRateLimitHeaders = (ctx: Context, result: RateLimiterRes, rateLimiter: RateLimiterRedis) => {
+const consumeCredits = async (userId: string, rateLimiterRes: RateLimiterRes, numberOfProbes: number) => {
+	const freeCredits = config.get<number>('measurement.authenticatedRateLimit');
+	const requiredCredits = Math.min(rateLimiterRes.consumedPoints - freeCredits, numberOfProbes);
+	const { isConsumed, remainingCredits } = await credits.consume(userId, requiredCredits);
+
+	return {
+		isConsumed,
+		requiredCredits,
+		remainingCredits,
+	};
+};
+
+const setRateLimitHeaders = (ctx: ExtendedContext, result: RateLimiterRes, rateLimiter: RateLimiterRedis) => {
 	ctx.set('X-RateLimit-Reset', `${Math.round(result.msBeforeNext / 1000)}`);
 	ctx.set('X-RateLimit-Limit', `${rateLimiter.points}`);
 	ctx.set('X-RateLimit-Remaining', `${result.remainingPoints}`);
+};
+
+const setConsumedHeaders = (ctx: ExtendedContext, consumedCredits: number, remainingCredits: number) => {
+	ctx.set('X-Credits-Consumed', `${consumedCredits}`);
+	ctx.set('X-Credits-Remaining', `${remainingCredits}`);
+};
+
+const setRequiredHeaders = (ctx: ExtendedContext, requiredCredits: number, remainingCredits: number) => {
+	ctx.set('X-Credits-Required', `${requiredCredits}`);
+	ctx.set('X-Credits-Remaining', `${remainingCredits}`);
 };

@@ -44,3 +44,12 @@ CREATE TABLE IF NOT EXISTS gp_tokens (
 	expire DATE,
 	date_last_used DATE
 );
+
+CREATE TABLE IF NOT EXISTS gp_credits (
+  id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	AMOUNT INT,
+	user_id VARCHAR(36) NOT NULL,
+	CONSTRAINT gp_credits_user_id_unique UNIQUE (user_id),
+	CONSTRAINT gp_credits_amount_positive CHECK (`amount` >= 0)
+);

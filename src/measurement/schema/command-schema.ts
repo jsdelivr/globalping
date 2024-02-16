@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import {
-	joiSchemaErrorMessage as joiMalwareSchemaErrorMessage,
+	joiSchemaErrorMessages as joiMalwareSchemaErrorMessages,
 } from '../../lib/malware/client.js';
 import {
 	joiValidateDomain,
@@ -11,7 +11,7 @@ import {
 } from './utils.js';
 
 export const schemaErrorMessages = {
-	...joiMalwareSchemaErrorMessage(),
+	...joiMalwareSchemaErrorMessages,
 	'ip.private': 'Private hostnames are not allowed.',
 	'domain.invalid': 'Provided target is not a valid domain name',
 };

@@ -1,5 +1,5 @@
 import { type RemoteSocket, Server, Socket } from 'socket.io';
-import { createAdapter } from '@socket.io/redis-adapter';
+import { createShardedAdapter } from '@socket.io/redis-adapter';
 // eslint-disable-next-line n/no-missing-import
 import type { DefaultEventsMap } from 'socket.io/dist/typed-events.js';
 import type { Probe } from '../../probe/types.js';
@@ -32,7 +32,9 @@ export const initWsServer = async () => {
 		pingTimeout: 3000,
 	});
 
-	io.adapter(createAdapter(pubClient, subClient));
+	io.adapter(createShardedAdapter(pubClient, subClient, {
+		subscriptionMode: 'static',
+	}));
 };
 
 export const getWsServer = (): WsServer => {

@@ -2,7 +2,7 @@ import type { Schema } from 'joi';
 import type { ExtendedMiddleware } from '../../../types.js';
 
 export const validate = (schema: Schema): ExtendedMiddleware => async (ctx, next) => {
-	const valid = schema.validate(ctx.request.body, { convert: true });
+	const valid = schema.validate(ctx.request.body, { convert: true, context: ctx.state });
 
 	if (valid.error) {
 		const fields = valid.error.details.map(field => [ field.path.join('.'), String(field?.message) ]);

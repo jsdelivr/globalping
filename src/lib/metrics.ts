@@ -52,7 +52,7 @@ export class MetricsAgent {
 	}
 
 	private async updateMeasurementCount (): Promise<void> {
-		const count = await this.redis.count('gp:measurement:*');
+		const count = await this.redis.count('Xgp:measurement:*');
 
 		newrelic.recordMetric('measurement_record_count', count);
 	}

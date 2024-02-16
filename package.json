@@ -9,7 +9,7 @@
 		"@koa/router": "^12.0.1",
 		"@maxmind/geoip2-node": "^4.2.0",
 		"@redocly/openapi-core": "^1.6.0",
-		"@socket.io/redis-adapter": "^8.2.1",
+		"@socket.io/redis-adapter": "github:MartinKolarik/socket.io-redis-adapter#dist",
 		"adm-zip": "^0.5.10",
 		"any-ascii": "^0.3.2",
 		"bluebird": "^3.7.2",
@@ -36,7 +36,7 @@
 		"lru-cache": "^10.1.0",
 		"maxmind": "^4.3.18",
 		"mysql": "^2.18.1",
-		"newrelic": "^10.6.2",
+		"newrelic": "^11.10.3",
 		"physical-cpu-count": "^2.0.0",
 		"rate-limiter-flexible": "^2.4.2",
 		"redis": "^4.6.12",
@@ -117,7 +117,7 @@
 		"download:files": "tsx src/lib/download-files.ts",
 		"prepare": "npm run download:files; husky install || echo 'Failed to install husky'",
 		"stats": "NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false tsx probes-stats/known.ts",
-		"start": "NODE_ENV=production node --max_old_space_size=3584 --max-semi-space-size=128 --experimental-loader newrelic/esm-loader.mjs dist/src/index.js",
+		"start": "NODE_ENV=production node --max_old_space_size=3584 --max-semi-space-size=128 --experimental-loader newrelic/esm-loader.mjs -r newrelic dist/src/index.js",
 		"start:dev": "NODE_ENV=development FAKE_PROBE_IP=api NEW_RELIC_ENABLED=false tsx src/index.ts",
 		"start:test": "NODE_ENV=test FAKE_PROBE_IP=api NEW_RELIC_ENABLED=false tsx src/index.ts",
 		"lint": "npm run lint:js && npm run lint:types && npm run lint:docs",
@@ -139,6 +139,6 @@
 		"*.{cjs,js,json,ts}": "eslint --cache --fix"
 	},
 	"engines": {
-		"node": "18"
+		"node": "20"
 	}
 }
