@@ -2,12 +2,13 @@ components:
   schemas:
     AsnCode:
       type: integer
-      description: An autonomous system number.
+      description: An autonomous system number (ASN).
     CountryCode:
       type: string
-      description: An ISO 3166-1 alpha-2 country code.
+      description: A two-letter country code based on [ISO 3166-1 alpha-2](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements).
     ContinentCode:
       type: string
+      description: A two-letter continent code.
       enum:
         - AF
         - AN
@@ -20,6 +21,7 @@ components:
       type: string
       description: A city name in English.
     CreateMeasurementResponse:
+      description: Contains information about the newly created measurement.
       type: object
       required:
         - id
@@ -27,17 +29,23 @@ components:
       properties:
         id:
           type: string
+          description: |
+            The measurement ID.
+            > **Tip**: You can use the ID to create a new measurement request, reusing the same probes.
         probesCount:
           $ref: 'schemas.yaml#/components/schemas/MeasurementProbesCount'
     Latitude:
       type: number
+      description: The latitude of probe location.
     Longitude:
       type: number
+      description: The longitude of probe location.
     MeasurementLimit:
       type: integer
       description: |
-        Specifies the maximum number of probes that run the measurement.
+        The maximum number of probes that should run the measurement.
         The result count might be lower if there aren't enough probes available in the specified locations.
+        Mutually exclusive with the `limit` property that can be set for individual locations.
       minimum: 1
       maximum: 500
       default: 1
@@ -64,14 +72,16 @@ components:
         magic:
           type: string
           description: |
-            Fuzzy matching based on the `country`, `city`, `state`, `continent`, `region`, `asn` (using `AS` prefix, e.g., `AS123`), `tags`, and `network` values.
-            Includes the full names, ISO codes (where applicable), and common aliases.
+            Locations defined in a single string instead of the respective location properties.
+            The API performs fuzzy matching on the `country`, `city`, `state`, `continent`, `region`, `asn` (using `AS` prefix, e.g., `AS123`), `tags`, and `network` values.
+            Supports full names, ISO codes (where applicable), and common aliases.
             Multiple conditions can be combined using the `+` character.
         limit:
           type: integer
           description: |
-            Mutually exclusive with the global `limit`.
-            Specifies the maximum number of probes that run the measurement in this location.
+            The maximum number of probes that should run the measurement in this location.
+            The result count might be lower if there aren't enough probes available in this location.
+            Mutually exclusive with the global `limit` property.
           minimum: 1
           maximum: 200
           default: 1
@@ -79,16 +89,18 @@ components:
       oneOf:
         - type: array
           description: |
-            An array of locations from which to run the measurement. Each object specifies a location using one or multiple keys.
+            An array of locations from which to run the measurement. Each object specifies a location using one or more keys, such as country, city, ASN, etc.
           items:
             $ref: 'schemas.yaml#/components/schemas/MeasurementLocationOption'
         - type: string
           description: |
-            `id` of a previous measurement - its probes are reused for the new measurement and returned in the same order.
+            The `id` of a previous measurement whose probes you want to reuse.
+            The probes are returned in the same order as in the previous measurement.
             Measurement type and options are not reused and need to be specified in the request.
             Note that this option only works for the lifetime of the original measurement
             and will result in a `422` response for expired or invalid `id` values.
     MeasurementOptions:
+      description: Additional optional fields depending on the measurement `type`.
       anyOf:
         - $ref: 'schemas.yaml#/components/schemas/MeasurementPingOptions'
         - $ref: 'schemas.yaml#/components/schemas/MeasurementTracerouteOptions'
@@ -285,6 +297,7 @@ components:
       properties:
         packets:
           type: integer
+          description: The number of packets to send.
           default: 3
           minimum: 1
           maximum: 16
@@ -295,11 +308,13 @@ components:
       properties:
         port:
           type: integer
+          description: The destination port for the data packets.
           minimum: 0
           maximum: 65535
           default: 80
         protocol:
           type: string
+          description: The transport protocol to use.
           enum:
             - ICMP
             - TCP
@@ -317,6 +332,7 @@ components:
           properties:
             type:
               type: string
+              description: The type of DNS query.
               enum:
                 - A
                 - AAAA
@@ -338,11 +354,13 @@ components:
           $ref: 'schemas.yaml#/components/schemas/MeasurementResolver'
         port:
           type: integer
+          description: The port number to send the query to.
           minimum: 0
           maximum: 65535
           default: 53
         protocol:
           type: string
+          description: The protocol to use for the DNS query.
           enum:
             - TCP
             - UDP
@@ -359,11 +377,13 @@ components:
       properties:
         port:
           type: integer
+          description: The port number to use.
           minimum: 0
           maximum: 65535
           default: 80
         protocol:
           type: string
+          description: The transport protocol to use.
           enum:
             - ICMP
             - TCP
@@ -371,6 +391,7 @@ components:
           default: ICMP
         packets:
           type: integer
+          description: The number of packets to send to each hop.
           default: 3
           minimum: 1
           maximum: 16
@@ -390,10 +411,13 @@ components:
                 An optional override for the `Host` header. The default value is based on the `target`.
             path:
               type: string
+              description: The path portion of the URL.
             query:
               type: string
+              description: The query string portion of the URL.
             method:
               type: string
+              description: The HTTP method to use.
               enum:
                 - HEAD
                 - GET
@@ -408,11 +432,13 @@ components:
           $ref: 'schemas.yaml#/components/schemas/MeasurementResolver'
         port:
           type: integer
+          description: The port number to use.
           minimum: 0
           maximum: 65535
           default: 80
         protocol:
           type: string
+          description: The transport protocol to use.
           enum:
             - HTTP
             - HTTPS
@@ -420,16 +446,18 @@ components:
           default: HTTPS
     MeasurementProbesCount:
       type: integer
-      description: The number of probes that performed the measurement. Smaller or equal to `limit`.
+      description: |
+        The actual number of probes that performed the measurement tests.
+        Smaller or equal to `limit`, depending on probe availability.
     MeasurementResolver:
-      description: A DNS resolver to use for the query. Defaults to the probe's system resolver.
+      description: A DNS resolver to use for the query. Defaults to the probe system resolver.
       anyOf:
         - type: string
           format: ipv4
-          description: An IPv4 address.
+          description: The IPv4 address of the resolver.
         - type: string
           format: hostname
-          description: A Fully Qualified Domain Name (FQDN).
+          description: The Fully Qualified Domain Name (FQDN) of the resolver.
     MeasurementResultItem:
       type: object
       required:
@@ -440,7 +468,7 @@ components:
           allOf:
             - $ref: 'schemas.yaml#/components/schemas/ProbeLocation'
             - type: object
-              description: Information about the probe that performed this test.
+              description: Information about the probe that performed this test, such as its location, tags, and resolvers.
               required:
                 - tags
                 - resolvers
@@ -453,17 +481,18 @@ components:
           $ref: 'schemas.yaml#/components/schemas/TestResult'
     MeasurementStatus:
       type: string
-      description: The measurement status. Any value other than `in-progress` is final.
+      description: The current measurement status. Any value other than `in-progress` is final.
       enum:
         - in-progress
         - finished
     MeasurementTarget:
       type: string
       description: |
-        A public endpoint on which the measurement is executed.
-        Typically a hostname or an IPv4 address. The exact format depends on the measurement type.
+        A publicly reachable measurement target.
+        Typically a hostname or an IPv4 address, depending on the measurement `type`.
     MeasurementType:
       type: string
+      description: The measurement type.
       enum:
         - ping
         - traceroute
@@ -486,10 +515,9 @@ components:
             inProgressUpdates:
               type: boolean
               description: |
-                Specifies if the results of the measurement should be updated while being in progress.
-                If `false`, results are populated to the measurement object only after the test finishes.
-                If `true`, partial results are returned as soon as they are available and can be presented to the user in real-time.
-                Note that only the top 5 tests from the results array will update in real-time.
+                Indicates whether you want to get partial results while the measurement is still running:
+                - If `true`, partial results are returned as soon as they are available, and you can present them to the user in real time. Note that only the first 5 tests from the `results` array will update in real time.
+                - If `false`, the result of each test is updated only after the test finishes.
               default: false
             locations:
               $ref: 'schemas.yaml#/components/schemas/MeasurementLocations'
@@ -511,6 +539,7 @@ components:
       properties:
         id:
           type: string
+          description: The measurement ID.
         type:
           $ref: 'schemas.yaml#/components/schemas/MeasurementType'
         target:
@@ -520,33 +549,33 @@ components:
         createdAt:
           type: string
           format: date-time
-          description: Time when the measurement was created.
+          description: The date and time when the measurement was created.
         updatedAt:
           type: string
           format: date-time
-          description: Time when the measurement was last updated.
+          description: The date and time when the measurement was last updated.
         probesCount:
           $ref: 'schemas.yaml#/components/schemas/MeasurementProbesCount'
         locations:
           allOf:
             - $ref: 'schemas.yaml#/components/schemas/MeasurementLocations'
-            - description: The locations specified when creating the measurement.
+            - description: The locations you specified when creating the measurement.
         limit:
           allOf:
             - $ref: 'schemas.yaml#/components/schemas/MeasurementLimit'
-            - description: The limit specified when creating the measurement if different from default.
+            - description: The limit you specified when creating the measurement if different from the default value.
         measurementOptions:
           allOf:
             - $ref: 'schemas.yaml#/components/schemas/MeasurementOptions'
-            - description: The options specified when creating the measurement if different from default.
+            - description: The options you specified when creating the measurement if different from the default.
         results:
           type: array
-          description: The measurement results.
+          description: An array containing the measurement results.
           items:
             $ref: 'schemas.yaml#/components/schemas/MeasurementResultItem'
     NetworkName:
       type: string
-      description: A network name.
+      description: A network name, such as "Google LLC" or "DigitalOcean, LLC".
     NullableInteger:
       type:
         - integer
@@ -565,7 +594,7 @@ components:
       properties:
         version:
           type: string
-          description: Probe version.
+          description: The probe version.
         location:
           $ref: 'schemas.yaml#/components/schemas/ProbeLocation'
         tags:
@@ -574,6 +603,7 @@ components:
           $ref: 'schemas.yaml#/components/schemas/ProbeResolvers'
     ProbeLocation:
       type: object
+      description: The probe location information.
       required:
         - continent
         - region
@@ -607,13 +637,13 @@ components:
       anyOf:
         - type: string
           format: ipv4
-          description: An IPv4 address.
+          description: The IPv4 address of the resolver.
         - type: string
           const: private
-          description: Indicates the resolver points to a private IP address.
+          description: Indicates that the resolver points to a private IP address.
     ProbeResolvers:
       type: array
-      description: A list of default DNS resolvers configured on the probe.
+      description: An array of the default resolvers configured on the probe.
       items:
         $ref: 'schemas.yaml#/components/schemas/ProbeResolver'
     Probes:
@@ -623,8 +653,7 @@ components:
     RegionName:
       type: string
       description: |
-        A Geographic Region name based on the
-        UN [Standard Country or Area Codes for Statistical Use (M49)](https://unstats.un.org/unsd/methodology/m49/).
+        A geographic region name based on UN [Standard Country or Area Codes for Statistical Use (M49)](https://unstats.un.org/unsd/methodology/m49/).
       enum:
         - Northern Africa
         - Eastern Africa
@@ -665,7 +694,7 @@ components:
       type:
         - string
         - 'null'
-      description: Only for US states. A two-letter state code based on ISO 3166-2.
+      description: A two-letter [US state code](https://www.faa.gov/air_traffic/publications/atpubs/cnt_html/appendix_a.html).
     StatsRttMin:
       type: number
       description: The lowest `rtt` value.
@@ -689,7 +718,7 @@ components:
         - description: The highest `rtt` value.
     StatsPacketsTotal:
       type: integer
-      description: The number of sent packets.
+      description: The number of packets sent.
     StatsPacketsRcv:
       type: integer
       description: The number of received packets.
@@ -714,10 +743,9 @@ components:
     Tags:
       type: array
       description: |
-        An array of additional values that can be used to target the probe.
-        Probes hosted in [AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)
-        and [Google Cloud](https://cloud.google.com/compute/docs/regions-zones#available) are automatically assigned the service region code.
-        Probes are also automatically assigned `datacenter-network` and `eyeball-network` tags to distinguish between datacenter and end-user locations.
+        An array of additional values to fine-tune probe selection:
+        - Probes hosted in [AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) and [Google Cloud](https://cloud.google.com/compute/docs/regions-zones#available) are automatically assigned the service region code. For example: `aws-eu-west-1` and `gcp-us-south1`.
+        - Probes are automatically assigned `datacenter-network` and `eyeball-network` tags to distinguish between datacenter and end-user locations.
       items:
         type: string
     TestResult:
@@ -744,7 +772,7 @@ components:
       type: object
       title: InProgressTestResult
       description: |
-        Represents an `in-progress` test where most fields are not available.
+        Represents an `in-progress` test where most fields are not yet available.
       required:
         - status
         - rawOutput
@@ -770,8 +798,8 @@ components:
       type: object
       title: OfflineTestResult
       description: |
-        Represents an `offline` test where the requested probe is currently offline and most fields are not available.
-        Only possible when passing an `id` of a previous measurement to the `locations` field.
+        Represents an `offline` test where the requested probe was not available to run the test and most fields are not available.
+        Only possible when you pass the `id` of a previous measurement in the `locations` field.
       required:
         - status
         - rawOutput
@@ -782,6 +810,7 @@ components:
           $ref: 'schemas.yaml#/components/schemas/TestRawOutput'
     FinishedPingTestResult:
       title: FinishedPingTestResult
+      description: Represents a `finished` ping test.
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/BaseFinishedTestResult'
         - type: object
@@ -826,7 +855,7 @@ components:
             timings:
               type: array
               description: |
-                Details for each sent packet.
+                An array containing details for each packet.
                 All times are in milliseconds.
               items:
                 type: object
@@ -840,6 +869,7 @@ components:
                     $ref: 'schemas.yaml#/components/schemas/TimingPacketTtl'
     FinishedTracerouteTestResult:
       title: FinishedTracerouteTestResult
+      description: Represents a `finished` traceroute test.
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/BaseFinishedTestResult'
         - type: object
@@ -854,7 +884,7 @@ components:
               $ref: 'schemas.yaml#/components/schemas/ResolvedHostname'
             hops:
               type: array
-              description: Details for each hop.
+              description: An array containing details about each hop.
               items:
                 type: object
                 required:
@@ -869,7 +899,7 @@ components:
                   timings:
                     type: array
                     description: |
-                      Details for each sent packet.
+                      An array containing details for each packet.
                       All times are in milliseconds.
                     items:
                       type: object
@@ -897,6 +927,7 @@ components:
       description: The HTTP response status code name.
     FinishedSimpleDnsTestResult:
       title: FinishedSimpleDnsTestResult
+      description: Represents a `finished` DNS test with `trace` disabled.
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/BaseFinishedTestResult'
         - type: object
@@ -911,6 +942,7 @@ components:
         - $ref: 'schemas.yaml#/components/schemas/DnsTestHopResult'
     FinishedTraceDnsTestResult:
       title: FinishedTraceDnsTestResult
+      description: Represents a `finished` DNS test with `trace` enabled.
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/BaseFinishedTestResult'
         - type: object
@@ -919,6 +951,7 @@ components:
           properties:
             hops:
               type: array
+              description: An array containing details about each hop.
               items:
                 $ref: 'schemas.yaml#/components/schemas/DnsTestHopResult'
     DnsTestHopResult:
@@ -933,17 +966,20 @@ components:
           description: The hostname or IP of the resolver that answered the query.
         answers:
           type: array
-          description: The list of received resource records.
+          description: An array of the received resource records.
           items:
             $ref: 'schemas.yaml#/components/schemas/DnsTestAnswer'
         timings:
           type: object
+          description: |
+            Details about the query times.
+            All times are in milliseconds.
           required:
             - total
           properties:
             total:
               type: number
-              description: The total query time in milliseconds.
+              description: The total query time.
     DnsTestAnswer:
       type: object
       required:
@@ -961,7 +997,7 @@ components:
           description: The record type.
         ttl:
           type: integer
-          description: The record TTL in seconds.
+          description: The record time-to-live value in seconds.
         class:
           type: string
           description: The record class.
@@ -970,6 +1006,7 @@ components:
           description: The record value.
     FinishedMtrTestResult:
       title: FinishedMtrTestResult
+      description: Represents a `finished` MTR test.
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/BaseFinishedTestResult'
         - type: object
@@ -984,6 +1021,7 @@ components:
               $ref: 'schemas.yaml#/components/schemas/ResolvedHostname'
             hops:
               type: array
+              description: An array containing details about each hop.
               items:
                 type: object
                 required:
@@ -1003,7 +1041,7 @@ components:
                       - description: The resolved hostname of this hop.
                   asn:
                     type: array
-                    description: The list of ASNs assigned to this hop.
+                    description: An array containing the ASNs assigned to this hop.
                     items:
                       type: integer
                   stats:
@@ -1049,7 +1087,7 @@ components:
                   timings:
                     type: array
                     description: |
-                      Details for each sent packet.
+                      An array containing details for each packet.
                       All times are in milliseconds.
                     items:
                       type: object
@@ -1060,6 +1098,7 @@ components:
                           $ref: 'schemas.yaml#/components/schemas/TimingPacketRtt'
     FinishedHttpTestResult:
       title: FinishedHttpTestResult
+      description: Represents a `finished` HTTP test.
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/BaseFinishedTestResult'
         - type: object
@@ -1079,11 +1118,13 @@ components:
               description: The raw HTTP response headers.
             rawBody:
               type: string
-              description: The raw HTTP response body. Only the first 10 kb are returned.
+              description: |
+                The raw HTTP response body.
+                Note that only the first 10 kb are returned.
             truncated:
               type: boolean
               description: |
-                `true` if `rawBody` was truncated due to being too big, `false` otherwise.
+                Indicates whether the `rawBody` value was truncated due to being too big.
             headers:
               type: object
               description: The HTTP response headers.
@@ -1097,6 +1138,9 @@ components:
               $ref: 'schemas.yaml#/components/schemas/ResolvedAddress'
             timings:
               type: object
+              description: |
+                Details about the HTTP request times.
+                All times are in milliseconds.
               required:
                 - total
                 - dns
@@ -1118,17 +1162,18 @@ components:
                 download:
                   $ref: 'schemas.yaml#/components/schemas/TimingHttpDownloadNullable'
             tls:
+              description: Information about the TLS certificate or `null` if no TLS certificate is available.
               oneOf:
                 - $ref: 'schemas.yaml#/components/schemas/TlsCertificate'
                 - type: 'null'
     TestRawOutput:
       type: string
       description: |
-        The raw output can be presented to users but is not meant to be parsed clients.
+        The raw output of the test. Can be presented to users but is not meant to be parsed by clients.
         Please use the individual values provided in other fields for automated processing.
     BaseTestStatus:
       type: string
-      description: The test status. Any value other than `in-progress` is final.
+      description: The current test status. Any value other than `in-progress` is final.
     InProgressTestStatus:
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/BaseTestStatus'
@@ -1150,7 +1195,7 @@ components:
       description: The round-trip time for this packet.
     TimingPacketTtl:
       type: number
-      description: The packet time-to-live value.
+      description: The time-to-live value of this packet.
     TimingHttpTotalNullable:
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
@@ -1174,10 +1219,10 @@ components:
     TimingHttpDownloadNullable:
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
-        - description: The time from the first byte to downloading the whole response.
+        - description: The time from the first response byte to downloading the entire response.
     TlsCertificate:
       type: object
-      description: The TLS session information.
+      title: TlsCertificate
       required:
         - authorized
         - createdAt
@@ -1188,16 +1233,18 @@ components:
         authorized:
           type: boolean
           description: |
-            `true` if the certificate is valid and signed by a trusted authority, `false` otherwise.
+            Indicates whether a trusted authority signed the certificate.
         error:
           type: string
           description: |
             The reason for rejecting the certificate if `authorized` is `false`.
         createdAt:
           type: string
+          description: The creation date and time of the certificate.
           format: date-time
         expiresAt:
           type: string
+          description: The expiration date and time of the certificate.
           format: date-time
         subject:
           $ref: 'schemas.yaml#/components/schemas/TlsCertificateSubject'
@@ -1205,6 +1252,7 @@ components:
           $ref: 'schemas.yaml#/components/schemas/TlsCertificateIssuer'
     TlsCertificateIssuer:
       type: object
+      description: Information about the certificate issuer.
       required:
         - C
         - O
@@ -1221,6 +1269,7 @@ components:
           description: The issuer's common name.
     TlsCertificateSubject:
       type: object
+      description: Information about the certificate subject.
       required:
         - CN
         - alt

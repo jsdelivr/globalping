@@ -32,7 +32,7 @@ components:
       schema:
         type: integer
     RateLimitReset:
-      description: The number of seconds until the limit is reset.
+      description: The number of seconds until the limit resets.
       required: true
       schema:
         type: integer

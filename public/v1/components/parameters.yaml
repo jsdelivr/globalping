@@ -1,6 +1,7 @@
 components:
   parameters:
     measurementId:
+      description: The ID of the measurement you want to retrieve.
       in: path
       name: id
       required: true

@@ -27,6 +27,9 @@ components:
         ]
     createMeasurementPingLocations:
       summary: 'ping: specific locations'
+      description: |
+        Use the `locations` object to define locations from which the API should select probes.
+        In this example, we're selecting probes based on the `country`, but you can use other properties like `city`, `asn`, etc. to fine-tune the selection.
       value:
         {
           "type": "ping",
@@ -38,6 +41,10 @@ components:
         }
     createMeasurementPingLocationsLimit:
       summary: 'ping: specific locations and limit'
+      description: |
+        Use the `limit` property to specify how many probes the API should pick per location.
+        Alternatively, you can use the measurement's global `limit` property to have the API divide the probes evenly among the locations.
+        If you don't define a limit value, the global limit value is set to 1.
       value:
         {
           "type": "ping",
@@ -49,6 +56,12 @@ components:
         }
     createMeasurementPingLocationsMagic:
       summary: 'ping: magic location filter'
+      description: |
+        Instead of defining the individual object properties for each location type, you can ask the API to find the best match across
+        all location fields. For example, rather than explicitly defining a country and a city, you can write `magic: country+city`.
+
+        We recommend using this field in real time applications that allow free-form user input. On the other hand, defining the
+        specific location keys may be a better option for scripts, as it makes the selection stricter and therefore more predictable.
       value:
         {
           "type": "ping",
@@ -67,6 +80,7 @@ components:
         }
     createMeasurementPingCustom:
       summary: 'ping: custom options'
+      description: Depending on the measurement `type`, you may provide additional measurement options. In this example, we set the number of packets to send for our ping test. You can find all available options in the request body schema.
       value:
         {
           "type": "ping",
@@ -77,6 +91,7 @@ components:
         }
     createMeasurementPingLocationsMeasurementId:
       summary: 'ping: previous measurement id'
+      description: If you want to reuse probes from a previous measurement, pass its `id` in the `locations` field. Note that some probes may be offline and no longer unavailable - this will be indicated in the results.
       value:
         {
           "type": "ping",
