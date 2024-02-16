@@ -117,6 +117,12 @@ components:
           $ref: 'headers.yaml#/components/headers/RateLimitRemaining'
         X-RateLimit-Reset:
           $ref: 'headers.yaml#/components/headers/RateLimitReset'
+        X-Credits-Consumed:
+          $ref: 'headers.yaml#/components/headers/CreditsConsumed'
+        X-Credits-Required:
+          $ref: 'headers.yaml#/components/headers/CreditsRequired'
+        X-Credits-Remaining:
+          $ref: 'headers.yaml#/components/headers/CreditsRemaining'
       content:
         application/json:
           schema:
