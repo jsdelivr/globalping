@@ -1,17 +1,7 @@
-import config from 'config';
-import {
-	createClient,
-	type RedisClientType,
-	type RedisDefaultModules,
-	type RedisClientOptions,
-	type RedisFunctions,
-} from 'redis';
-import { scopedLogger } from '../logger.js';
-import { scripts, type RedisScripts } from './scripts.js';
+import type { RedisClientOptions } from 'redis';
+import { createRedisClientInternal, type RedisClient } from './shared.js';
 
-const logger = scopedLogger('redis-client');
-
-export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts>;
+export type { RedisClient } from './shared.js';
 
 let redis: RedisClient;
 
@@ -21,22 +11,11 @@ export const initRedisClient = async () => {
 };
 
 const createRedisClient = async (options?: RedisClientOptions): Promise<RedisClient> => {
-	const client = createClient({
-		...config.util.toObject(config.get('redis')) as RedisClientOptions,
+	return createRedisClientInternal({
 		...options,
-		database: 1,
+		database: 2,
 		name: 'non-persistent',
-		scripts,
 	});
-
-	client
-		.on('error', (error: Error) => logger.error('connection error', error))
-		.on('ready', () => logger.info('connection ready'))
-		.on('reconnecting', () => logger.info('reconnecting'));
-
-	await client.connect();
-
-	return client;
 };
 
 export const getRedisClient = (): RedisClient => {

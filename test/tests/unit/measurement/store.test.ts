@@ -48,7 +48,7 @@ describe('measurement store', () => {
 
 	before(async () => {
 		td.replaceEsm('crypto-random-string', null, () => 'measurementid');
-		await td.replaceEsm('../../../../src/lib/redis/persistent-client.ts', { getPersistentRedisClient: () => redisMock });
+		await td.replaceEsm('../../../../src/lib/redis/measurement-client.ts', { getMeasurementRedisClient: () => redisMock });
 		getMeasurementStore = (await import('../../../../src/measurement/store.js')).getMeasurementStore;
 	});
 

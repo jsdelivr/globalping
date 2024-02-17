@@ -4,7 +4,7 @@ import got from 'got';
 import AdmZip from 'adm-zip';
 import csvParser from 'csv-parser';
 import _ from 'lodash';
-import { getRedisClient, RedisClient } from '../redis/client.js';
+import { getRedisClient, type RedisClient } from '../redis/client.js';
 import { throttle } from '../ws/helper/throttle.js';
 import { scopedLogger } from '../logger.js';
 import { getIsDcCity } from './dc-cities.js';

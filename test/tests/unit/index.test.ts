@@ -3,15 +3,15 @@ import { EventEmitter } from 'node:events';
 import { expect } from 'chai';
 import * as td from 'testdouble';
 import * as sinon from 'sinon';
-import { getRedisClient, RedisClient } from '../../../src/lib/redis/client.js';
-import { getPersistentRedisClient, PersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
+import { getRedisClient, type RedisClient } from '../../../src/lib/redis/client.js';
+import { getPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
 
 describe('index file', () => {
 	const cluster: any = new EventEmitter();
 	cluster.isPrimary = true;
 	cluster.fork = sinon.stub();
 	let redis: RedisClient;
-	let persistentRedis: PersistentRedisClient;
+	let persistentRedis: RedisClient;
 
 	const readFile = sinon.stub().resolves('commitHash');
 
