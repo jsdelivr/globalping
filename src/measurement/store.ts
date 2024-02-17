@@ -9,14 +9,8 @@ import { getMeasurementRedisClient, type RedisClient } from '../lib/redis/measur
 
 const logger = scopedLogger('store');
 
-export const getMeasurementKey = (id: string, suffix: string | undefined = undefined): string => {
-	let key = `gp:measurement:${id}`;
-
-	if (suffix) {
-		key += `:${suffix}`;
-	}
-
-	return key;
+export const getMeasurementKey = (id: string, suffix: string = 'results'): string => {
+	return `gp:m:${id}:${suffix}`;
 };
 
 const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unknown> = {}) => {

@@ -31,8 +31,8 @@ const recordResult: RecordResultScript = defineScript({
 	local testId = KEYS[2]
 	local data = KEYS[3]
 	local date = KEYS[4]
-	local key = 'gp:measurement:'..measurementId
-	local awaitingKey = key..':probes_awaiting'
+	local key = 'gp:m:'..measurementId..':results'
+	local awaitingKey = 'gp:m:'..measurementId..':probes_awaiting'
 
 	local probesAwaiting = redis.call('GET', awaitingKey)
 	if not probesAwaiting then
@@ -61,8 +61,8 @@ const markFinished: MarkFinishedScript = defineScript({
 	NUMBER_OF_KEYS: 1,
 	SCRIPT: `
 	local measurementId = KEYS[1]
-	local key = 'gp:measurement:'..measurementId
-	local awaitingKey = key..':probes_awaiting'
+	local key = 'gp:m:'..measurementId..':results'
+	local awaitingKey = 'gp:m:'..measurementId..':probes_awaiting'
 
 	redis.call('HDEL', 'gp:in-progress', measurementId)
 	redis.call('DEL', awaitingKey)
