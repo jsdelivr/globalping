@@ -33,7 +33,8 @@ export const initWsServer = async () => {
 	});
 
 	io.adapter(createShardedAdapter(pubClient, subClient, {
-		subscriptionMode: 'static',
+		subscriptionMode: 'dynamic',
+		dynamicPrivateChannels: true,
 	}));
 };
 
