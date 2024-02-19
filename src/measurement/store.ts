@@ -5,18 +5,12 @@ import type { OfflineProbe, Probe } from '../probe/types.js';
 import { scopedLogger } from '../lib/logger.js';
 import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType, MeasurementResultMessage } from './types.js';
 import { getDefaults } from './schema/utils.js';
-import { getPersistentRedisClient, PersistentRedisClient } from '../lib/redis/persistent-client.js';
+import { getMeasurementRedisClient, type RedisClient } from '../lib/redis/measurement-client.js';
 
 const logger = scopedLogger('store');
 
-export const getMeasurementKey = (id: string, suffix: string | undefined = undefined): string => {
-	let key = `gp:measurement:${id}`;
-
-	if (suffix) {
-		key += `:${suffix}`;
-	}
-
-	return key;
+export const getMeasurementKey = (id: string, suffix: string = 'results'): string => {
+	return `gp:m:${id}:${suffix}`;
 };
 
 const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unknown> = {}) => {
@@ -41,7 +35,7 @@ const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, un
 };
 
 export class MeasurementStore {
-	constructor (private readonly redis: PersistentRedisClient) {}
+	constructor (private readonly redis: RedisClient) {}
 
 	async getMeasurementString (id: string): Promise<string> {
 		return this.redis.sendCommand([ 'JSON.GET', getMeasurementKey(id) ]);
@@ -238,7 +232,7 @@ let store: MeasurementStore;
 
 export const getMeasurementStore = () => {
 	if (!store) {
-		store = new MeasurementStore(getPersistentRedisClient());
+		store = new MeasurementStore(getMeasurementRedisClient());
 		store.scheduleCleanup();
 	}
 

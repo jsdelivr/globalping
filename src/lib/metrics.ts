@@ -4,7 +4,7 @@ import newrelic from 'newrelic';
 
 import { getWsServer, PROBES_NAMESPACE } from './ws/server.js';
 import { scopedLogger } from './logger.js';
-import { getPersistentRedisClient, PersistentRedisClient } from './redis/persistent-client.js';
+import { getMeasurementRedisClient, type RedisClient } from './redis/measurement-client.js';
 
 const logger = scopedLogger('metrics');
 
@@ -13,7 +13,7 @@ export class MetricsAgent {
 
 	constructor (
 		private readonly io: SocketServer,
-		private readonly redis: PersistentRedisClient,
+		private readonly redis: RedisClient,
 	) {}
 
 	run (): void {
@@ -52,9 +52,15 @@ export class MetricsAgent {
 	}
 
 	private async updateMeasurementCount (): Promise<void> {
-		const count = await this.redis.count('Xgp:measurement:*');
+		const [ dbSize, awaitingSize ] = await Promise.all([
+			this.redis.dbSize(),
+			this.redis.hLen('gp:in-progress'),
+		]);
 
-		newrelic.recordMetric('measurement_record_count', count);
+		// running measurements use 3 keys
+		// finished measurements use 2 keys
+		// 1 global key tracks the in-progress measurements
+		newrelic.recordMetric('measurement_record_count', Math.round((dbSize - awaitingSize - 1) / 2));
 	}
 }
 
@@ -62,7 +68,7 @@ let agent: MetricsAgent;
 
 export const getMetricsAgent = () => {
 	if (!agent) {
-		agent = new MetricsAgent(getWsServer(), getPersistentRedisClient());
+		agent = new MetricsAgent(getWsServer(), getMeasurementRedisClient());
 	}
 
 	return agent;

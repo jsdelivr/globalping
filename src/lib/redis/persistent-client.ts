@@ -1,45 +1,24 @@
-import config from 'config';
-import {
-	createClient,
-	type RedisClientType,
-	type RedisDefaultModules,
-	type RedisClientOptions,
-	type RedisFunctions,
-} from 'redis';
-import { scopedLogger } from '../logger.js';
-import { scripts, type RedisScripts } from './scripts.js';
+import type { RedisClientOptions } from 'redis';
+import { createRedisClientInternal, type RedisClient } from './shared.js';
 
-const logger = scopedLogger('persistent-redis-client');
+export type { RedisClient } from './shared.js';
 
-export type PersistentRedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts>;
-
-let redis: PersistentRedisClient;
+let redis: RedisClient;
 
 export const initPersistentRedisClient = async () => {
 	redis = await createPersistentRedisClient();
 	return redis;
 };
 
-export const createPersistentRedisClient = async (options?: RedisClientOptions): Promise<PersistentRedisClient> => {
-	const client = createClient({
-		...config.util.toObject(config.get('redis')) as RedisClientOptions,
+export const createPersistentRedisClient = async (options?: RedisClientOptions): Promise<RedisClient> => {
+	return createRedisClientInternal({
 		...options,
-		database: 0,
+		database: 1,
 		name: 'persistent',
-		scripts,
 	});
-
-	client
-		.on('error', (error: Error) => logger.error('connection error', error))
-		.on('ready', () => logger.info('connection ready'))
-		.on('reconnecting', () => logger.info('reconnecting'));
-
-	await client.connect();
-
-	return client;
 };
 
-export const getPersistentRedisClient = (): PersistentRedisClient => {
+export const getPersistentRedisClient = (): RedisClient => {
 	if (!redis) {
 		throw new Error('redis connection to persistent db is not initialized yet');
 	}

@@ -9,11 +9,13 @@ import { populateCitiesList } from './geoip/city-approximation.js';
 import { adoptedProbes } from './adopted-probes.js';
 import { reconnectProbes } from './ws/helper/reconnect-probes.js';
 import { initPersistentRedisClient } from './redis/persistent-client.js';
+import { initMeasurementRedisClient } from './redis/measurement-client.js';
 import { auth } from './http/auth.js';
 
 export const createServer = async (): Promise<Server> => {
 	await initRedisClient();
 	await initPersistentRedisClient();
+	await initMeasurementRedisClient();
 
 	// Populate memory malware list
 	await populateMemMalwareList();

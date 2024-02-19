@@ -48,7 +48,7 @@ describe('measurement store', () => {
 
 	before(async () => {
 		td.replaceEsm('crypto-random-string', null, () => 'measurementid');
-		await td.replaceEsm('../../../../src/lib/redis/persistent-client.ts', { getPersistentRedisClient: () => redisMock });
+		await td.replaceEsm('../../../../src/lib/redis/measurement-client.ts', { getMeasurementRedisClient: () => redisMock });
 		getMeasurementStore = (await import('../../../../src/measurement/store.js')).getMeasurementStore;
 	});
 
@@ -97,12 +97,12 @@ describe('measurement store', () => {
 		expect(redisMock.hScan.callCount).to.equal(1);
 		expect(redisMock.hScan.firstCall.args).to.deep.equal([ 'gp:in-progress', 0, { COUNT: 5000 }]);
 		expect(redisMock.json.mGet.callCount).to.equal(1);
-		expect(redisMock.json.mGet.firstCall.args).to.deep.equal([ [ 'gp:measurement:id1', 'gp:measurement:id2' ], '.' ]);
+		expect(redisMock.json.mGet.firstCall.args).to.deep.equal([ [ 'gp:m:id1:results', 'gp:m:id2:results' ], '.' ]);
 		expect(redisMock.hDel.callCount).to.equal(1);
 		expect(redisMock.hDel.firstCall.args).to.deep.equal([ 'gp:in-progress', [ 'id1', 'id2' ] ]);
 		expect(redisMock.json.set.callCount).to.equal(1);
 
-		expect(redisMock.json.set.firstCall.args).to.deep.equal([ 'gp:measurement:id1', '$', {
+		expect(redisMock.json.set.firstCall.args).to.deep.equal([ 'gp:m:id1:results', '$', {
 			id: 'id1',
 			type: 'ping',
 			status: 'finished',
@@ -137,10 +137,10 @@ describe('measurement store', () => {
 		expect(redisMock.hSet.callCount).to.equal(1);
 		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', 'measurementid', 1678000000000 ]);
 		expect(redisMock.set.callCount).to.equal(1);
-		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid:probes_awaiting', 4, { EX: 35 }]);
+		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:m:measurementid:probes_awaiting', 4, { EX: 35 }]);
 		expect(redisMock.json.set.callCount).to.equal(2);
 
-		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid', '$', {
+		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:m:measurementid:results', '$', {
 			id: 'measurementid',
 			type: 'ping',
 			status: 'in-progress',
@@ -215,11 +215,11 @@ describe('measurement store', () => {
 			}],
 		}]);
 
-		expect(redisMock.expire.args[0]).to.deep.equal([ 'gp:measurement:measurementid', 604800 ]);
+		expect(redisMock.expire.args[0]).to.deep.equal([ 'gp:m:measurementid:results', 604800 ]);
 
-		expect(redisMock.json.set.args[1]).to.deep.equal([ 'gp:measurement:measurementid:ips', '$', [ '1.1.1.1', '2.2.2.2', '3.3.3.3', '4.4.4.4' ] ]);
+		expect(redisMock.json.set.args[1]).to.deep.equal([ 'gp:m:measurementid:ips', '$', [ '1.1.1.1', '2.2.2.2', '3.3.3.3', '4.4.4.4' ] ]);
 
-		expect(redisMock.expire.args[1]).to.deep.equal([ 'gp:measurement:measurementid:ips', 604800 ]);
+		expect(redisMock.expire.args[1]).to.deep.equal([ 'gp:m:measurementid:ips', 604800 ]);
 	});
 
 	it('should initialize measurement object with the proper default values', async () => {
@@ -238,7 +238,7 @@ describe('measurement store', () => {
 		);
 
 		expect(redisMock.json.set.firstCall.args).to.deep.equal([
-			'gp:measurement:measurementid',
+			'gp:m:measurementid:results',
 			'$',
 			{
 				id: 'measurementid',
@@ -294,7 +294,7 @@ describe('measurement store', () => {
 		);
 
 		expect(redisMock.json.set.firstCall.args).to.deep.equal([
-			'gp:measurement:measurementid',
+			'gp:m:measurementid:results',
 			'$',
 			{
 				id: 'measurementid',
@@ -347,7 +347,7 @@ describe('measurement store', () => {
 		);
 
 		expect(redisMock.json.set.firstCall.args).to.deep.equal([
-			'gp:measurement:measurementid',
+			'gp:m:measurementid:results',
 			'$',
 			{
 				id: 'measurementid',
@@ -381,7 +381,7 @@ describe('measurement store', () => {
 			},
 		]);
 
-		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid:probes_awaiting', 0, { EX: 35 }]);
+		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:m:measurementid:probes_awaiting', 0, { EX: 35 }]);
 	});
 
 	it('should store non-default fields of the measurement request', async () => {
@@ -415,7 +415,7 @@ describe('measurement store', () => {
 			[ getProbe('id', '1.1.1.1') ],
 		);
 
-		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid', '$', {
+		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:m:measurementid:results', '$', {
 			id: 'measurementid',
 			type: 'http',
 			status: 'in-progress',
@@ -480,7 +480,7 @@ describe('measurement store', () => {
 			[ getProbe('id', '1.1.1.1') ],
 		);
 
-		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:measurement:measurementid', '$', {
+		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:m:measurementid:results', '$', {
 			id: 'measurementid',
 			type: 'http',
 			status: 'in-progress',
@@ -527,19 +527,19 @@ describe('measurement store', () => {
 		expect(redisMock.json.strAppend.callCount).to.equal(3);
 
 		expect(redisMock.json.strAppend.firstCall.args).to.deep.equal([
-			'gp:measurement:measurementid',
+			'gp:m:measurementid:results',
 			'$.results[testid].result.rawHeaders',
 			'headers',
 		]);
 
 		expect(redisMock.json.strAppend.secondCall.args).to.deep.equal([
-			'gp:measurement:measurementid',
+			'gp:m:measurementid:results',
 			'$.results[testid].result.rawBody',
 			'body',
 		]);
 
 		expect(redisMock.json.strAppend.thirdCall.args).to.deep.equal([
-			'gp:measurement:measurementid',
+			'gp:m:measurementid:results',
 			'$.results[testid].result.rawOutput',
 			'output',
 		]);
@@ -547,7 +547,7 @@ describe('measurement store', () => {
 		expect(redisMock.json.set.callCount).to.equal(1);
 
 		expect(redisMock.json.set.firstCall.args).to.deep.equal([
-			'gp:measurement:measurementid',
+			'gp:m:measurementid:results',
 			'$.updatedAt',
 			'2023-03-05T07:06:40.000Z',
 		]);

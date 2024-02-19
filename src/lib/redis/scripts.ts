@@ -1,15 +1,6 @@
 import { defineScript } from 'redis';
 import type { MeasurementRecord, MeasurementResultMessage } from '../../measurement/types.js';
 
-type CountScript = {
-	NUMBER_OF_KEYS: number;
-	SCRIPT: string;
-	transformArguments (key: string): string[];
-	transformReply (reply: number): number;
-} & {
-	SHA1: string;
-};
-
 type RecordResultScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
@@ -29,31 +20,9 @@ type MarkFinishedScript = {
 };
 
 export type RedisScripts = {
-	count: CountScript;
 	recordResult: RecordResultScript;
 	markFinished: MarkFinishedScript;
 };
-
-const count: CountScript = defineScript({
-	NUMBER_OF_KEYS: 1,
-	SCRIPT: `
-	local cursor = 0
-	local count = 0
-	repeat
-		local result = redis.call('SCAN', cursor, 'MATCH', KEYS[1], 'COUNT', 1000)
-		cursor = tonumber(result[1])
-		local keys = result[2]
-		count = count + #keys
-	until cursor == 0
-	return count
-	`,
-	transformArguments (key: string) {
-		return [ key ];
-	},
-	transformReply (reply: number) {
-		return reply;
-	},
-});
 
 const recordResult: RecordResultScript = defineScript({
 	NUMBER_OF_KEYS: 4,
@@ -62,8 +31,8 @@ const recordResult: RecordResultScript = defineScript({
 	local testId = KEYS[2]
 	local data = KEYS[3]
 	local date = KEYS[4]
-	local key = 'gp:measurement:'..measurementId
-	local awaitingKey = key..':probes_awaiting'
+	local key = 'gp:m:'..measurementId..':results'
+	local awaitingKey = 'gp:m:'..measurementId..':probes_awaiting'
 
 	local probesAwaiting = redis.call('GET', awaitingKey)
 	if not probesAwaiting then
@@ -92,8 +61,8 @@ const markFinished: MarkFinishedScript = defineScript({
 	NUMBER_OF_KEYS: 1,
 	SCRIPT: `
 	local measurementId = KEYS[1]
-	local key = 'gp:measurement:'..measurementId
-	local awaitingKey = key..':probes_awaiting'
+	local key = 'gp:m:'..measurementId..':results'
+	local awaitingKey = 'gp:m:'..measurementId..':probes_awaiting'
 
 	redis.call('HDEL', 'gp:in-progress', measurementId)
 	redis.call('DEL', awaitingKey)
@@ -107,4 +76,4 @@ const markFinished: MarkFinishedScript = defineScript({
 	},
 });
 
-export const scripts: RedisScripts = { count, recordResult, markFinished };
+export const scripts: RedisScripts = { recordResult, markFinished };
