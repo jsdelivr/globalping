@@ -25,6 +25,8 @@ export type AdoptedProbe = {
 	isCustomCity: boolean;
 	status: string;
 	version: string;
+	isHardware: boolean;
+	hardwareDevice: string;
 	country: string;
 	countryOfCustomCity?: string;
 	city?: string;
@@ -51,6 +53,14 @@ export class AdoptedProbes {
 		},
 		version: {
 			connectedField: 'version',
+			shouldUpdateIfCustomCity: true,
+		},
+		isHardware: {
+			connectedField: 'isHardware',
+			shouldUpdateIfCustomCity: true,
+		},
+		hardwareDevice: {
+			connectedField: 'hardwareDevice',
 			shouldUpdateIfCustomCity: true,
 		},
 		asn: {
@@ -179,6 +189,7 @@ export class AdoptedProbes {
 		const isCustomCity = adoptedProbe.isCustomCity;
 
 		if (!connectedProbe) {
+			await this.updateProbeData(adoptedProbe, { status: 'offline' });
 			return;
 		}
 

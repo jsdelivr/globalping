@@ -40,6 +40,8 @@ describe('Adoption code', () => {
 				expect(response.body).to.deep.equal({
 					uuid: '1-1-1-1-1',
 					version: '0.14.0',
+					isHardware: false,
+					hardwareDevice: null,
 					status: 'initializing',
 					city: 'Dallas',
 					state: 'TX',
