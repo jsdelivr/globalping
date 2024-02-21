@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS gp_adopted_probes (
   tags LONGTEXT,
   status VARCHAR(255) NOT NULL,
   version VARCHAR(255) NOT NULL,
-  isHardware TINYINT(1) NOT NULL,
   hardwareDevice VARCHAR(255) NULL,
   country VARCHAR(255) NOT NULL,
   city VARCHAR(255),

@@ -25,7 +25,6 @@ export type AdoptedProbe = {
 	isCustomCity: boolean;
 	status: string;
 	version: string;
-	isHardware: boolean;
 	hardwareDevice: string;
 	country: string;
 	countryOfCustomCity?: string;
@@ -53,10 +52,6 @@ export class AdoptedProbes {
 		},
 		version: {
 			connectedField: 'version',
-			shouldUpdateIfCustomCity: true,
-		},
-		isHardware: {
-			connectedField: 'isHardware',
 			shouldUpdateIfCustomCity: true,
 		},
 		hardwareDevice: {

@@ -18,7 +18,6 @@ const handle = async (ctx: Context): Promise<void> => {
 	ctx.body = {
 		uuid: socket.data.probe.uuid,
 		version: socket.data.probe.version,
-		isHardware: socket.data.probe.isHardware,
 		hardwareDevice: socket.data.probe.hardwareDevice,
 		status: socket.data.probe.status,
 		city: socket.data.probe.location.city,
