@@ -183,8 +183,12 @@ export class AdoptedProbes {
 		const connectedProbe = this.connectedIpToProbe.get(adoptedProbe.ip);
 		const isCustomCity = adoptedProbe.isCustomCity;
 
-		if (!connectedProbe) {
+		if (!connectedProbe && adoptedProbe.status !== 'offline') {
 			await this.updateProbeData(adoptedProbe, { status: 'offline' });
+			return;
+		}
+
+		if (!connectedProbe) {
 			return;
 		}
 

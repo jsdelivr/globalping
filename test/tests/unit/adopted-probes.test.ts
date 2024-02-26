@@ -138,6 +138,18 @@ describe('AdoptedProbes', () => {
 		expect(deleteStub.callCount).to.equal(0);
 	});
 
+	it('class should do nothing if adopted probe was not found and lastSyncDate < 30 days away but it is already "offline"', async () => {
+		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
+		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: new Date('1969-12-15'), status: 'offline' }]);
+		fetchSocketsStub.resolves([]);
+
+		await adoptedProbes.syncDashboardData();
+
+		expect(whereStub.callCount).to.equal(0);
+		expect(updateStub.callCount).to.equal(0);
+		expect(deleteStub.callCount).to.equal(0);
+	});
+
 	it('class should delete adoption if adopted probe was not found and lastSyncDate > 30 days away', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
 		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: new Date('1969-11-15') }]);
