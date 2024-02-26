@@ -15,6 +15,7 @@ describe('AdoptedProbes', () => {
 		isCustomCity: 0,
 		status: 'ready',
 		version: '0.26.0',
+		hardwareDevice: null,
 		country: 'IE',
 		state: null,
 		countryOfCustomCity: '',
@@ -124,9 +125,22 @@ describe('AdoptedProbes', () => {
 		expect(updateStub.args[0]).to.deep.equal([{ ip: '2.2.2.2' }]);
 	});
 
-	it('class should do nothing if adopted probe was not found and lastSyncDate < 30 days away', async () => {
+	it('class should update status to "offline" if adopted probe was not found and lastSyncDate < 30 days away', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
 		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: new Date('1969-12-15') }]);
+		fetchSocketsStub.resolves([]);
+
+		await adoptedProbes.syncDashboardData();
+
+		expect(whereStub.callCount).to.equal(1);
+		expect(updateStub.callCount).to.equal(1);
+		expect(updateStub.args[0]).to.deep.equal([{ status: 'offline' }]);
+		expect(deleteStub.callCount).to.equal(0);
+	});
+
+	it('class should do nothing if adopted probe was not found and lastSyncDate < 30 days away but it is already "offline"', async () => {
+		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
+		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: new Date('1969-12-15'), status: 'offline' }]);
 		fetchSocketsStub.resolves([]);
 
 		await adoptedProbes.syncDashboardData();
@@ -143,9 +157,10 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(whereStub.callCount).to.equal(1);
+		expect(whereStub.callCount).to.equal(2);
 		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
-		expect(updateStub.callCount).to.equal(0);
+		expect(updateStub.callCount).to.equal(1);
+		expect(updateStub.args[0]).to.deep.equal([{ status: 'offline' }]);
 		expect(deleteStub.callCount).to.equal(1);
 	});
 
@@ -196,6 +211,8 @@ describe('AdoptedProbes', () => {
 					status: 'initializing',
 					version: '0.27.0',
 					nodeVersion: 'v18.17.0',
+					isHardware: true,
+					hardwareDevice: 'v1',
 					location: {
 						continent: 'EU',
 						region: 'Northern Europe',
@@ -220,6 +237,7 @@ describe('AdoptedProbes', () => {
 		expect(updateStub.args[0]).to.deep.equal([{
 			status: 'initializing',
 			version: '0.27.0',
+			hardwareDevice: 'v1',
 			asn: 20473,
 			network: 'The Constant Company, LLC',
 			country: 'GB',
@@ -241,6 +259,8 @@ describe('AdoptedProbes', () => {
 					status: 'initializing',
 					version: '0.27.0',
 					nodeVersion: 'v18.17.0',
+					isHardware: false,
+					hardwareDevice: null,
 					location: {
 						continent: 'EU',
 						region: 'Northern Europe',
@@ -293,6 +313,8 @@ describe('AdoptedProbes', () => {
 					status: 'initializing',
 					version: '0.27.0',
 					nodeVersion: 'v18.17.0',
+					isHardware: false,
+					hardwareDevice: null,
 					location: {
 						continent: 'EU',
 						region: 'Northern Europe',

@@ -663,6 +663,7 @@ describe('Create measurement', () => {
 					tags: '[{"prefix":"jsdelivr","value":"Dashboard-Tag"}]',
 					status: 'ready',
 					version: '0.26.0',
+					hardwareDevice: null,
 					country: 'US',
 					countryOfCustomCity: 'US',
 					city: 'Oklahoma City',
