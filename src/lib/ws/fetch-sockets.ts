@@ -22,7 +22,7 @@ const addAdoptedProbesData = (sockets: RemoteProbeSocket[]) => {
 		}
 
 		const isCustomCity = adopted.isCustomCity;
-		const hasUserTags = adopted.tags && adopted.tags.length;
+		const hasUserTags = adopted.tags && adopted.tags.length > 0;
 
 		if (!isCustomCity && !hasUserTags) {
 			return socket;
