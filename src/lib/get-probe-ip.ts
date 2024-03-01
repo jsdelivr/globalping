@@ -6,6 +6,10 @@ const getProbeIp = (socket: Socket) => {
 		return '1.2.3.4';
 	}
 
+	if (process.env['TEST_MODE'] === 'e2e') {
+		return '51.158.22.211'; // Paris
+	}
+
 	// Use random ip assigned by the API
 	if (process.env['FAKE_PROBE_IP']) {
 		const samples = [
@@ -15,7 +19,6 @@ const getProbeIp = (socket: Socket) => {
 			'95.155.94.127',
 			'65.49.22.66',
 			'185.229.226.83',
-			'51.158.22.211',
 			'131.255.7.26',
 			'94.214.253.78',
 			'79.205.97.254',
