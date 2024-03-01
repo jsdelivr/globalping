@@ -25,7 +25,7 @@ Once the API is live, you can spin up a probe instance by running as described a
 
 ### Environment variables
 - `PORT=3000` environment variable can start the API on another port (default is 3000)
-- `FAKE_PROBE_IP=api` environment variable can be used to make debug easier. When defined, every Probe
+- `FAKE_PROBE_IP=1` environment variable can be used to make debug easier. When defined, every Probe
   that connects to the API will get an IP address from the list of predefined "real" addresses.
 
 ### Testing
@@ -43,7 +43,7 @@ Most IDEs have plugins integrating the used linter (eslint), including support f
 - `NEW_RELIC_LICENSE_KEY={value}` used in production to send APM metrics to new relic
 - `NEW_RELIC_APP_NAME={value}` used in production to send APM mentrics to new relic
 - `NEW_RELIC_ENABLED=false` used in development to disable newrelic monitoring
-- `FAKE_PROBE_IP={api|probe}` used in development to either use a random fake ip from the API or a fake ip from Probe
+- `FAKE_PROBE_IP=1` used in development to use a random fake ip assigned by the API
 - `ADMIN_KEY={value}` used to access additional information over the API
 - `SYSTEM_API_KEY={value}` used for integration with the dashboard
 - `DB_CONNECTION_HOST`, `DB_CONNECTION_USER`, `DB_CONNECTION_PASSWORD`, and `DB_CONNECTION_DATABASE` database connection details

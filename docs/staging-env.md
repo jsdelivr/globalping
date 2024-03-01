@@ -35,7 +35,7 @@ exit
 
 ## API
 
-Runs 2 API instances on ports 3001 and 3002 behind the haproxy on port 80. Geoip client is mocked so all probes get same location. `FAKE_PROBE_IP=probe` makes API to use fake ip provided by the probe.
+Runs 2 API instances on ports 3001 and 3002 behind the haproxy on port 80. Geoip client is mocked so all probes get same location. `TEST_MODE=perf` makes API to use fake ip provided by the probe.
 
 ```bash
 # Update that variables before start
@@ -79,20 +79,20 @@ npm run build
 
 # Run the app
 echo 'Run 2 app instances using:
-PORT=3001 HOSTNAME=3001 REDIS_URL=redis://default:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production ADMIN_KEY=admin FAKE_PROBE_IP=probe NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
+PORT=3001 HOSTNAME=3001 REDIS_URL=redis://default:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production ADMIN_KEY=admin TEST_MODE=perf NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
 and
-PORT=3002 HOSTNAME=3002 REDIS_URL=redis://default:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production ADMIN_KEY=admin FAKE_PROBE_IP=probe NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
+PORT=3002 HOSTNAME=3002 REDIS_URL=redis://default:$REDIS_PASSWORD@$REDIS_HOST:6379 NODE_ENV=production ADMIN_KEY=admin TEST_MODE=perf NEW_RELIC_ENABLED=false NEW_RELIC_LOG_ENABLED=false node dist/index.js
 '
 ```
 
 ## Probe
 
-Runs `PROBES_COUNT` number of probe processes. They all get a random fake ip which is passed to the API. Value of the `FAKE_PROBE_IP` is the first octet of the fake ip. Each probe process requires ~40mb of RAM.
+Runs `PROBES_COUNT` number of probe processes. They all get a random fake ip which is passed to the API. Value of the `FAKE_IP_FIRST_OCTET` is the first octet of the fake ip. Each probe process requires ~40mb of RAM.
 
 ```bash
 # Update that variables before start
 API_HOST=<your_value>
-FAKE_PROBE_IP=1
+FAKE_IP_FIRST_OCTET=1
 PROBES_COUNT=300
 
 # Install node
@@ -124,6 +124,6 @@ sudo dpkg --extract "/tmp/expect.deb" /
 # Auto start the probes
 sudo npm i -g pm2
 sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
-FAKE_PROBE_IP=$FAKE_PROBE_IP NODE_ENV=development PROBES_COUNT=$PROBES_COUNT API_HOST=ws://$API_HOST pm2 start dist/index.js
+FAKE_IP_FIRST_OCTET=$FAKE_IP_FIRST_OCTET NODE_ENV=development PROBES_COUNT=$PROBES_COUNT API_HOST=ws://$API_HOST pm2 start dist/index.js
 pm2 save
 ```

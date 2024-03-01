@@ -42,7 +42,7 @@ export default function wallaby () {
 			params: {
 				runner: '--experimental-specifier-resolution=node --loader '
 					+ url.pathToFileURL(path.join(__dirname, 'node_modules/testdouble/lib/index.mjs')),
-				env: 'NODE_ENV=test;NEW_RELIC_ENABLED=false;NEW_RELIC_LOG_ENABLED=false;FAKE_PROBE_IP=api',
+				env: 'NODE_ENV=test;NEW_RELIC_ENABLED=false;NEW_RELIC_LOG_ENABLED=false;TEST_MODE=unit',
 			},
 		},
 		preprocessors: {

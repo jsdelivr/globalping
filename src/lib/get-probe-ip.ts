@@ -2,12 +2,12 @@ import requestIp from 'request-ip';
 import type { Socket } from 'socket.io';
 
 const getProbeIp = (socket: Socket) => {
-	if (process.env['NODE_ENV'] === 'test') {
+	if (process.env['TEST_MODE'] === 'unit') {
 		return '1.2.3.4';
 	}
 
 	// Use random ip assigned by the API
-	if (process.env['FAKE_PROBE_IP'] === 'api') {
+	if (process.env['FAKE_PROBE_IP']) {
 		const samples = [
 			'213.136.174.80',
 			'18.200.0.1',
@@ -27,7 +27,7 @@ const getProbeIp = (socket: Socket) => {
 	}
 
 	// Use fake ip provided by the probe
-	if (process.env['FAKE_PROBE_IP'] === 'probe') {
+	if (process.env['TEST_MODE'] === 'perf') {
 		return socket.handshake.query['fakeIp'] as string;
 	}
 
