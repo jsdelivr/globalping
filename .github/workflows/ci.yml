@@ -48,11 +48,11 @@ jobs:
         run: |
           npm ci
           npm run build
-      - name: Test e2e
+      - name: Test E2E
         run: |
           docker pull ghcr.io/jsdelivr/globalping-probe
           npm run test:e2e
-      - name: Test unit
+      - name: Test Unit
         run: |
           npm run lint
           npm run coverage

@@ -1,7 +1,11 @@
 import Docker from 'dockerode';
 import got from 'got';
 import { setTimeout } from 'timers/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import chai from 'chai';
 
+import chaiOas from '../test/plugins/oas/index.js';
 import type { Probe } from '../src/probe/types.js';
 
 let container: Docker.Container;
@@ -24,17 +28,23 @@ const attachLogs = async (container: Docker.Container) => {
 
 const waitForProbeToConnect = async () => {
 	for (;;) {
-		const probes = await got('http://localhost:3000/v1/probes').json<Probe[]>();
+		const response = await got('http://localhost:3000/v1/probes');
+		console.log('response.statusCode', response.statusCode);
+		console.log('response.body', response.body);
+		const probes = JSON.parse(response.body) as Probe[];
+		console.log('probes', probes);
 
 		if (probes.length > 0) {
 			return;
 		}
 
-		await setTimeout(500);
+		await setTimeout(1000);
 	}
 };
 
 before(async () => {
+	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../public/v1/spec.yaml') }));
+
 	const docker = new Docker();
 
 	const isLinux = await isLinuxHost(docker);
