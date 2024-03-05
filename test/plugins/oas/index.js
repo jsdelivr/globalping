@@ -63,6 +63,15 @@ export default async ({ specPath, ajvBodyOptions = {}, ajvHeadersOptions = {} })
 
 		chai.Assertion.addMethod('matchApiSchema', function () {
 			let response = this._obj;
+
+			if (typeof response.body === 'string') {
+				response.body = JSON.parse(response.body);
+			}
+
+			if (!response.type) {
+				response.type = response.headers['content-type'] === 'application/json; charset=utf-8' ? 'application/json' : response.headers['content-type'];
+			}
+
 			let reqPath = new URL(response.req.path, 'http://localhost').pathname;
 			let reqMethod = response.req.method.toLowerCase();
 
