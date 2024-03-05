@@ -29,10 +29,7 @@ const attachLogs = async (container: Docker.Container) => {
 const waitForProbeToConnect = async () => {
 	for (;;) {
 		const response = await got('http://localhost:3000/v1/probes');
-		console.log('response.statusCode', response.statusCode);
-		console.log('response.body', response.body);
 		const probes = JSON.parse(response.body) as Probe[];
-		console.log('probes', probes);
 
 		if (probes.length > 0) {
 			return;
