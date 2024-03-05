@@ -9,6 +9,7 @@ const getProbeIp = (socket: Socket) => {
 	// Use random ip assigned by the API
 	if (process.env['FAKE_PROBE_IP'] === 'api') {
 		const samples = [
+			'213.136.174.80',
 			'18.200.0.1',
 			'34.140.0.10',
 			'95.155.94.127',
@@ -16,7 +17,6 @@ const getProbeIp = (socket: Socket) => {
 			'185.229.226.83',
 			'51.158.22.211',
 			'131.255.7.26',
-			'213.136.174.80',
 			'94.214.253.78',
 			'79.205.97.254',
 		];

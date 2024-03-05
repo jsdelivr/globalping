@@ -14,9 +14,8 @@ export const NOTIFICATIONS_TABLE = 'directus_notifications';
 
 export type AdoptedProbe = {
 	userId: string;
-	username: string;
 	ip: string;
-	uuid: string;
+	uuid: string | null;
 	lastSyncDate: Date;
 	tags: {
 		type: 'user';
@@ -24,16 +23,16 @@ export type AdoptedProbe = {
 	}[];
 	isCustomCity: boolean;
 	status: string;
-	version: string;
-	hardwareDevice: string;
-	country: string;
-	countryOfCustomCity?: string;
-	city?: string;
-	state?: string;
-	latitude?: number;
-	longitude?: number;
-	asn: number;
-	network: string;
+	version: string | null;
+	hardwareDevice: string | null;
+	country: string | null;
+	countryOfCustomCity: string | null;
+	city: string | null;
+	state: string | null;
+	latitude: number | null;
+	longitude: number | null;
+	asn: number | null;
+	network: string | null;
 }
 
 type Row = Omit<AdoptedProbe, 'isCustomCity' | 'tags'> & {
@@ -160,7 +159,7 @@ export class AdoptedProbes {
 		this.adoptedIpToProbe = new Map(adoptedProbes.map(probe => [ probe.ip, probe ]));
 	}
 
-	private async syncProbeIds (ip: string, uuid: string) {
+	private async syncProbeIds (ip: string, uuid: string | null) {
 		const connectedProbe = this.connectedIpToProbe.get(ip);
 
 		if (connectedProbe && connectedProbe.uuid === uuid) { // ip and uuid are synced
@@ -169,6 +168,10 @@ export class AdoptedProbes {
 
 		if (connectedProbe && connectedProbe.uuid !== uuid) { // uuid was found, but it is outdated
 			await this.updateUuid(ip, connectedProbe.uuid);
+			return;
+		}
+
+		if (!uuid) { // uuid is null, so no searching by uuid is required
 			return;
 		}
 
@@ -208,7 +211,7 @@ export class AdoptedProbes {
 		});
 
 		// if country of probe changes, but there is a custom city in prev country, send notification to user
-		if (updateObject['country'] && adoptedProbe.country === adoptedProbe.countryOfCustomCity) {
+		if (updateObject['country'] && adoptedProbe.countryOfCustomCity && adoptedProbe.country === adoptedProbe.countryOfCustomCity) {
 			await this.sendNotification(adoptedProbe, connectedProbe);
 		}
 
