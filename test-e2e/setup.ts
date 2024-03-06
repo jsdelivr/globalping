@@ -32,6 +32,8 @@ const waitProbeToConnect = async () => {
 before(async () => {
 	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../public/v1/spec.yaml') }));
 
+	await removeProbeContainer();
+
 	await startProbeContainer();
 
 	await waitProbeToConnect();

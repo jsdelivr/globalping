@@ -13,15 +13,17 @@ describe('/measurements endpoint', () => {
 	});
 
 	it('should return measurement result', async () => {
-		const postResponse = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const responseOfCreate = await got.post('http://localhost:3000/v1/measurements', { json: {
 			target: 'jsdelivr.com',
 			type: 'ping',
 		} });
 
-		const { id } = JSON.parse(postResponse.body);
-		const getResponse = await got(`http://localhost:3000/v1/measurements/${id}`);
+		const { id } = JSON.parse(responseOfCreate.body);
+		const responseOfRead = await got(`http://localhost:3000/v1/measurements/${id}`);
+		const body = JSON.parse(responseOfRead.body);
 
-		expect(getResponse.statusCode).to.equal(200);
-		expect(getResponse).to.matchApiSchema();
+		expect(body.probesCount).to.equal(1);
+		expect(responseOfRead.statusCode).to.equal(200);
+		expect(responseOfRead).to.matchApiSchema();
 	});
 });
