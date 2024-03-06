@@ -1,28 +1,30 @@
 import got from 'got';
 import { expect } from 'chai';
-import { waitMesurementFinish } from './utils.js';
+import { waitMesurementFinish } from '../utils.js';
 
-describe('dns mesurement', () => {
+describe('http mesurement', () => {
 	it('should finish successfully', async () => {
 		const { id } = await got.post('http://localhost:3000/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
-			type: 'dns',
+			type: 'http',
 		} }).json();
 
 		const { response, body } = await waitMesurementFinish(id);
 
 		expect(body.status).to.equal('finished');
 		expect(body.results[0].result.status).to.equal('finished');
-		expect(body.results[0].result.hops).to.not.exist;
+		expect(body.results[0].result.rawBody).to.equal(null);
 		expect(response).to.matchApiSchema();
 	});
 
-	it('should finish successfully in case of "traced": true', async () => {
+	it('should finish successfully in case of GET request', async () => {
 		const { id } = await got.post('http://localhost:3000/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
-			type: 'dns',
+			type: 'http',
 			measurementOptions: {
-				trace: true,
+				request: {
+					method: 'GET',
+				},
 			},
 		} }).json();
 
@@ -30,7 +32,7 @@ describe('dns mesurement', () => {
 
 		expect(body.status).to.equal('finished');
 		expect(body.results[0].result.status).to.equal('finished');
-		expect(body.results[0].result.hops.length > 0).to.be.true;
+		expect(body.results[0].result.rawBody.length > 0).to.be.true;
 		expect(response).to.matchApiSchema();
 	});
 });

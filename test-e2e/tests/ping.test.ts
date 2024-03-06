@@ -1,12 +1,12 @@
 import got from 'got';
 import { expect } from 'chai';
-import { waitMesurementFinish } from './utils.js';
+import { waitMesurementFinish } from '../utils.js';
 
-describe('traceroute mesurement', () => {
+describe('ping mesurement', () => {
 	it('should finish successfully', async () => {
 		const { id } = await got.post('http://localhost:3000/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
-			type: 'traceroute',
+			type: 'ping',
 		} }).json();
 
 		const { response, body } = await waitMesurementFinish(id);
