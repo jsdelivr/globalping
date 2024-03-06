@@ -1,4 +1,4 @@
-import got from 'got';
+import got, { RequestError } from 'got';
 import { setTimeout } from 'timers/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +15,7 @@ const waitProbeToConnect = async () => {
 		try {
 			response = await got('http://localhost:3000/v1/probes');
 		} catch (err) {
-			console.log(err.code);
+			console.log((err as RequestError).code);
 			throw err;
 		}
 

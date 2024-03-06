@@ -5,7 +5,7 @@ import { waitMesurementFinish } from './utils.js';
 describe('ping mesurement', () => {
 	it('should finish successfully', async () => {
 		const { id } = await got.post('http://localhost:3000/v1/measurements', { json: {
-			target: 'jsdelivr.com',
+			target: 'www.jsdelivr.com',
 			type: 'ping',
 		} }).json();
 

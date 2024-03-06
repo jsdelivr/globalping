@@ -4,7 +4,7 @@ import { expect } from 'chai';
 describe('/measurements endpoint', () => {
 	it('should create measurement', async () => {
 		const response = await got.post('http://localhost:3000/v1/measurements', { json: {
-			target: 'jsdelivr.com',
+			target: 'www.jsdelivr.com',
 			type: 'ping',
 		} });
 
@@ -14,7 +14,7 @@ describe('/measurements endpoint', () => {
 
 	it('should return measurement result', async () => {
 		const responseOfCreate = await got.post('http://localhost:3000/v1/measurements', { json: {
-			target: 'jsdelivr.com',
+			target: 'www.jsdelivr.com',
 			type: 'ping',
 		} });
 
