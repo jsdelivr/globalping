@@ -137,7 +137,7 @@
 		"test:portman:create": "mkdir -p tmp && redocly bundle public/v1/spec.yaml > tmp/spec.yaml && portman --cliOptionsFile test/tests/contract/portman-cli.json",
 		"test:portman:run": "newman run tmp/converted/globalpingApi.json -e test/tests/contract/newman-env.json --ignore-redirects",
 		"test:e2e": "start-test 'npm run start:test' http://localhost:3000/health 'npm run test:e2e:cases'",
-		"test:e2e:cases": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --config test-e2e/.mocharc.json"
+		"test:e2e:cases": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --config .mocharc.e2e.json"
 	},
 	"lint-staged": {
 		"*.{cjs,js,json,ts}": "eslint --cache --fix"
