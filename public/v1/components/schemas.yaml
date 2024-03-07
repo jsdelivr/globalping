@@ -682,7 +682,9 @@ components:
         - Micronesia
         - Polynesia
     ResolvedAddress:
-      type: string
+      type:
+        - string
+        - 'null'
       description: The resolved IP address of the `target`.
     ResolvedHostname:
       type:
@@ -1193,7 +1195,9 @@ components:
         - $ref: 'schemas.yaml#/components/schemas/BaseTestStatus'
         - const: offline
     TimingPacketRtt:
-      type: number
+      type:
+        - number
+        - 'null'
       description: The round-trip time for this packet.
     TimingPacketTtl:
       type: number
