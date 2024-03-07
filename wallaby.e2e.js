@@ -2,12 +2,15 @@ export default function wallaby () {
 	return {
 		testFramework: 'mocha',
 		files: [
+			'config/*',
 			'public/v1/*',
 			'public/**/*.yaml',
 			'test/plugins/**/*',
 			'test-e2e/setup.ts',
 			'test-e2e/utils.ts',
 			'test-e2e/docker.ts',
+			'src/**/*.ts',
+			'knexfile.js',
 			'package.json',
 		],
 		tests: [

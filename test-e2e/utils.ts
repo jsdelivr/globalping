@@ -24,6 +24,27 @@ export const waitProbeToConnect = async () => {
 	}
 };
 
+export const waitProbeInCity = async (city: string) => {
+	let response;
+
+	for (;;) {
+		try {
+			response = await got('http://localhost:3000/v1/probes');
+		} catch (err) {
+			console.log((err as RequestError).code);
+			throw err;
+		}
+
+		const probes = JSON.parse(response.body) as Probe[];
+
+		if (probes.length > 0 && probes[0]!.location.city === city) {
+			return;
+		}
+
+		await setTimeout(1000);
+	}
+};
+
 export const waitMesurementFinish = async (id: string) => {
 	for (;;) {
 		const response = await got(`http://localhost:3000/v1/measurements/${id}`);
