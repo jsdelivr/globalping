@@ -16,7 +16,7 @@ const attachLogs = async (container: Docker.Container) => {
 	container.modem.demuxStream(stream, process.stdout, process.stderr);
 };
 
-export const startProbeContainer = async () => {
+export const createProbeContainer = async () => {
 	const docker = new Docker();
 
 	const isLinux = await isLinuxHost(docker);
@@ -41,17 +41,45 @@ export const startProbeContainer = async () => {
 	await attachLogs(container);
 };
 
-export const removeProbeContainer = async () => {
+const getProbeContainer = async () => {
 	const docker = new Docker();
 	const containers = await docker.listContainers({ all: true });
 	const containerInfo = containers.find(c => c.Names.includes('/globalping-probe-e2e'));
 
 	if (!containerInfo) {
 		console.log('Container not found:');
+		return { container: null, state: null };
+	}
+
+	return { container: docker.getContainer(containerInfo.Id), state: containerInfo.State };
+};
+
+export const removeProbeContainer = async () => {
+	const { container } = await getProbeContainer();
+
+	if (!container) {
 		return;
 	}
 
-	const container = docker.getContainer(containerInfo.Id);
-
 	await container.remove({ force: true });
+};
+
+export const stopProbeContainer = async () => {
+	const { container, state } = await getProbeContainer();
+
+	if (!container || state === 'exited') {
+		return;
+	}
+
+	await container.stop();
+};
+
+export const startProbeContainer = async () => {
+	const { container, state } = await getProbeContainer();
+
+	if (!container || state === 'running') {
+		return;
+	}
+
+	await container.start({});
 };

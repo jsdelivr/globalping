@@ -1,5 +1,28 @@
+import got, { type RequestError } from 'got';
 import { setTimeout } from 'timers/promises';
-import got from 'got';
+
+import type { Probe } from '../src/probe/types.js';
+
+export const waitProbeToConnect = async () => {
+	let response;
+
+	for (;;) {
+		try {
+			response = await got('http://localhost:3000/v1/probes');
+		} catch (err) {
+			console.log((err as RequestError).code);
+			throw err;
+		}
+
+		const probes = JSON.parse(response.body) as Probe[];
+
+		if (probes.length > 0) {
+			return;
+		}
+
+		await setTimeout(1000);
+	}
+};
 
 export const waitMesurementFinish = async (id: string) => {
 	for (;;) {

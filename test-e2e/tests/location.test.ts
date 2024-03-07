@@ -74,7 +74,7 @@ describe('locations filter', () => {
 		expect(response.statusCode).to.equal(202);
 	});
 
-	it('should not create measurement wrong id of another measurement', async () => {
+	it('should not create measurement by wrong id', async () => {
 		const response = await got.post('http://localhost:3000/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
