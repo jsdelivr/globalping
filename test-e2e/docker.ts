@@ -30,16 +30,18 @@ export const createApiContainer = async () => {
 			'NODE_ENV=test',
 			'TEST_MODE=e2e',
 			'NEW_RELIC_ENABLED=false',
-			// `REDIS_URL=redis://${isLinux ? 'localhost' : 'host.docker.internal'}:6379`,
-			// `DB_CONNECTION_HOST=${isLinux ? 'localhost' : 'host.docker.internal'}`,
-			`REDIS_URL=redis://localhost:6379`,
-			`DB_CONNECTION_HOST=localhost`,
+			'PORT=3000',
+			`REDIS_URL=redis://${isLinux ? 'localhost' : 'host.docker.internal'}:6379`,
+			`DB_CONNECTION_HOST=${isLinux ? 'localhost' : 'host.docker.internal'}`,
+			// `REDIS_URL=redis://localhost:6379`,
+			// `DB_CONNECTION_HOST=localhost`,
 		],
 		HostConfig: {
 			PortBindings: {
-				'80/tcp': [{ HostPort: '3000' }],
+				'3000/tcp': [{ HostPort: '3000' }],
 			},
-			NetworkMode: 'host',
+			NetworkMode: isLinux ? 'host' : 'bridge',
+			// NetworkMode: 'host',
 		},
 	});
 
@@ -58,15 +60,16 @@ export const createProbeContainer = async () => {
 		Image: 'ghcr.io/jsdelivr/globalping-probe',
 		name: 'globalping-probe-e2e',
 		Env: [
-			`API_HOST=ws://localhost:3000`,
+			`API_HOST=ws://${isLinux ? 'localhost' : 'host.docker.internal'}:3000`,
+			// `API_HOST=ws://localhost:3000`,
 		],
 		HostConfig: {
 			LogConfig: {
 				Type: 'local',
 				Config: {},
 			},
-			// NetworkMode: isLinux ? 'host' : 'bridge',
-			NetworkMode: 'host',
+			NetworkMode: isLinux ? 'host' : 'bridge',
+			// NetworkMode: 'host',
 		},
 	});
 
@@ -127,3 +130,6 @@ export const startProbeContainer = async () => {
 
 	await container.start({});
 };
+
+await createApiContainer();
+await createProbeContainer();
