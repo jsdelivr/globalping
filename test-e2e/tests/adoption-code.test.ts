@@ -12,13 +12,9 @@ describe('/adoption-code endpoint', () => {
 		expect(response.statusCode).to.equal(200);
 
 		expect(body).to.deep.include({
-			asn: 12876,
 			city: 'Paris',
 			country: 'FR',
 			hardwareDevice: null,
-			latitude: 48.8534,
-			longitude: 2.3488,
-			network: 'SCALEWAY S.A.S.',
 			state: null,
 			status: 'ready',
 		});

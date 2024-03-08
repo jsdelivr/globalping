@@ -53,12 +53,12 @@ jobs:
           npm run lint
           npm run coverage
           npm run test:portman
+      - name: Test E2E
+        run: |
+          docker pull ghcr.io/jsdelivr/globalping-probe
+          npm run test:e2e
       - name: Test Dist
         run: |
           rm -rf node_modules
           npm ci --omit=dev
           npm run test:dist
-      - name: Test E2E
-        run: |
-          docker pull ghcr.io/jsdelivr/globalping-probe
-          npm run test:e2e
