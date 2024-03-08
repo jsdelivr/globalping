@@ -10,6 +10,7 @@ import { flushRedisCache } from './lib/flush-redis-cache.js';
 const logger = scopedLogger('index');
 const port = process.env['PORT'] ?? config.get<number>('server.port');
 const workerCount = config.get<number>('server.processes');
+console.log('process.env[\'NODE_ENV\']', process.env['NODE_ENV']);
 
 const workerFn = async () => {
 	const server = await createServer();

@@ -11,7 +11,8 @@ export const waitProbeToConnect = async () => {
 			response = await got('http://localhost:3000/v1/probes');
 		} catch (err) {
 			console.log((err as RequestError).code);
-			throw err;
+			await setTimeout(1000);
+			continue;
 		}
 
 		const probes = JSON.parse(response.body) as Probe[];
