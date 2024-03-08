@@ -3,7 +3,7 @@ import { expect } from 'chai';
 
 describe('locations filter', () => {
 	it('should create measurement without location', async () => {
-		const response = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 		} });
@@ -12,7 +12,7 @@ describe('locations filter', () => {
 	});
 
 	it('should create measurement by valid "city" value', async () => {
-		const response = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
@@ -24,7 +24,7 @@ describe('locations filter', () => {
 	});
 
 	it('should not create measurement by invalid "city" value', async () => {
-		const response = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
@@ -36,7 +36,7 @@ describe('locations filter', () => {
 	});
 
 	it('should create measurement by valid "magic" value', async () => {
-		const response = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
@@ -48,7 +48,7 @@ describe('locations filter', () => {
 	});
 
 	it('should not create measurement by invalid "magic" value', async () => {
-		const response = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
@@ -60,12 +60,12 @@ describe('locations filter', () => {
 	});
 
 	it('should create measurement by id of another measurement', async () => {
-		const { id } = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 		} }).json();
 
-		const response = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: id,
@@ -75,7 +75,7 @@ describe('locations filter', () => {
 	});
 
 	it('should not create measurement by wrong id', async () => {
-		const response = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: 'wrongIdValue',

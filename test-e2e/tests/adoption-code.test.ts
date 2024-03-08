@@ -3,7 +3,7 @@ import { expect } from 'chai';
 
 describe('/adoption-code endpoint', () => {
 	it('should send code to the probe', async () => {
-		const response = await got.post('http://localhost:3000/v1/adoption-code?systemkey=system', { json: {
+		const response = await got.post('http://localhost:80/v1/adoption-code?systemkey=system', { json: {
 			ip: '51.158.22.211',
 			code: '123456',
 		} });

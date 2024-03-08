@@ -38,13 +38,13 @@ describe('adopted probe', () => {
 	});
 
 	it('should return probe list with updated city', async () => {
-		const probes = await got('http://localhost:3000/v1/probes').json<Probe[]>();
+		const probes = await got('http://localhost:80/v1/probes').json<Probe[]>();
 
 		expect(probes[0]!.location.city).to.equal('Marseille');
 	});
 
 	it('should create measurement by its new location', async () => {
-		const response = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
@@ -56,7 +56,7 @@ describe('adopted probe', () => {
 	});
 
 	it('should create measurement by user tag', async () => {
-		const response = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
@@ -68,7 +68,7 @@ describe('adopted probe', () => {
 	});
 
 	it('should not create measurement by its old location', async () => {
-		const response = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{

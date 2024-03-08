@@ -4,7 +4,7 @@ import { waitMesurementFinish } from '../utils.js';
 
 describe('traceroute mesurement', () => {
 	it('should finish successfully', async () => {
-		const { id } = await got.post('http://localhost:3000/v1/measurements', { json: {
+		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'traceroute',
 		} }).json();
