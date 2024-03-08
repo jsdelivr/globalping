@@ -48,10 +48,6 @@ jobs:
         run: |
           npm ci
           npm run build
-      - name: Test E2E
-        run: |
-          docker pull ghcr.io/jsdelivr/globalping-probe
-          npm run test:e2e
       - name: Test Unit
         run: |
           npm run lint
@@ -62,3 +58,7 @@ jobs:
           rm -rf node_modules
           npm ci --omit=dev
           npm run test:dist
+      - name: Test E2E
+        run: |
+          docker pull ghcr.io/jsdelivr/globalping-probe
+          npm run test:e2e
