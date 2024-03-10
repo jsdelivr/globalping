@@ -5,12 +5,13 @@ import type { RedisClient } from '../../../src/lib/redis/client.js';
 import type RedisCache from '../../../src/lib/cache/redis-cache.js';
 
 describe('RedisCache', () => {
+	const sandbox = sinon.createSandbox();
 	const redisClient = {
-		set: sinon.stub(),
-		get: sinon.stub(),
-		del: sinon.stub(),
+		set: sandbox.stub(),
+		get: sandbox.stub(),
+		del: sandbox.stub(),
 	};
-	const noticeError = sinon.stub();
+	const noticeError = sandbox.stub();
 	let redisCache: RedisCache;
 
 	before(async () => {
@@ -20,7 +21,7 @@ describe('RedisCache', () => {
 	});
 
 	beforeEach(() => {
-		sinon.resetHistory();
+		sandbox.resetHistory();
 	});
 
 	describe('set', () => {

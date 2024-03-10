@@ -30,11 +30,7 @@ class MockSocket {
 type BundledMockSocket = Socket & MockSocket;
 
 describe('ws error', () => {
-	let sandbox: sinon.SinonSandbox;
-
-	beforeEach(() => {
-		sandbox = sinon.createSandbox({ useFakeTimers: true });
-	});
+	const sandbox = sinon.createSandbox();
 
 	afterEach(() => {
 		sandbox.restore();
@@ -58,7 +54,7 @@ describe('ws error', () => {
 			errorHandler(testMethod)(socket as Socket, testCb);
 
 			expect(socket.isConnected).to.equal(true);
-			await sandbox.clock.nextAsync();
+			await clock.nextAsync();
 
 			expect(socket.isConnected).to.equal(false);
 			expect(cbError).to.not.be.null;
@@ -83,7 +79,7 @@ describe('ws error', () => {
 			errorHandler(testMethod)(socket as Socket, testCb);
 
 			expect(socket.isConnected).to.equal(true);
-			await sandbox.clock.nextAsync();
+			await clock.nextAsync();
 
 			expect(socket.isConnected).to.equal(false);
 			expect(cbError).to.not.be.null;

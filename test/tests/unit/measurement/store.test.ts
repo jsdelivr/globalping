@@ -1,6 +1,7 @@
 import * as td from 'testdouble';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
+import relativeDayUtc from 'relative-day-utc';
 import type { MeasurementStore } from '../../../../src/measurement/store.js';
 import type { OfflineProbe, Probe } from '../../../../src/probe/types.js';
 import type { PingResult } from '../../../../src/measurement/types.js';
@@ -29,38 +30,38 @@ const getOfflineProbe = (id: string, ip: string) => ({
 
 describe('measurement store', () => {
 	let getMeasurementStore: () => MeasurementStore;
-	let sandbox: sinon.SinonSandbox;
 
+	const sandbox = sinon.createSandbox();
 	const redisMock = {
-		hScan: sinon.stub(),
-		hDel: sinon.stub(),
-		hSet: sinon.stub(),
-		set: sinon.stub(),
-		expire: sinon.stub(),
+		hScan: sandbox.stub(),
+		hDel: sandbox.stub(),
+		hSet: sandbox.stub(),
+		set: sandbox.stub(),
+		expire: sandbox.stub(),
 		json: {
-			mGet: sinon.stub(),
-			set: sinon.stub(),
-			strAppend: sinon.stub(),
+			mGet: sandbox.stub(),
+			set: sandbox.stub(),
+			strAppend: sandbox.stub(),
 		},
-		recordResult: sinon.stub(),
-		markFinished: sinon.stub(),
+		recordResult: sandbox.stub(),
+		markFinished: sandbox.stub(),
 	};
 
+	sandbox.stub(Math, 'random').returns(0.8);
+
 	before(async () => {
-		td.replaceEsm('crypto-random-string', null, () => 'measurementid');
+		await td.replaceEsm('crypto-random-string', null, () => 'measurementid');
 		await td.replaceEsm('../../../../src/lib/redis/measurement-client.ts', { getMeasurementRedisClient: () => redisMock });
 		getMeasurementStore = (await import('../../../../src/measurement/store.js')).getMeasurementStore;
 	});
 
 	beforeEach(() => {
-		sandbox = sinon.createSandbox({ useFakeTimers: { now: 1_678_000_000_000 } });
-		sandbox.stub(Math, 'random').returns(0.8);
 		redisMock.recordResult.reset();
-		sinon.resetHistory();
+		sandbox.resetHistory();
 	});
 
 	afterEach(() => {
-		sandbox.restore();
+		clock.unpause();
 	});
 
 	after(() => {
@@ -68,18 +69,20 @@ describe('measurement store', () => {
 	});
 
 	it('should call proper redis methods during timeout checks', async () => {
+		const now = clock.pause().now;
+
 		redisMock.hScan.resolves({ cursor: 0, tuples: [
-			{ field: 'id1', value: '1677510747483' }, // Timed out measurement
-			{ field: 'id2', value: '1677510747483' }, // Non-existing measurement
-			{ field: 'id3', value: '2677510747483' }, // Not timed out measurement
+			{ field: 'id1', value: relativeDayUtc(-1).valueOf() }, // Timed out measurement
+			{ field: 'id2', value: relativeDayUtc(-1).valueOf() }, // Non-existing measurement
+			{ field: 'id3', value: relativeDayUtc(1).valueOf() }, // Not timed out measurement
 		] });
 
 		redisMock.json.mGet.resolves([{
 			id: 'id1',
 			type: 'ping',
 			status: 'in-progress',
-			createdAt: 1_677_510_747_483,
-			updatedAt: 1_677_510_747_483,
+			createdAt: new Date(now).toISOString(),
+			updatedAt: new Date(now).toISOString(),
 			probesCount: 1,
 			results: [{
 				probe: {},
@@ -92,7 +95,7 @@ describe('measurement store', () => {
 
 		getMeasurementStore();
 
-		await sandbox.clock.tickAsync(16_000);
+		await clock.tickAsync(16_000);
 
 		expect(redisMock.hScan.callCount).to.equal(1);
 		expect(redisMock.hScan.firstCall.args).to.deep.equal([ 'gp:in-progress', 0, { COUNT: 5000 }]);
@@ -102,12 +105,15 @@ describe('measurement store', () => {
 		expect(redisMock.hDel.firstCall.args).to.deep.equal([ 'gp:in-progress', [ 'id1', 'id2' ] ]);
 		expect(redisMock.json.set.callCount).to.equal(1);
 
-		expect(redisMock.json.set.firstCall.args).to.deep.equal([ 'gp:m:id1:results', '$', {
+		expect(redisMock.json.set.firstCall.args).to.have.lengthOf(3);
+		expect(redisMock.json.set.firstCall.args[0]).to.equal('gp:m:id1:results');
+		expect(redisMock.json.set.firstCall.args[1]).to.equal('$');
+
+		expect(redisMock.json.set.firstCall.args[2]).to.deep.include({
 			id: 'id1',
 			type: 'ping',
 			status: 'finished',
-			createdAt: 1_677_510_747_483,
-			updatedAt: '2023-03-05T07:06:52.000Z',
+			createdAt: new Date(now).toISOString(),
 			probesCount: 1,
 			results: [{
 				probe: {},
@@ -116,10 +122,13 @@ describe('measurement store', () => {
 					rawOutput: '\n\nThe measurement timed out',
 				},
 			}],
-		}]);
+		});
+
+		expect(new Date(redisMock.json.set.firstCall.args[2].updatedAt)).to.be.within(new Date(now + 1), new Date(now + 16_000));
 	});
 
 	it('should store measurement probes in the same order as in arguments', async () => {
+		const now = clock.pause().now;
 		const store = getMeasurementStore();
 		await store.createMeasurement(
 			{
@@ -135,7 +144,7 @@ describe('measurement store', () => {
 		);
 
 		expect(redisMock.hSet.callCount).to.equal(1);
-		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', 'measurementid', 1678000000000 ]);
+		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', 'measurementid', now ]);
 		expect(redisMock.set.callCount).to.equal(1);
 		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:m:measurementid:probes_awaiting', 4, { EX: 35 }]);
 		expect(redisMock.json.set.callCount).to.equal(2);
@@ -144,8 +153,8 @@ describe('measurement store', () => {
 			id: 'measurementid',
 			type: 'ping',
 			status: 'in-progress',
-			createdAt: '2023-03-05T07:06:40.000Z',
-			updatedAt: '2023-03-05T07:06:40.000Z',
+			createdAt: new Date(now).toISOString(),
+			updatedAt: new Date(now).toISOString(),
 			target: 'jsdelivr.com',
 			limit: 4,
 			probesCount: 4,
@@ -223,6 +232,7 @@ describe('measurement store', () => {
 	});
 
 	it('should initialize measurement object with the proper default values', async () => {
+		const now = clock.pause().now;
 		const store = getMeasurementStore();
 		await store.createMeasurement(
 			{
@@ -244,8 +254,8 @@ describe('measurement store', () => {
 				id: 'measurementid',
 				type: 'ping',
 				status: 'in-progress',
-				createdAt: '2023-03-05T07:06:40.000Z',
-				updatedAt: '2023-03-05T07:06:40.000Z',
+				createdAt: new Date(now).toISOString(),
+				updatedAt: new Date(now).toISOString(),
 				target: 'jsdelivr.com',
 				probesCount: 1,
 				results: [
@@ -271,6 +281,7 @@ describe('measurement store', () => {
 	});
 
 	it('should initialize measurement object with the proper default values in case of http measurement', async () => {
+		const now = clock.pause().now;
 		const store = getMeasurementStore();
 		await store.createMeasurement(
 			{
@@ -300,8 +311,8 @@ describe('measurement store', () => {
 				id: 'measurementid',
 				type: 'http',
 				status: 'in-progress',
-				createdAt: '2023-03-05T07:06:40.000Z',
-				updatedAt: '2023-03-05T07:06:40.000Z',
+				createdAt: new Date(now).toISOString(),
+				updatedAt: new Date(now).toISOString(),
 				target: 'jsdelivr.com',
 				probesCount: 1,
 				results: [
@@ -332,6 +343,7 @@ describe('measurement store', () => {
 	});
 
 	it('should initialize measurement object with the proper default in case of offline probes', async () => {
+		const now = clock.pause().now;
 		const store = getMeasurementStore();
 		await store.createMeasurement(
 			{
@@ -353,8 +365,8 @@ describe('measurement store', () => {
 				id: 'measurementid',
 				type: 'ping',
 				status: 'in-progress',
-				createdAt: '2023-03-05T07:06:40.000Z',
-				updatedAt: '2023-03-05T07:06:40.000Z',
+				createdAt: new Date(now).toISOString(),
+				updatedAt: new Date(now).toISOString(),
 				target: 'jsdelivr.com',
 				probesCount: 1,
 				results: [
@@ -385,6 +397,7 @@ describe('measurement store', () => {
 	});
 
 	it('should store non-default fields of the measurement request', async () => {
+		const now = clock.pause().now;
 		const store = getMeasurementStore();
 		await store.createMeasurement(
 			{
@@ -419,8 +432,8 @@ describe('measurement store', () => {
 			id: 'measurementid',
 			type: 'http',
 			status: 'in-progress',
-			createdAt: '2023-03-05T07:06:40.000Z',
-			updatedAt: '2023-03-05T07:06:40.000Z',
+			createdAt: new Date(now).toISOString(),
+			updatedAt: new Date(now).toISOString(),
 			target: 'jsdelivr.com',
 			probesCount: 1,
 			measurementOptions: {
@@ -458,6 +471,7 @@ describe('measurement store', () => {
 	});
 
 	it('shouldn\'t store fields of the measurement request which are equal to the default', async () => {
+		const now = clock.pause().now;
 		const store = getMeasurementStore();
 		await store.createMeasurement(
 			{
@@ -484,8 +498,8 @@ describe('measurement store', () => {
 			id: 'measurementid',
 			type: 'http',
 			status: 'in-progress',
-			createdAt: '2023-03-05T07:06:40.000Z',
-			updatedAt: '2023-03-05T07:06:40.000Z',
+			createdAt: new Date(now).toISOString(),
+			updatedAt: new Date(now).toISOString(),
 			target: 'jsdelivr.com',
 			probesCount: 1,
 			results: [{
@@ -513,6 +527,7 @@ describe('measurement store', () => {
 	});
 
 	it('should store rawHeaders and rawBody fields for the http in-progress updates', async () => {
+		const now = clock.pause().now;
 		const store = getMeasurementStore();
 		await store.storeMeasurementProgress({
 			testId: 'testid',
@@ -549,7 +564,7 @@ describe('measurement store', () => {
 		expect(redisMock.json.set.firstCall.args).to.deep.equal([
 			'gp:m:measurementid:results',
 			'$.updatedAt',
-			'2023-03-05T07:06:40.000Z',
+			new Date(now).toISOString(),
 		]);
 	});
 

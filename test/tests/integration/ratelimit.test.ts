@@ -2,7 +2,7 @@ import type { Server } from 'node:http';
 import request, { type Response } from 'supertest';
 import requestIp from 'request-ip';
 import { expect } from 'chai';
-import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../utils/server.js';
+import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { anonymousRateLimiter, authenticatedRateLimiter } from '../../../src/lib/rate-limiter.js';
 import { client } from '../../../src/lib/sql/client.js';
@@ -32,6 +32,8 @@ describe('rate limiter', () => {
 
 		probe1.emit('probe:status:update', 'ready');
 		probe2.emit('probe:status:update', 'ready');
+
+		await waitForProbesUpdate();
 
 		await client(GP_TOKENS_TABLE).insert({
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',

@@ -1,3 +1,5 @@
+import './types.js';
+
 import config from 'config';
 import Bluebird from 'bluebird';
 import chai from 'chai';
@@ -5,6 +7,13 @@ import nock from 'nock';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Knex } from 'knex';
+import * as sinon from 'sinon';
+
+const clock = sinon.createSandbox().useFakeTimers({
+	now: Date.now(),
+	shouldAdvanceTime: true,
+	toFake: [ 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date', 'hrtime', 'performance' ],
+});
 
 import { populateMemList } from '../src/lib/geoip/whitelist.js';
 import {
@@ -17,6 +26,9 @@ import chaiOas from './plugins/oas/index.js';
 import { initRedisClient } from '../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../src/lib/redis/persistent-client.js';
 import { client as sql } from '../src/lib/sql/client.js';
+import { extendSinonClock } from './utils/clock.js';
+
+global.clock = extendSinonClock(clock);
 
 const dbConfig = config.get<{ connection: { database: string, host: string } }>('db');
 

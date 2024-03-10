@@ -169,7 +169,7 @@ export class MeasurementStore {
 			this.cleanup()
 				.finally(() => this.scheduleCleanup())
 				.catch(error => logger.error(error));
-		}, intervalTime);
+		}, intervalTime).unref();
 	}
 
 	removeDefaults (measurement: Partial<MeasurementRecord>, request: MeasurementRequest): Partial<MeasurementRecord> {

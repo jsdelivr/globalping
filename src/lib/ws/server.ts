@@ -1,9 +1,12 @@
-import { type RemoteSocket, Server, Socket } from 'socket.io';
+import { Namespace, type RemoteSocket, Server, Socket } from 'socket.io';
 import { createShardedAdapter } from '@socket.io/redis-adapter';
 // eslint-disable-next-line n/no-missing-import
 import type { DefaultEventsMap } from 'socket.io/dist/typed-events.js';
 import type { Probe } from '../../probe/types.js';
 import { getRedisClient } from '../redis/client.js';
+import { SyncedProbeList } from './synced-probe-list.js';
+import { client } from '../sql/client.js';
+import { AdoptedProbes } from '../adopted-probes.js';
 
 export type SocketData = {
 	probe: Probe;
@@ -15,9 +18,12 @@ export type ServerSocket = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEve
 
 export type WsServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 
+export type WsServerNamespace = Namespace<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
+
 export const PROBES_NAMESPACE = '/probes';
 
 let io: WsServer;
+let syncedProbeList: SyncedProbeList;
 
 export const initWsServer = async () => {
 	const pubClient = getRedisClient().duplicate();
@@ -36,6 +42,11 @@ export const initWsServer = async () => {
 		subscriptionMode: 'dynamic',
 		dynamicPrivateChannels: true,
 	}));
+
+	syncedProbeList = new SyncedProbeList(io.of(PROBES_NAMESPACE), adoptedProbes);
+
+	await syncedProbeList.sync();
+	syncedProbeList.scheduleSync();
 };
 
 export const getWsServer = (): WsServer => {
@@ -46,12 +57,36 @@ export const getWsServer = (): WsServer => {
 	return io;
 };
 
+export const getSyncedProbeList = (): SyncedProbeList => {
+	if (!syncedProbeList) {
+		throw new Error('SyncedProbeList not initialized yet');
+	}
+
+	return syncedProbeList;
+};
+
 export const fetchRawSockets = async () => {
 	if (!io) {
 		throw new Error('WS server not initialized yet');
 	}
 
-	const sockets = await io.of(PROBES_NAMESPACE).fetchSockets();
-
-	return sockets;
+	return io.of(PROBES_NAMESPACE).fetchSockets();
 };
+
+export const fetchProbes = async ({ allowStale = true } = {}): Promise<Probe[]> => {
+	if (!syncedProbeList) {
+		throw new Error('WS server not initialized yet');
+	}
+
+	return allowStale ? syncedProbeList.getProbes() : syncedProbeList.fetchProbes();
+};
+
+export const fetchRawProbes = async (): Promise<Probe[]> => {
+	if (!syncedProbeList) {
+		throw new Error('WS server not initialized yet');
+	}
+
+	return syncedProbeList.getRawProbes();
+};
+
+export const adoptedProbes = new AdoptedProbes(client, fetchRawProbes);

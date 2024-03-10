@@ -13,20 +13,20 @@ const handle = async (ctx: Context): Promise<void> => {
 	}
 
 	const request = ctx.request.body as AdoptionCodeRequest;
-	const socket = await codeSender.sendCode(request);
+	const probe = await codeSender.sendCode(request);
 
 	ctx.body = {
-		uuid: socket.data.probe.uuid,
-		version: socket.data.probe.version,
-		hardwareDevice: socket.data.probe.hardwareDevice,
-		status: socket.data.probe.status,
-		city: socket.data.probe.location.city,
-		state: socket.data.probe.location.state,
-		country: socket.data.probe.location.country,
-		latitude: socket.data.probe.location.latitude,
-		longitude: socket.data.probe.location.longitude,
-		asn: socket.data.probe.location.asn,
-		network: socket.data.probe.location.network,
+		uuid: probe.uuid,
+		version: probe.version,
+		hardwareDevice: probe.hardwareDevice,
+		status: probe.status,
+		city: probe.location.city,
+		state: probe.location.state,
+		country: probe.location.country,
+		latitude: probe.location.latitude,
+		longitude: probe.location.longitude,
+		asn: probe.location.asn,
+		network: probe.location.network,
 	};
 };
 

@@ -5,29 +5,34 @@ import { expect } from 'chai';
 describe('ws server', () => {
 	let initWsServer: () => any, getWsServer: () => any;
 
+	const sandbox = sinon.createSandbox();
 	const redisClient = {
 		duplicate: () => redisClient,
-		connect: sinon.stub(),
+		connect: sandbox.stub(),
 	};
-	const disconnect = sinon.stub();
-	const fetchSocketsSocketIo = sinon.stub();
-	const getRedisClient = sinon.stub().returns(redisClient);
+	const disconnect = sandbox.stub();
+	const fetchSocketsSocketIo = sandbox.stub();
+	const getRedisClient = sandbox.stub().returns(redisClient);
 	const io = {
-		adapter: sinon.stub(),
-		of: sinon.stub().returns({
-			fetchSockets: fetchSocketsSocketIo,
+		adapter: sandbox.stub(),
+		of: sandbox.stub().returns({
+			on: sandbox.stub(),
+			serverSideEmit: sandbox.stub(),
+			local: {
+				fetchSockets: fetchSocketsSocketIo,
+			},
 		}),
 	};
 
 	before(async () => {
-		await td.replaceEsm('socket.io', { Server: sinon.stub().returns(io) });
+		await td.replaceEsm('socket.io', { Server: sandbox.stub().returns(io) });
 		await td.replaceEsm('../../../../src/lib/redis/client.ts', { getRedisClient });
 	});
 
 	beforeEach(async () => {
 		({ initWsServer, getWsServer } = await import('../../../../src/lib/ws/server.js'));
 		fetchSocketsSocketIo.reset();
-		fetchSocketsSocketIo.resolves([{ disconnect }, {	disconnect }]);
+		fetchSocketsSocketIo.resolves([{ data: { probe: {} }, disconnect }, { data: { probe: {} }, disconnect }]);
 	});
 
 	it('getWsServer should return the same instance every time', async () => {

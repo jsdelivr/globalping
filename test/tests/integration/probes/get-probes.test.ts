@@ -2,9 +2,10 @@
 import nock from 'nock';
 import { expect } from 'chai';
 import request, { type Agent } from 'supertest';
-import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../../utils/server.js';
+import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../../utils/server.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
-import { adoptedProbes, ADOPTED_PROBES_TABLE } from '../../../../src/lib/adopted-probes.js';
+import { ADOPTED_PROBES_TABLE } from '../../../../src/lib/adopted-probes.js';
+import { adoptedProbes } from '../../../../src/lib/ws/server.js';
 import { client } from '../../../../src/lib/sql/client.js';
 
 describe('Get Probes', () => {
@@ -61,6 +62,8 @@ describe('Get Probes', () => {
 			probe2.emit('probe:status:update', 'ready');
 			probe3.emit('probe:status:update', 'ready');
 			probe4.emit('probe:status:update', 'ready');
+
+			await waitForProbesUpdate();
 
 			await requestAgent.get('/v1/probes')
 				.send()
@@ -144,6 +147,7 @@ describe('Get Probes', () => {
 			const probe1 = await addFakeProbe();
 			await addFakeProbe();
 			probe1.emit('probe:status:update', 'ready');
+			await waitForProbesUpdate();
 
 			await requestAgent.get('/v1/probes')
 				.send()
@@ -175,6 +179,7 @@ describe('Get Probes', () => {
 
 			const probe = await addFakeProbe();
 			probe.emit('probe:status:update', 'ready');
+			await waitForProbesUpdate();
 
 			await requestAgent.get('/v1/probes?adminkey=admin')
 				.send()
@@ -213,6 +218,7 @@ describe('Get Probes', () => {
 
 			const probe = await addFakeProbe();
 			probe.emit('probe:status:update', 'ready');
+			await waitForProbesUpdate();
 
 			await requestAgent.get('/v1/probes?systemkey=system')
 				.send()
@@ -247,6 +253,7 @@ describe('Get Probes', () => {
 
 			const probe = await addFakeProbe({}, { query: { isHardware: 'true', hardwareDevice: 'v1' } });
 			probe.emit('probe:status:update', 'ready');
+			await waitForProbesUpdate();
 
 			await requestAgent.get('/v1/probes?adminkey=admin')
 				.send()
@@ -294,6 +301,7 @@ describe('Get Probes', () => {
 				nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
 				const probe = await addFakeProbe();
 				probe.emit('probe:status:update', 'ready');
+				await waitForProbesUpdate();
 
 				await requestAgent.get('/v1/probes')
 					.send()

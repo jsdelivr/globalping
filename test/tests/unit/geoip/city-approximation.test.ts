@@ -5,11 +5,12 @@ import * as td from 'testdouble';
 describe('city approximation', () => {
 	let getCity: any;
 	let populateCitiesList: any;
+	const sandbox = sinon.createSandbox();
 
 	const redis = {
-		geoAdd: sinon.stub(),
-		geoSearch: sinon.stub(),
-		zCard: sinon.stub(),
+		geoAdd: sandbox.stub(),
+		geoSearch: sandbox.stub(),
+		zCard: sandbox.stub(),
 	};
 
 	before(async () => {

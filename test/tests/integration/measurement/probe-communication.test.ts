@@ -5,6 +5,7 @@ import type { Socket } from 'socket.io-client';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
+import { waitForProbesUpdate } from '../../../utils/server.js';
 
 describe('Create measurement request', () => {
 	let probe: Socket;
@@ -13,9 +14,10 @@ describe('Create measurement request', () => {
 	let getTestServer;
 	let requestAgent: Agent;
 
-	const locationHandlerStub = sinon.stub();
-	const requestHandlerStub = sinon.stub();
-	const cryptoRandomString = sinon.stub().returns('measurementid');
+	const sandbox = sinon.createSandbox();
+	const locationHandlerStub = sandbox.stub();
+	const requestHandlerStub = sandbox.stub();
+	const cryptoRandomString = sandbox.stub().returns('measurementid');
 
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
@@ -26,7 +28,7 @@ describe('Create measurement request', () => {
 	});
 
 	beforeEach(async () => {
-		sinon.resetHistory();
+		sandbox.resetHistory();
 		nockGeoIpProviders();
 
 		probe = await addFakeProbe({
@@ -46,6 +48,7 @@ describe('Create measurement request', () => {
 
 	it('should send and handle proper events during probe connection', async () => {
 		probe.emit('probe:dns:update', [ '1.1.1.1' ]);
+		await waitForProbesUpdate();
 
 		await requestAgent.post('/v1/measurements').send({
 			type: 'ping',
@@ -75,6 +78,7 @@ describe('Create measurement request', () => {
 
 	it('should send and handle proper events during measurement request', async () => {
 		probe.emit('probe:status:update', 'ready');
+		await waitForProbesUpdate();
 
 		await requestAgent.post('/v1/measurements').send({
 			type: 'ping',
@@ -315,6 +319,8 @@ describe('Create measurement request', () => {
 				],
 			},
 		});
+
+		await waitForProbesUpdate();
 
 		await requestAgent.get('/v1/probes?adminkey=admin').send()
 			.expect(200).expect((response) => {

@@ -1,12 +1,11 @@
 import type { Server } from 'node:http';
 import { initRedisClient } from './redis/client.js';
-import { initWsServer } from './ws/server.js';
+import { adoptedProbes, initWsServer } from './ws/server.js';
 import { getMetricsAgent } from './metrics.js';
 import { populateMemList as populateMemMalwareList } from './malware/client.js';
 import { populateMemList as populateMemIpRangesList } from './ip-ranges.js';
 import { populateMemList as populateIpWhiteList } from './geoip/whitelist.js';
 import { populateCitiesList } from './geoip/city-approximation.js';
-import { adoptedProbes } from './adopted-probes.js';
 import { reconnectProbes } from './ws/helper/reconnect-probes.js';
 import { initPersistentRedisClient } from './redis/persistent-client.js';
 import { initMeasurementRedisClient } from './redis/measurement-client.js';

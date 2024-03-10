@@ -13,8 +13,8 @@ const logger = winston.createLogger({
 		winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
 		winston.format.prettyPrint(),
 		winston.format.printf((info: winston.Logform.TransformableInfo) => {
-			const { timestamp, level, scope, message, stack, ...otherFields } = info; // eslint-disable-line @typescript-eslint/no-unsafe-assignment
-			let result = `[${timestamp as string}] [${level.toUpperCase()}] [${process.pid}] [${scope as string}] ${message as string}`;
+			const { timestamp, level, scope, message, stack, label, ...otherFields } = info; // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+			let result = `[${timestamp as string}] [${level.toUpperCase()}] [${process.pid}] [${scope as string}] ${label ? `[${label}] ` : ''}${message as string}`;
 
 			if (Object.keys(otherFields).length > 0) {
 				result += `\n${objectFormatter(otherFields)}`;
@@ -32,4 +32,4 @@ const logger = winston.createLogger({
 	],
 });
 
-export const scopedLogger = (scope: string): winston.Logger => logger.child({ scope });
+export const scopedLogger = (scope: string, label?: string): winston.Logger => logger.child({ scope, label });
