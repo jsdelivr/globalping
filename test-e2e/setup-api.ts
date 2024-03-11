@@ -8,7 +8,7 @@ import { initPersistentRedisClient } from '../src/lib/redis/persistent-client.js
 import { initMeasurementRedisClient } from '../src/lib/redis/measurement-client.js';
 
 before(async () => {
-	docker.removeApiContainer();
+	await docker.removeApiContainer();
 
 	const redisClient = await initRedisClient();
 	await redisClient.flushDb();
@@ -25,7 +25,7 @@ before(async () => {
 });
 
 after(async () => {
-	docker.removeApiContainer();
+	await docker.removeApiContainer();
 });
 
 const dropAllTables = async (sql: Knex) => {
