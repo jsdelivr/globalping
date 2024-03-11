@@ -16,6 +16,7 @@ import {
 import chaiOas from './plugins/oas/index.js';
 import { initRedisClient } from '../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../src/lib/redis/persistent-client.js';
+import { initMeasurementRedisClient } from '../src/lib/redis/measurement-client.js';
 import { client as sql } from '../src/lib/sql/client.js';
 
 const dbConfig = config.get<{ connection: { database: string, host: string } }>('db');
@@ -31,6 +32,8 @@ before(async () => {
 	await redisClient.flushDb();
 	const persistentRedisClient = await initPersistentRedisClient();
 	await persistentRedisClient.flushDb();
+	const measurementRedisClient = await initMeasurementRedisClient();
+	await measurementRedisClient.flushDb();
 
 	await dropAllTables(sql);
 	await sql.migrate.latest();

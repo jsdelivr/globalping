@@ -55,7 +55,6 @@ jobs:
           npm run test:portman
       - name: Test E2E
         run: |
-          docker pull ghcr.io/jsdelivr/globalping-probe
           npm run test:e2e
       - name: Test Dist
         run: |

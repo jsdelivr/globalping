@@ -1,126 +1,126 @@
 import Docker from 'dockerode';
+import { scopedLogger } from '../src/lib/logger.js';
 
-const isLinuxHost = async (docker: Docker) => {
-	const versionInfo = await docker.version();
-	const platformName = versionInfo.Platform.Name.toLowerCase();
-	console.log('platformName', platformName);
-	const isLinuxHost = platformName.includes('engine');
-	return isLinuxHost;
-};
+const logger = scopedLogger('docker-manager');
 
-const attachLogs = async (container: Docker.Container) => {
-	const stream = await container.logs({
-		follow: true,
-		stdout: true,
-		stderr: true,
-	});
-	container.modem.demuxStream(stream, process.stdout, process.stderr);
-};
+class DockerManager {
+	docker: Docker;
 
-export const createApiContainer = async () => {
-	const docker = new Docker();
+	constructor () {
+		this.docker = new Docker();
+	}
 
-	const isLinux = await isLinuxHost(docker);
-	console.log('isLinux', isLinux);
-
-	const container = await docker.createContainer({
-		Image: 'globalping-api-e2e',
-		name: 'globalping-api-e2e',
-		Env: [
-			'NODE_ENV=test',
-			'TEST_MODE=e2e',
-			'NEW_RELIC_ENABLED=false',
-			`REDIS_URL=redis://${isLinux ? 'localhost' : 'host.docker.internal'}:6379`,
-			`DB_CONNECTION_HOST=${isLinux ? 'localhost' : 'host.docker.internal'}`,
-		],
-		HostConfig: {
-			PortBindings: {
-				'80/tcp': [{ HostPort: '80' }],
+	public async createApiContainer () {
+		const isLinux = await this.isLinuxHost();
+		const container = await this.docker.createContainer({
+			Image: 'globalping-api-e2e',
+			name: 'globalping-api-e2e',
+			Env: [
+				'NODE_ENV=test',
+				'TEST_MODE=e2e',
+				'NEW_RELIC_ENABLED=false',
+				`REDIS_URL=redis://${isLinux ? 'localhost' : 'host.docker.internal'}:6379`,
+				`DB_CONNECTION_HOST=${isLinux ? 'localhost' : 'host.docker.internal'}`,
+			],
+			HostConfig: {
+				PortBindings: {
+					'80/tcp': [{ HostPort: '80' }],
+				},
+				NetworkMode: isLinux ? 'host' : 'bridge',
 			},
-			NetworkMode: isLinux ? 'host' : 'bridge',
-		},
-	});
+		});
 
-	await container.start({});
+		await container.start({});
+		await this.attachLogs(container);
+	}
 
-	await attachLogs(container);
-};
-
-export const createProbeContainer = async () => {
-	const docker = new Docker();
-
-	const isLinux = await isLinuxHost(docker);
-	console.log('isLinux', isLinux);
-
-	const container = await docker.createContainer({
-		Image: 'ghcr.io/jsdelivr/globalping-probe',
-		name: 'globalping-probe-e2e',
-		Env: [
-			`API_HOST=ws://${isLinux ? 'localhost' : 'host.docker.internal'}:80`,
-		],
-		HostConfig: {
-			LogConfig: {
-				Type: 'local',
-				Config: {},
+	public async createProbeContainer () {
+		const isLinux = await this.isLinuxHost();
+		const container = await this.docker.createContainer({
+			Image: 'ghcr.io/jsdelivr/globalping-probe',
+			name: 'globalping-probe-e2e',
+			Env: [
+				`API_HOST=ws://${isLinux ? 'localhost' : 'host.docker.internal'}:80`,
+			],
+			HostConfig: {
+				LogConfig: {
+					Type: 'local',
+					Config: {},
+				},
+				NetworkMode: isLinux ? 'host' : 'bridge',
 			},
-			NetworkMode: isLinux ? 'host' : 'bridge',
-		},
-	});
+		});
 
-	await container.start({});
-
-	await attachLogs(container);
-};
-
-const getContainer = async (name: string) => {
-	const docker = new Docker();
-	const containers = await docker.listContainers({ all: true });
-	const containerInfo = containers.find(c => c.Names.includes(`/${name}`));
-
-	if (!containerInfo) {
-		console.log('Container not found:');
-		return { container: null, state: null };
+		await container.start({});
+		await this.attachLogs(container);
 	}
 
-	return { container: docker.getContainer(containerInfo.Id), state: containerInfo.State };
-};
+	public async removeProbeContainer () {
+		const { container } = await this.getContainer('globalping-probe-e2e');
 
-export const removeProbeContainer = async () => {
-	const { container } = await getContainer('globalping-probe-e2e');
+		if (!container) {
+			return;
+		}
 
-	if (!container) {
-		return;
+		await container.remove({ force: true });
 	}
 
-	await container.remove({ force: true });
-};
+	public async removeApiContainer () {
+		const { container } = await this.getContainer('globalping-api-e2e');
 
-export const removeApiContainer = async () => {
-	const { container } = await getContainer('globalping-api-e2e');
+		if (!container) {
+			return;
+		}
 
-	if (!container) {
-		return;
+		await container.remove({ force: true });
 	}
 
-	await container.remove({ force: true });
-};
+	public async stopProbeContainer () {
+		const { container, state } = await this.getContainer('globalping-probe-e2e');
 
-export const stopProbeContainer = async () => {
-	const { container, state } = await getContainer('globalping-probe-e2e');
+		if (!container || state === 'exited') {
+			return;
+		}
 
-	if (!container || state === 'exited') {
-		return;
+		await container.stop();
 	}
 
-	await container.stop();
-};
+	public async startProbeContainer () {
+		const { container, state } = await this.getContainer('globalping-probe-e2e');
 
-export const startProbeContainer = async () => {
-	const { container, state } = await getContainer('globalping-probe-e2e');
+		if (!container || state === 'running') {
+			return;
+		}
 
-	if (!container || state === 'running') {
-		return;
+		await container.start({});
 	}
 
-	await container.start({});
-};
+	private async isLinuxHost (): Promise<boolean> {
+		const versionInfo = await this.docker.version();
+		const platformName = versionInfo.Platform.Name.toLowerCase();
+		return platformName.includes('engine');
+	}
+
+	private async attachLogs (container: Docker.Container) {
+		const stream = await container.logs({
+			follow: true,
+			stdout: true,
+			stderr: true,
+		});
+		container.modem.demuxStream(stream, process.stdout, process.stderr);
+	}
+
+	private async getContainer (name: string): Promise<{ container: Docker.Container | null, state: string | null }> {
+		const containers = await this.docker.listContainers({ all: true });
+		const containerInfo = containers.find(c => c.Names.includes(`/${name}`));
+
+		if (!containerInfo) {
+			logger.warn('Container not found:');
+			return { container: null, state: null };
+		}
+
+		return { container: this.docker.getContainer(containerInfo.Id), state: containerInfo.State };
+	}
+}
+
+export const docker = new DockerManager();

@@ -2,16 +2,16 @@ import got from 'got';
 import { expect } from 'chai';
 
 import { waitMesurementFinish, waitProbeToConnect } from '../utils.js';
-import { startProbeContainer, stopProbeContainer } from '../docker.js';
+import { docker } from '../docker.js';
 
 describe('api', () => {
 	beforeEach(async () => {
-		await startProbeContainer();
+		await docker.startProbeContainer();
 		await waitProbeToConnect();
 	});
 
 	after(async () => {
-		await startProbeContainer();
+		await docker.startProbeContainer();
 		await waitProbeToConnect();
 	});
 
@@ -21,7 +21,7 @@ describe('api', () => {
 			type: 'ping',
 		} }).json();
 
-		await stopProbeContainer();
+		await docker.stopProbeContainer();
 
 		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
@@ -42,7 +42,7 @@ describe('api', () => {
 			type: 'ping',
 		} }).json();
 
-		await stopProbeContainer();
+		await docker.stopProbeContainer();
 
 		const { response, body } = await waitMesurementFinish(id);
 

@@ -1,7 +1,10 @@
 import got, { type RequestError } from 'got';
 import { setTimeout } from 'timers/promises';
+import { scopedLogger } from '../src/lib/logger.js';
 
 import type { Probe } from '../src/probe/types.js';
+
+const logger = scopedLogger('e2e-utils');
 
 export const waitProbeToConnect = async () => {
 	let response;
@@ -10,7 +13,7 @@ export const waitProbeToConnect = async () => {
 		try {
 			response = await got('http://localhost:80/v1/probes');
 		} catch (err) {
-			console.log((err as RequestError).code);
+			logger.info((err as RequestError).code);
 			await setTimeout(1000);
 			continue;
 		}
@@ -32,7 +35,7 @@ export const waitProbeInCity = async (city: string) => {
 		try {
 			response = await got('http://localhost:80/v1/probes');
 		} catch (err) {
-			console.log((err as RequestError).code);
+			logger.info((err as RequestError).code);
 			throw err;
 		}
 
