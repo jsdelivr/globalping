@@ -690,7 +690,6 @@ components:
       type:
         - string
         - 'null'
-      format: hostname
       description: The resolved hostname of the `target`.
     StateCode:
       type:
