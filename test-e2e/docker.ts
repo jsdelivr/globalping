@@ -12,6 +12,7 @@ class DockerManager {
 
 	public async createApiContainer () {
 		const isLinux = await this.isLinuxHost();
+		// docker run -e NODE_ENV=test -e TEST_MODE=e2e -e NEW_RELIC_ENABLED=false -e REDIS_URL=redis://host.docker.internal:6379 -e DB_CONNECTION_HOST=host.docker.internal --name globalping-api-e2e globalping-api-e2e
 		const container = await this.docker.createContainer({
 			Image: 'globalping-api-e2e',
 			name: 'globalping-api-e2e',
@@ -36,6 +37,7 @@ class DockerManager {
 
 	public async createProbeContainer () {
 		const isLinux = await this.isLinuxHost();
+		// docker run -e API_HOST=ws://host.docker.internal:80 --name globalping-probe-e2e ghcr.io/jsdelivr/globalping-probe
 		const container = await this.docker.createContainer({
 			Image: 'ghcr.io/jsdelivr/globalping-probe',
 			name: 'globalping-probe-e2e',
@@ -43,10 +45,6 @@ class DockerManager {
 				`API_HOST=ws://${isLinux ? 'localhost' : 'host.docker.internal'}:80`,
 			],
 			HostConfig: {
-				LogConfig: {
-					Type: 'local',
-					Config: {},
-				},
 				NetworkMode: isLinux ? 'host' : 'bridge',
 			},
 		});
