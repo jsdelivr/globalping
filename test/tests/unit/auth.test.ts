@@ -4,25 +4,23 @@ import * as sinon from 'sinon';
 import { Auth } from '../../../src/lib/http/auth.js';
 
 describe('Auth', () => {
-	const updateStub = sinon.stub();
-	const selectStub = sinon.stub();
-	const whereStub = sinon.stub().returns({
+	const sandbox = sinon.createSandbox();
+	const updateStub = sandbox.stub();
+	const selectStub = sandbox.stub().resolves([]);
+	const whereStub = sandbox.stub().returns({
 		update: updateStub,
 		select: selectStub,
 	});
-	const sqlStub = sinon.stub().returns({
+	const sqlStub = sandbox.stub().returns({
 		where: whereStub,
 	}) as sinon.SinonStub<any[], any> & {raw: any};
-	let sandbox: sinon.SinonSandbox;
 
 	beforeEach(() => {
-		sandbox = sinon.createSandbox({ useFakeTimers: true });
-		sinon.resetHistory();
+		sandbox.resetHistory();
 	});
 
 	afterEach(() => {
 		selectStub.reset();
-		sandbox.restore();
 	});
 
 	it('should sync tokens every minute', async () => {
@@ -36,7 +34,7 @@ describe('Auth', () => {
 		selectStub.onCall(2).resolves([]);
 
 		auth.scheduleSync();
-		await sandbox.clock.tickAsync(60000);
+		await clock.tickAsync(60_000);
 
 		const user1 = await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
 		expect(user1).to.equal('user1');
@@ -50,12 +48,13 @@ describe('Auth', () => {
 
 		selectStub.onCall(4).resolves([]);
 
-		await sandbox.clock.tickAsync(60000);
+		await clock.tickAsync(60_000);
 
 		const user1afterSync = await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
 		expect(user1afterSync).to.equal(null);
 		const user2afterSync = await auth.validate('ve7w6UTaOt3aXpctEk8wJQtkJwz2IOMY', 'https://jsdelivr.com');
 		expect(user2afterSync).to.equal('user2');
+		auth.unscheduleSync();
 	});
 
 	it('should not do sql requests for synced tokens', async () => {

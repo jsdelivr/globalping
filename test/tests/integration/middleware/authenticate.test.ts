@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import nock from 'nock';
 import request, { type Agent } from 'supertest';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
-import { addFakeProbe, deleteFakeProbes, getTestServer } from '../../../utils/server.js';
+import { addFakeProbe, deleteFakeProbes, getTestServer, waitForProbesUpdate } from '../../../utils/server.js';
 import { client } from '../../../../src/lib/sql/client.js';
 import { auth, GP_TOKENS_TABLE, Token } from '../../../../src/lib/http/auth.js';
 
@@ -17,6 +17,7 @@ describe('authenticate', () => {
 		nockGeoIpProviders();
 		const probe = await addFakeProbe();
 		probe.emit('probe:status:update', 'ready');
+		await waitForProbesUpdate();
 	});
 
 	beforeEach(async () => {

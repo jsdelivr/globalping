@@ -6,7 +6,6 @@ import NullCache from '../../../../src/lib/cache/null-cache.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import geoIpMocks from '../../../mocks/nock-geoip.json' assert { type: 'json' };
 
-
 const MOCK_IP = '131.255.7.26';
 
 describe('geoip service', () => {

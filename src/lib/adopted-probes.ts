@@ -2,8 +2,7 @@ import type { Knex } from 'knex';
 import Bluebird from 'bluebird';
 import _ from 'lodash';
 import { scopedLogger } from './logger.js';
-import { client } from './sql/client.js';
-import { fetchRawSockets } from './ws/server.js';
+import type { fetchRawProbes as serverFetchRawProbes } from './ws/server.js';
 import type { Probe } from '../probe/types.js';
 import { normalizeFromPublicName } from './geoip/utils.js';
 
@@ -89,7 +88,7 @@ export class AdoptedProbes {
 
 	constructor (
 		private readonly sql: Knex,
-		private readonly fetchSocketsRaw: typeof fetchRawSockets,
+		private readonly fetchRawProbes: typeof serverFetchRawProbes,
 	) {}
 
 	getByIp (ip: string) {
@@ -131,13 +130,13 @@ export class AdoptedProbes {
 			this.syncDashboardData()
 				.finally(() => this.scheduleSync())
 				.catch(error => logger.error(error));
-		}, 60_000);
+		}, 60_000).unref();
 	}
 
 	async syncDashboardData () {
-		const allSockets = await this.fetchSocketsRaw();
-		this.connectedIpToProbe = new Map(allSockets.map(socket => [ socket.data.probe.ipAddress, socket.data.probe ]));
-		this.connectedUuidToIp = new Map(allSockets.map(socket => [ socket.data.probe.uuid, socket.data.probe.ipAddress ]));
+		const allProbes = await this.fetchRawProbes();
+		this.connectedIpToProbe = new Map(allProbes.map(probe => [ probe.ipAddress, probe ]));
+		this.connectedUuidToIp = new Map(allProbes.map(probe => [ probe.uuid, probe.ipAddress ]));
 
 		await this.fetchAdoptedProbes();
 		await Bluebird.map(this.adoptedIpToProbe.values(), ({ ip, uuid }) => this.syncProbeIds(ip, uuid), { concurrency: 8 });
@@ -304,5 +303,3 @@ export class AdoptedProbes {
 		return daysDifference > 30;
 	}
 }
-
-export const adoptedProbes = new AdoptedProbes(client, fetchRawSockets);

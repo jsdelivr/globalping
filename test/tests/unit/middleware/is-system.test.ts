@@ -3,10 +3,11 @@ import * as sinon from 'sinon';
 import { expect } from 'chai';
 import { isSystemMw } from '../../../../src/lib/http/middleware/is-system.js';
 
-const next = sinon.stub();
+const sandbox = sinon.createSandbox();
+const next = sandbox.stub();
 
 beforeEach(() => {
-	sinon.resetHistory();
+	sandbox.resetHistory();
 });
 
 describe('rate limit middleware', () => {

@@ -1,17 +1,17 @@
 import _ from 'lodash';
-import { fetchSockets } from '../lib/ws/fetch-sockets.js';
 import type { LocationWithLimit, MeasurementRequest, MeasurementResult, UserRequest } from '../measurement/types.js';
 import type { Location } from '../lib/location/types.js';
 import type { OfflineProbe, Probe } from './types.js';
 import { ProbesLocationFilter } from './probes-location-filter.js';
 import { getMeasurementStore, MeasurementStore } from '../measurement/store.js';
 import { normalizeFromPublicName, normalizeNetworkName } from '../lib/geoip/utils.js';
+import { fetchProbes as serverFetchProbes } from '../lib/ws/server.js';
 
 export class ProbeRouter {
 	private readonly probesFilter = new ProbesLocationFilter();
 
 	constructor (
-		private readonly fetchWsSockets: typeof fetchSockets,
+		private readonly fetchProbes: typeof serverFetchProbes,
 		private readonly store: MeasurementStore,
 	) {}
 
@@ -23,7 +23,7 @@ export class ProbeRouter {
 		const locations = userRequest.locations ?? [];
 		const globalLimit = userRequest.limit ?? 1;
 
-		const connectedProbes = await this.fetchProbes();
+		const connectedProbes = (await this.fetchProbes()).filter(probe => probe.status === 'ready');
 
 		if (typeof locations === 'string') {
 			return this.findWithMeasurementId(connectedProbes, locations, userRequest);
@@ -53,11 +53,6 @@ export class ProbeRouter {
 			onlineProbesMap: new Map(filtered.entries()),
 			request: request as MeasurementRequest,
 		};
-	}
-
-	private async fetchProbes (): Promise<Probe[]> {
-		const sockets = await this.fetchWsSockets();
-		return sockets.filter(s => s.data.probe.status === 'ready').map(s => s.data.probe);
 	}
 
 	private findGloballyDistributed (probes: Probe[], limit: number): Probe[] {
@@ -181,7 +176,7 @@ let router: ProbeRouter;
 
 export const getProbeRouter = () => {
 	if (!router) {
-		router = new ProbeRouter(fetchSockets, getMeasurementStore());
+		router = new ProbeRouter(serverFetchProbes, getMeasurementStore());
 	}
 
 	return router;
