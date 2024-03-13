@@ -15,7 +15,7 @@ type NodeData = {
 };
 
 export class SyncedProbeList extends EventEmitter {
-	syncInterval = 1000;
+	syncInterval = 2000;
 	syncTimeout = 5000;
 
 	readonly localUpdateEvent = 'synced-probe-list:local-update';
