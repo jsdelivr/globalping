@@ -1,7 +1,7 @@
 import got from 'got';
 import { expect } from 'chai';
 
-import { waitMesurementFinish, waitProbeToConnect } from '../utils.js';
+import { waitMesurementFinish, waitProbeToConnect, waitProbeToDisconnect } from '../utils.js';
 import { docker } from '../docker.js';
 
 describe('api', () => {
@@ -22,6 +22,7 @@ describe('api', () => {
 		} }).json();
 
 		await docker.stopProbeContainer();
+		await waitProbeToDisconnect();
 
 		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
@@ -29,11 +30,8 @@ describe('api', () => {
 			locations: locationId,
 		} }).json();
 
-		console.log('measurement id:', id, new Date());
 		const response = await waitMesurementFinish(id);
 
-		console.log(1, new Date());
-		console.log('response.body', response.body, new Date());
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('offline');
 		expect(response).to.matchApiSchema();
