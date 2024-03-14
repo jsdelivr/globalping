@@ -13,8 +13,8 @@ after(() => {
 describe('Get health', () => {
 	let app: Server;
 	let requestAgent: Agent;
-	let sandbox: sinon.SinonSandbox;
 	let exitStub: sinon.SinonStub;
+	const sandbox = sinon.createSandbox();
 
 	before(async () => {
 		app = await getTestServer();
@@ -22,7 +22,6 @@ describe('Get health', () => {
 	});
 
 	beforeEach(() => {
-		sandbox = sinon.createSandbox({ useFakeTimers: { shouldAdvanceTime: true } });
 		exitStub = sandbox.stub(process, 'exit');
 	});
 
@@ -42,9 +41,9 @@ describe('Get health', () => {
 
 		it('should respond with "Received SIGTERM, shutting down" message and exit in 15_000 ms after SIGTERM', async () => {
 			process.once('SIGTERM', () => {
-				sinon.assert.notCalled(exitStub);
-				sandbox.clock.tick(15_000 + 10);
-				sinon.assert.calledOnce(exitStub);
+				sandbox.assert.notCalled(exitStub);
+				clock.tick(15_000 + 10);
+				sandbox.assert.calledOnce(exitStub);
 			});
 
 			process.emit('SIGTERM', 'SIGTERM');

@@ -4,13 +4,15 @@ import * as sinon from 'sinon';
 import { validate } from '../../../../src/lib/http/middleware/validate.js';
 
 describe('Validate middleware', () => {
+	const sandbox = sinon.createSandbox();
+
 	const documentation = 'link://';
 	const getDocsLink = () => documentation;
 
 	const schema = Joi.object({
 		hello: Joi.string().valid('world!').required(),
 	});
-	const nextMock = sinon.stub();
+	const nextMock = sandbox.stub();
 
 	beforeEach(() => {
 		nextMock.reset();
@@ -18,7 +20,7 @@ describe('Validate middleware', () => {
 
 	it('should call next', async () => {
 		const ctx: any = { request: { body: { hello: 'world!' } }, getDocsLink };
-		const next = sinon.stub();
+		const next = sandbox.stub();
 
 		await validate(schema)(ctx, next);
 

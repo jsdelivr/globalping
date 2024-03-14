@@ -26,14 +26,22 @@ type Row = Omit<Token, 'origins'> & {
 export class Auth {
 	private validTokens = new TTLCache<string, Token>({ ttl: TOKEN_TTL });
 	private invalidTokens = new TTLCache<string, true>({ ttl: TOKEN_TTL });
+	private timer: NodeJS.Timeout | undefined;
+
 	constructor (private readonly sql: Knex) {}
 
 	scheduleSync () {
-		setTimeout(() => {
+		clearTimeout(this.timer);
+
+		this.timer = setTimeout(() => {
 			this.syncTokens()
 				.finally(() => this.scheduleSync())
 				.catch(error => logger.error(error));
-		}, 60_000);
+		}, 60_000).unref();
+	}
+
+	unscheduleSync () {
+		clearTimeout(this.timer);
 	}
 
 	async syncTokens () {

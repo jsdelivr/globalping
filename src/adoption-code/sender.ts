@@ -1,34 +1,33 @@
-
 import createHttpError from 'http-errors';
-import type { RemoteProbeSocket } from '../lib/ws/server.js';
-import { fetchSockets } from '../lib/ws/fetch-sockets.js';
+import { fetchProbes as serverFetchProbes, getWsServer, PROBES_NAMESPACE, type WsServer } from '../lib/ws/server.js';
 import type { AdoptionCodeRequest } from './types.js';
+import type { Probe } from '../probe/types.js';
 
 export class CodeSender {
-	constructor (private readonly fetchWsSockets: typeof fetchSockets) {}
+	constructor (private readonly io: WsServer, private readonly fetchProbes: typeof serverFetchProbes) {}
 
-	async sendCode (request: AdoptionCodeRequest): Promise<RemoteProbeSocket> {
-		const socket = await this.findSocketByIp(request.ip);
+	async sendCode (request: AdoptionCodeRequest): Promise<Probe> {
+		const probe = await this.findSocketByIp(request.ip);
 
-		if (!socket) {
+		if (!probe) {
 			throw createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' });
 		}
 
-		this.sendToSocket(socket, request.code);
+		this.sendToProbe(probe, request.code);
 
-		return socket;
+		return probe;
 	}
 
 	private async findSocketByIp (ip: string) {
-		const sockets = await this.fetchWsSockets();
-		return sockets.find(socket => socket.data.probe.ipAddress === ip);
+		const probes = await this.fetchProbes();
+		return probes.find(probe => probe.ipAddress === ip);
 	}
 
-	private sendToSocket (socket: RemoteProbeSocket, code: string) {
-		socket.emit('probe:adoption:code', {
+	private sendToProbe (probe: Probe, code: string) {
+		this.io.of(PROBES_NAMESPACE).to(probe.client).emit('probe:adoption:code', {
 			code,
 		});
 	}
 }
 
-export const codeSender = new CodeSender(fetchSockets);
+export const codeSender = new CodeSender(getWsServer(), serverFetchProbes);

@@ -4,19 +4,20 @@ import * as sinon from 'sinon';
 import { Credits } from '../../../src/lib/credits.js';
 
 describe('Credits', () => {
-	const updateStub = sinon.stub();
-	const selectStub = sinon.stub();
-	const whereStub = sinon.stub().returns({
+	const sandbox = sinon.createSandbox();
+	const updateStub = sandbox.stub();
+	const selectStub = sandbox.stub();
+	const whereStub = sandbox.stub().returns({
 		update: updateStub,
 		select: selectStub,
 	});
-	const sqlStub = sinon.stub().returns({
+	const sqlStub = sandbox.stub().returns({
 		where: whereStub,
 	}) as sinon.SinonStub<any[], any> & {raw: any};
-	sqlStub.raw = sinon.stub();
+	sqlStub.raw = sandbox.stub();
 
 	beforeEach(() => {
-		sinon.resetHistory();
+		sandbox.resetHistory();
 	});
 
 	it('should return true if row was updated', async () => {

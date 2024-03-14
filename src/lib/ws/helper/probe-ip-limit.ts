@@ -1,7 +1,6 @@
-import { fetchSockets } from '../fetch-sockets.js';
+import { fetchProbes } from '../server.js';
 import { scopedLogger } from '../../logger.js';
 import { ProbeError } from '../../probe-error.js';
-import type { LRUOptions } from './throttle.js';
 
 const logger = scopedLogger('ws:limit');
 
@@ -10,18 +9,11 @@ export const verifyIpLimit = async (ip: string, socketId: string): Promise<void>
 		return;
 	}
 
-	const status: LRUOptions['status'] = {};
-	let socketList = await fetchSockets({ forceRefresh: true, status });
-
-	// If another fetchSockets was already 'inflight' at the moment of a new fetchSockets call, result socketList may be stale, so we need to refetch it.
-	if (status.fetch === 'inflight') {
-		socketList = await fetchSockets({ forceRefresh: true });
-	}
-
-	const previousSocket = socketList.find(s => s.data.probe.ipAddress === ip && s.id !== socketId);
+	const probes = await fetchProbes({ allowStale: false });
+	const previousSocket = probes.find(p => p.ipAddress === ip && p.client !== socketId);
 
 	if (previousSocket) {
-		logger.info(`ws client ${socketId} has reached the concurrent IP limit.`, { message: previousSocket.data.probe.ipAddress });
+		logger.info(`ws client ${socketId} has reached the concurrent IP limit.`, { message: previousSocket.ipAddress });
 		throw new ProbeError('ip limit');
 	}
 };

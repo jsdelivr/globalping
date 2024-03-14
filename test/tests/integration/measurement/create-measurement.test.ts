@@ -1,4 +1,3 @@
-
 import { expect } from 'chai';
 import request, { type Agent } from 'supertest';
 import * as td from 'testdouble';
@@ -7,6 +6,7 @@ import type { Socket } from 'socket.io-client';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { client } from '../../../../src/lib/sql/client.js';
 import type { AdoptedProbes } from '../../../../src/lib/adopted-probes.js';
+import { waitForProbesUpdate } from '../../../utils/server.js';
 
 describe('Create measurement', () => {
 	let addFakeProbe: () => Promise<Socket>;
@@ -19,7 +19,8 @@ describe('Create measurement', () => {
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
 		({ getTestServer, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
-		({ adoptedProbes, ADOPTED_PROBES_TABLE } = await import('../../../../src/lib/adopted-probes.js'));
+		({ ADOPTED_PROBES_TABLE } = await import('../../../../src/lib/adopted-probes.js'));
+		({ adoptedProbes } = await import('../../../../src/lib/ws/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
 	});
@@ -61,10 +62,12 @@ describe('Create measurement', () => {
 			nockGeoIpProviders();
 			probe = await addFakeProbe();
 			probe.emit('probe:status:update', 'ready');
+			await waitForProbesUpdate();
 		});
 
-		afterEach(() => {
+		afterEach(async () => {
 			probe.emit('probe:status:update', 'ready');
+			await waitForProbesUpdate();
 		});
 
 		after(async () => {
@@ -74,6 +77,7 @@ describe('Create measurement', () => {
 
 		it('should respond with error if there are no ready probes', async () => {
 			probe.emit('probe:status:update', 'initializing');
+			await waitForProbesUpdate();
 
 			await requestAgent.post('/v1/measurements')
 				.send({
@@ -100,6 +104,7 @@ describe('Create measurement', () => {
 
 		it('should respond with error if probe emitted non-"ready" "probe:status:update"', async () => {
 			probe.emit('probe:status:update', 'sigterm');
+			await waitForProbesUpdate();
 
 			await requestAgent.post('/v1/measurements')
 				.send({
@@ -177,8 +182,6 @@ describe('Create measurement', () => {
 		});
 
 		it('should create measurement with location limit (continent)', async () => {
-			probe.emit('probe:status:update', 'ready');
-
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -195,8 +198,6 @@ describe('Create measurement', () => {
 		});
 
 		it('should create measurement with location limit (region)', async () => {
-			probe.emit('probe:status:update', 'ready');
-
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -213,8 +214,6 @@ describe('Create measurement', () => {
 		});
 
 		it('should create measurement with location limit (country)', async () => {
-			probe.emit('probe:status:update', 'ready');
-
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -231,8 +230,6 @@ describe('Create measurement', () => {
 		});
 
 		it('should create measurement with location limit (state)', async () => {
-			probe.emit('probe:status:update', 'ready');
-
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -249,8 +246,6 @@ describe('Create measurement', () => {
 		});
 
 		it('should create measurement with location limit (city)', async () => {
-			probe.emit('probe:status:update', 'ready');
-
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -267,8 +262,6 @@ describe('Create measurement', () => {
 		});
 
 		it('should create measurement with location limit (asn)', async () => {
-			probe.emit('probe:status:update', 'ready');
-
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -285,8 +278,6 @@ describe('Create measurement', () => {
 		});
 
 		it('should create measurement with location limit (network)', async () => {
-			probe.emit('probe:status:update', 'ready');
-
 			await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
@@ -602,8 +593,9 @@ describe('Create measurement', () => {
 		});
 
 		describe('offline probes', () => {
-			after(() => {
+			after(async () => {
 				probe.emit('probe:status:update', 'ready');
+				await waitForProbesUpdate();
 			});
 
 			it('should create measurement with offline test result if requested probe is offline', async () => {
@@ -623,6 +615,7 @@ describe('Create measurement', () => {
 					});
 
 				probe.emit('probe:status:update', 'ping-test-failed');
+				await waitForProbesUpdate();
 
 				let id2;
 				await requestAgent.post('/v1/measurements')
@@ -674,6 +667,7 @@ describe('Create measurement', () => {
 				});
 
 				await adoptedProbes.syncDashboardData();
+				await waitForProbesUpdate();
 			});
 
 			after(async () => {

@@ -9,7 +9,9 @@ import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 describe('Adoption code', () => {
 	let app: Server;
 	let requestAgent: Agent;
-	const adoptionCodeStub = sinon.stub();
+
+	const sandbox = sinon.createSandbox();
+	const adoptionCodeStub = sandbox.stub();
 
 	before(async () => {
 		app = await getTestServer();
@@ -22,7 +24,7 @@ describe('Adoption code', () => {
 	});
 
 	afterEach(async () => {
-		sinon.resetHistory();
+		sandbox.resetHistory();
 	});
 
 	after(async () => {

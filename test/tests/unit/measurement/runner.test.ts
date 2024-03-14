@@ -20,29 +20,34 @@ const req = {
 };
 
 describe('MeasurementRunner', () => {
-	const set = sinon.stub();
-	const emit = sinon.stub();
-	const to = sinon.stub();
-	const io = sinon.createStubInstance(Server);
-	const store = sinon.createStubInstance(MeasurementStore);
-	const router = sinon.createStubInstance(ProbeRouter);
-	const metrics = sinon.createStubInstance(MetricsAgent);
-	const rateLimit = sinon.stub();
+	const sandbox = sinon.createSandbox();
+	const set = sandbox.stub();
+	const emit = sandbox.stub();
+	const to = sandbox.stub();
+	const io = sandbox.createStubInstance(Server);
+	const store = sandbox.createStubInstance(MeasurementStore);
+	const router = sandbox.createStubInstance(ProbeRouter);
+	const metrics = sandbox.createStubInstance(MetricsAgent);
+	const rateLimit = sandbox.stub();
 	let runner: MeasurementRunner;
 	let testId: number;
 
 	before(async () => {
-		td.replaceEsm('crypto-random-string', null, () => testId++);
+		await td.replaceEsm('crypto-random-string', null, () => testId++);
 		const { MeasurementRunner } = await import('../../../../src/measurement/runner.js');
 		runner = new MeasurementRunner(io, store, router, rateLimit, metrics);
 	});
 
 	beforeEach(() => {
-		sinon.resetHistory();
+		sandbox.resetHistory();
 		to.returns({ emit });
 		io.of.withArgs('/probes').returns({ to } as any);
 		store.createMeasurement.resolves('measurementid');
 		testId = 0;
+	});
+
+	afterEach(() => {
+		clock.unpause();
 	});
 
 	after(() => {
@@ -247,12 +252,14 @@ describe('MeasurementRunner', () => {
 	});
 
 	it('should properly handle result events from probes', async () => {
-		const sandbox = sinon.createSandbox({ useFakeTimers: { now: new Date('2023-05-24T09:56:55.000Z').getTime() } });
+		const start = clock.pause().now;
+
 		store.storeMeasurementResult
 			.onFirstCall().resolves(null)
-			.onSecondCall().resolves({ type: 'ping', createdAt: '2023-05-24T09:56:30.000Z' } as MeasurementRecord)
+			.onSecondCall().resolves({ type: 'ping', createdAt: new Date(start).toISOString() } as MeasurementRecord)
 			.onThirdCall().resolves(null);
 
+		await clock.tickAsync(25_000);
 		await runner.recordResult({ measurementId: 'measurementid', testId: 'testid1', result: {} as MeasurementResultMessage['result'] });
 		await runner.recordResult({ measurementId: 'measurementid', testId: 'testid2', result: {} as MeasurementResultMessage['result'] });
 		await runner.recordResult({ measurementId: 'measurementid', testId: 'testid3', result: {} as MeasurementResultMessage['result'] });
@@ -263,7 +270,6 @@ describe('MeasurementRunner', () => {
 		expect(store.storeMeasurementResult.args[2]).to.deep.equal([{ measurementId: 'measurementid', testId: 'testid3', result: {} }]);
 		expect(metrics.recordMeasurementTime.callCount).to.equal(1);
 		expect(metrics.recordMeasurementTime.args[0]).to.deep.equal([ 'ping', 25000 ]);
-		sandbox.restore();
 	});
 
 	it('should call rate limiter with the number of online probes', async () => {

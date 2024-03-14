@@ -5,6 +5,7 @@ import type { Socket } from 'socket.io-client';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
+import { waitForProbesUpdate } from '../../../utils/server.js';
 
 describe('Timeout results', () => {
 	let probe: Socket;
@@ -12,12 +13,11 @@ describe('Timeout results', () => {
 	let deleteFakeProbes: () => Promise<void>;
 	let getTestServer;
 	let requestAgent: Agent;
-	let sandbox: sinon.SinonSandbox;
 
-	const cryptoRandomString = sinon.stub().returns('measurementid');
+	const sandbox = sinon.createSandbox();
+	const cryptoRandomString = sandbox.stub().returns('measurementid');
 
 	before(async () => {
-		sandbox = sinon.createSandbox({ useFakeTimers: { shouldAdvanceTime: true } });
 		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
 		({ getTestServer, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
@@ -38,11 +38,11 @@ describe('Timeout results', () => {
 
 	after(() => {
 		td.reset();
-		sandbox.restore();
 	});
 
 	it('should be included in measurement if there was no ack or results from the probe', async () => {
 		probe.emit('probe:status:update', 'ready');
+		await waitForProbesUpdate();
 
 		await requestAgent.post('/v1/measurements').send({
 			type: 'ping',
@@ -84,7 +84,7 @@ describe('Timeout results', () => {
 				expect(response).to.matchApiSchema();
 			});
 
-		await sandbox.clock.tickAsync(60000); // cleanup interval + time to treat measurement as timed out
+		await clock.tickAsync(60000); // cleanup interval + time to treat measurement as timed out
 
 		let response;
 

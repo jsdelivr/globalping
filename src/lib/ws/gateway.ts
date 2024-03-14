@@ -6,11 +6,10 @@ import { handleStatusUpdate } from '../../probe/handler/status.js';
 import { handleDnsUpdate } from '../../probe/handler/dns.js';
 import { handleStatsReport } from '../../probe/handler/stats.js';
 import { scopedLogger } from '../logger.js';
-import { getWsServer, PROBES_NAMESPACE, ServerSocket } from './server.js';
+import { adoptedProbes, getWsServer, PROBES_NAMESPACE, ServerSocket } from './server.js';
 import { probeMetadata } from './middleware/probe-metadata.js';
 import { errorHandler } from './helper/error-handler.js';
 import { subscribeWithHandler } from './helper/subscribe-handler.js';
-import { adoptedProbes } from '../adopted-probes.js';
 
 const io = getWsServer();
 const logger = scopedLogger('gateway');

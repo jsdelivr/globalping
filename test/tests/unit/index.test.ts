@@ -7,13 +7,14 @@ import { getRedisClient, type RedisClient } from '../../../src/lib/redis/client.
 import { getPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
 
 describe('index file', () => {
+	const sandbox = sinon.createSandbox();
 	const cluster: any = new EventEmitter();
 	cluster.isPrimary = true;
-	cluster.fork = sinon.stub();
+	cluster.fork = sandbox.stub();
 	let redis: RedisClient;
 	let persistentRedis: RedisClient;
 
-	const readFile = sinon.stub().resolves('commitHash');
+	const readFile = sandbox.stub().resolves('commitHash');
 
 	before(async () => {
 		redis = getRedisClient();
@@ -21,9 +22,9 @@ describe('index file', () => {
 	});
 
 	beforeEach(async () => {
-		sinon.resetHistory();
+		sandbox.resetHistory();
 		await td.replaceEsm('node:cluster', null, cluster);
-		await td.replaceEsm('node:fs/promises', { readFile, writeFile: sinon.stub() });
+		await td.replaceEsm('node:fs/promises', { readFile, writeFile: sandbox.stub() });
 	});
 
 	after(() => {

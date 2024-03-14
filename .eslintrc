@@ -45,7 +45,42 @@
 			"rules": {
 				"@typescript-eslint/no-explicit-any": "off",
 				"@typescript-eslint/no-non-null-assertion": "off",
-				"no-unused-expressions": "off"
+				"no-unused-expressions": "off",
+				"no-restricted-properties": [
+					"error",
+					{
+						"object": "sinon",
+						"property": "spy"
+					},
+					{
+						"object": "sinon",
+						"property": "stub"
+					},
+					{
+						"object": "sinon",
+						"property": "mock"
+					},
+					{
+						"object": "sinon",
+						"property": "fake"
+					},
+					{
+						"object": "sinon",
+						"property": "restore"
+					},
+					{
+						"object": "sinon",
+						"property": "reset"
+					},
+					{
+						"object": "sinon",
+						"property": "resetHistory"
+					},
+					{
+						"object": "sinon",
+						"property": "resetBehavior"
+					}
+				]
 			}
 		}
 	]
