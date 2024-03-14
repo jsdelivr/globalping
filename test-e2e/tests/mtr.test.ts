@@ -10,9 +10,6 @@ describe('mtr mesurement', () => {
 		} }).json();
 
 		const response = await waitMesurementFinish(id);
-		console.log('response');
-		console.log(response);
-		console.log(response.body.results[0].result);
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
