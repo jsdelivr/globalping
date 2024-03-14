@@ -47,7 +47,11 @@ export const waitMesurementFinish = async (id: string) => {
 	for (;;) {
 		const response = await got<any>(`http://localhost:80/v1/measurements/${id}`, { responseType: 'json' });
 
+		console.log('id', id, new Date());
+		console.log('response.body.status', response.body.status, new Date());
+
 		if (response.body.status !== 'in-progress') {
+			logger.info('return');
 			return response;
 		}
 

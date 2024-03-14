@@ -29,8 +29,11 @@ describe('api', () => {
 			locations: locationId,
 		} }).json();
 
+		console.log('measurement id:', id, new Date());
 		const response = await waitMesurementFinish(id);
 
+		console.log(1, new Date());
+		console.log('response.body', response.body, new Date());
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('offline');
 		expect(response).to.matchApiSchema();
