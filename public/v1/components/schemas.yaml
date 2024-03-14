@@ -1194,9 +1194,7 @@ components:
         - $ref: 'schemas.yaml#/components/schemas/BaseTestStatus'
         - const: offline
     TimingPacketRtt:
-      type:
-        - number
-        - 'null'
+      type: number
       description: The round-trip time for this packet.
     TimingPacketTtl:
       type: number
