@@ -9,11 +9,11 @@ describe('http mesurement', () => {
 			type: 'http',
 		} }).json();
 
-		const { response, body } = await waitMesurementFinish(id);
+		const response = await waitMesurementFinish(id);
 
-		expect(body.status).to.equal('finished');
-		expect(body.results[0].result.status).to.equal('finished');
-		expect(body.results[0].result.rawBody).to.equal(null);
+		expect(response.body.status).to.equal('finished');
+		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.rawBody).to.equal(null);
 		expect(response).to.matchApiSchema();
 	});
 
@@ -28,11 +28,11 @@ describe('http mesurement', () => {
 			},
 		} }).json();
 
-		const { response, body } = await waitMesurementFinish(id);
+		const response = await waitMesurementFinish(id);
 
-		expect(body.status).to.equal('finished');
-		expect(body.results[0].result.status).to.equal('finished');
-		expect(body.results[0].result.rawBody.length > 0).to.be.true;
+		expect(response.body.status).to.equal('finished');
+		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.rawBody.length > 0).to.be.true;
 		expect(response).to.matchApiSchema();
 	});
 });

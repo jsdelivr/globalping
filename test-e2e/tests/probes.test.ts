@@ -3,11 +3,10 @@ import { expect } from 'chai';
 
 describe('/probes endpoint', () => {
 	it('should return an array of probes', async () => {
-		const response = await got('http://localhost:80/v1/probes');
-		const probes = JSON.parse(response.body);
+		const response = await got<any>('http://localhost:80/v1/probes', { responseType: 'json' });
 
 		expect(response.statusCode).to.equal(200);
-		expect(probes.length).to.equal(1);
+		expect(response.body.length).to.equal(1);
 		expect(response).to.matchApiSchema();
 	});
 });

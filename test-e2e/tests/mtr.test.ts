@@ -9,10 +9,10 @@ describe('mtr mesurement', () => {
 			type: 'mtr',
 		} }).json();
 
-		const { response, body } = await waitMesurementFinish(id);
+		const response = await waitMesurementFinish(id);
 
-		expect(body.status).to.equal('finished');
-		expect(body.results[0].result.status).to.equal('finished');
+		expect(response.body.status).to.equal('finished');
+		expect(response.body.results[0].result.status).to.equal('finished');
 		expect(response).to.matchApiSchema();
 	});
 });

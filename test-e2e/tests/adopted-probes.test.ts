@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import { client } from '../../src/lib/sql/client.js';
 import { ADOPTED_PROBES_TABLE } from '../../src/lib/adopted-probes.js';
 import { waitProbeInCity } from '../utils.js';
-import type { Probe } from '../../src/probe/types.js';
 
 describe('adopted probe', () => {
 	before(async function () {
@@ -38,9 +37,9 @@ describe('adopted probe', () => {
 	});
 
 	it('should return probe list with updated city', async () => {
-		const probes = await got('http://localhost:80/v1/probes').json<Probe[]>();
+		const probes = await got('http://localhost:80/v1/probes').json<any>();
 
-		expect(probes[0]!.location.city).to.equal('Marseille');
+		expect(probes[0].location.city).to.equal('Marseille');
 	});
 
 	it('should create measurement by its new location', async () => {

@@ -9,11 +9,11 @@ describe('dns mesurement', () => {
 			type: 'dns',
 		} }).json();
 
-		const { response, body } = await waitMesurementFinish(id);
+		const response = await waitMesurementFinish(id);
 
-		expect(body.status).to.equal('finished');
-		expect(body.results[0].result.status).to.equal('finished');
-		expect(body.results[0].result.hops).to.not.exist;
+		expect(response.body.status).to.equal('finished');
+		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.hops).to.not.exist;
 		expect(response).to.matchApiSchema();
 	});
 
@@ -26,11 +26,11 @@ describe('dns mesurement', () => {
 			},
 		} }).json();
 
-		const { response, body } = await waitMesurementFinish(id);
+		const response = await waitMesurementFinish(id);
 
-		expect(body.status).to.equal('finished');
-		expect(body.results[0].result.status).to.equal('finished');
-		expect(body.results[0].result.hops.length > 0).to.be.true;
+		expect(response.body.status).to.equal('finished');
+		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.hops.length > 0).to.be.true;
 		expect(response).to.matchApiSchema();
 	});
 });

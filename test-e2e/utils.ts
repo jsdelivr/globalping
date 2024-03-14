@@ -2,8 +2,6 @@ import got, { type RequestError } from 'got';
 import { setTimeout } from 'timers/promises';
 import { scopedLogger } from '../src/lib/logger.js';
 
-import type { Probe } from '../src/probe/types.js';
-
 const logger = scopedLogger('e2e-utils');
 
 export const waitProbeToConnect = async () => {
@@ -11,16 +9,14 @@ export const waitProbeToConnect = async () => {
 
 	for (;;) {
 		try {
-			response = await got('http://localhost:80/v1/probes');
+			response = await got<any>('http://localhost:80/v1/probes', { responseType: 'json' });
 		} catch (err) {
 			logger.info((err as RequestError).code);
 			await setTimeout(1000);
 			continue;
 		}
 
-		const probes = JSON.parse(response.body) as Probe[];
-
-		if (probes.length > 0) {
+		if (response.body.length > 0) {
 			return;
 		}
 
@@ -33,15 +29,13 @@ export const waitProbeInCity = async (city: string) => {
 
 	for (;;) {
 		try {
-			response = await got('http://localhost:80/v1/probes');
+			response = await got<any>('http://localhost:80/v1/probes', { responseType: 'json' });
 		} catch (err) {
 			logger.info((err as RequestError).code);
 			throw err;
 		}
 
-		const probes = JSON.parse(response.body) as Probe[];
-
-		if (probes.length > 0 && probes[0]!.location.city === city) {
+		if (response.body.length > 0 && response.body[0].location.city === city) {
 			return;
 		}
 
@@ -51,11 +45,10 @@ export const waitProbeInCity = async (city: string) => {
 
 export const waitMesurementFinish = async (id: string) => {
 	for (;;) {
-		const response = await got(`http://localhost:80/v1/measurements/${id}`);
-		const body = JSON.parse(response.body);
+		const response = await got<any>(`http://localhost:80/v1/measurements/${id}`, { responseType: 'json' });
 
-		if (body.status !== 'in-progress') {
-			return { response, body };
+		if (response.body.status !== 'in-progress') {
+			return response;
 		}
 
 		await setTimeout(500);
