@@ -32,7 +32,7 @@ describe('http mesurement', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
-		expect(response.body.results[0].result.rawBody.length > 0).to.be.true;
+		expect(response.body.results[0].result.rawBody.length).to.be.above(0);
 		expect(response).to.matchApiSchema();
 	});
 });

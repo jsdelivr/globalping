@@ -29,7 +29,8 @@ export default function wallaby () {
 			'data/LAST_API_COMMIT_HASH.txt',
 		],
 		tests: [
-			'test/tests/**/*.test.ts',
+			'test/tests/integration/**/*.test.ts',
+			'test/tests/unit/**/*.test.ts',
 		],
 
 		setup (w) {

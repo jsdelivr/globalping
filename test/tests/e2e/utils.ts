@@ -1,6 +1,6 @@
 import got, { type RequestError } from 'got';
 import { setTimeout } from 'timers/promises';
-import { scopedLogger } from '../src/lib/logger.js';
+import { scopedLogger } from '../../../src/lib/logger.js';
 
 const logger = scopedLogger('e2e-utils');
 

@@ -6,7 +6,8 @@
 		"test/setup.ts"
 	],
 	"spec": [
-		"test/**/*.test.ts"
+		"test/tests/integration/**/*.test.ts",
+		"test/tests/unit/**/*.test.ts"
 	],
 	"node-option": [
 		"experimental-specifier-resolution=node",

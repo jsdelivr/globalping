@@ -3,11 +3,11 @@
 	"timeout": 20000,
 	"check-leaks": true,
 	"file": [
-		"test-e2e/setup-api.ts",
-		"test-e2e/setup-probe.ts"
+		"test/tests/e2e/setup-api.ts",
+		"test/tests/e2e/setup-probe.ts"
 	],
 	"spec": [
-		"test-e2e/**/*.test.ts"
+		"test/tests/e2e/**/*.test.ts"
 	],
 	"node-option": [
 		"experimental-specifier-resolution=node",

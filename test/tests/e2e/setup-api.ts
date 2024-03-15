@@ -2,10 +2,10 @@ import Bluebird from 'bluebird';
 import type { Knex } from 'knex';
 
 import { docker } from './docker.js';
-import { client as sql } from '../src/lib/sql/client.js';
-import { initRedisClient } from '../src/lib/redis/client.js';
-import { initPersistentRedisClient } from '../src/lib/redis/persistent-client.js';
-import { initMeasurementRedisClient } from '../src/lib/redis/measurement-client.js';
+import { client as sql } from '../../../src/lib/sql/client.js';
+import { initRedisClient } from '../../../src/lib/redis/client.js';
+import { initPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
+import { initMeasurementRedisClient } from '../../../src/lib/redis/measurement-client.js';
 
 before(async () => {
 	await docker.removeApiContainer();

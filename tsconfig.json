@@ -18,8 +18,7 @@
 	},
 	"include": [
 		"src/**/*",
-		"test/**/*.ts",
-		"test-e2e/**/*.ts"
+		"test/**/*.ts"
 	],
 	"exclude": [
 		"dist",
