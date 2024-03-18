@@ -5,7 +5,7 @@ import { ProbeError } from '../../probe-error.js';
 const logger = scopedLogger('ws:limit');
 
 export const verifyIpLimit = async (ip: string, socketId: string): Promise<void> => {
-	if (process.env['FAKE_PROBE_IP'] === 'api') {
+	if (process.env['FAKE_PROBE_IP'] || process.env['TEST_MODE'] === 'unit') {
 		return;
 	}
 

@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     env:
       NODE_ENV: test
@@ -48,11 +48,14 @@ jobs:
         run: |
           npm ci
           npm run build
-      - name: Test
+      - name: Test Unit
         run: |
           npm run lint
           npm run coverage
           npm run test:portman
+      - name: Test E2E
+        run: |
+          npm run test:e2e
       - name: Test Dist
         run: |
           rm -rf node_modules

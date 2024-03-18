@@ -52,7 +52,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	let ipInfo;
 
-	if (process.env['FAKE_PROBE_IP'] === 'probe') {
+	if (process.env['TEST_MODE'] === 'perf') {
 		ipInfo = fakeLookup();
 	} else if (!isIpPrivate(ip)) {
 		ipInfo = await geoipClient.lookup(ip);

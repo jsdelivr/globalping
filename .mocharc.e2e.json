@@ -1,18 +1,17 @@
 {
 	"exit": true,
-	"timeout": 10000,
+	"timeout": 20000,
 	"check-leaks": true,
 	"file": [
-		"test/setup.ts"
+		"test/tests/e2e/setup-api.ts",
+		"test/tests/e2e/setup-probe.ts"
 	],
 	"spec": [
-		"test/tests/integration/**/*.test.ts",
-		"test/tests/unit/**/*.test.ts"
+		"test/tests/e2e/**/*.test.ts"
 	],
 	"node-option": [
 		"experimental-specifier-resolution=node",
-		"loader=ts-node/esm",
-		"loader=testdouble"
+		"loader=ts-node/esm"
 	],
 	"globals": [
 		"__extends",

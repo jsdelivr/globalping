@@ -29,7 +29,8 @@ export default function wallaby () {
 			'data/LAST_API_COMMIT_HASH.txt',
 		],
 		tests: [
-			'test/tests/**/*.test.ts',
+			'test/tests/integration/**/*.test.ts',
+			'test/tests/unit/**/*.test.ts',
 		],
 
 		setup (w) {
@@ -42,7 +43,7 @@ export default function wallaby () {
 			params: {
 				runner: '--experimental-specifier-resolution=node --loader '
 					+ url.pathToFileURL(path.join(__dirname, 'node_modules/testdouble/lib/index.mjs')),
-				env: 'NODE_ENV=test;NEW_RELIC_ENABLED=false;NEW_RELIC_LOG_ENABLED=false;FAKE_PROBE_IP=api',
+				env: 'NODE_ENV=test;NEW_RELIC_ENABLED=false;NEW_RELIC_LOG_ENABLED=false;TEST_MODE=unit',
 			},
 		},
 		preprocessors: {

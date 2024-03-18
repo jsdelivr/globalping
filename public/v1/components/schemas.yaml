@@ -682,13 +682,14 @@ components:
         - Micronesia
         - Polynesia
     ResolvedAddress:
-      type: string
+      type:
+        - string
+        - 'null'
       description: The resolved IP address of the `target`.
     ResolvedHostname:
       type:
         - string
         - 'null'
-      format: hostname
       description: The resolved hostname of the `target`.
     StateCode:
       type:
@@ -1117,9 +1118,11 @@ components:
               type: string
               description: The raw HTTP response headers.
             rawBody:
-              type: string
+              type:
+                - string
+                - 'null'
               description: |
-                The raw HTTP response body.
+                The raw HTTP response body or `null` if there was no body in response.
                 Note that only the first 10 kb are returned.
             truncated:
               type: boolean
