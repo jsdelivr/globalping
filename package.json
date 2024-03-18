@@ -139,7 +139,7 @@
 		"test:portman:run": "newman run tmp/converted/globalpingApi.json -e test/tests/contract/newman-env.json --ignore-redirects",
 		"test:e2e": "npm run test:e2e:docker && npm run test:e2e:cases",
 		"test:e2e:api": "NODE_ENV=test knex migrate:latest && PORT=80 NODE_ENV=test TEST_MODE=e2e NEW_RELIC_ENABLED=false tsx src/index.ts",
-		"test:e2e:docker": "docker build -t globalping-api-e2e . && docker pull ghcr.io/jsdelivr/globalping-probe",
+		"test:e2e:docker": "docker build -t globalping-api-e2e . && docker build -t globalping-probe-e2e https://github.com/jsdelivr/globalping-probe.git",
 		"test:e2e:cases": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --config .mocharc.e2e.json"
 	},
 	"lint-staged": {
