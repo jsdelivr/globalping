@@ -1,4 +1,6 @@
 import Docker from 'dockerode';
+import config from 'config';
+
 import { scopedLogger } from '../../../src/lib/logger.js';
 
 const logger = scopedLogger('docker-manager');
@@ -11,7 +13,18 @@ class DockerManager {
 	}
 
 	public async createApiContainer () {
+		let networkMode = 'host';
+		let redisUrl = config.get<string>('redis.url');
+		let dbConnectionHost = config.get<string>('db.connection.host');
+
 		const isLinux = await this.isLinuxHost();
+
+		if (!isLinux) {
+			networkMode = 'bridge';
+			redisUrl = redisUrl.replace('localhost', 'host.docker.internal');
+			dbConnectionHost = dbConnectionHost.replace('localhost', 'host.docker.internal');
+		}
+
 		// docker run -e NODE_ENV=test -e TEST_MODE=e2e -e NEW_RELIC_ENABLED=false -e REDIS_URL=redis://host.docker.internal:6379 -e DB_CONNECTION_HOST=host.docker.internal --name globalping-api-e2e globalping-api-e2e
 		const container = await this.docker.createContainer({
 			Image: 'globalping-api-e2e',
@@ -20,14 +33,14 @@ class DockerManager {
 				'NODE_ENV=test',
 				'TEST_MODE=e2e',
 				'NEW_RELIC_ENABLED=false',
-				`REDIS_URL=redis://${isLinux ? 'localhost' : 'host.docker.internal'}:6379`,
-				`DB_CONNECTION_HOST=${isLinux ? 'localhost' : 'host.docker.internal'}`,
+				`REDIS_URL=${redisUrl}`,
+				`DB_CONNECTION_HOST=${dbConnectionHost}`,
 			],
 			HostConfig: {
 				PortBindings: {
 					'80/tcp': [{ HostPort: '80' }],
 				},
-				NetworkMode: isLinux ? 'host' : 'bridge',
+				NetworkMode: networkMode,
 			},
 		});
 
@@ -36,16 +49,25 @@ class DockerManager {
 	}
 
 	public async createProbeContainer () {
+		let networkMode = 'host';
+		let apiHost = 'ws://localhost:80';
+
 		const isLinux = await this.isLinuxHost();
+
+		if (!isLinux) {
+			networkMode = 'bridge';
+			apiHost = apiHost.replace('localhost', 'host.docker.internal');
+		}
+
 		// docker run -e API_HOST=ws://host.docker.internal:80 --name globalping-probe-e2e ghcr.io/jsdelivr/globalping-probe
 		const container = await this.docker.createContainer({
 			Image: 'ghcr.io/jsdelivr/globalping-probe',
 			name: 'globalping-probe-e2e',
 			Env: [
-				`API_HOST=ws://${isLinux ? 'localhost' : 'host.docker.internal'}:80`,
+				`API_HOST=${apiHost}`,
 			],
 			HostConfig: {
-				NetworkMode: isLinux ? 'host' : 'bridge',
+				NetworkMode: networkMode,
 			},
 		});
 
