@@ -1232,6 +1232,11 @@ components:
         - expiresAt
         - subject
         - issuer
+        - publicKeyType
+        - publicKey
+        - fingerprint
+        - fingerprint256
+        - fingerprint512
       properties:
         authorized:
           type: boolean
@@ -1253,6 +1258,29 @@ components:
           $ref: 'schemas.yaml#/components/schemas/TlsCertificateSubject'
         issuer:
           $ref: 'schemas.yaml#/components/schemas/TlsCertificateIssuer'
+        publicKeyType:
+          type:
+            - string
+            - 'null'
+          enum:
+            - RSA
+            - ECC
+            - 'null'
+          description: The type of the public key, `null` for unrecognized types.
+        publicKey:
+          type:
+            - string
+            - 'null'
+          description: The public key in HEX format.
+        fingerprint:
+          type: string
+          description: The SHA-1 fingerprint of the certificate.
+        fingerprint256:
+          type: string
+          description: The SHA-256 fingerprint of the certificate.
+        fingerprint512:
+          type: string
+          description: The SHA-512 fingerprint of the certificate.
     TlsCertificateIssuer:
       type: object
       description: Information about the certificate issuer.
