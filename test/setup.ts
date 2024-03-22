@@ -22,7 +22,7 @@ import {
 	populateIpRangeList,
 	populateNockCitiesList,
 } from './utils/populate-static-files.js';
-import chaiOas from './plugins/oas/index.js';
+import chaiOas from './tests/e2e/plugins/oas/index.js';
 import { initRedisClient } from '../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../src/lib/redis/persistent-client.js';
 import { initMeasurementRedisClient } from '../src/lib/redis/measurement-client.js';
