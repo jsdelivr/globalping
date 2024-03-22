@@ -7,12 +7,12 @@ import chai from 'chai';
 import { createClient } from 'redis';
 
 import { waitProbeToConnect } from './utils.js';
-import chaiOas from './plugins/oas/index.js';
+import chaiOas from '../plugins/oas/index.js';
 import { docker } from './docker.js';
 import { client as sql } from './client.js';
 
 before(async () => {
-	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../../../public/v1/spec.yaml') }));
+	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../../public/v1/spec.yaml') }));
 
 	await docker.removeProbeContainer();
 	await docker.removeApiContainer();

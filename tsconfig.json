@@ -12,7 +12,7 @@
 		"sourceMap": true,
 		"paths": {
 			"chai": [
-				"./test/tests/e2e/plugins/oas"
+				"./test/plugins/oas"
 			]
 		}
 	},
