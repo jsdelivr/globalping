@@ -3,8 +3,7 @@
 	"timeout": 20000,
 	"check-leaks": true,
 	"file": [
-		"test/tests/e2e/setup-api.ts",
-		"test/tests/e2e/setup-probe.ts"
+		"test/tests/e2e/setup.ts"
 	],
 	"spec": [
 		"test/tests/e2e/**/*.test.ts"

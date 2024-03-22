@@ -1,6 +1,11 @@
 import Bluebird from 'bluebird';
 import type { Knex } from 'knex';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import chai from 'chai';
 
+import { waitProbeToConnect } from './utils.js';
+import chaiOas from '../../plugins/oas/index.js';
 import { docker } from './docker.js';
 import { client as sql } from '../../../src/lib/sql/client.js';
 import { initRedisClient } from '../../../src/lib/redis/client.js';
@@ -8,6 +13,9 @@ import { initPersistentRedisClient } from '../../../src/lib/redis/persistent-cli
 import { initMeasurementRedisClient } from '../../../src/lib/redis/measurement-client.js';
 
 before(async () => {
+	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../../../public/v1/spec.yaml') }));
+
+	await docker.removeProbeContainer();
 	await docker.removeApiContainer();
 
 	const redisClient = await initRedisClient();
@@ -22,9 +30,13 @@ before(async () => {
 	await sql.seed.run();
 
 	await docker.createApiContainer();
+	await docker.createProbeContainer();
+
+	await waitProbeToConnect();
 });
 
 after(async () => {
+	await docker.removeProbeContainer();
 	await docker.removeApiContainer();
 });
 
