@@ -1,5 +1,9 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import knex, { Knex } from 'knex';
 import config from 'config';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const dbConfig = config.util.toObject(config.get('db'));
 
@@ -15,6 +19,9 @@ export const client: Knex = knex({
 	},
 	acquireConnectionTimeout: 10000,
 	seeds: {
-		directory: `./seeds/${environment}`,
+		directory: path.join(__dirname, `../../seeds/${environment}`),
+	},
+	migrations: {
+		directory: path.join(__dirname, `../../migrations`),
 	},
 });

@@ -1,7 +1,7 @@
 import Docker from 'dockerode';
 import config from 'config';
 
-import { scopedLogger } from '../../src/lib/logger.js';
+import { scopedLogger } from './logger.js';
 
 const logger = scopedLogger('docker-manager');
 
