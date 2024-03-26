@@ -45,17 +45,22 @@ export const waitProbeToConnect = async () => {
 };
 
 export const waitProbeInCity = async (city: string) => {
-	let response;
+	let responses;
 
 	for (;;) {
 		try {
-			response = await got<any>('http://localhost:80/v1/probes', { responseType: 'json' });
+			responses = await Promise.all([
+				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
+				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
+				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
+				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
+			]);
 		} catch (err) {
 			logger.info((err as RequestError).code);
 			throw err;
 		}
 
-		if (response.body.length > 0 && response.body[0].location.city === city) {
+		if (responses.every(response => response.body.length > 0 && response.body[0].location.city === city)) {
 			return;
 		}
 
@@ -68,7 +73,6 @@ export const waitMesurementFinish = async (id: string) => {
 		const response = await got<any>(`http://localhost:80/v1/measurements/${id}`, { responseType: 'json' });
 
 		if (response.body.status !== 'in-progress') {
-			logger.info('return');
 			return response;
 		}
 
