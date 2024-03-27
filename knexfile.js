@@ -1,5 +1,9 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import _ from 'lodash';
 import config from 'config';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const dbConfig = config.get('db');
 
@@ -19,7 +23,10 @@ export default _.merge({}, ...[ 'development', 'production', 'staging', 'test' ]
 			},
 			acquireConnectionTimeout: 10000,
 			seeds: {
-				directory: `./seeds/${environment}`,
+				directory: path.join(__dirname, `./seeds/${environment}`),
+			},
+			migrations: {
+				directory: path.join(__dirname, `./migrations`),
 			},
 		},
 	};

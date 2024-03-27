@@ -9,7 +9,7 @@ import { createClient } from 'redis';
 import { waitProbeToConnect } from './utils.js';
 import chaiOas from '../plugins/oas/index.js';
 import { docker } from './docker.js';
-import { client as sql } from './client.js';
+import { client as sql } from '../../src/lib/sql/client.js';
 
 before(async () => {
 	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../../public/v1/spec.yaml') }));
