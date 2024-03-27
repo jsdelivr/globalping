@@ -5,18 +5,23 @@ import { scopedLogger } from './logger.js';
 const logger = scopedLogger('e2e-utils');
 
 export const waitProbeToDisconnect = async () => {
-	let response;
+	let responses;
 
 	for (;;) {
 		try {
-			response = await got<any>('http://localhost:80/v1/probes', { responseType: 'json' });
+			responses = await Promise.all([
+				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
+				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
+				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
+				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
+			]);
 		} catch (err) {
 			logger.info((err as RequestError).code);
 			await setTimeout(1000);
 			continue;
 		}
 
-		if (response.body.length === 0) {
+		if (responses.every(response => response.body.length === 0)) {
 			return;
 		}
 
@@ -25,18 +30,23 @@ export const waitProbeToDisconnect = async () => {
 };
 
 export const waitProbeToConnect = async () => {
-	let response;
+	let responses;
 
 	for (;;) {
 		try {
-			response = await got<any>('http://localhost:80/v1/probes', { responseType: 'json' });
+			responses = await Promise.all([
+				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
+				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
+				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
+				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
+			]);
 		} catch (err) {
 			logger.info((err as RequestError).code);
 			await setTimeout(1000);
 			continue;
 		}
 
-		if (response.body.length > 0) {
+		if (responses.every(response => response.body.length > 0)) {
 			return;
 		}
 
