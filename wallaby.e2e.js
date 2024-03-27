@@ -6,7 +6,6 @@ export default function wallaby () {
 			'public/v1/*',
 			'public/**/*.yaml',
 			'test/plugins/**/*',
-			'test/e2e/client.ts',
 			'test/e2e/setup.ts',
 			'test/e2e/utils.ts',
 			'test/e2e/docker.ts',

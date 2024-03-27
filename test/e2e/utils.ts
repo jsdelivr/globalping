@@ -1,20 +1,20 @@
+import config from 'config';
 import got, { type RequestError } from 'got';
+import _ from 'lodash';
 import { setTimeout } from 'timers/promises';
 import { scopedLogger } from '../../src/lib/logger.js';
 
 const logger = scopedLogger('e2e-utils');
+
+const processes = config.get<number>('server.processes');
+logger.info(`There are ${processes} workers running.`);
 
 export const waitProbeToDisconnect = async () => {
 	let responses;
 
 	for (;;) {
 		try {
-			responses = await Promise.all([
-				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
-				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
-				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
-				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
-			]);
+			responses = await Promise.all(_.times(processes * 2, (() => got<any>('http://localhost:80/v1/probes', { responseType: 'json' }))));
 		} catch (err) {
 			logger.info((err as RequestError).code);
 			await setTimeout(1000);
@@ -34,12 +34,7 @@ export const waitProbeToConnect = async () => {
 
 	for (;;) {
 		try {
-			responses = await Promise.all([
-				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
-				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
-				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
-				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
-			]);
+			responses = await Promise.all(_.times(processes * 2, (() => got<any>('http://localhost:80/v1/probes', { responseType: 'json' }))));
 		} catch (err) {
 			logger.info((err as RequestError).code);
 			await setTimeout(1000);
@@ -59,12 +54,7 @@ export const waitProbeInCity = async (city: string) => {
 
 	for (;;) {
 		try {
-			responses = await Promise.all([
-				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
-				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
-				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
-				got<any>('http://localhost:80/v1/probes', { responseType: 'json' }),
-			]);
+			responses = await Promise.all(_.times(processes * 2, (() => got<any>('http://localhost:80/v1/probes', { responseType: 'json' }))));
 		} catch (err) {
 			logger.info((err as RequestError).code);
 			throw err;
