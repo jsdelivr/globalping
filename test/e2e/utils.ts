@@ -14,6 +14,7 @@ export const waitProbeToDisconnect = async () => {
 
 	for (;;) {
 		try {
+			// Probe list sync across workers takes a few seconds. So we should retry until all workers return the same result. Multiplying by 2 for safety.
 			responses = await Promise.all(_.times(processes * 2, (() => got<any>('http://localhost:80/v1/probes', { responseType: 'json' }))));
 		} catch (err) {
 			logger.info((err as RequestError).code);

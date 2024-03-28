@@ -44,11 +44,12 @@ const dropAllTables = async (sql: Knex) => {
 
 const flushRedis = async () => {
 	const dbs = [ 0, 1, 2 ];
-	dbs.forEach(async (database) => {
+	await Promise.all(dbs.map(async (database) => {
 		const client = createClient({
 			...config.util.toObject(config.get('redis')),
 			database,
 		});
+		await client.connect();
 		await client.flushDb();
-	});
+	}));
 };
