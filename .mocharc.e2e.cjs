@@ -5,10 +5,10 @@ module.exports = {
 	'timeout': 20000,
 	'check-leaks': true,
 	'file': [
-		path.join(__dirname, 'setup.ts'),
+		path.join(__dirname, 'test/e2e/setup.ts'),
 	],
 	'spec': [
-		path.join(__dirname, 'cases/**/*.test.ts'),
+		path.join(__dirname, 'test/e2e/cases/**/*.test.ts'),
 	],
 	'node-option': [
 		'experimental-specifier-resolution=node',
