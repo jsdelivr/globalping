@@ -1,22 +1,28 @@
+import config from 'config';
 import got, { type RequestError } from 'got';
+import _ from 'lodash';
 import { setTimeout } from 'timers/promises';
-import { scopedLogger } from '../../../src/lib/logger.js';
+import { scopedLogger } from '../../src/lib/logger.js';
 
 const logger = scopedLogger('e2e-utils');
 
+const processes = config.get<number>('server.processes');
+logger.info(`There are ${processes} workers running.`);
+
 export const waitProbeToDisconnect = async () => {
-	let response;
+	let responses;
 
 	for (;;) {
 		try {
-			response = await got<any>('http://localhost:80/v1/probes', { responseType: 'json' });
+			// Probe list sync across workers takes a few seconds. So we should retry until all workers return the same result. Multiplying by 2 for safety.
+			responses = await Promise.all(_.times(processes * 2, (() => got<any>('http://localhost:80/v1/probes', { responseType: 'json' }))));
 		} catch (err) {
 			logger.info((err as RequestError).code);
 			await setTimeout(1000);
 			continue;
 		}
 
-		if (response.body.length === 0) {
+		if (responses.every(response => response.body.length === 0)) {
 			return;
 		}
 
@@ -25,18 +31,18 @@ export const waitProbeToDisconnect = async () => {
 };
 
 export const waitProbeToConnect = async () => {
-	let response;
+	let responses;
 
 	for (;;) {
 		try {
-			response = await got<any>('http://localhost:80/v1/probes', { responseType: 'json' });
+			responses = await Promise.all(_.times(processes * 2, (() => got<any>('http://localhost:80/v1/probes', { responseType: 'json' }))));
 		} catch (err) {
 			logger.info((err as RequestError).code);
 			await setTimeout(1000);
 			continue;
 		}
 
-		if (response.body.length > 0) {
+		if (responses.every(response => response.body.length > 0)) {
 			return;
 		}
 
@@ -45,17 +51,17 @@ export const waitProbeToConnect = async () => {
 };
 
 export const waitProbeInCity = async (city: string) => {
-	let response;
+	let responses;
 
 	for (;;) {
 		try {
-			response = await got<any>('http://localhost:80/v1/probes', { responseType: 'json' });
+			responses = await Promise.all(_.times(processes * 2, (() => got<any>('http://localhost:80/v1/probes', { responseType: 'json' }))));
 		} catch (err) {
 			logger.info((err as RequestError).code);
 			throw err;
 		}
 
-		if (response.body.length > 0 && response.body[0].location.city === city) {
+		if (responses.every(response => response.body.length > 0 && response.body[0].location.city === city)) {
 			return;
 		}
 
@@ -68,7 +74,6 @@ export const waitMesurementFinish = async (id: string) => {
 		const response = await got<any>(`http://localhost:80/v1/measurements/${id}`, { responseType: 'json' });
 
 		if (response.body.status !== 'in-progress') {
-			logger.info('return');
 			return response;
 		}
 

@@ -1,8 +1,9 @@
 import got from 'got';
 import { expect } from 'chai';
-import { client } from '../../../../src/lib/sql/client.js';
-import { ADOPTED_PROBES_TABLE } from '../../../../src/lib/adopted-probes.js';
+import { client } from '../../../src/lib/sql/client.js';
 import { waitProbeInCity } from '../utils.js';
+
+const ADOPTED_PROBES_TABLE = 'gp_adopted_probes';
 
 describe('adopted probe', () => {
 	before(async function () {
