@@ -15,4 +15,13 @@ describe('traceroute mesurement', () => {
 		expect(response.body.results[0].result.status).to.equal('finished');
 		expect(response).to.matchApiSchema();
 	});
+
+	it('should return 400 for blacklisted target', async () => {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
+			target: 'dpd.96594345154.xyz',
+			type: 'traceroute',
+		}, throwHttpErrors: false });
+
+		expect(response.statusCode).to.equal(400);
+	});
 });
