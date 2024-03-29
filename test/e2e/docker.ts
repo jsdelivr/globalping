@@ -61,7 +61,7 @@ class DockerManager {
 			apiHost = apiHost.replace('localhost', 'host.docker.internal');
 		}
 
-		// docker run -e API_HOST=ws://host.docker.internal:80 --name globalping-probe-e2e globalping-api-e2e
+		// docker run -e API_HOST=ws://host.docker.internal:80 --name globalping-probe-e2e globalping-probe-e2e
 		const container = await this.docker.createContainer({
 			Image: 'globalping-probe-e2e',
 			name: 'globalping-probe-e2e',
