@@ -39,7 +39,7 @@ export const joiValidateDomainForDns = () => (value: string, helpers: CustomHelp
 		return value;
 	}
 
-	if (validator.isFQDN('example' + value, options)) {
+	if (value[0] === '.' && validator.isFQDN('example' + value, options)) {
 		return value.substring(1);
 	}
 

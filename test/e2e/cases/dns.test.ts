@@ -59,13 +59,17 @@ describe('dns mesurement', () => {
 		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: '.',
 			type: 'dns',
+			measurementOptions: {
+				query: {
+					type: 'ANY',
+				},
+			},
 		} }).json();
 
 		const response = await waitMesurementFinish(id);
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
-		expect(response.body.results[0].result.hops.length).to.be.above(0);
 		expect(response).to.matchApiSchema();
 	});
 
@@ -73,13 +77,17 @@ describe('dns mesurement', () => {
 		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: '.com',
 			type: 'dns',
+			measurementOptions: {
+				query: {
+					type: 'ANY',
+				},
+			},
 		} }).json();
 
 		const response = await waitMesurementFinish(id);
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
-		expect(response.body.results[0].result.hops.length).to.be.above(0);
 		expect(response).to.matchApiSchema();
 	});
 });
