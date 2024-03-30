@@ -4,6 +4,7 @@ import {
 } from '../../lib/malware/client.js';
 import {
 	joiValidateDomain,
+	joiValidateDomainForDns,
 	joiValidateTarget,
 	whenTypeApply,
 	globalIpOptions,
@@ -83,7 +84,7 @@ const allowedDnsTypes = [ 'A', 'AAAA', 'ANY', 'CNAME', 'DNSKEY', 'DS', 'HTTPS', 
 const allowedDnsProtocols = [ 'UDP', 'TCP' ];
 
 // Dns
-const dnsDefaultTargetSchema = Joi.custom(joiValidateDomain()).custom(joiValidateTarget('domain')).required().messages(schemaErrorMessages);
+const dnsDefaultTargetSchema = Joi.custom(joiValidateDomainForDns()).custom(joiValidateTarget('domain')).required().messages(schemaErrorMessages);
 const dnsPtrTargetSchema = Joi.string().ip(globalIpOptions).custom(joiValidateTarget('ip')).required().messages(schemaErrorMessages);
 const dnsTargetSchema = Joi.when(Joi.ref('..measurementOptions.query.type'), { is: Joi.string().insensitive().valid('PTR').required(), then: dnsPtrTargetSchema, otherwise: dnsDefaultTargetSchema });
 

@@ -26,6 +26,24 @@ export const joiValidateDomain = () => (value: string, helpers: CustomHelpers): 
 	return value;
 };
 
+export const joiValidateDomainForDns = () => (value: string, helpers: CustomHelpers): string | ErrorReport => {
+	const options = {
+		allow_underscores: true,
+		allow_trailing_dot: true,
+		require_tld: false,
+	};
+
+	if (value === '.') {
+		return value;
+	}
+
+	if (validator.isFQDN(value, options)) {
+		return value;
+	}
+
+	return helpers.error('domain.invalid');
+};
+
 export const joiValidateTarget = (type: string) => (value: string, helpers?: CustomHelpers): string | ErrorReport | Error => {
 	if ([ 'ip', 'any' ].includes(type) && isIpPrivate(value)) {
 		if (helpers) {

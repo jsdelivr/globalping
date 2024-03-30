@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import Joi from 'joi';
+import { schemaErrorMessages } from '../../../../../src/measurement/schema/command-schema.js';
 import {
 	schema as globalSchema,
 } from '../../../../../src/measurement/schema/global-schema.js';
@@ -9,6 +10,7 @@ import {
 import {
 	joiValidateTarget,
 	joiValidateDomain,
+	joiValidateDomainForDns,
 } from '../../../../../src/measurement/schema/utils.js';
 import { populateDomainList, populateIpList } from '../../../../utils/populate-static-files.js';
 
@@ -493,13 +495,14 @@ describe('command schema', async () => {
 	});
 
 	describe('domain validator', () => {
-		const schema = Joi.custom(joiValidateDomain());
+		const schema = Joi.custom(joiValidateDomain()).messages(schemaErrorMessages);
 
 		it('should succeed (_acme-challenge.1337.com)', () => {
 			const input = '_acme-challenge.1337.com';
 			const valid = schema.validate(input);
 
 			expect(valid.value).to.equal(input);
+			expect(valid.error).to.not.exist;
 		});
 
 		it('should succeed (example.com)', () => {
@@ -507,6 +510,72 @@ describe('command schema', async () => {
 			const valid = schema.validate(input);
 
 			expect(valid.value).to.equal(input);
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should fail (root domain)', () => {
+			const input = '.';
+			const valid = schema.validate(input);
+
+			expect(valid.error!.details[0]!.message).to.equal('Provided target is not a valid domain name');
+		});
+
+		it('should fail (tld)', () => {
+			const input = 'com';
+			const valid = schema.validate(input);
+
+			expect(valid.error!.details[0]!.message).to.equal('Provided target is not a valid domain name');
+		});
+
+		it('should fail (trailing dot)', () => {
+			const input = 'example.com.';
+			const valid = schema.validate(input);
+
+			expect(valid.error!.details[0]!.message).to.equal('Provided target is not a valid domain name');
+		});
+	});
+
+	describe('dns domain validator', () => {
+		const schema = Joi.custom(joiValidateDomainForDns()).messages(schemaErrorMessages);
+
+		it('should succeed (_acme-challenge.1337.com)', () => {
+			const input = '_acme-challenge.1337.com';
+			const valid = schema.validate(input);
+
+			expect(valid.value).to.equal(input);
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should succeed (example.com)', () => {
+			const input = 'example.com';
+			const valid = schema.validate(input);
+
+			expect(valid.value).to.equal(input);
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should succeed (root domain)', () => {
+			const input = '.';
+			const valid = schema.validate(input);
+
+			expect(valid.value).to.equal(input);
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should succeed (tld)', () => {
+			const input = 'com';
+			const valid = schema.validate(input);
+
+			expect(valid.value).to.equal('com');
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should succeed (trailing dot)', () => {
+			const input = 'example.com.';
+			const valid = schema.validate(input);
+
+			expect(valid.value).to.equal('example.com.');
+			expect(valid.error).to.not.exist;
 		});
 	});
 
@@ -1059,6 +1128,39 @@ describe('command schema', async () => {
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should pass (root domain)', () => {
+			const input = {
+				type: 'dns',
+				target: '.',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should pass (tld)', () => {
+			const input = {
+				type: 'dns',
+				target: 'com',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should pass (trailing dot)', () => {
+			const input = {
+				type: 'dns',
+				target: 'example.com.',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
 		});
 	});
 
