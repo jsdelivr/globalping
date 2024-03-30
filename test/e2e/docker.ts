@@ -1,7 +1,7 @@
 import Docker from 'dockerode';
 import config from 'config';
 
-import { scopedLogger } from '../../../src/lib/logger.js';
+import { scopedLogger } from '../../src/lib/logger.js';
 
 const logger = scopedLogger('docker-manager');
 
@@ -16,6 +16,7 @@ class DockerManager {
 		let networkMode = 'host';
 		let redisUrl = config.get<string>('redis.url');
 		let dbConnectionHost = config.get<string>('db.connection.host');
+		const processes = config.get<string>('server.processes');
 
 		const isLinux = await this.isLinuxHost();
 
@@ -35,6 +36,7 @@ class DockerManager {
 				'NEW_RELIC_ENABLED=false',
 				`REDIS_URL=${redisUrl}`,
 				`DB_CONNECTION_HOST=${dbConnectionHost}`,
+				`SERVER_PROCESSES=${processes}`,
 			],
 			HostConfig: {
 				PortBindings: {
@@ -59,7 +61,7 @@ class DockerManager {
 			apiHost = apiHost.replace('localhost', 'host.docker.internal');
 		}
 
-		// docker run -e API_HOST=ws://host.docker.internal:80 --name globalping-probe-e2e globalping-api-e2e
+		// docker run -e API_HOST=ws://host.docker.internal:80 --name globalping-probe-e2e globalping-probe-e2e
 		const container = await this.docker.createContainer({
 			Image: 'globalping-probe-e2e',
 			name: 'globalping-probe-e2e',

@@ -33,4 +33,25 @@ describe('dns mesurement', () => {
 		expect(response.body.results[0].result.hops.length).to.be.above(0);
 		expect(response).to.matchApiSchema();
 	});
+
+	it('should return 400 for blacklisted target', async () => {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
+			target: 'dpd.96594345154.xyz',
+			type: 'dns',
+		}, throwHttpErrors: false });
+
+		expect(response.statusCode).to.equal(400);
+	});
+
+	it('should return 400 for blacklisted resolver', async () => {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
+			target: 'www.jsdelivr.com',
+			type: 'dns',
+			measurementOptions: {
+				resolver: '113.24.166.134',
+			},
+		}, throwHttpErrors: false });
+
+		expect(response.statusCode).to.equal(400);
+	});
 });
