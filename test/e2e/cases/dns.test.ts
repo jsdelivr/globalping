@@ -75,7 +75,7 @@ describe('dns mesurement', () => {
 
 	it('should finish successfully in case of tld target', async () => {
 		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: '.com',
+			target: 'com',
 			type: 'dns',
 			measurementOptions: {
 				query: {
