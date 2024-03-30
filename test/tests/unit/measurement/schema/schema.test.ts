@@ -521,7 +521,14 @@ describe('command schema', async () => {
 		});
 
 		it('should fail (tld)', () => {
-			const input = '.com';
+			const input = 'com';
+			const valid = schema.validate(input);
+
+			expect(valid.error!.details[0]!.message).to.equal('Provided target is not a valid domain name');
+		});
+
+		it('should fail (trailing dot)', () => {
+			const input = 'example.com.';
 			const valid = schema.validate(input);
 
 			expect(valid.error!.details[0]!.message).to.equal('Provided target is not a valid domain name');
@@ -556,10 +563,18 @@ describe('command schema', async () => {
 		});
 
 		it('should succeed (tld)', () => {
-			const input = '.com';
+			const input = 'com';
 			const valid = schema.validate(input);
 
 			expect(valid.value).to.equal('com');
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should succeed (trailing dot)', () => {
+			const input = 'example.com.';
+			const valid = schema.validate(input);
+
+			expect(valid.value).to.equal('example.com.');
 			expect(valid.error).to.not.exist;
 		});
 	});
@@ -1129,7 +1144,7 @@ describe('command schema', async () => {
 		it('should pass (tld)', () => {
 			const input = {
 				type: 'dns',
-				target: '.com',
+				target: 'com',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
@@ -1137,16 +1152,15 @@ describe('command schema', async () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should fail (invalid tld format)', () => {
+		it('should pass (trailing dot)', () => {
 			const input = {
 				type: 'dns',
-				target: 'com',
+				target: 'example.com.',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
 
-			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided target is not a valid domain name');
+			expect(valid.error).to.not.exist;
 		});
 	});
 

@@ -29,6 +29,8 @@ export const joiValidateDomain = () => (value: string, helpers: CustomHelpers): 
 export const joiValidateDomainForDns = () => (value: string, helpers: CustomHelpers): string | ErrorReport => {
 	const options = {
 		allow_underscores: true,
+		allow_trailing_dot: true,
+		require_tld: false,
 	};
 
 	if (value === '.') {
@@ -37,10 +39,6 @@ export const joiValidateDomainForDns = () => (value: string, helpers: CustomHelp
 
 	if (validator.isFQDN(value, options)) {
 		return value;
-	}
-
-	if (value[0] === '.' && validator.isFQDN('example' + value, options)) {
-		return value.substring(1);
 	}
 
 	return helpers.error('domain.invalid');
