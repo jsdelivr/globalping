@@ -3,11 +3,16 @@ import { expect } from 'chai';
 import { waitMesurementFinish } from '../utils.js';
 
 describe('dns mesurement', () => {
+	const resolver = '1.1.1.1';
+
 	it('should finish successfully', async () => {
-		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'dns',
-		} }).json();
+		const { id } = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				type: 'dns',
+				target: 'www.jsdelivr.com',
+				measurementOptions: { resolver },
+			},
+		}).json();
 
 		const response = await waitMesurementFinish(id);
 
@@ -18,13 +23,16 @@ describe('dns mesurement', () => {
 	});
 
 	it('should finish successfully in case of "traced": true', async () => {
-		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'dns',
-			measurementOptions: {
-				trace: true,
+		const { id } = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				type: 'dns',
+				target: 'www.jsdelivr.com',
+				measurementOptions: {
+					resolver,
+					trace: true,
+				},
 			},
-		} }).json();
+		}).json();
 
 		const response = await waitMesurementFinish(id);
 
@@ -35,36 +43,46 @@ describe('dns mesurement', () => {
 	});
 
 	it('should return 400 for blacklisted target', async () => {
-		const response = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'dpd.96594345154.xyz',
-			type: 'dns',
-		}, throwHttpErrors: false });
+		const response = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				type: 'dns',
+				target: 'dpd.96594345154.xyz',
+				measurementOptions: { resolver },
+			},
+			throwHttpErrors: false,
+		});
 
 		expect(response.statusCode).to.equal(400);
 	});
 
 	it('should return 400 for blacklisted resolver', async () => {
-		const response = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'dns',
-			measurementOptions: {
-				resolver: '113.24.166.134',
+		const response = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				type: 'dns',
+				target: 'www.jsdelivr.com',
+				measurementOptions: {
+					resolver: '113.24.166.134',
+				},
 			},
-		}, throwHttpErrors: false });
+			throwHttpErrors: false,
+		});
 
 		expect(response.statusCode).to.equal(400);
 	});
 
 	it('should finish successfully in case of root domain target', async () => {
-		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: '.',
-			type: 'dns',
-			measurementOptions: {
-				query: {
-					type: 'ANY',
+		const { id } = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				type: 'dns',
+				target: '.',
+				measurementOptions: {
+					resolver,
+					query: {
+						type: 'ANY',
+					},
 				},
 			},
-		} }).json();
+		}).json();
 
 		const response = await waitMesurementFinish(id);
 
@@ -74,15 +92,18 @@ describe('dns mesurement', () => {
 	});
 
 	it('should finish successfully in case of tld target', async () => {
-		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'com',
-			type: 'dns',
-			measurementOptions: {
-				query: {
-					type: 'ANY',
+		const { id } = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				type: 'dns',
+				target: 'com',
+				measurementOptions: {
+					resolver,
+					query: {
+						type: 'ANY',
+					},
 				},
 			},
-		} }).json();
+		}).json();
 
 		const response = await waitMesurementFinish(id);
 
