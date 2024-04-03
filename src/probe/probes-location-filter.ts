@@ -98,6 +98,7 @@ export class ProbesLocationFilter {
 
 		while (groupedByLocation.size > 0 && pickedProbes.size < limit) {
 			const selectedCount = pickedProbes.size;
+			const remainingWeight = [ ...distribution.values() ].reduce((sum, value) => sum + value, 0);
 
 			for (const [ location, locationProbes ] of groupedByLocation) {
 				if (pickedProbes.size === limit) {
@@ -110,9 +111,7 @@ export class ProbesLocationFilter {
 					continue;
 				}
 
-				let count = Math.ceil((limit - selectedCount) * locationWeight / 100);
-				const remainingSpace = limit - pickedProbes.size;
-				count = count > remainingSpace ? remainingSpace : count;
+				const count = Math.floor((limit - selectedCount) * locationWeight / remainingWeight) || 1;
 
 				for (const s of locationProbes.splice(0, count)) {
 					pickedProbes.add(s);
@@ -120,6 +119,7 @@ export class ProbesLocationFilter {
 
 				if (locationProbes.length === 0) {
 					groupedByLocation.delete(location);
+					distribution.delete(location);
 				}
 			}
 		}

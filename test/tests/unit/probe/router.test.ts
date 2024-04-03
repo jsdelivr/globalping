@@ -252,12 +252,13 @@ describe('probe router', () => {
 
 			expect(allProbes.length).to.equal(100);
 			expect(onlineProbesMap.size).to.equal(100);
-			expect(grouped['AF']?.length).to.equal(13);
+			// Depending on the _.shuffle(globalDistribution) "AF" may be handled before "SA" which leads to {AF: 12, SA: 23}. Or vice-versa, which leads to {AF: 11, SA: 24}
+			expect(grouped['AF']?.length).to.be.oneOf([ 11, 12 ]);
 			expect(grouped['AS']?.length).to.equal(15);
 			expect(grouped['EU']?.length).to.equal(20);
 			expect(grouped['OC']?.length).to.equal(10);
 			expect(grouped['NA']?.length).to.equal(20);
-			expect(grouped['SA']?.length).to.equal(22);
+			expect(grouped['SA']?.length).to.be.oneOf([ 23, 24 ]);
 		});
 
 		it('should return exactly the same number of probes if limit can\'t be divided evenly', async () => {
@@ -366,6 +367,84 @@ describe('probe router', () => {
 		});
 
 		it('should evenly distribute probes', async () => {
+			const probes: DeepPartial<Probe[]> = await Promise.all([
+				..._.range(5).map(i => buildProbe(`US-${i}`, { country: 'US' })),
+				..._.range(5).map(i => buildProbe(`CN-${i}`, { country: 'CN' })),
+				..._.range(5).map(i => buildProbe(`AU-${i}`, { country: 'AU' })),
+				..._.range(5).map(i => buildProbe(`PL-${i}`, { country: 'PL' })),
+			]);
+			const locations: Location[] = [
+				{ country: 'US' },
+				{ country: 'CN' },
+				{ country: 'AU' },
+				{ country: 'PL' },
+			];
+
+			fetchProbesMock.resolves(probes as never);
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 5 } as unknown as UserRequest);
+			const grouped = _.groupBy(allProbes, 'location.country');
+
+			expect(allProbes.length).to.equal(5);
+			expect(onlineProbesMap.size).to.equal(5);
+			expect(grouped['US']?.length).to.equal(2);
+			expect(grouped['CN']?.length).to.equal(1);
+			expect(grouped['AU']?.length).to.equal(1);
+			expect(grouped['PL']?.length).to.equal(1);
+		});
+
+		it('should evenly distribute probes 2', async () => {
+			const probes: DeepPartial<Probe[]> = await Promise.all([
+				..._.range(5).map(i => buildProbe(`US-${i}`, { country: 'US' })),
+				..._.range(5).map(i => buildProbe(`CN-${i}`, { country: 'CN' })),
+				..._.range(5).map(i => buildProbe(`AU-${i}`, { country: 'AU' })),
+				..._.range(5).map(i => buildProbe(`PL-${i}`, { country: 'PL' })),
+			]);
+			const locations: Location[] = [
+				{ country: 'US' },
+				{ country: 'CN' },
+				{ country: 'AU' },
+				{ country: 'PL' },
+			];
+
+			fetchProbesMock.resolves(probes as never);
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 6 } as unknown as UserRequest);
+			const grouped = _.groupBy(allProbes, 'location.country');
+
+			expect(allProbes.length).to.equal(6);
+			expect(onlineProbesMap.size).to.equal(6);
+			expect(grouped['US']?.length).to.equal(2);
+			expect(grouped['CN']?.length).to.equal(2);
+			expect(grouped['AU']?.length).to.equal(1);
+			expect(grouped['PL']?.length).to.equal(1);
+		});
+
+		it('should evenly distribute probes 3', async () => {
+			const probes: DeepPartial<Probe[]> = await Promise.all([
+				..._.range(100).map(i => buildProbe(`US-${i}`, { country: 'US' })),
+				..._.range(10).map(i => buildProbe(`CN-${i}`, { country: 'CN' })),
+				..._.range(100).map(i => buildProbe(`AU-${i}`, { country: 'AU' })),
+			]);
+			const locations: Location[] = [
+				{ country: 'US' },
+				{ country: 'CN' },
+				{ country: 'AU' },
+			];
+
+			fetchProbesMock.resolves(probes as never);
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 60 } as unknown as UserRequest);
+			const grouped = _.groupBy(allProbes, 'location.country');
+
+			expect(allProbes.length).to.equal(60);
+			expect(onlineProbesMap.size).to.equal(60);
+			expect(grouped['US']?.length).to.equal(25);
+			expect(grouped['CN']?.length).to.equal(10);
+			expect(grouped['AU']?.length).to.equal(25);
+		});
+
+		it('should evenly distribute many probes', async () => {
 			const probes: DeepPartial<Probe[]> = await Promise.all([
 				..._.range(100).map(i => buildProbe(`PL-${i}`, { country: 'PL' })),
 				..._.range(100).map(i => buildProbe(`UA-${i}`, { country: 'UA' })),
