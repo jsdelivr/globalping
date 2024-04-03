@@ -420,6 +420,30 @@ describe('probe router', () => {
 			expect(grouped['PL']?.length).to.equal(1);
 		});
 
+		it('should evenly distribute probes 3', async () => {
+			const probes: DeepPartial<Probe[]> = await Promise.all([
+				..._.range(100).map(i => buildProbe(`US-${i}`, { country: 'US' })),
+				..._.range(10).map(i => buildProbe(`CN-${i}`, { country: 'CN' })),
+				..._.range(100).map(i => buildProbe(`AU-${i}`, { country: 'AU' })),
+			]);
+			const locations: Location[] = [
+				{ country: 'US' },
+				{ country: 'CN' },
+				{ country: 'AU' },
+			];
+
+			fetchProbesMock.resolves(probes as never);
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 60 } as unknown as UserRequest);
+			const grouped = _.groupBy(allProbes, 'location.country');
+
+			expect(allProbes.length).to.equal(60);
+			expect(onlineProbesMap.size).to.equal(60);
+			expect(grouped['US']?.length).to.equal(25);
+			expect(grouped['CN']?.length).to.equal(10);
+			expect(grouped['AU']?.length).to.equal(25);
+		});
+
 		it('should evenly distribute many probes', async () => {
 			const probes: DeepPartial<Probe[]> = await Promise.all([
 				..._.range(100).map(i => buildProbe(`PL-${i}`, { country: 'PL' })),
