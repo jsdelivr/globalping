@@ -1,4 +1,4 @@
-name: Node CI
+name: e2e tests
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     env:
       NODE_ENV: test
@@ -48,13 +48,6 @@ jobs:
         run: |
           npm ci
           npm run build
-      - name: Test Unit, Integration, Contract
+      - name: Test E2E
         run: |
-          npm run lint
-          npm run coverage
-          npm run test:portman
-      - name: Test Dist
-        run: |
-          rm -rf node_modules
-          npm ci --omit=dev
-          npm run test:dist
+          npm run test:e2e
