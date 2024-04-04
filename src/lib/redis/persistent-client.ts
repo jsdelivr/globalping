@@ -6,11 +6,11 @@ export type { RedisClient } from './shared.js';
 let redis: RedisClient;
 
 export const initPersistentRedisClient = async () => {
-	redis = await createPersistentRedisClient();
+	redis = createPersistentRedisClient();
 	return redis;
 };
 
-export const createPersistentRedisClient = async (options?: RedisClientOptions): Promise<RedisClient> => {
+export const createPersistentRedisClient = (options?: RedisClientOptions): RedisClient => {
 	return createRedisClientInternal({
 		...options,
 		database: 1,
@@ -19,9 +19,6 @@ export const createPersistentRedisClient = async (options?: RedisClientOptions):
 };
 
 export const getPersistentRedisClient = (): RedisClient => {
-	if (!redis) {
-		throw new Error('redis connection to persistent db is not initialized yet');
-	}
-
+	redis = createPersistentRedisClient();
 	return redis;
 };
