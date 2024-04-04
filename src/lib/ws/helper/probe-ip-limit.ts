@@ -37,7 +37,7 @@ export class ProbeIpLimit {
 			const prevSocketId = uniqIpToSocketId.get(socket.data.probe.ipAddress);
 
 			if (prevSocketId && prevSocketId !== socket.id) {
-				logger.warn(`Probe ip duplication occured (${socket.data.probe.ipAddress}). Socket id to preserve: ${prevSocketId}, socket id to disconnect: ${socket.id}`);
+				logger.warn(`Probe ip duplication occurred (${socket.data.probe.ipAddress}). Socket id to preserve: ${prevSocketId}, socket id to disconnect: ${socket.id}`);
 				socket.disconnect();
 			} else {
 				uniqIpToSocketId.set(socket.data.probe.ipAddress, socket.id);
