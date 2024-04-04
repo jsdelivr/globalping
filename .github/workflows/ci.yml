@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Run e2e tests
+    name: Run tests
     runs-on: ubuntu-latest
 
     env:
