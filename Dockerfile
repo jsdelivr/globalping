@@ -3,7 +3,7 @@ RUN apt-get update -y && apt-get install util-linux curl git -y
 
 ENV NODE_ENV production
 
-ADD package.json package-lock.json /app/
+COPY package.json package-lock.json /app/
 WORKDIR /app
 RUN npm ci --include=dev
 COPY . /app
@@ -14,7 +14,7 @@ RUN apt-get update -y && apt-get install tini util-linux curl -y
 
 ENV NODE_ENV production
 
-ADD package.json package-lock.json /app/
+COPY package.json package-lock.json /app/
 WORKDIR /app
 RUN npm ci
 COPY . /app
