@@ -1,4 +1,4 @@
-name: Run e2e tests
+name: CI
 
 on:
   push:
@@ -8,6 +8,7 @@ on:
 
 jobs:
   build:
+    name: Run e2e tests
     runs-on: self-hosted
 
     env:
