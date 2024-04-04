@@ -23,7 +23,7 @@ export class ProbeIpLimit {
 			this.syncIpLimit()
 				.finally(() => this.scheduleSync())
 				.catch(error => logger.error(error));
-		}, 60_000 * 2 * numberOfProcesses * Math.random()).unref();
+		}, 60_000 * 2 * Math.random() * numberOfProcesses).unref();
 	}
 
 	async syncIpLimit () {
@@ -37,7 +37,7 @@ export class ProbeIpLimit {
 			const prevSocketId = uniqIpToSocketId.get(socket.data.probe.ipAddress);
 
 			if (prevSocketId && prevSocketId !== socket.id) {
-				logger.warn(`Probe ip duplication occured (${socket.data.probe.ipAddress}). First socket id: ${prevSocketId}, socket id to disconnect: ${socket.id}`);
+				logger.warn(`Probe ip duplication occured (${socket.data.probe.ipAddress}). Socket id to preserve: ${prevSocketId}, socket id to disconnect: ${socket.id}`);
 				socket.disconnect();
 			} else {
 				uniqIpToSocketId.set(socket.data.probe.ipAddress, socket.id);
