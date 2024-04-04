@@ -1,6 +1,6 @@
 import type { Server } from 'node:http';
 import { initRedisClient } from './redis/client.js';
-import { adoptedProbes, initWsServer } from './ws/server.js';
+import { adoptedProbes, probeIpLimit, initWsServer } from './ws/server.js';
 import { getMetricsAgent } from './metrics.js';
 import { populateMemList as populateMemMalwareList } from './malware/client.js';
 import { populateMemList as populateMemIpRangesList } from './ip-ranges.js';
@@ -32,6 +32,8 @@ export const createServer = async (): Promise<Server> => {
 
 	await auth.syncTokens();
 	auth.scheduleSync();
+
+	probeIpLimit.scheduleSync();
 
 	reconnectProbes();
 
