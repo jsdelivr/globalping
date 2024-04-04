@@ -9,6 +9,13 @@ describe('ws server', () => {
 	const redisClient = {
 		duplicate: () => redisClient,
 		connect: sandbox.stub(),
+		xAdd: sandbox.stub().resolves(null),
+		xRange: sandbox.stub().resolves([]),
+		pExpire: sandbox.stub().resolves(null),
+		json: {
+			get: sandbox.stub().resolves(null),
+			set: sandbox.stub().resolves(null),
+		},
 	};
 	const disconnect = sandbox.stub();
 	const fetchSocketsSocketIo = sandbox.stub();
