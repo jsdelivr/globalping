@@ -27,21 +27,29 @@ export class ProbeIpLimit {
 	}
 
 	async syncIpLimit () {
-		const sockets = await this.fetchRawSockets();
-		// Sorting sockets by id, so all workers will treat the same socket as "first".
-		const sortedSockets = _.sortBy(sockets, [ 'id' ]);
+		const probes = await this.fetchProbes();
+		// Sorting probes by "client" (socket id), so all workers will treat the same probe as "first".
+		const sortedProbes = _.sortBy(probes, [ 'client' ]);
 
 		const uniqIpToSocketId = new Map<string, string>();
+		const socketIdsToDisconnect = new Set<string>();
 
-		for (const socket of sortedSockets) {
-			const prevSocketId = uniqIpToSocketId.get(socket.data.probe.ipAddress);
+		for (const probe of sortedProbes) {
+			const prevSocketId = uniqIpToSocketId.get(probe.ipAddress);
 
-			if (prevSocketId && prevSocketId !== socket.id) {
-				logger.warn(`Probe ip duplication occurred (${socket.data.probe.ipAddress}). Socket id to preserve: ${prevSocketId}, socket id to disconnect: ${socket.id}`);
-				socket.disconnect();
+			if (prevSocketId && prevSocketId !== probe.client) {
+				logger.warn(`Probe ip duplication occurred (${probe.ipAddress}). Socket id to preserve: ${prevSocketId}, socket id to disconnect: ${probe.client}`);
+				socketIdsToDisconnect.add(probe.client);
 			} else {
-				uniqIpToSocketId.set(socket.data.probe.ipAddress, socket.id);
+				uniqIpToSocketId.set(probe.ipAddress, probe.client);
 			}
+		}
+
+		if (socketIdsToDisconnect.size > 0) {
+			const sockets = await this.fetchRawSockets();
+			sockets
+				.filter(socket => socketIdsToDisconnect.has(socket.id))
+				.forEach(socket => socket.disconnect());
 		}
 	}
 

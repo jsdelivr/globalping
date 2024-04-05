@@ -10,7 +10,7 @@ describe('ProbeIpLimit', () => {
 
 	const getSocket = (id: string, ip: string) => ({
 		id,
-		data: { probe: { ipAddress: ip } },
+		data: { probe: { client: id, ipAddress: ip } },
 		disconnect: sandbox.stub(),
 	});
 
@@ -18,6 +18,12 @@ describe('ProbeIpLimit', () => {
 		const socket1 = getSocket('a', '1.1.1.1');
 		const socket2 = getSocket('b', '2.2.2.2');
 		const duplicate = getSocket('c', '2.2.2.2');
+
+		fetchProbes.resolves([
+			socket1.data.probe,
+			socket2.data.probe,
+			duplicate.data.probe,
+		]);
 
 		fetchRawSockets.resolves([
 			socket1,
@@ -38,6 +44,13 @@ describe('ProbeIpLimit', () => {
 		const socket2 = getSocket('b', '2.2.2.2');
 		const duplicate1 = getSocket('c', '2.2.2.2');
 		const duplicate2 = getSocket('d', '2.2.2.2');
+
+		fetchProbes.resolves([
+			socket1.data.probe,
+			duplicate1.data.probe,
+			socket2.data.probe,
+			duplicate2.data.probe,
+		]);
 
 		fetchRawSockets.resolves([
 			socket1,
