@@ -7,6 +7,7 @@ import { getRedisClient } from '../redis/client.js';
 import { SyncedProbeList } from './synced-probe-list.js';
 import { client } from '../sql/client.js';
 import { AdoptedProbes } from '../adopted-probes.js';
+import { ProbeIpLimit } from './helper/probe-ip-limit.js';
 
 export type SocketData = {
 	probe: Probe;
@@ -90,3 +91,5 @@ export const fetchRawProbes = async (): Promise<Probe[]> => {
 };
 
 export const adoptedProbes = new AdoptedProbes(client, fetchRawProbes);
+
+export const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets);

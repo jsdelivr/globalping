@@ -17,7 +17,7 @@ import type GeoipClient from '../lib/geoip/client.js';
 import getProbeIp from '../lib/get-probe-ip.js';
 import { getRegion } from '../lib/ip-ranges.js';
 import type { Probe, ProbeLocation, Tag } from './types.js';
-import { verifyIpLimit } from '../lib/ws/helper/probe-ip-limit.js';
+import { probeIpLimit } from '../lib/ws/server.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
 
 let geoipClient: GeoipClient;
@@ -62,7 +62,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		throw new Error(`couldn't detect probe location for ip ${ip}`);
 	}
 
-	await verifyIpLimit(ip, socket.id);
+	await probeIpLimit.verifyIpLimit(ip, socket.id);
 
 	const location = getLocation(ipInfo);
 
