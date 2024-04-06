@@ -6,11 +6,11 @@ export type { RedisClient } from './shared.js';
 let redis: RedisClient;
 
 export const initMeasurementRedisClient = async () => {
-	redis = await createMeasurementRedisClient();
+	redis = createMeasurementRedisClient();
 	return redis;
 };
 
-export const createMeasurementRedisClient = async (options?: RedisClientOptions): Promise<RedisClient> => {
+export const createMeasurementRedisClient = (options?: RedisClientOptions): RedisClient => {
 	return createRedisClientInternal({
 		...options,
 		database: 0,
@@ -19,9 +19,6 @@ export const createMeasurementRedisClient = async (options?: RedisClientOptions)
 };
 
 export const getMeasurementRedisClient = (): RedisClient => {
-	if (!redis) {
-		throw new Error('redis connection to measurement db is not initialized yet');
-	}
-
+	redis = createMeasurementRedisClient();
 	return redis;
 };

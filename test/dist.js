@@ -17,6 +17,10 @@ if (!cluster.isPrimary) {
 			Object.values(cluster.workers).forEach((worker) => {
 				worker.kill();
 			});
+
+			setTimeout(() => {
+				process.exit(process.exitCode);
+			}, 1000).unref();
 		});
 
 		it('loads and doesn\'t crash', async () => {

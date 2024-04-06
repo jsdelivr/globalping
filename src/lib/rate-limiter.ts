@@ -6,7 +6,7 @@ import createHttpError from 'http-errors';
 import type { ExtendedContext } from '../types.js';
 import { credits } from './credits.js';
 
-const redisClient = await createPersistentRedisClient({ legacyMode: true });
+const redisClient = createPersistentRedisClient({ legacyMode: true });
 
 export const anonymousRateLimiter = new RateLimiterRedis({
 	storeClient: redisClient,

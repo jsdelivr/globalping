@@ -27,8 +27,9 @@ let io: WsServer;
 let syncedProbeList: SyncedProbeList;
 
 export const initWsServer = async () => {
-	const pubClient = getRedisClient().duplicate();
-	const subClient = pubClient.duplicate();
+	const redis = getRedisClient();
+	const pubClient = redis.duplicate();
+	const subClient = redis.duplicate();
 
 	await Promise.all([ pubClient.connect(), subClient.connect() ]);
 
@@ -44,7 +45,7 @@ export const initWsServer = async () => {
 		dynamicPrivateChannels: true,
 	}));
 
-	syncedProbeList = new SyncedProbeList(io.of(PROBES_NAMESPACE), adoptedProbes);
+	syncedProbeList = new SyncedProbeList(redis, io.of(PROBES_NAMESPACE), adoptedProbes);
 
 	await syncedProbeList.sync();
 	syncedProbeList.scheduleSync();
