@@ -6,7 +6,7 @@ import type { Probe } from '../../probe/types.js';
 import { getRedisClient } from '../redis/client.js';
 import { SyncedProbeList } from './synced-probe-list.js';
 import { client } from '../sql/client.js';
-import { AdoptedProbes } from '../adopted-probes.js';
+import { ProbeOverride } from '../probe-override.js';
 import { ProbeIpLimit } from './helper/probe-ip-limit.js';
 
 export type SocketData = {
@@ -45,7 +45,7 @@ export const initWsServer = async () => {
 		dynamicPrivateChannels: true,
 	}));
 
-	syncedProbeList = new SyncedProbeList(redis, io.of(PROBES_NAMESPACE), adoptedProbes);
+	syncedProbeList = new SyncedProbeList(redis, io.of(PROBES_NAMESPACE), probeOverride);
 
 	await syncedProbeList.sync();
 	syncedProbeList.scheduleSync();
@@ -91,6 +91,6 @@ export const fetchRawProbes = async (): Promise<Probe[]> => {
 	return syncedProbeList.getRawProbes();
 };
 
-export const adoptedProbes = new AdoptedProbes(client, fetchRawProbes);
+export const probeOverride = new ProbeOverride(client, fetchRawProbes);
 
 export const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets);

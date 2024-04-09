@@ -6,8 +6,7 @@ import { scopedLogger } from '../logger.js';
 import type { WsServerNamespace } from './server.js';
 import type { Probe, ProbeStats } from '../../probe/types.js';
 import type winston from 'winston';
-import type { AdoptedProbes } from '../adopted-probes.js';
-import { getIndex } from '../../probe/builder.js';
+import type { ProbeOverride } from '../probe-override.js';
 import type { RedisClient } from '../redis/shared.js';
 
 type NodeData = {
@@ -55,7 +54,7 @@ export class SyncedProbeList extends EventEmitter {
 	private readonly nodeId: string;
 	private readonly nodeData: TTLCache<string, NodeData>;
 
-	constructor (private readonly redis: RedisClient, private readonly ioNamespace: WsServerNamespace, private readonly adoptedProbes: AdoptedProbes) {
+	constructor (private readonly redis: RedisClient, private readonly ioNamespace: WsServerNamespace, private readonly probeOverride: ProbeOverride) {
 		super();
 		this.nodeId = randomBytes(8).toString('hex');
 		this.logger = scopedLogger('synced-probe-list', this.nodeId);
@@ -109,7 +108,7 @@ export class SyncedProbeList extends EventEmitter {
 		}
 
 		this.rawProbes = probes;
-		this.probes = addAdoptedProbesData(this.adoptedProbes, probes);
+		this.probes = this.probeOverride.addOverrideData(probes);
 		this.oldest = oldest;
 
 		this.emit(this.localUpdateEvent);
@@ -442,31 +441,3 @@ export class SyncedProbeList extends EventEmitter {
 		clearTimeout(this.pullTimer);
 	}
 }
-
-const addAdoptedProbesData = (adoptedProbes: AdoptedProbes, probes: Probe[]) => {
-	return probes.map((probe) => {
-		const adopted = adoptedProbes.getByIp(probe.ipAddress);
-
-		if (!adopted) {
-			return probe;
-		}
-
-		const isCustomCity = adopted.isCustomCity;
-		const hasUserTags = adopted.tags && adopted.tags.length;
-
-		if (!isCustomCity && !hasUserTags) {
-			return probe;
-		}
-
-		const newLocation = adoptedProbes.getUpdatedLocation(probe);
-
-		const newTags = adoptedProbes.getUpdatedTags(probe);
-
-		return {
-			...probe,
-			location: newLocation,
-			tags: newTags,
-			index: getIndex(newLocation, newTags),
-		};
-	});
-};
