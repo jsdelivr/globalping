@@ -1,6 +1,6 @@
 import ipaddr from 'ipaddr.js';
 import type { Knex } from 'knex';
-import type { Probe } from '../probe/types.js';
+import type { Probe, ProbeLocation } from '../probe/types.js';
 import { normalizeFromPublicName } from './geoip/utils.js';
 import { scopedLogger } from './logger.js';
 
@@ -41,11 +41,11 @@ export class AdminData {
 	getUpdatedProbes (probes: Probe[]) {
 		return probes.map(probe => ({
 			...probe,
-			location: this.getUpdatedLocation(probe),
+			location: this.getUpdatedLocation(probe) || probe.location,
 		}));
 	}
 
-	getUpdatedLocation (probe: Probe) {
+	getUpdatedLocation (probe: Probe): ProbeLocation | null {
 		for (const [ range, adminData ] of this.locationOverrides) {
 			const ip = ipaddr.parse(probe.ipAddress);
 
@@ -62,6 +62,6 @@ export class AdminData {
 			}
 		}
 
-		return probe.location;
+		return null;
 	}
 }

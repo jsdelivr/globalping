@@ -3,7 +3,7 @@ import Bluebird from 'bluebird';
 import _ from 'lodash';
 import { scopedLogger } from './logger.js';
 import type { fetchProbesWithAdminData as serverFetchProbesWithAdminData } from './ws/server.js';
-import type { Probe } from '../probe/types.js';
+import type { Probe, ProbeLocation } from '../probe/types.js';
 import { normalizeFromPublicName } from './geoip/utils.js';
 import { getIndex } from '../probe/builder.js';
 
@@ -96,11 +96,11 @@ export class AdoptedProbes {
 		return this.adoptedIpToProbe.get(ip);
 	}
 
-	getUpdatedLocation (probe: Probe) {
+	getUpdatedLocation (probe: Probe): ProbeLocation | null {
 		const adoptedProbe = this.getByIp(probe.ipAddress);
 
 		if (!adoptedProbe || !adoptedProbe.isCustomCity || adoptedProbe.countryOfCustomCity !== probe.location.country) {
-			return probe.location;
+			return null;
 		}
 
 		return {
@@ -149,7 +149,7 @@ export class AdoptedProbes {
 				...probe,
 				location: newLocation,
 				tags: newTags,
-				index: getIndex(newLocation, newTags),
+				index: getIndex(newLocation || probe.location, newTags),
 			};
 		});
 	}
