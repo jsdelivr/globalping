@@ -2,7 +2,7 @@ import type { Knex } from 'knex';
 import Bluebird from 'bluebird';
 import _ from 'lodash';
 import { scopedLogger } from './logger.js';
-import type { fetchRawProbes as serverFetchRawProbes } from './ws/server.js';
+import type { fetchProbesWithAdminData as serverFetchProbesWithAdminData } from './ws/server.js';
 import type { Probe } from '../probe/types.js';
 import { normalizeFromPublicName } from './geoip/utils.js';
 
@@ -88,7 +88,7 @@ export class AdoptedProbes {
 
 	constructor (
 		private readonly sql: Knex,
-		private readonly fetchRawProbes: typeof serverFetchRawProbes,
+		private readonly fetchProbesWithAdminData: typeof serverFetchProbesWithAdminData,
 	) {}
 
 	getByIp (ip: string) {
@@ -134,7 +134,7 @@ export class AdoptedProbes {
 	}
 
 	async syncDashboardData () {
-		const allProbes = await this.fetchRawProbes();
+		const allProbes = await this.fetchProbesWithAdminData();
 		this.connectedIpToProbe = new Map(allProbes.map(probe => [ probe.ipAddress, probe ]));
 		this.connectedUuidToIp = new Map(allProbes.map(probe => [ probe.uuid, probe.ipAddress ]));
 

@@ -1,23 +1,38 @@
 import { getIndex } from '../probe/builder.js';
 import type { Probe } from '../probe/types.js';
 import type { AdoptedProbes } from './adopted-probes.js';
+import type { AdminData } from './admin-data.js';
 
 export class ProbeOverride {
-	constructor (private readonly adoptedProbes: AdoptedProbes) {}
+	constructor (
+		private readonly adoptedProbes: AdoptedProbes,
+		private readonly adminData: AdminData,
+	) {}
 
 	async syncDashboardData () {
-		await this.adoptedProbes.syncDashboardData();
+		await Promise.all([
+			this.adoptedProbes.syncDashboardData(),
+			this.adminData.syncDashboardData(),
+		]);
 	}
 
 	scheduleSync () {
 		this.adoptedProbes.scheduleSync();
+		this.adminData.scheduleSync();
 	}
 
 	getUpdatedLocation (probe: Probe) {
-		return this.adoptedProbes.getUpdatedLocation(probe);
+		const adminLocation = this.adminData.getUpdatedLocation(probe);
+		const adoptedLocation = this.adoptedProbes.getUpdatedLocation(probe);
+		return { ...adminLocation, ...adoptedLocation };
 	}
 
-	addOverrideData (probes: Probe[]) {
+	addAdminData (probes: Probe[]) {
+		// Implement
+		return probes;
+	}
+
+	addAdoptedData (probes: Probe[]) {
 		return probes.map((probe) => {
 			const adopted = this.adoptedProbes.getByIp(probe.ipAddress);
 

@@ -45,6 +45,7 @@ export class SyncedProbeList extends EventEmitter {
 
 	private logger: winston.Logger;
 	private rawProbes: Probe[];
+	private probesWithAdminData: Probe[];
 	private probes: Probe[];
 	private oldest: number;
 	private pushTimer: NodeJS.Timeout | undefined;
@@ -59,6 +60,7 @@ export class SyncedProbeList extends EventEmitter {
 		this.nodeId = randomBytes(8).toString('hex');
 		this.logger = scopedLogger('synced-probe-list', this.nodeId);
 		this.rawProbes = [];
+		this.probesWithAdminData = [];
 		this.probes = [];
 		this.oldest = Infinity;
 		this.lastReadEventId = Date.now().toString();
@@ -70,6 +72,18 @@ export class SyncedProbeList extends EventEmitter {
 				this.updateProbes();
 			},
 		});
+	}
+
+	getRawProbes (): Probe[] {
+		return this.rawProbes.slice();
+	}
+
+	getProbesWithAdminData (): Probe[] {
+		return this.probesWithAdminData.slice();
+	}
+
+	getProbes (): Probe[] {
+		return this.probes.slice();
 	}
 
 	async fetchProbes (): Promise<Probe[]> {
@@ -87,14 +101,6 @@ export class SyncedProbeList extends EventEmitter {
 		});
 	}
 
-	getProbes (): Probe[] {
-		return this.probes.slice();
-	}
-
-	getRawProbes (): Probe[] {
-		return this.rawProbes.slice();
-	}
-
 	private updateProbes () {
 		const probes = [];
 		let oldest = Infinity;
@@ -108,7 +114,8 @@ export class SyncedProbeList extends EventEmitter {
 		}
 
 		this.rawProbes = probes;
-		this.probes = this.probeOverride.addOverrideData(probes);
+		this.probesWithAdminData = this.probeOverride.addAdminData(probes);
+		this.probes = this.probeOverride.addAdoptedData(this.probesWithAdminData);
 		this.oldest = oldest;
 
 		this.emit(this.localUpdateEvent);
