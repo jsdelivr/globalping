@@ -8,6 +8,7 @@ import { SyncedProbeList } from './synced-probe-list.js';
 import { client } from '../sql/client.js';
 import { ProbeOverride } from '../probe-override.js';
 import { ProbeIpLimit } from './helper/probe-ip-limit.js';
+import { AdoptedProbes } from '../adopted-probes.js';
 
 export type SocketData = {
 	probe: Probe;
@@ -91,6 +92,8 @@ export const fetchRawProbes = async (): Promise<Probe[]> => {
 	return syncedProbeList.getRawProbes();
 };
 
-export const probeOverride = new ProbeOverride(client, fetchRawProbes);
+export const adoptedProbes = new AdoptedProbes(client, fetchRawProbes);
+
+export const probeOverride = new ProbeOverride(adoptedProbes);
 
 export const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets);

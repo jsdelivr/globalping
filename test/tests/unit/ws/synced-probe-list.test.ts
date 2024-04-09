@@ -7,6 +7,7 @@ import { type AdoptedProbe, AdoptedProbes } from '../../../../src/lib/adopted-pr
 import type { Probe } from '../../../../src/probe/types.js';
 import { getRegionByCountry } from '../../../../src/lib/location/location.js';
 import { getRedisClient } from '../../../../src/lib/redis/client.js';
+import { ProbeOverride } from '../../../../src/lib/probe-override.js';
 
 describe('SyncedProbeList', () => {
 	const sandbox = sinon.createSandbox();
@@ -35,6 +36,7 @@ describe('SyncedProbeList', () => {
 	} as unknown as WsServerNamespace;
 
 	const adoptedProbes = sandbox.createStubInstance(AdoptedProbes);
+	const probeOverride = new ProbeOverride(adoptedProbes);
 
 	let syncedProbeList: SyncedProbeList;
 
@@ -46,7 +48,7 @@ describe('SyncedProbeList', () => {
 		adoptedProbes.getUpdatedLocation.callThrough();
 		adoptedProbes.getUpdatedTags.callThrough();
 
-		syncedProbeList = new SyncedProbeList(redisClient, ioNamespace, adoptedProbes);
+		syncedProbeList = new SyncedProbeList(redisClient, ioNamespace, probeOverride);
 	});
 
 	afterEach(() => {

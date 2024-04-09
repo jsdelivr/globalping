@@ -1,18 +1,9 @@
-import type { Knex } from 'knex';
 import { getIndex } from '../probe/builder.js';
 import type { Probe } from '../probe/types.js';
-import { AdoptedProbes } from './adopted-probes.js';
-import type { fetchRawProbes as serverFetchRawProbes } from './ws/server.js';
+import type { AdoptedProbes } from './adopted-probes.js';
 
 export class ProbeOverride {
-	private readonly adoptedProbes: AdoptedProbes;
-
-	constructor (
-		private readonly sql: Knex,
-		private readonly fetchRawProbes: typeof serverFetchRawProbes,
-	) {
-		this.adoptedProbes = new AdoptedProbes(this.sql, this.fetchRawProbes);
-	}
+	constructor (private readonly adoptedProbes: AdoptedProbes) {}
 
 	async syncDashboardData () {
 		await this.adoptedProbes.syncDashboardData();

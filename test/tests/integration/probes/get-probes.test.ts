@@ -5,7 +5,7 @@ import request, { type Agent } from 'supertest';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../../utils/server.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { ADOPTED_PROBES_TABLE } from '../../../../src/lib/adopted-probes.js';
-import { adoptedProbes } from '../../../../src/lib/ws/server.js';
+import { probeOverride } from '../../../../src/lib/ws/server.js';
 import { client } from '../../../../src/lib/sql/client.js';
 
 describe('Get Probes', () => {
@@ -290,7 +290,7 @@ describe('Get Probes', () => {
 					asn: 61004,
 				});
 
-				await adoptedProbes.syncDashboardData();
+				await probeOverride.syncDashboardData();
 			});
 
 			after(async () => {
