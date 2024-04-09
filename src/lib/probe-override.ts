@@ -28,8 +28,7 @@ export class ProbeOverride {
 	}
 
 	addAdminData (probes: Probe[]) {
-		// Implement
-		return probes;
+		return this.adminData.getUpdatedProbes(probes);
 	}
 
 	addAdoptedData (probes: Probe[]) {

@@ -106,9 +106,9 @@ export class AdoptedProbes {
 			...probe.location,
 			city: adoptedProbe.city!,
 			normalizedCity: normalizeFromPublicName(adoptedProbe.city!),
+			...(adoptedProbe.state && { state: adoptedProbe.state }),
 			latitude: adoptedProbe.latitude!,
 			longitude: adoptedProbe.longitude!,
-			...(adoptedProbe.state && { state: adoptedProbe.state }),
 		};
 	}
 
