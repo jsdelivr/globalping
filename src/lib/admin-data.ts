@@ -41,11 +41,11 @@ export class AdminData {
 	getUpdatedProbes (probes: Probe[]) {
 		return probes.map(probe => ({
 			...probe,
-			location: this.getUpdatedLocation(probe) || probe.location,
+			location: this.getUpdatedLocation(probe),
 		}));
 	}
 
-	getUpdatedLocation (probe: Probe): ProbeLocation | null {
+	getUpdatedLocation (probe: Probe): ProbeLocation {
 		for (const [ range, adminData ] of this.locationOverrides) {
 			const ip = ipaddr.parse(probe.ipAddress);
 
@@ -55,13 +55,13 @@ export class AdminData {
 					city: adminData.city,
 					normalizedCity: normalizeFromPublicName(adminData.city),
 					country: adminData.country,
-					...(adminData.state && { state: adminData.state }),
+					state: adminData.state,
 					latitude: adminData.latitude,
 					longitude: adminData.longitude,
 				};
 			}
 		}
 
-		return null;
+		return probe.location;
 	}
 }

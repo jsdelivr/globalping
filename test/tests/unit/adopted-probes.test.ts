@@ -393,7 +393,7 @@ describe('AdoptedProbes', () => {
 		});
 	});
 
-	it('getUpdatedLocation method should return null if connected.country !== adopted.countryOfCustomCity', async () => {
+	it('getUpdatedLocation method should return same location object if connected.country !== adopted.countryOfCustomCity', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
 		selectStub.resolves([{
 			...defaultAdoptedProbe,
@@ -407,10 +407,10 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 		const updatedLocation = adoptedProbes.getUpdatedLocation(defaultConnectedProbe);
-		expect(updatedLocation).to.equal(null);
+		expect(updatedLocation).to.equal(defaultConnectedProbe.location);
 	});
 
-	it('getUpdatedLocation method should return null if "isCustomCity: false"', async () => {
+	it('getUpdatedLocation method should return same location object if "isCustomCity: false"', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchSocketsStub);
 		selectStub.resolves([{
 			...defaultAdoptedProbe,
@@ -422,7 +422,7 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 		const updatedLocation = adoptedProbes.getUpdatedLocation(defaultConnectedProbe);
-		expect(updatedLocation).to.equal(null);
+		expect(updatedLocation).to.equal(defaultConnectedProbe.location);
 	});
 
 	it('getUpdatedTags method should return updated tags', async () => {

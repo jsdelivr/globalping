@@ -8,6 +8,7 @@ import type { Probe } from '../../../../src/probe/types.js';
 import { getRegionByCountry } from '../../../../src/lib/location/location.js';
 import { getRedisClient } from '../../../../src/lib/redis/client.js';
 import { ProbeOverride } from '../../../../src/lib/probe-override.js';
+import { AdminData } from '../../../../src/lib/admin-data.js';
 
 describe('SyncedProbeList', () => {
 	const sandbox = sinon.createSandbox();
@@ -36,7 +37,9 @@ describe('SyncedProbeList', () => {
 	} as unknown as WsServerNamespace;
 
 	const adoptedProbes = sandbox.createStubInstance(AdoptedProbes);
-	const probeOverride = new ProbeOverride(adoptedProbes);
+	const adminData = sandbox.createStubInstance(AdminData);
+	adminData.locationOverrides = new Map();
+	const probeOverride = new ProbeOverride(adoptedProbes, adminData);
 
 	let syncedProbeList: SyncedProbeList;
 
@@ -47,6 +50,9 @@ describe('SyncedProbeList', () => {
 		localFetchSocketsStub.resolves([]);
 		adoptedProbes.getUpdatedLocation.callThrough();
 		adoptedProbes.getUpdatedTags.callThrough();
+		adoptedProbes.getUpdatedProbes.callThrough();
+		adminData.getUpdatedLocation.callThrough();
+		adminData.getUpdatedProbes.callThrough();
 
 		syncedProbeList = new SyncedProbeList(redisClient, ioNamespace, probeOverride);
 	});
@@ -58,8 +64,8 @@ describe('SyncedProbeList', () => {
 
 	it('updates and emits local probes during sync', async () => {
 		const sockets = [
-			{ data: { probe: { client: 'A' } } },
-			{ data: { probe: { client: 'B' } } },
+			{ data: { probe: { client: 'A', location: {} } } },
+			{ data: { probe: { client: 'B', location: {} } } },
 		];
 
 		localFetchSocketsStub.resolves(sockets);
@@ -97,9 +103,9 @@ describe('SyncedProbeList', () => {
 
 	it('emits stats in the message on change', async () => {
 		const sockets = [
-			{ data: { probe: { client: 'A', stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } } } },
-			{ data: { probe: { client: 'B', stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } } } },
-			{ data: { probe: { client: 'C', stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } } } },
+			{ data: { probe: { client: 'A', location: {}, stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } } } },
+			{ data: { probe: { client: 'B', location: {}, stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } } } },
+			{ data: { probe: { client: 'C', location: {}, stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } } } },
 		];
 
 		localFetchSocketsStub.resolves(sockets);
@@ -191,9 +197,9 @@ describe('SyncedProbeList', () => {
 
 	it('reads remote stats updates', async () => {
 		const probes = {
-			A: { client: 'A', stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } },
-			B: { client: 'B', stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } },
-			C: { client: 'C', stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } },
+			A: { client: 'A', location: {}, stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } },
+			B: { client: 'B', location: {}, stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } },
+			C: { client: 'C', location: {}, stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } },
 		} as unknown as Record<string, Probe>;
 
 		redisXRange.resolves([
@@ -254,8 +260,8 @@ describe('SyncedProbeList', () => {
 
 	it('expires remote probes after the timeout', async () => {
 		const probes = {
-			A: { client: 'A' },
-			B: { client: 'B' },
+			A: { client: 'A', location: {} },
+			B: { client: 'B', location: {} },
 		} as unknown as Record<string, Probe>;
 
 		redisXRange.resolves([

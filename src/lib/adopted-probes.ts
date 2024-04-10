@@ -5,7 +5,7 @@ import { scopedLogger } from './logger.js';
 import type { fetchProbesWithAdminData as serverFetchProbesWithAdminData } from './ws/server.js';
 import type { Probe, ProbeLocation } from '../probe/types.js';
 import { normalizeFromPublicName } from './geoip/utils.js';
-import { getIndex } from '../probe/builder.js';
+import { getIndex } from './location/location.js';
 
 const logger = scopedLogger('adopted-probes');
 
@@ -96,18 +96,18 @@ export class AdoptedProbes {
 		return this.adoptedIpToProbe.get(ip);
 	}
 
-	getUpdatedLocation (probe: Probe): ProbeLocation | null {
+	getUpdatedLocation (probe: Probe): ProbeLocation {
 		const adoptedProbe = this.getByIp(probe.ipAddress);
 
 		if (!adoptedProbe || !adoptedProbe.isCustomCity || adoptedProbe.countryOfCustomCity !== probe.location.country) {
-			return null;
+			return probe.location;
 		}
 
 		return {
 			...probe.location,
 			city: adoptedProbe.city!,
 			normalizedCity: normalizeFromPublicName(adoptedProbe.city!),
-			...(adoptedProbe.state && { state: adoptedProbe.state }),
+			state: adoptedProbe.state,
 			latitude: adoptedProbe.latitude!,
 			longitude: adoptedProbe.longitude!,
 		};
@@ -147,9 +147,9 @@ export class AdoptedProbes {
 
 			return {
 				...probe,
-				location: newLocation || probe.location,
+				location: newLocation,
 				tags: newTags,
-				index: getIndex(newLocation || probe.location, newTags),
+				index: getIndex(newLocation, newTags),
 			};
 		});
 	}

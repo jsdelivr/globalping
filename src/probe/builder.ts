@@ -2,15 +2,7 @@ import * as process from 'node:process';
 import type { Socket } from 'socket.io';
 import { isIpPrivate } from '../lib/private-ip.js';
 import semver from 'semver';
-import {
-	getStateNameByIso,
-	getCountryByIso,
-	getCountryIso3ByIso2,
-	getCountryAliases,
-	getNetworkAliases,
-	getContinentAliases,
-	getRegionAliases,
-} from '../lib/location/location.js';
+import { getIndex } from '../lib/location/location.js';
 import { ProbeError } from '../lib/probe-error.js';
 import { createGeoipClient, LocationInfo } from '../lib/geoip/client.js';
 import type GeoipClient from '../lib/geoip/client.js';
@@ -93,29 +85,6 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		},
 		status: 'initializing',
 	};
-};
-
-export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
-	// Storing index as string[][] so every category will have it's exact position in the index array across all probes
-	const index = [
-		[ location.country ],
-		[ getCountryIso3ByIso2(location.country) ],
-		[ getCountryByIso(location.country) ],
-		getCountryAliases(location.country),
-		[ location.normalizedCity ],
-		location.state ? [ location.state ] : [],
-		location.state ? [ getStateNameByIso(location.state) ] : [],
-		[ location.continent ],
-		getContinentAliases(location.continent),
-		[ location.region ],
-		getRegionAliases(location.region),
-		[ `as${location.asn}` ],
-		tags.filter(tag => tag.type === 'system').map(tag => tag.value),
-		[ location.normalizedNetwork ],
-		getNetworkAliases(location.normalizedNetwork),
-	].map(category => category.map(s => s.toLowerCase().replaceAll('-', ' ')));
-
-	return index;
 };
 
 const getLocation = (ipInfo: LocationInfo): ProbeLocation => ({
