@@ -147,7 +147,7 @@ export class AdoptedProbes {
 
 			return {
 				...probe,
-				location: newLocation,
+				location: newLocation || probe.location,
 				tags: newTags,
 				index: getIndex(newLocation || probe.location, newTags),
 			};

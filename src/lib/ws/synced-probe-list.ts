@@ -399,7 +399,7 @@ export class SyncedProbeList extends EventEmitter {
 				}
 			}
 
-			const newNodeData = {
+			const newNodeData: NodeData = {
 				...nodeData,
 				...changes.revalidateTimestamp ? { revalidateTimestamp: changes.revalidateTimestamp } : {},
 				probesById,
