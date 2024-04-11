@@ -1,7 +1,9 @@
+/* eslint-disable camelcase */
 import ipaddr from 'ipaddr.js';
 import type { Knex } from 'knex';
 import type { Probe, ProbeLocation } from '../probe/types.js';
 import { normalizeFromPublicName } from './geoip/utils.js';
+import { getContinentByCountry, getRegionByCountry } from './location/location.js';
 import { scopedLogger } from './logger.js';
 
 const logger = scopedLogger('admin-data');
@@ -11,6 +13,8 @@ const LOCATION_OVERRIDES_TABLE = 'gp_location_overrides';
 type ParsedIpRange = [ipaddr.IPv4 | ipaddr.IPv6, number];
 
 type LocationOverride = {
+	date_created: Date;
+	date_updated: Date;
 	ip_range: string;
 	city: string;
 	country: string;
@@ -19,8 +23,23 @@ type LocationOverride = {
 	longitude: number;
 }
 
+type UpdatedFields = {
+	continent: string;
+	region: string;
+	city: string;
+	normalizedCity: string;
+	country: string;
+	state: string | null;
+	latitude: number;
+	longitude: number;
+}
+
 export class AdminData {
-	private locationOverrides: Map<ParsedIpRange, LocationOverride> = new Map();
+	private rangesToUpdatedFields: Map<ParsedIpRange, UpdatedFields> = new Map();
+
+	private ipsToUpdatedFields: Map<string, UpdatedFields | null> = new Map();
+
+	private lastUpdate: Date = new Date('01-01-1970');
 
 	constructor (private readonly sql: Knex) {}
 
@@ -33,35 +52,84 @@ export class AdminData {
 	}
 
 	async syncDashboardData () {
+		console.log('syncDashboardData');
 		const overrides = await this.sql(LOCATION_OVERRIDES_TABLE).select<LocationOverride[]>();
 
-		this.locationOverrides = new Map(overrides.map(override => [ ipaddr.parseCIDR(override.ip_range), override ]));
+		this.rangesToUpdatedFields = new Map(overrides.map(override => [ ipaddr.parseCIDR(override.ip_range), {
+			continent: getContinentByCountry(override.country),
+			region: getRegionByCountry(override.country),
+			city: override.city,
+			normalizedCity: normalizeFromPublicName(override.city),
+			country: override.country,
+			state: override.state,
+			latitude: override.latitude,
+			longitude: override.longitude,
+		}]));
+
+		const newLastUpdate = overrides.reduce((lastUpdate, { date_created, date_updated }) => {
+			lastUpdate = date_created > lastUpdate ? date_created : lastUpdate;
+			lastUpdate = date_updated > lastUpdate ? date_updated : lastUpdate;
+			return lastUpdate;
+		}, new Date('01-01-1970'));
+
+		if (newLastUpdate > this.lastUpdate) {
+			this.ipsToUpdatedFields.clear();
+			this.lastUpdate = newLastUpdate;
+		}
 	}
 
 	getUpdatedProbes (probes: Probe[]) {
-		return probes.map(probe => ({
-			...probe,
-			location: this.getUpdatedLocation(probe),
-		}));
+		return probes.map((probe) => {
+			const updatedFields = this.getUpdatedFields(probe);
+
+			if (!updatedFields) {
+				return probe;
+			}
+
+			return {
+				...probe,
+				location: {
+					...probe.location,
+					...updatedFields,
+				},
+			};
+		});
 	}
 
 	getUpdatedLocation (probe: Probe): ProbeLocation {
-		for (const [ range, adminData ] of this.locationOverrides) {
+		const updatedFields = this.getUpdatedFields(probe);
+
+		if (!updatedFields) {
+			return probe.location;
+		}
+
+		return {
+			...probe.location,
+			...updatedFields,
+		};
+	}
+
+	getUpdatedFields (probe: Probe): UpdatedFields | null {
+		const updatedFields = this.ipsToUpdatedFields.get(probe.ipAddress);
+
+		if (updatedFields !== undefined) {
+			return updatedFields;
+		}
+
+		const newUpdatedFields = this.findUpdatedFields(probe);
+		this.ipsToUpdatedFields.set(probe.ipAddress, newUpdatedFields);
+		return newUpdatedFields;
+	}
+
+	findUpdatedFields (probe: Probe): UpdatedFields | null {
+		for (const [ range, updatedFields ] of this.rangesToUpdatedFields) {
 			const ip = ipaddr.parse(probe.ipAddress);
 
 			if (ip.kind() === range[0].kind() && ip.match(range)) {
-				return {
-					...probe.location,
-					city: adminData.city,
-					normalizedCity: normalizeFromPublicName(adminData.city),
-					country: adminData.country,
-					state: adminData.state,
-					latitude: adminData.latitude,
-					longitude: adminData.longitude,
-				};
+				return updatedFields;
 			}
 		}
 
-		return probe.location;
+		return null;
 	}
 }
