@@ -284,8 +284,8 @@ describe('Get Probes', () => {
 					country: 'AR',
 					countryOfCustomCity: 'AR',
 					city: 'Cordoba',
-					latitude: '-31.4135',
-					longitude: '-64.18105',
+					latitude: -31.4135,
+					longitude: -64.18105,
 					network: 'InterBS S.R.L. (BAEHOST)',
 					asn: 61004,
 				});

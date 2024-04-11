@@ -63,6 +63,8 @@ CREATE TABLE IF NOT EXISTS gp_location_overrides (
   date_updated TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   ip_range VARCHAR(255) NOT NULL,
   city VARCHAR(255) NOT NULL,
-  state VARCHAR(255) NULL,
-  country VARCHAR(255) NULL
+  state VARCHAR(255),
+  country VARCHAR(255),
+	latitude FLOAT(10, 5),
+	longitude FLOAT(10, 5)
 );

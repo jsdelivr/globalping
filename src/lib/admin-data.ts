@@ -14,7 +14,7 @@ type ParsedIpRange = [ipaddr.IPv4 | ipaddr.IPv6, number];
 
 type LocationOverride = {
 	date_created: Date;
-	date_updated: Date;
+	date_updated: Date | null;
 	ip_range: string;
 	city: string;
 	country: string;
@@ -40,6 +40,8 @@ export class AdminData {
 	private ipsToUpdatedFields: Map<string, UpdatedFields | null> = new Map();
 
 	private lastUpdate: Date = new Date('01-01-1970');
+
+	private lastOverridesLength: number = 0;
 
 	constructor (private readonly sql: Knex) {}
 
@@ -67,13 +69,14 @@ export class AdminData {
 
 		const newLastUpdate = overrides.reduce((lastUpdate, { date_created, date_updated }) => {
 			lastUpdate = date_created > lastUpdate ? date_created : lastUpdate;
-			lastUpdate = date_updated > lastUpdate ? date_updated : lastUpdate;
+			lastUpdate = (date_updated && date_updated > lastUpdate) ? date_updated : lastUpdate;
 			return lastUpdate;
 		}, new Date('01-01-1970'));
 
-		if (newLastUpdate > this.lastUpdate) {
+		if (newLastUpdate > this.lastUpdate || overrides.length !== this.lastOverridesLength) {
 			this.ipsToUpdatedFields.clear();
 			this.lastUpdate = newLastUpdate;
+			this.lastOverridesLength = overrides.length;
 		}
 	}
 
