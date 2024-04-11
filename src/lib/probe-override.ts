@@ -23,7 +23,7 @@ export class ProbeOverride {
 	getUpdatedLocation (probe: Probe) {
 		const adminLocation = this.adminData.getUpdatedLocation(probe);
 		const adoptedLocation = this.adoptedProbes.getUpdatedLocation(probe);
-		return { ...adminLocation, ...adoptedLocation };
+		return { ...probe.location, ...adminLocation, ...adoptedLocation };
 	}
 
 	addAdminData (probes: Probe[]) {

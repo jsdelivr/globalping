@@ -52,7 +52,6 @@ export class AdminData {
 	}
 
 	async syncDashboardData () {
-		console.log('syncDashboardData');
 		const overrides = await this.sql(LOCATION_OVERRIDES_TABLE).select<LocationOverride[]>();
 
 		this.rangesToUpdatedFields = new Map(overrides.map(override => [ ipaddr.parseCIDR(override.ip_range), {
@@ -96,11 +95,11 @@ export class AdminData {
 		});
 	}
 
-	getUpdatedLocation (probe: Probe): ProbeLocation {
+	getUpdatedLocation (probe: Probe): ProbeLocation | null {
 		const updatedFields = this.getUpdatedFields(probe);
 
 		if (!updatedFields) {
-			return probe.location;
+			return null;
 		}
 
 		return {

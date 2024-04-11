@@ -96,11 +96,11 @@ export class AdoptedProbes {
 		return this.adoptedIpToProbe.get(ip);
 	}
 
-	getUpdatedLocation (probe: Probe): ProbeLocation {
+	getUpdatedLocation (probe: Probe): ProbeLocation | null {
 		const adoptedProbe = this.getByIp(probe.ipAddress);
 
 		if (!adoptedProbe || !adoptedProbe.isCustomCity || adoptedProbe.countryOfCustomCity !== probe.location.country) {
-			return probe.location;
+			return null;
 		}
 
 		return {
@@ -141,7 +141,7 @@ export class AdoptedProbes {
 				return probe;
 			}
 
-			const newLocation = this.getUpdatedLocation(probe);
+			const newLocation = this.getUpdatedLocation(probe) || probe.location;
 
 			const newTags = this.getUpdatedTags(probe);
 
