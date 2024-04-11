@@ -37,8 +37,7 @@ describe('SyncedProbeList', () => {
 	} as unknown as WsServerNamespace;
 
 	const adoptedProbes = sandbox.createStubInstance(AdoptedProbes);
-	const adminData = sandbox.createStubInstance(AdminData);
-	adminData.locationOverrides = new Map();
+	const adminData = new AdminData(sandbox.stub() as any);
 	const probeOverride = new ProbeOverride(adoptedProbes, adminData);
 
 	let syncedProbeList: SyncedProbeList;
@@ -51,8 +50,6 @@ describe('SyncedProbeList', () => {
 		adoptedProbes.getUpdatedLocation.callThrough();
 		adoptedProbes.getUpdatedTags.callThrough();
 		adoptedProbes.getUpdatedProbes.callThrough();
-		adminData.getUpdatedLocation.callThrough();
-		adminData.getUpdatedProbes.callThrough();
 
 		syncedProbeList = new SyncedProbeList(redisClient, ioNamespace, probeOverride);
 	});
