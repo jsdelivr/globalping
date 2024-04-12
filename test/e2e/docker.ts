@@ -13,18 +13,10 @@ class DockerManager {
 	}
 
 	public async createApiContainer () {
-		let networkMode = 'host';
-		let redisUrl = config.get<string>('redis.url');
-		let dbConnectionHost = config.get<string>('db.connection.host');
+		const networkMode = 'bridge';
+		const redisUrl = config.get<string>('redis.url').replace('localhost', 'host.docker.internal');
+		const dbConnectionHost = config.get<string>('db.connection.host').replace('localhost', 'host.docker.internal');
 		const processes = config.get<string>('server.processes');
-
-		const isLinux = await this.isLinuxHost();
-
-		if (!isLinux) {
-			networkMode = 'bridge';
-			redisUrl = redisUrl.replace('localhost', 'host.docker.internal');
-			dbConnectionHost = dbConnectionHost.replace('localhost', 'host.docker.internal');
-		}
 
 		// docker run -e NODE_ENV=test -e TEST_MODE=e2e -e NEW_RELIC_ENABLED=false -e REDIS_URL=redis://host.docker.internal:6379 -e DB_CONNECTION_HOST=host.docker.internal --name globalping-api-e2e globalping-api-e2e
 		const container = await this.docker.createContainer({
@@ -52,15 +44,8 @@ class DockerManager {
 	}
 
 	public async createProbeContainer () {
-		let networkMode = 'host';
-		let apiHost = 'ws://localhost:80';
-
-		const isLinux = await this.isLinuxHost();
-
-		if (!isLinux) {
-			networkMode = 'bridge';
-			apiHost = apiHost.replace('localhost', 'host.docker.internal');
-		}
+		const networkMode = 'bridge';
+		const apiHost = 'ws://localhost:80'.replace('localhost', 'host.docker.internal');
 
 		// docker run -e API_HOST=ws://host.docker.internal:80 --name globalping-probe-e2e globalping-probe-e2e
 		console.log({
@@ -129,14 +114,6 @@ class DockerManager {
 		}
 
 		await container.start({});
-	}
-
-	private async isLinuxHost (): Promise<boolean> {
-		const versionInfo = await this.docker.version();
-		const platformName = versionInfo.Platform.Name.toLowerCase();
-		console.log('versionInfo.Platform');
-		console.log(versionInfo.Platform);
-		return platformName.includes('engine');
 	}
 
 	private async attachLogs (container: Docker.Container) {
