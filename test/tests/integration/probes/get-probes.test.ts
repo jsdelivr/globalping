@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import request, { type Agent } from 'supertest';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../../utils/server.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
-import { ADOPTED_PROBES_TABLE } from '../../../../src/lib/adopted-probes.js';
+import { ADOPTED_PROBES_TABLE } from '../../../../src/lib/override/adopted-probes.js';
 import { probeOverride } from '../../../../src/lib/ws/server.js';
 import { client } from '../../../../src/lib/sql/client.js';
 

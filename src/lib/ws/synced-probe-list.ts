@@ -6,7 +6,7 @@ import { scopedLogger } from '../logger.js';
 import type { WsServerNamespace } from './server.js';
 import type { Probe, ProbeStats } from '../../probe/types.js';
 import type winston from 'winston';
-import type { ProbeOverride } from '../probe-override.js';
+import type { ProbeOverride } from '../override/probe-override.js';
 import type { RedisClient } from '../redis/shared.js';
 
 type NodeData = {

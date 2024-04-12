@@ -1,4 +1,4 @@
-import type { Probe } from '../probe/types.js';
+import type { Probe } from '../../probe/types.js';
 import type { AdoptedProbes } from './adopted-probes.js';
 import type { AdminData } from './admin-data.js';
 

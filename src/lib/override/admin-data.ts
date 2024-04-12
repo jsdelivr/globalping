@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import ipaddr from 'ipaddr.js';
 import type { Knex } from 'knex';
-import type { Probe, ProbeLocation } from '../probe/types.js';
-import { normalizeFromPublicName } from './geoip/utils.js';
-import { getContinentByCountry, getRegionByCountry } from './location/location.js';
-import { scopedLogger } from './logger.js';
+import type { Probe, ProbeLocation } from '../../probe/types.js';
+import { normalizeFromPublicName } from '../geoip/utils.js';
+import { getContinentByCountry, getRegionByCountry } from '../location/location.js';
+import { scopedLogger } from '../logger.js';
 
 const logger = scopedLogger('admin-data');
 

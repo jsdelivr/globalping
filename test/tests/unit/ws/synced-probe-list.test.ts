@@ -6,7 +6,7 @@ import { SyncedProbeList } from '../../../../src/lib/ws/synced-probe-list.js';
 import type { Probe } from '../../../../src/probe/types.js';
 import { getRegionByCountry } from '../../../../src/lib/location/location.js';
 import { getRedisClient } from '../../../../src/lib/redis/client.js';
-import { ProbeOverride } from '../../../../src/lib/probe-override.js';
+import { ProbeOverride } from '../../../../src/lib/override/probe-override.js';
 
 describe('SyncedProbeList', () => {
 	const sandbox = sinon.createSandbox();

@@ -5,7 +5,7 @@ import nock from 'nock';
 import type { Socket } from 'socket.io-client';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { client } from '../../../../src/lib/sql/client.js';
-import type { ProbeOverride } from '../../../../src/lib/probe-override.js';
+import type { ProbeOverride } from '../../../../src/lib/override/probe-override.js';
 import { waitForProbesUpdate } from '../../../utils/server.js';
 
 describe('Create measurement', () => {
@@ -19,7 +19,7 @@ describe('Create measurement', () => {
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
 		({ getTestServer, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
-		({ ADOPTED_PROBES_TABLE } = await import('../../../../src/lib/adopted-probes.js'));
+		({ ADOPTED_PROBES_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
 		({ probeOverride } = await import('../../../../src/lib/ws/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);

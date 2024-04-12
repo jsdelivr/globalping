@@ -6,10 +6,10 @@ import type { Probe } from '../../probe/types.js';
 import { getRedisClient } from '../redis/client.js';
 import { SyncedProbeList } from './synced-probe-list.js';
 import { client } from '../sql/client.js';
-import { ProbeOverride } from '../probe-override.js';
+import { ProbeOverride } from '../override/probe-override.js';
 import { ProbeIpLimit } from './helper/probe-ip-limit.js';
-import { AdoptedProbes } from '../adopted-probes.js';
-import { AdminData } from '../admin-data.js';
+import { AdoptedProbes } from '../override/adopted-probes.js';
+import { AdminData } from '../override/admin-data.js';
 
 export type SocketData = {
 	probe: Probe;

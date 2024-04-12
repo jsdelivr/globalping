@@ -1,11 +1,11 @@
 import type { Knex } from 'knex';
 import Bluebird from 'bluebird';
 import _ from 'lodash';
-import { scopedLogger } from './logger.js';
-import type { fetchProbesWithAdminData as serverFetchProbesWithAdminData } from './ws/server.js';
-import type { Probe, ProbeLocation } from '../probe/types.js';
-import { normalizeFromPublicName } from './geoip/utils.js';
-import { getIndex } from './location/location.js';
+import { scopedLogger } from '../logger.js';
+import type { fetchProbesWithAdminData as serverFetchProbesWithAdminData } from '../ws/server.js';
+import type { Probe, ProbeLocation } from '../../probe/types.js';
+import { normalizeFromPublicName } from '../geoip/utils.js';
+import { getIndex } from '../location/location.js';
 
 const logger = scopedLogger('adopted-probes');
 
