@@ -111,7 +111,7 @@ export class AdminData {
 		};
 	}
 
-	getUpdatedFields (probe: Probe): UpdatedFields | null {
+	private getUpdatedFields (probe: Probe): UpdatedFields | null {
 		const updatedFields = this.ipsToUpdatedFields.get(probe.ipAddress);
 
 		if (updatedFields !== undefined) {

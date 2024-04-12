@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import type { Knex } from 'knex';
 import * as sinon from 'sinon';
 import relativeDayUtc from 'relative-day-utc';
-import { AdoptedProbes } from '../../../src/lib/override/adopted-probes.js';
-import type { Probe } from '../../../src/probe/types.js';
+import { AdoptedProbes } from '../../../../src/lib/override/adopted-probes.js';
+import type { Probe } from '../../../../src/probe/types.js';
 
 describe('AdoptedProbes', () => {
 	const defaultAdoptedProbe = {
