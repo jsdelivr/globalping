@@ -13,7 +13,6 @@ class DockerManager {
 	}
 
 	public async createApiContainer () {
-		const networkMode = 'bridge';
 		const redisUrl = config.get<string>('redis.url').replace('localhost', 'host.docker.internal');
 		const dbConnectionHost = config.get<string>('db.connection.host').replace('localhost', 'host.docker.internal');
 		const processes = config.get<string>('server.processes');
@@ -34,7 +33,6 @@ class DockerManager {
 				PortBindings: {
 					'80/tcp': [{ HostPort: '80' }],
 				},
-				NetworkMode: networkMode,
 				ExtraHosts: [ 'host.docker.internal:host-gateway' ],
 			},
 		});
@@ -44,30 +42,14 @@ class DockerManager {
 	}
 
 	public async createProbeContainer () {
-		const networkMode = 'bridge';
-		const apiHost = 'ws://localhost:80'.replace('localhost', 'host.docker.internal');
-
 		// docker run -e API_HOST=ws://host.docker.internal:80 --name globalping-probe-e2e globalping-probe-e2e
-		console.log({
-			Image: 'globalping-probe-e2e',
-			name: 'globalping-probe-e2e',
-			Env: [
-				`API_HOST=${apiHost}`,
-			],
-			HostConfig: {
-				NetworkMode: networkMode,
-				ExtraHosts: [ 'host.docker.internal:host-gateway' ],
-			},
-		});
-
 		const container = await this.docker.createContainer({
 			Image: 'globalping-probe-e2e',
 			name: 'globalping-probe-e2e',
 			Env: [
-				`API_HOST=${apiHost}`,
+				'API_HOST=ws://host.docker.internal:80',
 			],
 			HostConfig: {
-				NetworkMode: networkMode,
 				ExtraHosts: [ 'host.docker.internal:host-gateway' ],
 			},
 		});
