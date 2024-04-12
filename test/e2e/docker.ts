@@ -43,6 +43,7 @@ class DockerManager {
 					'80/tcp': [{ HostPort: '80' }],
 				},
 				NetworkMode: networkMode,
+				ExtraHosts: [ 'host.docker.internal:host-gateway' ],
 			},
 		});
 
@@ -70,6 +71,7 @@ class DockerManager {
 			],
 			HostConfig: {
 				NetworkMode: networkMode,
+				ExtraHosts: [ 'host.docker.internal:host-gateway' ],
 			},
 		});
 
