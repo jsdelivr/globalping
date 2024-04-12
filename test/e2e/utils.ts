@@ -36,7 +36,9 @@ export const waitProbeToConnect = async () => {
 	for (;;) {
 		try {
 			responses = await Promise.all(_.times(processes * 2, (() => got<any>('http://localhost:80/v1/probes', { responseType: 'json' }))));
-		} catch (err) {
+		} catch (err: any) {
+			console.log(err);
+			console.log(err.message);
 			logger.info((err as RequestError).code);
 			await setTimeout(1000);
 			continue;

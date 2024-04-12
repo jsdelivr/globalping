@@ -63,6 +63,18 @@ class DockerManager {
 		}
 
 		// docker run -e API_HOST=ws://host.docker.internal:80 --name globalping-probe-e2e globalping-probe-e2e
+		console.log({
+			Image: 'globalping-probe-e2e',
+			name: 'globalping-probe-e2e',
+			Env: [
+				`API_HOST=${apiHost}`,
+			],
+			HostConfig: {
+				NetworkMode: networkMode,
+				ExtraHosts: [ 'host.docker.internal:host-gateway' ],
+			},
+		});
+
 		const container = await this.docker.createContainer({
 			Image: 'globalping-probe-e2e',
 			name: 'globalping-probe-e2e',
@@ -122,6 +134,8 @@ class DockerManager {
 	private async isLinuxHost (): Promise<boolean> {
 		const versionInfo = await this.docker.version();
 		const platformName = versionInfo.Platform.Name.toLowerCase();
+		console.log('versionInfo.Platform');
+		console.log(versionInfo.Platform);
 		return platformName.includes('engine');
 	}
 
