@@ -5,7 +5,7 @@ import { waitProbeInCity } from '../utils.js';
 
 const LOCATION_OVERRIDES_TABLE = 'gp_location_overrides';
 
-describe.only('location overrides', () => {
+describe('location overrides', () => {
 	before(async function () {
 		this.timeout(80000);
 
