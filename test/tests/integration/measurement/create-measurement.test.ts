@@ -5,7 +5,7 @@ import nock from 'nock';
 import type { Socket } from 'socket.io-client';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { client } from '../../../../src/lib/sql/client.js';
-import type { AdoptedProbes } from '../../../../src/lib/adopted-probes.js';
+import type { ProbeOverride } from '../../../../src/lib/override/probe-override.js';
 import { waitForProbesUpdate } from '../../../utils/server.js';
 
 describe('Create measurement', () => {
@@ -13,14 +13,14 @@ describe('Create measurement', () => {
 	let deleteFakeProbes: () => Promise<void>;
 	let getTestServer;
 	let requestAgent: Agent;
-	let adoptedProbes: AdoptedProbes;
+	let probeOverride: ProbeOverride;
 	let ADOPTED_PROBES_TABLE: string;
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
 		({ getTestServer, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
-		({ ADOPTED_PROBES_TABLE } = await import('../../../../src/lib/adopted-probes.js'));
-		({ adoptedProbes } = await import('../../../../src/lib/ws/server.js'));
+		({ ADOPTED_PROBES_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
+		({ probeOverride } = await import('../../../../src/lib/ws/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
 	});
@@ -660,13 +660,13 @@ describe('Create measurement', () => {
 					country: 'US',
 					countryOfCustomCity: 'US',
 					city: 'Oklahoma City',
-					latitude: '35.46756',
-					longitude: '-97.51643',
+					latitude: 35.46756,
+					longitude: -97.51643,
 					network: 'InterBS S.R.L. (BAEHOST)',
 					asn: 61004,
 				});
 
-				await adoptedProbes.syncDashboardData();
+				await probeOverride.syncDashboardData();
 				await waitForProbesUpdate();
 			});
 

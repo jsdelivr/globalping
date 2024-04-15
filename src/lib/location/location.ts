@@ -8,6 +8,7 @@ import {
 } from './countries.js';
 import { aliases as networkAliases } from './networks.js';
 import { aliases as continentAliases } from './continents.js';
+import type { ProbeLocation, Tag } from '../../probe/types.js';
 
 const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [ c, r ])));
 
@@ -93,5 +94,28 @@ export const getRegionAliases = (key: string): string[] => {
 	const array = regionAliases.find(n => n.includes(key.toLowerCase()));
 
 	return array ?? [];
+};
+
+export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
+	// Storing index as string[][] so every category will have it's exact position in the index array across all probes
+	const index = [
+		[ location.country ],
+		[ getCountryIso3ByIso2(location.country) ],
+		[ getCountryByIso(location.country) ],
+		getCountryAliases(location.country),
+		[ location.normalizedCity ],
+		location.state ? [ location.state ] : [],
+		location.state ? [ getStateNameByIso(location.state) ] : [],
+		[ location.continent ],
+		getContinentAliases(location.continent),
+		[ location.region ],
+		getRegionAliases(location.region),
+		[ `as${location.asn}` ],
+		tags.filter(tag => tag.type === 'system').map(tag => tag.value),
+		[ location.normalizedNetwork ],
+		getNetworkAliases(location.normalizedNetwork),
+	].map(category => category.map(s => s.toLowerCase().replaceAll('-', ' ')));
+
+	return index;
 };
 

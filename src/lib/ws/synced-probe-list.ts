@@ -6,8 +6,7 @@ import { scopedLogger } from '../logger.js';
 import type { WsServerNamespace } from './server.js';
 import type { Probe, ProbeStats } from '../../probe/types.js';
 import type winston from 'winston';
-import type { AdoptedProbes } from '../adopted-probes.js';
-import { getIndex } from '../../probe/builder.js';
+import type { ProbeOverride } from '../override/probe-override.js';
 import type { RedisClient } from '../redis/shared.js';
 
 type NodeData = {
@@ -46,6 +45,7 @@ export class SyncedProbeList extends EventEmitter {
 
 	private logger: winston.Logger;
 	private rawProbes: Probe[];
+	private probesWithAdminData: Probe[];
 	private probes: Probe[];
 	private oldest: number;
 	private pushTimer: NodeJS.Timeout | undefined;
@@ -55,11 +55,12 @@ export class SyncedProbeList extends EventEmitter {
 	private readonly nodeId: string;
 	private readonly nodeData: TTLCache<string, NodeData>;
 
-	constructor (private readonly redis: RedisClient, private readonly ioNamespace: WsServerNamespace, private readonly adoptedProbes: AdoptedProbes) {
+	constructor (private readonly redis: RedisClient, private readonly ioNamespace: WsServerNamespace, private readonly probeOverride: ProbeOverride) {
 		super();
 		this.nodeId = randomBytes(8).toString('hex');
 		this.logger = scopedLogger('synced-probe-list', this.nodeId);
 		this.rawProbes = [];
+		this.probesWithAdminData = [];
 		this.probes = [];
 		this.oldest = Infinity;
 		this.lastReadEventId = Date.now().toString();
@@ -71,6 +72,18 @@ export class SyncedProbeList extends EventEmitter {
 				this.updateProbes();
 			},
 		});
+	}
+
+	getRawProbes (): Probe[] {
+		return this.rawProbes.slice();
+	}
+
+	getProbesWithAdminData (): Probe[] {
+		return this.probesWithAdminData.slice();
+	}
+
+	getProbes (): Probe[] {
+		return this.probes.slice();
 	}
 
 	async fetchProbes (): Promise<Probe[]> {
@@ -88,14 +101,6 @@ export class SyncedProbeList extends EventEmitter {
 		});
 	}
 
-	getProbes (): Probe[] {
-		return this.probes.slice();
-	}
-
-	getRawProbes (): Probe[] {
-		return this.rawProbes.slice();
-	}
-
 	private updateProbes () {
 		const probes = [];
 		let oldest = Infinity;
@@ -109,7 +114,8 @@ export class SyncedProbeList extends EventEmitter {
 		}
 
 		this.rawProbes = probes;
-		this.probes = addAdoptedProbesData(this.adoptedProbes, probes);
+		this.probesWithAdminData = this.probeOverride.addAdminData(probes);
+		this.probes = this.probeOverride.addAdoptedData(this.probesWithAdminData);
 		this.oldest = oldest;
 
 		this.emit(this.localUpdateEvent);
@@ -393,7 +399,7 @@ export class SyncedProbeList extends EventEmitter {
 				}
 			}
 
-			const newNodeData = {
+			const newNodeData: NodeData = {
 				...nodeData,
 				...changes.revalidateTimestamp ? { revalidateTimestamp: changes.revalidateTimestamp } : {},
 				probesById,
@@ -442,31 +448,3 @@ export class SyncedProbeList extends EventEmitter {
 		clearTimeout(this.pullTimer);
 	}
 }
-
-const addAdoptedProbesData = (adoptedProbes: AdoptedProbes, probes: Probe[]) => {
-	return probes.map((probe) => {
-		const adopted = adoptedProbes.getByIp(probe.ipAddress);
-
-		if (!adopted) {
-			return probe;
-		}
-
-		const isCustomCity = adopted.isCustomCity;
-		const hasUserTags = adopted.tags && adopted.tags.length;
-
-		if (!isCustomCity && !hasUserTags) {
-			return probe;
-		}
-
-		const newLocation = adoptedProbes.getUpdatedLocation(probe);
-
-		const newTags = adoptedProbes.getUpdatedTags(probe);
-
-		return {
-			...probe,
-			location: newLocation,
-			tags: newTags,
-			index: getIndex(newLocation, newTags),
-		};
-	});
-};

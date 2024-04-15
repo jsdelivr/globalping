@@ -35,7 +35,7 @@ export default function wallaby () {
 
 		setup (w) {
 			const path = require('path');
-			w.testFramework.addFile(path.resolve(process.cwd(), 'test/setup.js'));
+			w.testFramework.files.unshift(path.resolve(process.cwd(), 'test/setup.js'));
 		},
 
 		env: {

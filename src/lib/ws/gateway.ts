@@ -6,7 +6,7 @@ import { handleStatusUpdate } from '../../probe/handler/status.js';
 import { handleDnsUpdate } from '../../probe/handler/dns.js';
 import { handleStatsReport } from '../../probe/handler/stats.js';
 import { scopedLogger } from '../logger.js';
-import { adoptedProbes, getWsServer, PROBES_NAMESPACE, ServerSocket } from './server.js';
+import { probeOverride, getWsServer, PROBES_NAMESPACE, ServerSocket } from './server.js';
 import { probeMetadata } from './middleware/probe-metadata.js';
 import { errorHandler } from './helper/error-handler.js';
 import { subscribeWithHandler } from './helper/subscribe-handler.js';
@@ -20,7 +20,7 @@ io
 	.use(probeMetadata)
 	.on('connect', errorHandler(async (socket: ServerSocket) => {
 		const probe = socket.data.probe;
-		const location = adoptedProbes.getUpdatedLocation(probe);
+		const location = probeOverride.getUpdatedLocation(probe);
 
 		socket.emit('api:connect:location', location);
 		logger.info(`ws client ${socket.id} connected from ${location.city}, ${location.country} [${probe.ipAddress} - ${location.network}]`);

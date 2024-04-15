@@ -1,10 +1,11 @@
 import type { Knex } from 'knex';
 import Bluebird from 'bluebird';
 import _ from 'lodash';
-import { scopedLogger } from './logger.js';
-import type { fetchRawProbes as serverFetchRawProbes } from './ws/server.js';
-import type { Probe } from '../probe/types.js';
-import { normalizeFromPublicName } from './geoip/utils.js';
+import { scopedLogger } from '../logger.js';
+import type { fetchProbesWithAdminData as serverFetchProbesWithAdminData } from '../ws/server.js';
+import type { Probe, ProbeLocation } from '../../probe/types.js';
+import { normalizeFromPublicName } from '../geoip/utils.js';
+import { getIndex } from '../location/location.js';
 
 const logger = scopedLogger('adopted-probes');
 
@@ -88,27 +89,27 @@ export class AdoptedProbes {
 
 	constructor (
 		private readonly sql: Knex,
-		private readonly fetchRawProbes: typeof serverFetchRawProbes,
+		private readonly fetchProbesWithAdminData: typeof serverFetchProbesWithAdminData,
 	) {}
 
 	getByIp (ip: string) {
 		return this.adoptedIpToProbe.get(ip);
 	}
 
-	getUpdatedLocation (probe: Probe) {
+	getUpdatedLocation (probe: Probe): ProbeLocation | null {
 		const adoptedProbe = this.getByIp(probe.ipAddress);
 
 		if (!adoptedProbe || !adoptedProbe.isCustomCity || adoptedProbe.countryOfCustomCity !== probe.location.country) {
-			return probe.location;
+			return null;
 		}
 
 		return {
 			...probe.location,
 			city: adoptedProbe.city!,
 			normalizedCity: normalizeFromPublicName(adoptedProbe.city!),
+			state: adoptedProbe.state,
 			latitude: adoptedProbe.latitude!,
 			longitude: adoptedProbe.longitude!,
-			...(adoptedProbe.state && { state: adoptedProbe.state }),
 		};
 	}
 
@@ -125,6 +126,34 @@ export class AdoptedProbes {
 		];
 	}
 
+	getUpdatedProbes (probes: Probe[]) {
+		return probes.map((probe) => {
+			const adopted = this.getByIp(probe.ipAddress);
+
+			if (!adopted) {
+				return probe;
+			}
+
+			const isCustomCity = adopted.isCustomCity;
+			const hasUserTags = adopted.tags && adopted.tags.length;
+
+			if (!isCustomCity && !hasUserTags) {
+				return probe;
+			}
+
+			const newLocation = this.getUpdatedLocation(probe) || probe.location;
+
+			const newTags = this.getUpdatedTags(probe);
+
+			return {
+				...probe,
+				location: newLocation,
+				tags: newTags,
+				index: getIndex(newLocation, newTags),
+			};
+		});
+	}
+
 	scheduleSync () {
 		setTimeout(() => {
 			this.syncDashboardData()
@@ -134,7 +163,7 @@ export class AdoptedProbes {
 	}
 
 	async syncDashboardData () {
-		const allProbes = await this.fetchRawProbes();
+		const allProbes = await this.fetchProbesWithAdminData();
 		this.connectedIpToProbe = new Map(allProbes.map(probe => [ probe.ipAddress, probe ]));
 		this.connectedUuidToIp = new Map(allProbes.map(probe => [ probe.uuid, probe.ipAddress ]));
 

@@ -6,8 +6,10 @@ import type { Probe } from '../../probe/types.js';
 import { getRedisClient } from '../redis/client.js';
 import { SyncedProbeList } from './synced-probe-list.js';
 import { client } from '../sql/client.js';
-import { AdoptedProbes } from '../adopted-probes.js';
+import { ProbeOverride } from '../override/probe-override.js';
 import { ProbeIpLimit } from './helper/probe-ip-limit.js';
+import { AdoptedProbes } from '../override/adopted-probes.js';
+import { AdminData } from '../override/admin-data.js';
 
 export type SocketData = {
 	probe: Probe;
@@ -45,7 +47,7 @@ export const initWsServer = async () => {
 		dynamicPrivateChannels: true,
 	}));
 
-	syncedProbeList = new SyncedProbeList(redis, io.of(PROBES_NAMESPACE), adoptedProbes);
+	syncedProbeList = new SyncedProbeList(redis, io.of(PROBES_NAMESPACE), probeOverride);
 
 	await syncedProbeList.sync();
 	syncedProbeList.scheduleSync();
@@ -75,14 +77,6 @@ export const fetchRawSockets = async () => {
 	return io.of(PROBES_NAMESPACE).fetchSockets();
 };
 
-export const fetchProbes = async ({ allowStale = true } = {}): Promise<Probe[]> => {
-	if (!syncedProbeList) {
-		throw new Error('WS server not initialized yet');
-	}
-
-	return allowStale ? syncedProbeList.getProbes() : syncedProbeList.fetchProbes();
-};
-
 export const fetchRawProbes = async (): Promise<Probe[]> => {
 	if (!syncedProbeList) {
 		throw new Error('WS server not initialized yet');
@@ -91,6 +85,26 @@ export const fetchRawProbes = async (): Promise<Probe[]> => {
 	return syncedProbeList.getRawProbes();
 };
 
+export const fetchProbesWithAdminData = async (): Promise<Probe[]> => {
+	if (!syncedProbeList) {
+		throw new Error('WS server not initialized yet');
+	}
+
+	return syncedProbeList.getProbesWithAdminData();
+};
+
+export const fetchProbes = async ({ allowStale = true } = {}): Promise<Probe[]> => {
+	if (!syncedProbeList) {
+		throw new Error('WS server not initialized yet');
+	}
+
+	return allowStale ? syncedProbeList.getProbes() : syncedProbeList.fetchProbes();
+};
+
 export const adoptedProbes = new AdoptedProbes(client, fetchRawProbes);
+
+export const adminData = new AdminData(client);
+
+export const probeOverride = new ProbeOverride(adoptedProbes, adminData);
 
 export const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets);

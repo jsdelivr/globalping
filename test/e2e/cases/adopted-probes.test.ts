@@ -22,8 +22,8 @@ describe('adopted probe', () => {
 			country: 'FR',
 			countryOfCustomCity: 'FR',
 			city: 'Marseille',
-			latitude: '43.29695',
-			longitude: '5.38107',
+			latitude: 43.29695,
+			longitude: 5.38107,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			asn: 61004,
 		});

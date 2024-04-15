@@ -54,3 +54,17 @@ CREATE TABLE IF NOT EXISTS gp_credits (
 	CONSTRAINT gp_credits_user_id_unique UNIQUE (user_id),
 	CONSTRAINT gp_credits_amount_positive CHECK (`amount` >= 0)
 );
+
+CREATE TABLE IF NOT EXISTS gp_location_overrides (
+  id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_created CHAR(36),
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  user_updated CHAR(36),
+  date_updated TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  ip_range VARCHAR(255) NOT NULL,
+  city VARCHAR(255) NOT NULL,
+  state VARCHAR(255),
+  country VARCHAR(255),
+	latitude FLOAT(10, 5),
+	longitude FLOAT(10, 5)
+);
