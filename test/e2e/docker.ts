@@ -8,6 +8,8 @@ const logger = scopedLogger('docker-manager');
 class DockerManager {
 	docker: Docker;
 
+	private lastLogTimestamp: number = 0;
+
 	constructor () {
 		this.docker = new Docker();
 	}
@@ -96,6 +98,7 @@ class DockerManager {
 		}
 
 		await container.start({});
+		await this.attachLogs(container);
 	}
 
 	private async attachLogs (container: Docker.Container) {
@@ -103,7 +106,10 @@ class DockerManager {
 			follow: true,
 			stdout: true,
 			stderr: true,
+			since: this.lastLogTimestamp,
 		});
+		stream.on('close', () => this.lastLogTimestamp = Math.floor(Date.now() / 1000));
+
 		container.modem.demuxStream(stream, process.stdout, process.stderr);
 	}
 
