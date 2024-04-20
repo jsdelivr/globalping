@@ -18,7 +18,7 @@ jobs:
       redis:
         image: redis/redis-stack-server:latest
         ports:
-          - 6379:6379
+          - 16379:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -28,7 +28,7 @@ jobs:
       mariadb:
         image: mariadb:10.11.5
         ports:
-          - 3306:3306
+          - 13306:3306
         env:
           MARIADB_DATABASE: directus-test
           MARIADB_USER: directus
