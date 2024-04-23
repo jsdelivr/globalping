@@ -18,6 +18,7 @@ describe('adopted probe', () => {
 			tags: '[{"prefix":"jimaek","value":"dashboardtag1"}]',
 			status: 'ready',
 			version: '0.28.0',
+			nodeVersion: 'v18.14.2',
 			hardwareDevice: null,
 			country: 'FR',
 			countryOfCustomCity: 'FR',

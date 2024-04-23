@@ -16,6 +16,7 @@ describe('AdoptedProbes', () => {
 		isCustomCity: 0,
 		status: 'ready',
 		version: '0.26.0',
+		nodeVersion: 'v18.17.0',
 		hardwareDevice: null,
 		country: 'IE',
 		state: null,
@@ -205,7 +206,7 @@ describe('AdoptedProbes', () => {
 				uuid: '1-1-1-1-1',
 				status: 'initializing',
 				version: '0.27.0',
-				nodeVersion: 'v18.17.0',
+				nodeVersion: 'v18.17.1',
 				isHardware: true,
 				hardwareDevice: 'v1',
 				location: {
@@ -231,6 +232,7 @@ describe('AdoptedProbes', () => {
 		expect(updateStub.args[0]).to.deep.equal([{
 			status: 'initializing',
 			version: '0.27.0',
+			nodeVersion: 'v18.17.1',
 			hardwareDevice: 'v1',
 			asn: 20473,
 			network: 'The Constant Company, LLC',

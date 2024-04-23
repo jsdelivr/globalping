@@ -656,6 +656,7 @@ describe('Create measurement', () => {
 					tags: '[{"prefix":"jsdelivr","value":"Dashboard-Tag"}]',
 					status: 'ready',
 					version: '0.26.0',
+					nodeVersion: 'v18.14.2',
 					hardwareDevice: null,
 					country: 'US',
 					countryOfCustomCity: 'US',

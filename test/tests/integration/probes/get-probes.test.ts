@@ -280,6 +280,7 @@ describe('Get Probes', () => {
 					tags: '[{"prefix":"jimaek","value":"dashboardtag1"}]',
 					status: 'ready',
 					version: '0.26.0',
+					nodeVersion: 'v18.14.2',
 					hardwareDevice: null,
 					country: 'AR',
 					countryOfCustomCity: 'AR',
