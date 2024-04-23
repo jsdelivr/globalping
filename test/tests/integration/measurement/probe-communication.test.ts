@@ -297,6 +297,9 @@ describe('Create measurement request', () => {
 
 	it('should handle stats event from probe', async () => {
 		probe.emit('probe:stats:report', {
+			jobs: {
+				count: 0,
+			},
 			cpu: {
 				count: 4,
 				load: [
@@ -344,6 +347,9 @@ describe('Create measurement request', () => {
 					resolvers: [],
 					host: '',
 					stats: {
+						jobs: {
+							count: 0,
+						},
 						cpu: {
 							count: 4,
 							load: [
