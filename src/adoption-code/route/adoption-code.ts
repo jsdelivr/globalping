@@ -18,6 +18,7 @@ const handle = async (ctx: Context): Promise<void> => {
 	ctx.body = {
 		uuid: probe.uuid,
 		version: probe.version,
+		nodeVersion: probe.nodeVersion,
 		hardwareDevice: probe.hardwareDevice,
 		status: probe.status,
 		city: probe.location.city,
