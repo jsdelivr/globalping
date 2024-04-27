@@ -510,11 +510,11 @@ components:
                     "CN": "sni.cloudflaressl.com",
                     "alt": "DNS:cdn.jsdelivr.net, DNS:sni.cloudflaressl.com"
                   },
-                  "publicKeyType": "ECC",
-                  "publicKey": "04:32:0D:64:C9:2D:88:E7:EC:D9:74:35:89:31:95:FD:68:6F:73:A0:8D:8C:9B:55:42:86:DF:5F:E9:14:BF:99:44:B6:A7:74:69:59:50:2D:F4:E8:F9:24:9A:61:9D:5C:9E:BC:B1:C2:9A:74:E4:29:03:26:4E:A4:15:6B:E2:26:92",
-                  "fingerprint": "DD:2E:D1:50:F1:3B:79:16:36:22:E7:0A:FD:E6:E7:35:C7:1A:42:6E",
+                  "keyType": "EC",
+                  "keyBits": 256,
+                  "serialNumber": "07:2D:BB:27:D4:67:BF:66:ED:70:DD:7B:A1:32:C6:22",
                   "fingerprint256": "52:EC:FB:20:C4:64:3A:25:2F:F7:C5:BE:F0:4A:32:86:18:03:71:D8:F6:62:57:B6:B3:1B:68:14:82:B1:35:D5",
-                  "fingerprint512": "A3:57:8A:99:ED:F4:22:7B:B1:2A:21:EA:62:D4:80:E4:69:56:74:B7:86:E8:86:EF:20:48:84:EF:60:40:84:81:49:3F:6E:FA:FD:66:98:73:FD:3F:E4:74:89:91:27:61:38:EF:C5:25:36:28:F4:1E:D7:59:35:52:75:4B:09:DD"
+                  "publicKey": "04:32:0D:64:C9:2D:88:E7:EC:D9:74:35:89:31:95:FD:68:6F:73:A0:8D:8C:9B:55:42:86:DF:5F:E9:14:BF:99:44:B6:A7:74:69:59:50:2D:F4:E8:F9:24:9A:61:9D:5C:9E:BC:B1:C2:9A:74:E4:29:03:26:4E:A4:15:6B:E2:26:92",
                 }
               }
             }
