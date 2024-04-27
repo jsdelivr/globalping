@@ -1232,6 +1232,11 @@ components:
         - expiresAt
         - subject
         - issuer
+        - keyType
+        - keyBits
+        - serialNumber
+        - fingerprint256
+        - publicKey
       properties:
         authorized:
           type: boolean
@@ -1253,6 +1258,31 @@ components:
           $ref: 'schemas.yaml#/components/schemas/TlsCertificateSubject'
         issuer:
           $ref: 'schemas.yaml#/components/schemas/TlsCertificateIssuer'
+        keyType:
+          enum:
+            - RSA
+            - EC
+            - 'null'
+          description: The type of the used key, or `null` for unrecognized types.
+        keyBits:
+          type:
+            - number
+            - 'null'
+          description: The size of the used key, or `null` for unrecognized types.
+        serialNumber:
+          type: string
+          description: |
+            The certificate serial number as a : separated HEX string.
+        fingerprint256:
+          type: string
+          description: |
+            The SHA-256 digest of the DER-encoded certificate as a : separated HEX string.
+        publicKey:
+          type:
+            - string
+            - 'null'
+          description: |
+            The public key as a : separated HEX string, or `null` for unrecognized types.
     TlsCertificateIssuer:
       type: object
       description: Information about the certificate issuer.
