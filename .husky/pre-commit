@@ -1,5 +1,4 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
 # Add cygpath to PATH if missing to make this work with GitHub Desktop app
 # https://github.com/desktop/desktop/issues/12562
