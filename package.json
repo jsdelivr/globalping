@@ -38,7 +38,7 @@
 		"mysql": "^2.18.1",
 		"newrelic": "^11.15.0",
 		"physical-cpu-count": "^2.0.0",
-		"rate-limiter-flexible": "^2.4.2",
+		"rate-limiter-flexible": "^5.0.3",
 		"redis": "^4.6.13",
 		"request-ip": "^3.3.0",
 		"semver": "^7.6.0",
