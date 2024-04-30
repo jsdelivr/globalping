@@ -43,8 +43,7 @@ export const initWsServer = async () => {
 	});
 
 	io.adapter(createShardedAdapter(pubClient, subClient, {
-		subscriptionMode: 'dynamic',
-		dynamicPrivateChannels: true,
+		subscriptionMode: 'dynamic-private',
 	}));
 
 	syncedProbeList = new SyncedProbeList(redis, io.of(PROBES_NAMESPACE), probeOverride);

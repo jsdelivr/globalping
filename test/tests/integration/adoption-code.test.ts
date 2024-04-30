@@ -1,4 +1,5 @@
 import type { Server } from 'node:http';
+import { setTimeout } from 'node:timers/promises';
 import nock from 'nock';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
@@ -55,6 +56,7 @@ describe('Adoption code', () => {
 				});
 			});
 
+		await setTimeout(20);
 		expect(adoptionCodeStub.callCount).to.equal(1);
 		expect(adoptionCodeStub.args[0]).to.deep.equal([{ code: '123456' }]);
 	});
@@ -69,6 +71,7 @@ describe('Adoption code', () => {
 				expect(response.body.error.message).to.equal('Forbidden');
 			});
 
+		await setTimeout(20);
 		expect(adoptionCodeStub.callCount).to.equal(0);
 	});
 
