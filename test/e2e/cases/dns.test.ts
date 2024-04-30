@@ -12,7 +12,7 @@ describe('dns mesurement', () => {
 				target: 'www.jsdelivr.com',
 				measurementOptions: { resolver },
 			},
-		}).json();
+		}).json<any>();
 
 		const response = await waitMesurementFinish(id);
 
@@ -32,7 +32,7 @@ describe('dns mesurement', () => {
 					trace: true,
 				},
 			},
-		}).json();
+		}).json<any>();
 
 		const response = await waitMesurementFinish(id);
 
@@ -82,7 +82,7 @@ describe('dns mesurement', () => {
 					},
 				},
 			},
-		}).json();
+		}).json<any>();
 
 		const response = await waitMesurementFinish(id);
 
@@ -103,7 +103,7 @@ describe('dns mesurement', () => {
 					},
 				},
 			},
-		}).json();
+		}).json<any>();
 
 		const response = await waitMesurementFinish(id);
 

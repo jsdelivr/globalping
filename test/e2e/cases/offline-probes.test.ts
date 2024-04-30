@@ -19,7 +19,7 @@ describe('api', () => {
 		const { id: locationId } = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
-		} }).json();
+		} }).json<any>();
 
 		await docker.stopProbeContainer();
 		await waitProbeToDisconnect();
@@ -28,7 +28,7 @@ describe('api', () => {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: locationId,
-		} }).json();
+		} }).json<any>();
 
 		const response = await waitMesurementFinish(id);
 
@@ -41,7 +41,7 @@ describe('api', () => {
 		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
-		} }).json();
+		} }).json<any>();
 
 		await docker.stopProbeContainer();
 

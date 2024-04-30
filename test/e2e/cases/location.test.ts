@@ -63,7 +63,7 @@ describe('locations filter', () => {
 		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
-		} }).json();
+		} }).json<any>();
 
 		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',

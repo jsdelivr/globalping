@@ -52,7 +52,8 @@
 		"@martin-kolarik/eslint-config": "^7.3.2",
 		"@redocly/cli": "^1.12.0",
 		"@stoplight/spectral-cli": "^6.11.1",
-		"@tsconfig/node18-strictest-esm": "^1.0.1",
+		"@tsconfig/node18": "^18.2.4",
+		"@tsconfig/strictest": "^2.0.5",
 		"@types/adm-zip": "^0.5.5",
 		"@types/bluebird": "^3.5.42",
 		"@types/chai": "^4.3.14",
@@ -104,9 +105,9 @@
 		"start-server-and-test": "^2.0.3",
 		"supertest": "^7.0.0",
 		"testdouble": "^3.20.2",
-		"ts-node": "^10.9.2",
+		"ts-node": "github:TypeStrong/ts-node",
 		"tsx": "^4.7.3",
-		"typescript": "~4.7.4"
+		"typescript": "^5.4.5"
 	},
 	"optionalDependencies": {
 		"bufferutil": "^4.0.8",
