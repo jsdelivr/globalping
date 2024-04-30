@@ -3,12 +3,12 @@
 	"compilerOptions": {
 		"outDir": "./dist",
 		"lib": [
-			"esnext"
+			"ES2023"
 		],
-		"module": "esnext",
-		"target": "esnext",
+		"module": "NodeNext",
+		"target": "ES2022",
+		"moduleResolution": "NodeNext",
 		"resolveJsonModule": true,
-		"moduleResolution": "node",
 		"sourceMap": true,
 		"paths": {
 			"chai": [

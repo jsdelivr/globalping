@@ -1,7 +1,5 @@
 import { Namespace, type RemoteSocket, Server, Socket } from 'socket.io';
 import { createShardedAdapter } from '@socket.io/redis-adapter';
-// eslint-disable-next-line n/no-missing-import
-import type { DefaultEventsMap } from 'socket.io/dist/typed-events.js';
 import type { Probe } from '../../probe/types.js';
 import { getRedisClient } from '../redis/client.js';
 import { SyncedProbeList } from './synced-probe-list.js';
@@ -10,6 +8,12 @@ import { ProbeOverride } from '../override/probe-override.js';
 import { ProbeIpLimit } from './helper/probe-ip-limit.js';
 import { AdoptedProbes } from '../override/adopted-probes.js';
 import { AdminData } from '../override/admin-data.js';
+
+export interface DefaultEventsMap {
+	// TODO: maybe create type definitions for the events?
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	[event: string]: (...args: any[]) => void;
+}
 
 export type SocketData = {
 	probe: Probe;

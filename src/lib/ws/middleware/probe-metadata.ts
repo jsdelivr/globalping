@@ -1,6 +1,3 @@
-// eslint-disable-next-line n/no-missing-import
-import type { ExtendedError } from 'socket.io/dist/namespace.js';
-
 import type { ServerSocket } from '../server.js';
 import { WsError } from '../ws-error.js';
 import { buildProbe } from '../../../probe/builder.js';
@@ -11,7 +8,7 @@ import getProbeIp from '../../get-probe-ip.js';
 
 const logger = scopedLogger('probe-metadata');
 
-export const probeMetadata = errorHandler(async (socket: ServerSocket, next: (error?: ExtendedError) => void) => {
+export const probeMetadata = errorHandler(async (socket: ServerSocket, next: (error?: Error) => void) => {
 	const clientIp = getProbeIp(socket);
 
 	try {
