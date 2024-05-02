@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import request, { type Agent } from 'supertest';
 import * as td from 'testdouble';
 import nock from 'nock';
@@ -94,6 +95,7 @@ describe('Create measurement request', () => {
 			expect(response).to.matchApiSchema();
 		});
 
+		await setTimeout(20);
 		expect(requestHandlerStub.callCount).to.equal(1);
 
 		expect(requestHandlerStub.firstCall.args[0]).to.deep.equal({
@@ -243,8 +245,7 @@ describe('Create measurement request', () => {
 			},
 		});
 
-		// eslint-disable-next-line no-promise-executor-return
-		await new Promise(resolve => setTimeout(resolve, 100)); // We need to wait until all redis writes finish
+		await setTimeout(100); // We need to wait until all redis writes finish
 
 		await requestAgent.get(`/v1/measurements/measurementid`).send()
 			.expect(200).expect((response) => {

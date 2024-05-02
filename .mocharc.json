@@ -11,8 +11,7 @@
 	],
 	"node-option": [
 		"experimental-specifier-resolution=node",
-		"loader=ts-node/esm",
-		"loader=testdouble"
+		"loader=ts-node/esm"
 	],
 	"globals": [
 		"__extends",
