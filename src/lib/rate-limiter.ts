@@ -1,12 +1,12 @@
 import config from 'config';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 import requestIp from 'request-ip';
-import { createPersistentRedisClient } from './redis/persistent-client.js';
+import { getPersistentRedisClient } from './redis/persistent-client.js';
 import createHttpError from 'http-errors';
 import type { ExtendedContext } from '../types.js';
 import { credits } from './credits.js';
 
-const redisClient = createPersistentRedisClient();
+const redisClient = getPersistentRedisClient();
 
 export const anonymousRateLimiter = new RateLimiterRedis({
 	storeClient: redisClient,
