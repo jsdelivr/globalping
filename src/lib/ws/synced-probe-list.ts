@@ -184,7 +184,7 @@ export class SyncedProbeList extends EventEmitter {
 	}
 
 	private serializeProbeStats (stats: ProbeStats): string {
-		const loadStats = stats.cpu.load.flatMap(load => [ load.idle, load.usage ]);
+		const loadStats = stats.cpu.load.map(load => load.usage);
 		return [ stats.jobs.count ].concat(loadStats).join();
 	}
 
@@ -196,10 +196,9 @@ export class SyncedProbeList extends EventEmitter {
 				count: parts[0] || 0,
 			},
 			cpu: {
-				count: Math.floor(parts.length / 2),
-				load: parts.slice(1).reduce((acc, v, i, a) => {
-					return acc.concat([{ idle: v, usage: a[i + 1] || 0 }]);
-				}, [] as ProbeStats['cpu']['load']),
+				load: parts.slice(1).map((usage) => {
+					return { usage };
+				}),
 			},
 		};
 	}
