@@ -461,7 +461,7 @@ describe('command schema', async () => {
 	});
 
 	describe('target validator', () => {
-		it('should fail (ip type) (private ip)', () => {
+		it('should fail (ip type) (private ipv4)', () => {
 			const input = '192.168.0.101';
 
 			let result: string | Error = '';
@@ -477,8 +477,40 @@ describe('command schema', async () => {
 			expect(result).to.be.instanceof(Error);
 		});
 
-		it('should fail (any type) (private ip)', () => {
+		it('should fail (ip type) (private ipv6)', () => {
+			const input = '64:ff9b:1::1a2b:3c4d';
+
+			let result: string | Error = '';
+
+			try {
+				result = joiValidateTarget('ip')(input);
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					result = error;
+				}
+			}
+
+			expect(result).to.be.instanceof(Error);
+		});
+
+		it('should fail (any type) (private ipv4)', () => {
 			const input = '192.168.0.101';
+
+			let result: string | Error = '';
+
+			try {
+				result = joiValidateTarget('any')(input);
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					result = error;
+				}
+			}
+
+			expect(result).to.be.instanceof(Error);
+		});
+
+		it('should fail (any type) (private ipv6)', () => {
+			const input = 'fe80::ffff:ffff:ffff:ffff';
 
 			let result: string | Error = '';
 
@@ -580,7 +612,7 @@ describe('command schema', async () => {
 	});
 
 	describe('ping', () => {
-		it('should fail (private ip)', () => {
+		it('should fail (private ipv4)', () => {
 			const input = {
 				type: 'ping',
 				target: '192.168.0.101',
@@ -592,16 +624,16 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Private hostnames are not allowed.');
 		});
 
-		it('should fail (ipv6)', () => {
+		it('should fail (private ipv6)', () => {
 			const input = {
 				type: 'ping',
-				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+				target: 'fe80::ffff:ffff:ffff:ffff',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
+			expect(valid.error!.message).to.equal('Private hostnames are not allowed.');
 		});
 
 		it('should fail (missing values)', () => {
@@ -732,6 +764,10 @@ describe('command schema', async () => {
 					packets: 3,
 				},
 				limit: 1,
+				measurementOptions: {
+					packets: 3,
+					ipVersion: 6,
+				},
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
@@ -953,14 +989,13 @@ describe('command schema', async () => {
 				type: 'dns',
 				target: 'abc.com',
 				measurementOptions: {
-					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+					resolver: '2001:41f0:4060::',
 				},
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
 
-			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"measurementOptions.resolver" does not match any of the allowed types');
+			expect(valid.error).to.not.exist;
 		});
 
 		it('should fail (blacklisted domain resolver)', () => {
