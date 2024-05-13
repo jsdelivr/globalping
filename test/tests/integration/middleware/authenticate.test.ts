@@ -17,6 +17,7 @@ describe('authenticate', () => {
 		nockGeoIpProviders();
 		const probe = await addFakeProbe();
 		probe.emit('probe:status:update', 'ready');
+		probe.emit('probe:isIPv4Supported:update', true);
 		await waitForProbesUpdate();
 	});
 

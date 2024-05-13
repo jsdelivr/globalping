@@ -10,6 +10,7 @@ import { probeOverride, getWsServer, PROBES_NAMESPACE, ServerSocket } from './se
 import { probeMetadata } from './middleware/probe-metadata.js';
 import { errorHandler } from './helper/error-handler.js';
 import { subscribeWithHandler } from './helper/subscribe-handler.js';
+import { handleIsIPv4SupportedUpdate, handleIsIPv6SupportedUpdate } from '../../probe/handler/ip-version.js';
 
 const io = getWsServer();
 const logger = scopedLogger('gateway');
@@ -27,6 +28,8 @@ io
 
 		// Handlers
 		socket.on('probe:status:update', handleStatusUpdate(probe));
+		socket.on('probe:isIPv6Supported:update', handleIsIPv6SupportedUpdate(probe));
+		socket.on('probe:isIPv4Supported:update', handleIsIPv4SupportedUpdate(probe));
 		socket.on('probe:dns:update', handleDnsUpdate(probe));
 		socket.on('probe:stats:report', handleStatsReport(probe));
 		subscribeWithHandler(socket, 'probe:measurement:ack', handleMeasurementAck(probe));

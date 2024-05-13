@@ -62,11 +62,13 @@ describe('Create measurement', () => {
 			nockGeoIpProviders();
 			probe = await addFakeProbe();
 			probe.emit('probe:status:update', 'ready');
+			probe.emit('probe:isIPv4Supported:update', true);
 			await waitForProbesUpdate();
 		});
 
 		afterEach(async () => {
 			probe.emit('probe:status:update', 'ready');
+			probe.emit('probe:isIPv4Supported:update', true);
 			await waitForProbesUpdate();
 		});
 
@@ -595,6 +597,7 @@ describe('Create measurement', () => {
 		describe('offline probes', () => {
 			after(async () => {
 				probe.emit('probe:status:update', 'ready');
+				probe.emit('probe:isIPv4Supported:update', true);
 				await waitForProbesUpdate();
 			});
 
@@ -655,6 +658,8 @@ describe('Create measurement', () => {
 					isCustomCity: 1,
 					tags: '[{"prefix":"jsdelivr","value":"Dashboard-Tag"}]',
 					status: 'ready',
+					isIPv4Supported: true,
+					isIPv6Supported: true,
 					version: '0.26.0',
 					nodeVersion: 'v18.14.2',
 					hardwareDevice: null,

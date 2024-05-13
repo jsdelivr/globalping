@@ -84,6 +84,8 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 			jobs: { count: 0 },
 		},
 		status: 'initializing',
+		isIPv4Supported: false,
+		isIPv6Supported: false,
 	};
 };
 

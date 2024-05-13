@@ -140,6 +140,8 @@ export class ProbeRouter {
 
 	private testToOfflineProbe = (test: MeasurementResult, ip: string): OfflineProbe => ({
 		status: 'offline',
+		isIPv4Supported: false,
+		isIPv6Supported: false,
 		client: null,
 		version: null,
 		nodeVersion: null,

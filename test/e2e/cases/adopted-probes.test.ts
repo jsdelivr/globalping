@@ -17,6 +17,8 @@ describe('adopted probe', () => {
 			isCustomCity: 1,
 			tags: '[{"prefix":"jimaek","value":"dashboardtag1"}]',
 			status: 'ready',
+			isIPv4Supported: true,
+			isIPv6Supported: true,
 			version: '0.28.0',
 			nodeVersion: 'v18.14.2',
 			hardwareDevice: null,

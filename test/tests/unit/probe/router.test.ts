@@ -43,6 +43,8 @@ describe('probe router', () => {
 		id: string,
 		location: Partial<ProbeLocation>,
 		status: Probe['status'] = 'ready',
+		isIPv4Supported: Probe['isIPv4Supported'] = true,
+		isIPv6Supported: Probe['isIPv6Supported'] = false,
 	): Promise<Probe> => {
 		const socket: DeepPartial<RemoteProbeSocket> = {
 			id,
@@ -58,6 +60,8 @@ describe('probe router', () => {
 		socket.data!.probe = {
 			...await buildProbeInternal(socket as RemoteProbeSocket),
 			status,
+			isIPv4Supported,
+			isIPv6Supported,
 		};
 
 		return socket.data!.probe as unknown as Probe;

@@ -31,7 +31,9 @@ describe('rate limiter', () => {
 		const probe2 = await addFakeProbe();
 
 		probe1.emit('probe:status:update', 'ready');
+		probe1.emit('probe:isIPv4Supported:update', true);
 		probe2.emit('probe:status:update', 'ready');
+		probe2.emit('probe:isIPv4Supported:update', true);
 
 		await waitForProbesUpdate();
 

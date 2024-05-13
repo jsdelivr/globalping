@@ -14,6 +14,8 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 	ctx.body = sockets.map((socket: Probe) => ({
 		status: (isAdmin || isSystem) ? socket.status : undefined,
 		version: socket.version,
+		isIPv4Supported: (isAdmin || isSystem) ? socket.isIPv4Supported : undefined,
+		isIPv6Supported: (isAdmin || isSystem) ? socket.isIPv6Supported : undefined,
 		nodeVersion: isAdmin ? socket.nodeVersion : undefined,
 		uuid: isAdmin ? socket.uuid : undefined,
 		ipAddress: (isAdmin || isSystem) ? socket.ipAddress : undefined,

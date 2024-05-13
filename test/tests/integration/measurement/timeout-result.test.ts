@@ -42,6 +42,7 @@ describe('Timeout results', () => {
 
 	it('should be included in measurement if there was no ack or results from the probe', async () => {
 		probe.emit('probe:status:update', 'ready');
+		probe.emit('probe:isIPv4Supported:update', true);
 		await waitForProbesUpdate();
 
 		await requestAgent.post('/v1/measurements').send({
