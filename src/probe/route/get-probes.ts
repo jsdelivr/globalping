@@ -36,6 +36,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		resolvers: socket.resolvers,
 		host: isAdmin ? socket.host : undefined,
 		stats: isAdmin ? socket.stats : undefined,
+		hostInfo: isAdmin ? socket.hostInfo : undefined,
 	}));
 };
 

@@ -14,15 +14,19 @@ export type ProbeLocation = {
 
 export type ProbeStats = {
 	cpu: {
-		count: number;
 		load: Array<{
-			idle: number;
 			usage: number;
 		}>;
 	};
 	jobs: {
 		count: number;
 	};
+};
+
+export type HostInfo = {
+	totalMemory: number;
+	totalDiskSize: number;
+	availableDiskSpace: number;
 };
 
 export type Tag = {
@@ -47,6 +51,7 @@ export type Probe = {
 	resolvers: string[];
 	tags: Tag[];
 	stats: ProbeStats;
+	hostInfo: HostInfo;
 };
 
 type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;

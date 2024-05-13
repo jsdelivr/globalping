@@ -3,7 +3,7 @@ import Bluebird from 'bluebird';
 import type { Knex } from 'knex';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import chai from 'chai';
+import * as chai from 'chai';
 import { createClient } from 'redis';
 
 import { waitProbeToConnect } from './utils.js';

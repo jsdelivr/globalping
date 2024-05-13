@@ -60,10 +60,14 @@ describe('AdoptedProbes', () => {
 		resolvers: [],
 		stats: {
 			cpu: {
-				count: 0,
 				load: [],
 			},
 			jobs: { count: 0 },
+		},
+		hostInfo: {
+			totalMemory: 0,
+			totalDiskSize: 0,
+			availableDiskSpace: 0,
 		},
 	};
 

@@ -23,6 +23,10 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	const nodeVersion = String(socket.handshake.query['nodeVersion']);
 
+	const totalMemory = Number(socket.handshake.query['totalMemory']);
+	const totalDiskSize = Number(socket.handshake.query['totalDiskSize']);
+	const availableDiskSpace = Number(socket.handshake.query['availableDiskSpace']);
+
 	const uuid = String(socket.handshake.query['uuid']);
 
 	const isHardware = socket.handshake.query['isHardware'] === 'true' || socket.handshake.query['isHardware'] === '1';
@@ -78,10 +82,14 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		tags,
 		stats: {
 			cpu: {
-				count: 0,
 				load: [],
 			},
 			jobs: { count: 0 },
+		},
+		hostInfo: {
+			totalMemory,
+			totalDiskSize,
+			availableDiskSpace,
 		},
 		status: 'initializing',
 		isIPv4Supported: false,

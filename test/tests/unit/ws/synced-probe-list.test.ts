@@ -95,9 +95,9 @@ describe('SyncedProbeList', () => {
 
 	it('emits stats in the message on change', async () => {
 		const sockets = [
-			{ data: { probe: { client: 'A', location: {}, stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } } } },
-			{ data: { probe: { client: 'B', location: {}, stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } } } },
-			{ data: { probe: { client: 'C', location: {}, stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } } } },
+			{ data: { probe: { client: 'A', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } } } },
+			{ data: { probe: { client: 'B', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } } } },
+			{ data: { probe: { client: 'C', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } } } },
 		];
 
 		localFetchSocketsStub.resolves(sockets);
@@ -119,8 +119,8 @@ describe('SyncedProbeList', () => {
 
 		// @ts-expect-error the arg must be an object
 		expect(JSON.parse(redisXAdd.secondCall.args[2].s)).to.deep.equal({
-			B: '1,0,0',
-			C: '1,0,0',
+			B: '1,0',
+			C: '1,0',
 		});
 
 		expect(redisXAdd.secondCall.args[2]).to.not.have.property('r');
@@ -151,7 +151,7 @@ describe('SyncedProbeList', () => {
 
 		// @ts-expect-error the arg must be an object
 		expect(JSON.parse(redisXAdd.args[3][2].s)).to.deep.equal({
-			C: '2,0,0',
+			C: '2,0',
 		});
 
 		expect(redisXAdd.args[3]![2]).to.deep.include({ '+': 'D', '-': 'B' });
@@ -189,9 +189,9 @@ describe('SyncedProbeList', () => {
 
 	it('reads remote stats updates', async () => {
 		const probes = {
-			A: { client: 'A', location: {}, stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } },
-			B: { client: 'B', location: {}, stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } },
-			C: { client: 'C', location: {}, stats: { cpu: { count: 1, load: [{ idle: 0, usage: 0 }] }, jobs: { count: 0 } } },
+			A: { client: 'A', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } },
+			B: { client: 'B', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } },
+			C: { client: 'C', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } },
 		} as unknown as Record<string, Probe>;
 
 		redisXRange.resolves([

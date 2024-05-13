@@ -13,4 +13,4 @@ interface OasOptions {
 declare function chaiOas (options: OasOptions): typeof chaiOasPlugin;
 declare function chaiOasPlugin (chai: any, utils: any): void;
 
-export = chaiOas;
+export default chaiOas;

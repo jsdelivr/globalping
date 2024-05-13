@@ -2,7 +2,7 @@ import './types.js';
 
 import config from 'config';
 import Bluebird from 'bluebird';
-import chai from 'chai';
+import * as chai from 'chai';
 import nock from 'nock';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

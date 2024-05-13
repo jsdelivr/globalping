@@ -204,7 +204,12 @@ describe('Get Probes', () => {
 							longitude: -58.3772,
 							network: 'InterBS S.R.L. (BAEHOST)',
 						},
-						stats: { cpu: { count: 0, load: [] }, jobs: { count: 0 } },
+						stats: { cpu: { load: [] }, jobs: { count: 0 } },
+						hostInfo: {
+							totalMemory: 1e9,
+							totalDiskSize: 2e3,
+							availableDiskSpace: 1e3,
+						},
 						status: 'ready',
 						tags: [],
 						resolvers: [],
