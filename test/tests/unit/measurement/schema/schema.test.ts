@@ -704,10 +704,22 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (blacklisted target ip)', () => {
+		it('should fail (blacklisted target ipv4)', () => {
 			const input = {
 				type: 'ping',
 				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted target ipv6)', () => {
+			const input = {
+				type: 'ping',
+				target: '2803:5380:ffff::386',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
@@ -789,18 +801,6 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('"target" is required');
 		});
 
-		it('should fail (ipv6)', () => {
-			const input = {
-				type: 'traceroute',
-				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
-			};
-
-			const valid = globalSchema.validate(input, { convert: true });
-
-			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
-		});
-
 		it('should fail (blacklisted target domain)', () => {
 			const input = {
 				type: 'traceroute',
@@ -813,10 +813,22 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (blacklisted target ip)', () => {
+		it('should fail (blacklisted target ipv4)', () => {
 			const input = {
 				type: 'traceroute',
 				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted target ipv6)', () => {
+			const input = {
+				type: 'traceroute',
+				target: '2803:5380:ffff::386',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
@@ -1013,12 +1025,27 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (blacklisted ip resolver)', () => {
+		it('should fail (blacklisted ipv4 resolver)', () => {
 			const input = {
 				type: 'dns',
 				target: 'abc.com',
 				measurementOptions: {
 					resolver: '100.0.41.228',
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted ipv6 resolver)', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					resolver: '2803:5380:ffff::386',
 				},
 			};
 
@@ -1217,7 +1244,7 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('"target" must be a valid ip address of one of the following versions [ipv4] with a forbidden CIDR');
 		});
 
-		it('should fail (uses blacklisted ip for target)', () => {
+		it('should fail (uses blacklisted ipv4 for target)', () => {
 			const input = {
 				type: 'dns',
 				target: '100.0.41.228',
@@ -1235,6 +1262,23 @@ describe('command schema', async () => {
 		});
 
 		it('should pass (uses ip for target)', () => {
+		it('should fail (uses blacklisted ipv6 for target)', () => {
+			const input = {
+				type: 'dns',
+				target: '2803:5380:ffff::386',
+				measurementOptions: {
+					query: {
+						type: 'PTR',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
 			const input = {
 				type: 'dns',
 				target: '1.1.1.1',
@@ -1307,10 +1351,22 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (blacklisted target ip)', () => {
+		it('should fail (blacklisted target ipv4)', () => {
 			const input = {
 				type: 'mtr',
 				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted target ipv6)', () => {
+			const input = {
+				type: 'mtr',
+				target: '2803:5380:ffff::386',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
@@ -1470,11 +1526,12 @@ describe('command schema', async () => {
 		});
 
 		it('should fail (ipv6 resolver)', () => {
+		it('should fail (blacklisted ipv4 resolver)', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
 				measurementOptions: {
-					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+					resolver: '100.0.41.228',
 					protocol: 'https',
 					port: 443,
 					request: {
@@ -1489,15 +1546,15 @@ describe('command schema', async () => {
 
 			const valid = globalSchema.validate(input, { convert: true });
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"measurementOptions.resolver" must be a valid ip address of one of the following versions [ipv4] with a forbidden CIDR');
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (blacklisted resolver)', () => {
+		it('should fail (blacklisted ipv6 resolver)', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
 				measurementOptions: {
-					resolver: '100.0.41.228',
+					resolver: '2803:5380:ffff::386',
 					protocol: 'https',
 					port: 443,
 					request: {
@@ -1573,10 +1630,22 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (blacklisted target ip)', () => {
+		it('should fail (blacklisted target ipv4)', () => {
 			const input = {
 				type: 'http',
 				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted target ipv6)', () => {
+			const input = {
+				type: 'http',
+				target: '2803:5380:ffff::386',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
