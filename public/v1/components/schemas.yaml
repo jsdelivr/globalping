@@ -301,6 +301,13 @@ components:
           default: 3
           minimum: 1
           maximum: 16
+        ipVersion:
+          type: integer
+          description: The IP protocol to use. Only allowed, if the target is a host name.
+          default: 4
+          enum:
+            - 4
+            - 6
     MeasurementTracerouteOptions:
       type: object
       title: TracerouteOptions
@@ -320,6 +327,13 @@ components:
             - TCP
             - UDP
           default: ICMP
+        ipVersion:
+          type: integer
+          description: The IP protocol to use. Only allowed, if the target is a host name.
+          default: 4
+          enum:
+            - 4
+            - 6
     MeasurementDnsOptions:
       type: object
       title: DnsOptions
@@ -370,6 +384,13 @@ components:
           description: |
             Toggles tracing of the delegation path from the root servers down to the target domain name.
           default: false
+        ipVersion:
+          type: integer
+          description: The IP protocol to use for resolver. Only allowed, if the target is a host name.
+          default: 4
+          enum:
+            - 4
+            - 6
     MeasurementMtrOptions:
       type: object
       title: MtrOptions
@@ -395,6 +416,13 @@ components:
           default: 3
           minimum: 1
           maximum: 16
+        ipVersion:
+          type: integer
+          description: The IP protocol to use. Only allowed, if the target is a host name.
+          default: 4
+          enum:
+            - 4
+            - 6
     MeasurementHttpOptions:
       type: object
       title: HttpOptions
@@ -444,6 +472,13 @@ components:
             - HTTPS
             - HTTP2
           default: HTTPS
+        ipVersion:
+          type: integer
+          description: The IP protocol to use. Only allowed, if the target is a host name.
+          default: 4
+          enum:
+            - 4
+            - 6
     MeasurementProbesCount:
       type: integer
       description: |
@@ -455,6 +490,9 @@ components:
         - type: string
           format: ipv4
           description: The IPv4 address of the resolver.
+        - type: string
+          format: ipv6
+          description: The IPv6 address of the resolver.
         - type: string
           format: hostname
           description: The Fully Qualified Domain Name (FQDN) of the resolver.
@@ -489,7 +527,7 @@ components:
       type: string
       description: |
         A publicly reachable measurement target.
-        Typically a hostname or an IPv4 address, depending on the measurement `type`.
+        Typically a hostname, an IPv4 address or IPv6 address, depending on the measurement `type`.
     MeasurementType:
       type: string
       description: The measurement type.
@@ -638,6 +676,9 @@ components:
         - type: string
           format: ipv4
           description: The IPv4 address of the resolver.
+        - type: string
+          format: ipv6
+          description: The IPv6 address of the resolver.
         - type: string
           const: private
           description: Indicates that the resolver points to a private IP address.

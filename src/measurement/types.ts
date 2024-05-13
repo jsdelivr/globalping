@@ -11,6 +11,7 @@ type TestResult = {
 
 type PingTest = {
 	packets: number;
+	ipVersion?: 4 | 6;
 };
 
 type PingTiming = {
@@ -32,6 +33,7 @@ export type PingResult = TestResult & {
 type TracerouteTest = {
 	protocol: 'ICMP' | 'TCP' | 'UDP';
 	port: number;
+	ipVersion?: 4 | 6;
 };
 
 type TraceHopTiming = {
@@ -54,6 +56,7 @@ type MtrTest = {
 	protocol: 'ICMP' | 'TCP' | 'UDP';
 	packets: number;
 	port: number;
+	ipVersion?: 4 | 6;
 };
 
 type MtrResultHopTiming = {
@@ -96,6 +99,7 @@ type DnsTest = {
 	protocol: 'TCP' | 'UDP';
 	port: number;
 	trace: boolean;
+	ipVersion?: 4 | 6;
 };
 
 type DnsAnswer = {
@@ -131,6 +135,7 @@ type HttpTest = {
 	port?: number;
 	protocol: 'HTTPS' | 'HTTP' | 'HTTP2';
 	resolver?: string;
+	ipVersion?: 4 | 6;
 };
 
 type HttpProgress = TestProgress & {

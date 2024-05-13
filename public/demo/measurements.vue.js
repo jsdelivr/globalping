@@ -86,6 +86,9 @@ const app = () => ({
 		getLocationTypeArray () {
 			return ALLOWED_LOCATION_TYPES;
 		},
+		getIpVersionArray () {
+			return ALLOWED_IP_VERSIONS;
+		},
 		submitPostMeasurement (e) {
 			e.preventDefault();
 			this.response = {};
@@ -97,8 +100,14 @@ const app = () => ({
 				target: this.query.target,
 			};
 
-			if (this.query.type === 'ping' && this.query.packets) {
-				measurement.packets = this.query.packets;
+			if (this.query.type === 'ping') {
+				if (this.query.packets) {
+					measurement.packets = this.query.packets;
+				}
+
+				if (this.query.ipVersion) {
+					measurement.ipVersion = this.query.ipVersion;
+				}
 			}
 
 			if (this.query.type === 'mtr') {
@@ -113,6 +122,10 @@ const app = () => ({
 				if (this.query.protocol) {
 					measurement.protocol = this.query.protocol;
 				}
+
+				if (this.query.ipVersion) {
+					measurement.ipVersion = this.query.ipVersion;
+				}
 			}
 
 			if (this.query.type === 'traceroute') {
@@ -122,6 +135,10 @@ const app = () => ({
 
 				if (this.query.port) {
 					measurement.port = this.query.port;
+				}
+
+				if (this.query.ipVersion) {
+					measurement.ipVersion = this.query.ipVersion;
 				}
 			}
 
@@ -152,9 +169,17 @@ const app = () => ({
 				if (Object.keys(query).length > 0) {
 					measurement.query = query;
 				}
+
+				if (this.query.ipVersion) {
+					measurement.ipVersion = this.query.ipVersion;
+				}
 			}
 
 			if (this.query.type === 'http') {
+				if (this.query.ipVersion) {
+					measurement.ipVersion = this.query.ipVersion;
+				}
+
 				measurement.protocol = this.query.protocol;
 				measurement.port = this.query.port;
 				measurement.resolver = this.query.resolver;
@@ -323,6 +348,18 @@ const app = () => ({
 					<label for="query_packets" class="col-sm-2 col-form-label">packets</label>
 					<div class="col-sm-10">
 						<input type="number" v-model="query.packets" id="query_packets" name="query_packets" placeholder="packets" />
+					</div>
+				</div>
+
+				<div v-if="['ping', 'mtr', 'dns', 'traceroute', 'http'].includes(query.type)" class="form-group row">
+					<label for="query_ipVersion" class="col-sm-2 col-form-label">ipVersion</label>
+					<div class="col-sm-10">
+						<select v-model="query.ipVersion" name="query_ipVersion" id="query_ipVersion" class="custom-select my-1 mr-sm-2">
+							<option disabled value="">Please select one</option>
+							<option v-for="ipVersion in getIpVersionArray()" :value="ipVersion">
+								{{ ipVersion }}
+							</option>
+						</select>
 					</div>
 				</div>
 				<div v-if="query.type === 'http'" class="form-group row">

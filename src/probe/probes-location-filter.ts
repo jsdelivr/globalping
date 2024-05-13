@@ -58,6 +58,18 @@ export class ProbesLocationFilter {
 		return this.filterByLocationAndWeight(probes, distribution, limit);
 	}
 
+	public filterByIpVersion (probes: Probe[], ipVersion: 4 | 6) : Probe[] {
+		let filteredProbes = probes;
+
+		if (ipVersion === 4) {
+			filteredProbes = probes.filter(probe => probe.isIPv4Supported);
+		} else if (ipVersion === 6) {
+			filteredProbes = probes.filter(probe => probe.isIPv6Supported);
+		}
+
+		return filteredProbes;
+	}
+
 	public filterByLocation (probes: Probe[], location: Location): Probe[] {
 		if (location.magic?.toLowerCase() === 'world') {
 			return _.shuffle(this.filterGloballyDistibuted(probes, probes.length));

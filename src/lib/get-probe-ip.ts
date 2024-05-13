@@ -22,6 +22,7 @@ const getProbeIp = (socket: Socket) => {
 			'131.255.7.26',
 			'94.214.253.78',
 			'79.205.97.254',
+			'2a04:4e42:200::485',
 		];
 		// Choosing ip based on the probe uuid to always return the same ip for the same probe.
 		const lastGroup = (socket.handshake.query['uuid'] as string).split('-').pop() || '0';
