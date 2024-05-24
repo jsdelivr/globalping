@@ -303,11 +303,12 @@ components:
           maximum: 16
         ipVersion:
           type: integer
-          description: The IP protocol to use. Only allowed, if the target is a host name.
-          default: 4
+          description: |
+            EXPERIMENTAL: The IP protocol to use. Only allowed if the target is a hostname.
           enum:
             - 4
             - 6
+          default: 4
     MeasurementTracerouteOptions:
       type: object
       title: TracerouteOptions
@@ -329,11 +330,12 @@ components:
           default: ICMP
         ipVersion:
           type: integer
-          description: The IP protocol to use. Only allowed, if the target is a host name.
-          default: 4
+          description: |
+            EXPERIMENTAL: The IP protocol to use. Only allowed if the target is a hostname.
           enum:
             - 4
             - 6
+          default: 4
     MeasurementDnsOptions:
       type: object
       title: DnsOptions
@@ -386,11 +388,12 @@ components:
           default: false
         ipVersion:
           type: integer
-          description: The IP protocol to use for resolver. Only allowed, if the target is a host name.
-          default: 4
+          description: |
+            EXPERIMENTAL: The IP protocol to use. Only allowed if the resolver is a hostname.
           enum:
             - 4
             - 6
+          default: 4
     MeasurementMtrOptions:
       type: object
       title: MtrOptions
@@ -418,11 +421,12 @@ components:
           maximum: 16
         ipVersion:
           type: integer
-          description: The IP protocol to use. Only allowed, if the target is a host name.
-          default: 4
+          description: |
+            EXPERIMENTAL: The IP protocol to use. Only allowed if the resolver is a hostname.
           enum:
             - 4
             - 6
+          default: 4
     MeasurementHttpOptions:
       type: object
       title: HttpOptions
@@ -474,11 +478,12 @@ components:
           default: HTTPS
         ipVersion:
           type: integer
-          description: The IP protocol to use. Only allowed, if the target is a host name.
-          default: 4
+          description: |
+            EXPERIMENTAL: The IP protocol to use. Only allowed if the resolver is a hostname.
           enum:
             - 4
             - 6
+          default: 4
     MeasurementProbesCount:
       type: integer
       description: |
@@ -527,7 +532,7 @@ components:
       type: string
       description: |
         A publicly reachable measurement target.
-        Typically a hostname, an IPv4 address or IPv6 address, depending on the measurement `type`.
+        Typically a hostname, an IPv4 address, or IPv6 address, depending on the measurement `type`.
     MeasurementType:
       type: string
       description: The measurement type.
