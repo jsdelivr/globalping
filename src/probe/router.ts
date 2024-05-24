@@ -26,7 +26,6 @@ export class ProbeRouter {
 		const preferredIpVersion = userRequest.measurementOptions?.ipVersion ?? 4;
 		const connectedProbes = (await this.fetchProbes()).filter(probe => probe.status === 'ready');
 
-
 		if (typeof locations === 'string') { // the measurement id of existing measurement was provided by the user, the same probes are to be used
 			return this.findWithMeasurementId(connectedProbes, locations, userRequest);
 		}
