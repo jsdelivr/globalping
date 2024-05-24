@@ -95,7 +95,6 @@ const pingTargetSchema = Joi.alternatives()
 	.required()
 	.messages(schemaErrorMessages);
 
-
 export const pingSchema = Joi.object({
 	packets: Joi.number().min(1).max(16).default(COMMAND_DEFAULTS.ping.packets),
 	ipVersion: ipVersionSchema,
