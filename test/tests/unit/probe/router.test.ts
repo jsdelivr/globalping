@@ -42,9 +42,7 @@ describe('probe router', () => {
 	const buildProbe = async (
 		id: string,
 		location: Partial<ProbeLocation>,
-		status: Probe['status'] = 'ready',
-		isIPv4Supported: Probe['isIPv4Supported'] = true,
-		isIPv6Supported: Probe['isIPv6Supported'] = false,
+		additionalProperties: Partial<Probe> = { status: 'ready', isIPv4Supported: true, isIPv6Supported: false },
 	): Promise<Probe> => {
 		const socket: DeepPartial<RemoteProbeSocket> = {
 			id,
@@ -59,9 +57,7 @@ describe('probe router', () => {
 
 		socket.data!.probe = {
 			...await buildProbeInternal(socket as RemoteProbeSocket),
-			status,
-			isIPv4Supported,
-			isIPv6Supported,
+			...additionalProperties,
 		};
 
 		return socket.data!.probe as unknown as Probe;
@@ -196,8 +192,8 @@ describe('probe router', () => {
 	describe('probe readiness', () => {
 		it('should find 2 probes', async () => {
 			const probes: Array<DeepPartial<Probe>> = [
-				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, 'unbuffer-missing'),
-				await buildProbe('socket-2', { continent: 'EU', country: 'PL' }, 'unbuffer-missing'),
+				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, { status: 'unbuffer-missing' }),
+				await buildProbe('socket-2', { continent: 'EU', country: 'PL' }, { status: 'unbuffer-missing' }),
 				await buildProbe('socket-4', { continent: 'EU', country: 'GB' }),
 				await buildProbe('socket-5', { continent: 'EU', country: 'PL' }),
 			];
@@ -222,10 +218,10 @@ describe('probe router', () => {
 	describe('probe filtered by IP version', () => {
 		it('should find only probes supporting IPv4', async () => {
 			const probes: Array<DeepPartial<Probe>> = [
-				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, 'unbuffer-missing', false, false),
-				await buildProbe('socket-2', { continent: 'EU', country: 'CZ' }, 'ready', true, true),
-				await buildProbe('socket-3', { continent: 'EU', country: 'PL' }, 'ready', true, false),
-				await buildProbe('socket-4', { continent: 'EU', country: 'AU' }, 'ready', false, true),
+				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, { status: 'unbuffer-missing', isIPv4Supported: false, isIPv6Supported: false }),
+				await buildProbe('socket-2', { continent: 'EU', country: 'CZ' }, { status: 'ready', isIPv4Supported: true, isIPv6Supported: true }),
+				await buildProbe('socket-3', { continent: 'EU', country: 'PL' }, { status: 'ready', isIPv4Supported: true, isIPv6Supported: false }),
+				await buildProbe('socket-4', { continent: 'EU', country: 'AU' }, { status: 'ready', isIPv4Supported: false, isIPv6Supported: true }),
 			];
 
 			fetchProbesMock.resolves(probes as never);
@@ -245,10 +241,10 @@ describe('probe router', () => {
 
 		it('should find only probes supporting IPv6', async () => {
 			const probes: Array<DeepPartial<Probe>> = [
-				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, 'unbuffer-missing', false, false),
-				await buildProbe('socket-2', { continent: 'EU', country: 'CZ' }, 'ready', true, true),
-				await buildProbe('socket-3', { continent: 'EU', country: 'PL' }, 'ready', true, false),
-				await buildProbe('socket-4', { continent: 'EU', country: 'AU' }, 'ready', false, true),
+				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, { status: 'unbuffer-missing', isIPv4Supported: false, isIPv6Supported: false }),
+				await buildProbe('socket-2', { continent: 'EU', country: 'CZ' }, { status: 'ready', isIPv4Supported: true, isIPv6Supported: true }),
+				await buildProbe('socket-3', { continent: 'EU', country: 'PL' }, { status: 'ready', isIPv4Supported: true, isIPv6Supported: false }),
+				await buildProbe('socket-4', { continent: 'EU', country: 'AU' }, { status: 'ready', isIPv4Supported: false, isIPv6Supported: true }),
 			];
 
 			fetchProbesMock.resolves(probes as never);
@@ -268,10 +264,10 @@ describe('probe router', () => {
 
 		it('should find only probes supporting IPv4 by default', async () => {
 			const probes: Array<DeepPartial<Probe>> = [
-				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, 'unbuffer-missing', false, false),
-				await buildProbe('socket-2', { continent: 'EU', country: 'CZ' }, 'ready', true, true),
-				await buildProbe('socket-3', { continent: 'EU', country: 'PL' }, 'ready', true, false),
-				await buildProbe('socket-4', { continent: 'EU', country: 'AU' }, 'ready', false, true),
+				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, { status: 'unbuffer-missing', isIPv4Supported: false, isIPv6Supported: false }),
+				await buildProbe('socket-2', { continent: 'EU', country: 'CZ' }, { status: 'ready', isIPv4Supported: true, isIPv6Supported: true }),
+				await buildProbe('socket-3', { continent: 'EU', country: 'PL' }, { status: 'ready', isIPv4Supported: true, isIPv6Supported: false }),
+				await buildProbe('socket-4', { continent: 'EU', country: 'AU' }, { status: 'ready', isIPv4Supported: false, isIPv6Supported: true }),
 			];
 
 			fetchProbesMock.resolves(probes as never);
