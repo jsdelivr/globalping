@@ -9,7 +9,7 @@ services:
   mariadb:
     image: mariadb:10.11.5
     environment:
-      - MARIADB_DATABASE=directus
+      - MARIADB_DATABASE=dashboard-globalping
       - MARIADB_USER=directus
       - MARIADB_PASSWORD=password
       - MARIADB_ROOT_PASSWORD=root
