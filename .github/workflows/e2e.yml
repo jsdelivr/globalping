@@ -30,7 +30,7 @@ jobs:
         ports:
           - 13306:3306
         env:
-          MARIADB_DATABASE: directus-test
+          MARIADB_DATABASE: dashboard-globalping-test
           MARIADB_USER: directus
           MARIADB_PASSWORD: password
           MARIADB_RANDOM_ROOT_PASSWORD: 1

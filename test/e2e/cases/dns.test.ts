@@ -61,7 +61,7 @@ describe('dns mesurement', () => {
 				type: 'dns',
 				target: 'www.jsdelivr.com',
 				measurementOptions: {
-					resolver: '113.24.166.134',
+					resolver: '101.109.234.248',
 				},
 			},
 			throwHttpErrors: false,

@@ -8,7 +8,7 @@ module.exports = {
 	db: {
 		connection: {
 			port: 13306,
-			database: 'directus-test',
+			database: 'dashboard-globalping-test',
 			multipleStatements: true,
 		},
 	},
