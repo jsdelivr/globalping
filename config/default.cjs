@@ -17,7 +17,7 @@ module.exports = {
 			host: 'localhost',
 			user: 'directus',
 			password: 'password',
-			database: 'directus',
+			database: 'dashboard-globalping',
 			port: 3306,
 		},
 	},
