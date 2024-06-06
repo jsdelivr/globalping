@@ -46,5 +46,6 @@ if (cluster.isPrimary) {
 
 	workerFn().catch((error) => {
 		logger.error('failed to start cluster', error);
+		setTimeout(() => process.exit(1), 5000);
 	});
 }
