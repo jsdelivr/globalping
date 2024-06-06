@@ -57,6 +57,7 @@ export class SyncedProbeList extends EventEmitter {
 
 	constructor (private readonly redis: RedisClient, private readonly ioNamespace: WsServerNamespace, private readonly probeOverride: ProbeOverride) {
 		super();
+		this.setMaxListeners(Infinity);
 		this.nodeId = randomBytes(8).toString('hex');
 		this.logger = scopedLogger('synced-probe-list', this.nodeId);
 		this.rawProbes = [];
