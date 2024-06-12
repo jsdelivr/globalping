@@ -341,7 +341,7 @@ describe('MeasurementRunner', () => {
 				body: request,
 			},
 		} as unknown as ExtendedContext).catch((err: unknown) => err);
-		expect(err).to.deep.equal(createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' }));
+		expect(err).to.deep.equal(createHttpError(422, 'No suitable probes supporting IPv4 found.', { type: 'no_probes_found' }));
 		expect(store.markFinished.callCount).to.equal(0);
 	});
 

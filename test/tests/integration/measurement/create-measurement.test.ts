@@ -42,7 +42,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found.',
+							message: 'No suitable probes supporting IPv4 found.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -63,12 +63,14 @@ describe('Create measurement', () => {
 			probe = await addFakeProbe();
 			probe.emit('probe:status:update', 'ready');
 			probe.emit('probe:isIPv4Supported:update', true);
+			probe.emit('probe:isIPv6Supported:update', true);
 			await waitForProbesUpdate();
 		});
 
 		afterEach(async () => {
 			probe.emit('probe:status:update', 'ready');
 			probe.emit('probe:isIPv4Supported:update', true);
+			probe.emit('probe:isIPv6Supported:update', true);
 			await waitForProbesUpdate();
 		});
 
@@ -92,7 +94,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found.',
+							message: 'No suitable probes supporting IPv4 found.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -119,7 +121,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found.',
+							message: 'No suitable probes supporting IPv4 found.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -386,7 +388,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found.',
+							message: 'No suitable probes supporting IPv4 found.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -582,7 +584,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found.',
+							message: 'No suitable probes supporting IPv4 found.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -736,7 +738,7 @@ describe('Create measurement', () => {
 						locations: [{ magic: 'u-jsdelivr-dashboard-tag', limit: 2 }],
 					})
 					.expect(422).expect((response) => {
-						expect(response.body.error.message).to.equal('No suitable probes found.');
+						expect(response.body.error.message).to.equal('No suitable probes supporting IPv4 found.');
 					});
 			});
 		});
