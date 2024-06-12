@@ -416,6 +416,30 @@ describe('Create measurement', () => {
 				});
 		});
 
+		it('should create measurement with the ipVersion option set', async () => {
+			let id;
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					measurementOptions: { ipVersion: 6 },
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header['location']).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+					id = response.body.id;
+				});
+
+			await requestAgent.get(`/v1/measurements/${id}`)
+				.expect(200)
+				.expect((response) => {
+					expect(response).to.matchApiSchema();
+				});
+		});
+
 		it('should create measurement with another measurement id location', async () => {
 			let id;
 			await requestAgent.post('/v1/measurements')
