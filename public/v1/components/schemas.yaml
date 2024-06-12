@@ -304,7 +304,7 @@ components:
         ipVersion:
           type: integer
           description: |
-            EXPERIMENTAL: The IP protocol to use. Only allowed if the target is a hostname.
+            EXPERIMENTAL: The IP version to use. Only allowed if the target is a hostname.
           enum:
             - 4
             - 6
@@ -331,7 +331,7 @@ components:
         ipVersion:
           type: integer
           description: |
-            EXPERIMENTAL: The IP protocol to use. Only allowed if the target is a hostname.
+            EXPERIMENTAL: The IP version to use. Only allowed if the target is a hostname.
           enum:
             - 4
             - 6
@@ -381,19 +381,19 @@ components:
             - TCP
             - UDP
           default: UDP
+        ipVersion:
+          type: integer
+          description: |
+            EXPERIMENTAL: The IP version to use. Only allowed if the target is a hostname.
+          enum:
+            - 4
+            - 6
+          default: 4
         trace:
           type: boolean
           description: |
             Toggles tracing of the delegation path from the root servers down to the target domain name.
           default: false
-        ipVersion:
-          type: integer
-          description: |
-            EXPERIMENTAL: The IP protocol to use. Only allowed if the resolver is a hostname.
-          enum:
-            - 4
-            - 6
-          default: 4
     MeasurementMtrOptions:
       type: object
       title: MtrOptions
@@ -413,20 +413,20 @@ components:
             - TCP
             - UDP
           default: ICMP
+        ipVersion:
+          type: integer
+          description: |
+            EXPERIMENTAL: The IP version to use. Only allowed if the target is a hostname.
+          enum:
+            - 4
+            - 6
+          default: 4
         packets:
           type: integer
           description: The number of packets to send to each hop.
           default: 3
           minimum: 1
           maximum: 16
-        ipVersion:
-          type: integer
-          description: |
-            EXPERIMENTAL: The IP protocol to use. Only allowed if the resolver is a hostname.
-          enum:
-            - 4
-            - 6
-          default: 4
     MeasurementHttpOptions:
       type: object
       title: HttpOptions
@@ -479,7 +479,7 @@ components:
         ipVersion:
           type: integer
           description: |
-            EXPERIMENTAL: The IP protocol to use. Only allowed if the resolver is a hostname.
+            EXPERIMENTAL: The IP version to use. Only allowed if the target is a hostname.
           enum:
             - 4
             - 6
