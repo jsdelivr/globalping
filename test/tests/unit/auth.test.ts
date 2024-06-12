@@ -27,7 +27,7 @@ describe('Auth', () => {
 		const auth = new Auth(sqlStub as unknown as Knex);
 
 		selectStub.onCall(1).resolves([{
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
 		}]);
 
@@ -36,13 +36,13 @@ describe('Auth', () => {
 		auth.scheduleSync();
 		await clock.tickAsync(60_000);
 
-		const user1 = await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+		const user1 = await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 		expect(user1).to.equal('user1');
-		const user2 = await auth.validate('ve7w6UTaOt3aXpctEk8wJQtkJwz2IOMY', 'https://jsdelivr.com');
+		const user2 = await auth.validate('vumzijbzihrskmc2hj34yw22batpibmt', 'https://jsdelivr.com');
 		expect(user2).to.equal(null);
 
 		selectStub.onCall(3).resolves([{
-			value: 'r8S12cmTjYeMIb/KcYE2a/LLQGBdHdhC0VxTyt2eeAQ=',
+			value: '8YZ2pZoGQxfOeEGvUUkagX1yizZckq3weL+IN0chvU0=',
 			user_created: 'user2',
 		}]);
 
@@ -50,9 +50,9 @@ describe('Auth', () => {
 
 		await clock.tickAsync(60_000);
 
-		const user1afterSync = await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+		const user1afterSync = await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 		expect(user1afterSync).to.equal(null);
-		const user2afterSync = await auth.validate('ve7w6UTaOt3aXpctEk8wJQtkJwz2IOMY', 'https://jsdelivr.com');
+		const user2afterSync = await auth.validate('vumzijbzihrskmc2hj34yw22batpibmt', 'https://jsdelivr.com');
 		expect(user2afterSync).to.equal('user2');
 		auth.unscheduleSync();
 	});
@@ -61,16 +61,16 @@ describe('Auth', () => {
 		const auth = new Auth(sqlStub as unknown as Knex);
 
 		selectStub.resolves([{
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
 		}]);
 
 		await auth.syncTokens();
 
-		const user = await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+		const user = await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 
 		expect(user).to.equal('user1');
 		expect(selectStub.callCount).to.equal(1);
@@ -80,14 +80,14 @@ describe('Auth', () => {
 		const auth = new Auth(sqlStub as unknown as Knex);
 
 		selectStub.resolves([{
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
 		}]);
 
-		const user = await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+		const user = await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 
 		expect(user).to.equal('user1');
 		expect(selectStub.callCount).to.equal(1);
@@ -97,15 +97,15 @@ describe('Auth', () => {
 		const auth = new Auth(sqlStub as unknown as Knex);
 
 		selectStub.resolves([{
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
 			date_last_used: new Date(),
 		}]);
 
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 
 		expect(updateStub.callCount).to.equal(0);
 	});
@@ -114,14 +114,14 @@ describe('Auth', () => {
 		const auth = new Auth(sqlStub as unknown as Knex);
 
 		selectStub.resolves([{
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
 		}]);
 
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
-		await auth.validate('VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
+		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 
 		expect(updateStub.args[0]).to.deep.equal([{ date_last_used: new Date() }]);
 		expect(updateStub.callCount).to.equal(1);

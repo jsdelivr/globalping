@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import type { Knex } from 'knex';
 import TTLCache from '@isaacs/ttlcache';
+import { base32 } from '@scure/base';
 import { scopedLogger } from '../logger.js';
 import { client } from '../sql/client.js';
 
@@ -93,7 +94,14 @@ export class Auth {
 	}
 
 	async validate (tokenString: string, origin: string) {
-		const bytes = Buffer.from(tokenString, 'base64');
+		let bytes;
+
+		try {
+			bytes = base32.decode(tokenString.toUpperCase());
+		} catch {
+			return null;
+		}
+
 		const hash = createHash('sha256').update(bytes).digest('base64');
 
 		if (this.invalidTokens.get(hash)) {

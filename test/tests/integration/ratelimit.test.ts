@@ -39,7 +39,7 @@ describe('rate limiter', () => {
 
 		await client(GP_TOKENS_TABLE).insert({
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
-			value: '7emhYIar8eLtwAAjyXUn+h3Cj+Xc9BQcLMC6JAX9fHQ=', // token: v2lUHEVLtVSskaRKDBabpyp4AkzdMnob
+			value: 'Xj6kuKFEQ6zI60mr+ckHG7yQcIFGMJFzvtK9PBQ69y8=', // token: qz5kdukfcr3vggv3xbujvjwvirkpkkpx
 		});
 	});
 
@@ -51,7 +51,7 @@ describe('rate limiter', () => {
 
 	after(async () => {
 		await deleteFakeProbes();
-		await client(GP_TOKENS_TABLE).where({ value: '7emhYIar8eLtwAAjyXUn+h3Cj+Xc9BQcLMC6JAX9fHQ=' }).delete();
+		await client(GP_TOKENS_TABLE).where({ value: 'Xj6kuKFEQ6zI60mr+ckHG7yQcIFGMJFzvtK9PBQ69y8=' }).delete();
 	});
 
 	describe('headers', () => {
@@ -84,7 +84,7 @@ describe('rate limiter', () => {
 
 		it('should include headers (authenticated POST)', async () => {
 			const response = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
@@ -117,7 +117,7 @@ describe('rate limiter', () => {
 
 		it('should change values on multiple requests (authenticated POST)', async () => {
 			const response = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
@@ -128,7 +128,7 @@ describe('rate limiter', () => {
 			expect(response.headers['x-ratelimit-reset']).to.equal('3600');
 
 			const response2 = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
@@ -181,7 +181,7 @@ describe('rate limiter', () => {
 			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 0, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
@@ -194,7 +194,7 @@ describe('rate limiter', () => {
 			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
@@ -207,7 +207,7 @@ describe('rate limiter', () => {
 			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 249, 0); // 1 remaining
 
 			const response = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
@@ -232,7 +232,7 @@ describe('rate limiter', () => {
 			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 0, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
@@ -251,7 +251,7 @@ describe('rate limiter', () => {
 			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
@@ -270,7 +270,7 @@ describe('rate limiter', () => {
 			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 249, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
@@ -295,7 +295,7 @@ describe('rate limiter', () => {
 			});
 
 			const response = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
@@ -314,7 +314,7 @@ describe('rate limiter', () => {
 			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 255, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
@@ -339,7 +339,7 @@ describe('rate limiter', () => {
 			});
 
 			const response = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
@@ -362,7 +362,7 @@ describe('rate limiter', () => {
 			}).delete();
 
 			const response = await requestAgent.post('/v1/measurements')
-				.set('Authorization', 'Bearer v2lUHEVLtVSskaRKDBabpyp4AkzdMnob')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',

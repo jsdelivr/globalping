@@ -22,7 +22,7 @@ describe('authenticate', () => {
 	});
 
 	beforeEach(async () => {
-		await client(GP_TOKENS_TABLE).where({ value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=' }).delete();
+		await client(GP_TOKENS_TABLE).where({ value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=' }).delete();
 		await auth.syncTokens();
 	});
 
@@ -43,13 +43,13 @@ describe('authenticate', () => {
 	it('should accept if valid token was passed', async () => {
 		await client(GP_TOKENS_TABLE).insert({
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 		});
 
 		await auth.syncTokens();
 
 		await requestAgent.post('/v1/measurements')
-			.set('Authorization', 'Bearer VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4')
+			.set('Authorization', 'Bearer hf2fnprguymlgliirdk7qv23664c2xcr')
 			.send({
 				type: 'ping',
 				target: 'example.com',
@@ -60,14 +60,14 @@ describe('authenticate', () => {
 	it('should accept if origin is correct', async () => {
 		await client(GP_TOKENS_TABLE).insert({
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			origins: JSON.stringify([ 'https://jsdelivr.com' ]),
 		});
 
 		await auth.syncTokens();
 
 		await requestAgent.post('/v1/measurements')
-			.set('Authorization', 'Bearer VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4')
+			.set('Authorization', 'Bearer hf2fnprguymlgliirdk7qv23664c2xcr')
 			.set('Origin', 'https://jsdelivr.com')
 			.send({
 				type: 'ping',
@@ -79,13 +79,13 @@ describe('authenticate', () => {
 	it('should update "date_last_used" field', async () => {
 		await client(GP_TOKENS_TABLE).insert({
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 		});
 
 		await auth.syncTokens();
 
 		await requestAgent.post('/v1/measurements')
-			.set('Authorization', 'Bearer VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4')
+			.set('Authorization', 'Bearer hf2fnprguymlgliirdk7qv23664c2xcr')
 			.send({
 				type: 'ping',
 				target: 'example.com',
@@ -93,7 +93,7 @@ describe('authenticate', () => {
 			.expect(202);
 
 		const tokens = await client(GP_TOKENS_TABLE).select<Token[]>([ 'date_last_used' ]).where({
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 		});
 
 		const currentDate = new Date();
@@ -104,11 +104,11 @@ describe('authenticate', () => {
 	it('should get token from db if it is not synced yet', async () => {
 		await client(GP_TOKENS_TABLE).insert({
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 		});
 
 		await requestAgent.post('/v1/measurements')
-			.set('Authorization', 'Bearer VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4')
+			.set('Authorization', 'Bearer hf2fnprguymlgliirdk7qv23664c2xcr')
 			.send({
 				type: 'ping',
 				target: 'example.com',
@@ -129,14 +129,14 @@ describe('authenticate', () => {
 	it('should reject if token is expired', async () => {
 		await client(GP_TOKENS_TABLE).insert({
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			expire: new Date('01-01-2024'),
 		});
 
 		await auth.syncTokens();
 
 		await requestAgent.post('/v1/measurements')
-			.set('Authorization', 'Bearer VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4')
+			.set('Authorization', 'Bearer hf2fnprguymlgliirdk7qv23664c2xcr')
 			.send({
 				type: 'ping',
 				target: 'example.com',
@@ -147,12 +147,12 @@ describe('authenticate', () => {
 	it('should reject if previously not synced token is expired', async () => {
 		await client(GP_TOKENS_TABLE).insert({
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			expire: new Date('01-01-2024'),
 		});
 
 		await requestAgent.post('/v1/measurements')
-			.set('Authorization', 'Bearer VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4')
+			.set('Authorization', 'Bearer hf2fnprguymlgliirdk7qv23664c2xcr')
 			.send({
 				type: 'ping',
 				target: 'example.com',
@@ -163,14 +163,14 @@ describe('authenticate', () => {
 	it('should reject if origin is wrong', async () => {
 		await client(GP_TOKENS_TABLE).insert({
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
-			value: 'aGmWPCV1JN/qmYl27g8VpBjhCmTpbFcbdrWgTvEtqo4=',
+			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			origins: JSON.stringify([ 'https://jsdelivr.com' ]),
 		});
 
 		await auth.syncTokens();
 
 		await requestAgent.post('/v1/measurements')
-			.set('Authorization', 'Bearer VRbBNLbHkckWRcPmWv0Kj3xwBpi32Ij4')
+			.set('Authorization', 'Bearer hf2fnprguymlgliirdk7qv23664c2xcr')
 			.send({
 				type: 'ping',
 				target: 'example.com',
