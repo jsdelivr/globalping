@@ -66,7 +66,7 @@ export const joiValidateTarget = (type: string) => (value: string, helpers?: Cus
 
 export const whenTypeApply = (mType: string, schema: AnySchema) => Joi.any().when(Joi.ref('/type'), { is: mType, then: schema });
 
-export const globalIpOptions: {version: string[]; cidr: PresenceMode} = { version: [ 'ipv4' ], cidr: 'forbidden' };
+export const globalIpOptions: {version: string[]; cidr: PresenceMode} = { version: [ 'ipv4', 'ipv6' ], cidr: 'forbidden' };
 
 export const GLOBAL_DEFAULTS = {
 	locations: [],
@@ -80,6 +80,7 @@ export const GLOBAL_DEFAULTS = {
 	inProgressUpdates: false,
 };
 
+export const DEFAULT_IP_VERSION = 4;
 export const COMMAND_DEFAULTS = {
 	http: {
 		request: {
@@ -89,18 +90,23 @@ export const COMMAND_DEFAULTS = {
 			headers: {},
 		},
 		protocol: 'HTTPS',
+		ipVersion: 4,
 	},
 	mtr: {
 		protocol: 'ICMP',
 		packets: 3,
 		port: 80,
+		ipVersion: 4,
 	},
 	ping: {
 		packets: 3,
+		ipVersion: 4,
 	},
 	traceroute: {
 		protocol: 'ICMP',
 		port: 80,
+		ipVersion: 4,
+
 	},
 	dns: {
 		query: {
@@ -109,6 +115,7 @@ export const COMMAND_DEFAULTS = {
 		protocol: 'UDP',
 		port: 53,
 		trace: false,
+		ipVersion: 4,
 	},
 } as const;
 

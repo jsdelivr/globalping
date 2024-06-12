@@ -42,7 +42,7 @@ describe('probe router', () => {
 	const buildProbe = async (
 		id: string,
 		location: Partial<ProbeLocation>,
-		status: Probe['status'] = 'ready',
+		additionalProperties: Partial<Probe> = { status: 'ready', isIPv4Supported: true, isIPv6Supported: false },
 	): Promise<Probe> => {
 		const socket: DeepPartial<RemoteProbeSocket> = {
 			id,
@@ -57,7 +57,7 @@ describe('probe router', () => {
 
 		socket.data!.probe = {
 			...await buildProbeInternal(socket as RemoteProbeSocket),
-			status,
+			...additionalProperties,
 		};
 
 		return socket.data!.probe as unknown as Probe;
@@ -192,8 +192,8 @@ describe('probe router', () => {
 	describe('probe readiness', () => {
 		it('should find 2 probes', async () => {
 			const probes: Array<DeepPartial<Probe>> = [
-				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, 'unbuffer-missing'),
-				await buildProbe('socket-2', { continent: 'EU', country: 'PL' }, 'unbuffer-missing'),
+				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, { status: 'unbuffer-missing' }),
+				await buildProbe('socket-2', { continent: 'EU', country: 'PL' }, { status: 'unbuffer-missing' }),
 				await buildProbe('socket-4', { continent: 'EU', country: 'GB' }),
 				await buildProbe('socket-5', { continent: 'EU', country: 'PL' }),
 			];
@@ -211,6 +211,77 @@ describe('probe router', () => {
 			expect(onlineProbesMap.size).to.equal(2);
 			expect(allProbes.length).to.equal(2);
 			expect(allProbes.filter(p => p.location.country === 'GB').length).to.equal(1);
+			expect(allProbes.filter(p => p.location.country === 'PL').length).to.equal(1);
+		});
+	});
+
+	describe('probe filtered by IP version', () => {
+		it('should find only probes supporting IPv4', async () => {
+			const probes: Array<DeepPartial<Probe>> = [
+				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, { status: 'unbuffer-missing', isIPv4Supported: false, isIPv6Supported: false }),
+				await buildProbe('socket-2', { continent: 'EU', country: 'CZ' }, { status: 'ready', isIPv4Supported: true, isIPv6Supported: true }),
+				await buildProbe('socket-3', { continent: 'EU', country: 'PL' }, { status: 'ready', isIPv4Supported: true, isIPv6Supported: false }),
+				await buildProbe('socket-4', { continent: 'EU', country: 'AU' }, { status: 'ready', isIPv4Supported: false, isIPv6Supported: true }),
+			];
+
+			fetchProbesMock.resolves(probes as never);
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [
+				{ continent: 'EU', limit: 4 },
+			], measurementOptions: { ipVersion: 4 } } as UserRequest);
+
+			expect(fetchProbesMock.callCount).to.equal(1);
+			expect(fetchProbesMock.firstCall.args).to.deep.equal([]);
+
+			expect(onlineProbesMap.size).to.equal(2);
+			expect(allProbes.length).to.equal(2);
+			expect(allProbes.filter(p => p.location.country === 'CZ').length).to.equal(1);
+			expect(allProbes.filter(p => p.location.country === 'PL').length).to.equal(1);
+		});
+
+		it('should find only probes supporting IPv6', async () => {
+			const probes: Array<DeepPartial<Probe>> = [
+				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, { status: 'unbuffer-missing', isIPv4Supported: false, isIPv6Supported: false }),
+				await buildProbe('socket-2', { continent: 'EU', country: 'CZ' }, { status: 'ready', isIPv4Supported: true, isIPv6Supported: true }),
+				await buildProbe('socket-3', { continent: 'EU', country: 'PL' }, { status: 'ready', isIPv4Supported: true, isIPv6Supported: false }),
+				await buildProbe('socket-4', { continent: 'EU', country: 'AU' }, { status: 'ready', isIPv4Supported: false, isIPv6Supported: true }),
+			];
+
+			fetchProbesMock.resolves(probes as never);
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [
+				{ continent: 'EU', limit: 4 },
+			], measurementOptions: { ipVersion: 6 } } as UserRequest);
+
+			expect(fetchProbesMock.callCount).to.equal(1);
+			expect(fetchProbesMock.firstCall.args).to.deep.equal([]);
+
+			expect(onlineProbesMap.size).to.equal(2);
+			expect(allProbes.length).to.equal(2);
+			expect(allProbes.filter(p => p.location.country === 'CZ').length).to.equal(1);
+			expect(allProbes.filter(p => p.location.country === 'AU').length).to.equal(1);
+		});
+
+		it('should find only probes supporting IPv4 by default', async () => {
+			const probes: Array<DeepPartial<Probe>> = [
+				await buildProbe('socket-1', { continent: 'EU', country: 'GB' }, { status: 'unbuffer-missing', isIPv4Supported: false, isIPv6Supported: false }),
+				await buildProbe('socket-2', { continent: 'EU', country: 'CZ' }, { status: 'ready', isIPv4Supported: true, isIPv6Supported: true }),
+				await buildProbe('socket-3', { continent: 'EU', country: 'PL' }, { status: 'ready', isIPv4Supported: true, isIPv6Supported: false }),
+				await buildProbe('socket-4', { continent: 'EU', country: 'AU' }, { status: 'ready', isIPv4Supported: false, isIPv6Supported: true }),
+			];
+
+			fetchProbesMock.resolves(probes as never);
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: [
+				{ continent: 'EU', limit: 4 },
+			] } as UserRequest);
+
+			expect(fetchProbesMock.callCount).to.equal(1);
+			expect(fetchProbesMock.firstCall.args).to.deep.equal([]);
+
+			expect(onlineProbesMap.size).to.equal(2);
+			expect(allProbes.length).to.equal(2);
+			expect(allProbes.filter(p => p.location.country === 'CZ').length).to.equal(1);
 			expect(allProbes.filter(p => p.location.country === 'PL').length).to.equal(1);
 		});
 	});

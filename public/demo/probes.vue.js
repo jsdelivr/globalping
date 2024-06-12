@@ -48,6 +48,14 @@ const probes = () => ({
 			const probe = this.probes[index];
 			return probe.tags.length ? `(${probe.tags.join(', ')})` : '';
 		},
+		getIsIPv4Supported (index) {
+			const probe = this.probes[index];
+			return `IPv4: [${probe.isIPv4Supported}]`;
+		},
+		getIsIPv6Supported (index) {
+			const probe = this.probes[index];
+			return `IPv6: [${probe.isIPv6Supported}]`;
+		},
 		async fetchProbes () {
 			const adminKey = new URLSearchParams(window.location.search).get('adminkey');
 			const url = `/v1/probes?adminkey=${adminKey}`;
@@ -72,7 +80,7 @@ const probes = () => ({
 			<ul>
 				<li v-for="(probe, index) in probes">
 					<div :style="{ color: getReadyColor(index) }">
-						[{{ probe.version }}] {{ getNodeVersion(index) }} {{ getReadyStatus(index) }} {{ getHost(index) }} {{ getIpAddress(index) }} {{ parsedLocation(index) }} -- {{ probe.location.network }} {{ getTags(index) }}
+						[{{ probe.version }}] {{ getNodeVersion(index) }} {{ getReadyStatus(index) }} {{ getIsIPv4Supported(index) }} {{ getIsIPv6Supported(index) }} {{ getHost(index) }} {{ getIpAddress(index) }} {{ parsedLocation(index) }} -- {{ probe.location.network }} {{ getTags(index) }}
 					</div>
 				</li>
 			</ul>

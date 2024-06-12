@@ -92,6 +92,8 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 			availableDiskSpace,
 		},
 		status: 'initializing',
+		isIPv4Supported: false,
+		isIPv6Supported: false,
 	};
 };
 

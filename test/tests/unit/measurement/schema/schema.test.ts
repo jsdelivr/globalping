@@ -461,7 +461,7 @@ describe('command schema', async () => {
 	});
 
 	describe('target validator', () => {
-		it('should fail (ip type) (private ip)', () => {
+		it('should fail (ip type) (private ipv4)', () => {
 			const input = '192.168.0.101';
 
 			let result: string | Error = '';
@@ -477,8 +477,40 @@ describe('command schema', async () => {
 			expect(result).to.be.instanceof(Error);
 		});
 
-		it('should fail (any type) (private ip)', () => {
+		it('should fail (ip type) (private ipv6)', () => {
+			const input = '64:ff9b:1::1a2b:3c4d';
+
+			let result: string | Error = '';
+
+			try {
+				result = joiValidateTarget('ip')(input);
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					result = error;
+				}
+			}
+
+			expect(result).to.be.instanceof(Error);
+		});
+
+		it('should fail (any type) (private ipv4)', () => {
 			const input = '192.168.0.101';
+
+			let result: string | Error = '';
+
+			try {
+				result = joiValidateTarget('any')(input);
+			} catch (error: unknown) {
+				if (error instanceof Error) {
+					result = error;
+				}
+			}
+
+			expect(result).to.be.instanceof(Error);
+		});
+
+		it('should fail (any type) (private ipv6)', () => {
+			const input = 'fe80::ffff:ffff:ffff:ffff';
 
 			let result: string | Error = '';
 
@@ -580,7 +612,7 @@ describe('command schema', async () => {
 	});
 
 	describe('ping', () => {
-		it('should fail (private ip)', () => {
+		it('should fail (private ipv4)', () => {
 			const input = {
 				type: 'ping',
 				target: '192.168.0.101',
@@ -592,16 +624,16 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Private hostnames are not allowed.');
 		});
 
-		it('should fail (ipv6)', () => {
+		it('should fail (private ipv6)', () => {
 			const input = {
 				type: 'ping',
-				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+				target: 'fe80::ffff:ffff:ffff:ffff',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
+			expect(valid.error!.message).to.equal('Private hostnames are not allowed.');
 		});
 
 		it('should fail (missing values)', () => {
@@ -637,7 +669,7 @@ describe('command schema', async () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should pass (target ip)', () => {
+		it('should pass (target ipv4)', () => {
 			const input = {
 				type: 'ping',
 				target: '1.1.1.1',
@@ -648,10 +680,34 @@ describe('command schema', async () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should fail (target: invalid ip format)', () => {
+		it('should pass (target ipv6)', () => {
+			const input = {
+				type: 'ping',
+				target: '2001:41f0:4060::',
+				measurementOptions: {},
+			};
+
+			const valid = globalSchema.validate(input);
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should fail (target: invalid ipv4 format)', () => {
 			const input = {
 				type: 'ping',
 				target: '300.300.300.300',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
+		});
+
+		it('should fail (target: invalid ipv6 format)', () => {
+			const input = {
+				type: 'ping',
+				target: '2a06:e80:::3000:abcd:1234:5678:9abc:def0',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
@@ -672,7 +728,7 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (blacklisted target ip)', () => {
+		it('should fail (blacklisted target ipv4)', () => {
 			const input = {
 				type: 'ping',
 				target: '100.0.41.228',
@@ -682,6 +738,33 @@ describe('command schema', async () => {
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted target ipv6)', () => {
+			const input = {
+				type: 'ping',
+				target: '2803:5380:ffff::386',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (unsupported ipVersion)', () => {
+			const input = {
+				type: 'ping',
+				target: '_acme-challenge.abc.com',
+				measurementOptions: {
+					ipVersion: 8,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('ipVersion must be either 4 or 6');
 		});
 
 		it('should pass and correct values (incorrect capitalization)', () => {
@@ -702,6 +785,7 @@ describe('command schema', async () => {
 				target: 'abc.com',
 				measurementOptions: {
 					packets: 1,
+					ipVersion: 4,
 				},
 			};
 
@@ -730,8 +814,94 @@ describe('command schema', async () => {
 				inProgressUpdates: false,
 				measurementOptions: {
 					packets: 3,
+					ipVersion: 4,
 				},
 				limit: 1,
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should pass (deep equal) ip version 6 target is a domain', () => {
+			const input = {
+				type: 'ping',
+				target: 'abc.com',
+				measurementOptions: {
+					packets: 1,
+					ipVersion: 6,
+				},
+			};
+
+			const desiredOutput = {
+				...input,
+				inProgressUpdates: false,
+				locations: [],
+				limit: 1,
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should fail ip version provided when target is an ip', () => {
+			const input = {
+				type: 'ping',
+				target: '1.1.1.1',
+				measurementOptions: {
+					packets: 1,
+					ipVersion: 4,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('ipVersion is not allowed when target is not a domain');
+		});
+
+		it('should pass (deep equal) ip version 4 automatically selected when target ipv4', () => {
+			const input = {
+				type: 'ping',
+				target: '1.1.1.1',
+			};
+
+			const desiredOutput = {
+				...input,
+				inProgressUpdates: false,
+				locations: [],
+				limit: 1,
+				measurementOptions: {
+					packets: 3,
+					ipVersion: 4,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should pass (deep equal) ip version 6 automatically selected when target ipv6', () => {
+			const input = {
+				type: 'ping',
+				target: '2001:41f0:4060::',
+			};
+
+			const desiredOutput = {
+				...input,
+				inProgressUpdates: false,
+				locations: [],
+				limit: 1,
+				measurementOptions: {
+					packets: 3,
+					ipVersion: 6,
+				},
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
@@ -753,18 +923,6 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('"target" is required');
 		});
 
-		it('should fail (ipv6)', () => {
-			const input = {
-				type: 'traceroute',
-				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
-			};
-
-			const valid = globalSchema.validate(input, { convert: true });
-
-			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
-		});
-
 		it('should fail (blacklisted target domain)', () => {
 			const input = {
 				type: 'traceroute',
@@ -777,10 +935,22 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (blacklisted target ip)', () => {
+		it('should fail (blacklisted target ipv4)', () => {
 			const input = {
 				type: 'traceroute',
 				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted target ipv6)', () => {
+			const input = {
+				type: 'traceroute',
+				target: '2803:5380:ffff::386',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
@@ -802,6 +972,21 @@ describe('command schema', async () => {
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"measurementOptions.port" must be a valid port');
+		});
+
+		it('should fail (unsupported ipVersion)', () => {
+			const input = {
+				type: 'traceroute',
+				target: 'abc.com',
+				measurementOptions: {
+					ipVersion: 8,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('ipVersion must be either 4 or 6');
 		});
 
 		it('should pass (target domain)', () => {
@@ -826,7 +1011,7 @@ describe('command schema', async () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should pass (target ip)', () => {
+		it('should pass (target ipv4)', () => {
 			const input = {
 				type: 'traceroute',
 				target: '1.1.1.1',
@@ -837,10 +1022,33 @@ describe('command schema', async () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should fail (target: invalid ip format)', () => {
+		it('should pass (target ipv6)', () => {
+			const input = {
+				type: 'traceroute',
+				target: '2001:41f0:4060::',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should fail (target: invalid ipv4 format)', () => {
 			const input = {
 				type: 'traceroute',
 				target: '300.300.300.300',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
+		});
+
+		it('should fail (target: invalid ipv6 format)', () => {
+			const input = {
+				type: 'traceroute',
+				target: '2a06:e80:::3000:abcd:1234:5678:9abc:def0',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
@@ -865,13 +1073,14 @@ describe('command schema', async () => {
 			expect(valid.value.measurementOptions.protocol).to.equal('UDP');
 		});
 
-		it('should pass (deep equal)', () => {
+		it('should pass (deep equal) ip version 6 target is a domain', () => {
 			const input = {
 				type: 'traceroute',
 				target: 'abc.com',
 				measurementOptions: {
 					protocol: 'TCP',
 					port: 80,
+					ipVersion: 6,
 				},
 			};
 
@@ -902,6 +1111,70 @@ describe('command schema', async () => {
 				measurementOptions: {
 					protocol: 'ICMP',
 					port: 80,
+					ipVersion: 4,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should fail ip version provided when target is an ip', () => {
+			const input = {
+				type: 'traceroute',
+				target: '2001:41f0:4060::',
+				measurementOptions: {
+					ipVersion: 6,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('ipVersion is not allowed when target is not a domain');
+		});
+
+		it('should pass (deep equal) ip version 4 automatically selected when target ipv4', () => {
+			const input = {
+				type: 'traceroute',
+				target: '1.1.1.1',
+			};
+
+			const desiredOutput = {
+				...input,
+				inProgressUpdates: false,
+				limit: 1,
+				locations: [],
+				measurementOptions: {
+					protocol: 'ICMP',
+					port: 80,
+					ipVersion: 4,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should pass (deep equal) ip version 6 automatically selected when target ipv6', () => {
+			const input = {
+				type: 'traceroute',
+				target: '2001:41f0:4060::',
+			};
+
+			const desiredOutput = {
+				...input,
+				inProgressUpdates: false,
+				limit: 1,
+				locations: [],
+				measurementOptions: {
+					protocol: 'ICMP',
+					port: 80,
+					ipVersion: 6,
 				},
 			};
 
@@ -948,19 +1221,18 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (ipv6 resolver)', () => {
+		it('should pass (ipv6 resolver)', () => {
 			const input = {
 				type: 'dns',
 				target: 'abc.com',
 				measurementOptions: {
-					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+					resolver: '2001:41f0:4060::',
 				},
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
 
-			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"measurementOptions.resolver" does not match any of the allowed types');
+			expect(valid.error).to.not.exist;
 		});
 
 		it('should fail (blacklisted domain resolver)', () => {
@@ -978,12 +1250,27 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (blacklisted ip resolver)', () => {
+		it('should fail (blacklisted ipv4 resolver)', () => {
 			const input = {
 				type: 'dns',
 				target: 'abc.com',
 				measurementOptions: {
 					resolver: '100.0.41.228',
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted ipv6 resolver)', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					resolver: '2803:5380:ffff::386',
 				},
 			};
 
@@ -1020,6 +1307,22 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
+		});
+
+		it('should fail (unsupported ipVersion)', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					resolver: 'gns1.cloudns.net',
+					ipVersion: 8,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('ipVersion must be either 4 or 6');
 		});
 
 		it('should pass (target domain) (_acme-challenge.abc.com)', () => {
@@ -1091,7 +1394,125 @@ describe('command schema', async () => {
 			};
 
 			const desiredOutput = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					trace: false,
+					resolver: '1.1.1.1',
+					protocol: 'UDP',
+					port: 53,
+					query: {
+						type: 'A',
+					},
+					ipVersion: 4,
+				},
+				inProgressUpdates: false,
+				limit: 1,
+				locations: [],
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should pass (deep equal) ip version 6 resolver is a domain', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					trace: false,
+					resolver: 'gns1.cloudns.net',
+					protocol: 'UDP',
+					port: 53,
+					query: {
+						type: 'A',
+					},
+					ipVersion: 6,
+				},
+			};
+
+			const desiredOutput = {
 				...input,
+				inProgressUpdates: false,
+				limit: 1,
+				locations: [],
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should pass (deep equal) ip version 4 automatically selected when resolver is ipv4', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					trace: false,
+					resolver: '1.1.1.1',
+					protocol: 'UDP',
+					port: 53,
+					query: {
+						type: 'A',
+					},
+				},
+			};
+
+			const desiredOutput = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					trace: false,
+					resolver: '1.1.1.1',
+					protocol: 'UDP',
+					port: 53,
+					query: {
+						type: 'A',
+					},
+					ipVersion: 4,
+				},
+				inProgressUpdates: false,
+				limit: 1,
+				locations: [],
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should pass (deep equal) ip version 6 automatically selected when resolver is ipv6', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					trace: false,
+					resolver: '2001:41f0:4060::',
+					protocol: 'UDP',
+					port: 53,
+					query: {
+						type: 'A',
+					},
+				},
+			};
+
+			const desiredOutput = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					trace: false,
+					resolver: '2001:41f0:4060::',
+					protocol: 'UDP',
+					port: 53,
+					query: {
+						type: 'A',
+					},
+					ipVersion: 6,
+				},
 				inProgressUpdates: false,
 				limit: 1,
 				locations: [],
@@ -1121,6 +1542,7 @@ describe('command schema', async () => {
 					query: {
 						type: 'A',
 					},
+					ipVersion: 4,
 				},
 			};
 
@@ -1128,6 +1550,22 @@ describe('command schema', async () => {
 
 			expect(valid.error).to.not.exist;
 			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should fail (ip version provided when resolver is an ip)', () => {
+			const input = {
+				type: 'dns',
+				target: 'abc.com',
+				measurementOptions: {
+					resolver: '2001:41f0:4060::',
+					ipVersion: 6,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('ipVersion is not allowed when resolver is not a domain');
 		});
 
 		it('should pass (root domain)', () => {
@@ -1179,10 +1617,10 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"target" must be a valid ip address of one of the following versions [ipv4] with a forbidden CIDR');
+			expect(valid.error!.message).to.equal('"target" must be a valid ip address of one of the following versions [ipv4, ipv6] with a forbidden CIDR');
 		});
 
-		it('should fail (uses blacklisted ip for target)', () => {
+		it('should fail (uses blacklisted ipv4 for target)', () => {
 			const input = {
 				type: 'dns',
 				target: '100.0.41.228',
@@ -1199,7 +1637,24 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should pass (uses ip for target)', () => {
+		it('should fail (uses blacklisted ipv6 for target)', () => {
+			const input = {
+				type: 'dns',
+				target: '2803:5380:ffff::386',
+				measurementOptions: {
+					query: {
+						type: 'PTR',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should pass (uses ipv4 for target)', () => {
 			const input = {
 				type: 'dns',
 				target: '1.1.1.1',
@@ -1217,7 +1672,25 @@ describe('command schema', async () => {
 			expect(valid.value.measurementOptions.query.type).to.equal('PTR');
 		});
 
-		it('should pass (uses ip for target incorrect caps for type)', () => {
+		it('should pass (uses ipv6 for target)', () => {
+			const input = {
+				type: 'dns',
+				target: '2001:41f0:4060::',
+				measurementOptions: {
+					query: {
+						type: 'PTR',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).not.to.exist;
+			expect(valid.value.type).to.equal('dns');
+			expect(valid.value.measurementOptions.query.type).to.equal('PTR');
+		});
+
+		it('should pass (uses ipv4 for target incorrect caps for type)', () => {
 			const input = {
 				type: 'dns',
 				target: '1.1.1.1',
@@ -1248,16 +1721,15 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('"target" is required');
 		});
 
-		it('should fail (ipv6 target)', () => {
+		it('should pass (ipv6 target)', () => {
 			const input = {
 				type: 'mtr',
-				target: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+				target: '2001:41f0:4060::',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
 
-			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
+			expect(valid.error).to.not.exist;
 		});
 
 		it('should fail (blacklisted target domain)', () => {
@@ -1272,10 +1744,22 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (blacklisted target ip)', () => {
+		it('should fail (blacklisted target ipv4)', () => {
 			const input = {
 				type: 'mtr',
 				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted target ipv6)', () => {
+			const input = {
+				type: 'mtr',
+				target: '2803:5380:ffff::386',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
@@ -1297,6 +1781,21 @@ describe('command schema', async () => {
 
 			expect(valid.error).to.exist;
 			expect(valid.error!.message).to.equal('"measurementOptions.port" must be a valid port');
+		});
+
+		it('should fail (unsupported ipVersion)', () => {
+			const input = {
+				type: 'mtr',
+				target: 'abc.com',
+				measurementOptions: {
+					ipVersion: 8,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('ipVersion must be either 4 or 6');
 		});
 
 		it('should pass (target domain)', () => {
@@ -1321,7 +1820,7 @@ describe('command schema', async () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should pass (target ip)', () => {
+		it('should pass (target ipv4)', () => {
 			const input = {
 				type: 'mtr',
 				target: '1.1.1.1',
@@ -1332,10 +1831,22 @@ describe('command schema', async () => {
 			expect(valid.error).to.not.exist;
 		});
 
-		it('should fail (target: invalid ip format)', () => {
+		it('should fail (target: invalid ipv4 format)', () => {
 			const input = {
 				type: 'mtr',
 				target: '300.300.300.300',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
+		});
+
+		it('should fail (target: invalid ipv6 format)', () => {
+			const input = {
+				type: 'mtr',
+				target: '2a06:e80:::3000:abcd:1234:5678:9abc:def0',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
@@ -1360,7 +1871,85 @@ describe('command schema', async () => {
 			expect(valid.value.measurementOptions.protocol).to.equal('UDP');
 		});
 
-		it('should pass (deep equal)', () => {
+		it('should fail ip version provided when target is an ip', () => {
+			const input = {
+				type: 'mtr',
+				target: '2001:41f0:4060::',
+				measurementOptions: {
+					protocol: 'udp',
+					ipVersion: 6,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('ipVersion is not allowed when target is not a domain');
+		});
+
+		it('should pass (deep equal) ip version 4 automatically selected when target ipv4', () => {
+			const input = {
+				type: 'mtr',
+				target: '1.1.1.1',
+				measurementOptions: {
+					protocol: 'TCP',
+					packets: 10,
+					port: 80,
+				},
+			};
+
+			const desiredOutput = {
+				type: 'mtr',
+				target: '1.1.1.1',
+				measurementOptions: {
+					protocol: 'TCP',
+					packets: 10,
+					port: 80,
+					ipVersion: 4,
+				},
+				inProgressUpdates: false,
+				limit: 1,
+				locations: [],
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should pass (deep equal) ip version 6 automatically selected when target ipv6', () => {
+			const input = {
+				type: 'mtr',
+				target: '2001:41f0:4060::',
+				measurementOptions: {
+					protocol: 'TCP',
+					packets: 10,
+					port: 80,
+				},
+			};
+
+			const desiredOutput = {
+				type: 'mtr',
+				target: '2001:41f0:4060::',
+				measurementOptions: {
+					protocol: 'TCP',
+					packets: 10,
+					port: 80,
+					ipVersion: 6,
+				},
+				inProgressUpdates: false,
+				limit: 1,
+				locations: [],
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should pass (deep equal) ip version 6 domain', () => {
 			const input = {
 				type: 'mtr',
 				target: 'abc.com',
@@ -1368,6 +1957,7 @@ describe('command schema', async () => {
 					protocol: 'TCP',
 					packets: 10,
 					port: 80,
+					ipVersion: 6,
 				},
 			};
 
@@ -1399,6 +1989,7 @@ describe('command schema', async () => {
 					protocol: 'ICMP',
 					packets: 3,
 					port: 80,
+					ipVersion: 4,
 				},
 			};
 
@@ -1431,15 +2022,37 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"measurementOptions.resolver" must be a valid ip address of one of the following versions [ipv4] with a forbidden CIDR');
+			expect(valid.error!.message).to.equal('"measurementOptions.resolver" must be a valid ip address of one of the following versions [ipv4, ipv6] with a forbidden CIDR');
 		});
 
-		it('should fail (ipv6 resolver)', () => {
+		it('should pass (ipv6 resolver)', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
 				measurementOptions: {
-					resolver: '0083:eec9:a0b9:bc22:a151:ad0e:a3d7:fd28',
+					resolver: '2001:41f0:4060::',
+					protocol: 'https',
+					port: 443,
+					request: {
+						host: 'abc.com',
+						headers: {
+							test: 'abc',
+						},
+						method: 'GET',
+					},
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+			expect(valid.error).to.not.exist;
+		});
+
+		it('should fail (blacklisted ipv4 resolver)', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				measurementOptions: {
+					resolver: '100.0.41.228',
 					protocol: 'https',
 					port: 443,
 					request: {
@@ -1454,15 +2067,15 @@ describe('command schema', async () => {
 
 			const valid = globalSchema.validate(input, { convert: true });
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"measurementOptions.resolver" must be a valid ip address of one of the following versions [ipv4] with a forbidden CIDR');
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (blacklisted resolver)', () => {
+		it('should fail (blacklisted ipv6 resolver)', () => {
 			const input = {
 				type: 'http',
 				target: 'elocast.com',
 				measurementOptions: {
-					resolver: '100.0.41.228',
+					resolver: '2803:5380:ffff::386',
 					protocol: 'https',
 					port: 443,
 					request: {
@@ -1526,6 +2139,31 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('"measurementOptions.protocol" must be one of [HTTP, HTTPS, HTTP2]');
 		});
 
+		it('should fail (unsupported ipVersion)', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				measurementOptions: {
+					resolver: '2001:41f0:4060::',
+					protocol: 'https',
+					port: 443,
+					request: {
+						host: 'abc.com',
+						headers: {
+							test: 'abc',
+						},
+						method: 'GET',
+					},
+					ipVersion: 8,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('ipVersion must be either 4 or 6');
+		});
+
 		it('should fail (blacklisted target domain)', () => {
 			const input = {
 				type: 'http',
@@ -1538,10 +2176,22 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
 		});
 
-		it('should fail (blacklisted target ip)', () => {
+		it('should fail (blacklisted target ipv4)', () => {
 			const input = {
 				type: 'http',
 				target: '100.0.41.228',
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+		});
+
+		it('should fail (blacklisted target ipv6)', () => {
+			const input = {
+				type: 'http',
+				target: '2803:5380:ffff::386',
 			};
 
 			const valid = globalSchema.validate(input, { convert: true });
@@ -1605,6 +2255,7 @@ describe('command schema', async () => {
 						query: '',
 						headers: { test: 'abc' },
 					},
+					ipVersion: 4,
 				},
 				locations: [],
 				limit: 1,
@@ -1647,6 +2298,7 @@ describe('command schema', async () => {
 						query: '',
 						headers: { test: 'abc' },
 					},
+					ipVersion: 4,
 				},
 				locations: [],
 				limit: 1,
@@ -1676,7 +2328,174 @@ describe('command schema', async () => {
 						query: '',
 						headers: {},
 					},
+					ipVersion: 4,
 				},
+				locations: [],
+				limit: 1,
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should pass (deep equal) ip version 6 target is a domain', () => {
+			const input = {
+				type: 'http',
+				target: 'elocast.com',
+				measurementOptions: {
+					resolver: '1.1.1.1',
+					protocol: 'https',
+					port: 443,
+					request: {
+						host: 'abc.com',
+						headers: {
+							test: 'abc',
+						},
+						method: 'GET',
+					},
+					ipVersion: 6,
+				},
+			};
+
+			const desiredOutput = {
+				type: 'http',
+				target: 'elocast.com',
+				measurementOptions: {
+					resolver: '1.1.1.1',
+					protocol: 'HTTPS',
+					port: 443,
+					request: {
+						host: 'abc.com',
+						headers: {
+							test: 'abc',
+						},
+						method: 'GET',
+						query: '',
+						path: '/',
+					},
+					ipVersion: 6,
+				},
+				inProgressUpdates: false,
+				locations: [],
+				limit: 1,
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should fail ip version provided when target is an ip', () => {
+			const input = {
+				type: 'http',
+				target: '2001:41f0:4060::',
+				measurementOptions: {
+					resolver: '2001:41f0:4060::',
+					protocol: 'https',
+					port: 443,
+					request: {
+						host: 'abc.com',
+						headers: {
+							test: 'abc',
+						},
+						method: 'GET',
+					},
+					ipVersion: 6,
+				},
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+			expect(valid.error).to.exist;
+			expect(valid.error!.message).to.equal('ipVersion is not allowed when target is not a domain');
+		});
+
+		it('should pass (deep equal) ip version 4 automatically selected when target is ipv4', () => {
+			const input = {
+				type: 'http',
+				target: '1.1.1.1',
+				measurementOptions: {
+					resolver: '1.2.3.4',
+					protocol: 'https',
+					port: 443,
+					request: {
+						host: 'abc.com',
+						headers: {
+							test: 'abc',
+						},
+						method: 'GET',
+					},
+				},
+			};
+
+			const desiredOutput = {
+				type: 'http',
+				target: '1.1.1.1',
+				measurementOptions: {
+					resolver: '1.2.3.4',
+					protocol: 'HTTPS',
+					port: 443,
+					request: {
+						host: 'abc.com',
+						headers: {
+							test: 'abc',
+						},
+						method: 'GET',
+						query: '',
+						path: '/',
+					},
+					ipVersion: 4,
+				},
+				inProgressUpdates: false,
+				locations: [],
+				limit: 1,
+			};
+
+			const valid = globalSchema.validate(input, { convert: true });
+
+			expect(valid.error).to.not.exist;
+			expect(valid.value).to.deep.equal(desiredOutput);
+		});
+
+		it('should pass (deep equal) ip version 6 automatically selected when target is ipv6', () => {
+			const input = {
+				type: 'http',
+				target: '2001:41f0:4060::',
+				measurementOptions: {
+					resolver: '1.1.1.1',
+					protocol: 'https',
+					port: 443,
+					request: {
+						host: 'abc.com',
+						headers: {
+							test: 'abc',
+						},
+						method: 'GET',
+					},
+				},
+			};
+
+			const desiredOutput = {
+				type: 'http',
+				target: '2001:41f0:4060::',
+				measurementOptions: {
+					resolver: '1.1.1.1',
+					protocol: 'HTTPS',
+					port: 443,
+					request: {
+						host: 'abc.com',
+						headers: {
+							test: 'abc',
+						},
+						method: 'GET',
+						query: '',
+						path: '/',
+					},
+					ipVersion: 6,
+				},
+				inProgressUpdates: false,
 				locations: [],
 				limit: 1,
 			};

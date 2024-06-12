@@ -4,6 +4,9 @@ const ALLOWED_QUERY_TYPES = [ 'ping', 'traceroute', 'dns', 'mtr', 'http' ];
 // filters
 const ALLOWED_LOCATION_TYPES = [ 'continent', 'region', 'country', 'state', 'city', 'asn', 'network', 'tags', 'magic' ];
 
+// ip versions
+const ALLOWED_IP_VERSIONS = [ 4, 6 ];
+
 // traceroute
 const ALLOWED_TRACE_PROTOCOLS = [ 'TCP', 'UDP', 'ICMP' ];
 

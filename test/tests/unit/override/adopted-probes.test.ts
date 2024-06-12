@@ -15,6 +15,8 @@ describe('AdoptedProbes', () => {
 		tags: '[{"prefix":"jimaek","value":"dashboardtag"}]',
 		isCustomCity: 0,
 		status: 'ready',
+		isIPv4Supported: true,
+		isIPv6Supported: true,
 		version: '0.26.0',
 		nodeVersion: 'v18.17.0',
 		hardwareDevice: null,
@@ -32,6 +34,8 @@ describe('AdoptedProbes', () => {
 		ipAddress: '1.1.1.1',
 		uuid: '1-1-1-1-1',
 		status: 'ready',
+		isIPv4Supported: true,
+		isIPv6Supported: true,
 		version: '0.26.0',
 		nodeVersion: 'v18.17.0',
 		location: {
@@ -209,6 +213,8 @@ describe('AdoptedProbes', () => {
 				ipAddress: '1.1.1.1',
 				uuid: '1-1-1-1-1',
 				status: 'initializing',
+				isIPv4Supported: false,
+				isIPv6Supported: false,
 				version: '0.27.0',
 				nodeVersion: 'v18.17.1',
 				isHardware: true,
@@ -235,6 +241,8 @@ describe('AdoptedProbes', () => {
 
 		expect(updateStub.args[0]).to.deep.equal([{
 			status: 'initializing',
+			isIPv4Supported: false,
+			isIPv6Supported: false,
 			version: '0.27.0',
 			nodeVersion: 'v18.17.1',
 			hardwareDevice: 'v1',
@@ -256,6 +264,8 @@ describe('AdoptedProbes', () => {
 				ipAddress: '1.1.1.1',
 				uuid: '1-1-1-1-1',
 				status: 'initializing',
+				isIPv4Supported: false,
+				isIPv6Supported: false,
 				version: '0.27.0',
 				nodeVersion: 'v18.17.0',
 				isHardware: false,
@@ -291,6 +301,8 @@ describe('AdoptedProbes', () => {
 		expect(updateStub.args[0]).to.deep.equal([
 			{
 				status: 'initializing',
+				isIPv4Supported: false,
+				isIPv6Supported: false,
 				version: '0.27.0',
 				asn: 20473,
 				network: 'The Constant Company, LLC',
@@ -308,6 +320,8 @@ describe('AdoptedProbes', () => {
 				ipAddress: '1.1.1.1',
 				uuid: '1-1-1-1-1',
 				status: 'initializing',
+				isIPv4Supported: false,
+				isIPv6Supported: false,
 				version: '0.27.0',
 				nodeVersion: 'v18.17.0',
 				isHardware: false,
@@ -334,6 +348,8 @@ describe('AdoptedProbes', () => {
 
 		expect(updateStub.args[0]).to.deep.equal([{
 			status: 'initializing',
+			isIPv4Supported: false,
+			isIPv6Supported: false,
 			version: '0.27.0',
 			country: 'GB',
 			asn: 20473,

@@ -187,6 +187,8 @@ describe('Get Probes', () => {
 				.expect((response) => {
 					expect(response.body[0]).to.deep.equal({
 						version: '0.14.0',
+						isIPv4Supported: false,
+						isIPv6Supported: false,
 						host: '',
 						ipAddress: '1.2.3.4',
 						uuid: '1-1-1-1-1',
@@ -244,6 +246,8 @@ describe('Get Probes', () => {
 							network: 'InterBS S.R.L. (BAEHOST)',
 						},
 						status: 'ready',
+						isIPv4Supported: false,
+						isIPv6Supported: false,
 						tags: [],
 						resolvers: [],
 					});
@@ -284,6 +288,8 @@ describe('Get Probes', () => {
 					isCustomCity: 1,
 					tags: '[{"prefix":"jimaek","value":"dashboardtag1"}]',
 					status: 'ready',
+					isIPv4Supported: false,
+					isIPv6Supported: false,
 					version: '0.26.0',
 					nodeVersion: 'v18.14.2',
 					hardwareDevice: null,

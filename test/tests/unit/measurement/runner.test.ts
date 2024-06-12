@@ -60,6 +60,7 @@ describe('MeasurementRunner', () => {
 			target: 'jsdelivr.com',
 			measurementOptions: {
 				packets: 3,
+				ipVersion: 4 as const,
 			},
 			locations: [],
 			limit: 10,
@@ -89,7 +90,7 @@ describe('MeasurementRunner', () => {
 			{
 				type: 'ping',
 				target: 'jsdelivr.com',
-				measurementOptions: { packets: 3 },
+				measurementOptions: { packets: 3, ipVersion: 4 },
 				locations: [],
 				limit: 10,
 				inProgressUpdates: false,
@@ -106,6 +107,7 @@ describe('MeasurementRunner', () => {
 			measurement: {
 				inProgressUpdates: false,
 				packets: 3,
+				ipVersion: 4,
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
@@ -119,6 +121,7 @@ describe('MeasurementRunner', () => {
 			measurement: {
 				inProgressUpdates: false,
 				packets: 3,
+				ipVersion: 4,
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
@@ -132,6 +135,7 @@ describe('MeasurementRunner', () => {
 			measurement: {
 				inProgressUpdates: false,
 				packets: 3,
+				ipVersion: 4,
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
@@ -145,6 +149,7 @@ describe('MeasurementRunner', () => {
 			measurement: {
 				inProgressUpdates: false,
 				packets: 3,
+				ipVersion: 4,
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
@@ -162,6 +167,7 @@ describe('MeasurementRunner', () => {
 			target: 'jsdelivr.com',
 			measurementOptions: {
 				packets: 3,
+				ipVersion: 4 as const,
 			},
 			locations: [],
 			limit: 10,
@@ -191,7 +197,7 @@ describe('MeasurementRunner', () => {
 			{
 				type: 'ping',
 				target: 'jsdelivr.com',
-				measurementOptions: { packets: 3 },
+				measurementOptions: { packets: 3, ipVersion: 4 },
 				locations: [],
 				limit: 10,
 				inProgressUpdates: true,
@@ -207,6 +213,7 @@ describe('MeasurementRunner', () => {
 			measurement: {
 				inProgressUpdates: true,
 				packets: 3,
+				ipVersion: 4,
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
@@ -218,6 +225,7 @@ describe('MeasurementRunner', () => {
 			measurement: {
 				inProgressUpdates: true,
 				packets: 3,
+				ipVersion: 4,
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
@@ -229,6 +237,7 @@ describe('MeasurementRunner', () => {
 			measurement: {
 				inProgressUpdates: false,
 				packets: 3,
+				ipVersion: 4,
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
@@ -240,6 +249,7 @@ describe('MeasurementRunner', () => {
 			measurement: {
 				inProgressUpdates: false,
 				packets: 3,
+				ipVersion: 4,
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
@@ -278,6 +288,7 @@ describe('MeasurementRunner', () => {
 			target: 'jsdelivr.com',
 			measurementOptions: {
 				packets: 3,
+				ipVersion: 4 as const,
 			},
 			locations: [],
 			limit: 10,
@@ -310,6 +321,7 @@ describe('MeasurementRunner', () => {
 			target: 'jsdelivr.com',
 			measurementOptions: {
 				packets: 3,
+				ipVersion: 4 as const,
 			},
 			locations: [],
 			limit: 10,
@@ -329,7 +341,7 @@ describe('MeasurementRunner', () => {
 				body: request,
 			},
 		} as unknown as ExtendedContext).catch((err: unknown) => err);
-		expect(err).to.deep.equal(createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' }));
+		expect(err).to.deep.equal(createHttpError(422, 'No suitable probes supporting IPv4 found.', { type: 'no_probes_found' }));
 		expect(store.markFinished.callCount).to.equal(0);
 	});
 
@@ -339,6 +351,7 @@ describe('MeasurementRunner', () => {
 			target: 'jsdelivr.com',
 			measurementOptions: {
 				packets: 3,
+				ipVersion: 4 as const,
 			},
 			locations: [],
 			limit: 10,

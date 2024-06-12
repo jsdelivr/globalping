@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS gp_adopted_probes (
   isCustomCity TINYINT(1) DEFAULT 0,
   tags LONGTEXT,
   status VARCHAR(255) NOT NULL,
+  isIPv4Supported BOOLEAN,
+  isIPv6Supported BOOLEAN,
   version VARCHAR(255) NOT NULL,
   nodeVersion VARCHAR(255) NOT NULL,
   hardwareDevice VARCHAR(255) NULL,

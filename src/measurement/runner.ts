@@ -23,9 +23,10 @@ export class MeasurementRunner {
 	async run (ctx: ExtendedContext): Promise<{measurementId: string; probesCount: number;}> {
 		const userRequest = ctx.request.body as UserRequest;
 		const { onlineProbesMap, allProbes, request } = await this.router.findMatchingProbes(userRequest);
+		const ipVersion = userRequest.measurementOptions?.ipVersion;
 
 		if (allProbes.length === 0) {
-			throw createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' });
+			throw createHttpError(422, `No suitable probes supporting IPv${ipVersion} found.`, { type: 'no_probes_found' });
 		}
 
 		await this.checkRateLimit(ctx, onlineProbesMap.size);

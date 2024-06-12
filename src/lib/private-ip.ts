@@ -21,6 +21,21 @@ privateBlockList.addSubnet('224.0.0.0', 4, 'ipv4');
 privateBlockList.addSubnet('240.0.0.0', 4, 'ipv4');
 privateBlockList.addAddress('255.255.255.255', 'ipv4');
 
+// https://www.iana.org/assignments/iana-ipv6-special-registry/iana-ipv6-special-registry.xhtml
+// IPv6
+privateBlockList.addSubnet('::', 128, 'ipv6');
+privateBlockList.addSubnet('::1', 128, 'ipv6');
+privateBlockList.addSubnet('64:ff9b:1::', 48, 'ipv6');
+privateBlockList.addSubnet('100::', 64, 'ipv6');
+privateBlockList.addSubnet('2001::', 32, 'ipv6');
+privateBlockList.addSubnet('2001:10::', 28, 'ipv6');
+privateBlockList.addSubnet('2001:20::', 28, 'ipv6');
+privateBlockList.addSubnet('2001:db8::', 32, 'ipv6');
+privateBlockList.addSubnet('2002::', 16, 'ipv6');
+privateBlockList.addSubnet('fc00::', 7, 'ipv6');
+privateBlockList.addSubnet('fe80::', 10, 'ipv6');
+privateBlockList.addSubnet('ff00::', 8, 'ipv6');
+
 export const isIpPrivate = (ip: string) => {
 	const ipVersion = isIP(ip);
 
@@ -29,7 +44,7 @@ export const isIpPrivate = (ip: string) => {
 	}
 
 	if (ipVersion === 6) {
-		throw new Error('IPv6 not supported');
+		return privateBlockList.check(ip, 'ipv6');
 	}
 
 	// Not a valid IP

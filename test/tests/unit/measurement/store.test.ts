@@ -133,7 +133,7 @@ describe('measurement store', () => {
 		await store.createMeasurement(
 			{
 				type: 'ping',
-				measurementOptions: { packets: 3 },
+				measurementOptions: { packets: 3, ipVersion: 4 },
 				target: 'jsdelivr.com',
 				locations: [],
 				limit: 4,
@@ -237,7 +237,7 @@ describe('measurement store', () => {
 		await store.createMeasurement(
 			{
 				type: 'ping',
-				measurementOptions: { packets: 3 },
+				measurementOptions: { packets: 3, ipVersion: 4 },
 				target: 'jsdelivr.com',
 				locations: [],
 				limit: 1,
@@ -294,6 +294,7 @@ describe('measurement store', () => {
 						headers: {},
 					},
 					protocol: 'HTTPS',
+					ipVersion: 4,
 				},
 				target: 'jsdelivr.com',
 				locations: [],
@@ -348,7 +349,7 @@ describe('measurement store', () => {
 		await store.createMeasurement(
 			{
 				type: 'ping',
-				measurementOptions: { packets: 3 },
+				measurementOptions: { packets: 3, ipVersion: 4 },
 				target: 'jsdelivr.com',
 				locations: [],
 				limit: 1,
@@ -412,6 +413,7 @@ describe('measurement store', () => {
 						},
 					},
 					protocol: 'HTTP',
+					ipVersion: 4,
 				},
 				target: 'jsdelivr.com',
 				locations: [{
@@ -484,6 +486,7 @@ describe('measurement store', () => {
 						headers: {},
 					},
 					protocol: 'HTTPS',
+					ipVersion: 4,
 				},
 				target: 'jsdelivr.com',
 				limit: 1,

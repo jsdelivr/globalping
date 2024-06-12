@@ -36,6 +36,8 @@ export type Tag = {
 
 export type Probe = {
 	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'ping-test-failed' | 'sigterm';
+	isIPv4Supported: boolean;
+	isIPv6Supported: boolean;
 	client: string;
 	version: string;
 	nodeVersion: string;
@@ -56,6 +58,8 @@ type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;
 
 export type OfflineProbe = Modify<Probe, {
 	status: 'offline';
+	isIPv4Supported: boolean;
+	isIPv6Supported: boolean;
 	client: null;
 	version: null;
 	nodeVersion: null;

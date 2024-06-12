@@ -79,6 +79,8 @@ describe('Create measurement request', () => {
 
 	it('should send and handle proper events during measurement request', async () => {
 		probe.emit('probe:status:update', 'ready');
+		probe.emit('probe:isIPv4Supported:update', true);
+		probe.emit('probe:isIPv6Supported:update', true);
 		await waitForProbesUpdate();
 
 		await requestAgent.post('/v1/measurements').send({
@@ -101,7 +103,7 @@ describe('Create measurement request', () => {
 		expect(requestHandlerStub.firstCall.args[0]).to.deep.equal({
 			measurementId: 'measurementid',
 			testId: '0',
-			measurement: { packets: 4, type: 'ping', target: 'jsdelivr.com', inProgressUpdates: false },
+			measurement: { packets: 4, ipVersion: 4, type: 'ping', target: 'jsdelivr.com', inProgressUpdates: false },
 		});
 
 		await requestAgent.get(`/v1/measurements/measurementid`).send()
@@ -330,6 +332,8 @@ describe('Create measurement request', () => {
 			.expect(200).expect((response) => {
 				expect(response.body[0]).to.deep.include({
 					status: 'initializing',
+					isIPv4Supported: false,
+					isIPv6Supported: false,
 					version: '0.14.0',
 					nodeVersion: 'v18.17.0',
 					uuid: '1-1-1-1-1',
@@ -359,6 +363,179 @@ describe('Create measurement request', () => {
 								{ usage: 2.06, idle: 97.94 },
 								{ usage: 43, idle: 57 },
 							],
+						},
+					},
+				});
+
+				expect(response).to.matchApiSchema();
+			});
+	});
+
+	it('should handle isIPv4Supported and isIPv6Supported events from probe', async () => {
+		probe.emit('probe:status:update', 'ready');
+		probe.emit('probe:isIPv4Supported:update', true);
+		probe.emit('probe:isIPv6Supported:update', true);
+
+		await waitForProbesUpdate();
+
+		await requestAgent.get('/v1/probes?adminkey=admin').send()
+			.expect(200).expect((response) => {
+				expect(response.body[0]).to.deep.include({
+					status: 'ready',
+					isIPv4Supported: true,
+					isIPv6Supported: true,
+					version: '0.14.0',
+					nodeVersion: 'v18.17.0',
+					uuid: '1-1-1-1-1',
+					location: {
+						continent: 'NA',
+						region: 'Northern America',
+						country: 'US',
+						state: 'TX',
+						city: 'Dallas',
+						asn: 20004,
+						latitude: 32.7831,
+						longitude: -96.8067,
+						network: 'The Constant Company LLC',
+					},
+					tags: [ 'gcp-us-west4', 'datacenter-network' ],
+					resolvers: [],
+					host: '',
+					stats: {
+						jobs: {
+							count: 0,
+						},
+						cpu: {
+							load: [],
+						},
+					},
+				});
+
+				expect(response).to.matchApiSchema();
+			});
+
+
+		probe.emit('probe:status:update', 'ready');
+		probe.emit('probe:isIPv4Supported:update', true);
+		probe.emit('probe:isIPv6Supported:update', false);
+
+		await waitForProbesUpdate();
+
+		await requestAgent.get('/v1/probes?adminkey=admin').send()
+			.expect(200).expect((response) => {
+				expect(response.body[0]).to.deep.include({
+					status: 'ready',
+					isIPv4Supported: true,
+					isIPv6Supported: false,
+					version: '0.14.0',
+					nodeVersion: 'v18.17.0',
+					uuid: '1-1-1-1-1',
+					location: {
+						continent: 'NA',
+						region: 'Northern America',
+						country: 'US',
+						state: 'TX',
+						city: 'Dallas',
+						asn: 20004,
+						latitude: 32.7831,
+						longitude: -96.8067,
+						network: 'The Constant Company LLC',
+					},
+					tags: [ 'gcp-us-west4', 'datacenter-network' ],
+					resolvers: [],
+					host: '',
+					stats: {
+						jobs: {
+							count: 0,
+						},
+						cpu: {
+							load: [],
+						},
+					},
+				});
+
+				expect(response).to.matchApiSchema();
+			});
+
+
+		probe.emit('probe:status:update', 'ready');
+		probe.emit('probe:isIPv4Supported:update', false);
+		probe.emit('probe:isIPv6Supported:update', true);
+
+		await waitForProbesUpdate();
+
+		await requestAgent.get('/v1/probes?adminkey=admin').send()
+			.expect(200).expect((response) => {
+				expect(response.body[0]).to.deep.include({
+					status: 'ready',
+					isIPv4Supported: false,
+					isIPv6Supported: true,
+					version: '0.14.0',
+					nodeVersion: 'v18.17.0',
+					uuid: '1-1-1-1-1',
+					location: {
+						continent: 'NA',
+						region: 'Northern America',
+						country: 'US',
+						state: 'TX',
+						city: 'Dallas',
+						asn: 20004,
+						latitude: 32.7831,
+						longitude: -96.8067,
+						network: 'The Constant Company LLC',
+					},
+					tags: [ 'gcp-us-west4', 'datacenter-network' ],
+					resolvers: [],
+					host: '',
+					stats: {
+						jobs: {
+							count: 0,
+						},
+						cpu: {
+							load: [],
+						},
+					},
+				});
+
+				expect(response).to.matchApiSchema();
+			});
+
+
+		probe.emit('probe:status:update', 'ping-test-failed');
+		probe.emit('probe:isIPv4Supported:update', false);
+		probe.emit('probe:isIPv6Supported:update', false);
+
+		await waitForProbesUpdate();
+
+		await requestAgent.get('/v1/probes?adminkey=admin').send()
+			.expect(200).expect((response) => {
+				expect(response.body[0]).to.deep.include({
+					status: 'ping-test-failed',
+					isIPv4Supported: false,
+					isIPv6Supported: false,
+					version: '0.14.0',
+					nodeVersion: 'v18.17.0',
+					uuid: '1-1-1-1-1',
+					location: {
+						continent: 'NA',
+						region: 'Northern America',
+						country: 'US',
+						state: 'TX',
+						city: 'Dallas',
+						asn: 20004,
+						latitude: 32.7831,
+						longitude: -96.8067,
+						network: 'The Constant Company LLC',
+					},
+					tags: [ 'gcp-us-west4', 'datacenter-network' ],
+					resolvers: [],
+					host: '',
+					stats: {
+						jobs: {
+							count: 0,
+						},
+						cpu: {
+							load: [],
 						},
 					},
 				});

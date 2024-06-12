@@ -42,7 +42,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found.',
+							message: 'No suitable probes supporting IPv4 found.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -62,11 +62,15 @@ describe('Create measurement', () => {
 			nockGeoIpProviders();
 			probe = await addFakeProbe();
 			probe.emit('probe:status:update', 'ready');
+			probe.emit('probe:isIPv4Supported:update', true);
+			probe.emit('probe:isIPv6Supported:update', true);
 			await waitForProbesUpdate();
 		});
 
 		afterEach(async () => {
 			probe.emit('probe:status:update', 'ready');
+			probe.emit('probe:isIPv4Supported:update', true);
+			probe.emit('probe:isIPv6Supported:update', true);
 			await waitForProbesUpdate();
 		});
 
@@ -90,7 +94,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found.',
+							message: 'No suitable probes supporting IPv4 found.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -117,7 +121,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found.',
+							message: 'No suitable probes supporting IPv4 found.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -384,7 +388,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found.',
+							message: 'No suitable probes supporting IPv4 found.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -408,6 +412,30 @@ describe('Create measurement', () => {
 					expect(response.body.id).to.exist;
 					expect(response.header['location']).to.exist;
 					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+				});
+		});
+
+		it('should create measurement with the ipVersion option set', async () => {
+			let id;
+			await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'example.com',
+					measurementOptions: { ipVersion: 6 },
+				})
+				.expect(202)
+				.expect((response) => {
+					expect(response.body.id).to.exist;
+					expect(response.header['location']).to.exist;
+					expect(response.body.probesCount).to.equal(1);
+					expect(response).to.matchApiSchema();
+					id = response.body.id;
+				});
+
+			await requestAgent.get(`/v1/measurements/${id}`)
+				.expect(200)
+				.expect((response) => {
 					expect(response).to.matchApiSchema();
 				});
 		});
@@ -580,7 +608,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes found.',
+							message: 'No suitable probes supporting IPv4 found.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -595,6 +623,7 @@ describe('Create measurement', () => {
 		describe('offline probes', () => {
 			after(async () => {
 				probe.emit('probe:status:update', 'ready');
+				probe.emit('probe:isIPv4Supported:update', true);
 				await waitForProbesUpdate();
 			});
 
@@ -655,6 +684,8 @@ describe('Create measurement', () => {
 					isCustomCity: 1,
 					tags: '[{"prefix":"jsdelivr","value":"Dashboard-Tag"}]',
 					status: 'ready',
+					isIPv4Supported: true,
+					isIPv6Supported: true,
 					version: '0.26.0',
 					nodeVersion: 'v18.14.2',
 					hardwareDevice: null,
@@ -731,7 +762,7 @@ describe('Create measurement', () => {
 						locations: [{ magic: 'u-jsdelivr-dashboard-tag', limit: 2 }],
 					})
 					.expect(422).expect((response) => {
-						expect(response.body.error.message).to.equal('No suitable probes found.');
+						expect(response.body.error.message).to.equal('No suitable probes supporting IPv4 found.');
 					});
 			});
 		});

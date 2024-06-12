@@ -23,24 +23,27 @@ export class ProbeRouter {
 		const locations = userRequest.locations ?? [];
 		const globalLimit = userRequest.limit ?? 1;
 
+		const preferredIpVersion = userRequest.measurementOptions?.ipVersion ?? 4;
 		const connectedProbes = (await this.fetchProbes()).filter(probe => probe.status === 'ready');
 
-		if (typeof locations === 'string') {
+		if (typeof locations === 'string') { // the measurement id of existing measurement was provided by the user, the same probes are to be used
 			return this.findWithMeasurementId(connectedProbes, locations, userRequest);
 		}
 
+		const connectedProbesFilteredByIpVersion = this.probesFilter.filterByIpVersion(connectedProbes, preferredIpVersion);
+
 		if (locations.some(l => l.limit)) {
-			const filtered = this.findWithLocationLimit(connectedProbes, locations);
-			return this.processFiltered(filtered, connectedProbes, locations, userRequest);
+			const filtered = this.findWithLocationLimit(connectedProbesFilteredByIpVersion, locations);
+			return this.processFiltered(filtered, connectedProbesFilteredByIpVersion, locations, userRequest);
 		}
 
 		if (locations.length > 0) {
-			const filtered = this.findWithGlobalLimit(connectedProbes, locations, globalLimit);
-			return this.processFiltered(filtered, connectedProbes, locations, userRequest);
+			const filtered = this.findWithGlobalLimit(connectedProbesFilteredByIpVersion, locations, globalLimit);
+			return this.processFiltered(filtered, connectedProbesFilteredByIpVersion, locations, userRequest);
 		}
 
-		const filtered = this.findGloballyDistributed(connectedProbes, globalLimit);
-		return this.processFiltered(filtered, connectedProbes, locations, userRequest);
+		const filtered = this.findGloballyDistributed(connectedProbesFilteredByIpVersion, globalLimit);
+		return this.processFiltered(filtered, connectedProbesFilteredByIpVersion, locations, userRequest);
 	}
 
 	private async processFiltered (filtered: Probe[], connectedProbes: Probe[], locations: LocationWithLimit[], request: UserRequest) {
@@ -136,6 +139,8 @@ export class ProbeRouter {
 
 	private testToOfflineProbe = (test: MeasurementResult, ip: string): OfflineProbe => ({
 		status: 'offline',
+		isIPv4Supported: false,
+		isIPv6Supported: false,
 		client: null,
 		version: null,
 		nodeVersion: null,

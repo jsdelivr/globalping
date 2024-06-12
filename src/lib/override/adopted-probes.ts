@@ -23,6 +23,8 @@ export type AdoptedProbe = {
 	}[];
 	isCustomCity: boolean;
 	status: string;
+	isIPv4Supported: boolean,
+	isIPv6Supported: boolean,
 	version: string | null;
 	nodeVersion: string | null;
 	hardwareDevice: string | null;
@@ -48,6 +50,14 @@ export class AdoptedProbes {
 	private readonly adoptedFieldToConnectedField = {
 		status: {
 			connectedField: 'status',
+			shouldUpdateIfCustomCity: true,
+		},
+		isIPv4Supported: {
+			connectedField: 'isIPv4Supported',
+			shouldUpdateIfCustomCity: true,
+		},
+		isIPv6Supported: {
+			connectedField: 'isIPv6Supported',
 			shouldUpdateIfCustomCity: true,
 		},
 		version: {
