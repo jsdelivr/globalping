@@ -50,11 +50,11 @@ const probes = () => ({
 		},
 		getIsIPv4Supported (index) {
 			const probe = this.probes[index];
-			return `IPv4: [${probe.isIPv4Supported}]`;
+			return probe.isIPv4Supported === undefined ? '' : `IPv4: [${probe.isIPv4Supported}]`;
 		},
 		getIsIPv6Supported (index) {
 			const probe = this.probes[index];
-			return `IPv6: [${probe.isIPv6Supported}]`;
+			return probe.isIPv6Supported === undefined ? '' : `IPv6: [${probe.isIPv6Supported}]`;
 		},
 		async fetchProbes () {
 			const adminKey = new URLSearchParams(window.location.search).get('adminkey');
