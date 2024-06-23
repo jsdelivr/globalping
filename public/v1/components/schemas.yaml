@@ -497,7 +497,8 @@ components:
           description: The IPv4 address of the resolver.
         - type: string
           format: ipv6
-          description: The IPv6 address of the resolver.
+          description: |
+            EXPERIMENTAL: The IPv6 address of the resolver.
         - type: string
           format: hostname
           description: The Fully Qualified Domain Name (FQDN) of the resolver.
@@ -533,6 +534,7 @@ components:
       description: |
         A publicly reachable measurement target.
         Typically a hostname, an IPv4 address, or IPv6 address, depending on the measurement `type`.
+        Support for IPv6 targets is currently considered experimental.
     MeasurementType:
       type: string
       description: The measurement type.
@@ -683,7 +685,8 @@ components:
           description: The IPv4 address of the resolver.
         - type: string
           format: ipv6
-          description: The IPv6 address of the resolver.
+          description: |
+            EXPERIMENTAL: The IPv6 address of the resolver.
         - type: string
           const: private
           description: Indicates that the resolver points to a private IP address.
