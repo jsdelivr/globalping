@@ -26,6 +26,7 @@ import { isSystemMw } from './middleware/is-system.js';
 import domainRedirect from './middleware/domain-redirect.js';
 import { docsLink } from './middleware/docs-link.js';
 import type { CustomContext } from '../../types.js';
+import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternative-ip.js';
 
 const app = new Koa();
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
@@ -61,6 +62,8 @@ registerGetMeasurementRoute(apiRouter);
 registerGetProbesRoute(apiRouter);
 // POST /send-code
 registerSendCodeRoute(apiRouter);
+// POST /alternative-ip
+registerAlternativeIpRoute(apiRouter);
 
 const healthRouter = new Router({ strict: true, sensitive: true });
 // GET /health

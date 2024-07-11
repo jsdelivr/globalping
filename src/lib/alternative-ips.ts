@@ -19,13 +19,15 @@ export class AlternativeIps {
 	generateToken (socket: ServerSocket) {
 		const token = randomUUID();
 		this.tokenToSocket.set(token, socket);
+		console.log('socket.id', socket.id);
 		console.log('token', token);
 	}
 
 	async validateToken (request: AlternativeIpRequest) {
-		const localSocket = this.tokenToSocket.get(request.socketId);
+		const localSocket = this.tokenToSocket.get(request.token);
 
 		if (localSocket) {
+			localSocket.data.probe.altIpAddresses.push(request.ip);
 		}
 	}
 }

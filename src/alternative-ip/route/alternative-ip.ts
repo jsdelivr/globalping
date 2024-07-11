@@ -14,6 +14,6 @@ const handle = async (ctx: Context): Promise<void> => {
 	};
 };
 
-export const registerSendCodeRoute = (router: Router): void => {
+export const registerAlternativeIpRoute = (router: Router): void => {
 	router.post('/alternative-ip', '/alternative-ip', bodyParser(), validate(schema), handle);
 };
