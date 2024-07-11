@@ -45,6 +45,7 @@ export type Probe = {
 	isHardware: boolean;
 	hardwareDevice: string | null;
 	ipAddress: string;
+	altIpAddresses: string[];
 	host: string;
 	location: ProbeLocation;
 	index: string[][];

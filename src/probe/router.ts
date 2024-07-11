@@ -148,7 +148,13 @@ export class ProbeRouter {
 		isHardware: false,
 		hardwareDevice: null,
 		ipAddress: ip,
+		altIpAddresses: [],
 		host: null,
+		hostInfo: {
+			totalMemory: 0,
+			totalDiskSize: 0,
+			availableDiskSpace: 0,
+		},
 		location: {
 			continent: test.probe.continent,
 			region: test.probe.region,
@@ -172,7 +178,7 @@ export class ProbeRouter {
 			},
 			jobs: { count: 0 },
 		},
-	} as OfflineProbe);
+	});
 }
 
 // Factory

@@ -32,6 +32,7 @@ describe('AdoptedProbes', () => {
 
 	const defaultConnectedProbe: Probe = {
 		ipAddress: '1.1.1.1',
+		altIpAddresses: [],
 		uuid: '1-1-1-1-1',
 		status: 'ready',
 		isIPv4Supported: true,
