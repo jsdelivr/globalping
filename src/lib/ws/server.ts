@@ -8,6 +8,7 @@ import { ProbeOverride } from '../override/probe-override.js';
 import { ProbeIpLimit } from './helper/probe-ip-limit.js';
 import { AdoptedProbes } from '../override/adopted-probes.js';
 import { AdminData } from '../override/admin-data.js';
+import { AlternativeIps } from '../alternative-ips.js';
 
 export interface DefaultEventsMap {
 	// TODO: maybe create type definitions for the events?
@@ -32,6 +33,8 @@ export const PROBES_NAMESPACE = '/probes';
 let io: WsServer;
 let syncedProbeList: SyncedProbeList;
 
+export let alternativeIps: AlternativeIps;
+
 export const initWsServer = async () => {
 	const redis = getRedisClient();
 	const pubClient = redis.duplicate();
@@ -54,6 +57,8 @@ export const initWsServer = async () => {
 
 	await syncedProbeList.sync();
 	syncedProbeList.scheduleSync();
+
+	alternativeIps = new AlternativeIps(getRedisClient(), syncedProbeList, io);
 };
 
 export const getWsServer = (): WsServer => {
