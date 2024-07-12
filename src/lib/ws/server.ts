@@ -9,6 +9,7 @@ import { ProbeIpLimit } from './helper/probe-ip-limit.js';
 import { AdoptedProbes } from '../override/adopted-probes.js';
 import { AdminData } from '../override/admin-data.js';
 import { AlternativeIps } from '../alternative-ips.js';
+import { getSubscriptionRedisClient } from '../redis/subscription-client.js';
 
 export interface DefaultEventsMap {
 	// TODO: maybe create type definitions for the events?
@@ -37,6 +38,7 @@ export let alternativeIps: AlternativeIps;
 
 export const initWsServer = async () => {
 	const redis = getRedisClient();
+	const redisSubClient = getSubscriptionRedisClient();
 	const pubClient = redis.duplicate();
 	const subClient = redis.duplicate();
 
@@ -53,12 +55,12 @@ export const initWsServer = async () => {
 		subscriptionMode: 'dynamic-private',
 	}));
 
-	syncedProbeList = new SyncedProbeList(redis, io.of(PROBES_NAMESPACE), probeOverride);
+	syncedProbeList = new SyncedProbeList(redis, redisSubClient, io.of(PROBES_NAMESPACE), probeOverride);
 
 	await syncedProbeList.sync();
 	syncedProbeList.scheduleSync();
 
-	alternativeIps = new AlternativeIps(getRedisClient(), syncedProbeList, io);
+	alternativeIps = new AlternativeIps(syncedProbeList);
 };
 
 export const getWsServer = (): WsServer => {

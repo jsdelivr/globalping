@@ -8,7 +8,7 @@ import { alternativeIps } from '../../lib/ws/server.js';
 
 const handle = async (ctx: Context): Promise<void> => {
 	const request = ctx.request.body as AlternativeIpRequest;
-	await alternativeIps.validateToken(request);
+	await alternativeIps.validateTokenFromHttp(request);
 
 	ctx.body = {
 	};

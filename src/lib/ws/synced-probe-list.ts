@@ -25,6 +25,13 @@ type NodeChanges = {
 	updateStats: Map<string, ProbeStats>;
 };
 
+export type PubSubMessage = {
+	type: string,
+	body: object;
+}
+
+type Callback = (message: PubSubMessage, channel: string) => void;
+
 const MESSAGE_TYPES = {
 	ALIVE: 'a',
 	META: 'm',
@@ -55,7 +62,10 @@ export class SyncedProbeList extends EventEmitter {
 	private readonly nodeId: string;
 	private readonly nodeData: TTLCache<string, NodeData>;
 
-	constructor (private readonly redis: RedisClient, private readonly ioNamespace: WsServerNamespace, private readonly probeOverride: ProbeOverride) {
+	private socketIdToNodeId: Record<Probe['client'], NodeData['nodeId']>;
+	private registeredCallbacks: Record<string, Callback[]>;
+
+	constructor (private readonly redis: RedisClient, private readonly subRedisClient: RedisClient, private readonly ioNamespace: WsServerNamespace, private readonly probeOverride: ProbeOverride) {
 		super();
 		this.setMaxListeners(Infinity);
 		this.nodeId = randomBytes(8).toString('hex');
@@ -73,6 +83,11 @@ export class SyncedProbeList extends EventEmitter {
 				this.updateProbes();
 			},
 		});
+
+		this.socketIdToNodeId = {};
+		this.registeredCallbacks = {};
+
+		this.subscribeNode();
 	}
 
 	getRawProbes (): Probe[] {
@@ -102,12 +117,33 @@ export class SyncedProbeList extends EventEmitter {
 		});
 	}
 
+	getNodeIdBySocketId (socketId: string) {
+		return this.socketIdToNodeId[socketId] || null;
+	}
+
+	async publishToNode (nodeId: string, message: PubSubMessage) {
+		await this.redis.publish(`gp:spl:pub-sub:${nodeId}`, JSON.stringify(message));
+	}
+
+	async subscribeToNodeMessages<T extends PubSubMessage> (type: string, callback: (message: T, channel: string) => void) {
+		const callbacks = this.registeredCallbacks[type];
+		const cb = callback as Callback;
+
+		if (callbacks) {
+			callbacks.push(cb);
+		} else {
+			this.registeredCallbacks[type] = [ cb ];
+		}
+	}
+
 	private updateProbes () {
 		const probes = [];
+		const socketIdToNodeId: Record<Probe['client'], NodeData['nodeId']> = {};
 		let oldest = Infinity;
 
 		for (const nodeData of this.nodeData.values()) {
 			probes.push(...Object.values(nodeData.probesById));
+			Object.assign(socketIdToNodeId, Object.fromEntries(Object.keys(nodeData.probesById).map(socketId => [ socketId, nodeData.nodeId ])));
 
 			if (nodeData.revalidateTimestamp < oldest) {
 				oldest = nodeData.revalidateTimestamp;
@@ -117,6 +153,7 @@ export class SyncedProbeList extends EventEmitter {
 		this.rawProbes = probes;
 		this.probesWithAdminData = this.probeOverride.addAdminData(probes);
 		this.probes = this.probeOverride.addAdoptedData(this.probesWithAdminData);
+		this.socketIdToNodeId = socketIdToNodeId;
 		this.oldest = oldest;
 
 		this.emit(this.localUpdateEvent);
@@ -446,5 +483,16 @@ export class SyncedProbeList extends EventEmitter {
 	unscheduleSync () {
 		clearTimeout(this.pushTimer);
 		clearTimeout(this.pullTimer);
+	}
+
+	private async subscribeNode () {
+		await this.subRedisClient.subscribe(`gp:spl:pub-sub:${this.nodeId}`, (message, channel) => {
+			const parsedMessage = JSON.parse(message) as PubSubMessage;
+			const callbacks = this.registeredCallbacks[parsedMessage.type];
+
+			if (callbacks) {
+				callbacks.forEach(callback => callback(parsedMessage, channel));
+			}
+		});
 	}
 }
