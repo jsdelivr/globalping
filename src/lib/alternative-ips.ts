@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import type { ServerSocket } from './ws/server.js';
 import type { SyncedProbeList } from './ws/synced-probe-list.js';
 import TTLCache from '@isaacs/ttlcache';
-import type { AlternativeIpRequest } from '../alternative-ip/types.js';
 
 const ALT_IP_MESSAGE_TYPE = 'alternative-ip';
 
@@ -30,7 +29,7 @@ export class AlternativeIps {
 		console.log('token', token);
 	}
 
-	async validateTokenFromHttp (request: AlternativeIpRequest) {
+	async validateTokenFromHttp (request: AltIpMessage['body']) {
 		const localSocket = this.tokenToSocket.get(request.token);
 
 		if (localSocket) {
