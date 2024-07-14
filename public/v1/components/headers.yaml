@@ -1,12 +1,7 @@
 components:
   headers:
     CreditsConsumed:
-      description: The number of credits consumed by the request. Returned only when credits were successfully consumed.
-      required: false
-      schema:
-        type: integer
-    CreditsRequired:
-      description: The number of credits required to process the request. Returned only when the credits in your account were not sufficient, and the request was rejected.
+      description: The number of credits consumed by the request. Returned only when an attempt to use credits was made (requests with a valid token exceeding the hourly rate limit).
       required: false
       schema:
         type: integer
@@ -22,17 +17,27 @@ components:
         type: string
         format: uri
     RateLimitLimit:
-      description: The number of requests available in a given time window.
+      description: The number of rate limit points available in a given time window.
+      required: true
+      schema:
+        type: integer
+    RateLimitConsumed:
+      description: The number of rate limit points consumed by the request.
       required: true
       schema:
         type: integer
     RateLimitRemaining:
-      description: The number of requests remaining in the current time window.
+      description: The number of rate limit points remaining in the current time window.
       required: true
       schema:
         type: integer
     RateLimitReset:
       description: The number of seconds until the limit resets.
       required: true
+      schema:
+        type: integer
+    RequestCost:
+      description: The number of rate limit points or credits required to accept the request.
+      required: false
       schema:
         type: integer
