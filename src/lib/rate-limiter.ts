@@ -38,9 +38,11 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 		id = requestIp.getClientIp(ctx.req) ?? '';
 	}
 
+	setRequestCostHeaders(ctx, numberOfProbes);
+
 	try {
 		const result = await rateLimiter.consume(id, numberOfProbes);
-		setRateLimitHeaders(ctx, result, rateLimiter);
+		setRateLimitHeaders(ctx, result, rateLimiter, numberOfProbes);
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
 			if (ctx.state.userId) {
@@ -48,16 +50,16 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 
 				if (isConsumed) {
 					const result = await rateLimiter.reward(id, requiredCredits);
-					setConsumedHeaders(ctx, requiredCredits, remainingCredits);
-					setRateLimitHeaders(ctx, result, rateLimiter);
+					setCreditsConsumedHeaders(ctx, requiredCredits, remainingCredits);
+					setRateLimitHeaders(ctx, result, rateLimiter, numberOfProbes - requiredCredits);
 					return;
 				}
 
-				setRequiredHeaders(ctx, requiredCredits, remainingCredits);
+				setCreditsConsumedHeaders(ctx, 0, remainingCredits);
 			}
 
 			const result = await rateLimiter.reward(id, numberOfProbes);
-			setRateLimitHeaders(ctx, result, rateLimiter);
+			setRateLimitHeaders(ctx, result, rateLimiter, 0);
 			throw createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
 		}
 
@@ -77,18 +79,18 @@ const consumeCredits = async (userId: string, rateLimiterRes: RateLimiterRes, nu
 	};
 };
 
-const setRateLimitHeaders = (ctx: ExtendedContext, result: RateLimiterRes, rateLimiter: RateLimiterRedis) => {
+const setRateLimitHeaders = (ctx: ExtendedContext, result: RateLimiterRes, rateLimiter: RateLimiterRedis, requestConsumedPoints: number) => {
 	ctx.set('X-RateLimit-Reset', `${Math.round(result.msBeforeNext / 1000)}`);
 	ctx.set('X-RateLimit-Limit', `${rateLimiter.points}`);
+	ctx.set('X-RateLimit-Consumed', `${requestConsumedPoints}`);
 	ctx.set('X-RateLimit-Remaining', `${result.remainingPoints}`);
 };
 
-const setConsumedHeaders = (ctx: ExtendedContext, consumedCredits: number, remainingCredits: number) => {
+const setCreditsConsumedHeaders = (ctx: ExtendedContext, consumedCredits: number, remainingCredits: number) => {
 	ctx.set('X-Credits-Consumed', `${consumedCredits}`);
 	ctx.set('X-Credits-Remaining', `${remainingCredits}`);
 };
 
-const setRequiredHeaders = (ctx: ExtendedContext, requiredCredits: number, remainingCredits: number) => {
-	ctx.set('X-Credits-Required', `${requiredCredits}`);
-	ctx.set('X-Credits-Remaining', `${remainingCredits}`);
+const setRequestCostHeaders = (ctx: ExtendedContext, requestCost: number) => {
+	ctx.set('X-Request-Cost', `${requestCost}`);
 };
