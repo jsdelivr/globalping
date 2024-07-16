@@ -25,8 +25,7 @@ export class AlternativeIps {
 	generateToken (socket: ServerSocket) {
 		const token = randomUUID();
 		this.tokenToSocket.set(token, socket);
-		console.log('socket.id', socket.id);
-		console.log('token', token);
+		return { token, socketId: socket.id };
 	}
 
 	async validateTokenFromHttp (request: AltIpMessage['body']) {
@@ -37,7 +36,7 @@ export class AlternativeIps {
 			return;
 		}
 
-		const nodeId = this.syncedProbeList.getNodeIdBySocketId(request.socketId);
+		const nodeId = await this.syncedProbeList.getNodeIdBySocketId(request.socketId);
 
 		if (nodeId) {
 			const message: AltIpMessage = {

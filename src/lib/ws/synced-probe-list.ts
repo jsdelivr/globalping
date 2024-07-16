@@ -117,7 +117,8 @@ export class SyncedProbeList extends EventEmitter {
 		});
 	}
 
-	getNodeIdBySocketId (socketId: string) {
+	async getNodeIdBySocketId (socketId: string) {
+		await this.fetchProbes(); // Need this to make sure this.socketIdToNodeId is fresh
 		return this.socketIdToNodeId[socketId] || null;
 	}
 
