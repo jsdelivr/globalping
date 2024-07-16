@@ -2,6 +2,11 @@ import { randomUUID } from 'node:crypto';
 import type { ServerSocket } from './ws/server.js';
 import type { SyncedProbeList } from './ws/synced-probe-list.js';
 import TTLCache from '@isaacs/ttlcache';
+import createHttpError from 'http-errors';
+import { scopedLogger } from './logger.js';
+
+
+const logger = scopedLogger('alt-ips');
 
 const ALT_IP_MESSAGE_TYPE = 'alternative-ip';
 
@@ -14,7 +19,7 @@ export type AltIpMessage = {
 	};
 }
 
-export class AlternativeIps {
+export class AltIps {
 	private readonly tokenToSocket: TTLCache<string, ServerSocket>;
 
 	constructor (private readonly syncedProbeList: SyncedProbeList) {
@@ -29,6 +34,18 @@ export class AlternativeIps {
 	}
 
 	async validateTokenFromHttp (request: AltIpMessage['body']) {
+		await this.syncedProbeList.fetchProbes(); // This refreshes the probes list
+
+		const duplicateProbe = this.syncedProbeList.getProbeByIp(request.ip);
+
+		if (duplicateProbe && duplicateProbe.client !== request.socketId) {
+			logger.warn(`Probe with ip ${request.ip} is already connected. Ignoring an alternative ip ${request.ip} for the socket ${request.socketId}`);
+			throw createHttpError(400, 'Probe with ip is already connected', { type: 'alt_ip_duplication' });
+		} else if (duplicateProbe) {
+			logger.warn(`Probe ${request.socketId} already has ip ${request.ip}`);
+			return;
+		}
+
 		const localSocket = this.tokenToSocket.get(request.token);
 
 		if (localSocket) {
@@ -36,7 +53,7 @@ export class AlternativeIps {
 			return;
 		}
 
-		const nodeId = await this.syncedProbeList.getNodeIdBySocketId(request.socketId);
+		const nodeId = this.syncedProbeList.getNodeIdBySocketId(request.socketId);
 
 		if (nodeId) {
 			const message: AltIpMessage = {

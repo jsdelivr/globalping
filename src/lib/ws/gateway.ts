@@ -6,7 +6,7 @@ import { handleStatusUpdate } from '../../probe/handler/status.js';
 import { handleDnsUpdate } from '../../probe/handler/dns.js';
 import { handleStatsReport } from '../../probe/handler/stats.js';
 import { scopedLogger } from '../logger.js';
-import { probeOverride, getWsServer, PROBES_NAMESPACE, ServerSocket, alternativeIps } from './server.js';
+import { probeOverride, getWsServer, PROBES_NAMESPACE, ServerSocket, altIps } from './server.js';
 import { probeMetadata } from './middleware/probe-metadata.js';
 import { errorHandler } from './helper/error-handler.js';
 import { subscribeWithHandler } from './helper/subscribe-handler.js';
@@ -23,7 +23,7 @@ io
 		const probe = socket.data.probe;
 		const location = probeOverride.getUpdatedLocation(probe);
 
-		socket.emit('api:connect:alt-ips-token', alternativeIps.generateToken(socket));
+		socket.emit('api:connect:alt-ips-token', altIps.generateToken(socket));
 		socket.emit('api:connect:location', location);
 		logger.info(`ws client ${socket.id} connected from ${location.city}, ${location.country} [${probe.ipAddress} - ${location.network}]`);
 

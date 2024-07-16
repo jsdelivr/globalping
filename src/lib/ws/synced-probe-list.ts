@@ -62,7 +62,8 @@ export class SyncedProbeList extends EventEmitter {
 	private readonly nodeId: string;
 	private readonly nodeData: TTLCache<string, NodeData>;
 
-	private socketIdToNodeId: Record<Probe['client'], NodeData['nodeId']>;
+	private socketIdToNodeId: Record<string, string>;
+	private ipToProbe: Record<string, Probe>;
 	private registeredCallbacks: Record<string, Callback[]>;
 
 	constructor (private readonly redis: RedisClient, private readonly subRedisClient: RedisClient, private readonly ioNamespace: WsServerNamespace, private readonly probeOverride: ProbeOverride) {
@@ -85,6 +86,7 @@ export class SyncedProbeList extends EventEmitter {
 		});
 
 		this.socketIdToNodeId = {};
+		this.ipToProbe = {};
 		this.registeredCallbacks = {};
 
 		this.subscribeNode();
@@ -117,9 +119,12 @@ export class SyncedProbeList extends EventEmitter {
 		});
 	}
 
-	async getNodeIdBySocketId (socketId: string) {
-		await this.fetchProbes(); // Need this to make sure this.socketIdToNodeId is fresh
+	getNodeIdBySocketId (socketId: string) {
 		return this.socketIdToNodeId[socketId] || null;
+	}
+
+	getProbeByIp (ip: string) {
+		return this.ipToProbe[ip] || null;
 	}
 
 	async publishToNode (nodeId: string, message: PubSubMessage) {
@@ -138,13 +143,18 @@ export class SyncedProbeList extends EventEmitter {
 	}
 
 	private updateProbes () {
-		const probes = [];
-		const socketIdToNodeId: Record<Probe['client'], NodeData['nodeId']> = {};
+		const probes: Probe[] = [];
+		const socketIdToNodeId: Record<string, string> = {};
+		const ipToProbe: Record<string, Probe> = {};
 		let oldest = Infinity;
 
 		for (const nodeData of this.nodeData.values()) {
-			probes.push(...Object.values(nodeData.probesById));
-			Object.assign(socketIdToNodeId, Object.fromEntries(Object.keys(nodeData.probesById).map(socketId => [ socketId, nodeData.nodeId ])));
+			Object.entries(nodeData.probesById).forEach(([ socketId, probe ]) => {
+				probes.push(probe);
+				socketIdToNodeId[socketId] = nodeData.nodeId;
+				ipToProbe[probe.ipAddress] = probe;
+				Object.assign(ipToProbe, _.fromPairs(probe.altIpAddresses.map(altIp => [ altIp, probe ])));
+			});
 
 			if (nodeData.revalidateTimestamp < oldest) {
 				oldest = nodeData.revalidateTimestamp;
@@ -155,6 +165,7 @@ export class SyncedProbeList extends EventEmitter {
 		this.probesWithAdminData = this.probeOverride.addAdminData(probes);
 		this.probes = this.probeOverride.addAdoptedData(this.probesWithAdminData);
 		this.socketIdToNodeId = socketIdToNodeId;
+		this.ipToProbe = ipToProbe;
 		this.oldest = oldest;
 
 		this.emit(this.localUpdateEvent);

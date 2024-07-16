@@ -8,7 +8,7 @@ import { ProbeOverride } from '../override/probe-override.js';
 import { ProbeIpLimit } from './helper/probe-ip-limit.js';
 import { AdoptedProbes } from '../override/adopted-probes.js';
 import { AdminData } from '../override/admin-data.js';
-import { AlternativeIps } from '../alternative-ips.js';
+import { AltIps } from '../alt-ips.js';
 import { getSubscriptionRedisClient } from '../redis/subscription-client.js';
 
 export interface DefaultEventsMap {
@@ -34,7 +34,7 @@ export const PROBES_NAMESPACE = '/probes';
 let io: WsServer;
 let syncedProbeList: SyncedProbeList;
 
-export let alternativeIps: AlternativeIps;
+export let altIps: AltIps;
 
 export const initWsServer = async () => {
 	const redis = getRedisClient();
@@ -60,7 +60,7 @@ export const initWsServer = async () => {
 	await syncedProbeList.sync();
 	syncedProbeList.scheduleSync();
 
-	alternativeIps = new AlternativeIps(syncedProbeList);
+	altIps = new AltIps(syncedProbeList);
 };
 
 export const getWsServer = (): WsServer => {
@@ -110,6 +110,22 @@ export const fetchProbes = async ({ allowStale = true } = {}): Promise<Probe[]> 
 
 	return allowStale ? syncedProbeList.getProbes() : syncedProbeList.fetchProbes();
 };
+
+// export const getNodeIdBySocketId = (socketId: string): string | null => {
+// 	if (!syncedProbeList) {
+// 		throw new Error('WS server not initialized yet');
+// 	}
+
+// 	return syncedProbeList.getNodeIdBySocketId(socketId);
+// };
+
+// export const getProbeByIp = (ip: string): Probe | null => {
+// 	if (!syncedProbeList) {
+// 		throw new Error('WS server not initialized yet');
+// 	}
+
+// 	return syncedProbeList.getProbeByIp(ip);
+// };
 
 export const adoptedProbes = new AdoptedProbes(client, fetchRawProbes);
 
