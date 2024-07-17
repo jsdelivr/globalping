@@ -130,13 +130,15 @@ export class SyncedProbeList extends EventEmitter {
 	}
 
 	async publishToNode<T extends object> (nodeId: string, type: string, body: T) {
+		const id = randomUUID();
 		const message: PubSubMessage = {
-			id: randomUUID(),
+			id,
 			reqNodeId: this.nodeId,
 			type,
 			body,
 		};
 		await this.redis.publish(`gp:spl:pub-sub:${nodeId}`, JSON.stringify(message));
+		return id;
 	}
 
 	async subscribeToNodeMessages<T extends object> (type: string, callback: (message: PubSubMessage<T>, channel: string) => Promise<void>) {

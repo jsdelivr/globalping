@@ -19,14 +19,16 @@ export type AltIpReqBody = {
 
 export type AltIpResBody = {
 	result: 'success';
-	reqId: string;
+	reqMessageId: string;
 };
 
 export class AltIps {
 	private readonly tokenToSocket: TTLCache<string, ServerSocket>;
+	private readonly pendingRequests: Map<string, (value: void | PromiseLike<void>) => void>;
 
 	constructor (private readonly syncedProbeList: SyncedProbeList) {
 		this.tokenToSocket = new TTLCache<string, ServerSocket>({ ttl: 5 * 60 * 1000 });
+		this.pendingRequests = new Map();
 		this.subscribeToNodeMessages();
 	}
 
@@ -66,9 +68,17 @@ export class AltIps {
 		const nodeId = this.syncedProbeList.getNodeIdBySocketId(request.socketId);
 
 		if (nodeId) {
-			await this.syncedProbeList.publishToNode<AltIpReqBody>(nodeId, ALT_IP_REQ_MESSAGE_TYPE, request);
-			// await this.getResponsePromise()
+			const id = await this.syncedProbeList.publishToNode<AltIpReqBody>(nodeId, ALT_IP_REQ_MESSAGE_TYPE, request);
+			await this.getResponsePromise(id);
+			console.log('success');
 		}
+	}
+
+	private getResponsePromise (messageId: string) {
+		const promise = new Promise<void>((resolve) => {
+			this.pendingRequests.set(messageId, resolve);
+		});
+		return promise;
 	}
 
 	private validateTokenFromPubSub = async (reqMessage: PubSubMessage<AltIpReqBody>) => {
@@ -82,12 +92,19 @@ export class AltIps {
 
 		if (localSocket) {
 			localSocket.data.probe.altIpAddresses.push(reqMessage.body.ip);
-			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqId: reqMessage.id });
+			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqMessageId: reqMessage.id });
 		}
 	};
 
 	private handleRes = async (resMessage: PubSubMessage<AltIpResBody>) => {
 		console.log('resMessage', resMessage);
+		const resolve = this.pendingRequests.get(resMessage.body.reqMessageId);
+
+		if (resolve) {
+			resolve();
+		} else {
+			logger.warn(`Unable to find resolve function for alt ip message ${resMessage.body.reqMessageId}`);
+		}
 	};
 
 	private async subscribeToNodeMessages () {
