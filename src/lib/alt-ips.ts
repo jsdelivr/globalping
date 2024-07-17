@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { ServerSocket } from './ws/server.js';
-import type { SyncedProbeList } from './ws/synced-probe-list.js';
+import type { PubSubMessage, SyncedProbeList } from './ws/synced-probe-list.js';
 import TTLCache from '@isaacs/ttlcache';
 import createHttpError from 'http-errors';
 import { scopedLogger } from './logger.js';
@@ -11,21 +11,15 @@ const logger = scopedLogger('alt-ips');
 const ALT_IP_REQ_MESSAGE_TYPE = 'alt-ip:req';
 const ALT_IP_RES_MESSAGE_TYPE = 'alt-ip:res';
 
-export type AltIpReqMessage = {
-	type: typeof ALT_IP_REQ_MESSAGE_TYPE,
-	body: {
-		socketId: string;
-		ip: string;
-		token: string;
-	};
+export type AltIpReqBody = {
+	socketId: string;
+	ip: string;
+	token: string;
 };
 
-export type AltIpResMessage = {
-	type: typeof ALT_IP_RES_MESSAGE_TYPE,
-	body: {
-		result: 'success',
-		type: 'success'
-	};
+export type AltIpResBody = {
+	result: 'success';
+	reqId: string;
 };
 
 export class AltIps {
@@ -38,11 +32,13 @@ export class AltIps {
 
 	generateToken (socket: ServerSocket) {
 		const token = randomUUID();
+		console.log('generateToken', token);
 		this.tokenToSocket.set(token, socket);
 		return { token, socketId: socket.id };
 	}
 
-	async validateTokenFromHttp (request: AltIpReqMessage['body']) {
+	async validateTokenFromHttp (request: AltIpReqBody) {
+		console.log('validateTokenFromHttp');
 		await this.syncedProbeList.fetchProbes(); // This refreshes the probes list
 
 		const duplicateProbe = this.syncedProbeList.getProbeByIp(request.ip);
@@ -70,15 +66,14 @@ export class AltIps {
 		const nodeId = this.syncedProbeList.getNodeIdBySocketId(request.socketId);
 
 		if (nodeId) {
-			const message: AltIpReqMessage = {
-				type: ALT_IP_REQ_MESSAGE_TYPE,
-				body: request,
-			};
-			await this.syncedProbeList.publishToNode(nodeId, message);
+			await this.syncedProbeList.publishToNode<AltIpReqBody>(nodeId, ALT_IP_REQ_MESSAGE_TYPE, request);
+			// await this.getResponsePromise()
 		}
 	}
 
-	private validateTokenFromPubSub = async (reqMessage: AltIpReqMessage, nodeId: string) => {
+	private validateTokenFromPubSub = async (reqMessage: PubSubMessage<AltIpReqBody>) => {
+		console.log('validateTokenFromPubSub');
+		console.log('reqMessage', reqMessage);
 		const localSocket = this.tokenToSocket.get(reqMessage.body.token);
 
 		if (localSocket && localSocket.data.probe.altIpAddresses.includes(reqMessage.body.token)) {
@@ -87,20 +82,16 @@ export class AltIps {
 
 		if (localSocket) {
 			localSocket.data.probe.altIpAddresses.push(reqMessage.body.ip);
-			const resMessage: AltIpResMessage = {
-				type: ALT_IP_RES_MESSAGE_TYPE,
-				body: { result: 'success', type: 'success' },
-			};
-			await this.syncedProbeList.publishToNode(nodeId, resMessage);
+			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqId: reqMessage.id });
 		}
 	};
 
-	private handleRes = async (resMessage: AltIpResMessage) => {
+	private handleRes = async (resMessage: PubSubMessage<AltIpResBody>) => {
 		console.log('resMessage', resMessage);
 	};
 
 	private async subscribeToNodeMessages () {
-		await this.syncedProbeList.subscribeToNodeMessages<AltIpReqMessage>(ALT_IP_REQ_MESSAGE_TYPE, this.validateTokenFromPubSub);
-		await this.syncedProbeList.subscribeToNodeMessages<AltIpResMessage>(ALT_IP_RES_MESSAGE_TYPE, this.handleRes);
+		await this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, this.validateTokenFromPubSub);
+		await this.syncedProbeList.subscribeToNodeMessages<AltIpResBody>(ALT_IP_RES_MESSAGE_TYPE, this.handleRes);
 	}
 }

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import TTLCache from '@isaacs/ttlcache';
 import { scopedLogger } from '../logger.js';
@@ -25,9 +25,11 @@ type NodeChanges = {
 	updateStats: Map<string, ProbeStats>;
 };
 
-export type PubSubMessage = {
-	type: string,
-	body: object;
+export type PubSubMessage<T = object> = {
+	id: string;
+	reqNodeId: string;
+	type: string;
+	body: T;
 }
 
 type Callback = (message: PubSubMessage, channel: string) => Promise<void>;
@@ -59,7 +61,7 @@ export class SyncedProbeList extends EventEmitter {
 	private pullTimer: NodeJS.Timeout | undefined;
 	private lastReadEventId: string;
 
-	private readonly nodeId: string;
+	public readonly nodeId: string;
 	private readonly nodeData: TTLCache<string, NodeData>;
 
 	private socketIdToNodeId: Record<string, string>;
@@ -127,11 +129,17 @@ export class SyncedProbeList extends EventEmitter {
 		return this.ipToProbe[ip] || null;
 	}
 
-	async publishToNode (nodeId: string, message: PubSubMessage) {
+	async publishToNode<T extends object> (nodeId: string, type: string, body: T) {
+		const message: PubSubMessage = {
+			id: randomUUID(),
+			reqNodeId: this.nodeId,
+			type,
+			body,
+		};
 		await this.redis.publish(`gp:spl:pub-sub:${nodeId}`, JSON.stringify(message));
 	}
 
-	async subscribeToNodeMessages<T extends PubSubMessage> (type: string, callback: (message: T, channel: string) => Promise<void>) {
+	async subscribeToNodeMessages<T extends object> (type: string, callback: (message: PubSubMessage<T>, channel: string) => Promise<void>) {
 		const callbacks = this.registeredCallbacks[type];
 		const cb = callback as Callback;
 
