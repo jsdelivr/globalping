@@ -31,17 +31,17 @@ export class ProbeIpLimit {
 		// Sorting probes by "client" (socket id), so all workers will treat the same probe as "first".
 		const sortedProbes = _.sortBy(probes, [ 'client' ]);
 
-		const uniqIpToSocketId = new Map<string, string>();
+		const ipToSocketId = new Map<string, string>();
 		const socketIdsToDisconnect = new Set<string>();
 
 		for (const probe of sortedProbes) {
-			const prevSocketId = uniqIpToSocketId.get(probe.ipAddress);
+			const prevSocketId = ipToSocketId.get(probe.ipAddress);
 
 			if (prevSocketId && prevSocketId !== probe.client) {
 				logger.warn(`Probe ip duplication occurred (${probe.ipAddress}). Socket id to preserve: ${prevSocketId}, socket id to disconnect: ${probe.client}`);
 				socketIdsToDisconnect.add(probe.client);
 			} else {
-				uniqIpToSocketId.set(probe.ipAddress, probe.client);
+				ipToSocketId.set(probe.ipAddress, probe.client);
 			}
 		}
 
@@ -62,7 +62,7 @@ export class ProbeIpLimit {
 		const previousProbe = probes.find(p => p.ipAddress === ip && p.client !== socketId);
 
 		if (previousProbe) {
-			logger.info(`ws client ${socketId} has reached the concurrent IP limit.`, { message: previousProbe.ipAddress });
+			logger.warn(`ws client ${socketId} has reached the concurrent IP limit.`, { message: previousProbe.ipAddress });
 			throw new ProbeError('ip limit');
 		}
 	}

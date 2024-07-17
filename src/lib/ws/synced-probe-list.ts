@@ -30,7 +30,7 @@ export type PubSubMessage = {
 	body: object;
 }
 
-type Callback = (message: PubSubMessage, channel: string) => void;
+type Callback = (message: PubSubMessage, channel: string) => Promise<void>;
 
 const MESSAGE_TYPES = {
 	ALIVE: 'a',
@@ -131,7 +131,7 @@ export class SyncedProbeList extends EventEmitter {
 		await this.redis.publish(`gp:spl:pub-sub:${nodeId}`, JSON.stringify(message));
 	}
 
-	async subscribeToNodeMessages<T extends PubSubMessage> (type: string, callback: (message: T, channel: string) => void) {
+	async subscribeToNodeMessages<T extends PubSubMessage> (type: string, callback: (message: T, channel: string) => Promise<void>) {
 		const callbacks = this.registeredCallbacks[type];
 		const cb = callback as Callback;
 
@@ -498,12 +498,13 @@ export class SyncedProbeList extends EventEmitter {
 	}
 
 	private async subscribeNode () {
-		await this.subRedisClient.subscribe(`gp:spl:pub-sub:${this.nodeId}`, (message, channel) => {
+		await this.subRedisClient.subscribe(`gp:spl:pub-sub:${this.nodeId}`, async (message, channel) => {
 			const parsedMessage = JSON.parse(message) as PubSubMessage;
 			const callbacks = this.registeredCallbacks[parsedMessage.type];
+			const nodeId = channel.split(':').at(-1)!;
 
 			if (callbacks) {
-				callbacks.forEach(callback => callback(parsedMessage, channel));
+				await Promise.all(callbacks.map(callback => callback(parsedMessage, nodeId)));
 			}
 		});
 	}
