@@ -34,20 +34,18 @@ export class AltIps {
 
 	generateToken (socket: ServerSocket) {
 		const token = randomUUID();
-		console.log('generateToken', token);
 		this.tokenToSocket.set(token, socket);
 		return { token, socketId: socket.id };
 	}
 
 	async validateTokenFromHttp (request: AltIpReqBody) {
-		console.log('validateTokenFromHttp');
 		await this.syncedProbeList.fetchProbes(); // This refreshes the probes list
 
 		const duplicateProbe = this.syncedProbeList.getProbeByIp(request.ip);
 
 		if (duplicateProbe && duplicateProbe.client !== request.socketId) {
 			logger.warn(`Probe with ip ${request.ip} is already connected. Ignoring an alternative ip ${request.ip} for the socket ${request.socketId}`);
-			throw createHttpError(400, 'Another probe with ip is already connected', { type: 'alt_ip_duplication' });
+			throw createHttpError(400, 'Another probe with that ip is already connected.', { type: 'alt_ip_duplication' });
 		}
 
 		if (duplicateProbe && duplicateProbe.client === request.socketId) {
@@ -70,40 +68,37 @@ export class AltIps {
 		if (nodeId) {
 			const id = await this.syncedProbeList.publishToNode<AltIpReqBody>(nodeId, ALT_IP_REQ_MESSAGE_TYPE, request);
 			await this.getResponsePromise(id);
-			console.log('success');
 		}
 	}
 
 	private getResponsePromise (messageId: string) {
-		const promise = new Promise<void>((resolve) => {
+		const promise = new Promise<void>((resolve, reject) => {
 			this.pendingRequests.set(messageId, resolve);
+
+			setTimeout(() => {
+				this.pendingRequests.delete(messageId);
+				logger.error(`Node failed to handle alt ip message in specified timeout.`);
+				reject(createHttpError(504, 'Node owning the probe failed to handle alt ip in specified timeout.', { type: 'node_response_timeout' }));
+			}, 15000);
 		});
 		return promise;
 	}
 
 	private validateTokenFromPubSub = async (reqMessage: PubSubMessage<AltIpReqBody>) => {
-		console.log('validateTokenFromPubSub');
-		console.log('reqMessage', reqMessage);
 		const localSocket = this.tokenToSocket.get(reqMessage.body.token);
 
-		if (localSocket && localSocket.data.probe.altIpAddresses.includes(reqMessage.body.token)) {
-			return;
+		if (localSocket && !localSocket.data.probe.altIpAddresses.includes(reqMessage.body.token)) {
+			localSocket.data.probe.altIpAddresses.push(reqMessage.body.ip);
 		}
 
-		if (localSocket) {
-			localSocket.data.probe.altIpAddresses.push(reqMessage.body.ip);
-			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqMessageId: reqMessage.id });
-		}
+		await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqMessageId: reqMessage.id });
 	};
 
 	private handleRes = async (resMessage: PubSubMessage<AltIpResBody>) => {
-		console.log('resMessage', resMessage);
 		const resolve = this.pendingRequests.get(resMessage.body.reqMessageId);
 
 		if (resolve) {
 			resolve();
-		} else {
-			logger.warn(`Unable to find resolve function for alt ip message ${resMessage.body.reqMessageId}`);
 		}
 	};
 
