@@ -56,9 +56,7 @@ export class AltIps {
 
 		if (localSocket && localSocket.data.probe.altIpAddresses.includes(request.ip)) {
 			return;
-		}
-
-		if (localSocket) {
+		} else if (localSocket) {
 			localSocket.data.probe.altIpAddresses.push(request.ip);
 			return;
 		}
@@ -68,6 +66,8 @@ export class AltIps {
 		if (nodeId) {
 			const id = await this.syncedProbeList.publishToNode<AltIpReqBody>(nodeId, ALT_IP_REQ_MESSAGE_TYPE, request);
 			await this.getResponsePromise(id);
+		} else {
+			throw createHttpError(400, 'Unable to find a probe by specified socketId', { type: 'probe_not_found' });
 		}
 	}
 
