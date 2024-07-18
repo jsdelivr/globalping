@@ -6,7 +6,7 @@ import type { AlternativeIpRequest } from '../types.js';
 import { bodyParser } from '../../lib/http/middleware/body-parser.js';
 import { validate } from '../../lib/http/middleware/validate.js';
 import { schema } from '../schema.js';
-import { altIps } from '../../lib/ws/server.js';
+import { getAltIpsClient } from '../../lib/alt-ips.js';
 
 const handle = async (ctx: Context): Promise<void> => {
 	const request = ctx.request.body as AlternativeIpRequest;
@@ -17,7 +17,7 @@ const handle = async (ctx: Context): Promise<void> => {
 		throw createHttpError(400, 'Unable to get requester ip.', { type: 'no_ip' });
 	}
 
-	await altIps.validateTokenFromHttp({
+	await getAltIpsClient().validateTokenFromHttp({
 		socketId: request.socketId,
 		token: request.token,
 		ip,

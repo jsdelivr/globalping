@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { ServerSocket } from './ws/server.js';
+import { getSyncedProbeList, type ServerSocket } from './ws/server.js';
 import type { PubSubMessage, SyncedProbeList } from './ws/synced-probe-list.js';
 import TTLCache from '@isaacs/ttlcache';
 import createHttpError from 'http-errors';
@@ -107,3 +107,13 @@ export class AltIps {
 		await this.syncedProbeList.subscribeToNodeMessages<AltIpResBody>(ALT_IP_RES_MESSAGE_TYPE, this.handleRes);
 	}
 }
+
+let altIpsClient: AltIps;
+
+export const getAltIpsClient = () => {
+	if (!altIpsClient) {
+		altIpsClient = new AltIps(getSyncedProbeList());
+	}
+
+	return altIpsClient;
+};
