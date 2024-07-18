@@ -39,7 +39,7 @@ describe('ws server', () => {
 	beforeEach(async () => {
 		({ initWsServer, getWsServer } = await import('../../../../src/lib/ws/server.js'));
 		fetchSocketsSocketIo.reset();
-		fetchSocketsSocketIo.resolves([{ data: { probe: {} }, disconnect }, { data: { probe: {} }, disconnect }]);
+		fetchSocketsSocketIo.resolves([{ data: { probe: { altIpAddresses: [] } }, disconnect }, { data: { probe: { altIpAddresses: [] } }, disconnect }]);
 	});
 
 	it('getWsServer should return the same instance every time', async () => {

@@ -8,6 +8,7 @@ import type { PingResult } from '../../../../src/measurement/types.js';
 
 const getProbe = (id: string, ip: string) => ({
 	ipAddress: ip,
+	altIpAddresses: [],
 	location: {
 		network: id,
 		continent: 'continent',

@@ -1,32 +1,39 @@
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 
-import type { WsServerNamespace } from '../../../../src/lib/ws/server.js';
+import { type WsServerNamespace } from '../../../../src/lib/ws/server.js';
 import { SyncedProbeList } from '../../../../src/lib/ws/synced-probe-list.js';
 import type { Probe } from '../../../../src/probe/types.js';
 import { getRegionByCountry } from '../../../../src/lib/location/location.js';
 import { getRedisClient } from '../../../../src/lib/redis/client.js';
 import { ProbeOverride } from '../../../../src/lib/override/probe-override.js';
+import { getSubscriptionRedisClient } from '../../../../src/lib/redis/subscription-client.js';
 
 describe('SyncedProbeList', () => {
 	const sandbox = sinon.createSandbox();
 	const redisClient = getRedisClient();
+	const subRedisClient = getSubscriptionRedisClient();
 	const localFetchSocketsStub = sandbox.stub();
 	const redisXAdd = sandbox.stub(redisClient, 'xAdd');
 	const redisXRange = sandbox.stub(redisClient, 'xRange');
 	const redisPExpire = sandbox.stub(redisClient, 'pExpire');
 	const redisJsonGet = sandbox.stub(redisClient.json, 'get');
 
-	const location = {
-		continent: 'NA',
-		region: getRegionByCountry('US'),
-		country: 'US',
-		state: 'NY',
-		city: 'The New York City',
-		normalizedCity: 'new york',
-		asn: 5089,
-		normalizedNetwork: 'abc',
-	};
+	const getProbe = (id: string) => ({
+		client: id,
+		altIpAddresses: [],
+		location: {
+			continent: 'NA',
+			region: getRegionByCountry('US'),
+			country: 'US',
+			state: 'NY',
+			city: 'The New York City',
+			normalizedCity: 'new york',
+			asn: 5089,
+			normalizedNetwork: 'abc',
+		},
+		stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } },
+	} as unknown as Probe);
 
 	const ioNamespace = {
 		local: {
@@ -46,7 +53,7 @@ describe('SyncedProbeList', () => {
 		probeOverride.addAdminData.returnsArg(0);
 		probeOverride.addAdoptedData.returnsArg(0);
 
-		syncedProbeList = new SyncedProbeList(redisClient, ioNamespace, probeOverride);
+		syncedProbeList = new SyncedProbeList(redisClient, subRedisClient, ioNamespace, probeOverride);
 	});
 
 	afterEach(() => {
@@ -56,8 +63,8 @@ describe('SyncedProbeList', () => {
 
 	it('updates and emits local probes during sync', async () => {
 		const sockets = [
-			{ data: { probe: { client: 'A', location: {} } } },
-			{ data: { probe: { client: 'B', location: {} } } },
+			{ data: { probe: getProbe('A') } },
+			{ data: { probe: getProbe('B') } },
 		];
 
 		localFetchSocketsStub.resolves(sockets);
@@ -95,9 +102,9 @@ describe('SyncedProbeList', () => {
 
 	it('emits stats in the message on change', async () => {
 		const sockets = [
-			{ data: { probe: { client: 'A', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } } } },
-			{ data: { probe: { client: 'B', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } } } },
-			{ data: { probe: { client: 'C', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } } } },
+			{ data: { probe: getProbe('A') } },
+			{ data: { probe: getProbe('B') } },
+			{ data: { probe: getProbe('C') } },
 		];
 
 		localFetchSocketsStub.resolves(sockets);
@@ -162,8 +169,8 @@ describe('SyncedProbeList', () => {
 		syncedProbeList.remoteDataTtl = 20 * 1000;
 
 		const sockets = [
-			{ data: { probe: { client: 'A' } } },
-			{ data: { probe: { client: 'B' } } },
+			{ data: { probe: getProbe('A') } },
+			{ data: { probe: getProbe('B') } },
 		];
 
 		localFetchSocketsStub.resolves(sockets);
@@ -189,9 +196,9 @@ describe('SyncedProbeList', () => {
 
 	it('reads remote stats updates', async () => {
 		const probes = {
-			A: { client: 'A', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } },
-			B: { client: 'B', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } },
-			C: { client: 'C', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } },
+			A: getProbe('A'),
+			B: getProbe('B'),
+			C: getProbe('C'),
 		} as unknown as Record<string, Probe>;
 
 		redisXRange.resolves([
@@ -252,8 +259,8 @@ describe('SyncedProbeList', () => {
 
 	it('expires remote probes after the timeout', async () => {
 		const probes = {
-			A: { client: 'A', location: {} },
-			B: { client: 'B', location: {} },
+			A: getProbe('A'),
+			B: getProbe('B'),
 		} as unknown as Record<string, Probe>;
 
 		redisXRange.resolves([
@@ -278,16 +285,16 @@ describe('SyncedProbeList', () => {
 	});
 
 	it('applies adoption data to getProbes()/fetchProbes() but not to getRawProbes()/getProbesWithAdminData()', async () => {
-		const probe1 = { client: 'A', location: { ...location }, tags: [], ipAddress: '1.1.1.1' } as unknown as Probe;
-		const probe2 = { client: 'B', location: { ...location }, tags: [] } as unknown as Probe;
+		const probe1 = getProbe('A');
+		const probe2 = getProbe('B');
 		const sockets = [{ data: { probe: probe1 } }, { data: { probe: probe2 } }];
 
 		const tags = [{ type: 'user', value: 'u-name-tag1' }] as Probe['tags'];
 
-		const adoptedProbe = { tags } as Probe;
+		const adoptedData = { tags } as Probe;
 
 		localFetchSocketsStub.resolves(sockets);
-		probeOverride.addAdoptedData.returns([ adoptedProbe, probe2 ]);
+		probeOverride.addAdoptedData.returns([{ ...probe1, ...adoptedData }, probe2 ]);
 
 		const fetchedProbesPromise = syncedProbeList.fetchProbes();
 		clock.tick(1);
@@ -310,14 +317,14 @@ describe('SyncedProbeList', () => {
 	});
 
 	it('applies admin location override data to getProbes()/fetchProbes()/getProbesWithAdminData() but not to getRawProbes()', async () => {
-		const probe1 = { client: 'A', location: { ...location }, tags: [], ipAddress: '1.1.1.1' } as unknown as Probe;
-		const probe2 = { client: 'B', location: { ...location }, tags: [] } as unknown as Probe;
+		const probe1 = getProbe('A');
+		const probe2 = getProbe('B');
 		const sockets = [{ data: { probe: probe1 } }, { data: { probe: probe2 } }];
 
-		const updatedProbe = { probe1, location: { ...probe1.location, city: 'Miami' } } as unknown as Probe;
+		const updatedProbe1 = { ...probe1, location: { ...probe1.location, city: 'Miami' } } as unknown as Probe;
 
 		localFetchSocketsStub.resolves(sockets);
-		probeOverride.addAdminData.returns([ updatedProbe, probe2 ]);
+		probeOverride.addAdminData.returns([ updatedProbe1, probe2 ]);
 
 		const fetchedProbesPromise = syncedProbeList.fetchProbes();
 		clock.tick(1);
