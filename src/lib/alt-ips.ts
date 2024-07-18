@@ -23,12 +23,10 @@ export type AltIpResBody = {
 };
 
 export class AltIps {
-	private readonly tokenToSocket: TTLCache<string, ServerSocket>;
-	private readonly pendingRequests: Map<string, (value: void | PromiseLike<void>) => void>;
+	private readonly tokenToSocket: TTLCache<string, ServerSocket> = new TTLCache<string, ServerSocket>({ ttl: 5 * 60 * 1000 });
+	private readonly pendingRequests: Map<string, (value: void | PromiseLike<void>) => void> = new Map();
 
 	constructor (private readonly syncedProbeList: SyncedProbeList) {
-		this.tokenToSocket = new TTLCache<string, ServerSocket>({ ttl: 5 * 60 * 1000 });
-		this.pendingRequests = new Map();
 		this.subscribeToNodeMessages();
 	}
 

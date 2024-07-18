@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import ipaddr from 'ipaddr.js';
 import type { Knex } from 'knex';
+import config from 'config';
 import type { Probe, ProbeLocation } from '../../probe/types.js';
 import { normalizeFromPublicName } from '../geoip/utils.js';
 import { getContinentByCountry, getRegionByCountry } from '../location/location.js';
@@ -50,7 +51,7 @@ export class AdminData {
 			this.syncDashboardData()
 				.finally(() => this.scheduleSync())
 				.catch(error => logger.error(error));
-		}, 60_000).unref();
+		}, config.get<number>('adminData.syncInterval')).unref();
 	}
 
 	async syncDashboardData () {

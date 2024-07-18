@@ -46,6 +46,12 @@ module.exports = {
 	ws: {
 		fetchSocketsCacheTTL: 1000,
 	},
+	adoptedProbes: {
+		syncInterval: 60000,
+	},
+	adminData: {
+		syncInterval: 60000,
+	},
 	measurement: {
 		anonymousRateLimit: 100000,
 		authenticatedRateLimit: 250,

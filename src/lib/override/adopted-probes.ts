@@ -1,6 +1,7 @@
 import type { Knex } from 'knex';
 import Bluebird from 'bluebird';
 import _ from 'lodash';
+import config from 'config';
 import { scopedLogger } from '../logger.js';
 import type { fetchProbesWithAdminData as serverFetchProbesWithAdminData } from '../ws/server.js';
 import type { Probe, ProbeLocation } from '../../probe/types.js';
@@ -174,7 +175,7 @@ export class AdoptedProbes {
 			this.syncDashboardData()
 				.finally(() => this.scheduleSync())
 				.catch(error => logger.error(error));
-		}, 60_000).unref();
+		}, config.get<number>('adoptedProbes.syncInterval')).unref();
 	}
 
 	async syncDashboardData () {
