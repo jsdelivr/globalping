@@ -5,9 +5,9 @@
 		"lib": [
 			"ES2023"
 		],
-		"module": "ESNext",
+		"module": "NodeNext",
 		"target": "ES2022",
-		"moduleResolution": "Node",
+		"moduleResolution": "NodeNext",
 		"resolveJsonModule": true,
 		"sourceMap": true,
 		"paths": {
