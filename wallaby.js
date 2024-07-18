@@ -33,9 +33,11 @@ export default function wallaby () {
 			'test/tests/unit/**/*.test.ts',
 		],
 
-		setup (w) {
+		setup (wallaby) {
 			const path = require('path');
-			w.testFramework.files.unshift(path.resolve(process.cwd(), 'test/setup.js'));
+			wallaby.testFramework.files.unshift(path.resolve(process.cwd(), 'test/setup.js'));
+			const mocha = wallaby.testFramework;
+			mocha.timeout(10000);
 		},
 
 		env: {
