@@ -76,4 +76,5 @@ module.exports = {
 			SA: 10,
 		},
 	},
+	sigtermDelay: 15000,
 };

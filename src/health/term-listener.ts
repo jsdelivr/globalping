@@ -1,3 +1,4 @@
+import config from 'config';
 import process from 'node:process';
 import { scopedLogger } from '../lib/logger.js';
 
@@ -8,14 +9,15 @@ class TermListener {
 
 	constructor () {
 		this.isTerminating = false;
-		this.attachListener();
+		const sigtermDelay = config.get<number>('sigtermDelay');
+		sigtermDelay && this.attachListener(sigtermDelay);
 	}
 
 	public getIsTerminating () {
 		return this.isTerminating;
 	}
 
-	private attachListener () {
+	private attachListener (delay: number) {
 		process.on('SIGTERM', (signal) => {
 			logger.info(`Process ${process.pid} received a ${signal} signal`);
 			this.isTerminating = true;
@@ -23,7 +25,7 @@ class TermListener {
 			setTimeout(() => {
 				logger.info('Exiting');
 				process.exit(0);
-			}, 15_000);
+			}, delay);
 		});
 	}
 }
