@@ -20,11 +20,14 @@ export type AltIpReqBody = {
 export type AltIpResBody = {
 	result: 'success';
 	reqMessageId: string;
+} | {
+	result: 'probe-not-found',
+	reqMessageId: string;
 };
 
 export class AltIps {
 	private readonly tokenToSocket: TTLCache<string, ServerSocket> = new TTLCache<string, ServerSocket>({ ttl: 5 * 60 * 1000 });
-	private readonly pendingRequests: Map<string, (value: void | PromiseLike<void>) => void> = new Map();
+	private readonly pendingRequests: Map<string, (value: AltIpResBody) => void> = new Map();
 
 	constructor (private readonly syncedProbeList: SyncedProbeList) {
 		this.subscribeToNodeMessages();
@@ -63,14 +66,18 @@ export class AltIps {
 
 		if (nodeId) {
 			const id = await this.syncedProbeList.publishToNode<AltIpReqBody>(nodeId, ALT_IP_REQ_MESSAGE_TYPE, request);
-			await this.getResponsePromise(id);
+			const response: AltIpResBody = await this.getResponsePromise(id);
+
+			if (response.result === 'probe-not-found') {
+				throw createHttpError(400, 'Unable to find a probe on the remote node.', { type: 'probe_not_found_on_remote' });
+			}
 		} else {
-			throw createHttpError(400, 'Unable to find a probe by specified socketId', { type: 'probe_not_found' });
+			throw createHttpError(400, 'Unable to find a probe by specified socketId.', { type: 'probe_not_found' });
 		}
 	}
 
 	private getResponsePromise (messageId: string) {
-		const promise = new Promise<void>((resolve, reject) => {
+		const promise = new Promise<AltIpResBody>((resolve, reject) => {
 			this.pendingRequests.set(messageId, resolve);
 
 			setTimeout(() => {
@@ -85,7 +92,12 @@ export class AltIps {
 	private validateTokenFromPubSub = async (reqMessage: PubSubMessage<AltIpReqBody>) => {
 		const localSocket = this.tokenToSocket.get(reqMessage.body.token);
 
-		if (localSocket && !localSocket.data.probe.altIpAddresses.includes(reqMessage.body.token)) {
+		if (!localSocket) {
+			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'probe-not-found', reqMessageId: reqMessage.id });
+			return;
+		}
+
+		if (!localSocket.data.probe.altIpAddresses.includes(reqMessage.body.ip)) {
 			localSocket.data.probe.altIpAddresses.push(reqMessage.body.ip);
 		}
 
@@ -96,7 +108,7 @@ export class AltIps {
 		const resolve = this.pendingRequests.get(resMessage.body.reqMessageId);
 
 		if (resolve) {
-			resolve();
+			resolve(resMessage.body);
 		}
 	};
 
