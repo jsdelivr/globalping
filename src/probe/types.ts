@@ -59,15 +59,12 @@ type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;
 
 export type OfflineProbe = Modify<Probe, {
 	status: 'offline';
-	isIPv4Supported: boolean;
-	isIPv6Supported: boolean;
 	client: null;
 	version: null;
 	nodeVersion: null;
 	uuid: null;
 	isHardware: false;
 	hardwareDevice: null;
-	ipAddress: string;
 	host: null;
 	index: [];
 	tags: {

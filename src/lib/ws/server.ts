@@ -106,13 +106,13 @@ export const fetchProbes = async ({ allowStale = true } = {}): Promise<Probe[]> 
 	return allowStale ? syncedProbeList.getProbes() : syncedProbeList.fetchProbes();
 };
 
-// export const getProbeByIp = (ip: string): Probe | null => {
-// 	if (!syncedProbeList) {
-// 		throw new Error('WS server not initialized yet');
-// 	}
+export const getProbeByIp = (ip: string): Probe | null => {
+	if (!syncedProbeList) {
+		throw new Error('WS server not initialized yet');
+	}
 
-// 	return syncedProbeList.getProbeByIp(ip);
-// };
+	return syncedProbeList.getProbeByIp(ip);
+};
 
 export const adoptedProbes = new AdoptedProbes(client, fetchRawProbes);
 
