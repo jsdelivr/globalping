@@ -162,8 +162,6 @@ export class SyncedProbeList extends EventEmitter {
 			Object.entries(nodeData.probesById).forEach(([ socketId, probe ]) => {
 				probes.push(probe);
 				socketIdToNodeId[socketId] = nodeData.nodeId;
-				ipToProbe[probe.ipAddress] = probe;
-				Object.assign(ipToProbe, _.fromPairs(probe.altIpAddresses.map(altIp => [ altIp, probe ])));
 			});
 
 			if (nodeData.revalidateTimestamp < oldest) {
@@ -174,9 +172,15 @@ export class SyncedProbeList extends EventEmitter {
 		this.rawProbes = probes;
 		this.probesWithAdminData = this.probeOverride.addAdminData(probes);
 		this.probes = this.probeOverride.addAdoptedData(this.probesWithAdminData);
-		this.socketIdToNodeId = socketIdToNodeId;
+
+		this.probes.forEach((probe) => {
+			ipToProbe[probe.ipAddress] = probe;
+			Object.assign(ipToProbe, _.fromPairs(probe.altIpAddresses.map(altIp => [ altIp, probe ])));
+		});
+
 		this.ipToProbe = ipToProbe;
 		this.oldest = oldest;
+		this.socketIdToNodeId = socketIdToNodeId;
 
 		this.emit(this.localUpdateEvent);
 	}

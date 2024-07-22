@@ -16,6 +16,7 @@ export const NOTIFICATIONS_TABLE = 'directus_notifications';
 export type AdoptedProbe = {
 	userId: string;
 	ip: string;
+	altIps: string[];
 	uuid: string | null;
 	lastSyncDate: Date;
 	tags: {
@@ -46,7 +47,8 @@ type Row = Omit<AdoptedProbe, 'isCustomCity' | 'tags'> & {
 
 export class AdoptedProbes {
 	private connectedIpToProbe: Map<string, Probe> = new Map();
-	private connectedUuidToIp: Map<string, string> = new Map();
+	private connectedUuidToProbe: Map<string, Probe> = new Map();
+	private adoptedProbes: AdoptedProbe[] = [];
 	private adoptedIpToProbe: Map<string, AdoptedProbe> = new Map();
 	private readonly adoptedFieldToConnectedField = {
 		status: {
@@ -180,18 +182,21 @@ export class AdoptedProbes {
 
 	async syncDashboardData () {
 		const allProbes = await this.fetchProbesWithAdminData();
-		this.connectedIpToProbe = new Map(allProbes.map(probe => [ probe.ipAddress, probe ]));
-		this.connectedUuidToIp = new Map(allProbes.map(probe => [ probe.uuid, probe.ipAddress ]));
+		this.connectedIpToProbe = new Map([
+			...allProbes.map(probe => [ probe.ipAddress, probe ] as const),
+			...allProbes.map(probe => probe.altIpAddresses.map(altIp => [ altIp, probe ] as const)).flat(),
+		]);
+
+		this.connectedUuidToProbe = new Map(allProbes.map(probe => [ probe.uuid, probe ]));
 
 		await this.fetchAdoptedProbes();
-		await Bluebird.map(this.adoptedIpToProbe.values(), ({ ip, uuid }) => this.syncProbeIds(ip, uuid), { concurrency: 8 });
-		await Bluebird.map(this.adoptedIpToProbe.values(), adoptedProbe => this.syncProbeData(adoptedProbe), { concurrency: 8 });
-		await Bluebird.map(this.adoptedIpToProbe.values(), ({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate), { concurrency: 8 });
+		await Bluebird.map(this.adoptedProbes, ({ ip, altIps, uuid }) => this.syncProbeIds(ip, altIps, uuid), { concurrency: 8 });
+		await Bluebird.map(this.adoptedProbes, adoptedProbe => this.syncProbeData(adoptedProbe), { concurrency: 8 });
+		await Bluebird.map(this.adoptedProbes, ({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate), { concurrency: 8 });
 	}
 
 	private async fetchAdoptedProbes () {
 		const rows = await this.sql(ADOPTED_PROBES_TABLE).select<Row[]>();
-
 
 		const adoptedProbes: AdoptedProbe[] = rows.map(row => ({
 			...row,
@@ -200,29 +205,52 @@ export class AdoptedProbes {
 			isCustomCity: Boolean(row.isCustomCity),
 		}));
 
-		this.adoptedIpToProbe = new Map(adoptedProbes.map(probe => [ probe.ip, probe ]));
+		this.adoptedProbes = adoptedProbes;
+
+		this.adoptedIpToProbe = new Map([
+			...adoptedProbes.map(probe => [ probe.ip, probe ] as const),
+			...adoptedProbes.map(probe => probe.altIps.map(altIp => [ altIp, probe ] as const)).flat(),
+		]);
 	}
 
-	private async syncProbeIds (ip: string, uuid: string | null) {
-		const connectedProbe = this.connectedIpToProbe.get(ip);
+	private async syncProbeIds (ip: string, altIps: string[], uuid: string | null) {
+		const connectedProbeByIp = this.connectedIpToProbe.get(ip);
 
-		if (connectedProbe && connectedProbe.uuid === uuid) { // ip and uuid are synced
+		const sameUuid = connectedProbeByIp && connectedProbeByIp.uuid === uuid;
+		const sameAltIps = connectedProbeByIp && _.isEqual(connectedProbeByIp.altIpAddresses, altIps);
+
+		if (connectedProbeByIp && sameUuid && sameAltIps) { // probe was found by ip, and all data is synced
 			return;
 		}
 
-		if (connectedProbe && connectedProbe.uuid !== uuid) { // uuid was found, but it is outdated
-			await this.updateUuid(ip, connectedProbe.uuid);
+		if (connectedProbeByIp) { // probe was found by ip, but data is outdated
+			await this.updateIds(ip, connectedProbeByIp);
 			return;
+		}
+
+		let connectedProbeByAltIp: Probe | undefined;
+
+		for (const altIp of altIps) {
+			const probe = this.connectedIpToProbe.get(altIp);
+
+			if (probe) {
+				connectedProbeByAltIp = probe;
+				break;
+			}
+		}
+
+		if (connectedProbeByAltIp) { // probe was found by alt ip, need to update the adoped data
+			this.updateIds(ip, connectedProbeByAltIp);
 		}
 
 		if (!uuid) { // uuid is null, so no searching by uuid is required
 			return;
 		}
 
-		const connectedIp = this.connectedUuidToIp.get(uuid);
+		const connectedProbeByUuid = this.connectedUuidToProbe.get(uuid);
 
-		if (connectedIp) { // data was found by uuid, but not found by ip, therefore ip is outdated
-			await this.updateIp(connectedIp, uuid);
+		if (connectedProbeByUuid) { // probe was found by uuid, need to update the adoped data
+			await this.updateIds(uuid, connectedProbeByUuid);
 		}
 	}
 
@@ -281,22 +309,22 @@ export class AdoptedProbes {
 		}
 	}
 
-	private async updateUuid (ip: string, uuid: string) {
-		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update({ uuid });
-		const adoptedProbe = this.adoptedIpToProbe.get(ip);
+	private async updateIds (currentAdoptedIp: string, connectedProbe: Probe) {
+		await this.sql(ADOPTED_PROBES_TABLE).where({ ip: currentAdoptedIp }).update({
+			ip: connectedProbe.ipAddress,
+			altIps: connectedProbe.altIpAddresses,
+			uuid: connectedProbe.uuid,
+		});
 
-		if (adoptedProbe) { adoptedProbe.uuid = uuid; }
-	}
+		const adoptedProbe = this.adoptedIpToProbe.get(currentAdoptedIp);
 
-	private async updateIp (ip: string, uuid: string) {
-		await this.sql(ADOPTED_PROBES_TABLE).where({ uuid }).update({ ip });
-		const entry = [ ...this.adoptedIpToProbe.entries() ].find(([ , adoptedProbe ]) => adoptedProbe.uuid === uuid);
-
-		if (entry) {
-			const [ prevIp, adoptedProbe ] = entry;
-			adoptedProbe.ip = ip;
-			this.adoptedIpToProbe.delete(prevIp);
-			this.adoptedIpToProbe.set(ip, adoptedProbe);
+		if (adoptedProbe) {
+			this.adoptedIpToProbe.delete(adoptedProbe.ip);
+			adoptedProbe.altIps.forEach(altIp => this.adoptedIpToProbe.delete(altIp));
+			adoptedProbe.ip = connectedProbe.ipAddress;
+			adoptedProbe.altIps = connectedProbe.altIpAddresses;
+			this.adoptedIpToProbe.set(connectedProbe.ipAddress, adoptedProbe);
+			connectedProbe.altIpAddresses.forEach(altIp => this.adoptedIpToProbe.set(altIp, adoptedProbe));
 		}
 	}
 
