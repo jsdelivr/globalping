@@ -120,4 +120,4 @@ export const adminData = new AdminData(client);
 
 export const probeOverride = new ProbeOverride(adoptedProbes, adminData);
 
-export const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets);
+export const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets, getProbeByIp);
