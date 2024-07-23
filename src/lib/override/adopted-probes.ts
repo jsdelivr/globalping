@@ -41,6 +41,7 @@ export type AdoptedProbe = {
 }
 
 type Row = Omit<AdoptedProbe, 'isCustomCity' | 'tags'> & {
+	altIps: string;
 	tags: string;
 	isCustomCity: number;
 }
@@ -200,7 +201,8 @@ export class AdoptedProbes {
 
 		const adoptedProbes: AdoptedProbe[] = rows.map(row => ({
 			...row,
-			tags: (row.tags ? JSON.parse(row.tags) as {prefix: string; value: string;}[] : [])
+			altIps: JSON.parse(row.altIps) as string[],
+			tags: (JSON.parse(row.tags) as { prefix: string; value: string; }[])
 				.map(({ prefix, value }) => ({ type: 'user' as const, value: `u-${prefix}-${value}` })),
 			isCustomCity: Boolean(row.isCustomCity),
 		}));
@@ -312,7 +314,7 @@ export class AdoptedProbes {
 	private async updateIds (currentAdoptedIp: string, connectedProbe: Probe) {
 		await this.sql(ADOPTED_PROBES_TABLE).where({ ip: currentAdoptedIp }).update({
 			ip: connectedProbe.ipAddress,
-			altIps: connectedProbe.altIpAddresses,
+			altIps: JSON.stringify(connectedProbe.altIpAddresses),
 			uuid: connectedProbe.uuid,
 		});
 
