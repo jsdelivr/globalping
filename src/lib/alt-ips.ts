@@ -82,9 +82,11 @@ export class AltIps {
 
 			setTimeout(() => {
 				this.pendingRequests.delete(messageId);
-				logger.error(`Node failed to handle alt ip message in specified timeout.`);
 				reject(createHttpError(504, 'Node owning the probe failed to handle alt ip in specified timeout.', { type: 'node_response_timeout' }));
 			}, 15000);
+		}).catch((err) => {
+			logger.error(`Node failed to handle alt ip message ${messageId} in specified timeout.`);
+			throw err;
 		});
 		return promise;
 	}
@@ -106,6 +108,7 @@ export class AltIps {
 
 	private handleRes = async (resMessage: PubSubMessage<AltIpResBody>) => {
 		const resolve = this.pendingRequests.get(resMessage.body.reqMessageId);
+		this.pendingRequests.delete(resMessage.body.reqMessageId);
 
 		if (resolve) {
 			resolve(resMessage.body);
