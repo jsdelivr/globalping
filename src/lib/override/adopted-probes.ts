@@ -183,10 +183,11 @@ export class AdoptedProbes {
 
 	async syncDashboardData () {
 		const allProbes = await this.fetchProbesWithAdminData();
-		this.connectedIpToProbe = new Map([
-			...allProbes.map(probe => [ probe.ipAddress, probe ] as const),
-			...allProbes.map(probe => probe.altIpAddresses.map(altIp => [ altIp, probe ] as const)).flat(),
-		]);
+
+		this.connectedIpToProbe = new Map(allProbes.map(probe => [
+			[ probe.ipAddress, probe ] as const,
+			...probe.altIpAddresses.map(altIp => [ altIp, probe ] as const),
+		]).flat());
 
 		this.connectedUuidToProbe = new Map(allProbes.map(probe => [ probe.uuid, probe ]));
 
