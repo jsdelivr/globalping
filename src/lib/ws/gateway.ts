@@ -26,7 +26,7 @@ io
 
 		socket.emit('api:connect:alt-ips-token', {
 			token: getAltIpsClient().generateToken(socket),
-			socket: socket.id,
+			socketId: socket.id,
 			ip: probe.ipAddress,
 		});
 
