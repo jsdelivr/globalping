@@ -24,7 +24,12 @@ io
 		const probe = socket.data.probe;
 		const location = probeOverride.getUpdatedLocation(probe);
 
-		socket.emit('api:connect:alt-ips-token', getAltIpsClient().generateToken(socket));
+		socket.emit('api:connect:alt-ips-token', {
+			token: getAltIpsClient().generateToken(socket),
+			socket: socket.id,
+			ip: probe.ipAddress,
+		});
+
 		socket.emit('api:connect:location', location);
 		logger.info(`ws client ${socket.id} connected from ${location.city}, ${location.country} [${probe.ipAddress} - ${location.network}]`);
 

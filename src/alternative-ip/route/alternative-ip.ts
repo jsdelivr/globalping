@@ -23,7 +23,9 @@ const handle = async (ctx: Context): Promise<void> => {
 		ip,
 	});
 
-	ctx.body = '';
+	ctx.body = {
+		ip,
+	};
 };
 
 export const registerAlternativeIpRoute = (router: Router): void => {

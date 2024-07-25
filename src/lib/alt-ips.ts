@@ -36,7 +36,7 @@ export class AltIps {
 	generateToken (socket: ServerSocket) {
 		const token = randomUUID();
 		this.tokenToSocket.set(token, socket);
-		return { token, socketId: socket.id };
+		return token;
 	}
 
 	async validateTokenFromHttp (request: AltIpReqBody) {
