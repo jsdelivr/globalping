@@ -23,9 +23,6 @@ module.exports = {
 			enabled: false,
 		},
 	},
-	ws: {
-		fetchSocketsCacheTTL: 1, // 1 ms ttl here to disable fetchSockets cache in tests
-	},
 	measurement: {
 		maxInProgressProbes: 2,
 	},

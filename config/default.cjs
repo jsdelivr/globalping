@@ -43,9 +43,6 @@ module.exports = {
 	ip2location: {
 		apiKey: '',
 	},
-	ws: {
-		fetchSocketsCacheTTL: 1000,
-	},
 	adoptedProbes: {
 		syncInterval: 60000,
 	},
