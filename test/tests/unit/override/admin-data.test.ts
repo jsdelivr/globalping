@@ -35,12 +35,13 @@ describe('AdminData', () => {
 
 		await adminData.syncDashboardData();
 		const updatedProbes = adminData.getUpdatedProbes([
-			{ ipAddress: '1.1.1.1', location: { city: 'Miami', state: 'FL' } } as Probe,
-			{ ipAddress: '2.2.2.2', location: { city: 'Miami', state: 'FL' } } as Probe,
+			{ ipAddress: '1.1.1.1', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe,
+			{ ipAddress: '2.2.2.2', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe,
 		]);
 
 		expect(updatedProbes[0]).to.deep.equal({
 			ipAddress: '1.1.1.1',
+			altIpAddresses: [],
 			location: {
 				city: 'Bydgoszcz',
 				continent: 'EU',
@@ -53,7 +54,7 @@ describe('AdminData', () => {
 			},
 		});
 
-		expect(updatedProbes[1]).to.deep.equal({ ipAddress: '2.2.2.2', location: { city: 'Miami', state: 'FL' } });
+		expect(updatedProbes[1]).to.deep.equal({ ipAddress: '2.2.2.2', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } });
 	});
 
 	it('syncDashboardData method should work for ip ranges', async () => {
@@ -61,8 +62,8 @@ describe('AdminData', () => {
 
 		await adminData.syncDashboardData();
 		const updatedProbes = adminData.getUpdatedProbes([
-			{ ipAddress: '1.200.210.220', location: { city: 'Miami', state: 'FL' } } as Probe,
-			{ ipAddress: '2.200.210.220', location: { city: 'Miami', state: 'FL' } } as Probe,
+			{ ipAddress: '1.200.210.220', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe,
+			{ ipAddress: '2.200.210.220', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe,
 		]);
 
 		expect(updatedProbes[0]?.location.city).to.deep.equal('Bydgoszcz');
@@ -72,7 +73,7 @@ describe('AdminData', () => {
 	it('getUpdatedLocation should return null if no override found', async () => {
 		select.resolves([]);
 		await adminData.syncDashboardData();
-		const updatedLocation = adminData.getUpdatedLocation({ ipAddress: '1.1.1.1' } as Probe);
+		const updatedLocation = adminData.getUpdatedLocation({ ipAddress: '1.1.1.1', altIpAddresses: [] } as unknown as Probe);
 		expect(updatedLocation).to.equal(null);
 	});
 
@@ -82,10 +83,10 @@ describe('AdminData', () => {
 		const findUpdatedFieldsSpy = sandbox.spy(adminData, 'findUpdatedFields');
 		await adminData.syncDashboardData();
 
-		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', location: { city: 'Miami', state: 'FL' } } as Probe ]);
-		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', location: { city: 'Miami', state: 'FL' } } as Probe ]);
+		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe ]);
+		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe ]);
 		await adminData.syncDashboardData();
-		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', location: { city: 'Miami', state: 'FL' } } as Probe ]);
+		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe ]);
 		expect(findUpdatedFieldsSpy.callCount).to.equal(1);
 	});
 
@@ -96,12 +97,12 @@ describe('AdminData', () => {
 		const findUpdatedFieldsSpy = sandbox.spy(adminData, 'findUpdatedFields');
 		await adminData.syncDashboardData();
 
-		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', location: { city: 'Miami', state: 'FL' } } as Probe ]);
-		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', location: { city: 'Miami', state: 'FL' } } as Probe ]);
+		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe ]);
+		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe ]);
 		select.resolves([{ ...overrideLocation, date_updated: new Date('2024-04-10') }]);
 		await adminData.syncDashboardData();
-		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', location: { city: 'Miami', state: 'FL' } } as Probe ]);
-		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', location: { city: 'Miami', state: 'FL' } } as Probe ]);
+		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe ]);
+		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe ]);
 		expect(findUpdatedFieldsSpy.callCount).to.equal(2);
 	});
 
@@ -112,12 +113,12 @@ describe('AdminData', () => {
 		const findUpdatedFieldsSpy = sandbox.spy(adminData, 'findUpdatedFields');
 		await adminData.syncDashboardData();
 
-		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', location: { city: 'Miami', state: 'FL' } } as Probe ]);
-		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', location: { city: 'Miami', state: 'FL' } } as Probe ]);
+		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe ]);
+		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe ]);
 		select.resolves([]);
 		await adminData.syncDashboardData();
-		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', location: { city: 'Miami', state: 'FL' } } as Probe ]);
-		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', location: { city: 'Miami', state: 'FL' } } as Probe ]);
+		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe ]);
+		adminData.getUpdatedProbes([ { ipAddress: '1.1.1.1', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe ]);
 		expect(findUpdatedFieldsSpy.callCount).to.equal(2);
 	});
 });

@@ -10,6 +10,7 @@ describe('AdoptedProbes', () => {
 		userId: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
 		username: 'jimaek',
 		ip: '1.1.1.1',
+		altIps: '[]',
 		uuid: '1-1-1-1-1',
 		lastSyncDate: new Date(),
 		tags: '[{"prefix":"jimaek","value":"dashboardtag"}]',
@@ -116,7 +117,7 @@ describe('AdoptedProbes', () => {
 		expect(whereStub.callCount).to.equal(1);
 		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
 		expect(updateStub.callCount).to.equal(1);
-		expect(updateStub.args[0]).to.deep.equal([{ uuid: '2-2-2-2-2' }]);
+		expect(updateStub.args[0]).to.deep.equal([{ ip: '1.1.1.1', altIps: '[]', uuid: '2-2-2-2-2' }]);
 	});
 
 	it('class should update ip if it is wrong', async () => {
@@ -126,9 +127,9 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		expect(whereStub.callCount).to.equal(1);
-		expect(whereStub.args[0]).to.deep.equal([{ uuid: '1-1-1-1-1' }]);
+		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
 		expect(updateStub.callCount).to.equal(1);
-		expect(updateStub.args[0]).to.deep.equal([{ ip: '2.2.2.2' }]);
+		expect(updateStub.args[0]).to.deep.equal([{ ip: '2.2.2.2', altIps: '[]', uuid: '1-1-1-1-1' }]);
 	});
 
 	it('class should update status to "offline" if adopted probe was not found and lastSyncDate < 30 days away', async () => {
@@ -388,7 +389,7 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		const adoptedProbe = adoptedProbes.getByIp('1.1.1.1');
-		expect(adoptedProbe).to.deep.equal({ ...defaultAdoptedProbe, tags: [{ type: 'user', value: 'u-jimaek-dashboardtag' }], isCustomCity: false });
+		expect(adoptedProbe).to.deep.equal({ ...defaultAdoptedProbe, altIps: [], tags: [{ type: 'user', value: 'u-jimaek-dashboardtag' }], isCustomCity: false });
 	});
 
 	it('getUpdatedLocation method should return updated location', async () => {
@@ -461,7 +462,7 @@ describe('AdoptedProbes', () => {
 
 	it('getUpdatedTags method should return same tags array if user tags are empty', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchProbesWithAdminData);
-		selectStub.resolves([{ ...defaultAdoptedProbe, tags: undefined }]);
+		selectStub.resolves([{ ...defaultAdoptedProbe, tags: '[]' }]);
 
 		await adoptedProbes.syncDashboardData();
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);

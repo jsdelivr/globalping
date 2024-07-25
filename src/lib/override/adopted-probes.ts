@@ -111,10 +111,6 @@ export class AdoptedProbes {
 		private readonly fetchProbesWithAdminData: typeof serverFetchProbesWithAdminData,
 	) {}
 
-	getByIp (ip: string) {
-		return this.adoptedIpToProbe.get(ip);
-	}
-
 	getUpdatedLocation (probe: Probe): ProbeLocation | null {
 		const adoptedProbe = this.getByIp(probe.ipAddress);
 
@@ -253,8 +249,12 @@ export class AdoptedProbes {
 		const connectedProbeByUuid = this.connectedUuidToProbe.get(uuid);
 
 		if (connectedProbeByUuid) { // probe was found by uuid, need to update the adoped data
-			await this.updateIds(uuid, connectedProbeByUuid);
+			await this.updateIds(ip, connectedProbeByUuid);
 		}
+	}
+
+	getByIp (ip: string) {
+		return this.adoptedIpToProbe.get(ip);
 	}
 
 	private async syncProbeData (adoptedProbe: AdoptedProbe) {
@@ -319,13 +319,14 @@ export class AdoptedProbes {
 			uuid: connectedProbe.uuid,
 		});
 
-		const adoptedProbe = this.adoptedIpToProbe.get(currentAdoptedIp);
+		const adoptedProbe = this.getByIp(currentAdoptedIp);
 
 		if (adoptedProbe) {
 			this.adoptedIpToProbe.delete(adoptedProbe.ip);
 			adoptedProbe.altIps.forEach(altIp => this.adoptedIpToProbe.delete(altIp));
 			adoptedProbe.ip = connectedProbe.ipAddress;
 			adoptedProbe.altIps = connectedProbe.altIpAddresses;
+			adoptedProbe.uuid = connectedProbe.uuid;
 			this.adoptedIpToProbe.set(connectedProbe.ipAddress, adoptedProbe);
 			connectedProbe.altIpAddresses.forEach(altIp => this.adoptedIpToProbe.set(altIp, adoptedProbe));
 		}
@@ -342,7 +343,7 @@ export class AdoptedProbes {
 	private async updateLastSyncDate (ip: string) {
 		const date = new Date();
 		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update({ lastSyncDate: date });
-		const adoptedProbe = this.adoptedIpToProbe.get(ip);
+		const adoptedProbe = this.getByIp(ip);
 
 		if (adoptedProbe) {
 			adoptedProbe.lastSyncDate = date;

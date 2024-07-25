@@ -7,10 +7,11 @@ describe('ProbeIpLimit', () => {
 	const sandbox = sinon.createSandbox();
 	const fetchProbes = sandbox.stub();
 	const fetchRawSockets = sandbox.stub();
+	const getProbeByIp = sandbox.stub();
 
 	const getSocket = (id: string, ip: string) => ({
 		id,
-		data: { probe: { client: id, ipAddress: ip } },
+		data: { probe: { client: id, ipAddress: ip, altIpAddresses: [] } },
 		disconnect: sandbox.stub(),
 	});
 
@@ -31,7 +32,7 @@ describe('ProbeIpLimit', () => {
 			duplicate,
 		]);
 
-		const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets);
+		const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets, getProbeByIp);
 		await probeIpLimit.syncIpLimit();
 
 		expect(socket1.disconnect.callCount).to.equal(0);
@@ -59,7 +60,7 @@ describe('ProbeIpLimit', () => {
 			duplicate2,
 		]);
 
-		const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets);
+		const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets, getProbeByIp);
 		await probeIpLimit.syncIpLimit();
 
 		expect(socket1.disconnect.callCount).to.equal(0);
