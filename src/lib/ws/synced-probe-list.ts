@@ -121,6 +121,10 @@ export class SyncedProbeList extends EventEmitter {
 		});
 	}
 
+	getNodeId () {
+		return this.nodeId;
+	}
+
 	getNodeIdBySocketId (socketId: string) {
 		return this.socketIdToNodeId[socketId] || null;
 	}

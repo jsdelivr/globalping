@@ -8,8 +8,8 @@ import { scopedLogger } from './logger.js';
 
 const logger = scopedLogger('alt-ips');
 
-const ALT_IP_REQ_MESSAGE_TYPE = 'alt-ip:req';
-const ALT_IP_RES_MESSAGE_TYPE = 'alt-ip:res';
+export const ALT_IP_REQ_MESSAGE_TYPE = 'alt-ip:req';
+export const ALT_IP_RES_MESSAGE_TYPE = 'alt-ip:res';
 
 export type AltIpReqBody = {
 	socketId: string;
@@ -64,7 +64,9 @@ export class AltIps {
 
 		const nodeId = this.syncedProbeList.getNodeIdBySocketId(request.socketId);
 
-		if (nodeId) {
+		if (nodeId === this.syncedProbeList.getNodeId()) {
+			throw createHttpError(400, 'Token value is wrong.', { type: 'wrong_token' });
+		} else if (nodeId) {
 			const id = await this.syncedProbeList.publishToNode<AltIpReqBody>(nodeId, ALT_IP_REQ_MESSAGE_TYPE, request);
 			const response: AltIpResBody = await this.getResponsePromise(id);
 
@@ -91,7 +93,7 @@ export class AltIps {
 		return promise;
 	}
 
-	private validateTokenFromPubSub = async (reqMessage: PubSubMessage<AltIpReqBody>) => {
+	validateTokenFromPubSub = async (reqMessage: PubSubMessage<AltIpReqBody>) => {
 		const localSocket = this.tokenToSocket.get(reqMessage.body.token);
 
 		if (!localSocket) {
@@ -106,7 +108,7 @@ export class AltIps {
 		await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqMessageId: reqMessage.id });
 	};
 
-	private handleRes = async (resMessage: PubSubMessage<AltIpResBody>) => {
+	handleRes = async (resMessage: PubSubMessage<AltIpResBody>) => {
 		const resolve = this.pendingRequests.get(resMessage.body.reqMessageId);
 		this.pendingRequests.delete(resMessage.body.reqMessageId);
 
