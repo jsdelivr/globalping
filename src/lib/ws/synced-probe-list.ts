@@ -152,7 +152,7 @@ export class SyncedProbeList extends EventEmitter {
 
 	async subscribeToNodeMessages<T extends object> (
 		type: string,
-		callback: (message: PubSubMessage<T>) => Promise<void>,
+		callback: (message: PubSubMessage<T>) => Promise<void> | void,
 	) {
 		const callbacks = this.registeredCallbacks[type];
 		const cb = callback as Callback;

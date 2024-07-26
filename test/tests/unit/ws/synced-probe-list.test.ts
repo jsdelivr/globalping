@@ -18,9 +18,18 @@ describe('SyncedProbeList', () => {
 	const redisXRange = sandbox.stub(redisClient, 'xRange');
 	const redisPExpire = sandbox.stub(redisClient, 'pExpire');
 	const redisJsonGet = sandbox.stub(redisClient.json, 'get');
+	const redisPublish = sandbox.stub(redisClient, 'publish');
+	const redisSubscribe = sandbox.stub(subRedisClient, 'subscribe');
 
-	const getProbe = (id: string) => ({
+	const idToIp = {
+		A: '1.1.1.1',
+		B: '2.2.2.2',
+		C: '3.3.3.3',
+	};
+
+	const getProbe = (id: 'A' | 'B' | 'C') => ({
 		client: id,
+		ipAddress: idToIp[id],
 		altIpAddresses: [],
 		location: {
 			continent: 'NA',
@@ -284,7 +293,7 @@ describe('SyncedProbeList', () => {
 		expect(syncedProbeList.getProbes()).to.be.empty;
 	});
 
-	it('applies adoption data to getProbes()/fetchProbes() but not to getRawProbes()/getProbesWithAdminData()', async () => {
+	it('applies adoption data to getProbes()/fetchProbes()/getProbeByIp() but not to getRawProbes()/getProbesWithAdminData()', async () => {
 		const probe1 = getProbe('A');
 		const probe2 = getProbe('B');
 		const sockets = [{ data: { probe: probe1 } }, { data: { probe: probe2 } }];
@@ -309,6 +318,9 @@ describe('SyncedProbeList', () => {
 		expect(fetchedProbes[0]).to.deep.include({ tags });
 		expect(fetchedProbes[1]).not.to.deep.include({ tags });
 
+		expect(syncedProbeList.getProbeByIp('1.1.1.1')).to.deep.include({ tags });
+		expect(syncedProbeList.getProbeByIp('2.2.2.2')).not.to.deep.include({ tags });
+
 		expect(syncedProbeList.getProbesWithAdminData()[0]).not.to.deep.include({ tags });
 		expect(syncedProbeList.getProbesWithAdminData()[1]).not.to.deep.include({ tags });
 
@@ -316,7 +328,7 @@ describe('SyncedProbeList', () => {
 		expect(syncedProbeList.getRawProbes()[1]).not.to.deep.include({ tags });
 	});
 
-	it('applies admin location override data to getProbes()/fetchProbes()/getProbesWithAdminData() but not to getRawProbes()', async () => {
+	it('applies admin location override data to getProbes()/fetchProbes()/getProbeByIp()/getProbesWithAdminData() but not to getRawProbes()', async () => {
 		const probe1 = getProbe('A');
 		const probe2 = getProbe('B');
 		const sockets = [{ data: { probe: probe1 } }, { data: { probe: probe2 } }];
@@ -342,6 +354,9 @@ describe('SyncedProbeList', () => {
 		expect(syncedProbeList.getProbesWithAdminData()[0]?.location.city).to.deep.equal('Miami');
 		expect(syncedProbeList.getProbesWithAdminData()[1]?.location.city).to.deep.equal('The New York City');
 
+		expect(syncedProbeList.getProbeByIp('1.1.1.1')?.location.city).to.deep.equal('Miami');
+		expect(syncedProbeList.getProbeByIp('2.2.2.2')?.location.city).to.deep.equal('The New York City');
+
 		expect(syncedProbeList.getRawProbes()[0]?.location.city).to.deep.equal('The New York City');
 		expect(syncedProbeList.getRawProbes()[1]?.location.city).to.deep.equal('The New York City');
 	});
@@ -361,5 +376,42 @@ describe('SyncedProbeList', () => {
 		await syncedProbeList.sync();
 		await clock.nextAsync();
 		expect(resolved).to.be.true;
+	});
+
+	it('is able to publish messages directly to another nodes', async () => {
+		const nodeId = syncedProbeList.getNodeId();
+		const body = { data: 1 };
+
+		await syncedProbeList.publishToNode('anotherNodeId', 'MESSAGE_TYPE', body);
+
+		expect(redisPublish.callCount).to.equal(1);
+		expect(redisPublish.firstCall.args[0]).to.equal('gp:spl:pub-sub:anotherNodeId');
+
+		expect(JSON.parse(redisPublish.firstCall.args[1] as string)).to.deep.include({
+			reqNodeId: nodeId,
+			type: 'MESSAGE_TYPE',
+			body,
+		});
+	});
+
+	it('is able to read direct messages from another nodes', async () => {
+		const message = {
+			id: 'messageId',
+			reqNodeId: 'reqNodeId',
+			type: 'MESSAGE_TYPE',
+			body: {
+				data: 1,
+			},
+		};
+		let receivedMessage: typeof message;
+		await syncedProbeList.subscribeToNodeMessages<any>('MESSAGE_TYPE', (m) => { receivedMessage = m; });
+
+		expect(redisSubscribe.callCount).to.equal(1);
+		expect(redisSubscribe.args[0]?.[0]).to.equal(`gp:spl:pub-sub:${syncedProbeList.getNodeId()}`);
+		const subscriptionCallback = redisSubscribe.args[0]?.[1];
+
+		await subscriptionCallback!(JSON.stringify(message), `gp:spl:pub-sub:${syncedProbeList.getNodeId()}`);
+
+		expect(receivedMessage!).to.deep.equal(message);
 	});
 });
