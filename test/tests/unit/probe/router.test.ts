@@ -42,7 +42,7 @@ describe('probe router', () => {
 	const buildProbe = async (
 		id: string,
 		location: Partial<ProbeLocation>,
-		additionalProperties: Partial<Probe> = { status: 'ready', isIPv4Supported: true, isIPv6Supported: false },
+		additionalProperties: Partial<Probe> = {},
 	): Promise<Probe> => {
 		const socket: DeepPartial<RemoteProbeSocket> = {
 			id,
@@ -57,6 +57,9 @@ describe('probe router', () => {
 
 		socket.data!.probe = {
 			...await buildProbeInternal(socket as RemoteProbeSocket),
+			status: 'ready',
+			isIPv4Supported: true,
+			isIPv6Supported: false,
 			...additionalProperties,
 		};
 
@@ -1103,6 +1106,35 @@ describe('probe router', () => {
 			});
 
 			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: [{ magic: 'measurementid' }] } as UserRequest);
+
+			expect(request).to.deep.equal({ limit: undefined, locations: undefined });
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(allProbes[0]!.location.country).to.equal('PL');
+			expect(allProbes[0]!.status).to.equal('ready');
+			expect(onlineProbesMap.get(0)?.location.country).to.equal('PL');
+		});
+
+		it('should find probes by prev measurement id that are now connected by another ip', async () => {
+			const probes: Array<DeepPartial<Probe>> = [
+				await buildProbe('socket-1', { continent: 'EU', country: 'PL' }, { ipAddress: '2.2.2.2', altIpAddresses: [ '1.2.3.4' ] }),
+			];
+			fetchProbesMock.resolves(probes as never);
+			store.getMeasurementIps.resolves([ '1.2.3.4' ]);
+
+			store.getMeasurement.resolves({
+				results: [{
+					probe: {
+						continent: 'EU',
+						country: 'PL',
+						city: 'Warsaw',
+						network: 'Liberty Global B.V.',
+						tags: [],
+					},
+				}],
+			});
+
+			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: 'measurementid' } as UserRequest);
 
 			expect(request).to.deep.equal({ limit: undefined, locations: undefined });
 			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
