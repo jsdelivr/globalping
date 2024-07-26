@@ -57,6 +57,33 @@ describe('AdminData', () => {
 		expect(updatedProbes[1]).to.deep.equal({ ipAddress: '2.2.2.2', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } });
 	});
 
+	it('syncDashboardData method should populate admin location overrides for alternativeIps', async () => {
+		select.resolves([ overrideLocation ]);
+
+		await adminData.syncDashboardData();
+		const updatedProbes = adminData.getUpdatedProbes([
+			{ ipAddress: '2.2.2.2', altIpAddresses: [ '1.1.1.1' ], location: { city: 'Miami', state: 'FL' } } as unknown as Probe,
+			{ ipAddress: '3.3.3.3', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } } as unknown as Probe,
+		]);
+
+		expect(updatedProbes[0]).to.deep.equal({
+			ipAddress: '2.2.2.2',
+			altIpAddresses: [ '1.1.1.1' ],
+			location: {
+				city: 'Bydgoszcz',
+				continent: 'EU',
+				region: 'Eastern Europe',
+				normalizedCity: 'bydgoszcz',
+				country: 'PL',
+				state: null,
+				latitude: 53.1235,
+				longitude: 18.00762,
+			},
+		});
+
+		expect(updatedProbes[1]).to.deep.equal({ ipAddress: '3.3.3.3', altIpAddresses: [], location: { city: 'Miami', state: 'FL' } });
+	});
+
 	it('syncDashboardData method should work for ip ranges', async () => {
 		select.resolves([{ ...overrideLocation, ip_range: '1.1.1.1/8' }]);
 

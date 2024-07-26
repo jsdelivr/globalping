@@ -109,7 +109,7 @@ describe('Adoption code', () => {
 			.send({ socketId, token: 'fake-token-12345' })
 			.expect(400)
 			.expect((response) => {
-				expect(response.body.error.type).to.equal('probe_not_found_on_remote');
+				expect(response.body.error.type).to.equal('wrong_token');
 			});
 	});
 

@@ -32,7 +32,7 @@ export type PubSubMessage<T = object> = {
 	body: T;
 }
 
-type Callback = (message: PubSubMessage, channel: string) => Promise<void>;
+type Callback = (message: PubSubMessage) => Promise<void>;
 
 const MESSAGE_TYPES = {
 	ALIVE: 'a',
@@ -61,14 +61,19 @@ export class SyncedProbeList extends EventEmitter {
 	private pullTimer: NodeJS.Timeout | undefined;
 	private lastReadEventId: string;
 
-	public readonly nodeId: string;
+	private readonly nodeId: string;
 	private readonly nodeData: TTLCache<string, NodeData>;
 
 	private socketIdToNodeId: Record<string, string>;
 	private ipToProbe: Record<string, Probe>;
 	private registeredCallbacks: Record<string, Callback[]>;
 
-	constructor (private readonly redis: RedisClient, private readonly subRedisClient: RedisClient, private readonly ioNamespace: WsServerNamespace, private readonly probeOverride: ProbeOverride) {
+	constructor (
+		private readonly redis: RedisClient,
+		private readonly subRedisClient: RedisClient,
+		private readonly ioNamespace: WsServerNamespace,
+		private readonly probeOverride: ProbeOverride,
+	) {
 		super();
 		this.setMaxListeners(Infinity);
 		this.nodeId = randomBytes(8).toString('hex');
@@ -145,7 +150,10 @@ export class SyncedProbeList extends EventEmitter {
 		return id;
 	}
 
-	async subscribeToNodeMessages<T extends object> (type: string, callback: (message: PubSubMessage<T>, channel: string) => Promise<void>) {
+	async subscribeToNodeMessages<T extends object> (
+		type: string,
+		callback: (message: PubSubMessage<T>) => Promise<void>,
+	) {
 		const callbacks = this.registeredCallbacks[type];
 		const cb = callback as Callback;
 
@@ -516,13 +524,12 @@ export class SyncedProbeList extends EventEmitter {
 	}
 
 	private async subscribeNode () {
-		await this.subRedisClient.subscribe(`gp:spl:pub-sub:${this.nodeId}`, async (message, channel) => {
+		await this.subRedisClient.subscribe(`gp:spl:pub-sub:${this.nodeId}`, async (message) => {
 			const parsedMessage = JSON.parse(message) as PubSubMessage;
 			const callbacks = this.registeredCallbacks[parsedMessage.type];
-			const nodeId = channel.split(':').at(-1)!;
 
 			if (callbacks) {
-				await Promise.all(callbacks.map(callback => callback(parsedMessage, nodeId)));
+				await Promise.all(callbacks.map(callback => callback(parsedMessage)));
 			}
 		});
 	}

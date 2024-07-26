@@ -9,9 +9,9 @@ describe('ProbeIpLimit', () => {
 	const fetchRawSockets = sandbox.stub();
 	const getProbeByIp = sandbox.stub();
 
-	const getSocket = (id: string, ip: string) => ({
+	const getSocket = (id: string, ip: string, altIpAddresses: string[] = []) => ({
 		id,
-		data: { probe: { client: id, ipAddress: ip, altIpAddresses: [] } },
+		data: { probe: { client: id, ipAddress: ip, altIpAddresses } },
 		disconnect: sandbox.stub(),
 	});
 
@@ -19,6 +19,31 @@ describe('ProbeIpLimit', () => {
 		const socket1 = getSocket('a', '1.1.1.1');
 		const socket2 = getSocket('b', '2.2.2.2');
 		const duplicate = getSocket('c', '2.2.2.2');
+
+		fetchProbes.resolves([
+			socket1.data.probe,
+			socket2.data.probe,
+			duplicate.data.probe,
+		]);
+
+		fetchRawSockets.resolves([
+			socket1,
+			socket2,
+			duplicate,
+		]);
+
+		const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets, getProbeByIp);
+		await probeIpLimit.syncIpLimit();
+
+		expect(socket1.disconnect.callCount).to.equal(0);
+		expect(socket2.disconnect.callCount).to.equal(0);
+		expect(duplicate.disconnect.callCount).to.equal(1);
+	});
+
+	it('syncIpLimit should disconnect lat ip duplicates', async () => {
+		const socket1 = getSocket('a', '1.1.1.1');
+		const socket2 = getSocket('b', '2.2.2.2');
+		const duplicate = getSocket('c', '3.3.3.3', [ '2.2.2.2' ]);
 
 		fetchProbes.resolves([
 			socket1.data.probe,

@@ -218,7 +218,7 @@ export class AdoptedProbes {
 		const sameUuid = connectedProbeByIp && connectedProbeByIp.uuid === uuid;
 		const sameAltIps = connectedProbeByIp && _.isEqual(connectedProbeByIp.altIpAddresses, altIps);
 
-		if (connectedProbeByIp && sameUuid && sameAltIps) { // probe was found by ip, and all data is synced
+		if (connectedProbeByIp && sameUuid && sameAltIps) { // probe was found by ip, and data is synced
 			return;
 		}
 
