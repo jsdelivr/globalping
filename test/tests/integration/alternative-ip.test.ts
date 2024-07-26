@@ -5,7 +5,7 @@ import request, { type Agent } from 'supertest';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { expect } from 'chai';
-import { randomUUID } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 
 describe('Adoption code', () => {
 	let app: Server;
@@ -96,19 +96,17 @@ describe('Adoption code', () => {
 	it('should send 400 if token is invalid', async () => {
 		nockGeoIpProviders();
 
-		let token: string;
 		let socketId: string;
 
 		await addFakeProbe({
 			'api:connect:alt-ips-token': (data: { token: string, socketId: string }) => {
-				token = randomUUID();
 				socketId = data.socketId;
 			},
 		});
 
 		await requestAgent.post('/v1/alternative-ip')
 			// @ts-expect-error Variable used before being assigned
-			.send({ socketId, token })
+			.send({ socketId, token: 'fake-token-12345' })
 			.expect(400)
 			.expect((response) => {
 				expect(response.body.error.type).to.equal('probe_not_found_on_remote');
@@ -123,7 +121,7 @@ describe('Adoption code', () => {
 
 		await addFakeProbe({
 			'api:connect:alt-ips-token': () => {
-				token = randomUUID();
+				token = randomBytes(8).toString('hex');
 				socketId = 'fake-socket-12345678';
 			},
 		});

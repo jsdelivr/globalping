@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { getSyncedProbeList, type ServerSocket } from './ws/server.js';
 import type { PubSubMessage, SyncedProbeList } from './ws/synced-probe-list.js';
 import TTLCache from '@isaacs/ttlcache';
@@ -34,7 +34,7 @@ export class AltIps {
 	}
 
 	generateToken (socket: ServerSocket) {
-		const token = randomUUID();
+		const token = randomBytes(8).toString('hex');
 		this.tokenToSocket.set(token, socket);
 		return token;
 	}

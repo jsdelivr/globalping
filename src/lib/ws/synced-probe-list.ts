@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { randomBytes, randomUUID } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import TTLCache from '@isaacs/ttlcache';
 import { scopedLogger } from '../logger.js';
@@ -130,7 +130,7 @@ export class SyncedProbeList extends EventEmitter {
 	}
 
 	async publishToNode<T extends object> (nodeId: string, type: string, body: T) {
-		const id = randomUUID();
+		const id = randomBytes(8).toString('hex');
 		const message: PubSubMessage = {
 			id,
 			reqNodeId: this.nodeId,
