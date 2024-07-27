@@ -33,7 +33,7 @@ describe('AltIps', () => {
 	});
 
 	it('should add alt ip for local probe', async () => {
-		const token = altIps.generateToken(socket);
+		const token = await altIps.generateToken(socket);
 		await altIps.validateTokenFromHttp({
 			socketId: 'socketId1',
 			ip: '2.2.2.2',
@@ -46,7 +46,7 @@ describe('AltIps', () => {
 	it('should not add alt ip for duplicated connected ip', async () => {
 		syncedProbeList.getProbeByIp.returns({});
 
-		const token = altIps.generateToken(socket);
+		const token = await altIps.generateToken(socket);
 		const err = await altIps.validateTokenFromHttp({
 			socketId: 'socketId1',
 			ip: '2.2.2.2',
@@ -61,7 +61,7 @@ describe('AltIps', () => {
 	it('should do nothing if alt ip is already added', async () => {
 		syncedProbeList.getProbeByIp.returns(socket.data.probe);
 
-		const token = altIps.generateToken(socket);
+		const token = await altIps.generateToken(socket);
 		await altIps.validateTokenFromHttp({
 			socketId: 'socketId1',
 			ip: '2.2.2.2',
@@ -173,7 +173,7 @@ describe('AltIps', () => {
 	});
 
 	it('should add alt ip from pub/sub', async () => {
-		const token = altIps.generateToken(socket);
+		const token = await altIps.generateToken(socket);
 		await altIps.validateTokenFromPubSub({
 			id: 'message1',
 			reqNodeId: 'node1',

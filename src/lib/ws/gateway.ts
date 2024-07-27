@@ -25,7 +25,7 @@ io
 		const location = probeOverride.getUpdatedLocation(probe);
 
 		socket.emit('api:connect:alt-ips-token', {
-			token: getAltIpsClient().generateToken(socket),
+			token: await getAltIpsClient().generateToken(socket),
 			socketId: socket.id,
 			ip: probe.ipAddress,
 		});

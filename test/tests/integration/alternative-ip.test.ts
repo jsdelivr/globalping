@@ -5,7 +5,6 @@ import request, { type Agent } from 'supertest';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { expect } from 'chai';
-import { randomBytes } from 'node:crypto';
 
 describe('Adoption code', () => {
 	let app: Server;
@@ -106,7 +105,7 @@ describe('Adoption code', () => {
 
 		await requestAgent.post('/v1/alternative-ip')
 			// @ts-expect-error Variable used before being assigned
-			.send({ socketId, token: 'fake-token-12345' })
+			.send({ socketId, token: 'fake-token-012345678901234567890' })
 			.expect(400)
 			.expect((response) => {
 				expect(response.body.error.type).to.equal('wrong_token');
@@ -121,7 +120,7 @@ describe('Adoption code', () => {
 
 		await addFakeProbe({
 			'api:connect:alt-ips-token': () => {
-				token = randomBytes(8).toString('hex');
+				token = 'fake-token-012345678901234567890';
 				socketId = 'fake-socket-12345678';
 			},
 		});

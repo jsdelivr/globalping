@@ -1,3 +1,4 @@
+import { promisify } from 'node:util';
 import { randomBytes } from 'node:crypto';
 import { getSyncedProbeList, type ServerSocket } from './ws/server.js';
 import type { PubSubMessage, SyncedProbeList } from './ws/synced-probe-list.js';
@@ -5,7 +6,7 @@ import TTLCache from '@isaacs/ttlcache';
 import createHttpError from 'http-errors';
 import { scopedLogger } from './logger.js';
 
-
+const getRandomBytes = promisify(randomBytes);
 const logger = scopedLogger('alt-ips');
 
 export const ALT_IP_REQ_MESSAGE_TYPE = 'alt-ip:req';
@@ -33,8 +34,9 @@ export class AltIps {
 		this.subscribeToNodeMessages();
 	}
 
-	generateToken (socket: ServerSocket) {
-		const token = randomBytes(8).toString('hex');
+	async generateToken (socket: ServerSocket) {
+		const bytes = await getRandomBytes(24);
+		const token = bytes.toString('base64');
 		this.tokenToSocket.set(token, socket);
 		return token;
 	}
