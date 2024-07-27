@@ -106,9 +106,13 @@ export const fetchProbes = async ({ allowStale = true } = {}): Promise<Probe[]> 
 	return allowStale ? syncedProbeList.getProbes() : syncedProbeList.fetchProbes();
 };
 
-export const getProbeByIp = (ip: string): Probe | null => {
+export const getProbeByIp = async (ip: string, { allowStale = true } = {}): Promise<Probe | null> => {
 	if (!syncedProbeList) {
 		throw new Error('WS server not initialized yet');
+	}
+
+	if (!allowStale) {
+		await syncedProbeList.fetchProbes();
 	}
 
 	return syncedProbeList.getProbeByIp(ip);

@@ -13,7 +13,7 @@ const handle = async (ctx: Context): Promise<void> => {
 	}
 
 	const request = ctx.request.body as AdoptionCodeRequest;
-	const probe = codeSender.sendCode(request);
+	const probe = await codeSender.sendCode(request);
 
 	ctx.body = {
 		uuid: probe.uuid,

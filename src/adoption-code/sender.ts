@@ -9,8 +9,8 @@ export class CodeSender {
 		private readonly getProbeByIp: typeof serverGetProbeByIp,
 	) {}
 
-	sendCode (request: AdoptionCodeRequest): Probe {
-		const probe = this.getProbeByIp(request.ip);
+	async sendCode (request: AdoptionCodeRequest) {
+		const probe = await this.getProbeByIp(request.ip);
 
 		if (!probe) {
 			throw createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' });

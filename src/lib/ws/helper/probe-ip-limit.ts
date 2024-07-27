@@ -65,8 +65,7 @@ export class ProbeIpLimit {
 			return;
 		}
 
-		await this.fetchProbes({ allowStale: false });
-		const previousProbe = this.getProbeByIp(ip);
+		const previousProbe = await this.getProbeByIp(ip, { allowStale: false });
 
 		if (previousProbe && previousProbe.client !== socketId) {
 			logger.warn(`ws client ${socketId} has reached the concurrent IP limit.`, { message: previousProbe.ipAddress });
