@@ -66,6 +66,11 @@ export type OfflineProbe = Modify<Probe, {
 	isHardware: false;
 	hardwareDevice: null;
 	host: null;
+	hostInfo: {
+		totalMemory: null;
+		totalDiskSize: null;
+		availableDiskSpace: null;
+	}
 	index: [];
 	tags: {
 		type: 'offline';
@@ -73,11 +78,11 @@ export type OfflineProbe = Modify<Probe, {
 	}[];
 	stats: {
 		cpu: {
-			count: 0;
+			count: null;
 			load: [];
 		};
 		jobs: {
-			count: 0
+			count: null
 		};
 	};
 }>

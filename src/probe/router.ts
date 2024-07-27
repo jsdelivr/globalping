@@ -154,9 +154,9 @@ export class ProbeRouter {
 		altIpAddresses: [],
 		host: null,
 		hostInfo: {
-			totalMemory: 0,
-			totalDiskSize: 0,
-			availableDiskSpace: 0,
+			totalMemory: null,
+			totalDiskSize: null,
+			availableDiskSpace: null,
 		},
 		location: {
 			continent: test.probe.continent,
@@ -176,10 +176,10 @@ export class ProbeRouter {
 		tags: test.probe.tags.map(tag => ({ value: tag, type: 'offline' })),
 		stats: {
 			cpu: {
-				count: 0,
+				count: null,
 				load: [],
 			},
-			jobs: { count: 0 },
+			jobs: { count: null },
 		},
 	});
 }
