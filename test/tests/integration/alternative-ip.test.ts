@@ -30,8 +30,8 @@ describe('Adoption code', () => {
 	it('should add alternative ip to the probe', async () => {
 		nockGeoIpProviders();
 
-		let token: string;
-		let socketId: string;
+		let token: string | undefined;
+		let socketId: string | undefined;
 
 		const probe = await addFakeProbe({
 			'api:connect:alt-ips-token': (data: { token: string, socketId: string }) => {
@@ -43,7 +43,6 @@ describe('Adoption code', () => {
 		probe.emit('probe:status:update', 'ready');
 
 		await requestAgent.post('/v1/alternative-ip')
-			// @ts-expect-error Variable used before being assigned
 			.send({ socketId, token })
 			.expect(200);
 
@@ -60,8 +59,8 @@ describe('Adoption code', () => {
 	it('should not add duplicate alternative ips to the probe', async () => {
 		nockGeoIpProviders();
 
-		let token: string;
-		let socketId: string;
+		let token: string | undefined;
+		let socketId: string | undefined;
 
 		const probe = await addFakeProbe({
 			'api:connect:alt-ips-token': (data: { token: string, socketId: string }) => {
@@ -73,12 +72,10 @@ describe('Adoption code', () => {
 		probe.emit('probe:status:update', 'ready');
 
 		await requestAgent.post('/v1/alternative-ip')
-			// @ts-expect-error Variable used before being assigned
 			.send({ socketId, token })
 			.expect(200);
 
 		await requestAgent.post('/v1/alternative-ip')
-		// @ts-expect-error Variable used before being assigned
 			.send({ socketId, token })
 			.expect(200);
 
@@ -95,7 +92,7 @@ describe('Adoption code', () => {
 	it('should send 400 if token is invalid', async () => {
 		nockGeoIpProviders();
 
-		let socketId: string;
+		let socketId: string | undefined;
 
 		await addFakeProbe({
 			'api:connect:alt-ips-token': (data: { token: string, socketId: string }) => {
@@ -104,7 +101,6 @@ describe('Adoption code', () => {
 		});
 
 		await requestAgent.post('/v1/alternative-ip')
-			// @ts-expect-error Variable used before being assigned
 			.send({ socketId, token: 'fake-token-012345678901234567890' })
 			.expect(400)
 			.expect((response) => {
@@ -115,8 +111,8 @@ describe('Adoption code', () => {
 	it('should send 400 if socket not found', async () => {
 		nockGeoIpProviders();
 
-		let token: string;
-		let socketId: string;
+		let token: string | undefined;
+		let socketId: string | undefined;
 
 		await addFakeProbe({
 			'api:connect:alt-ips-token': () => {
@@ -126,7 +122,6 @@ describe('Adoption code', () => {
 		});
 
 		await requestAgent.post('/v1/alternative-ip')
-			// @ts-expect-error Variable used before being assigned
 			.send({ socketId, token })
 			.expect(400)
 			.expect((response) => {
