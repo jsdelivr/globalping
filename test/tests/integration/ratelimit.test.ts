@@ -59,16 +59,20 @@ describe('rate limiter', () => {
 			const response = await requestAgent.get('/v1/').send().expect(200) as Response;
 
 			expect(response.headers['x-ratelimit-limit']).to.not.exist;
+			expect(response.headers['x-ratelimit-consumed']).to.not.exist;
 			expect(response.headers['x-ratelimit-remaining']).to.not.exist;
 			expect(response.headers['x-ratelimit-reset']).to.not.exist;
+			expect(response.headers['x-request-cost']).to.not.exist;
 		});
 
 		it('should NOT include headers if body is not valid (POST)', async () => {
 			const response = await requestAgent.post('/v1/measurements').send().expect(400) as Response;
 
 			expect(response.headers['x-ratelimit-limit']).to.not.exist;
+			expect(response.headers['x-ratelimit-consumed']).to.not.exist;
 			expect(response.headers['x-ratelimit-remaining']).to.not.exist;
 			expect(response.headers['x-ratelimit-reset']).to.not.exist;
+			expect(response.headers['x-request-cost']).to.not.exist;
 		});
 
 		it('should include headers (POST)', async () => {
@@ -78,8 +82,10 @@ describe('rate limiter', () => {
 			}).expect(202) as Response;
 
 			expect(response.headers['x-ratelimit-limit']).to.exist;
+			expect(response.headers['x-ratelimit-consumed']).to.exist;
 			expect(response.headers['x-ratelimit-remaining']).to.exist;
 			expect(response.headers['x-ratelimit-reset']).to.exist;
+			expect(response.headers['x-request-cost']).to.exist;
 		});
 
 		it('should include headers (authenticated POST)', async () => {
@@ -91,8 +97,10 @@ describe('rate limiter', () => {
 				}).expect(202) as Response;
 
 			expect(response.headers['x-ratelimit-limit']).to.exist;
+			expect(response.headers['x-ratelimit-consumed']).to.exist;
 			expect(response.headers['x-ratelimit-remaining']).to.exist;
 			expect(response.headers['x-ratelimit-reset']).to.exist;
+			expect(response.headers['x-request-cost']).to.exist;
 		});
 
 		it('should change values on multiple requests (POST)', async () => {
@@ -102,8 +110,10 @@ describe('rate limiter', () => {
 			}).expect(202) as Response;
 
 			expect(response.headers['x-ratelimit-limit']).to.equal('100000');
+			expect(response.headers['x-ratelimit-consumed']).to.equal('1');
 			expect(response.headers['x-ratelimit-remaining']).to.equal('99999');
 			expect(response.headers['x-ratelimit-reset']).to.equal('3600');
+			expect(response.headers['x-request-cost']).to.equal('1');
 
 			const response2 = await requestAgent.post('/v1/measurements').send({
 				type: 'ping',
@@ -111,8 +121,10 @@ describe('rate limiter', () => {
 			}).expect(202) as Response;
 
 			expect(response2.headers['x-ratelimit-limit']).to.equal('100000');
+			expect(response.headers['x-ratelimit-consumed']).to.equal('1');
 			expect(response2.headers['x-ratelimit-remaining']).to.equal('99998');
 			expect(response2.headers['x-ratelimit-reset']).to.equal('3600');
+			expect(response.headers['x-request-cost']).to.equal('1');
 		});
 
 		it('should change values on multiple requests (authenticated POST)', async () => {
@@ -124,8 +136,10 @@ describe('rate limiter', () => {
 				}).expect(202) as Response;
 
 			expect(response.headers['x-ratelimit-limit']).to.equal('250');
+			expect(response.headers['x-ratelimit-consumed']).to.equal('1');
 			expect(response.headers['x-ratelimit-remaining']).to.equal('249');
 			expect(response.headers['x-ratelimit-reset']).to.equal('3600');
+			expect(response.headers['x-request-cost']).to.equal('1');
 
 			const response2 = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -135,8 +149,10 @@ describe('rate limiter', () => {
 				}).expect(202) as Response;
 
 			expect(response2.headers['x-ratelimit-limit']).to.equal('250');
+			expect(response.headers['x-ratelimit-consumed']).to.equal('1');
 			expect(response2.headers['x-ratelimit-remaining']).to.equal('248');
 			expect(response2.headers['x-ratelimit-reset']).to.equal('3600');
+			expect(response.headers['x-request-cost']).to.equal('1');
 		});
 	});
 
@@ -239,10 +255,11 @@ describe('rate limiter', () => {
 					limit: 2,
 				}).expect(202) as Response;
 
+			expect(response.headers['x-ratelimit-consumed']).to.equal('2');
 			expect(response.headers['x-ratelimit-remaining']).to.equal('248');
 			expect(response.headers['x-credits-consumed']).to.not.exist;
-			expect(response.headers['x-credits-required']).to.not.exist;
 			expect(response.headers['x-credits-remaining']).to.not.exist;
+			expect(response.headers['x-request-cost']).to.equal('2');
 			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(10);
 		});
@@ -258,10 +275,11 @@ describe('rate limiter', () => {
 					limit: 2,
 				}).expect(202) as Response;
 
+			expect(response.headers['x-ratelimit-consumed']).to.equal('0');
 			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
 			expect(response.headers['x-credits-consumed']).to.equal('2');
-			expect(response.headers['x-credits-required']).to.not.exist;
-			expect((response.headers['x-credits-remaining'])).to.equal('8');
+			expect(response.headers['x-credits-remaining']).to.equal('8');
+			expect(response.headers['x-request-cost']).to.equal('2');
 			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(8);
 		});
@@ -277,10 +295,11 @@ describe('rate limiter', () => {
 					limit: 2,
 				}).expect(202) as Response;
 
+			expect(response.headers['x-ratelimit-consumed']).to.equal('1');
 			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
 			expect(response.headers['x-credits-consumed']).to.equal('1');
-			expect(response.headers['x-credits-required']).to.not.exist;
-			expect((response.headers['x-credits-remaining'])).to.equal('9');
+			expect(response.headers['x-credits-remaining']).to.equal('9');
+			expect(response.headers['x-request-cost']).to.equal('2');
 			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(9);
 		});
@@ -302,10 +321,11 @@ describe('rate limiter', () => {
 					limit: 2,
 				}).expect(429) as Response;
 
+			expect(response.headers['x-ratelimit-consumed']).to.equal('0');
 			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
-			expect(response.headers['x-credits-consumed']).to.not.exist;
-			expect(response.headers['x-credits-required']).to.equal('2');
+			expect(response.headers['x-credits-consumed']).to.equal('0');
 			expect(response.headers['x-credits-remaining']).to.equal('1');
+			expect(response.headers['x-request-cost']).to.equal('2');
 			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(1);
 		});
@@ -321,10 +341,11 @@ describe('rate limiter', () => {
 					limit: 2,
 				}).expect(202) as Response;
 
+			expect(response.headers['x-ratelimit-consumed']).to.equal('0');
 			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
 			expect(response.headers['x-credits-consumed']).to.equal('2');
-			expect(response.headers['x-credits-required']).to.not.exist;
-			expect((response.headers['x-credits-remaining'])).to.equal('8');
+			expect(response.headers['x-credits-remaining']).to.equal('8');
+			expect(response.headers['x-request-cost']).to.equal('2');
 			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(8);
 		});
@@ -346,10 +367,11 @@ describe('rate limiter', () => {
 					limit: 2,
 				}).expect(429) as Response;
 
+			expect(response.headers['x-ratelimit-consumed']).to.equal('0');
 			expect(response.headers['x-ratelimit-remaining']).to.equal('1');
-			expect(response.headers['x-credits-consumed']).to.not.exist;
-			expect(response.headers['x-credits-required']).to.equal('1');
+			expect(response.headers['x-credits-consumed']).to.equal('0');
 			expect(response.headers['x-credits-remaining']).to.equal('0');
+			expect(response.headers['x-request-cost']).to.equal('2');
 			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(0);
 		});
@@ -369,10 +391,11 @@ describe('rate limiter', () => {
 					limit: 2,
 				}).expect(429) as Response;
 
+			expect(response.headers['x-ratelimit-consumed']).to.equal('0');
 			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
-			expect(response.headers['x-credits-consumed']).to.not.exist;
-			expect(response.headers['x-credits-required']).to.equal('2');
+			expect(response.headers['x-credits-consumed']).to.equal('0');
 			expect(response.headers['x-credits-remaining']).to.equal('0');
+			expect(response.headers['x-request-cost']).to.equal('2');
 			const credits = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(credits).to.deep.equal([]);
 		});
