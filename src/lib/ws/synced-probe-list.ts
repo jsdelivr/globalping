@@ -64,9 +64,9 @@ export class SyncedProbeList extends EventEmitter {
 	private readonly nodeId: string;
 	private readonly nodeData: TTLCache<string, NodeData>;
 
-	private socketIdToNodeId: Record<string, string>;
 	private ipToProbe: Record<string, Probe>;
-	private registeredCallbacks: Record<string, Callback[]>;
+	private socketIdToNodeId: Record<string, string>;
+	private readonly registeredCallbacks: Record<string, Callback[]>;
 
 	constructor (
 		private readonly redis: RedisClient,
@@ -92,8 +92,8 @@ export class SyncedProbeList extends EventEmitter {
 			},
 		});
 
-		this.socketIdToNodeId = {};
 		this.ipToProbe = {};
+		this.socketIdToNodeId = {};
 		this.registeredCallbacks = {};
 
 		this.subscribeNode();
@@ -166,8 +166,8 @@ export class SyncedProbeList extends EventEmitter {
 
 	private updateProbes () {
 		const probes: Probe[] = [];
-		const socketIdToNodeId: Record<string, string> = {};
 		const ipToProbe: Record<string, Probe> = {};
+		const socketIdToNodeId: Record<string, string> = {};
 		let oldest = Infinity;
 
 		for (const nodeData of this.nodeData.values()) {
@@ -190,8 +190,8 @@ export class SyncedProbeList extends EventEmitter {
 			Object.assign(ipToProbe, _.fromPairs(probe.altIpAddresses.map(altIp => [ altIp, probe ])));
 		});
 
-		this.ipToProbe = ipToProbe;
 		this.oldest = oldest;
+		this.ipToProbe = ipToProbe;
 		this.socketIdToNodeId = socketIdToNodeId;
 
 		this.emit(this.localUpdateEvent);
