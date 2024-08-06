@@ -22,10 +22,10 @@ exports.config = {
 		ignore_messages: [ 'No suitable probes found', 'Too Many Probes Requested' ],
 	},
 	span_events: {
-		max_samples_stored: 100,
+		max_samples_stored: 10,
 	},
 	transaction_events: {
-		max_samples_stored: 100,
+		max_samples_stored: 10,
 		attributes: {
 			enabled: false,
 		},
