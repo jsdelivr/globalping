@@ -32,7 +32,7 @@ export type PubSubMessage<T = object> = {
 	body: T;
 }
 
-type Callback = (message: PubSubMessage) => Promise<void>;
+type Callback = (message: PubSubMessage) => Promise<void> | void;
 
 const MESSAGE_TYPES = {
 	ALIVE: 'a',
@@ -187,7 +187,7 @@ export class SyncedProbeList extends EventEmitter {
 
 		this.probes.forEach((probe) => {
 			ipToProbe[probe.ipAddress] = probe;
-			Object.assign(ipToProbe, _.fromPairs(probe.altIpAddresses.map(altIp => [ altIp, probe ])));
+			probe.altIpAddresses.forEach(altIp => ipToProbe[altIp] = probe);
 		});
 
 		this.oldest = oldest;
@@ -523,13 +523,20 @@ export class SyncedProbeList extends EventEmitter {
 		clearTimeout(this.pullTimer);
 	}
 
-	private async subscribeNode () {
-		await this.subRedisClient.subscribe(`gp:spl:pub-sub:${this.nodeId}`, async (message) => {
+	private subscribeNode () {
+		void this.subRedisClient.subscribe(`gp:spl:pub-sub:${this.nodeId}`, (message) => {
 			const parsedMessage = JSON.parse(message) as PubSubMessage;
 			const callbacks = this.registeredCallbacks[parsedMessage.type];
 
 			if (callbacks) {
-				await Promise.all(callbacks.map(callback => callback(parsedMessage)));
+				callbacks.forEach((callback) => {
+					// Errors in callbacks (both sync and async) shouldn't affect execution of other callbacks.
+					// So we are wrapping all of them in Promises to `.catch()` further.
+					new Promise((resolve) => {
+						const result = callback(parsedMessage);
+						resolve(result);
+					}).catch(error => this.logger.error(error));
+				});
 			}
 		});
 	}

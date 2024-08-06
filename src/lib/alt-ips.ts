@@ -55,6 +55,7 @@ export class AltIps {
 			return;
 		}
 
+		// Simple case - the socket is directly on this node
 		const localSocket = this.tokenToSocket.get(request.token);
 
 		if (localSocket && localSocket.data.probe.altIpAddresses.includes(request.ip)) {
@@ -64,6 +65,7 @@ export class AltIps {
 			return;
 		}
 
+		// The socket is on a different node, need to perform a remote update.
 		const nodeId = this.syncedProbeList.getNodeIdBySocketId(request.socketId);
 
 		if (nodeId === this.syncedProbeList.getNodeId()) {
@@ -119,9 +121,9 @@ export class AltIps {
 		}
 	};
 
-	private async subscribeToNodeMessages () {
-		await this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, this.validateTokenFromPubSub);
-		await this.syncedProbeList.subscribeToNodeMessages<AltIpResBody>(ALT_IP_RES_MESSAGE_TYPE, this.handleRes);
+	private subscribeToNodeMessages () {
+		void this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, this.validateTokenFromPubSub);
+		void this.syncedProbeList.subscribeToNodeMessages<AltIpResBody>(ALT_IP_RES_MESSAGE_TYPE, this.handleRes);
 	}
 }
 

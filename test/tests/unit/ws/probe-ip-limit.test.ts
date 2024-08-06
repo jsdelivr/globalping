@@ -40,10 +40,35 @@ describe('ProbeIpLimit', () => {
 		expect(duplicate.disconnect.callCount).to.equal(1);
 	});
 
-	it('syncIpLimit should disconnect lat ip duplicates', async () => {
+	it('syncIpLimit should disconnect duplicates with alt ip', async () => {
 		const socket1 = getSocket('a', '1.1.1.1');
 		const socket2 = getSocket('b', '2.2.2.2');
 		const duplicate = getSocket('c', '3.3.3.3', [ '2.2.2.2' ]);
+
+		fetchProbes.resolves([
+			socket1.data.probe,
+			socket2.data.probe,
+			duplicate.data.probe,
+		]);
+
+		fetchRawSockets.resolves([
+			socket1,
+			socket2,
+			duplicate,
+		]);
+
+		const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets, getProbeByIp);
+		await probeIpLimit.syncIpLimit();
+
+		expect(socket1.disconnect.callCount).to.equal(0);
+		expect(socket2.disconnect.callCount).to.equal(0);
+		expect(duplicate.disconnect.callCount).to.equal(1);
+	});
+
+	it('syncIpLimit should disconnect duplicates across alt ips', async () => {
+		const socket1 = getSocket('a', '1.1.1.1');
+		const socket2 = getSocket('b', '2.2.2.2', [ '4.4.4.4' ]);
+		const duplicate = getSocket('c', '3.3.3.3', [ '4.4.4.4' ]);
 
 		fetchProbes.resolves([
 			socket1.data.probe,

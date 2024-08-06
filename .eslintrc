@@ -20,7 +20,6 @@
 				"**"
 			],
 			"rules": {
-				"@typescript-eslint/no-floating-promises": "off",
 				"no-duplicate-imports": "off",
 				"no-extra-parens": "off"
 			}

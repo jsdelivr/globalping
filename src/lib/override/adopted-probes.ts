@@ -239,7 +239,7 @@ export class AdoptedProbes {
 		}
 
 		if (connectedProbeByAltIp) { // probe was found by alt ip, need to update the adoped data
-			this.updateIds(ip, connectedProbeByAltIp);
+			await this.updateIds(ip, connectedProbeByAltIp);
 		}
 
 		if (!uuid) { // uuid is null, so no searching by uuid is required
