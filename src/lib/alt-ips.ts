@@ -97,22 +97,24 @@ export class AltIps {
 		return promise;
 	}
 
-	validateTokenFromPubSub = async (reqMessage: PubSubMessage<AltIpReqBody>) => {
-		const localSocket = this.tokenToSocket.get(reqMessage.body.token);
+	validateTokenFromPubSub = (reqMessage: PubSubMessage<AltIpReqBody>) => {
+		(async () => {
+			const localSocket = this.tokenToSocket.get(reqMessage.body.token);
 
-		if (!localSocket) {
-			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'probe-not-found', reqMessageId: reqMessage.id });
-			return;
-		}
+			if (!localSocket) {
+				await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'probe-not-found', reqMessageId: reqMessage.id });
+				return;
+			}
 
-		if (!localSocket.data.probe.altIpAddresses.includes(reqMessage.body.ip)) {
-			localSocket.data.probe.altIpAddresses.push(reqMessage.body.ip);
-		}
+			if (!localSocket.data.probe.altIpAddresses.includes(reqMessage.body.ip)) {
+				localSocket.data.probe.altIpAddresses.push(reqMessage.body.ip);
+			}
 
-		await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqMessageId: reqMessage.id });
+			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqMessageId: reqMessage.id });
+		})().catch(error => logger.error(error));
 	};
 
-	handleRes = async (resMessage: PubSubMessage<AltIpResBody>) => {
+	handleRes = (resMessage: PubSubMessage<AltIpResBody>) => {
 		const resolve = this.pendingRequests.get(resMessage.body.reqMessageId);
 		this.pendingRequests.delete(resMessage.body.reqMessageId);
 
@@ -122,8 +124,8 @@ export class AltIps {
 	};
 
 	private subscribeToNodeMessages () {
-		void this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, this.validateTokenFromPubSub);
-		void this.syncedProbeList.subscribeToNodeMessages<AltIpResBody>(ALT_IP_RES_MESSAGE_TYPE, this.handleRes);
+		this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, this.validateTokenFromPubSub);
+		this.syncedProbeList.subscribeToNodeMessages<AltIpResBody>(ALT_IP_RES_MESSAGE_TYPE, this.handleRes);
 	}
 }
 

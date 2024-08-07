@@ -223,8 +223,7 @@ export class AdoptedProbes {
 		}
 
 		if (connectedProbeByIp) { // probe was found by ip, but data is outdated
-			await this.updateIds(ip, connectedProbeByIp);
-			return;
+			return this.updateIds(ip, connectedProbeByIp);
 		}
 
 		let connectedProbeByAltIp: Probe | undefined;

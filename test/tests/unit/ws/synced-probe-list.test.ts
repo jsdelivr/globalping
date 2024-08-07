@@ -408,9 +408,31 @@ describe('SyncedProbeList', () => {
 
 		expect(redisSubscribe.callCount).to.equal(1);
 		expect(redisSubscribe.args[0]?.[0]).to.equal(`gp:spl:pub-sub:${syncedProbeList.getNodeId()}`);
-		const subscriptionCallback = redisSubscribe.args[0]?.[1];
+		const redisSubscriptionCallback = redisSubscribe.args[0]?.[1];
 
-		await subscriptionCallback!(JSON.stringify(message), `gp:spl:pub-sub:${syncedProbeList.getNodeId()}`);
+		await redisSubscriptionCallback!(JSON.stringify(message), `gp:spl:pub-sub:${syncedProbeList.getNodeId()}`);
+
+		expect(receivedMessage!).to.deep.equal(message);
+	});
+
+	it(`errors in subscription callbacks doesn't affect execution of other callbacks`, async () => {
+		const message = {
+			id: 'messageId',
+			reqNodeId: 'reqNodeId',
+			type: 'MESSAGE_TYPE',
+			body: {
+				data: 1,
+			},
+		};
+		let receivedMessage: typeof message;
+		await syncedProbeList.subscribeToNodeMessages<any>('MESSAGE_TYPE', () => { throw new Error('Handling message error'); });
+		await syncedProbeList.subscribeToNodeMessages<any>('MESSAGE_TYPE', (m) => { receivedMessage = m; });
+
+		expect(redisSubscribe.callCount).to.equal(1);
+		expect(redisSubscribe.args[0]?.[0]).to.equal(`gp:spl:pub-sub:${syncedProbeList.getNodeId()}`);
+		const redisSubscriptionCallback = redisSubscribe.args[0]?.[1];
+
+		await redisSubscriptionCallback!(JSON.stringify(message), `gp:spl:pub-sub:${syncedProbeList.getNodeId()}`);
 
 		expect(receivedMessage!).to.deep.equal(message);
 	});

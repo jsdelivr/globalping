@@ -32,7 +32,7 @@ export type PubSubMessage<T = object> = {
 	body: T;
 }
 
-type Callback = (message: PubSubMessage) => Promise<void> | void;
+type Callback = (message: PubSubMessage) => void;
 
 const MESSAGE_TYPES = {
 	ALIVE: 'a',
@@ -150,9 +150,9 @@ export class SyncedProbeList extends EventEmitter {
 		return id;
 	}
 
-	async subscribeToNodeMessages<T extends object> (
+	subscribeToNodeMessages<T extends object> (
 		type: string,
-		callback: (message: PubSubMessage<T>) => Promise<void> | void,
+		callback: (message: PubSubMessage<T>) => void,
 	) {
 		const callbacks = this.registeredCallbacks[type];
 		const cb = callback as Callback;
@@ -530,12 +530,12 @@ export class SyncedProbeList extends EventEmitter {
 
 			if (callbacks) {
 				callbacks.forEach((callback) => {
-					// Errors in callbacks (both sync and async) shouldn't affect execution of other callbacks.
-					// So we are wrapping all of them in Promises to `.catch()` further.
-					new Promise((resolve) => {
-						const result = callback(parsedMessage);
-						resolve(result);
-					}).catch(error => this.logger.error(error));
+					// Errors in callbacks shouldn't affect execution of other callbacks.
+					try {
+						callback(parsedMessage);
+					} catch (error) {
+						this.logger.error(error);
+					}
 				});
 			}
 		});
