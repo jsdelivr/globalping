@@ -45,6 +45,7 @@ export type Probe = {
 	isHardware: boolean;
 	hardwareDevice: string | null;
 	ipAddress: string;
+	altIpAddresses: string[];
 	host: string;
 	location: ProbeLocation;
 	index: string[][];
@@ -58,16 +59,18 @@ type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;
 
 export type OfflineProbe = Modify<Probe, {
 	status: 'offline';
-	isIPv4Supported: boolean;
-	isIPv6Supported: boolean;
 	client: null;
 	version: null;
 	nodeVersion: null;
 	uuid: null;
 	isHardware: false;
 	hardwareDevice: null;
-	ipAddress: string;
 	host: null;
+	hostInfo: {
+		totalMemory: null;
+		totalDiskSize: null;
+		availableDiskSpace: null;
+	}
 	index: [];
 	tags: {
 		type: 'offline';
@@ -75,11 +78,11 @@ export type OfflineProbe = Modify<Probe, {
 	}[];
 	stats: {
 		cpu: {
-			count: 0;
+			count: null;
 			load: [];
 		};
 		jobs: {
-			count: 0
+			count: null
 		};
 	};
 }>

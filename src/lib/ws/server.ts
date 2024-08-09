@@ -8,6 +8,7 @@ import { ProbeOverride } from '../override/probe-override.js';
 import { ProbeIpLimit } from './helper/probe-ip-limit.js';
 import { AdoptedProbes } from '../override/adopted-probes.js';
 import { AdminData } from '../override/admin-data.js';
+import { getSubscriptionRedisClient } from '../redis/subscription-client.js';
 
 export interface DefaultEventsMap {
 	// TODO: maybe create type definitions for the events?
@@ -34,6 +35,7 @@ let syncedProbeList: SyncedProbeList;
 
 export const initWsServer = async () => {
 	const redis = getRedisClient();
+	const redisSubClient = getSubscriptionRedisClient();
 	const pubClient = redis.duplicate();
 	const subClient = redis.duplicate();
 
@@ -50,7 +52,7 @@ export const initWsServer = async () => {
 		subscriptionMode: 'dynamic-private',
 	}));
 
-	syncedProbeList = new SyncedProbeList(redis, io.of(PROBES_NAMESPACE), probeOverride);
+	syncedProbeList = new SyncedProbeList(redis, redisSubClient, io.of(PROBES_NAMESPACE), probeOverride);
 
 	await syncedProbeList.sync();
 	syncedProbeList.scheduleSync();
@@ -104,10 +106,22 @@ export const fetchProbes = async ({ allowStale = true } = {}): Promise<Probe[]> 
 	return allowStale ? syncedProbeList.getProbes() : syncedProbeList.fetchProbes();
 };
 
+export const getProbeByIp = async (ip: string, { allowStale = true } = {}): Promise<Probe | null> => {
+	if (!syncedProbeList) {
+		throw new Error('WS server not initialized yet');
+	}
+
+	if (!allowStale) {
+		await syncedProbeList.fetchProbes();
+	}
+
+	return syncedProbeList.getProbeByIp(ip);
+};
+
 export const adoptedProbes = new AdoptedProbes(client, fetchRawProbes);
 
 export const adminData = new AdminData(client);
 
 export const probeOverride = new ProbeOverride(adoptedProbes, adminData);
 
-export const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets);
+export const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets, getProbeByIp);

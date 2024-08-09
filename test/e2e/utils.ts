@@ -18,7 +18,7 @@ export const waitProbeToDisconnect = async () => {
 			responses = await Promise.all(_.times(processes * 2, (() => got<any>('http://localhost:80/v1/probes', { responseType: 'json' }))));
 		} catch (err) {
 			logger.info((err as RequestError).code);
-			await setTimeout(1000);
+			await setTimeout(100);
 			continue;
 		}
 
@@ -26,7 +26,7 @@ export const waitProbeToDisconnect = async () => {
 			return;
 		}
 
-		await setTimeout(1000);
+		await setTimeout(100);
 	}
 };
 
@@ -38,7 +38,7 @@ export const waitProbeToConnect = async () => {
 			responses = await Promise.all(_.times(processes * 2, (() => got<any>('http://localhost:80/v1/probes', { responseType: 'json' }))));
 		} catch (err) {
 			logger.info((err as RequestError).code);
-			await setTimeout(1000);
+			await setTimeout(100);
 			continue;
 		}
 
@@ -46,7 +46,7 @@ export const waitProbeToConnect = async () => {
 			return;
 		}
 
-		await setTimeout(1000);
+		await setTimeout(100);
 	}
 };
 
@@ -65,7 +65,7 @@ export const waitProbeInCity = async (city: string) => {
 			return;
 		}
 
-		await setTimeout(1000);
+		await setTimeout(100);
 	}
 };
 
@@ -77,6 +77,6 @@ export const waitMesurementFinish = async (id: string) => {
 			return response;
 		}
 
-		await setTimeout(500);
+		await setTimeout(100);
 	}
 };

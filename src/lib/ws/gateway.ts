@@ -11,6 +11,7 @@ import { probeMetadata } from './middleware/probe-metadata.js';
 import { errorHandler } from './helper/error-handler.js';
 import { subscribeWithHandler } from './helper/subscribe-handler.js';
 import { handleIsIPv4SupportedUpdate, handleIsIPv6SupportedUpdate } from '../../probe/handler/ip-version.js';
+import { getAltIpsClient } from '../alt-ips.js';
 
 const io = getWsServer();
 const logger = scopedLogger('gateway');
@@ -22,6 +23,12 @@ io
 	.on('connect', errorHandler(async (socket: ServerSocket) => {
 		const probe = socket.data.probe;
 		const location = probeOverride.getUpdatedLocation(probe);
+
+		socket.emit('api:connect:alt-ips-token', {
+			token: await getAltIpsClient().generateToken(socket),
+			socketId: socket.id,
+			ip: probe.ipAddress,
+		});
 
 		socket.emit('api:connect:location', location);
 		logger.info(`ws client ${socket.id} connected from ${location.city}, ${location.country} [${probe.ipAddress} - ${location.network}]`);

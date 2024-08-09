@@ -1,10 +1,12 @@
 /* eslint-disable camelcase */
 import ipaddr from 'ipaddr.js';
 import type { Knex } from 'knex';
+import config from 'config';
 import type { Probe, ProbeLocation } from '../../probe/types.js';
 import { normalizeFromPublicName } from '../geoip/utils.js';
 import { getContinentByCountry, getRegionByCountry } from '../location/location.js';
 import { scopedLogger } from '../logger.js';
+import _ from 'lodash';
 
 const logger = scopedLogger('admin-data');
 
@@ -37,11 +39,15 @@ type UpdatedFields = {
 export class AdminData {
 	private rangesToUpdatedFields: Map<ParsedIpRange, UpdatedFields> = new Map();
 
-	private ipsToUpdatedFields: Map<string, UpdatedFields | null> = new Map();
+	private ipsToUpdatedFieldsCache: Map<string, UpdatedFields | null> = new Map();
 
 	private lastUpdate: Date = new Date('01-01-1970');
 
 	private lastOverridesLength: number = 0;
+
+	private parseIp = _.memoize(ipaddr.parse);
+
+	private parseCidr = _.memoize(ipaddr.parseCIDR);
 
 	constructor (private readonly sql: Knex) {}
 
@@ -50,13 +56,13 @@ export class AdminData {
 			this.syncDashboardData()
 				.finally(() => this.scheduleSync())
 				.catch(error => logger.error(error));
-		}, 60_000).unref();
+		}, config.get<number>('adminData.syncInterval')).unref();
 	}
 
 	async syncDashboardData () {
 		const overrides = await this.sql(LOCATION_OVERRIDES_TABLE).select<LocationOverride[]>();
 
-		this.rangesToUpdatedFields = new Map(overrides.map(override => [ ipaddr.parseCIDR(override.ip_range), {
+		this.rangesToUpdatedFields = new Map(overrides.map(override => [ this.parseCidr(override.ip_range), {
 			continent: getContinentByCountry(override.country),
 			region: getRegionByCountry(override.country),
 			city: override.city,
@@ -74,7 +80,7 @@ export class AdminData {
 		}, new Date('01-01-1970'));
 
 		if (newLastUpdate > this.lastUpdate || overrides.length !== this.lastOverridesLength) {
-			this.ipsToUpdatedFields.clear();
+			this.ipsToUpdatedFieldsCache.clear();
 			this.lastUpdate = newLastUpdate;
 			this.lastOverridesLength = overrides.length;
 		}
@@ -112,23 +118,25 @@ export class AdminData {
 	}
 
 	private getUpdatedFields (probe: Probe): UpdatedFields | null {
-		const updatedFields = this.ipsToUpdatedFields.get(probe.ipAddress);
+		const ips = [ probe.ipAddress, ...probe.altIpAddresses ];
 
-		if (updatedFields !== undefined) {
-			return updatedFields;
+		if (ips.some(ip => this.ipsToUpdatedFieldsCache.get(ip) === undefined)) {
+			const newUpdatedFields = this.findUpdatedFields(probe);
+			this.ipsToUpdatedFieldsCache.set(probe.ipAddress, newUpdatedFields);
+			probe.altIpAddresses.forEach(altIp => this.ipsToUpdatedFieldsCache.set(altIp, newUpdatedFields));
 		}
 
-		const newUpdatedFields = this.findUpdatedFields(probe);
-		this.ipsToUpdatedFields.set(probe.ipAddress, newUpdatedFields);
-		return newUpdatedFields;
+		return this.ipsToUpdatedFieldsCache.get(probe.ipAddress)!;
 	}
 
 	findUpdatedFields (probe: Probe): UpdatedFields | null {
-		for (const [ range, updatedFields ] of this.rangesToUpdatedFields) {
-			const ip = ipaddr.parse(probe.ipAddress);
+		const parsedIps = [ probe.ipAddress, ...probe.altIpAddresses ].map(this.parseIp);
 
-			if (ip.kind() === range[0].kind() && ip.match(range)) {
-				return updatedFields;
+		for (const [ range, updatedFields ] of this.rangesToUpdatedFields) {
+			for (const ip of parsedIps) {
+				if (ip.kind() === range[0].kind() && ip.match(range)) {
+					return updatedFields;
+				}
 			}
 		}
 

@@ -19,6 +19,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		nodeVersion: isAdmin ? socket.nodeVersion : undefined,
 		uuid: isAdmin ? socket.uuid : undefined,
 		ipAddress: (isAdmin || isSystem) ? socket.ipAddress : undefined,
+		altIpAddresses: (isAdmin || isSystem) ? socket.altIpAddresses : undefined,
 		location: {
 			continent: socket.location.continent,
 			region: socket.location.region,

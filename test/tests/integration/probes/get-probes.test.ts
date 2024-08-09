@@ -191,6 +191,7 @@ describe('Get Probes', () => {
 						isIPv6Supported: false,
 						host: '',
 						ipAddress: '1.2.3.4',
+						altIpAddresses: [],
 						uuid: '1-1-1-1-1',
 						nodeVersion: 'v18.17.0',
 						location: {
@@ -234,6 +235,7 @@ describe('Get Probes', () => {
 					expect(response.body[0]).to.deep.equal({
 						version: '0.14.0',
 						ipAddress: '1.2.3.4',
+						altIpAddresses: [],
 						location: {
 							continent: 'SA',
 							region: 'South America',

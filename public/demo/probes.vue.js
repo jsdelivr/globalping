@@ -29,9 +29,9 @@ const probes = () => ({
 			const probe = this.probes[index];
 			return probe.host ? `[${probe.host}]` : '';
 		},
-		getIpAddress (index) {
+		getIpAddresses (index) {
 			const probe = this.probes[index];
-			return probe.ipAddress ? `[${probe.ipAddress}]` : '';
+			return probe.ipAddress ? `[${[ probe.ipAddress, ...probe.altIpAddresses ].join(', ')}]` : '';
 		},
 		parsedLocation (index) {
 			const probe = this.probes[index];
@@ -80,7 +80,7 @@ const probes = () => ({
 			<ul>
 				<li v-for="(probe, index) in probes">
 					<div :style="{ color: getReadyColor(index) }">
-						[{{ probe.version }}] {{ getNodeVersion(index) }} {{ getReadyStatus(index) }} {{ getIsIPv4Supported(index) }} {{ getIsIPv6Supported(index) }} {{ getHost(index) }} {{ getIpAddress(index) }} {{ parsedLocation(index) }} -- {{ probe.location.network }} {{ getTags(index) }}
+						[{{ probe.version }}] {{ getNodeVersion(index) }} {{ getReadyStatus(index) }} {{ getIsIPv4Supported(index) }} {{ getIsIPv6Supported(index) }} {{ getHost(index) }} {{ getIpAddresses(index) }} {{ parsedLocation(index) }} -- {{ probe.location.network }} {{ getTags(index) }}
 					</div>
 				</li>
 			</ul>

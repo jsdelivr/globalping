@@ -1,32 +1,48 @@
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 
-import type { WsServerNamespace } from '../../../../src/lib/ws/server.js';
+import { type WsServerNamespace } from '../../../../src/lib/ws/server.js';
 import { SyncedProbeList } from '../../../../src/lib/ws/synced-probe-list.js';
 import type { Probe } from '../../../../src/probe/types.js';
 import { getRegionByCountry } from '../../../../src/lib/location/location.js';
 import { getRedisClient } from '../../../../src/lib/redis/client.js';
 import { ProbeOverride } from '../../../../src/lib/override/probe-override.js';
+import { getSubscriptionRedisClient } from '../../../../src/lib/redis/subscription-client.js';
 
 describe('SyncedProbeList', () => {
 	const sandbox = sinon.createSandbox();
 	const redisClient = getRedisClient();
+	const subRedisClient = getSubscriptionRedisClient();
 	const localFetchSocketsStub = sandbox.stub();
 	const redisXAdd = sandbox.stub(redisClient, 'xAdd');
 	const redisXRange = sandbox.stub(redisClient, 'xRange');
 	const redisPExpire = sandbox.stub(redisClient, 'pExpire');
 	const redisJsonGet = sandbox.stub(redisClient.json, 'get');
+	const redisPublish = sandbox.stub(redisClient, 'publish');
+	const redisSubscribe = sandbox.stub(subRedisClient, 'subscribe');
 
-	const location = {
-		continent: 'NA',
-		region: getRegionByCountry('US'),
-		country: 'US',
-		state: 'NY',
-		city: 'The New York City',
-		normalizedCity: 'new york',
-		asn: 5089,
-		normalizedNetwork: 'abc',
+	const idToIp = {
+		A: '1.1.1.1',
+		B: '2.2.2.2',
+		C: '3.3.3.3',
 	};
+
+	const getProbe = (id: 'A' | 'B' | 'C') => ({
+		client: id,
+		ipAddress: idToIp[id],
+		altIpAddresses: [],
+		location: {
+			continent: 'NA',
+			region: getRegionByCountry('US'),
+			country: 'US',
+			state: 'NY',
+			city: 'The New York City',
+			normalizedCity: 'new york',
+			asn: 5089,
+			normalizedNetwork: 'abc',
+		},
+		stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } },
+	} as unknown as Probe);
 
 	const ioNamespace = {
 		local: {
@@ -46,7 +62,7 @@ describe('SyncedProbeList', () => {
 		probeOverride.addAdminData.returnsArg(0);
 		probeOverride.addAdoptedData.returnsArg(0);
 
-		syncedProbeList = new SyncedProbeList(redisClient, ioNamespace, probeOverride);
+		syncedProbeList = new SyncedProbeList(redisClient, subRedisClient, ioNamespace, probeOverride);
 	});
 
 	afterEach(() => {
@@ -56,8 +72,8 @@ describe('SyncedProbeList', () => {
 
 	it('updates and emits local probes during sync', async () => {
 		const sockets = [
-			{ data: { probe: { client: 'A', location: {} } } },
-			{ data: { probe: { client: 'B', location: {} } } },
+			{ data: { probe: getProbe('A') } },
+			{ data: { probe: getProbe('B') } },
 		];
 
 		localFetchSocketsStub.resolves(sockets);
@@ -95,9 +111,9 @@ describe('SyncedProbeList', () => {
 
 	it('emits stats in the message on change', async () => {
 		const sockets = [
-			{ data: { probe: { client: 'A', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } } } },
-			{ data: { probe: { client: 'B', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } } } },
-			{ data: { probe: { client: 'C', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } } } },
+			{ data: { probe: getProbe('A') } },
+			{ data: { probe: getProbe('B') } },
+			{ data: { probe: getProbe('C') } },
 		];
 
 		localFetchSocketsStub.resolves(sockets);
@@ -162,8 +178,8 @@ describe('SyncedProbeList', () => {
 		syncedProbeList.remoteDataTtl = 20 * 1000;
 
 		const sockets = [
-			{ data: { probe: { client: 'A' } } },
-			{ data: { probe: { client: 'B' } } },
+			{ data: { probe: getProbe('A') } },
+			{ data: { probe: getProbe('B') } },
 		];
 
 		localFetchSocketsStub.resolves(sockets);
@@ -189,9 +205,9 @@ describe('SyncedProbeList', () => {
 
 	it('reads remote stats updates', async () => {
 		const probes = {
-			A: { client: 'A', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } },
-			B: { client: 'B', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } },
-			C: { client: 'C', location: {}, stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } } },
+			A: getProbe('A'),
+			B: getProbe('B'),
+			C: getProbe('C'),
 		} as unknown as Record<string, Probe>;
 
 		redisXRange.resolves([
@@ -252,8 +268,8 @@ describe('SyncedProbeList', () => {
 
 	it('expires remote probes after the timeout', async () => {
 		const probes = {
-			A: { client: 'A', location: {} },
-			B: { client: 'B', location: {} },
+			A: getProbe('A'),
+			B: getProbe('B'),
 		} as unknown as Record<string, Probe>;
 
 		redisXRange.resolves([
@@ -277,17 +293,17 @@ describe('SyncedProbeList', () => {
 		expect(syncedProbeList.getProbes()).to.be.empty;
 	});
 
-	it('applies adoption data to getProbes()/fetchProbes() but not to getRawProbes()/getProbesWithAdminData()', async () => {
-		const probe1 = { client: 'A', location: { ...location }, tags: [], ipAddress: '1.1.1.1' } as unknown as Probe;
-		const probe2 = { client: 'B', location: { ...location }, tags: [] } as unknown as Probe;
+	it('applies adoption data to getProbes()/fetchProbes()/getProbeByIp() but not to getRawProbes()/getProbesWithAdminData()', async () => {
+		const probe1 = getProbe('A');
+		const probe2 = getProbe('B');
 		const sockets = [{ data: { probe: probe1 } }, { data: { probe: probe2 } }];
 
 		const tags = [{ type: 'user', value: 'u-name-tag1' }] as Probe['tags'];
 
-		const adoptedProbe = { tags } as Probe;
+		const adoptedData = { tags } as Probe;
 
 		localFetchSocketsStub.resolves(sockets);
-		probeOverride.addAdoptedData.returns([ adoptedProbe, probe2 ]);
+		probeOverride.addAdoptedData.returns([{ ...probe1, ...adoptedData }, probe2 ]);
 
 		const fetchedProbesPromise = syncedProbeList.fetchProbes();
 		clock.tick(1);
@@ -302,6 +318,9 @@ describe('SyncedProbeList', () => {
 		expect(fetchedProbes[0]).to.deep.include({ tags });
 		expect(fetchedProbes[1]).not.to.deep.include({ tags });
 
+		expect(syncedProbeList.getProbeByIp('1.1.1.1')).to.deep.include({ tags });
+		expect(syncedProbeList.getProbeByIp('2.2.2.2')).not.to.deep.include({ tags });
+
 		expect(syncedProbeList.getProbesWithAdminData()[0]).not.to.deep.include({ tags });
 		expect(syncedProbeList.getProbesWithAdminData()[1]).not.to.deep.include({ tags });
 
@@ -309,15 +328,15 @@ describe('SyncedProbeList', () => {
 		expect(syncedProbeList.getRawProbes()[1]).not.to.deep.include({ tags });
 	});
 
-	it('applies admin location override data to getProbes()/fetchProbes()/getProbesWithAdminData() but not to getRawProbes()', async () => {
-		const probe1 = { client: 'A', location: { ...location }, tags: [], ipAddress: '1.1.1.1' } as unknown as Probe;
-		const probe2 = { client: 'B', location: { ...location }, tags: [] } as unknown as Probe;
+	it('applies admin location override data to getProbes()/fetchProbes()/getProbeByIp()/getProbesWithAdminData() but not to getRawProbes()', async () => {
+		const probe1 = getProbe('A');
+		const probe2 = getProbe('B');
 		const sockets = [{ data: { probe: probe1 } }, { data: { probe: probe2 } }];
 
-		const updatedProbe = { probe1, location: { ...probe1.location, city: 'Miami' } } as unknown as Probe;
+		const updatedProbe1 = { ...probe1, location: { ...probe1.location, city: 'Miami' } } as unknown as Probe;
 
 		localFetchSocketsStub.resolves(sockets);
-		probeOverride.addAdminData.returns([ updatedProbe, probe2 ]);
+		probeOverride.addAdminData.returns([ updatedProbe1, probe2 ]);
 
 		const fetchedProbesPromise = syncedProbeList.fetchProbes();
 		clock.tick(1);
@@ -334,6 +353,9 @@ describe('SyncedProbeList', () => {
 
 		expect(syncedProbeList.getProbesWithAdminData()[0]?.location.city).to.deep.equal('Miami');
 		expect(syncedProbeList.getProbesWithAdminData()[1]?.location.city).to.deep.equal('The New York City');
+
+		expect(syncedProbeList.getProbeByIp('1.1.1.1')?.location.city).to.deep.equal('Miami');
+		expect(syncedProbeList.getProbeByIp('2.2.2.2')?.location.city).to.deep.equal('The New York City');
 
 		expect(syncedProbeList.getRawProbes()[0]?.location.city).to.deep.equal('The New York City');
 		expect(syncedProbeList.getRawProbes()[1]?.location.city).to.deep.equal('The New York City');
@@ -354,5 +376,64 @@ describe('SyncedProbeList', () => {
 		await syncedProbeList.sync();
 		await clock.nextAsync();
 		expect(resolved).to.be.true;
+	});
+
+	it('is able to publish messages directly to another nodes', async () => {
+		const nodeId = syncedProbeList.getNodeId();
+		const body = { data: 1 };
+
+		await syncedProbeList.publishToNode('anotherNodeId', 'MESSAGE_TYPE', body);
+
+		expect(redisPublish.callCount).to.equal(1);
+		expect(redisPublish.firstCall.args[0]).to.equal('gp:spl:pub-sub:anotherNodeId');
+
+		expect(JSON.parse(redisPublish.firstCall.args[1] as string)).to.deep.include({
+			reqNodeId: nodeId,
+			type: 'MESSAGE_TYPE',
+			body,
+		});
+	});
+
+	it('is able to read direct messages from another nodes', async () => {
+		const message = {
+			id: 'messageId',
+			reqNodeId: 'reqNodeId',
+			type: 'MESSAGE_TYPE',
+			body: {
+				data: 1,
+			},
+		};
+		let receivedMessage: typeof message;
+		await syncedProbeList.subscribeToNodeMessages<any>('MESSAGE_TYPE', (m) => { receivedMessage = m; });
+
+		expect(redisSubscribe.callCount).to.equal(1);
+		expect(redisSubscribe.args[0]?.[0]).to.equal(`gp:spl:pub-sub:${syncedProbeList.getNodeId()}`);
+		const redisSubscriptionCallback = redisSubscribe.args[0]?.[1];
+
+		await redisSubscriptionCallback!(JSON.stringify(message), `gp:spl:pub-sub:${syncedProbeList.getNodeId()}`);
+
+		expect(receivedMessage!).to.deep.equal(message);
+	});
+
+	it(`errors in subscription callbacks doesn't affect execution of other callbacks`, async () => {
+		const message = {
+			id: 'messageId',
+			reqNodeId: 'reqNodeId',
+			type: 'MESSAGE_TYPE',
+			body: {
+				data: 1,
+			},
+		};
+		let receivedMessage: typeof message;
+		await syncedProbeList.subscribeToNodeMessages<any>('MESSAGE_TYPE', () => { throw new Error('Handling message error'); });
+		await syncedProbeList.subscribeToNodeMessages<any>('MESSAGE_TYPE', (m) => { receivedMessage = m; });
+
+		expect(redisSubscribe.callCount).to.equal(1);
+		expect(redisSubscribe.args[0]?.[0]).to.equal(`gp:spl:pub-sub:${syncedProbeList.getNodeId()}`);
+		const redisSubscriptionCallback = redisSubscribe.args[0]?.[1];
+
+		await redisSubscriptionCallback!(JSON.stringify(message), `gp:spl:pub-sub:${syncedProbeList.getNodeId()}`);
+
+		expect(receivedMessage!).to.deep.equal(message);
 	});
 });

@@ -1,8 +1,9 @@
 import * as path from 'node:path';
 import * as url from 'node:url';
 
-export default function wallaby () {
+export default function wallaby (wallaby) {
 	const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
 	return {
 		testFramework: 'mocha',
 		files: [
@@ -32,12 +33,12 @@ export default function wallaby () {
 			'test/tests/integration/**/*.test.ts',
 			'test/tests/unit/**/*.test.ts',
 		],
-
 		setup (w) {
 			const path = require('path');
 			w.testFramework.files.unshift(path.resolve(process.cwd(), 'test/setup.js'));
+			const mocha = w.testFramework;
+			mocha.timeout(10000);
 		},
-
 		env: {
 			type: 'node',
 			params: {
@@ -45,6 +46,11 @@ export default function wallaby () {
 					+ url.pathToFileURL(path.join(__dirname, 'node_modules/testdouble/lib/index.mjs')),
 				env: 'NODE_ENV=test;NEW_RELIC_ENABLED=false;NEW_RELIC_LOG_ENABLED=false;TEST_MODE=unit',
 			},
+		},
+		compilers: {
+			'**/*.ts?(x)': wallaby.compilers.typeScript({
+				module: 'ESNext',
+			}),
 		},
 		preprocessors: {
 			'**/*.ts': file => file.content.replace(/\.ts/g, '.js'),

@@ -23,13 +23,13 @@ export class ProbeRouter {
 		const locations = userRequest.locations ?? [];
 		const globalLimit = userRequest.limit ?? 1;
 
-		const preferredIpVersion = userRequest.measurementOptions?.ipVersion ?? 4;
 		const connectedProbes = (await this.fetchProbes()).filter(probe => probe.status === 'ready');
 
 		if (typeof locations === 'string') { // the measurement id of existing measurement was provided by the user, the same probes are to be used
 			return this.findWithMeasurementId(connectedProbes, locations, userRequest);
 		}
 
+		const preferredIpVersion = userRequest.measurementOptions?.ipVersion ?? 4;
 		const connectedProbesFilteredByIpVersion = this.probesFilter.filterByIpVersion(connectedProbes, preferredIpVersion);
 
 		if (locations.some(l => l.limit)) {
@@ -97,7 +97,10 @@ export class ProbeRouter {
 		allProbes: (Probe | OfflineProbe)[];
 		request: MeasurementRequest;
 	}> {
-		const ipToConnectedProbe = new Map(connectedProbes.map(probe => [ probe.ipAddress, probe ]));
+		const ipToConnectedProbe = new Map(connectedProbes.map(probe => [
+			[ probe.ipAddress, probe ] as const,
+			...probe.altIpAddresses.map(altIp => [ altIp, probe ] as const),
+		]).flat());
 		const prevIps = await this.store.getMeasurementIps(measurementId);
 		const prevMeasurement = await this.store.getMeasurement(measurementId);
 
@@ -148,7 +151,13 @@ export class ProbeRouter {
 		isHardware: false,
 		hardwareDevice: null,
 		ipAddress: ip,
+		altIpAddresses: [],
 		host: null,
+		hostInfo: {
+			totalMemory: null,
+			totalDiskSize: null,
+			availableDiskSpace: null,
+		},
 		location: {
 			continent: test.probe.continent,
 			region: test.probe.region,
@@ -167,12 +176,12 @@ export class ProbeRouter {
 		tags: test.probe.tags.map(tag => ({ value: tag, type: 'offline' })),
 		stats: {
 			cpu: {
-				count: 0,
+				count: null,
 				load: [],
 			},
-			jobs: { count: 0 },
+			jobs: { count: null },
 		},
-	} as OfflineProbe);
+	});
 }
 
 // Factory

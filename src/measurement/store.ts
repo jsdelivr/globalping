@@ -91,9 +91,9 @@ export class MeasurementStore {
 		let progressUpdatePromises;
 
 		if (data.overwrite) {
-			progressUpdatePromises = entries.map(([ field, value ]) => this.redis.json.set(key, `$.results[${data.testId}].result.${field}`, value));
+			progressUpdatePromises = entries.map(([ field, value ]) => void this.redis.json.set(key, `$.results[${data.testId}].result.${field}`, value));
 		} else {
-			progressUpdatePromises = entries.map(([ field, value ]) => this.redis.json.strAppend(key, `$.results[${data.testId}].result.${field}`, value));
+			progressUpdatePromises = entries.map(([ field, value ]) => void this.redis.json.strAppend(key, `$.results[${data.testId}].result.${field}`, value));
 		}
 
 		await Promise.all([

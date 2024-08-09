@@ -30,6 +30,9 @@ class DockerManager {
 				`REDIS_URL=${redisUrl}`,
 				`DB_CONNECTION_HOST=${dbConnectionHost}`,
 				`SERVER_PROCESSES=${processes}`,
+				`MEASUREMENT_TIMEOUT=5`,
+				`ADOPTED_PROBES_SYNC_INTERVAL=2000`,
+				`ADMIN_DATA_SYNC_INTERVAL=2000`,
 			],
 			HostConfig: {
 				PortBindings: {

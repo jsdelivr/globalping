@@ -75,6 +75,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		isHardware,
 		hardwareDevice,
 		ipAddress: ip,
+		altIpAddresses: [],
 		host,
 		location,
 		index,

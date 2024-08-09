@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import config from 'config';
-import type { fetchProbes as serverFetchProbes, fetchRawSockets as serverFetchRawSockets } from '../server.js';
+import type { fetchProbes as serverFetchProbes, fetchRawSockets as serverFetchRawSockets, getProbeByIp as serverGetProbeByIp } from '../server.js';
 import { scopedLogger } from '../../logger.js';
 import { ProbeError } from '../../probe-error.js';
 
@@ -14,6 +14,7 @@ export class ProbeIpLimit {
 	constructor (
 		private readonly fetchProbes: typeof serverFetchProbes,
 		private readonly fetchRawSockets: typeof serverFetchRawSockets,
+		private readonly getProbeByIp: typeof serverGetProbeByIp,
 	) {}
 
 	scheduleSync () {
@@ -27,21 +28,27 @@ export class ProbeIpLimit {
 	}
 
 	async syncIpLimit () {
+		if (process.env['FAKE_PROBE_IP']) {
+			return;
+		}
+
 		const probes = await this.fetchProbes();
 		// Sorting probes by "client" (socket id), so all workers will treat the same probe as "first".
 		const sortedProbes = _.sortBy(probes, [ 'client' ]);
 
-		const uniqIpToSocketId = new Map<string, string>();
+		const ipToSocketId = new Map<string, string>();
 		const socketIdsToDisconnect = new Set<string>();
 
 		for (const probe of sortedProbes) {
-			const prevSocketId = uniqIpToSocketId.get(probe.ipAddress);
+			for (const ip of [ probe.ipAddress, ...probe.altIpAddresses ]) {
+				const prevSocketId = ipToSocketId.get(ip);
 
-			if (prevSocketId && prevSocketId !== probe.client) {
-				logger.warn(`Probe ip duplication occurred (${probe.ipAddress}). Socket id to preserve: ${prevSocketId}, socket id to disconnect: ${probe.client}`);
-				socketIdsToDisconnect.add(probe.client);
-			} else {
-				uniqIpToSocketId.set(probe.ipAddress, probe.client);
+				if (prevSocketId && prevSocketId !== probe.client) {
+					logger.warn(`Probe ip duplication occurred (${ip}). Socket id to preserve: ${prevSocketId}, socket id to disconnect: ${probe.client}`);
+					socketIdsToDisconnect.add(probe.client);
+				} else {
+					ipToSocketId.set(ip, probe.client);
+				}
 			}
 		}
 
@@ -58,11 +65,10 @@ export class ProbeIpLimit {
 			return;
 		}
 
-		const probes = await this.fetchProbes({ allowStale: false });
-		const previousProbe = probes.find(p => p.ipAddress === ip && p.client !== socketId);
+		const previousProbe = await this.getProbeByIp(ip, { allowStale: false });
 
-		if (previousProbe) {
-			logger.info(`ws client ${socketId} has reached the concurrent IP limit.`, { message: previousProbe.ipAddress });
+		if (previousProbe && previousProbe.client !== socketId) {
+			logger.warn(`ws client ${socketId} has reached the concurrent IP limit.`, { message: previousProbe.ipAddress });
 			throw new ProbeError('ip limit');
 		}
 	}

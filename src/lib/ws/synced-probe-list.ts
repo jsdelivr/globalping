@@ -25,6 +25,15 @@ type NodeChanges = {
 	updateStats: Map<string, ProbeStats>;
 };
 
+export type PubSubMessage<T = object> = {
+	id: string;
+	reqNodeId: string;
+	type: string;
+	body: T;
+}
+
+type Callback = (message: PubSubMessage) => void;
+
 const MESSAGE_TYPES = {
 	ALIVE: 'a',
 	META: 'm',
@@ -55,7 +64,16 @@ export class SyncedProbeList extends EventEmitter {
 	private readonly nodeId: string;
 	private readonly nodeData: TTLCache<string, NodeData>;
 
-	constructor (private readonly redis: RedisClient, private readonly ioNamespace: WsServerNamespace, private readonly probeOverride: ProbeOverride) {
+	private ipToProbe: Record<string, Probe>;
+	private socketIdToNodeId: Record<string, string>;
+	private readonly registeredCallbacks: Record<string, Callback[]>;
+
+	constructor (
+		private readonly redis: RedisClient,
+		private readonly subRedisClient: RedisClient,
+		private readonly ioNamespace: WsServerNamespace,
+		private readonly probeOverride: ProbeOverride,
+	) {
 		super();
 		this.setMaxListeners(Infinity);
 		this.nodeId = randomBytes(8).toString('hex');
@@ -73,6 +91,12 @@ export class SyncedProbeList extends EventEmitter {
 				this.updateProbes();
 			},
 		});
+
+		this.ipToProbe = {};
+		this.socketIdToNodeId = {};
+		this.registeredCallbacks = {};
+
+		this.subscribeNode();
 	}
 
 	getRawProbes (): Probe[] {
@@ -102,12 +126,55 @@ export class SyncedProbeList extends EventEmitter {
 		});
 	}
 
+	getNodeId () {
+		return this.nodeId;
+	}
+
+	getNodeIdBySocketId (socketId: string) {
+		return this.socketIdToNodeId[socketId] || null;
+	}
+
+	getProbeByIp (ip: string) {
+		return this.ipToProbe[ip] || null;
+	}
+
+	async publishToNode<T extends object> (nodeId: string, type: string, body: T) {
+		const id = randomBytes(8).toString('hex');
+		const message: PubSubMessage = {
+			id,
+			reqNodeId: this.nodeId,
+			type,
+			body,
+		};
+		await this.redis.publish(`gp:spl:pub-sub:${nodeId}`, JSON.stringify(message));
+		return id;
+	}
+
+	subscribeToNodeMessages<T extends object> (
+		type: string,
+		callback: (message: PubSubMessage<T>) => void,
+	) {
+		const callbacks = this.registeredCallbacks[type];
+		const cb = callback as Callback;
+
+		if (callbacks) {
+			callbacks.push(cb);
+		} else {
+			this.registeredCallbacks[type] = [ cb ];
+		}
+	}
+
 	private updateProbes () {
-		const probes = [];
+		const probes: Probe[] = [];
+		const ipToProbe: Record<string, Probe> = {};
+		const socketIdToNodeId: Record<string, string> = {};
 		let oldest = Infinity;
 
 		for (const nodeData of this.nodeData.values()) {
-			probes.push(...Object.values(nodeData.probesById));
+			Object.entries(nodeData.probesById).forEach(([ socketId, probe ]) => {
+				probes.push(probe);
+				socketIdToNodeId[socketId] = nodeData.nodeId;
+			});
 
 			if (nodeData.revalidateTimestamp < oldest) {
 				oldest = nodeData.revalidateTimestamp;
@@ -117,7 +184,15 @@ export class SyncedProbeList extends EventEmitter {
 		this.rawProbes = probes;
 		this.probesWithAdminData = this.probeOverride.addAdminData(probes);
 		this.probes = this.probeOverride.addAdoptedData(this.probesWithAdminData);
+
+		this.probes.forEach((probe) => {
+			ipToProbe[probe.ipAddress] = probe;
+			probe.altIpAddresses.forEach(altIp => ipToProbe[altIp] = probe);
+		});
+
 		this.oldest = oldest;
+		this.ipToProbe = ipToProbe;
+		this.socketIdToNodeId = socketIdToNodeId;
 
 		this.emit(this.localUpdateEvent);
 	}
@@ -446,5 +521,23 @@ export class SyncedProbeList extends EventEmitter {
 	unscheduleSync () {
 		clearTimeout(this.pushTimer);
 		clearTimeout(this.pullTimer);
+	}
+
+	private subscribeNode () {
+		void this.subRedisClient.subscribe(`gp:spl:pub-sub:${this.nodeId}`, (message) => {
+			const parsedMessage = JSON.parse(message) as PubSubMessage;
+			const callbacks = this.registeredCallbacks[parsedMessage.type];
+
+			if (callbacks) {
+				callbacks.forEach((callback) => {
+					// Errors in callbacks shouldn't affect execution of other callbacks.
+					try {
+						callback(parsedMessage);
+					} catch (error) {
+						this.logger.error(error);
+					}
+				});
+			}
+		});
 	}
 }
