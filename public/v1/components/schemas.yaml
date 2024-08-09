@@ -308,7 +308,6 @@ components:
           enum:
             - 4
             - 6
-          default: 4
     MeasurementTracerouteOptions:
       type: object
       title: TracerouteOptions
@@ -335,7 +334,6 @@ components:
           enum:
             - 4
             - 6
-          default: 4
     MeasurementDnsOptions:
       type: object
       title: DnsOptions
@@ -388,7 +386,6 @@ components:
           enum:
             - 4
             - 6
-          default: 4
         trace:
           type: boolean
           description: |
@@ -420,7 +417,6 @@ components:
           enum:
             - 4
             - 6
-          default: 4
         packets:
           type: integer
           description: The number of packets to send to each hop.
@@ -483,7 +479,6 @@ components:
           enum:
             - 4
             - 6
-          default: 4
     MeasurementProbesCount:
       type: integer
       description: |
