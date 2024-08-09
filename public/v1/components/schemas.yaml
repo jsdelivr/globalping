@@ -597,9 +597,12 @@ components:
         probesCount:
           $ref: 'schemas.yaml#/components/schemas/MeasurementProbesCount'
         locations:
-          allOf:
-            - $ref: 'schemas.yaml#/components/schemas/MeasurementLocations'
-            - description: The locations you specified when creating the measurement.
+          type: array
+          description: |
+            The locations you specified when creating the measurement.
+            If you passed in an `id` of a previous measurement, the value will be filled in from that measurement.
+          items:
+            $ref: 'schemas.yaml#/components/schemas/MeasurementLocationOption'
         limit:
           allOf:
             - $ref: 'schemas.yaml#/components/schemas/MeasurementLimit'
