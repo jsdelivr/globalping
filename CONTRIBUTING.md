@@ -46,4 +46,5 @@ Most IDEs have plugins integrating the used linter (eslint), including support f
 - `FAKE_PROBE_IP=1` used in development to use a random fake ip assigned by the API
 - `ADMIN_KEY={value}` used to access additional information over the API
 - `SYSTEM_API_KEY={value}` used for integration with the dashboard
+- `SERVER_SESSION_COOKIE_SECRET={value}` used to read the shared session cookie
 - `DB_CONNECTION_HOST`, `DB_CONNECTION_USER`, `DB_CONNECTION_PASSWORD`, and `DB_CONNECTION_DATABASE` database connection details

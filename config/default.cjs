@@ -4,6 +4,10 @@ module.exports = {
 		docsHost: 'https://www.jsdelivr.com',
 		port: 3000,
 		processes: 2,
+		session: {
+			cookieName: 'dash_session_token',
+			cookieSecret: '',
+		},
 	},
 	redis: {
 		url: 'redis://localhost:6379',
