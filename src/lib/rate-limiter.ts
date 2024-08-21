@@ -30,9 +30,9 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 	let rateLimiter: RateLimiterRedis;
 	let id: string;
 
-	if (ctx.state.userId) {
+	if (ctx.state.user?.id) {
 		rateLimiter = authenticatedRateLimiter;
-		id = ctx.state.userId;
+		id = ctx.state.user.id;
 	} else {
 		rateLimiter = anonymousRateLimiter;
 		id = requestIp.getClientIp(ctx.req) ?? '';
@@ -45,8 +45,8 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 		setRateLimitHeaders(ctx, result, rateLimiter, numberOfProbes);
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
-			if (ctx.state.userId) {
-				const { isConsumed, requiredCredits, remainingCredits } = await consumeCredits(ctx.state.userId, error, numberOfProbes);
+			if (ctx.state.user?.id) {
+				const { isConsumed, requiredCredits, remainingCredits } = await consumeCredits(ctx.state.user.id, error, numberOfProbes);
 
 				if (isConsumed) {
 					const result = await rateLimiter.reward(id, requiredCredits);

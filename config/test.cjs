@@ -1,4 +1,9 @@
 module.exports = {
+	server: {
+		session: {
+			cookieSecret: 'xxx',
+		},
+	},
 	redis: {
 		url: 'redis://localhost:16379',
 		socket: {

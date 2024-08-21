@@ -4,10 +4,11 @@ import { getMeasurementRunner } from '../runner.js';
 import { bodyParser } from '../../lib/http/middleware/body-parser.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 import { validate } from '../../lib/http/middleware/validate.js';
-import { authenticate } from '../../lib/http/middleware/authenticate.js';
+import { authenticate, AuthenticateOptions } from '../../lib/http/middleware/authenticate.js';
 import { schema } from '../schema/global-schema.js';
 import type { ExtendedContext } from '../../types.js';
 
+const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
 const hostConfig = config.get<string>('server.host');
 const runner = getMeasurementRunner();
 
@@ -26,5 +27,5 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 export const registerCreateMeasurementRoute = (router: Router): void => {
 	router
 		.options('/measurements', '/measurements', corsAuthHandler())
-		.post('/measurements', '/measurements', authenticate, bodyParser(), validate(schema), handle);
+		.post('/measurements', '/measurements', authenticate({ session: sessionConfig }), bodyParser(), validate(schema), handle);
 };
