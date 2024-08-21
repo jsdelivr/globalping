@@ -4,6 +4,13 @@ module.exports = {
 		docsHost: 'https://www.jsdelivr.com',
 		port: 3000,
 		processes: 2,
+		cors: {
+			trustedOrigins: [
+				'https://globalping.io',
+				'https://staging.globalping.io',
+				'http://localhost:13000',
+			],
+		},
 		session: {
 			cookieName: 'dash_session_token',
 			cookieSecret: '',
