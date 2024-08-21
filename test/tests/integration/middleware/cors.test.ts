@@ -25,6 +25,21 @@ describe('cors', () => {
 
 			expect(response.headers['access-control-allow-origin']).to.equal('*');
 		});
+
+		describe('POST /v1/measurements', () => {
+			it('should include the explicit origin if it is trusted', async () => {
+				const response = await requestAgent.options('/v1/measurements').set('Origin', 'https://globalping.io').send() as Response;
+
+				expect(response.headers['access-control-allow-origin']).to.equal('https://globalping.io');
+				expect(response.headers['vary']).to.include('Origin');
+			});
+
+			it('should include the wildcard if the origin is not trusted', async () => {
+				const response = await requestAgent.options('/v1/measurements').send() as Response;
+
+				expect(response.headers['access-control-allow-origin']).to.equal('*');
+			});
+		});
 	});
 
 	describe('Access-Control-Allow-Headers header', () => {
@@ -34,10 +49,10 @@ describe('cors', () => {
 			expect(response.headers['access-control-allow-headers']).to.equal('*');
 		});
 
-		it('should include the header with value of *, Authorization', async () => {
+		it('should include the header with value of Authorization, Content-Type', async () => {
 			const response = await requestAgent.options('/v1/measurements').send() as Response;
 
-			expect(response.headers['access-control-allow-headers']).to.equal('*, Authorization');
+			expect(response.headers['access-control-allow-headers']).to.equal('Authorization, Content-Type');
 		});
 	});
 });

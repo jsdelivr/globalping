@@ -1,4 +1,11 @@
 module.exports = {
+	server: {
+		cors: {
+			trustedOrigins: [
+				'http://localhost:13000',
+			],
+		},
+	},
 	redis: {
 		url: 'redis://localhost:16379',
 		socket: {
