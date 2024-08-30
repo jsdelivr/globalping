@@ -19,6 +19,9 @@ export const createPersistentRedisClient = (options?: RedisClientOptions): Redis
 };
 
 export const getPersistentRedisClient = (): RedisClient => {
-	redis = createPersistentRedisClient();
+	if (!redis) {
+		redis = createPersistentRedisClient();
+	}
+
 	return redis;
 };

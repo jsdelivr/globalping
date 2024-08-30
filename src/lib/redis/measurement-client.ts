@@ -19,6 +19,9 @@ export const createMeasurementRedisClient = (options?: RedisClientOptions): Redi
 };
 
 export const getMeasurementRedisClient = (): RedisClient => {
-	redis = createMeasurementRedisClient();
+	if (!redis) {
+		redis = createMeasurementRedisClient();
+	}
+
 	return redis;
 };
