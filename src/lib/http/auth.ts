@@ -16,11 +16,14 @@ export type Token = {
 	user_created: string,
 	value: string,
 	expire: Date | null,
+	scopes: string[],
 	origins: string[],
-	date_last_used: Date | null
+	date_last_used: Date | null,
+	type: 'access_token' | 'refresh_token',
 }
 
-type Row = Omit<Token, 'origins'> & {
+type Row = Omit<Token, 'scopes' | 'origins'> & {
+	scopes: string | null,
 	origins: string | null,
 }
 
@@ -46,7 +49,7 @@ export class Auth {
 	}
 
 	async syncTokens () {
-		const tokens = await this.fetchTokens();
+		const tokens = await this.fetchTokens({ type: 'access_token' });
 		const newValidTokens = new TTLCache<string, Token>({ ttl: TOKEN_TTL });
 		const newInvalidTokens = new TTLCache<string, true>({ ttl: TOKEN_TTL });
 
@@ -63,7 +66,7 @@ export class Auth {
 	}
 
 	async syncSpecificToken (hash: string) {
-		const tokens = await this.fetchTokens({ value: hash });
+		const tokens = await this.fetchTokens({ type: 'access_token', value: hash });
 
 		if (tokens.length === 0) {
 			this.invalidTokens.set(hash, true);
@@ -83,10 +86,11 @@ export class Auth {
 
 	async fetchTokens (filter: Partial<Row> = {}) {
 		const rows = await this.sql(GP_TOKENS_TABLE).where(filter)
-			.select<Row[]>([ 'user_created', 'value', 'expire', 'origins', 'date_last_used' ]);
+			.select<Row[]>([ 'user_created', 'value', 'expire', 'origins', 'date_last_used', 'scopes' ]);
 
 		const tokens: Token[] = rows.map(row => ({
 			...row,
+			scopes: (row.scopes ? JSON.parse(row.scopes) as string[] : []),
 			origins: (row.origins ? JSON.parse(row.origins) as string[] : []),
 		}));
 
@@ -123,7 +127,7 @@ export class Auth {
 		}
 
 		await this.updateLastUsedDate(token);
-		return token.user_created;
+		return { userId: token.user_created, scopes: token.scopes };
 	}
 
 	private async updateLastUsedDate (token: Token) {
