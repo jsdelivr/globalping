@@ -37,7 +37,7 @@ describe('Auth', () => {
 		await clock.tickAsync(60_000);
 
 		const user1 = await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
-		expect(user1).to.equal('user1');
+		expect(user1).to.deep.equal({ userId: 'user1', scopes: [] });
 		const user2 = await auth.validate('vumzijbzihrskmc2hj34yw22batpibmt', 'https://jsdelivr.com');
 		expect(user2).to.equal(null);
 
@@ -53,7 +53,7 @@ describe('Auth', () => {
 		const user1afterSync = await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 		expect(user1afterSync).to.equal(null);
 		const user2afterSync = await auth.validate('vumzijbzihrskmc2hj34yw22batpibmt', 'https://jsdelivr.com');
-		expect(user2afterSync).to.equal('user2');
+		expect(user2afterSync).to.deep.equal({ userId: 'user2', scopes: [] });
 		auth.unscheduleSync();
 	});
 
@@ -72,7 +72,7 @@ describe('Auth', () => {
 		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 
-		expect(user).to.equal('user1');
+		expect(user).to.deep.equal({ userId: 'user1', scopes: [] });
 		expect(selectStub.callCount).to.equal(1);
 	});
 
@@ -89,7 +89,7 @@ describe('Auth', () => {
 		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 
-		expect(user).to.equal('user1');
+		expect(user).to.deep.equal({ userId: 'user1', scopes: [] });
 		expect(selectStub.callCount).to.equal(1);
 	});
 

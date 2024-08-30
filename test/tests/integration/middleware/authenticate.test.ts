@@ -48,6 +48,7 @@ describe('authenticate', () => {
 
 		it('should accept if valid token was passed', async () => {
 			await client(GP_TOKENS_TABLE).insert({
+				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			});
@@ -65,6 +66,7 @@ describe('authenticate', () => {
 
 		it('should accept if origin is correct', async () => {
 			await client(GP_TOKENS_TABLE).insert({
+				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 				origins: JSON.stringify([ 'https://jsdelivr.com' ]),
@@ -84,6 +86,7 @@ describe('authenticate', () => {
 
 		it('should update "date_last_used" field', async () => {
 			await client(GP_TOKENS_TABLE).insert({
+				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			});
@@ -109,6 +112,7 @@ describe('authenticate', () => {
 
 		it('should get token from db if it is not synced yet', async () => {
 			await client(GP_TOKENS_TABLE).insert({
+				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			});
@@ -134,6 +138,7 @@ describe('authenticate', () => {
 
 		it('should reject if token is expired', async () => {
 			await client(GP_TOKENS_TABLE).insert({
+				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 				expire: new Date('01-01-2024'),
@@ -152,6 +157,7 @@ describe('authenticate', () => {
 
 		it('should reject if previously not synced token is expired', async () => {
 			await client(GP_TOKENS_TABLE).insert({
+				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 				expire: new Date('01-01-2024'),
@@ -168,6 +174,7 @@ describe('authenticate', () => {
 
 		it('should reject if origin is wrong', async () => {
 			await client(GP_TOKENS_TABLE).insert({
+				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 				origins: JSON.stringify([ 'https://jsdelivr.com' ]),
