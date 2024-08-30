@@ -1,4 +1,8 @@
 import type { Context, Next } from 'koa';
+import config from 'config';
+
+const corsConfig = config.get<CorsOptions>('server.cors');
+const trustedOrigins = corsConfig.trustedOrigins || [];
 
 export const corsHandler = () => async (ctx: Context, next: Next) => {
 	ctx.set('Access-Control-Allow-Origin', '*');
@@ -12,7 +16,7 @@ export const corsHandler = () => async (ctx: Context, next: Next) => {
 	return next();
 };
 
-export const corsAuthHandler = ({ trustedOrigins = [] }: CorsOptions) => {
+export const corsAuthHandler = () => {
 	const exposeHeaders = [
 		'ETag',
 		'Link',

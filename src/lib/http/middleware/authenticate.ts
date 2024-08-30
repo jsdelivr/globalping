@@ -1,7 +1,10 @@
+import config from 'config';
 import { jwtVerify } from 'jose';
 
 import { auth } from '../auth.js';
 import type { ExtendedMiddleware } from '../../../types.js';
+
+const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
 
 type SessionCookiePayload = {
 	id?: string;
@@ -10,12 +13,12 @@ type SessionCookiePayload = {
 	admin_access?: number;
 };
 
-export const authenticate = (options: AuthenticateOptions): ExtendedMiddleware => {
-	const sessionKey = Buffer.from(options.session.cookieSecret);
+export const authenticate = (): ExtendedMiddleware => {
+	const sessionKey = Buffer.from(sessionConfig.cookieSecret);
 
 	return async (ctx, next) => {
 		const authorization = ctx.headers.authorization;
-		const sessionCookie = ctx.cookies.get(options.session.cookieName);
+		const sessionCookie = ctx.cookies.get(sessionConfig.cookieName);
 
 		if (authorization) {
 			const parts = authorization.split(' ');
