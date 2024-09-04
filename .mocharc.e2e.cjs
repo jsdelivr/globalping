@@ -11,6 +11,7 @@ module.exports = {
 		path.join(__dirname, 'test/e2e/cases/**/*.test.ts'),
 	],
 	'node-option': [
+		'enable-source-maps',
 		'experimental-specifier-resolution=node',
 		'loader=ts-node/esm',
 	],

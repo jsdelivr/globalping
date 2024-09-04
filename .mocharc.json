@@ -10,6 +10,7 @@
 		"test/tests/unit/**/*.test.ts"
 	],
 	"node-option": [
+		"enable-source-maps",
 		"experimental-specifier-resolution=node",
 		"loader=ts-node/esm"
 	],

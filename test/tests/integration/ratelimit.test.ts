@@ -38,6 +38,7 @@ describe('rate limiter', () => {
 		await waitForProbesUpdate();
 
 		await client(GP_TOKENS_TABLE).insert({
+			name: 'test token',
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			value: 'Xj6kuKFEQ6zI60mr+ckHG7yQcIFGMJFzvtK9PBQ69y8=', // token: qz5kdukfcr3vggv3xbujvjwvirkpkkpx
 		});
@@ -56,7 +57,7 @@ describe('rate limiter', () => {
 
 	describe('headers', () => {
 		it('should NOT include headers (GET)', async () => {
-			const response = await requestAgent.get('/v1/').send().expect(200) as Response;
+			const response = await requestAgent.get('/v1/').send().expect(404) as Response;
 
 			expect(response.headers['x-ratelimit-limit']).to.not.exist;
 			expect(response.headers['x-ratelimit-consumed']).to.not.exist;

@@ -18,6 +18,9 @@ export const createSubscriptionRedisClient = (options?: RedisClientOptions): Red
 };
 
 export const getSubscriptionRedisClient = (): RedisClient => {
-	redis = createSubscriptionRedisClient();
+	if (!redis) {
+		redis = createSubscriptionRedisClient();
+	}
+
 	return redis;
 };

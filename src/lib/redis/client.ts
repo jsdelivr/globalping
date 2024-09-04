@@ -19,6 +19,9 @@ const createRedisClient = (options?: RedisClientOptions): RedisClient => {
 };
 
 export const getRedisClient = (): RedisClient => {
-	redis = createRedisClient();
+	if (!redis) {
+		redis = createRedisClient();
+	}
+
 	return redis;
 };
