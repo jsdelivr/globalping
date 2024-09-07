@@ -27,6 +27,8 @@ import domainRedirect from './middleware/domain-redirect.js';
 import { docsLink } from './middleware/docs-link.js';
 import type { CustomContext } from '../../types.js';
 import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternative-ip.js';
+import { registerLimitsRoute } from '../../limits/route/get-limits.js';
+import { authenticate } from './middleware/authenticate.js';
 
 const app = new Koa();
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
@@ -64,6 +66,8 @@ registerGetProbesRoute(apiRouter);
 registerSendCodeRoute(apiRouter);
 // POST /alternative-ip
 registerAlternativeIpRoute(apiRouter);
+// GET /limits
+registerLimitsRoute(apiRouter);
 
 const healthRouter = new Router({ strict: true, sensitive: true });
 // GET /health
@@ -82,6 +86,7 @@ app
 	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 	.use(errorHandlerMw)
 	.use(corsHandler())
+	.use(authenticate())
 	.use(rootRouter.routes())
 	.use(healthRouter.routes())
 	.use(apiRouter.routes())

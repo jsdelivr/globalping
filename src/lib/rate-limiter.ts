@@ -22,22 +22,30 @@ export const authenticatedRateLimiter = new RateLimiterRedis({
 	duration: config.get<number>('measurement.rateLimitReset'),
 });
 
+const getRateLimiter = (ctx: ExtendedContext) => {
+	let rateLimiter: RateLimiterRedis;
+	let id: string;
+	let type: 'user' | 'ip';
+
+	if (ctx.state.user?.id) {
+		type = 'user';
+		rateLimiter = authenticatedRateLimiter;
+		id = ctx.state.user.id;
+	} else {
+		type = 'ip';
+		rateLimiter = anonymousRateLimiter;
+		id = requestIp.getClientIp(ctx.req) ?? '';
+	}
+
+	return { rateLimiter, id, type };
+};
+
 export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) => {
 	if (ctx['isAdmin']) {
 		return;
 	}
 
-	let rateLimiter: RateLimiterRedis;
-	let id: string;
-
-	if (ctx.state.user?.id) {
-		rateLimiter = authenticatedRateLimiter;
-		id = ctx.state.user.id;
-	} else {
-		rateLimiter = anonymousRateLimiter;
-		id = requestIp.getClientIp(ctx.req) ?? '';
-	}
-
+	const { rateLimiter, id } = getRateLimiter(ctx);
 	setRequestCostHeaders(ctx, numberOfProbes);
 
 	try {
@@ -65,6 +73,41 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 
 		throw createHttpError(500);
 	}
+};
+
+export const getRateLimitState = async (ctx: ExtendedContext) => {
+	if (ctx['isAdmin']) {
+		return;
+	}
+
+	const { rateLimiter, id, type } = getRateLimiter(ctx);
+	const rateLimiterRes = await rateLimiter.get(id);
+
+	if (rateLimiterRes) {
+		return {
+			type,
+			limit: rateLimiter.points,
+			consumed: rateLimiterRes.consumedPoints,
+			remaining: rateLimiterRes.remainingPoints,
+			reset: Math.round(rateLimiterRes.msBeforeNext / 1000),
+		};
+	} else if (type === 'user') {
+		return {
+			type,
+			limit: config.get<number>('measurement.authenticatedRateLimit'),
+			consumed: 0,
+			remaining: config.get<number>('measurement.authenticatedRateLimit'),
+			reset: 0,
+		};
+	}
+
+	return {
+		type,
+		limit: config.get<number>('measurement.anonymousRateLimit'),
+		consumed: 0,
+		remaining: config.get<number>('measurement.anonymousRateLimit'),
+		reset: 0,
+	};
 };
 
 const consumeCredits = async (userId: string, rateLimiterRes: RateLimiterRes, numberOfProbes: number) => {
