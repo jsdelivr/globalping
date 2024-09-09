@@ -1,10 +1,24 @@
 import type Router from '@koa/router';
 import { getRateLimitState } from '../../lib/rate-limiter.js';
 import type { ExtendedContext } from '../../types.js';
+import { credits } from '../../lib/credits.js';
 
 const handle = async (ctx: ExtendedContext): Promise<void> => {
-	const rateLimitState = await getRateLimitState(ctx);
-	ctx.body = rateLimitState;
+	const [ rateLimitState, remainingCredits ] = await Promise.all([
+		getRateLimitState(ctx),
+		ctx.state.user?.id && credits.getRemainingCredits(ctx.state.user.id),
+	]);
+
+	ctx.body = {
+		rateLimit: {
+			measurements: {
+				create: rateLimitState,
+			},
+		},
+		...(ctx.state.user?.id && { credits: {
+			remaining: remainingCredits,
+		} }),
+	};
 };
 
 export const registerLimitsRoute = (router: Router): void => {

@@ -30,15 +30,8 @@ export class Credits {
 	}
 
 	async getRemainingCredits (userId: string): Promise<number> {
-		const result = await this.sql(CREDITS_TABLE).where({ user_id: userId }).select<[{ amount: number }]>('amount');
-
-		const remainingCredits = result[0]?.amount;
-
-		if (remainingCredits || remainingCredits === 0) {
-			return remainingCredits;
-		}
-
-		throw new Error('Credits data for the user not found.');
+		const result = await this.sql(CREDITS_TABLE).where({ user_id: userId }).first<{ amount: number } | undefined>('amount');
+		return result?.amount || 0;
 	}
 }
 
