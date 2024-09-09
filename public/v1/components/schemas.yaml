@@ -1360,3 +1360,58 @@ components:
         alt:
           type: string
           description: The subject's alternative names.
+    Limits:
+      type: object
+      required:
+        - rateLimit
+      properties:
+        rateLimit:
+          type: object
+          description: Object containing rate limits information.
+          required:
+            - measurements
+          properties:
+            measurements:
+              type: object
+              description: Measurements rate limits.
+              required:
+                - create
+              properties:
+                create:
+                  allOf:
+                    - $ref: 'schemas.yaml#/components/schemas/RateLimitDetails'
+                    - description: Rate limit for creating measurements.
+        credits:
+          type: object
+          description: Object containing credits information. Only exists when request is authenticated.
+          properties:
+            remaining:
+              type: integer
+              description: The number of user's remaining credits.
+    RateLimitDetails:
+      type: object
+      required:
+        - type
+        - limit
+        - consumed
+        - remaining
+        - reset
+      properties:
+        type:
+          type: string
+          description: Type of the rate limit value.
+          enum:
+            - ip
+            - user
+        limit:
+          type: integer
+          description: The number of rate limit points available in a given time window.
+        consumed:
+          type: integer
+          description: The number of rate limit points consumed by the request.
+        remaining:
+          type: integer
+          description: The number of rate limit points remaining in the current time window.
+        reset:
+          type: integer
+          description: The number of seconds until the limit resets.

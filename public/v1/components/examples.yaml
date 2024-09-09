@@ -520,3 +520,38 @@ components:
             }
           ]
         }
+    nonAuthenticatedLimits:
+      summary: 'non authenticated'
+      value:
+        {
+          "rateLimit": {
+            "measurements": {
+              "create": {
+                "type": "ip",
+                "limit": 100,
+                "consumed": 5,
+                "remaining": 95,
+                "reset": 3599
+              }
+            }
+          }
+        }
+    authenticatedLimits:
+      summary: 'authenticated'
+      value:
+        {
+          "rateLimit": {
+            "measurements": {
+              "create": {
+                "type": "user",
+                "limit": 250,
+                "consumed": 10,
+                "remaining": 240,
+                "reset": 3599
+              }
+            }
+          },
+          "credits": {
+            "remaining": 1000
+          }
+        }

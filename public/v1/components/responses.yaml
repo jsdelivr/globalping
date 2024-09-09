@@ -179,3 +179,15 @@ components:
           examples:
             '0':
               $ref: 'examples.yaml#/components/examples/probes'
+    limits:
+      description: |
+        A successful request returns status `200 OK` and a body containing info regarding current rate limits and user credits.
+      content:
+        application/json:
+          schema:
+            $ref: 'schemas.yaml#/components/schemas/Limits'
+          examples:
+            noAuthLimits:
+              $ref: 'examples.yaml#/components/examples/nonAuthenticatedLimits'
+            authLimits:
+              $ref: 'examples.yaml#/components/examples/authenticatedLimits'
