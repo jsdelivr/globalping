@@ -16,7 +16,7 @@ const disconnectProbes = async () => {
 };
 
 export const reconnectProbes = () => {
-	if (!reconnectProbesDelay || (reconnectProbesDelay as unknown as string) === '0') {
+	if (!reconnectProbesDelay) {
 		return;
 	}
 
