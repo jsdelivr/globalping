@@ -33,6 +33,7 @@ class DockerManager {
 				`MEASUREMENT_TIMEOUT=5`,
 				`ADOPTED_PROBES_SYNC_INTERVAL=2000`,
 				`ADMIN_DATA_SYNC_INTERVAL=2000`,
+				`RECONNECT_PROBES_DELAY=0`,
 			],
 			HostConfig: {
 				PortBindings: {
