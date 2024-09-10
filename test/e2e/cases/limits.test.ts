@@ -1,7 +1,15 @@
 import got from 'got';
 import { expect } from 'chai';
+import { getPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
 
 describe('/limits endpoint', () => {
+	const redis =	getPersistentRedisClient();
+
+	before(async () => {
+		const keys = await redis.keys('rate:anon:*');
+		await redis.del(keys);
+	});
+
 	it('should return a default limits object', async () => {
 		const response = await got('http://localhost:80/v1/limits', {
 			responseType: 'json',
