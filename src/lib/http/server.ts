@@ -28,7 +28,6 @@ import { docsLink } from './middleware/docs-link.js';
 import type { CustomContext } from '../../types.js';
 import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternative-ip.js';
 import { registerLimitsRoute } from '../../limits/route/get-limits.js';
-import { authenticate } from './middleware/authenticate.js';
 
 const app = new Koa();
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
@@ -88,7 +87,6 @@ app
 	.use(corsHandler())
 	.use(rootRouter.routes())
 	.use(healthRouter.routes())
-	.use(authenticate())
 	.use(apiRouter.routes())
 	.use(apiRouter.allowedMethods())
 	.use(koaStatic(publicPath, { format: false }));
