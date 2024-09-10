@@ -35,6 +35,7 @@ servers:
 tags:
   - name: Measurements
   - name: Probes
+  - name: Limits
 paths:
   /v1/measurements:
     post:
