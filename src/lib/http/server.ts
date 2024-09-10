@@ -86,9 +86,9 @@ app
 	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 	.use(errorHandlerMw)
 	.use(corsHandler())
-	.use(authenticate())
 	.use(rootRouter.routes())
 	.use(healthRouter.routes())
+	.use(authenticate())
 	.use(apiRouter.routes())
 	.use(apiRouter.allowedMethods())
 	.use(koaStatic(publicPath, { format: false }));
