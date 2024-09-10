@@ -16,4 +16,5 @@ module.exports = {
 	systemApi: {
 		key: 'system',
 	},
+	reconnectProbesDelay: 0,
 };
