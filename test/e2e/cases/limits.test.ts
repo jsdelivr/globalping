@@ -38,14 +38,14 @@ describe('/limits endpoint', () => {
 			type: 'ping',
 		} });
 
-		const response2 = await got<any>('http://localhost:80/v1/limits', {
+		const response = await got<any>('http://localhost:80/v1/limits', {
 			responseType: 'json',
 		});
 
-		expect(response2.statusCode).to.equal(200);
-		expect(response2.body.rateLimit.measurements.create.reset).to.be.a('number');
+		expect(response.statusCode).to.equal(200);
+		expect(response.body.rateLimit.measurements.create.reset).to.be.a('number');
 
-		expect(response2.body.rateLimit.measurements.create).to.deep.include({
+		expect(response.body.rateLimit.measurements.create).to.deep.include({
 			type: 'ip',
 			limit: 100000,
 			consumed: 1,

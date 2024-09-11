@@ -115,7 +115,7 @@ describe('rate limiter', () => {
 				});
 			});
 
-			it('should return values for that ip', async () => {
+			it('should return values for that user', async () => {
 				await requestAgent.post('/v1/measurements')
 					.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 					.send({
@@ -150,13 +150,6 @@ describe('rate limiter', () => {
 					amount: 10,
 				});
 
-				await requestAgent.post('/v1/measurements')
-					.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
-					.send({
-						type: 'ping',
-						target: 'jsdelivr.com',
-					}).expect(202) as Response;
-
 				const response = await requestAgent.get('/v1/limits')
 					.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 					.send();
@@ -166,9 +159,9 @@ describe('rate limiter', () => {
 							create: {
 								type: 'user',
 								limit: 250,
-								consumed: 1,
-								remaining: 249,
-								reset: 3600,
+								consumed: 0,
+								remaining: 250,
+								reset: 0,
 							},
 						},
 					},

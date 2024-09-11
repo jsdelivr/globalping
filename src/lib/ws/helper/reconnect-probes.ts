@@ -16,6 +16,9 @@ const disconnectProbes = async () => {
 };
 
 export const reconnectProbes = () => {
+	console.log('reconnectProbesDelay', reconnectProbesDelay);
+	console.log('typeof reconnectProbesDelay', typeof reconnectProbesDelay);
+
 	if (!reconnectProbesDelay) {
 		return;
 	}
