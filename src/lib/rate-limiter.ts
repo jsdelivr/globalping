@@ -85,7 +85,6 @@ export const getRateLimitState = async (ctx: ExtendedContext) => {
 		return {
 			type,
 			limit: rateLimiter.points,
-			consumed: rateLimiterRes.consumedPoints,
 			remaining: rateLimiterRes.remainingPoints,
 			reset: Math.round(rateLimiterRes.msBeforeNext / 1000),
 		};
@@ -93,7 +92,6 @@ export const getRateLimitState = async (ctx: ExtendedContext) => {
 		return {
 			type,
 			limit: config.get<number>('measurement.authenticatedRateLimit'),
-			consumed: 0,
 			remaining: config.get<number>('measurement.authenticatedRateLimit'),
 			reset: 0,
 		};
@@ -102,7 +100,6 @@ export const getRateLimitState = async (ctx: ExtendedContext) => {
 	return {
 		type,
 		limit: config.get<number>('measurement.anonymousRateLimit'),
-		consumed: 0,
 		remaining: config.get<number>('measurement.anonymousRateLimit'),
 		reset: 0,
 	};

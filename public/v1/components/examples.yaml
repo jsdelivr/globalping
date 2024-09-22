@@ -529,7 +529,6 @@ components:
               "create": {
                 "type": "ip",
                 "limit": 100,
-                "consumed": 5,
                 "remaining": 95,
                 "reset": 3599
               }
@@ -545,7 +544,6 @@ components:
               "create": {
                 "type": "user",
                 "limit": 250,
-                "consumed": 10,
                 "remaining": 240,
                 "reset": 3599
               }

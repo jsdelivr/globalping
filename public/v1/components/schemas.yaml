@@ -1393,7 +1393,6 @@ components:
       required:
         - type
         - limit
-        - consumed
         - remaining
         - reset
       properties:
@@ -1406,9 +1405,6 @@ components:
         limit:
           type: integer
           description: The number of rate limit points available in a given time window.
-        consumed:
-          type: integer
-          description: The number of rate limit points consumed by the request.
         remaining:
           type: integer
           description: The number of rate limit points remaining in the current time window.

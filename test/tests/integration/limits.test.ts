@@ -62,7 +62,6 @@ describe('rate limiter', () => {
 							create: {
 								type: 'ip',
 								limit: 100000,
-								consumed: 0,
 								remaining: 100000,
 								reset: 0,
 							},
@@ -75,7 +74,7 @@ describe('rate limiter', () => {
 				await requestAgent.post('/v1/measurements').send({
 					type: 'ping',
 					target: 'jsdelivr.com',
-				}).expect(202) as Response;
+				}).expect(202);
 
 				const response = await requestAgent.get('/v1/limits').send();
 				expect(response.body).to.deep.equal({
@@ -84,7 +83,6 @@ describe('rate limiter', () => {
 							create: {
 								type: 'ip',
 								limit: 100000,
-								consumed: 1,
 								remaining: 99999,
 								reset: 3600,
 							},
@@ -105,7 +103,6 @@ describe('rate limiter', () => {
 							create: {
 								type: 'user',
 								limit: 250,
-								consumed: 0,
 								remaining: 250,
 								reset: 0,
 							},
@@ -121,7 +118,7 @@ describe('rate limiter', () => {
 					.send({
 						type: 'ping',
 						target: 'jsdelivr.com',
-					}).expect(202) as Response;
+					}).expect(202);
 
 				const response = await requestAgent.get('/v1/limits')
 					.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -132,7 +129,6 @@ describe('rate limiter', () => {
 							create: {
 								type: 'user',
 								limit: 250,
-								consumed: 1,
 								remaining: 249,
 								reset: 3600,
 							},
@@ -159,7 +155,6 @@ describe('rate limiter', () => {
 							create: {
 								type: 'user',
 								limit: 250,
-								consumed: 0,
 								remaining: 250,
 								reset: 0,
 							},
