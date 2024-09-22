@@ -6,10 +6,10 @@ import { Credits } from '../../../src/lib/credits.js';
 describe('Credits', () => {
 	const sandbox = sinon.createSandbox();
 	const updateStub = sandbox.stub();
-	const selectStub = sandbox.stub();
+	const firstStub = sandbox.stub();
 	const whereStub = sandbox.stub().returns({
 		update: updateStub,
-		select: selectStub,
+		first: firstStub,
 	});
 	const sqlStub = sandbox.stub().returns({
 		where: whereStub,
@@ -22,7 +22,7 @@ describe('Credits', () => {
 
 	it('should return true if row was updated', async () => {
 		updateStub.resolves(1);
-		selectStub.resolves([{ amount: 5 }]);
+		firstStub.resolves({ amount: 5 });
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
 		expect(result).to.deep.equal({ isConsumed: true, remainingCredits: 5 });
@@ -30,7 +30,7 @@ describe('Credits', () => {
 
 	it('should return true if row was updated to 0', async () => {
 		updateStub.resolves(1);
-		selectStub.resolves([{ amount: 0 }]);
+		firstStub.resolves({ amount: 0 });
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
 		expect(result).to.deep.equal({ isConsumed: true, remainingCredits: 0 });
@@ -40,7 +40,7 @@ describe('Credits', () => {
 		updateStub.resolves(0);
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
-		expect(selectStub.callCount).to.equal(0);
+		expect(firstStub.callCount).to.equal(0);
 		expect(result).to.deep.equal({ isConsumed: false, remainingCredits: 0 });
 	});
 
@@ -48,7 +48,7 @@ describe('Credits', () => {
 		const error: Error & {errno?: number} = new Error('constraint');
 		error.errno = 4025;
 		updateStub.rejects(error);
-		selectStub.resolves([{ amount: 5 }]);
+		firstStub.resolves({ amount: 5 });
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
 		expect(result).to.deep.equal({ isConsumed: false, remainingCredits: 5 });

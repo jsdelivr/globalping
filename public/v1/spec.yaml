@@ -35,6 +35,7 @@ servers:
 tags:
   - name: Measurements
   - name: Probes
+  - name: Limits
 paths:
   /v1/measurements:
     post:
@@ -120,6 +121,20 @@ paths:
           $ref: 'components/responses.yaml#/components/responses/probes200'
       tags:
         - Probes
+  /v1/limits:
+    get:
+      summary: Get current rate limits
+      operationId: getLimits
+      description: |
+        Returns rate limits for the current user (if authenticated) or IP address (if not authenticated).
+      responses:
+        '200':
+          $ref: 'components/responses.yaml#/components/responses/limits'
+      tags:
+        - Limits
+      security:
+        - {}
+        - bearerAuth: []
 components:
   securitySchemes:
     bearerAuth:

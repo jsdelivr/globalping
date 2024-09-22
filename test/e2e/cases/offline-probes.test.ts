@@ -5,12 +5,14 @@ import { waitMesurementFinish, waitProbeToConnect, waitProbeToDisconnect } from 
 import { docker } from '../docker.js';
 
 describe('api', () => {
-	beforeEach(async () => {
+	beforeEach(async function () {
+		this.timeout(60000);
 		await docker.startProbeContainer();
 		await waitProbeToConnect();
 	});
 
-	after(async () => {
+	after(async function () {
+		this.timeout(60000);
 		await docker.startProbeContainer();
 		await waitProbeToConnect();
 	});

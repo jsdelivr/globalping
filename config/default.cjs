@@ -84,5 +84,6 @@ module.exports = {
 			SA: 10,
 		},
 	},
+	reconnectProbesDelay: 2 * 60 * 1000,
 	sigtermDelay: 15000,
 };

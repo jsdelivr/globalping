@@ -3,11 +3,20 @@ const df = require('./default.cjs');
 
 function mapEnvConfig (object, prefix = '') {
 	return _.mapValues(object, (value, key) => {
+		const currentKey = (prefix ? `${prefix}_` : '') + _.snakeCase(key).toUpperCase();
+
 		if (_.isObject(value)) {
-			return mapEnvConfig(value, (prefix ? `${prefix}_` : '') + _.snakeCase(key).toUpperCase());
+			return mapEnvConfig(value, currentKey);
 		}
 
-		return (prefix ? `${prefix}_` : '') + _.snakeCase(key).toUpperCase();
+		if (typeof value === 'number' || typeof value === 'boolean') {
+			return {
+				__name: currentKey,
+				__format: typeof value,
+			};
+		}
+
+		return currentKey;
 	});
 }
 

@@ -69,5 +69,12 @@ const dropAllTables = async (sql: Knex) => {
 		.whereRaw(`table_schema = database()`)
 		.select(`table_name as table`)
 	).map(({ table }: { table: string }) => table);
-	await Bluebird.map(allTables, table => sql.schema.raw(`drop table \`${table}\``));
+
+	// Brute force attempt at deleting all data regardless of foreign key constraints.
+	for (let i = 0; i < allTables.length; i++) {
+		await Bluebird.allSettled(allTables.map(table => sql.schema.raw(`delete from \`${table}\``)));
+		await Bluebird.allSettled(allTables.map(table => sql.schema.raw(`drop table if exists \`${table}\``)));
+	}
+
+	await Bluebird.map(allTables, table => sql.schema.raw(`drop table if exists \`${table}\``));
 };
