@@ -181,7 +181,7 @@ components:
               $ref: 'examples.yaml#/components/examples/probes'
     limits:
       description: |
-        A successful request returns status `200 OK` and a body containing info regarding current rate limits and user credits.
+        A successful request returns status `200 OK` and a body containing information about the current rate limits and user credits.
       content:
         application/json:
           schema:

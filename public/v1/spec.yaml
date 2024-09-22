@@ -126,9 +126,7 @@ paths:
       summary: Get current rate limits
       operationId: getLimits
       description: |
-        Returns rate limits for the current user or ip.
-
-        If request is not authenticated, result will show limits for the current ip. If request is authenticated, result will show limits for the current user, plus the amount of remaining credits.
+        Returns rate limits for the current user (if authenticated) or IP address (if not authenticated).
       responses:
         '200':
           $ref: 'components/responses.yaml#/components/responses/limits'

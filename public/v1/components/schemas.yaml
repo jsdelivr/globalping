@@ -1383,7 +1383,7 @@ components:
                     - description: Rate limit for creating measurements.
         credits:
           type: object
-          description: Object containing credits information. Only exists when request is authenticated.
+          description: Object containing credits information (only for authenticated requests).
           properties:
             remaining:
               type: integer
@@ -1398,7 +1398,7 @@ components:
       properties:
         type:
           type: string
-          description: Type of the rate limit value.
+          description: Type of the rate limit.
           enum:
             - ip
             - user
