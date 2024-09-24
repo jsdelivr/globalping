@@ -8,7 +8,7 @@ import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
 import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage, UserRequest } from './types.js';
-import { rateLimit } from '../lib/rate-limiter.js';
+import { rateLimit } from '../lib/rate-limiter/rate-limiter-post.js';
 import type { ExtendedContext } from '../types.js';
 
 export class MeasurementRunner {

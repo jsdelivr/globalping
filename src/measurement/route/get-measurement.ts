@@ -1,6 +1,8 @@
 import type { DefaultContext, DefaultState, ParameterizedContext } from 'koa';
 import type Router from '@koa/router';
 import { getMeasurementStore } from '../store.js';
+import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
+import { authenticate } from '../../lib/http/middleware/authenticate.js';
 
 const store = getMeasurementStore();
 
@@ -24,5 +26,5 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 };
 
 export const registerGetMeasurementRoute = (router: Router): void => {
-	router.get('/measurements/:id', '/measurements/:id([a-zA-Z0-9]+)', handle);
+	router.get('/measurements/:id', '/measurements/:id([a-zA-Z0-9]+)', corsAuthHandler(), authenticate(), handle);
 };

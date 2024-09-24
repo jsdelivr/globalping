@@ -72,8 +72,10 @@ module.exports = {
 		limits: {
 			anonymousTestsPerLocation: 200,
 			anonymousTestsPerMeasurement: 500,
+			anonymousGetMeasurement: 5, // per 2 seconds per IP
 			authenticatedTestsPerLocation: 500,
 			authenticatedTestsPerMeasurement: 500,
+			authenticatedGetMeasurement: 5, // per 2 seconds per user
 		},
 		globalDistribution: {
 			AF: 5,

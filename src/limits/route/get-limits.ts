@@ -1,5 +1,5 @@
 import type Router from '@koa/router';
-import { getRateLimitState } from '../../lib/rate-limiter.js';
+import { getRateLimitState } from '../../lib/rate-limiter/rate-limiter-post.js';
 import type { ExtendedContext } from '../../types.js';
 import { credits } from '../../lib/credits.js';
 import { authenticate } from '../../lib/http/middleware/authenticate.js';

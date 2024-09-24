@@ -4,7 +4,7 @@ import requestIp from 'request-ip';
 import { expect } from 'chai';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
-import { anonymousRateLimiter, authenticatedRateLimiter } from '../../../src/lib/rate-limiter.js';
+import { anonymousRateLimiter, authenticatedRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-post.js';
 import { client } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
 import { CREDITS_TABLE } from '../../../src/lib/credits.js';
