@@ -29,7 +29,7 @@ module.exports = {
 		},
 	},
 	measurement: {
-		maxInProgressProbes: 2,
+		maxInProgressTests: 2,
 	},
 	sigtermDelay: 0,
 };

@@ -61,21 +61,28 @@ module.exports = {
 		syncInterval: 60000,
 	},
 	measurement: {
-		anonymousRateLimit: 100000,
-		authenticatedRateLimit: 250,
-		rateLimitReset: 3600,
-		maxInProgressProbes: 5,
+		maxInProgressTests: 5,
 		// Timeout after which measurement will be marked as finished even if not all probes respond
 		timeout: 30, // 30 seconds
 		// measurement result TTL in redis
 		resultTTL: 7 * 24 * 60 * 60, // 7 days
+		rateLimit: {
+			post: {
+				anonymousLimit: 100000,
+				authenticatedLimit: 250,
+				reset: 3600,
+			},
+			get: {
+				anonymousLimit: 5,
+				authenticatedLimit: 5,
+				reset: 2,
+			},
+		},
 		limits: {
 			anonymousTestsPerLocation: 200,
 			anonymousTestsPerMeasurement: 500,
-			anonymousGetMeasurement: 5, // per 2 seconds per IP
 			authenticatedTestsPerLocation: 500,
 			authenticatedTestsPerMeasurement: 500,
-			authenticatedGetMeasurement: 5, // per 2 seconds per user
 		},
 		globalDistribution: {
 			AF: 5,

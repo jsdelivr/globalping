@@ -58,10 +58,10 @@ export class MeasurementRunner {
 	}
 
 	private sendToProbes (measurementId: string, onlineProbesMap: Map<number, Probe>, request: MeasurementRequest) {
-		let inProgressProbes = 0;
-		const maxInProgressProbes = config.get<number>('measurement.maxInProgressProbes');
+		let inProgressTests = 0;
+		const maxInProgressTests = config.get<number>('measurement.maxInProgressTests');
 		onlineProbesMap.forEach((probe, index) => {
-			const inProgressUpdates = request.inProgressUpdates && inProgressProbes++ < maxInProgressProbes;
+			const inProgressUpdates = request.inProgressUpdates && inProgressTests++ < maxInProgressTests;
 			this.io.of(PROBES_NAMESPACE).to(probe.client).emit('probe:measurement:request', {
 				measurementId,
 				testId: index.toString(),
