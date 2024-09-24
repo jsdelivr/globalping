@@ -4,7 +4,7 @@ import _ from 'lodash';
 import config from 'config';
 import { scopedLogger } from '../logger.js';
 import type { fetchProbesWithAdminData as serverFetchProbesWithAdminData } from '../ws/server.js';
-import type { Probe, ProbeLocation } from '../../probe/types.js';
+import type { Probe, ProbeLocation, Tag } from '../../probe/types.js';
 import { normalizeFromPublicName } from '../geoip/utils.js';
 import { getIndex } from '../location/location.js';
 
@@ -23,6 +23,7 @@ export type AdoptedProbe = {
 		type: 'user';
 		value: string;
 	}[];
+	systemTags: string[];
 	isCustomCity: boolean;
 	status: string;
 	isIPv4Supported: boolean,
@@ -40,10 +41,19 @@ export type AdoptedProbe = {
 	network: string | null;
 }
 
-type Row = Omit<AdoptedProbe, 'isCustomCity' | 'tags'> & {
+type Row = Omit<AdoptedProbe, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported'> & {
 	altIps: string;
 	tags: string;
+	systemTags: string;
 	isCustomCity: number;
+	isIPv4Supported: number;
+	isIPv6Supported: number;
+}
+
+type AdoptedFieldDescription = {
+	connectedField: string,
+	shouldUpdateIfCustomCity: boolean,
+	formatter?: (connectedValue: unknown) => unknown
 }
 
 export class AdoptedProbes {
@@ -51,7 +61,7 @@ export class AdoptedProbes {
 	private connectedUuidToProbe: Map<string, Probe> = new Map();
 	private adoptedProbes: AdoptedProbe[] = [];
 	private adoptedIpToProbe: Map<string, AdoptedProbe> = new Map();
-	private readonly adoptedFieldToConnectedField = {
+	private readonly adoptedFieldToConnectedField: Record<string, AdoptedFieldDescription> = {
 		status: {
 			connectedField: 'status',
 			shouldUpdateIfCustomCity: true,
@@ -75,6 +85,11 @@ export class AdoptedProbes {
 		hardwareDevice: {
 			connectedField: 'hardwareDevice',
 			shouldUpdateIfCustomCity: true,
+		},
+		systemTags: {
+			connectedField: 'tags',
+			shouldUpdateIfCustomCity: true,
+			formatter: (connectedTags: Tag[]) => connectedTags.filter(({ type }) => type === 'system').map(({ value }) => value),
 		},
 		asn: {
 			connectedField: 'location.asn',
@@ -201,7 +216,10 @@ export class AdoptedProbes {
 			altIps: JSON.parse(row.altIps) as string[],
 			tags: (JSON.parse(row.tags) as { prefix: string; value: string; }[])
 				.map(({ prefix, value }) => ({ type: 'user' as const, value: `u-${prefix}-${value}` })),
+			systemTags: JSON.parse(row.systemTags) as string[],
 			isCustomCity: Boolean(row.isCustomCity),
+			isIPv4Supported: Boolean(row.isIPv4Supported),
+			isIPv6Supported: Boolean(row.isIPv6Supported),
 		}));
 
 		this.adoptedProbes = adoptedProbes;
@@ -269,18 +287,22 @@ export class AdoptedProbes {
 			return;
 		}
 
-		const updateObject: Record<string, string | number> = {};
+		const updateObject: Record<string, unknown> = {};
 
-		Object.entries(this.adoptedFieldToConnectedField).forEach(([ adoptedField, { connectedField, shouldUpdateIfCustomCity }]) => {
+		Object.entries(this.adoptedFieldToConnectedField).forEach(([ adoptedField, { connectedField, shouldUpdateIfCustomCity, formatter }]) => {
 			if (isCustomCity && !shouldUpdateIfCustomCity) {
 				return;
 			}
 
-			const adoptedValue = _.get(adoptedProbe, adoptedField) as string | number;
-			const connectedValue = _.get(connectedProbe, connectedField) as string | number;
+			const adoptedValue = _.get(adoptedProbe, adoptedField) as unknown;
+			let connectedValue = _.get(connectedProbe, connectedField) as unknown;
 
-			if (adoptedValue !== connectedValue) {
-				updateObject[adoptedField] = connectedValue;
+			if (formatter) {
+				connectedValue = formatter(connectedValue);
+			}
+
+			if (!_.isEqual(adoptedValue, connectedValue)) {
+				updateObject[adoptedField] = _.isObject(connectedValue) ? JSON.stringify(connectedValue) : connectedValue;
 			}
 		});
 
@@ -331,11 +353,11 @@ export class AdoptedProbes {
 		}
 	}
 
-	private async updateProbeData (adoptedProbe: AdoptedProbe, updateObject: Record<string, string | number>) {
+	private async updateProbeData (adoptedProbe: AdoptedProbe, updateObject: Record<string, unknown>) {
 		await this.sql(ADOPTED_PROBES_TABLE).where({ ip: adoptedProbe.ip }).update(updateObject);
 
 		for (const [ field, value ] of Object.entries(updateObject)) {
-			(adoptedProbe as unknown as Record<string, string | number>)[field] = value;
+			(adoptedProbe as Record<string, unknown>)[field] = value;
 		}
 	}
 
