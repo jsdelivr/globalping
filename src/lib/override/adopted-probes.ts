@@ -53,7 +53,8 @@ type Row = Omit<AdoptedProbe, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' 
 type AdoptedFieldDescription = {
 	connectedField: string,
 	shouldUpdateIfCustomCity: boolean,
-	formatter?: (connectedValue: unknown) => unknown
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	formatter?: (connectedValue: any) => unknown
 }
 
 export class AdoptedProbes {
