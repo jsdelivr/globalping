@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS gp_adopted_probes (
 	lastSyncDate DATE NOT NULL,
 	isCustomCity TINYINT(1) DEFAULT 0,
 	tags LONGTEXT COLLATE utf8mb4_bin DEFAULT '[]' NOT NULL,
+	systemTags LONGTEXT COLLATE utf8mb4_bin DEFAULT '[]' NOT NULL,
 	status VARCHAR(255) NOT NULL,
 	isIPv4Supported BOOLEAN,
 	isIPv6Supported BOOLEAN,

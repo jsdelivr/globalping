@@ -46,6 +46,7 @@ describe('Adoption code', () => {
 					nodeVersion: 'v18.17.0',
 					hardwareDevice: null,
 					status: 'initializing',
+					systemTags: [ 'datacenter-network' ],
 					city: 'Dallas',
 					state: 'TX',
 					country: 'US',
