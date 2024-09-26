@@ -53,7 +53,7 @@ export const rateLimitMW = async (ctx: ExtendedContext, next: Next) => {
 		await rateLimiter.consume(id);
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
-			setRateLimitHeaders(ctx, error, rateLimiter);
+			setRateLimitHeaders(ctx, error);
 			throw createHttpError(429, 'Too Many Requests', { type: 'too_many_requests' });
 		}
 
@@ -63,5 +63,6 @@ export const rateLimitMW = async (ctx: ExtendedContext, next: Next) => {
 	await next();
 };
 
-const setRateLimitHeaders = (ctx: ExtendedContext, result: RateLimiterRes, rateLimiter: RateLimiterRedis) => {
+const setRateLimitHeaders = (ctx: ExtendedContext, error: RateLimiterRes) => {
+	ctx.set('Retry-After', `${Math.round(error.msBeforeNext / 1000)}`);
 };
