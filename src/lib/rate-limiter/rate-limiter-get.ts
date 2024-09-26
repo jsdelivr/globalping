@@ -22,7 +22,7 @@ export const authenticatedRateLimiter = new RateLimiterRedis({
 	duration: config.get<number>('measurement.rateLimit.get.reset'),
 });
 
-const getRateLimiter = (ctx: ExtendedContext): {
+const getRateLimiter = (ctx: ExtendedContext, extraId?: string): {
 	type: 'user'| 'ip',
 	id: string,
 	rateLimiter: RateLimiterRedis
@@ -30,24 +30,25 @@ const getRateLimiter = (ctx: ExtendedContext): {
 	if (ctx.state.user?.id) {
 		return {
 			type: 'user',
-			id: ctx.state.user.id,
+			id: extraId ? `${ctx.state.user.id}:${extraId}` : ctx.state.user.id,
 			rateLimiter: authenticatedRateLimiter,
 		};
 	}
 
+	const ip = requestIp.getClientIp(ctx.req) ?? '';
 	return {
 		type: 'ip',
-		id: requestIp.getClientIp(ctx.req) ?? '',
+		id: extraId ? `${ip}:${extraId}` : ip,
 		rateLimiter: anonymousRateLimiter,
 	};
 };
 
-export const rateLimitMW = async (ctx: ExtendedContext, next: Next) => {
+export const getMeasurementRateLimit = async (ctx: ExtendedContext, next: Next) => {
 	if (ctx['isAdmin']) {
 		return next();
 	}
 
-	const { rateLimiter, id } = getRateLimiter(ctx);
+	const { rateLimiter, id } = getRateLimiter(ctx, ctx.params['id']);
 
 	try {
 		await rateLimiter.consume(id);
