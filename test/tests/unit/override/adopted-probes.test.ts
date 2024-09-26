@@ -14,10 +14,11 @@ describe('AdoptedProbes', () => {
 		uuid: '1-1-1-1-1',
 		lastSyncDate: new Date(),
 		tags: '[{"prefix":"jimaek","value":"dashboardtag"}]',
+		systemTags: '["datacenter-network"]',
 		isCustomCity: 0,
 		status: 'ready',
-		isIPv4Supported: true,
-		isIPv6Supported: true,
+		isIPv4Supported: 1,
+		isIPv6Supported: 1,
 		version: '0.26.0',
 		nodeVersion: 'v18.17.0',
 		hardwareDevice: null,
@@ -55,7 +56,10 @@ describe('AdoptedProbes', () => {
 		},
 		isHardware: false,
 		hardwareDevice: null,
-		tags: [],
+		tags: [{
+			type: 'system',
+			value: 'datacenter-network',
+		}],
 		index: [],
 		client: '',
 		host: '',
@@ -234,6 +238,9 @@ describe('AdoptedProbes', () => {
 				nodeVersion: 'v18.17.1',
 				isHardware: true,
 				hardwareDevice: 'v1',
+				tags: [
+					{ type: 'system', value: 'eyeball-network' },
+				],
 				location: {
 					continent: 'EU',
 					region: 'Northern Europe',
@@ -261,6 +268,7 @@ describe('AdoptedProbes', () => {
 			version: '0.27.0',
 			nodeVersion: 'v18.17.1',
 			hardwareDevice: 'v1',
+			systemTags: '["eyeball-network"]',
 			asn: 20473,
 			network: 'The Constant Company, LLC',
 			country: 'GB',
@@ -272,7 +280,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should update country and send notification if country of the probe changes', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchProbesWithAdminData);
-		selectStub.resolves([{ ...defaultAdoptedProbe, countryOfCustomCity: 'IE', isCustomCity: true }]);
+		selectStub.resolves([{ ...defaultAdoptedProbe, countryOfCustomCity: 'IE', isCustomCity: 1 }]);
 
 		fetchProbesWithAdminData.resolves([
 			{
@@ -286,6 +294,9 @@ describe('AdoptedProbes', () => {
 				nodeVersion: 'v18.17.0',
 				isHardware: false,
 				hardwareDevice: null,
+				tags: [
+					{ type: 'system', value: 'datacenter-network' },
+				],
 				location: {
 					continent: 'EU',
 					region: 'Northern Europe',
@@ -329,7 +340,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should partially update probe meta info if it is outdated and "isCustomCity: true"', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchProbesWithAdminData);
-		selectStub.resolves([{ ...defaultAdoptedProbe, countryOfCustomCity: 'IE', isCustomCity: true }]);
+		selectStub.resolves([{ ...defaultAdoptedProbe, countryOfCustomCity: 'IE', isCustomCity: 1 }]);
 
 		fetchProbesWithAdminData.resolves([
 			{
@@ -343,6 +354,9 @@ describe('AdoptedProbes', () => {
 				nodeVersion: 'v18.17.0',
 				isHardware: false,
 				hardwareDevice: null,
+				tags: [
+					{ type: 'system', value: 'datacenter-network' },
+				],
 				location: {
 					continent: 'EU',
 					region: 'Northern Europe',
@@ -401,7 +415,15 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		const adoptedProbe = adoptedProbes.getByIp('1.1.1.1');
-		expect(adoptedProbe).to.deep.equal({ ...defaultAdoptedProbe, altIps: [], tags: [{ type: 'user', value: 'u-jimaek-dashboardtag' }], isCustomCity: false });
+		expect(adoptedProbe).to.deep.equal({
+			...defaultAdoptedProbe,
+			altIps: [],
+			systemTags: [ 'datacenter-network' ],
+			tags: [{ type: 'user', value: 'u-jimaek-dashboardtag' }],
+			isCustomCity: false,
+			isIPv4Supported: true,
+			isIPv6Supported: true,
+		});
 	});
 
 	it('getUpdatedLocation method should return updated location', async () => {
@@ -410,7 +432,7 @@ describe('AdoptedProbes', () => {
 			...defaultAdoptedProbe,
 			city: 'Dundalk',
 			countryOfCustomCity: 'IE',
-			isCustomCity: true,
+			isCustomCity: 1,
 			latitude: 54,
 			longitude: -6.41667,
 		}]);
@@ -439,7 +461,7 @@ describe('AdoptedProbes', () => {
 			country: 'IE',
 			countryOfCustomCity: 'GB',
 			city: 'London',
-			isCustomCity: true,
+			isCustomCity: 1,
 			latitude: 51.50853,
 			longitude: -0.12574,
 		}]);
@@ -454,7 +476,7 @@ describe('AdoptedProbes', () => {
 		selectStub.resolves([{
 			...defaultAdoptedProbe,
 			city: 'Dundalk',
-			isCustomCity: false,
+			isCustomCity: 0,
 			latitude: 54,
 			longitude: -6.41667,
 		}]);
@@ -469,7 +491,10 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
-		expect(updatedTags).to.deep.equal([{ type: 'user', value: 'u-jimaek-dashboardtag' }]);
+		expect(updatedTags).to.deep.equal([
+			{ type: 'system', value: 'datacenter-network' },
+			{ type: 'user', value: 'u-jimaek-dashboardtag' },
+		]);
 	});
 
 	it('getUpdatedTags method should return same tags array if user tags are empty', async () => {

@@ -21,6 +21,7 @@ const handle = async (ctx: Context): Promise<void> => {
 		nodeVersion: probe.nodeVersion,
 		hardwareDevice: probe.hardwareDevice,
 		status: probe.status,
+		systemTags: probe.tags.filter(({ type }) => type === 'system').map(({ value }) => value),
 		city: probe.location.city,
 		state: probe.location.state,
 		country: probe.location.country,
