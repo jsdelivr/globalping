@@ -55,7 +55,7 @@ export const getMeasurementRateLimit = async (ctx: ExtendedContext, next: Next) 
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
 			setRateLimitHeaders(ctx, error);
-			throw createHttpError(429, 'Too Many Requests', { type: 'too_many_requests' });
+			throw createHttpError(429, 'Too Many Requests.', { type: 'too_many_requests' });
 		}
 
 		throw createHttpError(500);

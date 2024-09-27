@@ -105,8 +105,13 @@ paths:
           $ref: 'components/responses.yaml#/components/responses/measurement200'
         '404':
           $ref: 'components/responses.yaml#/components/responses/404'
+        '429':
+          $ref: 'components/responses.yaml#/components/responses/measurement429'
       tags:
         - Measurements
+      security:
+        - {}
+        - bearerAuth: []
   /v1/probes:
     get:
       summary: List probes currently online

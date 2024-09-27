@@ -41,3 +41,8 @@ components:
       required: false
       schema:
         type: integer
+    RetryAfter:
+      description: The number of seconds remaining until the request of this measurement is available again.
+      required: true
+      schema:
+        type: integer

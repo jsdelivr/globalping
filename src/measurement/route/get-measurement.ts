@@ -4,6 +4,7 @@ import { getMeasurementStore } from '../store.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 import { authenticate } from '../../lib/http/middleware/authenticate.js';
 import { getMeasurementRateLimit } from '../../lib/rate-limiter/rate-limiter-get.js';
+import createHttpError from 'http-errors';
 
 const store = getMeasurementStore();
 
@@ -18,8 +19,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 	const result = await store.getMeasurementString(id);
 
 	if (!result) {
-		ctx.status = 404;
-		return;
+		throw createHttpError(404, `Couldn't find the requested item.`, { type: 'not_found' });
 	}
 
 	ctx.type = 'application/json';
