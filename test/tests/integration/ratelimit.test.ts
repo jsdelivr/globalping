@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { anonymousRateLimiter as anonymousPostRateLimiter, authenticatedRateLimiter as authenticatedPostRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-post.js';
-import { anonymousRateLimiter as anonymousGetRateLimiter, authenticatedRateLimiter as authenticatedGetRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-get.js';
+import { rateLimiter as getRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-get.js';
 import { client } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
 import { CREDITS_TABLE } from '../../../src/lib/credits.js';
@@ -49,14 +49,12 @@ describe('rate limiter', () => {
 
 
 	afterEach(async () => {
-		const [ anonGetKeys, authGetKeys ] = await Promise.all([
-			await redis.keys(`rate:get:anon:${clientIpv6}:*`),
-			await redis.keys('rate:get:auth:89da69bd-a236-4ab7-9c5d-b5f52ce09959:*'),
+		const [ getKeys ] = await Promise.all([
+			await redis.keys(`rate:get:${clientIpv6}:*`),
 			await anonymousPostRateLimiter.delete(clientIpv6),
 			await authenticatedPostRateLimiter.delete('89da69bd-a236-4ab7-9c5d-b5f52ce09959'),
 		]);
 
-		const getKeys = [ ...anonGetKeys, ...authGetKeys ];
 		getKeys.length && await redis.del(getKeys);
 	});
 
@@ -172,7 +170,7 @@ describe('rate limiter', () => {
 					type: 'ping',
 					target: 'jsdelivr.com',
 				}).expect(202) as Response;
-			await anonymousGetRateLimiter.set(`${clientIpv6}:${id}`, 999, 0);
+			await getRateLimiter.set(`${clientIpv6}:${id}`, 999, 0);
 			const response = await requestAgent.get(`/v1/measurements/${id}`).send().expect(200) as Response;
 
 			expect(response.headers['Retry-After']).to.not.exist;
@@ -220,7 +218,7 @@ describe('rate limiter', () => {
 					type: 'ping',
 					target: 'jsdelivr.com',
 				}).expect(202) as Response;
-			await anonymousGetRateLimiter.set(`${clientIpv6}:${id}`, 1000, 0);
+			await getRateLimiter.set(`${clientIpv6}:${id}`, 1000, 0);
 			const response = await requestAgent.get(`/v1/measurements/${id}`).send().expect(429) as Response;
 
 			expect(response.headers['retry-after']).to.equal('5');
@@ -268,13 +266,13 @@ describe('rate limiter', () => {
 			expect(response.headers['x-ratelimit-remaining']).to.equal('1');
 		});
 
-		it('should fail and include Retry-After header (GET measurement)', async () => {
+		it('should fail and include Retry-After header if ip limit is applied (GET measurement)', async () => {
 			const { body: { id } } = await requestAgent.post('/v1/measurements')
 				.send({
 					type: 'ping',
 					target: 'jsdelivr.com',
 				}).expect(202) as Response;
-			await authenticatedGetRateLimiter.set(`89da69bd-a236-4ab7-9c5d-b5f52ce09959:${id}`, 1000, 0);
+			await getRateLimiter.set(`${clientIpv6}:${id}`, 1000, 0);
 			const response = await requestAgent.get(`/v1/measurements/${id}`)
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send().expect(429) as Response;

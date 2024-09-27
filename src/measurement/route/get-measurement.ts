@@ -1,8 +1,6 @@
 import type { DefaultContext, DefaultState, ParameterizedContext } from 'koa';
 import type Router from '@koa/router';
 import { getMeasurementStore } from '../store.js';
-import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
-import { authenticate } from '../../lib/http/middleware/authenticate.js';
 import { getMeasurementRateLimit } from '../../lib/rate-limiter/rate-limiter-get.js';
 import createHttpError from 'http-errors';
 
@@ -27,5 +25,5 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 };
 
 export const registerGetMeasurementRoute = (router: Router): void => {
-	router.get('/measurements/:id', '/measurements/:id([a-zA-Z0-9]+)', corsAuthHandler(), authenticate(), getMeasurementRateLimit, handle);
+	router.get('/measurements/:id', '/measurements/:id([a-zA-Z0-9]+)', getMeasurementRateLimit, handle);
 };

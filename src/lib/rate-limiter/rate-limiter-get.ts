@@ -8,49 +8,22 @@ import type { Next } from 'koa';
 
 const redisClient = getPersistentRedisClient();
 
-export const anonymousRateLimiter = new RateLimiterRedis({
+export const rateLimiter = new RateLimiterRedis({
 	storeClient: redisClient,
-	keyPrefix: 'rate:get:anon',
-	points: config.get<number>('measurement.rateLimit.get.anonymousLimit'),
-	duration: config.get<number>('measurement.rateLimit.get.reset'),
+	keyPrefix: 'rate:get',
+	points: config.get<number>('measurement.rateLimit.getPerMeasurement.limit'),
+	duration: config.get<number>('measurement.rateLimit.getPerMeasurement.reset'),
 	blockDuration: 5,
 });
-
-export const authenticatedRateLimiter = new RateLimiterRedis({
-	storeClient: redisClient,
-	keyPrefix: 'rate:get:auth',
-	points: config.get<number>('measurement.rateLimit.get.authenticatedLimit'),
-	duration: config.get<number>('measurement.rateLimit.get.reset'),
-	blockDuration: 5,
-});
-
-const getRateLimiter = (ctx: ExtendedContext, extraId?: string): {
-	type: 'user'| 'ip',
-	id: string,
-	rateLimiter: RateLimiterRedis
-} => {
-	if (ctx.state.user?.id) {
-		return {
-			type: 'user',
-			id: extraId ? `${ctx.state.user.id}:${extraId}` : ctx.state.user.id,
-			rateLimiter: authenticatedRateLimiter,
-		};
-	}
-
-	const ip = requestIp.getClientIp(ctx.req) ?? '';
-	return {
-		type: 'ip',
-		id: extraId ? `${ip}:${extraId}` : ip,
-		rateLimiter: anonymousRateLimiter,
-	};
-};
 
 export const getMeasurementRateLimit = async (ctx: ExtendedContext, next: Next) => {
 	if (ctx['isAdmin']) {
 		return next();
 	}
 
-	const { rateLimiter, id } = getRateLimiter(ctx, ctx.params['id']);
+	const ip = requestIp.getClientIp(ctx.req) ?? '';
+	const measurementId = ctx.params['id'] ?? '';
+	const id = `${ip}:${measurementId}`;
 
 	try {
 		await rateLimiter.consume(id);

@@ -72,9 +72,8 @@ module.exports = {
 				authenticatedLimit: 250,
 				reset: 3600,
 			},
-			get: {
-				anonymousLimit: 5,
-				authenticatedLimit: 5,
+			getPerMeasurement: {
+				limit: 5,
 				reset: 2,
 			},
 		},
