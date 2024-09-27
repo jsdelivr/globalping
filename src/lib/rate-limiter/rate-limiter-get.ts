@@ -13,6 +13,7 @@ export const anonymousRateLimiter = new RateLimiterRedis({
 	keyPrefix: 'rate:get:anon',
 	points: config.get<number>('measurement.rateLimit.get.anonymousLimit'),
 	duration: config.get<number>('measurement.rateLimit.get.reset'),
+	blockDuration: 5,
 });
 
 export const authenticatedRateLimiter = new RateLimiterRedis({
@@ -20,6 +21,7 @@ export const authenticatedRateLimiter = new RateLimiterRedis({
 	keyPrefix: 'rate:get:auth',
 	points: config.get<number>('measurement.rateLimit.get.authenticatedLimit'),
 	duration: config.get<number>('measurement.rateLimit.get.reset'),
+	blockDuration: 5,
 });
 
 const getRateLimiter = (ctx: ExtendedContext, extraId?: string): {

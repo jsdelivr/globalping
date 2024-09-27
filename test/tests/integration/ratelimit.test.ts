@@ -223,7 +223,7 @@ describe('rate limiter', () => {
 			await anonymousGetRateLimiter.set(`${clientIpv6}:${id}`, 1000, 0);
 			const response = await requestAgent.get(`/v1/measurements/${id}`).send().expect(429) as Response;
 
-			expect(response.headers['retry-after']).to.equal('2');
+			expect(response.headers['retry-after']).to.equal('5');
 		});
 	});
 
@@ -274,13 +274,12 @@ describe('rate limiter', () => {
 					type: 'ping',
 					target: 'jsdelivr.com',
 				}).expect(202) as Response;
-			console.log(id);
 			await authenticatedGetRateLimiter.set(`89da69bd-a236-4ab7-9c5d-b5f52ce09959:${id}`, 1000, 0);
 			const response = await requestAgent.get(`/v1/measurements/${id}`)
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send().expect(429) as Response;
 
-			expect(response.headers['retry-after']).to.equal('2');
+			expect(response.headers['retry-after']).to.equal('5');
 		});
 	});
 
