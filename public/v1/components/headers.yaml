@@ -42,7 +42,7 @@ components:
       schema:
         type: integer
     RetryAfter:
-      description: The number of seconds remaining until the request of this measurement is available again.
+      description: The number of seconds to wait before retrying this request.
       required: true
       schema:
         type: integer
