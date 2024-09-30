@@ -1306,6 +1306,9 @@ components:
         issuer:
           $ref: 'schemas.yaml#/components/schemas/TlsCertificateIssuer'
         keyType:
+          type:
+            - string
+            - 'null'
           enum:
             - RSA
             - EC

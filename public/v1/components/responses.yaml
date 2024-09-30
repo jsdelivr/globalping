@@ -39,7 +39,7 @@ components:
                     measurement: '\"measurement\" does not match any of the allowed types'
     '404':
       description: |
-        If the API couldn't find the requested resource, it returns status `400 Not Found`
+        If the API couldn't find the requested resource, it returns status `404 Not Found`
         and a body containing more information about the error.
       content:
         application/json:
