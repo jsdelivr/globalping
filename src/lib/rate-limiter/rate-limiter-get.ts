@@ -29,8 +29,11 @@ export const getMeasurementRateLimit = async (ctx: ExtendedContext, next: Next) 
 		await rateLimiter.consume(id);
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
+			const retryAfter = Math.ceil(error.msBeforeNext / 1000);
+			const units = retryAfter === 1 ? 'second' : 'seconds';
+
 			setRateLimitHeaders(ctx, error);
-			throw createHttpError(429, 'Too Many Requests.', { type: 'too_many_requests' });
+			throw createHttpError(429, `Too many requests. Please retry in ${retryAfter} ${units}.`, { type: 'too_many_requests' });
 		}
 
 		throw createHttpError(500);
@@ -40,5 +43,5 @@ export const getMeasurementRateLimit = async (ctx: ExtendedContext, next: Next) 
 };
 
 const setRateLimitHeaders = (ctx: ExtendedContext, error: RateLimiterRes) => {
-	ctx.set('Retry-After', `${Math.round(error.msBeforeNext / 1000)}`);
+	ctx.set('Retry-After', `${Math.ceil(error.msBeforeNext / 1000)}`);
 };

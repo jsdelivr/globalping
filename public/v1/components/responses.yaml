@@ -197,7 +197,7 @@ components:
               value:
                 error:
                   type: too_many_requests
-                  message: Too Many Requests.
+                  message: Too many requests. Please retry in 4 seconds.
     probes200:
       description: |
         A successful request returns status `200 OK` and a body containing a list of all probes currently online and their metadata.
