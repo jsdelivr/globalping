@@ -1,6 +1,8 @@
 import type { DefaultContext, DefaultState, ParameterizedContext } from 'koa';
 import type Router from '@koa/router';
 import { getMeasurementStore } from '../store.js';
+import { getMeasurementRateLimit } from '../../lib/rate-limiter/rate-limiter-get.js';
+import createHttpError from 'http-errors';
 
 const store = getMeasurementStore();
 
@@ -15,8 +17,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 	const result = await store.getMeasurementString(id);
 
 	if (!result) {
-		ctx.status = 404;
-		return;
+		throw createHttpError(404, `Couldn't find the requested measurement.`, { type: 'not_found' });
 	}
 
 	ctx.type = 'application/json';
@@ -24,5 +25,5 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 };
 
 export const registerGetMeasurementRoute = (router: Router): void => {
-	router.get('/measurements/:id', '/measurements/:id([a-zA-Z0-9]+)', handle);
+	router.get('/measurements/:id', '/measurements/:id([a-zA-Z0-9]+)', getMeasurementRateLimit, handle);
 };

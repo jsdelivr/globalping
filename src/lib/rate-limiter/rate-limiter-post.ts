@@ -1,25 +1,25 @@
 import config from 'config';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 import requestIp from 'request-ip';
-import { getPersistentRedisClient } from './redis/persistent-client.js';
+import { getPersistentRedisClient } from '../redis/persistent-client.js';
 import createHttpError from 'http-errors';
-import type { ExtendedContext } from '../types.js';
-import { credits } from './credits.js';
+import type { ExtendedContext } from '../../types.js';
+import { credits } from '../credits.js';
 
 const redisClient = getPersistentRedisClient();
 
 export const anonymousRateLimiter = new RateLimiterRedis({
 	storeClient: redisClient,
-	keyPrefix: 'rate:anon',
-	points: config.get<number>('measurement.anonymousRateLimit'),
-	duration: config.get<number>('measurement.rateLimitReset'),
+	keyPrefix: 'rate:post:anon',
+	points: config.get<number>('measurement.rateLimit.post.anonymousLimit'),
+	duration: config.get<number>('measurement.rateLimit.post.reset'),
 });
 
 export const authenticatedRateLimiter = new RateLimiterRedis({
 	storeClient: redisClient,
-	keyPrefix: 'rate:auth',
-	points: config.get<number>('measurement.authenticatedRateLimit'),
-	duration: config.get<number>('measurement.rateLimitReset'),
+	keyPrefix: 'rate:post:auth',
+	points: config.get<number>('measurement.rateLimit.post.authenticatedLimit'),
+	duration: config.get<number>('measurement.rateLimit.post.reset'),
 });
 
 const getRateLimiter = (ctx: ExtendedContext): {
@@ -91,22 +91,22 @@ export const getRateLimitState = async (ctx: ExtendedContext) => {
 	} else if (type === 'user') {
 		return {
 			type,
-			limit: config.get<number>('measurement.authenticatedRateLimit'),
-			remaining: config.get<number>('measurement.authenticatedRateLimit'),
+			limit: config.get<number>('measurement.rateLimit.post.authenticatedLimit'),
+			remaining: config.get<number>('measurement.rateLimit.post.authenticatedLimit'),
 			reset: 0,
 		};
 	}
 
 	return {
 		type,
-		limit: config.get<number>('measurement.anonymousRateLimit'),
-		remaining: config.get<number>('measurement.anonymousRateLimit'),
+		limit: config.get<number>('measurement.rateLimit.post.anonymousLimit'),
+		remaining: config.get<number>('measurement.rateLimit.post.anonymousLimit'),
 		reset: 0,
 	};
 };
 
 const consumeCredits = async (userId: string, rateLimiterRes: RateLimiterRes, numberOfProbes: number) => {
-	const freeCredits = config.get<number>('measurement.authenticatedRateLimit');
+	const freeCredits = config.get<number>('measurement.rateLimit.post.authenticatedLimit');
 	const requiredCredits = Math.min(rateLimiterRes.consumedPoints - freeCredits, numberOfProbes);
 	const { isConsumed, remainingCredits } = await credits.consume(userId, requiredCredits);
 

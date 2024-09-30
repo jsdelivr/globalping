@@ -100,11 +100,16 @@ paths:
           1. Request the measurement to retrieve its status.
           2. If the status is `in-progress`, wait 500 milliseconds and start again at step 1. Note that it's important to wait 500 ms *after* receiving the response rather than using an "every 500ms" interval as for large measurements, the request itself may take a few hundred milliseconds to complete.
           3. If the status is anything **other** than `in-progress`, stop. The measurement is no longer running, and its results are final.
+
+        > **Important**: Do not query the results of a single measurement more often than every 500 milliseconds. Sending more than two
+        requests per second may trigger a rate limit and prevent you from accessing the results for a few seconds.
       responses:
         '200':
           $ref: 'components/responses.yaml#/components/responses/measurement200'
         '404':
           $ref: 'components/responses.yaml#/components/responses/404'
+        '429':
+          $ref: 'components/responses.yaml#/components/responses/measurement429'
       tags:
         - Measurements
   /v1/probes:

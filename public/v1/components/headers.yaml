@@ -41,3 +41,8 @@ components:
       required: false
       schema:
         type: integer
+    RetryAfter:
+      description: The number of seconds to wait before retrying this request.
+      required: true
+      schema:
+        type: integer

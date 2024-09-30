@@ -6,7 +6,7 @@ describe('/limits endpoint', () => {
 	const redis =	getPersistentRedisClient();
 
 	before(async () => {
-		const keys = await redis.keys('rate:anon:*');
+		const keys = await redis.keys('rate:post:anon:*');
 		await redis.del(keys);
 	});
 

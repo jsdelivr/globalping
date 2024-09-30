@@ -169,6 +169,35 @@ components:
               $ref: 'examples.yaml#/components/examples/getMtrMeasurementResponse'
             httpMeasurement:
               $ref: 'examples.yaml#/components/examples/getHttpMeasurementResponse'
+    measurement429:
+      description: |
+        If you've exceeded the API rate limit, you'll receive status `429 Too Many Requests` and a body containing more information about the error.
+      headers:
+        Retry-After:
+          $ref: 'headers.yaml#/components/headers/RetryAfter'
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - error
+            properties:
+              error:
+                type: object
+                required:
+                  - type
+                  - message
+                properties:
+                  type:
+                    type: string
+                  message:
+                    type: string
+          examples:
+            json:
+              value:
+                error:
+                  type: too_many_requests
+                  message: Too many requests. Please retry in 4 seconds.
     probes200:
       description: |
         A successful request returns status `200 OK` and a body containing a list of all probes currently online and their metadata.

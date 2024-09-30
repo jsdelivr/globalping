@@ -4,15 +4,18 @@ import requestIp from 'request-ip';
 import { expect } from 'chai';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
-import { anonymousRateLimiter, authenticatedRateLimiter } from '../../../src/lib/rate-limiter.js';
+import { anonymousRateLimiter as anonymousPostRateLimiter, authenticatedRateLimiter as authenticatedPostRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-post.js';
+import { rateLimiter as getRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-get.js';
 import { client } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
 import { CREDITS_TABLE } from '../../../src/lib/credits.js';
+import { getPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
 
 describe('rate limiter', () => {
 	let app: Server;
 	let requestAgent: any;
 	let clientIpv6: string;
+	const redis = getPersistentRedisClient();
 
 	before(async () => {
 		app = await getTestServer();
@@ -46,8 +49,13 @@ describe('rate limiter', () => {
 
 
 	afterEach(async () => {
-		await anonymousRateLimiter.delete(clientIpv6);
-		await authenticatedRateLimiter.delete('89da69bd-a236-4ab7-9c5d-b5f52ce09959');
+		const [ getKeys ] = await Promise.all([
+			await redis.keys(`rate:get:${clientIpv6}:*`),
+			await anonymousPostRateLimiter.delete(clientIpv6),
+			await authenticatedPostRateLimiter.delete('89da69bd-a236-4ab7-9c5d-b5f52ce09959'),
+		]);
+
+		getKeys.length && await redis.del(getKeys);
 	});
 
 	after(async () => {
@@ -155,11 +163,23 @@ describe('rate limiter', () => {
 			expect(response2.headers['x-ratelimit-reset']).to.equal('3600');
 			expect(response.headers['x-request-cost']).to.equal('1');
 		});
+
+		it('should NOT include headers (GET measurement)', async () => {
+			const { body: { id } } = await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'jsdelivr.com',
+				}).expect(202) as Response;
+			await getRateLimiter.set(`${clientIpv6}:${id}`, 999, 0);
+			const response = await requestAgent.get(`/v1/measurements/${id}`).send().expect(200) as Response;
+
+			expect(response.headers['Retry-After']).to.not.exist;
+		});
 	});
 
 	describe('anonymous access', () => {
 		it('should succeed (limit not reached)', async () => {
-			await anonymousRateLimiter.set(clientIpv6, 0, 0);
+			await anonymousPostRateLimiter.set(clientIpv6, 0, 0);
 
 			const response = await requestAgent.post('/v1/measurements').send({
 				type: 'ping',
@@ -170,7 +190,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should fail (limit reached)', async () => {
-			await anonymousRateLimiter.set(clientIpv6, 100000, 0);
+			await anonymousPostRateLimiter.set(clientIpv6, 100000, 0);
 
 			const response = await requestAgent.post('/v1/measurements').send({
 				type: 'ping',
@@ -181,7 +201,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should consume all points successfully or none at all (cost > remaining > 0)', async () => {
-			await anonymousRateLimiter.set(clientIpv6, 99999, 0); // 1 remaining
+			await anonymousPostRateLimiter.set(clientIpv6, 99999, 0); // 1 remaining
 
 			const response = await requestAgent.post('/v1/measurements').send({
 				type: 'ping',
@@ -191,11 +211,23 @@ describe('rate limiter', () => {
 
 			expect(response.headers['x-ratelimit-remaining']).to.equal('1');
 		});
+
+		it('should fail and include Retry-After header (GET measurement)', async () => {
+			const { body: { id } } = await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'jsdelivr.com',
+				}).expect(202) as Response;
+			await getRateLimiter.set(`${clientIpv6}:${id}`, 1000, 0);
+			const response = await requestAgent.get(`/v1/measurements/${id}`).send().expect(429) as Response;
+
+			expect(response.headers['retry-after']).to.equal('5');
+		});
 	});
 
 	describe('authenticated access', () => {
 		it('should succeed (limit not reached)', async () => {
-			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 0, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 0, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -208,7 +240,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should fail (limit reached)', async () => {
-			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -221,7 +253,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should consume all points successfully or none at all (cost > remaining > 0)', async () => {
-			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 249, 0); // 1 remaining
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 249, 0); // 1 remaining
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -232,6 +264,20 @@ describe('rate limiter', () => {
 				}).expect(429) as Response;
 
 			expect(response.headers['x-ratelimit-remaining']).to.equal('1');
+		});
+
+		it('should fail and include Retry-After header if ip limit is applied (GET measurement)', async () => {
+			const { body: { id } } = await requestAgent.post('/v1/measurements')
+				.send({
+					type: 'ping',
+					target: 'jsdelivr.com',
+				}).expect(202) as Response;
+			await getRateLimiter.set(`${clientIpv6}:${id}`, 1000, 0);
+			const response = await requestAgent.get(`/v1/measurements/${id}`)
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
+				.send().expect(429) as Response;
+
+			expect(response.headers['retry-after']).to.equal('5');
 		});
 	});
 
@@ -246,7 +292,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should consume free credits before paid credits', async () => {
-			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 0, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 0, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -266,7 +312,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should consume credits after limit is reached', async () => {
-			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -286,7 +332,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should consume part from free credits and part from paid credits if possible', async () => {
-			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 249, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 249, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -306,7 +352,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should not consume paid credits if there are not enough to satisfy the request', async () => {
-			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
 
 			await client(CREDITS_TABLE).update({
 				amount: 1,
@@ -332,7 +378,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should not consume more paid credits than the cost of the full request', async () => {
-			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 255, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 255, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -352,7 +398,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should not consume free credits if there are not enough to satisfy the request', async () => {
-			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 249, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 249, 0);
 
 			await client(CREDITS_TABLE).update({
 				amount: 0,
@@ -378,7 +424,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should work fine if there is no credits row for that user', async () => {
-			await authenticatedRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
 
 			await client(CREDITS_TABLE).where({
 				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',

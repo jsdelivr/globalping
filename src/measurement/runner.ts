@@ -8,7 +8,7 @@ import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
 import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage, UserRequest } from './types.js';
-import { rateLimit } from '../lib/rate-limiter.js';
+import { rateLimit } from '../lib/rate-limiter/rate-limiter-post.js';
 import type { ExtendedContext } from '../types.js';
 
 export class MeasurementRunner {
@@ -58,10 +58,10 @@ export class MeasurementRunner {
 	}
 
 	private sendToProbes (measurementId: string, onlineProbesMap: Map<number, Probe>, request: MeasurementRequest) {
-		let inProgressProbes = 0;
-		const maxInProgressProbes = config.get<number>('measurement.maxInProgressProbes');
+		let inProgressTests = 0;
+		const maxInProgressTests = config.get<number>('measurement.maxInProgressTests');
 		onlineProbesMap.forEach((probe, index) => {
-			const inProgressUpdates = request.inProgressUpdates && inProgressProbes++ < maxInProgressProbes;
+			const inProgressUpdates = request.inProgressUpdates && inProgressTests++ < maxInProgressTests;
 			this.io.of(PROBES_NAMESPACE).to(probe.client).emit('probe:measurement:request', {
 				measurementId,
 				testId: index.toString(),
