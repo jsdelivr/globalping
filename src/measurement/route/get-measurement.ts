@@ -17,7 +17,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 	const result = await store.getMeasurementString(id);
 
 	if (!result) {
-		throw createHttpError(404, `Couldn't find the requested item.`, { type: 'not_found' });
+		throw createHttpError(404, `Couldn't find the requested measurement.`, { type: 'not_found' });
 	}
 
 	ctx.type = 'application/json';
