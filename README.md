@@ -27,9 +27,9 @@ Many users will likely prefer alternative ways to use the platform rather than w
 - [Web tools](#web-based-tools---globalping-website) for on-the-go testing and visual presentations
 - [Slack app](#slack-app) for bringing network testing capabilities into your Slack workspace
 - [GitHub bot](#github-bot) for adding network test results to public GitHub issues
-- [Find more integrations on our website](https://www.jsdelivr.com/globalping/integrations)
+- [Find more integrations on our website](https://globalping.io/integrations)
 
-Learn more about Globalping on [www.jsdelivr.com/globalping](https://www.jsdelivr.com/globalping)
+Learn more about Globalping on [globalping.io](https://globalping.io)
 
 ## Our major sponsors
 We thank our sponsors who contribute to the development of Globalping and help us expand our probe network!
@@ -48,8 +48,8 @@ Here are some ways you can help:
 ##  Quick start – Run your first tests
 Whether you're new to network testing or are a seasoned pro, getting started with Globalping is straightforward. Let's check out how you can run your first tests using our various tools and integrations:
 
-### [Web-based tools - Globalping website](https://www.jsdelivr.com/globalping)
-[![globalping latency test from google cloud](https://github.com/jsdelivr/globalping/assets/1834071/760c9031-9292-4e2a-9901-68ef7f0745ca)](https://www.jsdelivr.com/globalping)
+### [Web-based tools - Globalping website](https://globalping.io)
+[![globalping latency test from google cloud](https://github.com/jsdelivr/globalping/assets/1834071/760c9031-9292-4e2a-9901-68ef7f0745ca)](https://globalping.io)
 
 Our website offers the fastest way to get started. Run tests instantly from anywhere and experiment with the different options for different test types. For each test, you can view the probes used on a map and get a detailed view of the individual test results below.
 

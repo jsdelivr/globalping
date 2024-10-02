@@ -23,7 +23,6 @@ import { errorHandlerMw } from './middleware/error-handler.js';
 import { corsHandler } from './middleware/cors.js';
 import { isAdminMw } from './middleware/is-admin.js';
 import { isSystemMw } from './middleware/is-system.js';
-import domainRedirect from './middleware/domain-redirect.js';
 import { docsLink } from './middleware/docs-link.js';
 import type { CustomContext } from '../../types.js';
 import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternative-ip.js';
@@ -74,7 +73,6 @@ registerHealthRoute(healthRouter);
 
 app
 	.use(responseTime())
-	.use(domainRedirect())
 	.use(koaFavicon(`${publicPath}/favicon.ico`))
 	.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }))
 	.use(conditionalGet())
