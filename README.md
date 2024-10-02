@@ -320,33 +320,33 @@ Notes on probe security and customization
 
 Learn more in the [Globalping Probe respository](https://github.com/jsdelivr/globalping-probe).
 
-## Limits | WIP
+## Limits
 Our platform has multiple limits to prevent abusive behaviour while motivating people to contribute to the sustainability of our platform. Here's an overview:
 
 #### Global limits
-These limits apply per IP address for all Globalping users:
+These limits apply per IP address to all Globalping users:
 
-- 100 POST requests per minute per IP. No GET limits are implemented to support "real-time" use cases.
-- A single measurement is limited to 200 probes per location and 500 total probes.
+- 100 POST requests per minute.
+- 2 GET requests per second per measurement.
 
 #### Unauthenticated users
 Anyone can connect to and use our API without requiring any credentials.
 For users without authentication, we limit the number of tests an IP address can run:
 
-- 100 tests per hour
+- 250 tests per hour
 
 >[!note]
 > A test is defined as a successful measurement the platform runs and returns to the user. For example, a limit of 10 tests means that users can either run 10 measurements with the probe limit set to 1 per measurement or a single measurement with the probe limit set to 10.
 
-#### Registered jsDelivr users – Free
-All registered jsDelivr users get an API key for authentication, granting them higher limits:
+#### Registered users – Free
+All registered users get an API key for authentication, granting them higher limits:
 
-- 200 tests per hour
+- 500 tests per hour
 
 #### GitHub Sponsors
 As a GitHub Sponsor of jsDelivr, your contributions help us continue the development of all projects under the [jsDelivr Organization](https://github.com/jsdelivr).
 
-As a thanks, we upgrade your account to receive higher limits.
+As a thanks, you receive additional 2000 credits for every dollar donated (1 credit = 1 test above the hourly limit).
 
 #### Custom limits
 Feel free to reach out if you need a custom limit for your API key.
