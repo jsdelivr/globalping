@@ -31,6 +31,8 @@ Many users will likely prefer alternative ways to use the platform rather than w
 
 Learn more about Globalping on [globalping.io](https://globalping.io)
 
+Register on the [Globalping Dashboard](https://dash.globalping.io/)  to increase your limits and adopt probes to earn free credits!
+
 ## Our major sponsors
 We thank our sponsors who contribute to the development of Globalping and help us expand our probe network!
 
