@@ -7,6 +7,7 @@ import type { fetchProbesWithAdminData as serverFetchProbesWithAdminData } from 
 import type { Probe, ProbeLocation, Tag } from '../../probe/types.js';
 import { normalizeFromPublicName } from '../geoip/utils.js';
 import { getIndex } from '../location/location.js';
+import { countries } from 'countries-list';
 
 const logger = scopedLogger('adopted-probes');
 
@@ -16,6 +17,7 @@ export const NOTIFICATIONS_TABLE = 'directus_notifications';
 export type AdoptedProbe = {
 	userId: string;
 	ip: string;
+	name: string | null;
 	altIps: string[];
 	uuid: string | null;
 	lastSyncDate: Date;
@@ -378,13 +380,16 @@ export class AdoptedProbes {
 	}
 
 	private async sendNotification (adoptedProbe: AdoptedProbe, connectedProbe: Probe) {
+		const newCountry = countries[connectedProbe.location.country as keyof typeof countries]?.name || connectedProbe.location.country;
+		const oldCountry = countries[adoptedProbe.country as keyof typeof countries]?.name || adoptedProbe.country;
+
 		await this.sql.raw(`
 			INSERT INTO ${NOTIFICATIONS_TABLE} (recipient, subject, message) SELECT :recipient, :subject, :message
 			WHERE NOT EXISTS (SELECT 1 FROM ${NOTIFICATIONS_TABLE} WHERE recipient = :recipient AND message = :message AND DATE(timestamp) = CURRENT_DATE)
 		`, {
 			recipient: adoptedProbe.userId,
-			subject: 'Adopted probe country change',
-			message: `Globalping API detected that your adopted probe with ip: ${adoptedProbe.ip} is located at "${connectedProbe.location.country}". So its country value changed from "${adoptedProbe.country}" to "${connectedProbe.location.country}", and custom city value "${adoptedProbe.city}" is not applied right now.\n\nIf this change is not right please report in [that issue](https://github.com/jsdelivr/globalping/issues/268).`,
+			subject: `Your probe's location has changed`,
+			message: `Globalping detected that your probe ${adoptedProbe.name ? `**${adoptedProbe.name}** ` : ''}with IP address **${adoptedProbe.ip}** has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoptedProbe.city}" is not applied anymore.\n\nIf this change is not right, please report in [this issue](https://github.com/jsdelivr/globalping/issues/268).`,
 		});
 	}
 
