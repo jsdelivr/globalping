@@ -345,6 +345,8 @@ All registered users get an API key for authentication, granting them higher lim
 
 - 500 tests per hour
 
+Register on our [Dashboard](https://dash.globalping.io/).
+
 #### GitHub Sponsors
 As a GitHub Sponsor of jsDelivr, your contributions help us continue the development of all projects under the [jsDelivr Organization](https://github.com/jsdelivr).
 
