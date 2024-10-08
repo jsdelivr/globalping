@@ -323,39 +323,43 @@ Notes on probe security and customization
 Learn more in the [Globalping Probe respository](https://github.com/jsdelivr/globalping-probe).
 
 ## Limits
-Our platform has multiple limits to prevent abusive behaviour while motivating people to contribute to the sustainability of our platform. Here's an overview:
+Our platform has multiple limits to prevent abusive behaviour while motivating people to contribute to the sustainability of the project. Here's an overview:
 
 #### Global limits
-These limits apply per IP address to all Globalping users:
+These limits apply per IP address to all users:
 
-- 100 POST requests per minute.
 - 2 GET requests per second per measurement.
 
 #### Unauthenticated users
-Anyone can connect to and use our API without requiring any credentials.
+Anyone can connect to and use our API without credentials.
 For users without authentication, we limit the number of tests an IP address can run:
 
 - 250 tests per hour
 
 >[!note]
-> A test is defined as a successful measurement the platform runs and returns to the user. For example, a limit of 10 tests means that users can either run 10 measurements with the probe limit set to 1 per measurement or a single measurement with the probe limit set to 10.
+> A test is defined as a successful measurement the platform runs from one probe. For example, a limit of 10 tests means that users can either run 10 measurements with the probe limit set to 1 per measurement or a single measurement with the probe limit set to 10.
 
 #### Registered users – Free
-All registered users get an API key for authentication, granting them higher limits:
+All registered users get an API key for authentication, granting them higher limits - register on our [Dashboard](https://dash.globalping.io/):
 
 - 500 tests per hour
 
-Register on our [Dashboard](https://dash.globalping.io/).
+Additionally, users hosting probes receive 150 credits per day for each probe.
+
+>[!note]
+> Credits allow you to run measurements above the hourly limits and are automatically
+> deducted from your account as needed. Each test above the limit costs one credit.
+> Credits have no expiration and keep accumulating in your account when you don't use them.
 
 #### GitHub Sponsors
 As a GitHub Sponsor of jsDelivr, your contributions help us continue the development of all projects under the [jsDelivr Organization](https://github.com/jsdelivr).
 
-As a thanks, you receive additional 2000 credits for every dollar donated (1 credit = 1 test above the hourly limit).
+As a thanks, you receive additional 2000 credits for every dollar donated.
 
 #### Custom limits
 Feel free to reach out if you need a custom limit for your API key.
 
-We're happy to provide higher limits for researchers, non-profits, and other open-source projects.
+We're happy to provide free credits for researchers, non-profits, and other open-source projects.
 
 ## Support and feedback
 If you are stuck or want to give us your feedback, please [open a new issue](https://github.com/jsdelivr/globalping/issues).
