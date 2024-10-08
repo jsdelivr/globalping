@@ -310,8 +310,12 @@ export class AdoptedProbes {
 		});
 
 		// if country of probe changes, but there is a custom city in prev country, send notification to user
-		if (updateObject['country'] && adoptedProbe.countryOfCustomCity && adoptedProbe.country === adoptedProbe.countryOfCustomCity) {
-			await this.sendNotification(adoptedProbe, connectedProbe);
+		if (updateObject['country']) {
+			if (adoptedProbe.countryOfCustomCity && adoptedProbe.country === adoptedProbe.countryOfCustomCity) {
+				await this.sendNotificationCityNotApplied(adoptedProbe, connectedProbe);
+			} else if (adoptedProbe.countryOfCustomCity && connectedProbe.location.country === adoptedProbe.countryOfCustomCity) {
+				await this.sendNotificationCityAppliedAgain(adoptedProbe, connectedProbe);
+			}
 		}
 
 		if (!_.isEmpty(updateObject)) {
@@ -379,18 +383,33 @@ export class AdoptedProbes {
 		this.adoptedIpToProbe.delete(ip);
 	}
 
-	private async sendNotification (adoptedProbe: AdoptedProbe, connectedProbe: Probe) {
-		const newCountry = countries[connectedProbe.location.country as keyof typeof countries]?.name || connectedProbe.location.country;
-		const oldCountry = countries[adoptedProbe.country as keyof typeof countries]?.name || adoptedProbe.country;
-
+	private async sendNotification (recipient: string, subject: string, message: string) {
 		await this.sql.raw(`
 			INSERT INTO ${NOTIFICATIONS_TABLE} (recipient, subject, message) SELECT :recipient, :subject, :message
 			WHERE NOT EXISTS (SELECT 1 FROM ${NOTIFICATIONS_TABLE} WHERE recipient = :recipient AND message = :message AND DATE(timestamp) = CURRENT_DATE)
-		`, {
-			recipient: adoptedProbe.userId,
-			subject: `Your probe's location has changed`,
-			message: `Globalping detected that your probe ${adoptedProbe.name ? `**${adoptedProbe.name}** ` : ''}with IP address **${adoptedProbe.ip}** has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoptedProbe.city}" is not applied anymore.\n\nIf this change is not right, please report in [this issue](https://github.com/jsdelivr/globalping/issues/268).`,
-		});
+		`, { recipient, subject, message });
+	}
+
+	private async sendNotificationCityNotApplied (adoptedProbe: AdoptedProbe, connectedProbe: Probe) {
+		const newCountry = countries[connectedProbe.location.country as keyof typeof countries]?.name || connectedProbe.location.country;
+		const oldCountry = countries[adoptedProbe.country as keyof typeof countries]?.name || adoptedProbe.country;
+
+		return this.sendNotification(
+			adoptedProbe.userId,
+			`Your probe's location has changed`,
+			`Globalping detected that your probe ${adoptedProbe.name ? `**${adoptedProbe.name}** ` : ''}with IP address **${adoptedProbe.ip}** has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoptedProbe.city}" is not applied anymore.\n\nIf this change is not right, please report in [this issue](https://github.com/jsdelivr/globalping/issues/268).`,
+		);
+	}
+
+	private async sendNotificationCityAppliedAgain (adoptedProbe: AdoptedProbe, connectedProbe: Probe) {
+		const newCountry = countries[connectedProbe.location.country as keyof typeof countries]?.name || connectedProbe.location.country;
+		const oldCountry = countries[adoptedProbe.country as keyof typeof countries]?.name || adoptedProbe.country;
+
+		return this.sendNotification(
+			adoptedProbe.userId,
+			`Your probe's location has changed back`,
+			`Globalping detected that your probe ${adoptedProbe.name ? `**${adoptedProbe.name}** ` : ''}with IP address **${adoptedProbe.ip}** has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoptedProbe.city}" is now applied again.`,
+		);
 	}
 
 	private isToday (date: Date) {

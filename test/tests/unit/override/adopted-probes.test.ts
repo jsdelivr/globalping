@@ -336,6 +336,63 @@ describe('AdoptedProbes', () => {
 				country: 'GB',
 			},
 		]);
+
+		selectStub.resolves([{ ...defaultAdoptedProbe, country: 'GB', countryOfCustomCity: 'IE', isCustomCity: 1 }]);
+
+		fetchProbesWithAdminData.resolves([
+			{
+				ipAddress: '1.1.1.1',
+				altIpAddresses: [] as string[],
+				uuid: '1-1-1-1-1',
+				status: 'initializing',
+				isIPv4Supported: false,
+				isIPv6Supported: false,
+				version: '0.27.0',
+				nodeVersion: 'v18.17.0',
+				isHardware: false,
+				hardwareDevice: null,
+				tags: [
+					{ type: 'system', value: 'datacenter-network' },
+				],
+				location: {
+					continent: 'EU',
+					region: 'Northern Europe',
+					country: 'IE',
+					state: null,
+					city: 'London',
+					asn: 20473,
+					latitude: 51.50853,
+					longitude: -0.12574,
+					network: 'The Constant Company, LLC',
+				},
+			} as Probe,
+		]);
+
+		await adoptedProbes.syncDashboardData();
+
+		expect(rawStub.callCount).to.equal(2);
+
+		expect(rawStub.args[1]![1]).to.deep.equal({
+			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
+			subject: `Your probe's location has changed back`,
+			message: 'Globalping detected that your probe with IP address **1.1.1.1** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
+		});
+
+		expect(whereStub.callCount).to.equal(2);
+		expect(whereStub.args[1]).to.deep.equal([{ ip: '1.1.1.1' }]);
+		expect(updateStub.callCount).to.equal(2);
+
+		expect(updateStub.args[1]).to.deep.equal([
+			{
+				status: 'initializing',
+				isIPv4Supported: false,
+				isIPv6Supported: false,
+				version: '0.27.0',
+				asn: 20473,
+				network: 'The Constant Company, LLC',
+				country: 'IE',
+			},
+		]);
 	});
 
 	it('class should partially update probe meta info if it is outdated and "isCustomCity: true"', async () => {
