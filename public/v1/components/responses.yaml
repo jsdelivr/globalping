@@ -92,7 +92,6 @@ components:
                   type: no_probes_found
                   message: No suitable probes found.
     measurements429:
-#      TODO: add Please review our [API rate limits](https://github.com/jsdelivr/globalping).
       description: |
         If you've exceeded the API rate limit, you'll receive status `429 Too Many Requests` and a body containing more information about the error.
       headers:

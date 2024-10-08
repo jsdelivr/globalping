@@ -2,14 +2,28 @@ openapi: 3.1.0
 info:
   title: Globalping API
   summary: The public Globalping API.
-  # TODO: update in https://github.com/jsdelivr/globalping/issues/475: However, it implements rate limits to ensure fair usage and reliability – see the "Limits" section in our [GitHub Readme](https://github.com/jsdelivr/globalping) to learn more about limits and how to increase them.
   description: |
     The Globalping API allows you to monitor, debug, and benchmark your internet infrastructure using a globally distributed network of probes.
 
     The API is public, free to use, and doesn't require authentication.
-    Additionally, the API is RESTful, accepts JSON-encoded request bodies, returns JSON-encoded responses, and uses standard HTTP response codes to indicate the success and failure of requests.
+    However, it implements rate limits to ensure fair usage and reliability, and some of the limits
+    are higher for authenticated users. Sign up on the [Globalping Dashboard](https://dash.globalping.io/) to enjoy the higher limits.
 
     Root endpoint: https://api.globalping.io
+
+    ## Limits and credits
+
+    | Operation | Unauthenticated user | Authenticated user |
+    |---|---|---|
+    | **Measurements** |||
+    | Create a measurement | 250 tests/hour | 500 tests/hour* |
+    | Get a measurement by ID | 2 requests/second/measurement | 2 requests/second/measurement |
+    | **Probes** |||
+    | List probes currently online | no limit | no limit |
+    | **Limits** |||
+    | Get current rate limits | no limit | no limit |
+
+    \*Additional measurements may be created by spending credits. Each test above the limit costs one credit. Learn more about credits on the [Globalping website](https://globalping.io/credits).
 
     ## Client guidelines
 
@@ -26,7 +40,7 @@ info:
   termsOfService: https://github.com/jsdelivr/globalping
   contact:
     url: https://github.com/jsdelivr/globalping/issues
-    email: d@jsdelivr.com
+    email: d@globalping.io
   license:
     name: Open Software License 3.0
     identifier: OSL-3.0
@@ -51,6 +65,10 @@ paths:
           return partial results as soon as they are available. This allows the user to see the measurement progress in real time.
           - If the application is interactive by default but also implements a "CI" mode for scripting, do not set the flag in the CI mode.
         - To perform multiple measurements using exactly the same probes, create a single measurement first, then pass its `id` in the `locations` field for the other measurements.
+        - When you receive a `429` response, inform the user about their current rate limit status based on the response headers. Depending on the exact situation and on what your application supports, you may also suggest:
+          - Signing in or using an access token.
+          - Learning more about how to get additional credits at https://globalping.io/credits.
+          - Repeating the measurement with fewer probes.
       requestBody:
         description: Use the request body to set the measurement parameters.
         content:
@@ -81,7 +99,9 @@ paths:
         - Measurements
       security:
         - {}
-        - bearerAuth: []
+        - BearerAuth: []
+        - OAuth2:
+            - measurements
   /v1/measurements/{id}:
     parameters:
       - $ref: 'components/parameters.yaml#/components/parameters/measurementId'
@@ -139,9 +159,24 @@ paths:
         - Limits
       security:
         - {}
-        - bearerAuth: []
+        - BearerAuth: []
+        - OAuth2: []
 components:
   securitySchemes:
-    bearerAuth:
+    BearerAuth:
       type: http
       scheme: bearer
+      description: |
+        For end users - generate a token in the [Globalping Dashboard](https://dash.globalping.io/tokens) and send it with your requests to get higher limits.
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.globalping.io/oauth/authorize
+          tokenUrl: https://auth.globalping.io/oauth/token
+          refreshUrl: https://auth.globalping.io/oauth/token
+          scopes:
+            measurements: execute measurements under your account
+      description: |
+        For developers building applications on top of Globalping - if you want to allow end users to sign in and run measurements under their own accounts,
+        we can provide OAuth2 access. Please e-mail d@globalping.io for more information.
