@@ -16,7 +16,7 @@ const locationKeyMap = [
 
 export class ProbesLocationFilter {
 	static magicFilter (probes: Probe[], magicLocation: string) {
-		let filteredProbes = probes;
+		let resultProbes = probes;
 		const keywords = magicLocation.split('+');
 
 		for (const keyword of keywords) {
@@ -31,26 +31,38 @@ export class ProbesLocationFilter {
 			}, Number.POSITIVE_INFINITY);
 			const noExactMatches = closestExactMatchPosition === Number.POSITIVE_INFINITY;
 
+			let filteredProbes = [];
+
 			if (noExactMatches) {
-				filteredProbes = filteredProbes.filter(probe => ProbesLocationFilter.getIndexPosition(probe, keyword) !== -1);
+				filteredProbes = resultProbes.filter(probe => ProbesLocationFilter.getIndexPosition(probe, keyword) !== -1);
 			} else {
-				filteredProbes = filteredProbes.filter(probe => ProbesLocationFilter.getExactIndexPosition(probe, keyword) === closestExactMatchPosition);
+				filteredProbes = resultProbes.filter(probe => ProbesLocationFilter.getExactIndexPosition(probe, keyword) === closestExactMatchPosition);
 			}
+
+			if (filteredProbes.length === 0) {
+				filteredProbes = resultProbes.filter(probe => ProbesLocationFilter.hasUserTag(probe, keyword.toLowerCase()));
+			}
+
+			resultProbes = filteredProbes;
 		}
 
-		return filteredProbes;
+		return resultProbes;
 	}
 
-	static getExactIndexPosition (probe: Probe, value: string) {
-		return probe.index.findIndex(category => category.some(index => index === value.toLowerCase().replaceAll('-', ' ').trim()));
+	static getExactIndexPosition (probe: Probe, filterValue: string) {
+		return probe.index.findIndex(category => category.some(index => index === filterValue.toLowerCase().replaceAll('-', ' ').trim()));
 	}
 
-	static getIndexPosition (probe: Probe, value: string) {
-		return probe.index.findIndex(category => category.some(index => index.includes(value.toLowerCase().replaceAll('-', ' ').trim())));
+	static getIndexPosition (probe: Probe, filterValue: string) {
+		return probe.index.findIndex(category => category.some(index => index.includes(filterValue.toLowerCase().replaceAll('-', ' ').trim())));
 	}
 
-	static hasTag (probe: Probe, tag: string) {
-		return probe.tags.some(({ value }) => value.toLowerCase() === tag);
+	static hasTag (probe: Probe, filterValue: string) {
+		return probe.tags.some(({ value }) => value.toLowerCase() === filterValue);
+	}
+
+	static hasUserTag (probe: Probe, filterValue: string) {
+		return probe.tags.filter(({ type }) => type === 'user').some(({ value }) => value.toLowerCase() === filterValue);
 	}
 
 	public filterGloballyDistibuted (probes: Probe[], limit: number): Probe[] {
