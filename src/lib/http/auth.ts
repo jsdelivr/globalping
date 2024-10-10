@@ -13,7 +13,7 @@ const logger = scopedLogger('auth');
 const TOKEN_TTL = 2 * 60 * 1000;
 
 export type Token = {
-	user_created: string,
+	user_created?: string,
 	value: string,
 	expire: Date | null,
 	scopes: string[],
@@ -127,7 +127,7 @@ export class Auth {
 		}
 
 		await this.updateLastUsedDate(token);
-		return { userId: token.user_created, scopes: token.scopes };
+		return { userId: token.user_created, scopes: token.scopes, hashedToken: token.value };
 	}
 
 	private async updateLastUsedDate (token: Token) {

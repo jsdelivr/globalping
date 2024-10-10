@@ -37,7 +37,7 @@ export const authenticate = (): ExtendedMiddleware => {
 				return;
 			}
 
-			ctx.state.user = { id: result.userId, scopes: result.scopes, authMode: 'token' };
+			ctx.state.user = { id: result.userId, scopes: result.scopes, authMode: 'token', hashedToken: result.hashedToken };
 		} else if (sessionCookie) {
 			try {
 				const result = await jwtVerify<SessionCookiePayload>(sessionCookie, sessionKey);
@@ -53,4 +53,4 @@ export const authenticate = (): ExtendedMiddleware => {
 };
 
 export type AuthenticateOptions = { session: { cookieName: string, cookieSecret: string } };
-export type AuthenticateState = { user?: { id: string, scopes?: string[], authMode: 'cookie' | 'token' } };
+export type AuthenticateState = { user?: { id: string | undefined, scopes?: string[], hashedToken?: string, authMode: 'cookie' | 'token' } };

@@ -40,11 +40,15 @@ describe('rate limiter', () => {
 
 		await waitForProbesUpdate();
 
-		await client(GP_TOKENS_TABLE).insert({
+		await client(GP_TOKENS_TABLE).insert([{
 			name: 'test token',
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			value: 'Xj6kuKFEQ6zI60mr+ckHG7yQcIFGMJFzvtK9PBQ69y8=', // token: qz5kdukfcr3vggv3xbujvjwvirkpkkpx
-		});
+		}, {
+			name: 'anon token',
+			user_created: null,
+			value: '1CJTN06QAyM2JYA3r2FwaSytXEWg1r50xNlUyC1G98w=', // token: t6jy4n6nw5jdqxhs5wlkvw7tqsabt734
+		}]);
 	});
 
 
@@ -278,6 +282,18 @@ describe('rate limiter', () => {
 				.send().expect(429) as Response;
 
 			expect(response.headers['retry-after']).to.equal('5');
+		});
+
+		it('should use hashed token as a key for anonymous tokens', async () => {
+			await requestAgent.post('/v1/measurements')
+				.set('Authorization', 'Bearer t6jy4n6nw5jdqxhs5wlkvw7tqsabt734')
+				.send({
+					type: 'ping',
+					target: 'jsdelivr.com',
+				}).expect(202) as Response;
+
+			const rateLimiterRes = await authenticatedPostRateLimiter.get(`1CJTN06QAyM2JYA3r2FwaSytXEWg1r50xNlUyC1G98w=`);
+			expect(rateLimiterRes?.remainingPoints).to.equal(249);
 		});
 	});
 
