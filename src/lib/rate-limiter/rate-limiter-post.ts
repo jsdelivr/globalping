@@ -27,17 +27,17 @@ const getRateLimiter = (ctx: ExtendedContext): {
 	id: string,
 	rateLimiter: RateLimiterRedis
 } => {
-	if (ctx.state.user) {
+	if (ctx.state.user?.id) {
 		return {
 			type: 'user',
-			id: ctx.state.user.id ?? ctx.state.user.hashedToken ?? '',
+			id: ctx.state.user.id ?? '',
 			rateLimiter: authenticatedRateLimiter,
 		};
 	}
 
 	return {
 		type: 'ip',
-		id: requestIp.getClientIp(ctx.req) ?? '',
+		id: ctx.state.user?.hashedToken ?? requestIp.getClientIp(ctx.req) ?? '',
 		rateLimiter: anonymousRateLimiter,
 	};
 };
