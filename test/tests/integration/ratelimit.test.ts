@@ -292,8 +292,8 @@ describe('rate limiter', () => {
 					target: 'jsdelivr.com',
 				}).expect(202) as Response;
 
-			const rateLimiterRes = await authenticatedPostRateLimiter.get(`1CJTN06QAyM2JYA3r2FwaSytXEWg1r50xNlUyC1G98w=`);
-			expect(rateLimiterRes?.remainingPoints).to.equal(249);
+			const rateLimiterRes = await anonymousPostRateLimiter.get(`1CJTN06QAyM2JYA3r2FwaSytXEWg1r50xNlUyC1G98w=`);
+			expect(rateLimiterRes?.remainingPoints).to.equal(99999);
 		});
 	});
 
