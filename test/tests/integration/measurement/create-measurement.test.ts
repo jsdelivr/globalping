@@ -6,11 +6,12 @@ import type { Socket } from 'socket.io-client';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { client } from '../../../../src/lib/sql/client.js';
 import type { ProbeOverride } from '../../../../src/lib/override/probe-override.js';
-import { waitForProbesUpdate } from '../../../utils/server.js';
+import geoIpMocks from '../../../mocks/nock-geoip.json' assert { type: 'json' };
 
 describe('Create measurement', () => {
 	let addFakeProbe: () => Promise<Socket>;
-	let deleteFakeProbes: () => Promise<void>;
+	let deleteFakeProbes: (probes?: Socket[]) => Promise<void>;
+	let waitForProbesUpdate: () => Promise<void>;
 	let getTestServer;
 	let requestAgent: Agent;
 	let probeOverride: ProbeOverride;
@@ -18,7 +19,7 @@ describe('Create measurement', () => {
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
-		({ getTestServer, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
+		({ getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } = await import('../../../utils/server.js'));
 		({ ADOPTED_PROBES_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
 		({ probeOverride } = await import('../../../../src/lib/ws/server.js'));
 		const app = await getTestServer();
@@ -754,15 +755,93 @@ describe('Create measurement', () => {
 					});
 			});
 
-			it('should not use create measurement with adopted tag in magic field "magic: ["u-jsdelivr-dashboard-tag"]" location', async () => {
+			describe('user tag in magic field', () => {
+				let probe2: Socket;
+				before(async () => {
+					nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).reply(400);
+					nock('https://api.ip2location.io').get(/.*/).reply(400);
+					nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(400);
+					nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(400);
+
+					// Creating an AR probe which has a tag value inside of the content (network name).
+					nock('https://ipinfo.io').get(/.*/).reply(200, {
+						...geoIpMocks.ipinfo.argentina,
+						org: 'AS61004 InterBS u-jsdelivr-dashboard-tag S.R.L.',
+					});
+
+					probe2 = await addFakeProbe();
+					probe2.emit('probe:status:update', 'ready');
+					probe2.emit('probe:isIPv4Supported:update', true);
+					probe2.emit('probe:isIPv6Supported:update', true);
+					await waitForProbesUpdate();
+				});
+
+				after(() => {
+					deleteFakeProbes([ probe2 ]);
+				});
+
+				it('should prefer a probe with a match in other field over the probe with match in user tag', async () => {
+					let measurementId;
+					await requestAgent.post('/v1/measurements')
+						.send({
+							type: 'ping',
+							target: 'example.com',
+							locations: [{ magic: 'u-jsdelivr-dashboard-tag', limit: 2 }],
+						})
+						.expect(202)
+						.expect((response) => {
+							measurementId = response.body.id;
+							expect(response.body.id).to.exist;
+							expect(response.header['location']).to.exist;
+							expect(response.body.probesCount).to.equal(1);
+							expect(response).to.matchApiSchema();
+						});
+
+					await requestAgent.get(`/v1/measurements/${measurementId}`)
+						.expect(200)
+						.expect((response) => {
+							expect(response.body.results[0].probe.country).to.equal('AR');
+						});
+				});
+			});
+
+			it('should prefer a probe with user tag in a magic field if there are no matches in other fields', async () => {
+				let measurementId;
 				await requestAgent.post('/v1/measurements')
 					.send({
 						type: 'ping',
 						target: 'example.com',
 						locations: [{ magic: 'u-jsdelivr-dashboard-tag', limit: 2 }],
 					})
-					.expect(422).expect((response) => {
-						expect(response.body.error.message).to.equal('No suitable probes supporting IPv4 found.');
+					.expect(202)
+					.expect((response) => {
+						measurementId = response.body.id;
+						expect(response.body.id).to.exist;
+						expect(response.header['location']).to.exist;
+						expect(response.body.probesCount).to.equal(1);
+						expect(response).to.matchApiSchema();
+					});
+
+				await requestAgent.get(`/v1/measurements/${measurementId}`)
+					.expect(200)
+					.expect((response) => {
+						expect(response.body.results[0].probe.country).to.equal('US');
+					});
+			});
+
+			it('should prefer a probe with any-case user tag in a magic field if there are no matches in other fields', async () => {
+				await requestAgent.post('/v1/measurements')
+					.send({
+						type: 'ping',
+						target: 'example.com',
+						locations: [{ magic: 'U-JSdelivr-Dashboard-TAG', limit: 2 }],
+					})
+					.expect(202)
+					.expect((response) => {
+						expect(response.body.id).to.exist;
+						expect(response.header['location']).to.exist;
+						expect(response.body.probesCount).to.equal(1);
+						expect(response).to.matchApiSchema();
 					});
 			});
 		});
