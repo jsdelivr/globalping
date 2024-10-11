@@ -72,8 +72,8 @@ export const addFakeProbes = async (count: number, events: object = {}, options:
 	});
 };
 
-export const deleteFakeProbes = async (): Promise<void> => {
-	const sockets = await fetchRawSockets();
+export const deleteFakeProbes = async (socketsToDelete?: Socket[]): Promise<void> => {
+	const sockets = socketsToDelete?.length ? socketsToDelete : await fetchRawSockets();
 
 	for (const socket of sockets) {
 		socket.disconnect(true);

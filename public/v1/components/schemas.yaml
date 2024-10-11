@@ -75,7 +75,7 @@ components:
             Locations defined in a single string instead of the respective location properties.
             The API performs fuzzy matching on the `country`, `city`, `state`, `continent`, `region`, `asn` (using `AS` prefix, e.g., `AS123`), `tags`, and `network` values.
             Supports full names, ISO codes (where applicable), and common aliases.
-            Multiple conditions can be combined using the `+` character.
+            Multiple conditions can be combined using the `+` character, which behaves like a logical `AND`.
         limit:
           type: integer
           description: |
