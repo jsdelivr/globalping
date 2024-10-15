@@ -62,9 +62,9 @@ export const httpSchema = Joi.object({
 	request: Joi.object({
 		method: Joi.string().valid(...allowedHttpMethods).insensitive().default(COMMAND_DEFAULTS.http.request.method),
 		host: Joi.string().domain().custom(joiValidateTarget('domain')).optional(),
-		path: Joi.string().optional().default(COMMAND_DEFAULTS.http.request.path),
-		query: Joi.string().optional().default(COMMAND_DEFAULTS.http.request.query),
-		headers: Joi.object().default(COMMAND_DEFAULTS.http.request.headers),
+		path: Joi.string().max(16384).optional().default(COMMAND_DEFAULTS.http.request.path),
+		query: Joi.string().max(16384).optional().default(COMMAND_DEFAULTS.http.request.query),
+		headers: Joi.object().max(128).pattern(/^/, Joi.string().max(8192)).default(COMMAND_DEFAULTS.http.request.headers),
 	}).default(),
 	resolver: Joi.string().ip(globalIpOptions).custom(joiValidateTarget('ip')),
 	protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default(COMMAND_DEFAULTS.http.protocol),
