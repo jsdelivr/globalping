@@ -127,12 +127,7 @@ export class ProbesLocationFilter {
 					break;
 				}
 
-				const locationWeight = distribution.get(location);
-
-				if (!locationWeight) {
-					continue;
-				}
-
+				const locationWeight = distribution.get(location) || 0;
 				const count = Math.floor((limit - selectedCount) * locationWeight / remainingWeight) || 1;
 
 				for (const s of locationProbes.splice(0, count)) {
