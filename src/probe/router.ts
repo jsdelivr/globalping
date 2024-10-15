@@ -63,7 +63,7 @@ export class ProbeRouter {
 	}
 
 	private findWithGlobalLimit (probes: Probe[], locations: Location[], limit: number): Probe[] {
-		const weight = Math.floor(100 / locations.length);
+		const weight = 100 / locations.length;
 		const distribution = new Map(locations.map(l => [ l, weight ]));
 
 		return this.probesFilter.filterByLocationAndWeight(probes, distribution, limit);
