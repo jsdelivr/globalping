@@ -47,7 +47,7 @@ describe('Create measurement', () => {
 							type: 'no_probes_found',
 						},
 						links: {
-							documentation: 'https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements',
+							documentation: 'https://globalping.io/docs/api.globalping.io#post-/v1/measurements',
 						},
 					});
 
@@ -99,7 +99,7 @@ describe('Create measurement', () => {
 							type: 'no_probes_found',
 						},
 						links: {
-							documentation: 'https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements',
+							documentation: 'https://globalping.io/docs/api.globalping.io#post-/v1/measurements',
 						},
 					});
 
@@ -126,7 +126,7 @@ describe('Create measurement', () => {
 							type: 'no_probes_found',
 						},
 						links: {
-							documentation: 'https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements',
+							documentation: 'https://globalping.io/docs/api.globalping.io#post-/v1/measurements',
 						},
 					});
 
@@ -393,7 +393,7 @@ describe('Create measurement', () => {
 							type: 'no_probes_found',
 						},
 						links: {
-							documentation: 'https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements',
+							documentation: 'https://globalping.io/docs/api.globalping.io#post-/v1/measurements',
 						},
 					});
 
@@ -613,7 +613,7 @@ describe('Create measurement', () => {
 							type: 'no_probes_found',
 						},
 						links: {
-							documentation: 'https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements',
+							documentation: 'https://globalping.io/docs/api.globalping.io#post-/v1/measurements',
 						},
 					});
 

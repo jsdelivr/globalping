@@ -1,7 +1,7 @@
 module.exports = {
 	server: {
 		host: 'https://api.globalping.io',
-		docsHost: 'https://www.jsdelivr.com',
+		docsHost: 'https://globalping.io',
 		port: 3000,
 		processes: 2,
 		cors: {
