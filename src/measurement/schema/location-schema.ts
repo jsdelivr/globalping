@@ -27,8 +27,8 @@ export const sumOfLocationsLimits = (code: string, max: number) => (value: Locat
 };
 
 export const schema = Joi.alternatives().try(
-	Joi.string(),
-	Joi.array().items(Joi.object().keys({
+	Joi.string().max(1024),
+	Joi.array().max(128).items(Joi.object().keys({
 		continent: Joi.string().valid(...Object.keys(continents)).insensitive()
 			.messages({ 'any.only': 'The continent must be a valid two-letter continent code' }),
 		region: Joi.string().valid(...regionNames).insensitive(),
@@ -39,8 +39,8 @@ export const schema = Joi.alternatives().try(
 		city: Joi.string().min(1).max(128).lowercase().custom(normalizeValue),
 		network: Joi.string().min(1).max(128).lowercase().custom(normalizeValue),
 		asn: Joi.number().integer().positive(),
-		magic: Joi.string().min(1).custom(normalizeValue),
-		tags: Joi.array().items(Joi.string().min(1).max(128).lowercase().custom(normalizeValue)),
+		magic: Joi.string().min(1).max(1024).custom(normalizeValue),
+		tags: Joi.array().max(32).items(Joi.string().min(1).max(128).lowercase().custom(normalizeValue)),
 		limit: Joi.number().min(1).when('$userId', {
 			is: Joi.exist(),
 			then: Joi.number().max(authenticatedTestsPerLocation),
