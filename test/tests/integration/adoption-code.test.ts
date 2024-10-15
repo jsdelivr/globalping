@@ -50,8 +50,8 @@ describe('Adoption code', () => {
 					city: 'Dallas',
 					state: 'TX',
 					country: 'US',
-					latitude: 32.7831,
-					longitude: -96.8067,
+					latitude: 32.78,
+					longitude: -96.81,
 					asn: 20004,
 					network: 'The Constant Company LLC',
 				});
