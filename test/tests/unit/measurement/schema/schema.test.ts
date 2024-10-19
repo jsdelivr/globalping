@@ -46,7 +46,7 @@ describe('command schema', async () => {
 
 				const valid = globalSchema.validate(input, { convert: true });
 
-				expect(valid?.error?.details?.[0]?.message).to.equal('limit per location is not allowed when a global limit is set');
+				expect(valid?.error?.details?.[0]?.message).to.equal('"locations[0].limit" is not allowed when a global limit is set');
 			});
 
 			it('should pass (2 locations - no limit)', () => {
@@ -145,7 +145,7 @@ describe('command schema', async () => {
 
 				const valid = globalSchema.validate(input, { convert: true });
 
-				expect(valid?.error?.details?.[0]?.message).to.equal('Sum of limits must be less than or equal to 500');
+				expect(valid?.error?.details?.[0]?.message).to.equal('the sum of limits must be less than or equal to 500');
 			});
 
 			it('should return an error (locations authenticated limit sum is bigger than global limit)', () => {
@@ -166,7 +166,7 @@ describe('command schema', async () => {
 
 				const valid = globalSchema.validate(input, { convert: true, context: { userId: '1-1-1-1-1' } });
 
-				expect(valid?.error?.details?.[0]?.message).to.equal('Sum of limits must be less than or equal to 500');
+				expect(valid?.error?.details?.[0]?.message).to.equal('the sum of limits must be less than or equal to 500');
 			});
 		});
 
@@ -549,21 +549,21 @@ describe('command schema', async () => {
 			const input = '.';
 			const valid = schema.validate(input);
 
-			expect(valid.error!.details[0]!.message).to.equal('Provided target is not a valid domain name');
+			expect(valid.error!.details[0]!.message).to.equal('"value" must be a valid domain name');
 		});
 
 		it('should fail (tld)', () => {
 			const input = 'com';
 			const valid = schema.validate(input);
 
-			expect(valid.error!.details[0]!.message).to.equal('Provided target is not a valid domain name');
+			expect(valid.error!.details[0]!.message).to.equal('"value" must be a valid domain name');
 		});
 
 		it('should fail (trailing dot)', () => {
 			const input = 'example.com.';
 			const valid = schema.validate(input);
 
-			expect(valid.error!.details[0]!.message).to.equal('Provided target is not a valid domain name');
+			expect(valid.error!.details[0]!.message).to.equal('"value" must be a valid domain name');
 		});
 	});
 
@@ -621,7 +621,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Private hostnames are not allowed.');
+			expect(valid.error!.message).to.equal('"target" must not be a private hostname');
 		});
 
 		it('should fail (private ipv6)', () => {
@@ -633,7 +633,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Private hostnames are not allowed.');
+			expect(valid.error!.message).to.equal('"target" must not be a private hostname');
 		});
 
 		it('should fail (missing values)', () => {
@@ -725,7 +725,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address or domain');
 		});
 
 		it('should fail (blacklisted target ipv4)', () => {
@@ -737,7 +737,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address or domain');
 		});
 
 		it('should fail (blacklisted target ipv6)', () => {
@@ -749,7 +749,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address or domain');
 		});
 
 		it('should fail (unsupported ipVersion)', () => {
@@ -764,7 +764,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('ipVersion must be either 4 or 6');
+			expect(valid.error!.message).to.equal('"measurementOptions.ipVersion" must be either 4 or 6');
 		});
 
 		it('should pass and correct values (incorrect capitalization)', () => {
@@ -861,7 +861,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('ipVersion is not allowed when target is not a domain');
+			expect(valid.error!.message).to.equal('"measurementOptions.ipVersion" is not allowed when target is not a domain');
 		});
 
 		it('should pass (deep equal) ip version 4 automatically selected when target ipv4', () => {
@@ -932,7 +932,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address or domain');
 		});
 
 		it('should fail (blacklisted target ipv4)', () => {
@@ -944,7 +944,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address or domain');
 		});
 
 		it('should fail (blacklisted target ipv6)', () => {
@@ -956,7 +956,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address or domain');
 		});
 
 		it('should fail (invalid port)', () => {
@@ -986,7 +986,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('ipVersion must be either 4 or 6');
+			expect(valid.error!.message).to.equal('"measurementOptions.ipVersion" must be either 4 or 6');
 		});
 
 		it('should pass (target domain)', () => {
@@ -1133,7 +1133,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('ipVersion is not allowed when target is not a domain');
+			expect(valid.error!.message).to.equal('"measurementOptions.ipVersion" is not allowed when target is not a domain');
 		});
 
 		it('should pass (deep equal) ip version 4 automatically selected when target ipv4', () => {
@@ -1206,7 +1206,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided target is not a valid domain name');
+			expect(valid.error!.message).to.equal('"target" must be a valid domain name');
 		});
 
 		it('should fail (blacklisted target domain)', () => {
@@ -1218,7 +1218,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted domain');
 		});
 
 		it('should pass (ipv6 resolver)', () => {
@@ -1247,7 +1247,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"measurementOptions.resolver" is a blacklisted address or domain');
 		});
 
 		it('should fail (blacklisted ipv4 resolver)', () => {
@@ -1262,7 +1262,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"measurementOptions.resolver" is a blacklisted address or domain');
 		});
 
 		it('should fail (blacklisted ipv6 resolver)', () => {
@@ -1277,7 +1277,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"measurementOptions.resolver" is a blacklisted address or domain');
 		});
 
 		it('should fail (invalid port)', () => {
@@ -1322,7 +1322,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('ipVersion must be either 4 or 6');
+			expect(valid.error!.message).to.equal('"measurementOptions.ipVersion" must be either 4 or 6');
 		});
 
 		it('should pass (target domain) (_acme-challenge.abc.com)', () => {
@@ -1565,7 +1565,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('ipVersion is not allowed when resolver is not a domain');
+			expect(valid.error!.message).to.equal('"measurementOptions.ipVersion" is not allowed when resolver is not a domain');
 		});
 
 		it('should pass (root domain)', () => {
@@ -1634,7 +1634,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address');
 		});
 
 		it('should fail (uses blacklisted ipv6 for target)', () => {
@@ -1651,7 +1651,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address');
 		});
 
 		it('should pass (uses ipv4 for target)', () => {
@@ -1741,7 +1741,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address or domain');
 		});
 
 		it('should fail (blacklisted target ipv4)', () => {
@@ -1753,7 +1753,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address or domain');
 		});
 
 		it('should fail (blacklisted target ipv6)', () => {
@@ -1765,7 +1765,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address or domain');
 		});
 
 		it('should fail (invalid port)', () => {
@@ -1795,7 +1795,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('ipVersion must be either 4 or 6');
+			expect(valid.error!.message).to.equal('"measurementOptions.ipVersion" must be either 4 or 6');
 		});
 
 		it('should pass (target domain)', () => {
@@ -1884,7 +1884,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('ipVersion is not allowed when target is not a domain');
+			expect(valid.error!.message).to.equal('"measurementOptions.ipVersion" is not allowed when target is not a domain');
 		});
 
 		it('should pass (deep equal) ip version 4 automatically selected when target ipv4', () => {
@@ -2067,7 +2067,7 @@ describe('command schema', async () => {
 
 			const valid = globalSchema.validate(input, { convert: true });
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"measurementOptions.resolver" is a blacklisted address');
 		});
 
 		it('should fail (blacklisted ipv6 resolver)', () => {
@@ -2090,7 +2090,7 @@ describe('command schema', async () => {
 
 			const valid = globalSchema.validate(input, { convert: true });
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"measurementOptions.resolver" is a blacklisted address');
 		});
 
 		it('should fail (unsupported method)', () => {
@@ -2161,7 +2161,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('ipVersion must be either 4 or 6');
+			expect(valid.error!.message).to.equal('"measurementOptions.ipVersion" must be either 4 or 6');
 		});
 
 		it('should fail (blacklisted target domain)', () => {
@@ -2173,7 +2173,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address or domain');
 		});
 
 		it('should fail (blacklisted target ipv4)', () => {
@@ -2185,7 +2185,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address or domain');
 		});
 
 		it('should fail (blacklisted target ipv6)', () => {
@@ -2197,7 +2197,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('Provided address is blacklisted.');
+			expect(valid.error!.message).to.equal('"target" is a blacklisted address or domain');
 		});
 
 		it('should pass (target domain) (_sub.domain.com)', () => {
@@ -2409,7 +2409,7 @@ describe('command schema', async () => {
 
 			const valid = globalSchema.validate(input, { convert: true });
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('ipVersion is not allowed when target is not a domain');
+			expect(valid.error!.message).to.equal('"measurementOptions.ipVersion" is not allowed when target is not a domain');
 		});
 
 		it('should pass (deep equal) ip version 4 automatically selected when target is ipv4', () => {

@@ -14,8 +14,8 @@ import {
 
 export const schemaErrorMessages = {
 	...joiMalwareSchemaErrorMessages,
-	'ip.private': 'Private hostnames are not allowed.',
-	'domain.invalid': 'Provided target is not a valid domain name',
+	'ip.private': '{{#label}} must not be a private hostname',
+	'domain.invalid': '{{#label}} must be a valid domain name',
 };
 
 
@@ -30,8 +30,8 @@ export const ipVersionSchema = Joi.number().when(Joi.ref('...target'), {
 		otherwise: Joi.forbidden().default(DEFAULT_IP_VERSION),
 	}),
 }).messages({
-	'any.only': 'ipVersion must be either 4 or 6',
-	'any.unknown': 'ipVersion is not allowed when target is not a domain',
+	'any.only': '{{#label}} must be either 4 or 6',
+	'any.unknown': '{{#label}} is not allowed when target is not a domain',
 });
 export const ipVersionDnsSchema = Joi.number().when(Joi.ref('resolver'), {
 	is: Joi.custom(joiValidateDomain()),
@@ -42,8 +42,8 @@ export const ipVersionDnsSchema = Joi.number().when(Joi.ref('resolver'), {
 		otherwise: Joi.forbidden().default(DEFAULT_IP_VERSION),
 	}),
 }).messages({
-	'any.only': 'ipVersion must be either 4 or 6',
-	'any.unknown': 'ipVersion is not allowed when resolver is not a domain',
+	'any.only': '{{#label}} must be either 4 or 6',
+	'any.unknown': '{{#label}} is not allowed when resolver is not a domain',
 });
 
 export const validCmdTypes = [ 'ping', 'dns', 'traceroute', 'mtr', 'http' ];
