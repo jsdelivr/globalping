@@ -65,8 +65,8 @@ export class ProbesLocationFilter {
 		return probe.tags.filter(({ type }) => type === 'user').some(({ value }) => value.toLowerCase() === filterValue);
 	}
 
-	public filterGloballyDistibuted (probes: Probe[], limit: number): Probe[] {
-		const distribution = this.getDistibutionConfig();
+	public filterGloballyDistributed (probes: Probe[], limit: number): Probe[] {
+		const distribution = this.getDistributionConfig();
 		return this.filterByLocationAndWeight(probes, distribution, limit);
 	}
 
@@ -82,7 +82,7 @@ export class ProbesLocationFilter {
 
 	public filterByLocation (probes: Probe[], location: Location): Probe[] {
 		if (location.magic?.toLowerCase() === 'world') {
-			return _.shuffle(this.filterGloballyDistibuted(probes, probes.length));
+			return _.shuffle(this.filterGloballyDistributed(probes, probes.length));
 		}
 
 		let filteredProbes = probes;
@@ -147,9 +147,9 @@ export class ProbesLocationFilter {
 	private magicSort (probes: Probe[], magicString: string): Probe[] {
 		const getClosestIndexPosition = (probe: Probe) => {
 			const keywords = magicString.split('+');
-			const closestIndexPosition = keywords.reduce((smallesIndex, keyword) => {
+			const closestIndexPosition = keywords.reduce((smallestIndex, keyword) => {
 				const indexPosition = ProbesLocationFilter.getIndexPosition(probe, keyword);
-				return indexPosition < smallesIndex ? indexPosition : smallesIndex;
+				return indexPosition < smallestIndex ? indexPosition : smallestIndex;
 			}, Number.POSITIVE_INFINITY);
 			return closestIndexPosition;
 		};
@@ -162,7 +162,7 @@ export class ProbesLocationFilter {
 		return resultProbes;
 	}
 
-	private getDistibutionConfig () {
+	private getDistributionConfig () {
 		return new Map<Location, number>(_.shuffle(Object.entries(config.get<Record<string, number>>('measurement.globalDistribution')))
 			.map(([ value, weight ]) => [{ continent: value }, weight ]));
 	}

@@ -1,8 +1,8 @@
 import got from 'got';
 import { expect } from 'chai';
-import { waitMesurementFinish } from '../utils.js';
+import { waitMeasurementFinish } from '../utils.js';
 
-describe('dns mesurement', () => {
+describe('dns measurement', () => {
 	const resolver = '1.1.1.1';
 
 	it('should finish successfully', async () => {
@@ -14,7 +14,7 @@ describe('dns mesurement', () => {
 			},
 		}).json<any>();
 
-		const response = await waitMesurementFinish(id);
+		const response = await waitMeasurementFinish(id);
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
@@ -34,7 +34,7 @@ describe('dns mesurement', () => {
 			},
 		}).json<any>();
 
-		const response = await waitMesurementFinish(id);
+		const response = await waitMeasurementFinish(id);
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
@@ -84,7 +84,7 @@ describe('dns mesurement', () => {
 			},
 		}).json<any>();
 
-		const response = await waitMesurementFinish(id);
+		const response = await waitMeasurementFinish(id);
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
@@ -105,7 +105,7 @@ describe('dns mesurement', () => {
 			},
 		}).json<any>();
 
-		const response = await waitMesurementFinish(id);
+		const response = await waitMeasurementFinish(id);
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');

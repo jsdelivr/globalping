@@ -13,7 +13,7 @@ export const getMeasurementKey = (id: string, suffix: string = 'results'): strin
 	return `gp:m:${id}:${suffix}`;
 };
 
-const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unknown> = {}) => {
+const subtractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unknown> = {}) => {
 	const result: Record<string, unknown> = {};
 	const keys1 = Object.keys(obj1);
 	keys1.forEach((key) => {
@@ -21,7 +21,7 @@ const substractObjects = (obj1: Record<string, unknown>, obj2: Record<string, un
 		const value2 = obj2[key];
 
 		if (_.isPlainObject(value1) && _.isPlainObject(value2)) {
-			const difference = substractObjects(value1 as Record<string, unknown>, value2 as Record<string, unknown>);
+			const difference = subtractObjects(value1 as Record<string, unknown>, value2 as Record<string, unknown>);
 
 			if (!_.isEmpty(difference)) {
 				result[key] = difference;
@@ -180,7 +180,7 @@ export class MeasurementStore {
 			measurement.locations = measurement.locations.map(location => location.limit === 1 ? _.omit(location, 'limit') : location);
 		}
 
-		return substractObjects(measurement, defaults) as Partial<MeasurementRecord>;
+		return subtractObjects(measurement, defaults) as Partial<MeasurementRecord>;
 	}
 
 	probesToResults (probes: (Probe | OfflineProbe)[], type: RequestType) {

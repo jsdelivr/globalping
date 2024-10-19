@@ -59,7 +59,7 @@ export class ProbeRouter {
 	}
 
 	private findGloballyDistributed (probes: Probe[], limit: number): Probe[] {
-		return this.probesFilter.filterGloballyDistibuted(probes, limit);
+		return this.probesFilter.filterGloballyDistributed(probes, limit);
 	}
 
 	private findWithGlobalLimit (probes: Probe[], locations: Location[], limit: number): Probe[] {

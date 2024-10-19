@@ -22,7 +22,7 @@ export const createServer = async (): Promise<Server> => {
 	await populateMemMalwareList();
 	// Populate memory cloud regions list
 	await populateMemIpRangesList();
-	// Populate ip whiltelist
+	// Populate ip whitelist
 	await populateIpWhiteList();
 	// Populate cities info
 	await populateCitiesList();

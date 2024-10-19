@@ -69,7 +69,7 @@ export const waitProbeInCity = async (city: string) => {
 	}
 };
 
-export const waitMesurementFinish = async (id: string) => {
+export const waitMeasurementFinish = async (id: string) => {
 	for (;;) {
 		const response = await got<any>(`http://localhost:80/v1/measurements/${id}`, { responseType: 'json' });
 

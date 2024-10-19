@@ -1,7 +1,7 @@
 import got from 'got';
 import { expect } from 'chai';
 
-import { waitMesurementFinish, waitProbeToConnect, waitProbeToDisconnect } from '../utils.js';
+import { waitMeasurementFinish, waitProbeToConnect, waitProbeToDisconnect } from '../utils.js';
 import { docker } from '../docker.js';
 
 describe('api', () => {
@@ -32,7 +32,7 @@ describe('api', () => {
 			locations: locationId,
 		} }).json<any>();
 
-		const response = await waitMesurementFinish(id);
+		const response = await waitMeasurementFinish(id);
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('offline');
@@ -47,7 +47,7 @@ describe('api', () => {
 
 		await docker.stopProbeContainer();
 
-		const response = await waitMesurementFinish(id);
+		const response = await waitMeasurementFinish(id);
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('failed');
