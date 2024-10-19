@@ -17,11 +17,11 @@ const locationKeyMap = [
 export class ProbesLocationFilter {
 	static magicFilter (probes: Probe[], magicLocation: string) {
 		let resultProbes = probes;
-		const keywords = magicLocation.split('+');
+		const keywords = magicLocation.toLowerCase().split('+').map(k => ({ system: k.replaceAll('-', ' ').trim(), userTag: k.trim() }));
 
 		for (const keyword of keywords) {
 			const closestExactMatchPosition = probes.reduce((smallestExactMatchPosition, probe) => {
-				const exactMatchPosition = ProbesLocationFilter.getExactIndexPosition(probe, keyword);
+				const exactMatchPosition = ProbesLocationFilter.getExactIndexPosition(probe, keyword.system);
 
 				if (exactMatchPosition === -1) {
 					return smallestExactMatchPosition;
@@ -34,13 +34,13 @@ export class ProbesLocationFilter {
 			let filteredProbes = [];
 
 			if (noExactMatches) {
-				filteredProbes = resultProbes.filter(probe => ProbesLocationFilter.getIndexPosition(probe, keyword) !== -1);
+				filteredProbes = resultProbes.filter(probe => ProbesLocationFilter.getIndexPosition(probe, keyword.system) !== -1);
 			} else {
-				filteredProbes = resultProbes.filter(probe => ProbesLocationFilter.getExactIndexPosition(probe, keyword) === closestExactMatchPosition);
+				filteredProbes = resultProbes.filter(probe => ProbesLocationFilter.getExactIndexPosition(probe, keyword.system) === closestExactMatchPosition);
 			}
 
 			if (filteredProbes.length === 0) {
-				filteredProbes = resultProbes.filter(probe => ProbesLocationFilter.hasUserTag(probe, keyword.toLowerCase()));
+				filteredProbes = resultProbes.filter(probe => ProbesLocationFilter.hasUserTag(probe, keyword.userTag));
 			}
 
 			resultProbes = filteredProbes;
@@ -50,11 +50,11 @@ export class ProbesLocationFilter {
 	}
 
 	static getExactIndexPosition (probe: Probe, filterValue: string) {
-		return probe.index.findIndex(category => category.some(index => index === filterValue.toLowerCase().replaceAll('-', ' ').trim()));
+		return probe.index.findIndex(category => category.some(index => index === filterValue));
 	}
 
 	static getIndexPosition (probe: Probe, filterValue: string) {
-		return probe.index.findIndex(category => category.some(index => index.includes(filterValue.toLowerCase().replaceAll('-', ' ').trim())));
+		return probe.index.findIndex(category => category.some(index => index.includes(filterValue)));
 	}
 
 	static hasTag (probe: Probe, filterValue: string) {
