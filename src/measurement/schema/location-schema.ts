@@ -13,8 +13,17 @@ const authenticatedTestsPerMeasurement = config.get<number>('measurement.limits.
 const anonymousTestsPerMeasurement = config.get<number>('measurement.limits.anonymousTestsPerMeasurement');
 const authenticatedTestsPerLocation = config.get<number>('measurement.limits.authenticatedTestsPerLocation');
 const anonymousTestsPerLocation = config.get<number>('measurement.limits.anonymousTestsPerLocation');
+const maxConditionsInMagicField = 4;
 
 const normalizeValue = (value: string): string => anyAscii(value);
+
+const validateMagic = (value: string, helpers: CustomHelpers): string | ErrorReport => {
+	if (value.split('+').length > maxConditionsInMagicField) {
+		return helpers.error('magic.max.conditions');
+	}
+
+	return value;
+};
 
 export const sumOfLocationsLimits = (code: string, max: number) => (value: LocationWithLimit[], helpers: CustomHelpers): LocationWithLimit[] | ErrorReport => {
 	const sum = value.reduce((sum, location) => sum + (location.limit || 1), 0);
@@ -39,7 +48,7 @@ export const schema = Joi.alternatives().try(
 		city: Joi.string().min(1).max(128).lowercase().custom(normalizeValue),
 		network: Joi.string().min(1).max(128).lowercase().custom(normalizeValue),
 		asn: Joi.number().integer().positive(),
-		magic: Joi.string().min(1).max(128).custom(normalizeValue),
+		magic: Joi.string().min(1).max(128).custom(validateMagic).custom(normalizeValue),
 		tags: Joi.array().max(32).items(Joi.string().min(1).max(128).lowercase().custom(normalizeValue)),
 		limit: Joi.number().min(1).when('$userId', {
 			is: Joi.exist(),
@@ -58,5 +67,6 @@ export const schema = Joi.alternatives().try(
 		}).messages({
 			'limits.sum.auth': `Sum of limits must be less than or equal to ${authenticatedTestsPerMeasurement}`,
 			'limits.sum.anon': `Sum of limits must be less than or equal to ${anonymousTestsPerMeasurement}`,
+			'magic.max.conditions': `{{#label}} must contain at most ${maxConditionsInMagicField} combined filters`,
 		}),
 ).default(GLOBAL_DEFAULTS.locations);
