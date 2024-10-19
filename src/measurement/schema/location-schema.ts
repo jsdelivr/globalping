@@ -39,12 +39,12 @@ export const schema = Joi.alternatives().try(
 	Joi.string().max(128),
 	Joi.array().max(128).items(Joi.object().keys({
 		continent: Joi.string().valid(...Object.keys(continents)).insensitive()
-			.messages({ 'any.only': 'The continent must be a valid two-letter continent code' }),
+			.messages({ 'any.only': '{{#label}} must be a valid two-letter continent code' }),
 		region: Joi.string().valid(...regionNames).insensitive(),
 		country: Joi.string().valid(...Object.keys(countries)).insensitive()
-			.messages({ 'any.only': 'The country must be a valid two-letter ISO code' }),
+			.messages({ 'any.only': '{{#label}} must be a valid two-letter ISO code' }),
 		state: Joi.string().valid(...Object.values(states)).insensitive()
-			.messages({ 'any.only': 'The US state must be a valid two-letter code, e.g. CA' }),
+			.messages({ 'any.only': '{{#label}} must be a valid two-letter code, e.g. CA' }),
 		city: Joi.string().min(1).max(128).lowercase().custom(normalizeValue),
 		network: Joi.string().min(1).max(128).lowercase().custom(normalizeValue),
 		asn: Joi.number().integer().positive(),
@@ -56,7 +56,7 @@ export const schema = Joi.alternatives().try(
 			otherwise: Joi.number().max(anonymousTestsPerLocation),
 		}).when(Joi.ref('/limit'), {
 			is: Joi.exist(),
-			then: Joi.forbidden().messages({ 'any.unknown': 'limit per location is not allowed when a global limit is set' }),
+			then: Joi.forbidden().messages({ 'any.unknown': '{{#label}} is not allowed when a global limit is set' }),
 			otherwise: Joi.number().default(1),
 		}),
 	}).or('continent', 'region', 'country', 'state', 'city', 'network', 'asn', 'magic', 'tags'))
@@ -65,8 +65,8 @@ export const schema = Joi.alternatives().try(
 			then: Joi.custom(sumOfLocationsLimits('limits.sum.auth', authenticatedTestsPerMeasurement)),
 			otherwise: Joi.custom(sumOfLocationsLimits('limits.sum.anon', anonymousTestsPerMeasurement)),
 		}).messages({
-			'limits.sum.auth': `Sum of limits must be less than or equal to ${authenticatedTestsPerMeasurement}`,
-			'limits.sum.anon': `Sum of limits must be less than or equal to ${anonymousTestsPerMeasurement}`,
+			'limits.sum.auth': `the sum of limits must be less than or equal to ${authenticatedTestsPerMeasurement}`,
+			'limits.sum.anon': `the sum of limits must be less than or equal to ${anonymousTestsPerMeasurement}`,
 			'magic.max.conditions': `{{#label}} must contain at most ${maxConditionsInMagicField} combined filters`,
 		}),
 ).default(GLOBAL_DEFAULTS.locations);
