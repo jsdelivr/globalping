@@ -69,7 +69,7 @@ module.exports = {
 		rateLimit: {
 			post: {
 				anonymousLimit: 100000,
-				authenticatedLimit: 250,
+				authenticatedLimit: 500,
 				reset: 3600,
 			},
 			getPerMeasurement: {

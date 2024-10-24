@@ -102,8 +102,8 @@ describe('rate limiter', () => {
 						measurements: {
 							create: {
 								type: 'user',
-								limit: 250,
-								remaining: 250,
+								limit: 500,
+								remaining: 500,
 								reset: 0,
 							},
 						},
@@ -128,8 +128,8 @@ describe('rate limiter', () => {
 						measurements: {
 							create: {
 								type: 'user',
-								limit: 250,
-								remaining: 249,
+								limit: 500,
+								remaining: 499,
 								reset: 3600,
 							},
 						},
@@ -154,8 +154,8 @@ describe('rate limiter', () => {
 						measurements: {
 							create: {
 								type: 'user',
-								limit: 250,
-								remaining: 250,
+								limit: 500,
+								remaining: 500,
 								reset: 0,
 							},
 						},

@@ -148,9 +148,9 @@ describe('rate limiter', () => {
 					target: 'jsdelivr.com',
 				}).expect(202) as Response;
 
-			expect(response.headers['x-ratelimit-limit']).to.equal('250');
+			expect(response.headers['x-ratelimit-limit']).to.equal('500');
 			expect(response.headers['x-ratelimit-consumed']).to.equal('1');
-			expect(response.headers['x-ratelimit-remaining']).to.equal('249');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('499');
 			expect(response.headers['x-ratelimit-reset']).to.equal('3600');
 			expect(response.headers['x-request-cost']).to.equal('1');
 
@@ -161,9 +161,9 @@ describe('rate limiter', () => {
 					target: 'jsdelivr.com',
 				}).expect(202) as Response;
 
-			expect(response2.headers['x-ratelimit-limit']).to.equal('250');
+			expect(response2.headers['x-ratelimit-limit']).to.equal('500');
 			expect(response.headers['x-ratelimit-consumed']).to.equal('1');
-			expect(response2.headers['x-ratelimit-remaining']).to.equal('248');
+			expect(response2.headers['x-ratelimit-remaining']).to.equal('498');
 			expect(response2.headers['x-ratelimit-reset']).to.equal('3600');
 			expect(response.headers['x-request-cost']).to.equal('1');
 		});
@@ -240,11 +240,11 @@ describe('rate limiter', () => {
 					target: 'jsdelivr.com',
 				}).expect(202) as Response;
 
-			expect(response.headers['x-ratelimit-remaining']).to.equal('249');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('499');
 		});
 
 		it('should fail (limit reached)', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -257,7 +257,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should consume all points successfully or none at all (cost > remaining > 0)', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 249, 0); // 1 remaining
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 499, 0); // 1 remaining
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -319,7 +319,7 @@ describe('rate limiter', () => {
 				}).expect(202) as Response;
 
 			expect(response.headers['x-ratelimit-consumed']).to.equal('2');
-			expect(response.headers['x-ratelimit-remaining']).to.equal('248');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('498');
 			expect(response.headers['x-credits-consumed']).to.not.exist;
 			expect(response.headers['x-credits-remaining']).to.not.exist;
 			expect(response.headers['x-request-cost']).to.equal('2');
@@ -328,7 +328,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should consume credits after limit is reached', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -348,7 +348,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should consume part from free credits and part from paid credits if possible', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 249, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 499, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -368,7 +368,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should not consume paid credits if there are not enough to satisfy the request', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0);
 
 			await client(CREDITS_TABLE).update({
 				amount: 1,
@@ -394,7 +394,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should not consume more paid credits than the cost of the full request', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 255, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 505, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -414,7 +414,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should not consume free credits if there are not enough to satisfy the request', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 249, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 499, 0);
 
 			await client(CREDITS_TABLE).update({
 				amount: 0,
@@ -440,7 +440,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should work fine if there is no credits row for that user', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 250, 0);
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0);
 
 			await client(CREDITS_TABLE).where({
 				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',

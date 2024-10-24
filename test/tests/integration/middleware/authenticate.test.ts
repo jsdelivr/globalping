@@ -209,7 +209,7 @@ describe('authenticate', () => {
 				});
 
 			expect(response.status).to.equal(202);
-			expect(response.headers['x-ratelimit-limit']).to.equal('250');
+			expect(response.headers['x-ratelimit-limit']).to.equal('500');
 		});
 
 		it('should ignore if cookie without app_access was passed', async () => {
