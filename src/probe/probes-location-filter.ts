@@ -4,15 +4,13 @@ import type { Location } from '../lib/location/types.js';
 import type { Probe, ProbeLocation } from './types.js';
 
 /*
- * [
- *    [ public key, internal key]
- * ]
+ * [ public key ]: internal key
  *
  * */
-const locationKeyMap = [
-	[ 'network', 'normalizedNetwork' ],
-	[ 'city', 'normalizedCity' ],
-];
+const locationKeyMap = {
+	network: 'normalizedNetwork',
+	city: 'normalizedCity',
+};
 
 export class ProbesLocationFilter {
 	static magicFilter (probes: Probe[], magicLocation: string) {
@@ -58,7 +56,7 @@ export class ProbesLocationFilter {
 	}
 
 	static hasTag (probe: Probe, filterValue: string) {
-		return probe.tags.some(({ value }) => value.toLowerCase() === filterValue);
+		return probe.tags.some(({ value }) => value.toLowerCase() === filterValue.toLowerCase());
 	}
 
 	static hasUserTag (probe: Probe, filterValue: string) {
@@ -95,8 +93,11 @@ export class ProbesLocationFilter {
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				filteredProbes = ProbesLocationFilter.magicFilter(filteredProbes, location.magic!);
 			} else {
-				const probeKey = locationKeyMap.find(m => m.includes(key))?.[1] ?? key;
-				filteredProbes = filteredProbes.filter(probe => location[key as keyof Location] === probe.location[probeKey as keyof ProbeLocation]);
+				const probeKey = Object.hasOwn(locationKeyMap, key) ? locationKeyMap[key as keyof typeof locationKeyMap] : key;
+				// @ts-expect-error it's a string
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+				const filterValue = Object.hasOwn(locationKeyMap, key) ? location[key].toLowerCase() as string : location[key as keyof Location];
+				filteredProbes = filteredProbes.filter(probe => filterValue === probe.location[probeKey as keyof ProbeLocation]);
 			}
 		});
 

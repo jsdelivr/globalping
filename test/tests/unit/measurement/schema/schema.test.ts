@@ -264,7 +264,7 @@ describe('command schema', async () => {
 
 	describe('location', () => {
 		describe('input case', () => {
-			it('should correct network name', () => {
+			it('should NOT change network name', () => {
 				const input = [
 					{
 						network: 'VIRGIN MEDIA',
@@ -274,11 +274,10 @@ describe('command schema', async () => {
 
 				const valid = locationSchema.validate(input);
 
-				expect(valid.value![0].network).to.equal(input[0]!.network.toLowerCase());
-				expect(valid.value![0].network).to.not.equal(input[0]!.network);
+				expect(valid.value![0].network).to.equal(input[0]!.network);
 			});
 
-			it('should correct city value (upper case)', () => {
+			it('should NOT change city value (upper case)', () => {
 				const input = [
 					{
 						city: 'LONDON',
@@ -288,8 +287,7 @@ describe('command schema', async () => {
 
 				const valid = locationSchema.validate(input);
 
-				expect(valid.value![0].city).to.equal(input[0]!.city.toLowerCase());
-				expect(valid.value![0].city).to.not.equal(input[0]!.city);
+				expect(valid.value![0].city).to.equal(input[0]!.city);
 			});
 
 			it('should correct the city value (non-ASCII)', () => {
@@ -302,8 +300,7 @@ describe('command schema', async () => {
 
 				const valid = locationSchema.validate(input);
 
-				expect(valid.value![0].city).to.not.equal(input[0]!.city);
-				expect(valid.value![0].city).to.equal('ceske budejovice');
+				expect(valid.value![0].city).to.equal('Ceske Budejovice');
 			});
 
 			it('should correct the magic value (non-ASCII)', () => {
@@ -333,7 +330,7 @@ describe('command schema', async () => {
 				expect(valid.value![0].region).to.equal('Northern America');
 			});
 
-			it('should correct tag value (lowercase)', () => {
+			it('should NOT change tag value (lowercase)', () => {
 				const input = [
 					{
 						tags: [ 'DifferentCase-tag' ],
@@ -343,8 +340,7 @@ describe('command schema', async () => {
 
 				const valid = locationSchema.validate(input);
 
-				expect(valid.value![0].tags).to.not.equal(input[0]!.tags);
-				expect(valid.value![0].tags).to.deep.equal([ 'differentcase-tag' ]);
+				expect(valid.value![0].tags).to.deep.equal(input[0]!.tags);
 			});
 
 			it('should fail (wrong region)', () => {
