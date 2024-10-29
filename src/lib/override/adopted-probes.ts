@@ -334,11 +334,6 @@ export class AdoptedProbes {
 
 		if (probeIsConnected) { // date is old, but probe is connected, therefore updating the sync date
 			await this.updateLastSyncDate(ip);
-			return;
-		}
-
-		if (this.isMoreThan30DaysAgo(lastSyncDate)) { // probe wasn't connected for >30 days, removing adoption
-			await this.deleteAdoptedProbe(ip);
 		}
 	}
 
@@ -380,11 +375,6 @@ export class AdoptedProbes {
 		}
 	}
 
-	private async deleteAdoptedProbe (ip: string) {
-		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).delete();
-		this.adoptedIpToProbe.delete(ip);
-	}
-
 	private async sendNotification (recipient: string, subject: string, message: string) {
 		await this.sql.raw(`
 			INSERT INTO ${NOTIFICATIONS_TABLE} (recipient, subject, message) SELECT :recipient, :subject, :message
@@ -417,14 +407,5 @@ export class AdoptedProbes {
 	private isToday (date: Date) {
 		const currentDate = new Date();
 		return date.toDateString() === currentDate.toDateString();
-	}
-
-	private isMoreThan30DaysAgo (date: Date) {
-		const currentDate = new Date();
-
-		const timeDifference = currentDate.getTime() - date.getTime();
-		const daysDifference = timeDifference / (24 * 3600 * 1000);
-
-		return daysDifference > 30;
 	}
 }

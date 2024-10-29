@@ -148,7 +148,7 @@ describe('AdoptedProbes', () => {
 		expect(updateStub.args[0]).to.deep.equal([{ ip: '1.1.1.1', altIps: JSON.stringify([ '2.2.2.2' ]), uuid: '1-1-1-1-1' }]);
 	});
 
-	it('class should update status to "offline" if adopted probe was not found and lastSyncDate < 30 days away', async () => {
+	it('class should update status to "offline" if adopted probe was not found', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchProbesWithAdminData);
 		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: relativeDayUtc(-15) }]);
 		fetchProbesWithAdminData.resolves([]);
@@ -161,7 +161,7 @@ describe('AdoptedProbes', () => {
 		expect(deleteStub.callCount).to.equal(0);
 	});
 
-	it('class should do nothing if adopted probe was not found and lastSyncDate < 30 days away but it is already "offline"', async () => {
+	it('class should do nothing if adopted probe was not found but it is already "offline"', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchProbesWithAdminData);
 		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: relativeDayUtc(-15), status: 'offline' }]);
 		fetchProbesWithAdminData.resolves([]);
@@ -173,21 +173,7 @@ describe('AdoptedProbes', () => {
 		expect(deleteStub.callCount).to.equal(0);
 	});
 
-	it('class should delete adoption if adopted probe was not found and lastSyncDate > 30 days away', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchProbesWithAdminData);
-		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: relativeDayUtc(-45) }]);
-		fetchProbesWithAdminData.resolves([]);
-
-		await adoptedProbes.syncDashboardData();
-
-		expect(whereStub.callCount).to.equal(2);
-		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
-		expect(updateStub.callCount).to.equal(1);
-		expect(updateStub.args[0]).to.deep.equal([{ status: 'offline' }]);
-		expect(deleteStub.callCount).to.equal(1);
-	});
-
-	it('class should update lastSyncDate if probe is connected and lastSyncDate < 30 days away', async () => {
+	it('class should update lastSyncDate if probe is connected', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchProbesWithAdminData);
 		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: relativeDayUtc(-15) }]);
 
@@ -200,20 +186,7 @@ describe('AdoptedProbes', () => {
 		expect(deleteStub.callCount).to.equal(0);
 	});
 
-	it('class should update lastSyncDate if probe is connected and lastSyncDate > 30 days away', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchProbesWithAdminData);
-		selectStub.resolves([{ ...defaultAdoptedProbe, lastSyncDate: relativeDayUtc(-45) }]);
-
-		await adoptedProbes.syncDashboardData();
-
-		expect(whereStub.callCount).to.equal(1);
-		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
-		expect(updateStub.callCount).to.equal(1);
-		expect(updateStub.firstCall.args[0].lastSyncDate).to.be.greaterThanOrEqual(relativeDayUtc());
-		expect(deleteStub.callCount).to.equal(0);
-	});
-
-	it('class should update lastSyncDate should not update anything if lastSyncDate is today', async () => {
+	it('class should not update anything if lastSyncDate is today', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchProbesWithAdminData);
 
 		await adoptedProbes.syncDashboardData();
