@@ -17,6 +17,7 @@ describe('Create measurement request', () => {
 
 	const sandbox = sinon.createSandbox();
 	const locationHandlerStub = sandbox.stub();
+	const adoptionHandlerStub = sandbox.stub();
 	const requestHandlerStub = sandbox.stub();
 	const cryptoRandomString = sandbox.stub().returns('measurementid');
 
@@ -34,6 +35,7 @@ describe('Create measurement request', () => {
 
 		probe = await addFakeProbe({
 			'api:connect:location': locationHandlerStub,
+			'api:connect:adoption': adoptionHandlerStub,
 			'probe:measurement:request': requestHandlerStub,
 		});
 	});
@@ -75,6 +77,9 @@ describe('Create measurement request', () => {
 			network: 'The Constant Company LLC',
 			normalizedNetwork: 'the constant company llc',
 		}]);
+
+		expect(adoptionHandlerStub.callCount).to.equal(1);
+		expect(adoptionHandlerStub.firstCall.args).to.deep.equal([{ isAdopted: false }]);
 	});
 
 	it('should send and handle proper events during measurement request', async () => {

@@ -6,7 +6,7 @@ import { handleStatusUpdate } from '../../probe/handler/status.js';
 import { handleDnsUpdate } from '../../probe/handler/dns.js';
 import { handleStatsReport } from '../../probe/handler/stats.js';
 import { scopedLogger } from '../logger.js';
-import { probeOverride, getWsServer, PROBES_NAMESPACE, ServerSocket } from './server.js';
+import { probeOverride, getWsServer, PROBES_NAMESPACE, ServerSocket, adoptedProbes } from './server.js';
 import { probeMetadata } from './middleware/probe-metadata.js';
 import { errorHandler } from './helper/error-handler.js';
 import { subscribeWithHandler } from './helper/subscribe-handler.js';
@@ -23,6 +23,7 @@ io
 	.on('connect', errorHandler(async (socket: ServerSocket) => {
 		const probe = socket.data.probe;
 		const location = probeOverride.getUpdatedLocation(probe);
+		const isAdopted = !!adoptedProbes.getByIp(probe.ipAddress);
 
 		socket.emit('api:connect:alt-ips-token', {
 			token: await getAltIpsClient().generateToken(socket),
@@ -31,6 +32,7 @@ io
 		});
 
 		socket.emit('api:connect:location', location);
+		socket.emit('api:connect:adoption', { isAdopted });
 		logger.info(`ws client ${socket.id} connected from ${location.city}, ${location.country} [${probe.ipAddress} - ${location.network}]`);
 
 		// Handlers
