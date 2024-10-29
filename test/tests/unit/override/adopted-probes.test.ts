@@ -7,6 +7,7 @@ import type { Probe } from '../../../../src/probe/types.js';
 
 describe('AdoptedProbes', () => {
 	const defaultAdoptedProbe = {
+		id: 'p-1',
 		userId: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
 		username: 'jimaek',
 		ip: '1.1.1.1',
@@ -253,7 +254,17 @@ describe('AdoptedProbes', () => {
 
 	it('class should update country and send notification if country of the probe changes', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchProbesWithAdminData);
-		selectStub.resolves([{ ...defaultAdoptedProbe, countryOfCustomCity: 'IE', isCustomCity: 1 }]);
+		const defaultAdoptedProbes = [
+			defaultAdoptedProbe,
+			{
+				...defaultAdoptedProbe,
+				id: 'p-9',
+				ip: '9.9.9.9',
+				uuid: '9-9-9-9-9',
+				name: 'probe-gb-london-01',
+			}];
+
+		selectStub.resolves(defaultAdoptedProbes.map(probe => ({ ...probe, countryOfCustomCity: 'IE', isCustomCity: 1 })));
 
 		fetchProbesWithAdminData.resolves([
 			{
@@ -282,21 +293,54 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company, LLC',
 				},
 			} as Probe,
+			{
+				ipAddress: '9.9.9.9',
+				altIpAddresses: [] as string[],
+				uuid: '9-9-9-9-9',
+				status: 'initializing',
+				isIPv4Supported: false,
+				isIPv6Supported: false,
+				version: '0.27.0',
+				nodeVersion: 'v18.17.0',
+				isHardware: false,
+				hardwareDevice: null,
+				tags: [
+					{ type: 'system', value: 'datacenter-network' },
+				],
+				location: {
+					continent: 'EU',
+					region: 'Northern Europe',
+					country: 'GB',
+					state: null,
+					city: 'London',
+					asn: 20473,
+					latitude: 51.50853,
+					longitude: -0.12574,
+					network: 'The Constant Company, LLC',
+				},
+			} as Probe,
 		]);
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(rawStub.callCount).to.equal(1);
+		expect(rawStub.callCount).to.equal(2);
 
 		expect(rawStub.args[0]![1]).to.deep.equal({
 			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
 			subject: `Your probe's location has changed`,
-			message: 'Globalping detected that your probe with IP address **1.1.1.1** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please report in [this issue](https://github.com/jsdelivr/globalping/issues/268).',
+			message: 'Globalping detected that your [probe with IP address **1.1.1.1**](/probes/p-1) has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).',
 		});
 
-		expect(whereStub.callCount).to.equal(1);
+		expect(rawStub.args[1]![1]).to.deep.equal({
+			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
+			subject: `Your probe's location has changed`,
+			message: 'Globalping detected that your probe [**probe-gb-london-01**](/probes/p-9) with IP address **9.9.9.9** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).',
+		});
+
+		expect(whereStub.callCount).to.equal(2);
 		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
-		expect(updateStub.callCount).to.equal(1);
+		expect(whereStub.args[1]).to.deep.equal([{ ip: '9.9.9.9' }]);
+		expect(updateStub.callCount).to.equal(2);
 
 		expect(updateStub.args[0]).to.deep.equal([
 			{
@@ -310,7 +354,19 @@ describe('AdoptedProbes', () => {
 			},
 		]);
 
-		selectStub.resolves([{ ...defaultAdoptedProbe, country: 'GB', countryOfCustomCity: 'IE', isCustomCity: 1 }]);
+		expect(updateStub.args[1]).to.deep.equal([
+			{
+				status: 'initializing',
+				isIPv4Supported: false,
+				isIPv6Supported: false,
+				version: '0.27.0',
+				asn: 20473,
+				network: 'The Constant Company, LLC',
+				country: 'GB',
+			},
+		]);
+
+		selectStub.resolves(defaultAdoptedProbes.map(probe => ({ ...probe, country: 'GB', countryOfCustomCity: 'IE', isCustomCity: 1 })));
 
 		fetchProbesWithAdminData.resolves([
 			{
@@ -339,23 +395,68 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company, LLC',
 				},
 			} as Probe,
+			{
+				ipAddress: '9.9.9.9',
+				altIpAddresses: [] as string[],
+				uuid: '9-9-9-9-9',
+				status: 'initializing',
+				isIPv4Supported: false,
+				isIPv6Supported: false,
+				version: '0.27.0',
+				nodeVersion: 'v18.17.0',
+				isHardware: false,
+				hardwareDevice: null,
+				tags: [
+					{ type: 'system', value: 'datacenter-network' },
+				],
+				location: {
+					continent: 'EU',
+					region: 'Northern Europe',
+					country: 'IE',
+					state: null,
+					city: 'London',
+					asn: 20473,
+					latitude: 51.50853,
+					longitude: -0.12574,
+					network: 'The Constant Company, LLC',
+				},
+			} as Probe,
 		]);
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(rawStub.callCount).to.equal(2);
+		expect(rawStub.callCount).to.equal(4);
 
-		expect(rawStub.args[1]![1]).to.deep.equal({
+		expect(rawStub.args[2]![1]).to.deep.equal({
 			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
 			subject: `Your probe's location has changed back`,
-			message: 'Globalping detected that your probe with IP address **1.1.1.1** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
+			message: 'Globalping detected that your [probe with IP address **1.1.1.1**](/probes/p-1) has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 
-		expect(whereStub.callCount).to.equal(2);
-		expect(whereStub.args[1]).to.deep.equal([{ ip: '1.1.1.1' }]);
-		expect(updateStub.callCount).to.equal(2);
+		expect(rawStub.args[3]![1]).to.deep.equal({
+			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
+			subject: `Your probe's location has changed back`,
+			message: 'Globalping detected that your probe [**probe-gb-london-01**](/probes/p-9) with IP address **9.9.9.9** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
+		});
 
-		expect(updateStub.args[1]).to.deep.equal([
+		expect(whereStub.callCount).to.equal(4);
+		expect(whereStub.args[2]).to.deep.equal([{ ip: '1.1.1.1' }]);
+		expect(whereStub.args[3]).to.deep.equal([{ ip: '9.9.9.9' }]);
+		expect(updateStub.callCount).to.equal(4);
+
+		expect(updateStub.args[2]).to.deep.equal([
+			{
+				status: 'initializing',
+				isIPv4Supported: false,
+				isIPv6Supported: false,
+				version: '0.27.0',
+				asn: 20473,
+				network: 'The Constant Company, LLC',
+				country: 'IE',
+			},
+		]);
+
+		expect(updateStub.args[3]).to.deep.equal([
 			{
 				status: 'initializing',
 				isIPv4Supported: false,
