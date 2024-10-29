@@ -15,6 +15,7 @@ export const ADOPTED_PROBES_TABLE = 'gp_adopted_probes';
 export const NOTIFICATIONS_TABLE = 'directus_notifications';
 
 export type AdoptedProbe = {
+	id: string;
 	userId: string;
 	ip: string;
 	name: string | null;
@@ -389,7 +390,7 @@ export class AdoptedProbes {
 		return this.sendNotification(
 			adoptedProbe.userId,
 			`Your probe's location has changed`,
-			`Globalping detected that your probe ${adoptedProbe.name ? `**${adoptedProbe.name}** ` : ''}with IP address **${adoptedProbe.ip}** has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoptedProbe.city}" is not applied anymore.\n\nIf this change is not right, please report in [this issue](https://github.com/jsdelivr/globalping/issues/268).`,
+			`Globalping detected that your ${adoptedProbe.name ? `probe [**${adoptedProbe.name}**](/probes/${adoptedProbe.id}) with IP address **${adoptedProbe.ip}**` : `[probe with IP address **${adoptedProbe.ip}**](/probes/${adoptedProbe.id})`} has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoptedProbe.city}" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).`,
 		);
 	}
 
@@ -400,7 +401,7 @@ export class AdoptedProbes {
 		return this.sendNotification(
 			adoptedProbe.userId,
 			`Your probe's location has changed back`,
-			`Globalping detected that your probe ${adoptedProbe.name ? `**${adoptedProbe.name}** ` : ''}with IP address **${adoptedProbe.ip}** has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoptedProbe.city}" is now applied again.`,
+			`Globalping detected that your ${adoptedProbe.name ? `probe [**${adoptedProbe.name}**](/probes/${adoptedProbe.id}) with IP address **${adoptedProbe.ip}**` : `[probe with IP address **${adoptedProbe.ip}**](/probes/${adoptedProbe.id})`} has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoptedProbe.city}" is now applied again.`,
 		);
 	}
 
