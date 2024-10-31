@@ -4,6 +4,7 @@ import path from 'node:path';
 
 const WHITELIST_FILE_PATH = 'config/whitelist-ips.txt';
 
+let isInitialized = false;
 const whitelistIps = new Set<string>();
 let whitelistRanges: ReturnType<typeof ipaddr.parseCIDR>[] = [];
 const whitelistRangesCache = new Set<string>();
@@ -24,6 +25,24 @@ export const populateMemList = async () => {
 			whitelistRanges.push(range);
 		}
 	}
+
+	isInitialized = true;
+};
+
+export const isAddrWhitelisted = (addr: string) => {
+	if (!isInitialized) {
+		throw new Error('Whitelist ips are not initialized');
+	}
+
+	if (whitelistIps.has(addr)) {
+		return true;
+	}
+
+	if (isInWhitelistRanges(addr)) {
+		return true;
+	}
+
+	return false;
 };
 
 const isInWhitelistRanges = (addr: string) => {
@@ -36,22 +55,6 @@ const isInWhitelistRanges = (addr: string) => {
 
 	if (isInRanges) {
 		whitelistRangesCache.add(addr);
-		return true;
-	}
-
-	return false;
-};
-
-export const isAddrWhitelisted = (addr: string) => {
-	if (!whitelistIps) {
-		throw new Error('Whitelist ips are not initialized');
-	}
-
-	if (whitelistIps.has(addr)) {
-		return true;
-	}
-
-	if (isInWhitelistRanges(addr)) {
 		return true;
 	}
 
