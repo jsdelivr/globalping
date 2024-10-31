@@ -5,6 +5,7 @@ import GeoipClient, { type LocationInfo } from '../../../../src/lib/geoip/client
 import NullCache from '../../../../src/lib/cache/null-cache.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import geoIpMocks from '../../../mocks/nock-geoip.json' assert { type: 'json' };
+import { populateMemList } from '../../../../src/lib/geoip/whitelist.js';
 
 const MOCK_IP = '131.255.7.26';
 
@@ -466,17 +467,17 @@ describe('geoip service', () => {
 		});
 
 		it('should pass - is_proxy field is true (whitelisted)', async () => {
-			const MOCK_IP = '5.134.119.43';
-
 			mockFs({
 				config: {
-					'whitelist-ips.txt': `${MOCK_IP}`,
+					'whitelist-ips.txt': '1.1.1.1',
 				},
 			});
 
+			await populateMemList();
+
 			nockGeoIpProviders({ ip2location: 'vpn' });
 
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP);
+			const response: LocationInfo | Error = await client.lookup('1.1.1.1');
 
 			expect(response).to.deep.equal({
 				continent: 'NA',
@@ -492,6 +493,52 @@ describe('geoip service', () => {
 				normalizedNetwork: 'the constant company llc',
 				isHosting: true,
 			});
+		});
+
+		it('should pass - is_proxy field is true (whitelisted range)', async () => {
+			mockFs({
+				config: {
+					'whitelist-ips.txt': '1.1.1.0/24',
+				},
+			});
+
+			await populateMemList();
+
+			nockGeoIpProviders({ ip2location: 'vpn' });
+
+			const response: LocationInfo | Error = await client.lookup('1.1.1.1');
+
+			expect(response).to.deep.equal({
+				continent: 'NA',
+				country: 'US',
+				state: 'TX',
+				city: 'Dallas',
+				region: 'Northern America',
+				normalizedCity: 'dallas',
+				asn: 20004,
+				latitude: 32.78,
+				longitude: -96.81,
+				network: 'The Constant Company LLC',
+				normalizedNetwork: 'the constant company llc',
+				isHosting: true,
+			});
+		});
+
+		it('should reject - (not in whitelisted range)', async () => {
+			mockFs({
+				config: {
+					'whitelist-ips.txt': `1.1.2.0/24`,
+				},
+			});
+
+			await populateMemList();
+
+			nockGeoIpProviders({ ip2location: 'vpn' });
+
+			const response: LocationInfo | Error = await client.lookup('1.1.1.1').catch((error: Error) => error);
+
+			expect(response).to.be.instanceof(Error);
+			expect((response as Error).message).to.equal('vpn detected');
 		});
 
 		it('should reject - is_proxy field is true', async () => {
