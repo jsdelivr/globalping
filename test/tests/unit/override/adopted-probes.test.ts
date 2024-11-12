@@ -134,7 +134,7 @@ describe('AdoptedProbes', () => {
 		expect(whereStub.callCount).to.equal(1);
 		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
 		expect(updateStub.callCount).to.equal(1);
-		expect(updateStub.args[0]).to.deep.equal([{ ip: '2.2.2.2', altIps: '[]', uuid: '1-1-1-1-1' }]);
+		expect(updateStub.args[0]).to.deep.equal([{ ip: '2.2.2.2', altIps: '[]' }]);
 	});
 
 	it('class should update alt ips if it is wrong', async () => {
@@ -146,7 +146,7 @@ describe('AdoptedProbes', () => {
 		expect(whereStub.callCount).to.equal(1);
 		expect(whereStub.args[0]).to.deep.equal([{ ip: '1.1.1.1' }]);
 		expect(updateStub.callCount).to.equal(1);
-		expect(updateStub.args[0]).to.deep.equal([{ ip: '1.1.1.1', altIps: JSON.stringify([ '2.2.2.2' ]), uuid: '1-1-1-1-1' }]);
+		expect(updateStub.args[0]).to.deep.equal([{ ip: '1.1.1.1', altIps: JSON.stringify([ '2.2.2.2' ]) }]);
 	});
 
 	it('class should update status to "offline" if adopted probe was not found', async () => {
