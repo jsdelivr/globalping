@@ -245,7 +245,7 @@ export class AdoptedProbes {
 		}
 
 		if (connectedProbeByIp) { // probe was found by ip, but data is outdated
-			return this.updateIds(ip, connectedProbeByIp);
+			return this.updateIds(ip, uuid, connectedProbeByIp);
 		}
 
 		let connectedProbeByAltIp: Probe | undefined;
@@ -261,7 +261,7 @@ export class AdoptedProbes {
 
 		if (connectedProbeByAltIp) { // probe was found by alt ip, need to update the adopted data
 			logger.info('Found by alt IP.', { old: { ip, uuid }, new: { ip: connectedProbeByAltIp.ipAddress, altIps: connectedProbeByAltIp.altIpAddresses, uuid: connectedProbeByAltIp.uuid } });
-			await this.updateIds(ip, connectedProbeByAltIp);
+			await this.updateIds(ip, uuid, connectedProbeByAltIp);
 		}
 
 		if (!uuid) { // uuid is null, so no searching by uuid is required
@@ -272,7 +272,7 @@ export class AdoptedProbes {
 
 		if (connectedProbeByUuid) { // probe was found by uuid, need to update the adopted data
 			logger.info('Found by UUID.', { old: { ip, uuid }, new: { ip: connectedProbeByUuid.ipAddress, altIps: connectedProbeByUuid.altIpAddresses, uuid: connectedProbeByUuid.uuid } });
-			await this.updateIds(ip, connectedProbeByUuid);
+			await this.updateIds(ip, uuid, connectedProbeByUuid);
 		}
 	}
 
@@ -338,11 +338,11 @@ export class AdoptedProbes {
 		}
 	}
 
-	private async updateIds (currentAdoptedIp: string, connectedProbe: Probe) {
+	private async updateIds (currentAdoptedIp: string, uuid: string | null, connectedProbe: Probe) {
 		await this.sql(ADOPTED_PROBES_TABLE).where({ ip: currentAdoptedIp }).update({
 			ip: connectedProbe.ipAddress,
 			altIps: JSON.stringify(connectedProbe.altIpAddresses),
-			uuid: connectedProbe.uuid,
+			...connectedProbe.uuid !== uuid ? { uuid: connectedProbe.uuid } : {},
 		});
 
 		const adoptedProbe = this.getByIp(currentAdoptedIp);
