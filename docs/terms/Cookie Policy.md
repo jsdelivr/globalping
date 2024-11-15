@@ -46,6 +46,4 @@ If you wish to contact our Data Protection Team, please send an email to <legal@
 
 ## Changes to this policy
 
-This policy was published on November 16, 2024 and last updated on November 16, 2024.
-
-We may change this policy from time to time, when we do, we will inform you via a notice on our website.
+This policy was published on November 16, 2024 and last updated on November 16, 2024. We may change this policy from time to time. You are advised to review this Privacy Policy periodically for any changes.

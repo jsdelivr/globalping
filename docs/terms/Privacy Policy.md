@@ -113,4 +113,4 @@ For further information on cookies, when we will request your consent before pla
 
 1. If you have any questions about this Privacy Policy, please contact us:
 
-    By email: legal@globalping.io
+By email: legal@globalping.io

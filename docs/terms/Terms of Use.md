@@ -117,4 +117,4 @@ The laws of England and Wales apply to these Terms and any disputes will be subj
 
 If you have any questions about these Terms, please contact us:
 
-By email: d@globalping.io
+By email: legal@globalping.io
