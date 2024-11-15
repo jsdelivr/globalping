@@ -22,7 +22,7 @@ For example, we may monitor how many times you visit the website, which pages yo
 
 For further information on our use of cookies, including a detailed list of your information which we and others may collect through cookies, please see below.
 
-For further information on cookies generally, including how to control and manage them, visit the guidance on cookies published by the UK Information Commissioner’s Office, or <www.allaboutcookies.org>.
+For further information on cookies generally, including how to control and manage them, visit the guidance on cookies published by the UK Information Commissioner’s Office, or www.allaboutcookies.org.
 
 ## Consent to use cookies and changing settings
 
@@ -36,13 +36,13 @@ The table below provides more information about the cookies we use and why:
 | --- |---------------------|---------------------|--------------|------------|
 | Necessary | `dash_session_token` | user authentication | Globalping | 7 days |
 
-**For further information about cookies and how to disable them please go to the guidance on cookies published by the UK Information Commissioner’s Office, or <www.allaboutcookies.org>**
+**For further information about cookies and how to disable them please go to the guidance on cookies published by the UK Information Commissioner’s Office, or www.allaboutcookies.org**
 
 ## How to contact us
 
 Please contact our Data Protection Team, if you have any questions about this cookie policy or the information we hold about you.
 
-If you wish to contact our Data Protection Team, please send an email to <legal@globalping.io>.
+If you wish to contact our Data Protection Team, please send an email to legal@globalping.io.
 
 ## Changes to this policy
 
