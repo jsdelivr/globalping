@@ -109,7 +109,7 @@ For further information on cookies, when we will request your consent before pla
 
 2. You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.
 
-# 12. Contact Us
+## 12. Contact Us
 
 1. If you have any questions about this Privacy Policy, please contact us:
 
