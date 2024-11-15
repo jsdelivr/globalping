@@ -32,9 +32,9 @@ We will ask for your consent to place cookies or other similar technologies on y
 
 The table below provides more information about the cookies we use and why:
 
-| **Cookie Type** | **Name**            | **Purpose**         | **Provider** | **Expiry** |
-| --- |---------------------|---------------------|--------------|------------|
-| Necessary | `dash_session_token` | user authentication | Globalping | 7 days |
+| **Cookie Type** | **Name**             | **Purpose**         | **Provider** | **Expiry** |
+|-----------------|----------------------|---------------------|--------------|------------|
+| Necessary       | `dash_session_token` | user authentication | Globalping   | 7 days     |
 
 **For further information about cookies and how to disable them please go to the guidance on cookies published by the UK Information Commissioner’s Office, or www.allaboutcookies.org**
 
