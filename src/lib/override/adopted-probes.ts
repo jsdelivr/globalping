@@ -216,9 +216,7 @@ export class AdoptedProbes {
 	}
 
 	private async fetchAdoptedProbes () {
-		const rows = await this.sql(ADOPTED_PROBES_TABLE)
-			.orderByRaw(`lastSyncDate DESC, onlineTimesToday DESC, FIELD(status, 'ready') DESC`)
-			.select<Row[]>();
+		const rows = await this.sql(ADOPTED_PROBES_TABLE).select<Row[]>();
 
 		const adoptedProbes: AdoptedProbe[] = rows.map(row => ({
 			...row,
@@ -402,7 +400,8 @@ export class AdoptedProbes {
 			.where({ ip: currentAdoptedIp })
 			.orWhere({ ip: connectedProbe.ipAddress })
 			.orWhere({ uuid: connectedProbe.uuid })
-			.orderByRaw(`lastSyncDate DESC, onlineTimesToday DESC, FIELD(status, 'ready') DESC`)
+			// First item will be preserved, so we are prioritizing probes with a custom city and online probes.
+			.orderByRaw(`isCustomCity DESC, lastSyncDate DESC, onlineTimesToday DESC, FIELD(status, 'ready') DESC`)
 			.select<Row[]>([ 'id', 'ip', 'uuid' ]);
 		logger.warn('Duplicated probes:', duplicates);
 
