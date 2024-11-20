@@ -576,7 +576,25 @@ describe('AdoptedProbes', () => {
 		expect(sql.update.args[3]).to.deep.equal([{ ip: '1.1.1.1', altIps: '[]', uuid: '2-2-2-2-2' }]);
 	});
 
-	it('class should proceed with syncing other probes if one probe sync fails', async () => {});
+	it('class should proceed with syncing other probes if one probe sync fails', async () => {
+		sql.select.resolves([ defaultAdoptedProbe, { ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2' }]);
+
+		// UUID of 2 probes changed.
+		fetchProbesWithAdminData.resolves([
+			{ ...defaultConnectedProbe, ipAddress: '1.1.1.1', uuid: '1-1-1-1-2' },
+			{ ...defaultConnectedProbe, ipAddress: '2.2.2.2', uuid: '2-2-2-2-3' },
+		]);
+
+		sql.update.rejects(new Error('some sql error'));
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		// Second update is still fired, even when first was rejected.
+		expect(sql.update.callCount).to.equal(2);
+		expect(sql.update.args[0]).to.deep.equal([{ ip: '1.1.1.1', altIps: '[]', uuid: '1-1-1-1-2' }]);
+		expect(sql.update.args[1]).to.deep.equal([{ ip: '2.2.2.2', altIps: '[]', uuid: '2-2-2-2-3' }]);
+	});
 
 	it('getByIp method should return adopted probe data', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);

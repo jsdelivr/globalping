@@ -210,9 +210,17 @@ export class AdoptedProbes {
 		this.connectedUuidToProbe = new Map(allProbes.map(probe => [ probe.uuid, probe ]));
 
 		await this.fetchAdoptedProbes();
-		await Bluebird.map(this.adoptedProbes, ({ ip, altIps, uuid }) => this.syncProbeIds(ip, altIps, uuid), { concurrency: 8 });
-		await Bluebird.map(this.adoptedProbes, adoptedProbe => this.syncProbeData(adoptedProbe), { concurrency: 8 });
-		await Bluebird.map(this.adoptedProbes, ({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate), { concurrency: 8 });
+		await Bluebird.map(this.adoptedProbes, ({ ip, altIps, uuid }) => this.resolveIfError(this.syncProbeIds(ip, altIps, uuid)), { concurrency: 8 });
+		await Bluebird.map(this.adoptedProbes, adoptedProbe => this.resolveIfError(this.syncProbeData(adoptedProbe)), { concurrency: 8 });
+		await Bluebird.map(this.adoptedProbes, ({ ip, lastSyncDate }) => this.resolveIfError(this.updateSyncDate(ip, lastSyncDate)), { concurrency: 8 });
+	}
+
+	private async resolveIfError (pr: Promise<void>): Promise<void> {
+		const result = await Bluebird.resolve(pr).reflect();
+
+		if (result.isRejected()) {
+			logger.error(result.reason());
+		}
 	}
 
 	private async fetchAdoptedProbes () {
