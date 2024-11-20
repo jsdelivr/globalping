@@ -1,9 +1,8 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import relativeDayUtc from 'relative-day-utc';
-import { AdoptedProbes } from '../../../../src/lib/override/adopted-probes.js';
+import { AdoptedProbes, ER_DUP_ENTRY_CODE } from '../../../../src/lib/override/adopted-probes.js';
 import type { Probe } from '../../../../src/probe/types.js';
-import { Knex } from 'knex';
 
 describe('AdoptedProbes', () => {
 	const defaultAdoptedProbe = {
@@ -80,26 +79,37 @@ describe('AdoptedProbes', () => {
 
 	const sandbox = sinon.createSandbox();
 
-	const sql = {} as any;
-	sql.select = sandbox.stub().returns(sql);
-	sql.update = sandbox.stub().returns(sql);
-	sql.delete = sandbox.stub().returns(sql);
-	sql.raw = sandbox.stub().returns(sql);
-	sql.where = sandbox.stub().returns(sql);
-	sql.orderByRaw = sandbox.stub().returns(sql);
-	const sqlStub = sandbox.stub().returns(sql) as any;
+	const sql = {
+		select: sandbox.stub(),
+		update: sandbox.stub(),
+		delete: sandbox.stub(),
+		raw: sandbox.stub(),
+		where: sandbox.stub(),
+		orWhere: sandbox.stub(),
+		whereIn: sandbox.stub(),
+		orderByRaw: sandbox.stub(),
+	} as any;
+	const sqlStub = sandbox.stub() as any;
 	sqlStub.raw = sql.raw;
-
-	const fetchProbesWithAdminData = sandbox.stub().resolves([]);
+	const fetchProbesWithAdminData = sandbox.stub();
 
 	beforeEach(() => {
-		sandbox.resetHistory();
+		sandbox.reset();
+		sql.select.returns(sql);
+		sql.update.returns(sql);
+		sql.delete.returns(sql);
+		sql.raw.returns(sql);
+		sql.where.returns(sql);
+		sql.orWhere.returns(sql);
+		sql.whereIn.returns(sql);
+		sql.orderByRaw.returns(sql);
 		sql.select.resolves([ defaultAdoptedProbe ]);
+		sqlStub.returns(sql);
 		fetchProbesWithAdminData.resolves([ defaultConnectedProbe ]);
 	});
 
 	it('syncDashboardData method should sync the data', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub as unknown as Knex, fetchProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
 
 		expect(sqlStub.callCount).to.equal(0);
 		expect(sql.select.callCount).to.equal(0);
@@ -537,6 +547,36 @@ describe('AdoptedProbes', () => {
 		expect(sql.update.callCount).to.equal(0);
 		expect(sql.delete.callCount).to.equal(0);
 	});
+
+	it('class should delete duplicated adopted probes', async () => {
+		// There are two rows for the same probe in the db.
+		sql.select.resolves([ defaultAdoptedProbe, { ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2' }]);
+
+		// Now second probe connects with the ip of the first one.
+		fetchProbesWithAdminData.resolves([{ ...defaultConnectedProbe, ipAddress: '1.1.1.1', uuid: '2-2-2-2-2' }]);
+
+		const sqlDuplicationError = { ...new Error('sql duplication error'), errno: ER_DUP_ENTRY_CODE };
+		// First probe tries to update uuid to '2-2-2-2-2' and fails with duplicate.
+		sql.update.onFirstCall().rejects(sqlDuplicationError);
+
+		// Second probe tries to update ip to '1.1.1.1' and fails with duplicate.
+		sql.update.onSecondCall().rejects(sqlDuplicationError);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		// Deleting the second item from the list in both cases.
+		expect(sql.delete.callCount).to.equal(2);
+		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2' ] ]);
+		expect(sql.whereIn.args[1]).to.deep.equal([ 'id', [ 'p-2' ] ]);
+
+		// Repeating the update in both cases. One of them will just not be applied by sql.
+		expect(sql.update.callCount).to.equal(4);
+		expect(sql.update.args[2]).to.deep.equal([{ ip: '1.1.1.1', altIps: '[]', uuid: '2-2-2-2-2' }]);
+		expect(sql.update.args[3]).to.deep.equal([{ ip: '1.1.1.1', altIps: '[]', uuid: '2-2-2-2-2' }]);
+	});
+
+	it('class should proceed with syncing other probes if one probe sync fails', async () => {});
 
 	it('getByIp method should return adopted probe data', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
