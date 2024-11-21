@@ -408,13 +408,13 @@ export class AdoptedProbes {
 			.orWhere({ uuid: connectedProbe.uuid })
 			// First item will be preserved, so we are prioritizing online probes.
 			.orderByRaw(`lastSyncDate DESC, onlineTimesToday DESC, FIELD(status, 'ready') DESC`)
-			.select<Row[]>([ 'id', 'ip', 'uuid' ]);
+			.select<Row[]>([ 'id', 'ip', 'uuid', 'altIps' ]);
 		logger.warn('Duplicated probes:', duplicates);
 
 		if (duplicates.length > 1) {
-			const excessProbesIds = duplicates.slice(1).map(row => row.id);
-			logger.warn('Deleting probes with ids:', excessProbesIds);
-			await this.sql(ADOPTED_PROBES_TABLE).whereIn('id', excessProbesIds).delete();
+			const excessProbes = duplicates.slice(1);
+			logger.warn('Deleting probes:', excessProbes);
+			await this.sql(ADOPTED_PROBES_TABLE).whereIn('id', excessProbes.map(row => row.id)).delete();
 		}
 	}
 
