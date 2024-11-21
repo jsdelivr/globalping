@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS gp_adopted_probes (
 	tags LONGTEXT COLLATE utf8mb4_bin DEFAULT '[]' NOT NULL,
 	systemTags LONGTEXT COLLATE utf8mb4_bin DEFAULT '[]' NOT NULL,
 	status VARCHAR(255) NOT NULL,
+	onlineTimesToday INT DEFAULT 0 NOT NULL,
 	isIPv4Supported BOOLEAN,
 	isIPv6Supported BOOLEAN,
 	version VARCHAR(255) NOT NULL,

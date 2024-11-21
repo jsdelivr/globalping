@@ -9,10 +9,13 @@ import { normalizeFromPublicName } from '../geoip/utils.js';
 import { getIndex } from '../location/location.js';
 import { countries } from 'countries-list';
 
+type KnexError = Error & { errno?: number, message: string };
+
 const logger = scopedLogger('adopted-probes');
 
 export const ADOPTED_PROBES_TABLE = 'gp_adopted_probes';
 export const NOTIFICATIONS_TABLE = 'directus_notifications';
+export const ER_DUP_ENTRY_CODE = 1062;
 
 export type AdoptedProbe = {
 	id: string;
@@ -207,9 +210,15 @@ export class AdoptedProbes {
 		this.connectedUuidToProbe = new Map(allProbes.map(probe => [ probe.uuid, probe ]));
 
 		await this.fetchAdoptedProbes();
-		await Bluebird.map(this.adoptedProbes, ({ ip, altIps, uuid }) => this.syncProbeIds(ip, altIps, uuid), { concurrency: 8 });
-		await Bluebird.map(this.adoptedProbes, adoptedProbe => this.syncProbeData(adoptedProbe), { concurrency: 8 });
-		await Bluebird.map(this.adoptedProbes, ({ ip, lastSyncDate }) => this.updateSyncDate(ip, lastSyncDate), { concurrency: 8 });
+		await Bluebird.map(this.adoptedProbes, ({ ip, altIps, uuid }) => this.resolveIfError(this.syncProbeIds(ip, altIps, uuid)), { concurrency: 8 });
+		await Bluebird.map(this.adoptedProbes, adoptedProbe => this.resolveIfError(this.syncProbeData(adoptedProbe)), { concurrency: 8 });
+		await Bluebird.map(this.adoptedProbes, ({ ip, lastSyncDate }) => this.resolveIfError(this.updateSyncDate(ip, lastSyncDate)), { concurrency: 8 });
+	}
+
+	private async resolveIfError (pr: Promise<void>): Promise<void> {
+		return pr.catch((e) => {
+			logger.error(e);
+		});
 	}
 
 	private async fetchAdoptedProbes () {
@@ -245,7 +254,7 @@ export class AdoptedProbes {
 		}
 
 		if (connectedProbeByIp) { // probe was found by ip, but data is outdated
-			return this.updateIds(ip, uuid, connectedProbeByIp);
+			return this.updateIds(ip, connectedProbeByIp);
 		}
 
 		let connectedProbeByAltIp: Probe | undefined;
@@ -261,7 +270,7 @@ export class AdoptedProbes {
 
 		if (connectedProbeByAltIp) { // probe was found by alt ip, need to update the adopted data
 			logger.info('Found by alt IP.', { old: { ip, uuid }, new: { ip: connectedProbeByAltIp.ipAddress, altIps: connectedProbeByAltIp.altIpAddresses, uuid: connectedProbeByAltIp.uuid } });
-			await this.updateIds(ip, uuid, connectedProbeByAltIp);
+			await this.updateIds(ip, connectedProbeByAltIp);
 		}
 
 		if (!uuid) { // uuid is null, so no searching by uuid is required
@@ -272,7 +281,7 @@ export class AdoptedProbes {
 
 		if (connectedProbeByUuid) { // probe was found by uuid, need to update the adopted data
 			logger.info('Found by UUID.', { old: { ip, uuid }, new: { ip: connectedProbeByUuid.ipAddress, altIps: connectedProbeByUuid.altIpAddresses, uuid: connectedProbeByUuid.uuid } });
-			await this.updateIds(ip, uuid, connectedProbeByUuid);
+			await this.updateIds(ip, connectedProbeByUuid);
 		}
 	}
 
@@ -338,12 +347,28 @@ export class AdoptedProbes {
 		}
 	}
 
-	private async updateIds (currentAdoptedIp: string, uuid: string | null, connectedProbe: Probe) {
-		await this.sql(ADOPTED_PROBES_TABLE).where({ ip: currentAdoptedIp }).update({
-			ip: connectedProbe.ipAddress,
-			altIps: JSON.stringify(connectedProbe.altIpAddresses),
-			...connectedProbe.uuid !== uuid ? { uuid: connectedProbe.uuid } : {},
-		});
+	private async updateIds (currentAdoptedIp: string, connectedProbe: Probe) {
+		const update = async () => {
+			await this.sql(ADOPTED_PROBES_TABLE).where({ ip: currentAdoptedIp }).update({
+				ip: connectedProbe.ipAddress,
+				altIps: JSON.stringify(connectedProbe.altIpAddresses),
+				uuid: connectedProbe.uuid,
+			});
+		};
+
+		try {
+			await update();
+		} catch (err) {
+			const error = err as KnexError;
+
+			if (error && error.errno === ER_DUP_ENTRY_CODE) {
+				logger.warn(`Adopted probe duplication error: ${error.message}`);
+				await this.deleteDuplicates(currentAdoptedIp, connectedProbe);
+				await update();
+			} else {
+				throw error;
+			}
+		}
 
 		const adoptedProbe = this.getByIp(currentAdoptedIp);
 
@@ -373,6 +398,23 @@ export class AdoptedProbes {
 
 		if (adoptedProbe) {
 			adoptedProbe.lastSyncDate = date;
+		}
+	}
+
+	private async deleteDuplicates (currentAdoptedIp: string, connectedProbe: Probe) {
+		const duplicates = await this.sql(ADOPTED_PROBES_TABLE)
+			.where({ ip: currentAdoptedIp })
+			.orWhere({ ip: connectedProbe.ipAddress })
+			.orWhere({ uuid: connectedProbe.uuid })
+			// First item will be preserved, so we are prioritizing online probes.
+			.orderByRaw(`lastSyncDate DESC, onlineTimesToday DESC, FIELD(status, 'ready') DESC`)
+			.select<Row[]>([ 'id', 'ip', 'uuid', 'altIps' ]);
+		logger.warn('Duplicated probes:', duplicates);
+
+		if (duplicates.length > 1) {
+			const excessProbes = duplicates.slice(1);
+			logger.warn('Deleting probes:', excessProbes);
+			await this.sql(ADOPTED_PROBES_TABLE).whereIn('id', excessProbes.map(row => row.id)).delete();
 		}
 	}
 
