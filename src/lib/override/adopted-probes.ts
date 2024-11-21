@@ -216,11 +216,9 @@ export class AdoptedProbes {
 	}
 
 	private async resolveIfError (pr: Promise<void>): Promise<void> {
-		const result = await Bluebird.resolve(pr).reflect();
-
-		if (result.isRejected()) {
-			logger.error(result.reason());
-		}
+		return pr.catch((e) => {
+			logger.error(e);
+		});
 	}
 
 	private async fetchAdoptedProbes () {
@@ -408,8 +406,8 @@ export class AdoptedProbes {
 			.where({ ip: currentAdoptedIp })
 			.orWhere({ ip: connectedProbe.ipAddress })
 			.orWhere({ uuid: connectedProbe.uuid })
-			// First item will be preserved, so we are prioritizing probes with a custom city and online probes.
-			.orderByRaw(`isCustomCity DESC, lastSyncDate DESC, onlineTimesToday DESC, FIELD(status, 'ready') DESC`)
+			// First item will be preserved, so we are prioritizing online probes.
+			.orderByRaw(`lastSyncDate DESC, onlineTimesToday DESC, FIELD(status, 'ready') DESC`)
 			.select<Row[]>([ 'id', 'ip', 'uuid' ]);
 		logger.warn('Duplicated probes:', duplicates);
 
