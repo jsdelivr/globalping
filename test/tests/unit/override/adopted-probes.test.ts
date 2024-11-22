@@ -576,6 +576,26 @@ describe('AdoptedProbes', () => {
 		expect(sql.update.args[3]).to.deep.equal([{ ip: '1.1.1.1', altIps: '[]', uuid: '2-2-2-2-2' }]);
 	});
 
+	it('class should only delete duplicated probes of the same user and same country', async () => {
+		sql.select.resolves([
+			{ ...defaultAdoptedProbe, altIps: JSON.stringify([ '9.9.9.9' ]) },
+			{ ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: JSON.stringify([ '9.9.9.9' ]) },
+			{ ...defaultAdoptedProbe, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: JSON.stringify([ '9.9.9.9' ]), country: 'anotherCountry' },
+			{ ...defaultAdoptedProbe, id: 'p-4', ip: '4.4.4.4', uuid: '4-4-4-4-4', altIps: JSON.stringify([ '9.9.9.9' ]), userId: 'anotherUserId' },
+		]);
+
+		fetchProbesWithAdminData.resolves([{ ...defaultConnectedProbe, altIps: JSON.stringify([ '9.9.9.9' ]) }]);
+
+		const sqlDuplicationError = { ...new Error('sql duplication error'), errno: ER_DUP_ENTRY_CODE };
+		sql.update.onFirstCall().rejects(sqlDuplicationError);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.delete.callCount).to.equal(1);
+		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2' ] ]);
+	});
+
 	it('class should proceed with syncing other probes if one probe sync fails', async () => {
 		sql.select.resolves([ defaultAdoptedProbe, { ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2' }]);
 
