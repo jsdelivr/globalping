@@ -9,6 +9,7 @@ describe('AltIps', () => {
 
 	let socket: ServerSocket;
 	let syncedProbeList: any;
+	let geoIpClient: any;
 	let altIps: AltIps;
 
 	beforeEach(() => {
@@ -25,7 +26,9 @@ describe('AltIps', () => {
 			}),
 		};
 
-		altIps = new AltIps(syncedProbeList);
+		geoIpClient = { lookup: sandbox.stub().resolves() };
+
+		altIps = new AltIps(syncedProbeList, geoIpClient);
 	});
 
 	afterEach(async () => {

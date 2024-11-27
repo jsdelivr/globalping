@@ -5,6 +5,7 @@ import type { PubSubMessage, SyncedProbeList } from './ws/synced-probe-list.js';
 import TTLCache from '@isaacs/ttlcache';
 import createHttpError from 'http-errors';
 import { scopedLogger } from './logger.js';
+import GeoIpClient, { getGeoIpClient } from './geoip/client.js';
 
 const getRandomBytes = promisify(randomBytes);
 const logger = scopedLogger('alt-ips');
@@ -30,7 +31,10 @@ export class AltIps {
 	private readonly tokenToSocket: TTLCache<string, ServerSocket> = new TTLCache<string, ServerSocket>({ ttl: 5 * 60 * 1000 });
 	private readonly pendingRequests: Map<string, (value: AltIpResBody) => void> = new Map();
 
-	constructor (private readonly syncedProbeList: SyncedProbeList) {
+	constructor (
+		private readonly syncedProbeList: SyncedProbeList,
+		private readonly geoIpClient: GeoIpClient,
+	) {
 		this.subscribeToNodeMessages();
 	}
 
@@ -95,19 +99,17 @@ export class AltIps {
 		return promise;
 	}
 
-	validateTokenFromPubSub = (reqMessage: PubSubMessage<AltIpReqBody>) => {
-		(async () => {
-			const localSocket = this.tokenToSocket.get(reqMessage.body.token);
+	async validateTokenFromPubSub (reqMessage: PubSubMessage<AltIpReqBody>) {
+		const localSocket = this.tokenToSocket.get(reqMessage.body.token);
 
-			if (!localSocket) {
-				await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'probe-not-found', reqMessageId: reqMessage.id });
-				return;
-			}
+		if (!localSocket) {
+			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'probe-not-found', reqMessageId: reqMessage.id });
+			return;
+		}
 
-			await this.addAltIp(localSocket, reqMessage.body.ip);
-			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqMessageId: reqMessage.id });
-		})().catch(error => logger.error(error));
-	};
+		await this.addAltIp(localSocket, reqMessage.body.ip);
+		await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqMessageId: reqMessage.id });
+	}
 
 	handleRes = (resMessage: PubSubMessage<AltIpResBody>) => {
 		const resolve = this.pendingRequests.get(resMessage.body.reqMessageId);
@@ -121,12 +123,16 @@ export class AltIps {
 	private async addAltIp (localSocket: ServerSocket, ip: string) {
 		if (!localSocket.data.probe.altIpAddresses.includes(ip)) {
 			// validate anycast and country here
+			const ipInfo = await this.geoIpClient.lookup(ip);
 			localSocket.data.probe.altIpAddresses.push(ip);
 		}
 	}
 
 	private subscribeToNodeMessages () {
-		this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, this.validateTokenFromPubSub);
+		this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, (reqMessage: PubSubMessage<AltIpReqBody>) => {
+			this.validateTokenFromPubSub(reqMessage).catch(error => logger.error(error));
+		});
+
 		this.syncedProbeList.subscribeToNodeMessages<AltIpResBody>(ALT_IP_RES_MESSAGE_TYPE, this.handleRes);
 	}
 }
@@ -135,7 +141,7 @@ let altIpsClient: AltIps;
 
 export const getAltIpsClient = () => {
 	if (!altIpsClient) {
-		altIpsClient = new AltIps(getSyncedProbeList());
+		altIpsClient = new AltIps(getSyncedProbeList(), getGeoIpClient());
 	}
 
 	return altIpsClient;

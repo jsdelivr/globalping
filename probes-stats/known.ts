@@ -7,13 +7,13 @@
 
 import fs from 'node:fs';
 import { getRedisClient, initRedisClient } from '../src/lib/redis/client.js';
-import { LocationInfo, createGeoipClient } from '../src/lib/geoip/client.js';
+import { LocationInfo, getGeoIpClient } from '../src/lib/geoip/client.js';
 import { normalizeCityName } from '../src/lib/geoip/utils.js';
 import { fastlyLookup } from '../src/lib/geoip/providers/fastly.js';
 import { ipinfoLookup } from '../src/lib/geoip/providers/ipinfo.js';
 import { maxmindLookup } from '../src/lib/geoip/providers/maxmind.js';
 import { populateMemList as populateIpWhiteList } from '../src/lib/geoip/whitelist.js';
-import { Ip2LocationBundledResponse, ip2LocationLookup } from '../src/lib/geoip/providers/ip2location.js';
+import { ip2LocationLookup } from '../src/lib/geoip/providers/ip2location.js';
 import { ipmapLookup } from '../src/lib/geoip/providers/ipmap.js';
 import sheet from './known-probes.json' assert { type: 'json' };
 import { populateCitiesList } from '../src/lib/geoip/city-approximation.js';
@@ -21,14 +21,14 @@ import { populateCitiesList } from '../src/lib/geoip/city-approximation.js';
 await populateIpWhiteList();
 await initRedisClient();
 await populateCitiesList();
-const geoIpClient = createGeoipClient();
+const geoIpClient = getGeoIpClient();
 
 const input: [string, (string) => Promise<LocationInfo>][] = [
-	[ 'ip2location', async ip => (await geoIpClient.lookupWithCache<Ip2LocationBundledResponse>(`geoip:ip2location:${ip}`, async () => ip2LocationLookup(ip))).location ],
-	[ 'ipmap', ip => geoIpClient.lookupWithCache<LocationInfo>(`geoip:ipmap:${ip}`, async () => ipmapLookup(ip)) ],
-	[ 'ipinfo', ip => geoIpClient.lookupWithCache<LocationInfo>(`geoip:ipinfo:${ip}`, async () => ipinfoLookup(ip)) ],
-	[ 'maxmind', ip => geoIpClient.lookupWithCache<LocationInfo>(`geoip:maxmind:${ip}`, async () => maxmindLookup(ip)) ],
-	[ 'fastly', ip => geoIpClient.lookupWithCache<LocationInfo>(`geoip:fastly:${ip}`, async () => fastlyLookup(ip)) ],
+	[ 'ip2location', ip => geoIpClient.lookupWithCache(`geoip:ip2location:${ip}`, async () => ip2LocationLookup(ip)) ],
+	[ 'ipmap', ip => geoIpClient.lookupWithCache(`geoip:ipmap:${ip}`, async () => ipmapLookup(ip)) ],
+	[ 'ipinfo', ip => geoIpClient.lookupWithCache(`geoip:ipinfo:${ip}`, async () => ipinfoLookup(ip)) ],
+	[ 'maxmind', ip => geoIpClient.lookupWithCache(`geoip:maxmind:${ip}`, async () => maxmindLookup(ip)) ],
+	[ 'fastly', ip => geoIpClient.lookupWithCache(`geoip:fastly:${ip}`, async () => fastlyLookup(ip)) ],
 	[ 'algorithm', ip => geoIpClient.lookup(ip) ],
 ];
 

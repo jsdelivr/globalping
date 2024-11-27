@@ -67,7 +67,7 @@ describe('probe router', () => {
 	};
 
 	before(async () => {
-		await td.replaceEsm('../../../../src/lib/geoip/client.ts', { createGeoipClient: () => ({ lookup: geoLookupMock }) });
+		await td.replaceEsm('../../../../src/lib/geoip/client.ts', { getGeoIpClient: () => ({ lookup: geoLookupMock }) });
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: getRegionMock });
 		buildProbeInternal = (await import('../../../../src/probe/builder.js')).buildProbe as unknown as (socket: RemoteProbeSocket) => Promise<Probe>;
 	});

@@ -1,7 +1,7 @@
 import nock from 'nock';
 import mockFs from 'mock-fs';
 import { expect } from 'chai';
-import GeoipClient, { type LocationInfo } from '../../../../src/lib/geoip/client.js';
+import GeoIpClient, { type LocationInfo } from '../../../../src/lib/geoip/client.js';
 import NullCache from '../../../../src/lib/cache/null-cache.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import geoIpMocks from '../../../mocks/nock-geoip.json' assert { type: 'json' };
@@ -10,7 +10,7 @@ import { populateMemList } from '../../../../src/lib/geoip/whitelist.js';
 const MOCK_IP = '131.255.7.26';
 
 describe('geoip service', () => {
-	const client = new GeoipClient(new NullCache());
+	const client = new GeoIpClient(new NullCache());
 
 	afterEach(() => {
 		nock.cleanAll();

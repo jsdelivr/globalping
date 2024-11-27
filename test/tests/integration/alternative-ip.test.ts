@@ -42,6 +42,8 @@ describe('Adoption code', () => {
 
 		probe.emit('probe:status:update', 'ready');
 
+		nockGeoIpProviders();
+
 		await requestAgent.post('/v1/alternative-ip')
 			.send({ socketId, token })
 			.expect(200);
@@ -70,6 +72,8 @@ describe('Adoption code', () => {
 		});
 
 		probe.emit('probe:status:update', 'ready');
+
+		nockGeoIpProviders();
 
 		await requestAgent.post('/v1/alternative-ip')
 			.send({ socketId, token })

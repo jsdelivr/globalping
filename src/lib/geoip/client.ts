@@ -26,11 +26,17 @@ export type NetworkInfo = {
 
 const logger = scopedLogger('geoip');
 
-export const createGeoipClient = (): GeoipClient => {
-	return new GeoipClient(config.get('geoip.cache.enabled') ? new RedisCache(getRedisClient()) : new NullCache());
+let geoIpClient: GeoIpClient;
+
+export const getGeoIpClient = (): GeoIpClient => {
+	if (!geoIpClient) {
+		geoIpClient = new GeoIpClient(config.get('geoip.cache.enabled') ? new RedisCache(getRedisClient()) : new NullCache());
+	}
+
+	return geoIpClient;
 };
 
-export default class GeoipClient {
+export default class GeoIpClient {
 	constructor (private readonly cache: CacheInterface) {}
 
 	async lookup (addr: string): Promise<LocationInfo> {
