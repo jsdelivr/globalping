@@ -11,12 +11,12 @@ import { ipinfoLookup } from './providers/ipinfo.js';
 import { fastlyLookup } from './providers/fastly.js';
 import { maxmindLookup } from './providers/maxmind.js';
 import { ipmapLookup } from './providers/ipmap.js';
-import { type Ip2LocationBundledResponse, ip2LocationLookup } from './providers/ip2location.js';
+import { ip2LocationLookup } from './providers/ip2location.js';
 import { isHostingOverrides } from './overrides.js';
 import NullCache from '../cache/null-cache.js';
 
 type Provider = 'ipmap' | 'ip2location' | 'ipinfo' | 'maxmind' | 'fastly';
-export type LocationInfo = ProbeLocation & {isHosting: boolean | null};
+export type LocationInfo = ProbeLocation & {isProxy: boolean | null, isHosting: boolean | null, isAnycast: boolean | null};
 export type LocationInfoWithProvider = LocationInfo & {provider: Provider};
 export type NetworkInfo = {
 	network: string;
@@ -34,36 +34,39 @@ export default class GeoipClient {
 	constructor (private readonly cache: CacheInterface) {}
 
 	async lookup (addr: string): Promise<LocationInfo> {
-		let isHosting = null;
 		const results = await Promise
 			.allSettled([
-				this.lookupWithCache<LocationInfo>(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
-				this.lookupWithCache<Ip2LocationBundledResponse>(`geoip:ip2location:${addr}`, async () => ip2LocationLookup(addr)),
-				this.lookupWithCache<LocationInfo>(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
-				this.lookupWithCache<LocationInfo>(`geoip:ipmap:${addr}`, async () => ipmapLookup(addr)),
-				this.lookupWithCache<LocationInfo>(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
+				this.lookupWithCache(`geoip:ipinfo:${addr}`, async () => ipinfoLookup(addr)),
+				this.lookupWithCache(`geoip:ip2location:${addr}`, async () => ip2LocationLookup(addr)),
+				this.lookupWithCache(`geoip:maxmind:${addr}`, async () => maxmindLookup(addr)),
+				this.lookupWithCache(`geoip:ipmap:${addr}`, async () => ipmapLookup(addr)),
+				this.lookupWithCache(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
 			.then(([ ipinfo, ip2location, maxmind, ipmap, fastly ]) => {
-				isHosting = ip2location.status === 'fulfilled' ? ip2location.value.location.isHosting : null;
 				const fulfilled: (LocationInfoWithProvider | null)[] = [];
 
 				// Providers here are pushed in a desc prioritized order
 				fulfilled.push(
 					ipinfo.status === 'fulfilled' ? { ...ipinfo.value, provider: 'ipinfo' } : null,
-					ip2location.status === 'fulfilled' ? { ...ip2location.value.location, provider: 'ip2location' } : null,
+					ip2location.status === 'fulfilled' ? { ...ip2location.value, provider: 'ip2location' } : null,
 					maxmind.status === 'fulfilled' ? { ...maxmind.value, provider: 'maxmind' } : null,
 					ipmap.status === 'fulfilled' ? { ...ipmap.value, provider: 'ipmap' } : null,
 					fastly.status === 'fulfilled' ? { ...fastly.value, provider: 'fastly' } : null,
 				);
 
-				if (ip2location.status === 'fulfilled' && ip2location.value.isProxy && !isAddrWhitelisted(addr)) {
-					throw new ProbeError('vpn detected');
-				}
-
 				return fulfilled.filter(Boolean).flat();
 			}) as LocationInfoWithProvider[];
 
+		const ip2location = results.find(result => result.provider === 'ip2location');
+		const ipinfo = results.find(result => result.provider === 'ipinfo');
 		const resultsWithCities = results.filter(s => s.city);
+
+
+		const isProxy = (ip2location?.isProxy && !isAddrWhitelisted(addr)) ?? null;
+
+		if (isProxy) {
+			throw new ProbeError('vpn detected');
+		}
 
 		if (resultsWithCities.length === 0 || (resultsWithCities.length === 1 && resultsWithCities[0]?.provider === 'fastly')) {
 			throw new ProbeError(`unresolvable geoip: ${addr}`);
@@ -76,12 +79,16 @@ export default class GeoipClient {
 			throw new ProbeError(`unresolvable geoip: ${addr}`);
 		}
 
+		let isHosting = ip2location?.isHosting ?? null;
+
 		for (const override of isHostingOverrides) {
 			if (override.normalizedNetwork.test(networkMatch.normalizedNetwork)) {
 				isHosting = override.isHosting;
 				break;
 			}
 		}
+
+		const isAnycast = ipinfo?.isAnycast ?? null;
 
 		return {
 			continent: match.continent,
@@ -95,7 +102,9 @@ export default class GeoipClient {
 			longitude: Math.round(Number(match.longitude) * 100) / 100,
 			network: networkMatch.network,
 			normalizedNetwork: networkMatch.normalizedNetwork,
+			isProxy,
 			isHosting,
+			isAnycast,
 		};
 	}
 

@@ -34,6 +34,8 @@ export const ipmapLookup = async (addr: string): Promise<LocationInfo> => {
 		longitude: Number(location.longitude) ?? 0,
 		network: '',
 		normalizedNetwork: '',
+		isProxy: null,
 		isHosting: null,
+		isAnycast: null,
 	};
 };
