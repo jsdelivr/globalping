@@ -332,7 +332,7 @@ describe('geoip service', () => {
 		});
 	});
 
-	it.only(`should set 'isAnycast: true' if ipinfo returned that it is anycast ip`, async () => {
+	it(`should set 'isAnycast: true' if ipinfo returned that it is anycast ip`, async () => {
 		nockGeoIpProviders({ ipinfo: 'anycast' });
 
 		const info = await client.lookup(MOCK_IP);

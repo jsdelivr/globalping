@@ -55,17 +55,15 @@ export class AltIps {
 			return;
 		}
 
-		// Simple case - the socket is directly on this node
+		// First case - the socket is directly on this node
 		const localSocket = this.tokenToSocket.get(request.token);
 
-		if (localSocket && localSocket.data.probe.altIpAddresses.includes(request.ip)) {
-			return;
-		} else if (localSocket) {
-			localSocket.data.probe.altIpAddresses.push(request.ip);
+		if (localSocket) {
+			await this.addAltIp(localSocket, request.ip);
 			return;
 		}
 
-		// The socket is on a different node, need to perform a remote update.
+		// Second case - the socket is on a different node, need to perform a remote update.
 		const nodeId = this.syncedProbeList.getNodeIdBySocketId(request.socketId);
 
 		if (nodeId === this.syncedProbeList.getNodeId()) {
@@ -106,10 +104,7 @@ export class AltIps {
 				return;
 			}
 
-			if (!localSocket.data.probe.altIpAddresses.includes(reqMessage.body.ip)) {
-				localSocket.data.probe.altIpAddresses.push(reqMessage.body.ip);
-			}
-
+			await this.addAltIp(localSocket, reqMessage.body.ip);
 			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqMessageId: reqMessage.id });
 		})().catch(error => logger.error(error));
 	};
@@ -122,6 +117,13 @@ export class AltIps {
 			resolve(resMessage.body);
 		}
 	};
+
+	private async addAltIp (localSocket: ServerSocket, ip: string) {
+		if (!localSocket.data.probe.altIpAddresses.includes(ip)) {
+			// validate anycast and country here
+			localSocket.data.probe.altIpAddresses.push(ip);
+		}
+	}
 
 	private subscribeToNodeMessages () {
 		this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, this.validateTokenFromPubSub);
