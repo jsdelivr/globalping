@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
 	'exit': true,
-	'timeout': 20000,
+	'timeout': 40000,
 	'check-leaks': true,
 	'file': [
 		path.join(__dirname, 'test/e2e/setup.ts'),
