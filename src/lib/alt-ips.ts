@@ -102,7 +102,7 @@ export class AltIps {
 			setTimeout(() => {
 				this.pendingRequests.delete(messageId);
 				reject(createHttpError(504, 'Node owning the probe failed to handle alt ip in specified timeout.', { type: 'node_response_timeout' }));
-			}, 15000);
+			}, 20000);
 		}).catch((err) => {
 			logger.error(`Node failed to handle alt ip message ${messageId} in specified timeout.`);
 			throw err;
