@@ -50,6 +50,8 @@ export const maxmindLookup = async (addr: string): Promise<LocationInfo> => {
 		longitude: data.location?.longitude ?? 0,
 		network: data.traits?.isp ?? '',
 		normalizedNetwork: normalizeNetworkName(data.traits?.isp ?? ''),
+		isProxy: null,
 		isHosting: null,
+		isAnycast: data.traits?.isAnycast ?? null,
 	};
 };

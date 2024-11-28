@@ -5,6 +5,8 @@ import type { PubSubMessage, SyncedProbeList } from './ws/synced-probe-list.js';
 import TTLCache from '@isaacs/ttlcache';
 import createHttpError from 'http-errors';
 import { scopedLogger } from './logger.js';
+import GeoIpClient, { getGeoIpClient } from './geoip/client.js';
+import { isIpPrivate } from './private-ip.js';
 
 const getRandomBytes = promisify(randomBytes);
 const logger = scopedLogger('alt-ips');
@@ -22,7 +24,10 @@ export type AltIpResBody = {
 	result: 'success';
 	reqMessageId: string;
 } | {
-	result: 'probe-not-found',
+	result: 'probe-not-found';
+	reqMessageId: string;
+} | {
+	result: 'invalid-alt-ip';
 	reqMessageId: string;
 };
 
@@ -30,7 +35,10 @@ export class AltIps {
 	private readonly tokenToSocket: TTLCache<string, ServerSocket> = new TTLCache<string, ServerSocket>({ ttl: 5 * 60 * 1000 });
 	private readonly pendingRequests: Map<string, (value: AltIpResBody) => void> = new Map();
 
-	constructor (private readonly syncedProbeList: SyncedProbeList) {
+	constructor (
+		private readonly syncedProbeList: SyncedProbeList,
+		private readonly geoIpClient: GeoIpClient,
+	) {
 		this.subscribeToNodeMessages();
 	}
 
@@ -42,7 +50,8 @@ export class AltIps {
 	}
 
 	async validateTokenFromHttp (request: AltIpReqBody) {
-		await this.syncedProbeList.fetchProbes(); // This refreshes the probes list
+		// This refreshes the probes list.
+		await this.syncedProbeList.fetchProbes();
 
 		const duplicateProbe = this.syncedProbeList.getProbeByIp(request.ip);
 
@@ -55,17 +64,20 @@ export class AltIps {
 			return;
 		}
 
-		// Simple case - the socket is directly on this node
+		// First case - the socket is directly on this node.
 		const localSocket = this.tokenToSocket.get(request.token);
 
-		if (localSocket && localSocket.data.probe.altIpAddresses.includes(request.ip)) {
-			return;
-		} else if (localSocket) {
-			localSocket.data.probe.altIpAddresses.push(request.ip);
+		if (localSocket) {
+			const isAdded = await this.addAltIp(localSocket, request.ip);
+
+			if (!isAdded) {
+				throw createHttpError(400, 'Alt IP is invalid.', { type: 'invalid_alt_ip' });
+			}
+
 			return;
 		}
 
-		// The socket is on a different node, need to perform a remote update.
+		// Second case - the socket is on a different node, need to perform a remote update.
 		const nodeId = this.syncedProbeList.getNodeIdBySocketId(request.socketId);
 
 		if (nodeId === this.syncedProbeList.getNodeId()) {
@@ -76,6 +88,8 @@ export class AltIps {
 
 			if (response.result === 'probe-not-found') {
 				throw createHttpError(400, 'Unable to find a probe on the remote node.', { type: 'probe_not_found_on_remote' });
+			} else if (response.result === 'invalid-alt-ip') {
+				throw createHttpError(400, 'Alt IP is invalid.', { type: 'invalid_alt_ip' });
 			}
 		} else {
 			throw createHttpError(400, 'Unable to find a probe by specified socketId.', { type: 'probe_not_found' });
@@ -89,7 +103,7 @@ export class AltIps {
 			setTimeout(() => {
 				this.pendingRequests.delete(messageId);
 				reject(createHttpError(504, 'Node owning the probe failed to handle alt ip in specified timeout.', { type: 'node_response_timeout' }));
-			}, 15000);
+			}, 20_000);
 		}).catch((err) => {
 			logger.error(`Node failed to handle alt ip message ${messageId} in specified timeout.`);
 			throw err;
@@ -97,22 +111,22 @@ export class AltIps {
 		return promise;
 	}
 
-	validateTokenFromPubSub = (reqMessage: PubSubMessage<AltIpReqBody>) => {
-		(async () => {
-			const localSocket = this.tokenToSocket.get(reqMessage.body.token);
+	async validateTokenFromPubSub (reqMessage: PubSubMessage<AltIpReqBody>) {
+		const localSocket = this.tokenToSocket.get(reqMessage.body.token);
 
-			if (!localSocket) {
-				await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'probe-not-found', reqMessageId: reqMessage.id });
-				return;
-			}
+		if (!localSocket) {
+			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'probe-not-found', reqMessageId: reqMessage.id });
+			return;
+		}
 
-			if (!localSocket.data.probe.altIpAddresses.includes(reqMessage.body.ip)) {
-				localSocket.data.probe.altIpAddresses.push(reqMessage.body.ip);
-			}
+		const isAdded = await this.addAltIp(localSocket, reqMessage.body.ip);
 
+		if (!isAdded) {
+			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'invalid-alt-ip', reqMessageId: reqMessage.id });
+		} else {
 			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqMessageId: reqMessage.id });
-		})().catch(error => logger.error(error));
-	};
+		}
+	}
 
 	handleRes = (resMessage: PubSubMessage<AltIpResBody>) => {
 		const resolve = this.pendingRequests.get(resMessage.body.reqMessageId);
@@ -123,8 +137,38 @@ export class AltIps {
 		}
 	};
 
+	/**
+	 * @returns was alt IP added.
+	 */
+	private async addAltIp (localSocket: ServerSocket, ip: string): Promise<boolean> {
+		if (localSocket.data.probe.altIpAddresses.includes(ip)) {
+			return true;
+		}
+
+		if (isIpPrivate(ip)) {
+			return false;
+		}
+
+		try {
+			const altIpInfo = await this.geoIpClient.lookup(ip);
+
+			if (altIpInfo.country !== localSocket.data.probe.location.country || altIpInfo.isAnycast) {
+				return false;
+			}
+		} catch (e) {
+			logger.error(e);
+			return false;
+		}
+
+		localSocket.data.probe.altIpAddresses.push(ip);
+		return true;
+	}
+
 	private subscribeToNodeMessages () {
-		this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, this.validateTokenFromPubSub);
+		this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, (reqMessage: PubSubMessage<AltIpReqBody>) => {
+			this.validateTokenFromPubSub(reqMessage).catch(error => logger.error(error));
+		});
+
 		this.syncedProbeList.subscribeToNodeMessages<AltIpResBody>(ALT_IP_RES_MESSAGE_TYPE, this.handleRes);
 	}
 }
@@ -133,7 +177,7 @@ let altIpsClient: AltIps;
 
 export const getAltIpsClient = () => {
 	if (!altIpsClient) {
-		altIpsClient = new AltIps(getSyncedProbeList());
+		altIpsClient = new AltIps(getSyncedProbeList(), getGeoIpClient());
 	}
 
 	return altIpsClient;

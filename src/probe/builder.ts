@@ -4,36 +4,24 @@ import { isIpPrivate } from '../lib/private-ip.js';
 import semver from 'semver';
 import { getIndex } from '../lib/location/location.js';
 import { ProbeError } from '../lib/probe-error.js';
-import { createGeoipClient, LocationInfo } from '../lib/geoip/client.js';
-import type GeoipClient from '../lib/geoip/client.js';
+import { getGeoIpClient, LocationInfo } from '../lib/geoip/client.js';
 import getProbeIp from '../lib/get-probe-ip.js';
 import { getRegion } from '../lib/ip-ranges.js';
 import type { Probe, ProbeLocation, Tag } from './types.js';
 import { probeIpLimit } from '../lib/ws/server.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
 
-let geoipClient: GeoipClient;
 
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
-	if (!geoipClient) {
-		geoipClient = createGeoipClient();
-	}
-
 	const version = String(socket.handshake.query['version']);
-
 	const nodeVersion = String(socket.handshake.query['nodeVersion']);
-
 	const totalMemory = Number(socket.handshake.query['totalMemory']);
 	const totalDiskSize = Number(socket.handshake.query['totalDiskSize']);
 	const availableDiskSpace = Number(socket.handshake.query['availableDiskSpace']);
-
 	const uuid = String(socket.handshake.query['uuid']);
-
 	const isHardware = socket.handshake.query['isHardware'] === 'true' || socket.handshake.query['isHardware'] === '1';
-
 	const hardwareDeviceValue = socket.handshake.query['hardwareDevice'];
 	const hardwareDevice = (!hardwareDeviceValue || hardwareDeviceValue === 'undefined') ? null : String(hardwareDeviceValue);
-
 	const host = process.env['HOSTNAME'] ?? '';
 
 	const ip = getProbeIp(socket);
@@ -51,7 +39,8 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	if (process.env['TEST_MODE'] === 'perf') {
 		ipInfo = fakeLookup();
 	} else if (!isIpPrivate(ip)) {
-		ipInfo = await geoipClient.lookup(ip);
+		const geoIpClient = getGeoIpClient();
+		ipInfo = await geoIpClient.lookup(ip);
 	}
 
 	if (!ipInfo) {

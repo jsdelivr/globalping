@@ -29,15 +29,10 @@ type Ip2LocationResponse = {
 	usage_type?: string;
 };
 
-export type Ip2LocationBundledResponse = {
-	location: LocationInfo,
-	isProxy: boolean,
-};
-
 // https://blog.ip2location.com/knowledge-base/what-is-usage-type/
 const HOSTING_USAGE_TYPES = [ 'CDN', 'DCH' ];
 
-export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundledResponse> => {
+export const ip2LocationLookup = async (addr: string): Promise<LocationInfo> => {
 	const result = await got(`https://api.ip2location.io`, {
 		searchParams: {
 			key: config.get<string>('ip2location.apiKey'),
@@ -48,7 +43,7 @@ export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundle
 
 	const city = await getCity(result.city_name, result.country_code, result.latitude, result.longitude);
 
-	const location = {
+	return {
 		continent: result.country_code ? getContinentByCountry(result.country_code) : '',
 		region: result.country_code ? getRegionByCountry(result.country_code) : '',
 		state: result.country_code === 'US' && result.region_name ? getStateIsoByName(result.region_name) : null,
@@ -60,11 +55,8 @@ export const ip2LocationLookup = async (addr: string): Promise<Ip2LocationBundle
 		longitude: result.longitude ?? 0,
 		network: result.as ?? '',
 		normalizedNetwork: normalizeNetworkName(result.as ?? ''),
-		isHosting: result.usage_type ? HOSTING_USAGE_TYPES.includes(result.usage_type) : null,
-	};
-
-	return {
-		location,
 		isProxy: result.is_proxy ?? false,
+		isHosting: result.usage_type ? HOSTING_USAGE_TYPES.includes(result.usage_type) : null,
+		isAnycast: null,
 	};
 };

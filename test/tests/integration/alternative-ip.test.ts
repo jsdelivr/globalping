@@ -6,7 +6,7 @@ import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } fr
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { expect } from 'chai';
 
-describe('Adoption code', () => {
+describe('Alternative IPs', () => {
 	let app: Server;
 	let requestAgent: Agent;
 
@@ -42,8 +42,11 @@ describe('Adoption code', () => {
 
 		probe.emit('probe:status:update', 'ready');
 
+		nockGeoIpProviders();
+
 		await requestAgent.post('/v1/alternative-ip')
 			.send({ socketId, token })
+			.set('x-client-ip', '89.64.80.78')
 			.expect(200);
 
 		await waitForProbesUpdate();
@@ -71,12 +74,16 @@ describe('Adoption code', () => {
 
 		probe.emit('probe:status:update', 'ready');
 
+		nockGeoIpProviders();
+
 		await requestAgent.post('/v1/alternative-ip')
 			.send({ socketId, token })
+			.set('x-client-ip', '89.64.80.78')
 			.expect(200);
 
 		await requestAgent.post('/v1/alternative-ip')
 			.send({ socketId, token })
+			.set('x-client-ip', '89.64.80.78')
 			.expect(200);
 
 		await waitForProbesUpdate();
@@ -123,6 +130,7 @@ describe('Adoption code', () => {
 
 		await requestAgent.post('/v1/alternative-ip')
 			.send({ socketId, token })
+			.set('x-client-ip', '89.64.80.78')
 			.expect(400)
 			.expect((response) => {
 				expect(response.body.error.type).to.equal('probe_not_found');

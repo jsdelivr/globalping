@@ -398,6 +398,17 @@
 			"region": "Texas",
 			"country": "US",
 			"loc": "32.7831,-96.8067"
+		},
+		"anycast": {
+			"city": "Dallas",
+			"region": "Texas",
+			"country": "US",
+			"loc": "32.7831,-96.8067",
+			"org": "AS20004 The Constant Company LLC",
+			"privacy": {
+				"hosting": true
+			},
+			"anycast": true
 		}
 	},
 	"fastly": {

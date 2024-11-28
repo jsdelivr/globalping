@@ -49,6 +49,8 @@ export const fastlyLookup = async (addr: string): Promise<LocationInfo> => {
 		longitude: data.longitude,
 		network: result.as.name,
 		normalizedNetwork: normalizeNetworkName(result.as.name),
+		isProxy: null,
 		isHosting: null,
+		isAnycast: null,
 	};
 };

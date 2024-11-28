@@ -13,6 +13,8 @@ export const fakeLookup = (): LocationInfo => {
 		longitude: -58.3772,
 		network: 'InterBS S.R.L. (BAEHOST)',
 		normalizedNetwork: 'interbs s.r.l. (baehost)',
+		isProxy: false,
 		isHosting: null,
+		isAnycast: false,
 	};
 };
