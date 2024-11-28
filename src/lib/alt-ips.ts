@@ -50,7 +50,8 @@ export class AltIps {
 	}
 
 	async validateTokenFromHttp (request: AltIpReqBody) {
-		await this.syncedProbeList.fetchProbes(); // This refreshes the probes list
+		// This refreshes the probes list.
+		await this.syncedProbeList.fetchProbes();
 
 		const duplicateProbe = this.syncedProbeList.getProbeByIp(request.ip);
 
@@ -63,7 +64,7 @@ export class AltIps {
 			return;
 		}
 
-		// First case - the socket is directly on this node
+		// First case - the socket is directly on this node.
 		const localSocket = this.tokenToSocket.get(request.token);
 
 		if (localSocket) {
@@ -102,7 +103,7 @@ export class AltIps {
 			setTimeout(() => {
 				this.pendingRequests.delete(messageId);
 				reject(createHttpError(504, 'Node owning the probe failed to handle alt ip in specified timeout.', { type: 'node_response_timeout' }));
-			}, 20000);
+			}, 20_000);
 		}).catch((err) => {
 			logger.error(`Node failed to handle alt ip message ${messageId} in specified timeout.`);
 			throw err;
@@ -137,7 +138,7 @@ export class AltIps {
 	};
 
 	/**
-	 * @returns is alt IP valid (added) or invalid (not added).
+	 * @returns was alt IP added.
 	 */
 	private async addAltIp (localSocket: ServerSocket, ip: string): Promise<boolean> {
 		if (localSocket.data.probe.altIpAddresses.includes(ip)) {
@@ -148,9 +149,14 @@ export class AltIps {
 			return false;
 		}
 
-		const altIpInfo = await this.geoIpClient.lookup(ip);
+		try {
+			const altIpInfo = await this.geoIpClient.lookup(ip);
 
-		if (altIpInfo.country !== localSocket.data.probe.location.country || altIpInfo.isAnycast) {
+			if (altIpInfo.country !== localSocket.data.probe.location.country || altIpInfo.isAnycast) {
+				return false;
+			}
+		} catch (e) {
+			logger.error(e);
 			return false;
 		}
 

@@ -166,7 +166,7 @@ describe('AltIps', () => {
 		syncedProbeList.getNodeIdBySocketId.returns('nodeId2');
 
 		setTimeout(async () => {
-			clock.tickAsync(15000);
+			clock.tickAsync(25000);
 		});
 
 		const err = await altIps.validateTokenFromHttp({
@@ -254,6 +254,30 @@ describe('AltIps', () => {
 	it('should throw if alt ip is not in the same country', async () => {
 		const token = await altIps.generateToken(socket);
 		geoIpClient.lookup.resolves({ country: 'FR', isAnycast: false });
+
+		await altIps.validateTokenFromPubSub({
+			id: 'message1',
+			reqNodeId: 'node1',
+			type: ALT_IP_REQ_MESSAGE_TYPE,
+			body: {
+				socketId: 'socketId2',
+				ip: '2.2.2.2',
+				token,
+			},
+		});
+
+		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
+
+		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
+			'node1',
+			'alt-ip:res',
+			{ result: 'invalid-alt-ip', reqMessageId: 'message1' },
+		]);
+	});
+
+	it('should send response message if geoip throws', async () => {
+		const token = await altIps.generateToken(socket);
+		geoIpClient.lookup.rejects(new Error('geoip error'));
 
 		await altIps.validateTokenFromPubSub({
 			id: 'message1',
