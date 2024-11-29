@@ -84,7 +84,7 @@ export class AltIps {
 			throw createHttpError(400, 'Token value is wrong.', { type: 'wrong_token' });
 		} else if (nodeId) {
 			const id = await this.syncedProbeList.publishToNode<AltIpReqBody>(nodeId, ALT_IP_REQ_MESSAGE_TYPE, request);
-			const response: AltIpResBody = await this.getResponsePromise(id);
+			const response: AltIpResBody = await this.getResponsePromise(id, nodeId, request);
 
 			if (response.result === 'probe-not-found') {
 				throw createHttpError(400, 'Unable to find a probe on the remote node.', { type: 'probe_not_found_on_remote' });
@@ -96,7 +96,7 @@ export class AltIps {
 		}
 	}
 
-	private getResponsePromise (messageId: string) {
+	private getResponsePromise (messageId: string, nodeId: string, request: AltIpReqBody) {
 		const promise = new Promise<AltIpResBody>((resolve, reject) => {
 			this.pendingRequests.set(messageId, resolve);
 
@@ -105,7 +105,7 @@ export class AltIps {
 				reject(createHttpError(504, 'Node owning the probe failed to handle alt ip in specified timeout.', { type: 'node_response_timeout' }));
 			}, 20_000);
 		}).catch((err) => {
-			logger.error(`Node failed to handle alt ip message ${messageId} in specified timeout.`);
+			logger.warn(`Node ${nodeId} failed to handle alt ip ${request.ip} for socket ${request.socketId} in specified timeout.`);
 			throw err;
 		});
 		return promise;
