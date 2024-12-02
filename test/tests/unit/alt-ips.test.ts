@@ -55,21 +55,6 @@ describe('AltIps', () => {
 		expect(socket.data.probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
 	});
 
-	it('should not add alt ip for duplicated connected ip', async () => {
-		syncedProbeList.getProbeByIp.returns({});
-
-		const token = await altIps.generateToken(socket);
-		const err = await altIps.validateTokenFromHttp({
-			socketId: 'socketId1',
-			ip: '2.2.2.2',
-			token,
-		}).catch(err => err);
-
-		expect(syncedProbeList.getProbeByIp.args[0]).to.deep.equal([ '2.2.2.2' ]);
-		expect(err).to.deep.equal(createHttpError(400, 'Another probe with that ip is already connected.', { type: 'alt_ip_duplication' }));
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
-	});
-
 	it('should do nothing if alt ip is already added', async () => {
 		syncedProbeList.getProbeByIp.returns(socket.data.probe);
 
@@ -80,6 +65,35 @@ describe('AltIps', () => {
 			token,
 		});
 
+		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
+	});
+
+	it('should throw for duplicated connected ip', async () => {
+		syncedProbeList.getNodeIdBySocketId.returns(null);
+
+		const token = await altIps.generateToken(socket);
+		const err = await altIps.validateTokenFromHttp({
+			socketId: 'socketId1',
+			ip: '2.2.2.2',
+			token,
+		}).catch(err => err);
+
+		expect(err).to.deep.equal(createHttpError(400, 'Unable to find a probe by specified socket id.', { type: 'probe_not_found' }));
+		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
+	});
+
+	it('should throw if probe reconnected and have another socket id', async () => {
+		syncedProbeList.getProbeByIp.returns({});
+
+		const token = await altIps.generateToken(socket);
+		const err = await altIps.validateTokenFromHttp({
+			socketId: 'socketId1',
+			ip: '2.2.2.2',
+			token,
+		}).catch(err => err);
+
+		expect(syncedProbeList.getProbeByIp.args[0]).to.deep.equal([ '2.2.2.2' ]);
+		expect(err).to.deep.equal(createHttpError(400, 'Another probe with this ip is already connected.', { type: 'alt_ip_duplication' }));
 		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
 	});
 
@@ -101,7 +115,7 @@ describe('AltIps', () => {
 			token: 'token2',
 		}).catch(err => err);
 
-		expect(err).to.deep.equal(createHttpError(400, 'Unable to find a probe by specified socketId.', { type: 'probe_not_found' }));
+		expect(err).to.deep.equal(createHttpError(400, 'Unable to find a probe by specified socket id.', { type: 'probe_not_found' }));
 	});
 
 	it('should add alt ip for external probe', async () => {
