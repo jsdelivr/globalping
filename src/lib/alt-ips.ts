@@ -50,14 +50,20 @@ export class AltIps {
 	}
 
 	async validateTokenFromHttp (request: AltIpReqBody) {
-		// This refreshes the probes list.
+		// Refresh the probes list.
 		await this.syncedProbeList.fetchProbes();
+
+		const nodeId = this.syncedProbeList.getNodeIdBySocketId(request.socketId);
+
+		if (!nodeId) {
+			throw createHttpError(400, 'Unable to find a probe by specified socket id.', { type: 'probe_not_found' });
+		}
 
 		const duplicateProbe = this.syncedProbeList.getProbeByIp(request.ip);
 
 		if (duplicateProbe && duplicateProbe.client !== request.socketId) {
 			logger.warn(`Probe with ip ${request.ip} is already connected. Ignoring an alternative ip ${request.ip} for the socket ${request.socketId}`);
-			throw createHttpError(400, 'Another probe with that ip is already connected.', { type: 'alt_ip_duplication' });
+			throw createHttpError(400, 'Another probe with this ip is already connected.', { type: 'alt_ip_duplication' });
 		}
 
 		if (duplicateProbe && duplicateProbe.client === request.socketId) {
@@ -77,22 +83,19 @@ export class AltIps {
 			return;
 		}
 
-		// Second case - the socket is on a different node, need to perform a remote update.
-		const nodeId = this.syncedProbeList.getNodeIdBySocketId(request.socketId);
 
 		if (nodeId === this.syncedProbeList.getNodeId()) {
 			throw createHttpError(400, 'Token value is wrong.', { type: 'wrong_token' });
-		} else if (nodeId) {
-			const id = await this.syncedProbeList.publishToNode<AltIpReqBody>(nodeId, ALT_IP_REQ_MESSAGE_TYPE, request);
-			const response: AltIpResBody = await this.getResponsePromise(id, nodeId, request);
+		}
 
-			if (response.result === 'probe-not-found') {
-				throw createHttpError(400, 'Unable to find a probe on the remote node.', { type: 'probe_not_found_on_remote' });
-			} else if (response.result === 'invalid-alt-ip') {
-				throw createHttpError(400, 'Alt IP is invalid.', { type: 'invalid_alt_ip' });
-			}
-		} else {
-			throw createHttpError(400, 'Unable to find a probe by specified socketId.', { type: 'probe_not_found' });
+		// Second case - the socket is on a different node, need to perform a remote update.
+		const id = await this.syncedProbeList.publishToNode<AltIpReqBody>(nodeId, ALT_IP_REQ_MESSAGE_TYPE, request);
+		const response: AltIpResBody = await this.getResponsePromise(id, nodeId, request);
+
+		if (response.result === 'probe-not-found') {
+			throw createHttpError(400, 'Unable to find a probe on the remote node.', { type: 'probe_not_found_on_remote' });
+		} else if (response.result === 'invalid-alt-ip') {
+			throw createHttpError(400, 'Alt IP is invalid.', { type: 'invalid_alt_ip' });
 		}
 	}
 
