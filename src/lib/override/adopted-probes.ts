@@ -269,7 +269,6 @@ export class AdoptedProbes {
 		}
 
 		if (connectedProbeByAltIp) { // probe was found by alt ip, need to update the adopted data
-			logger.info('Found by alt IP.', { old: { ip, uuid }, new: { ip: connectedProbeByAltIp.ipAddress, altIps: connectedProbeByAltIp.altIpAddresses, uuid: connectedProbeByAltIp.uuid } });
 			await this.updateIds(ip, connectedProbeByAltIp);
 		}
 
@@ -280,7 +279,6 @@ export class AdoptedProbes {
 		const connectedProbeByUuid = this.connectedUuidToProbe.get(uuid);
 
 		if (connectedProbeByUuid) { // probe was found by uuid, need to update the adopted data
-			logger.info('Found by UUID.', { old: { ip, uuid }, new: { ip: connectedProbeByUuid.ipAddress, altIps: connectedProbeByUuid.altIpAddresses, uuid: connectedProbeByUuid.uuid } });
 			await this.updateIds(ip, connectedProbeByUuid);
 		}
 	}
