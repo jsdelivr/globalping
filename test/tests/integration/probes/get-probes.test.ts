@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import request, { type Agent } from 'supertest';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../../utils/server.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
-import { ADOPTED_PROBES_TABLE } from '../../../../src/lib/override/adopted-probes.js';
+import { ADOPTIONS_TABLE } from '../../../../src/lib/override/adopted-probes.js';
 import { probeOverride } from '../../../../src/lib/ws/server.js';
 import { client } from '../../../../src/lib/sql/client.js';
 
@@ -282,7 +282,7 @@ describe('Get Probes', () => {
 
 		describe('adopted probes', () => {
 			before(async () => {
-				await client(ADOPTED_PROBES_TABLE).insert({
+				await client(ADOPTIONS_TABLE).insert({
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					lastSyncDate: new Date(),
 					ip: '1.2.3.4',
@@ -308,7 +308,7 @@ describe('Get Probes', () => {
 			});
 
 			after(async () => {
-				await client(ADOPTED_PROBES_TABLE).where({ city: 'Cordoba' }).delete();
+				await client(ADOPTIONS_TABLE).where({ city: 'Cordoba' }).delete();
 			});
 
 			it('should update probes data', async () => {

@@ -9,15 +9,13 @@ import { normalizeFromPublicName } from '../geoip/utils.js';
 import { getIndex } from '../location/location.js';
 import { countries } from 'countries-list';
 
-type KnexError = Error & { errno?: number, message: string };
-
 const logger = scopedLogger('adopted-probes');
 
-export const ADOPTED_PROBES_TABLE = 'gp_adopted_probes';
+export const ADOPTIONS_TABLE = 'gp_adopted_probes';
 export const NOTIFICATIONS_TABLE = 'directus_notifications';
 export const ER_DUP_ENTRY_CODE = 1062;
 
-export type AdoptedProbe = {
+export type Adoption = {
 	id: string;
 	userId: string;
 	ip: string;
@@ -47,7 +45,7 @@ export type AdoptedProbe = {
 	network: string | null;
 }
 
-type Row = Omit<AdoptedProbe, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported'> & {
+type Row = Omit<Adoption, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported'> & {
 	altIps: string;
 	tags: string;
 	systemTags: string;
@@ -56,74 +54,84 @@ type Row = Omit<AdoptedProbe, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' 
 	isIPv6Supported: number;
 }
 
-type AdoptedFieldDescription = {
-	connectedField: string,
+type AdoptionFieldDescription = {
+	probeField: string,
 	shouldUpdateIfCustomCity: boolean,
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	formatter?: (connectedValue: any) => unknown
+	formatter?: (probeValue: any) => unknown
 }
 
 export class AdoptedProbes {
-	private connectedIpToProbe: Map<string, Probe> = new Map();
-	private connectedUuidToProbe: Map<string, Probe> = new Map();
-	private adoptedProbes: AdoptedProbe[] = [];
-	private adoptedIpToProbe: Map<string, AdoptedProbe> = new Map();
-	private readonly adoptedFieldToConnectedField: Record<string, AdoptedFieldDescription> = {
+	private adoptions: Adoption[] = [];
+	private ipToAdoption: Map<string, Adoption> = new Map();
+	private readonly adoptionFieldToProbeField: Record<string, AdoptionFieldDescription> = {
+		uuid: {
+			probeField: 'uuid',
+			shouldUpdateIfCustomCity: true,
+		},
+		ip: {
+			probeField: 'ipAddress',
+			shouldUpdateIfCustomCity: true,
+		},
+		altIps: {
+			probeField: 'altIpAddresses',
+			shouldUpdateIfCustomCity: true,
+		},
 		status: {
-			connectedField: 'status',
+			probeField: 'status',
 			shouldUpdateIfCustomCity: true,
 		},
 		isIPv4Supported: {
-			connectedField: 'isIPv4Supported',
+			probeField: 'isIPv4Supported',
 			shouldUpdateIfCustomCity: true,
 		},
 		isIPv6Supported: {
-			connectedField: 'isIPv6Supported',
+			probeField: 'isIPv6Supported',
 			shouldUpdateIfCustomCity: true,
 		},
 		version: {
-			connectedField: 'version',
+			probeField: 'version',
 			shouldUpdateIfCustomCity: true,
 		},
 		nodeVersion: {
-			connectedField: 'nodeVersion',
+			probeField: 'nodeVersion',
 			shouldUpdateIfCustomCity: true,
 		},
 		hardwareDevice: {
-			connectedField: 'hardwareDevice',
+			probeField: 'hardwareDevice',
 			shouldUpdateIfCustomCity: true,
 		},
 		systemTags: {
-			connectedField: 'tags',
+			probeField: 'tags',
 			shouldUpdateIfCustomCity: true,
-			formatter: (connectedTags: Tag[]) => connectedTags.filter(({ type }) => type === 'system').map(({ value }) => value),
+			formatter: (probeTags: Tag[]) => probeTags.filter(({ type }) => type === 'system').map(({ value }) => value),
 		},
 		asn: {
-			connectedField: 'location.asn',
+			probeField: 'location.asn',
 			shouldUpdateIfCustomCity: true,
 		},
 		network: {
-			connectedField: 'location.network',
+			probeField: 'location.network',
 			shouldUpdateIfCustomCity: true,
 		},
 		country: {
-			connectedField: 'location.country',
+			probeField: 'location.country',
 			shouldUpdateIfCustomCity: true,
 		},
 		city: {
-			connectedField: 'location.city',
+			probeField: 'location.city',
 			shouldUpdateIfCustomCity: false,
 		},
 		state: {
-			connectedField: 'location.state',
+			probeField: 'location.state',
 			shouldUpdateIfCustomCity: false,
 		},
 		latitude: {
-			connectedField: 'location.latitude',
+			probeField: 'location.latitude',
 			shouldUpdateIfCustomCity: false,
 		},
 		longitude: {
-			connectedField: 'location.longitude',
+			probeField: 'location.longitude',
 			shouldUpdateIfCustomCity: false,
 		},
 	};
@@ -133,46 +141,50 @@ export class AdoptedProbes {
 		private readonly fetchProbesWithAdminData: typeof serverFetchProbesWithAdminData,
 	) {}
 
-	getUpdatedLocation (probe: Probe): ProbeLocation | null {
-		const adoptedProbe = this.getByIp(probe.ipAddress);
+	getByIp (ip: string) {
+		return this.ipToAdoption.get(ip);
+	}
 
-		if (!adoptedProbe || !adoptedProbe.isCustomCity || adoptedProbe.countryOfCustomCity !== probe.location.country) {
+	getUpdatedLocation (probe: Probe): ProbeLocation | null {
+		const adoption = this.getByIp(probe.ipAddress);
+
+		if (!adoption || !adoption.isCustomCity || adoption.countryOfCustomCity !== probe.location.country) {
 			return null;
 		}
 
 		return {
 			...probe.location,
-			city: adoptedProbe.city!,
-			normalizedCity: normalizeFromPublicName(adoptedProbe.city!),
-			state: adoptedProbe.state,
-			latitude: adoptedProbe.latitude!,
-			longitude: adoptedProbe.longitude!,
+			city: adoption.city!,
+			normalizedCity: normalizeFromPublicName(adoption.city!),
+			state: adoption.state,
+			latitude: adoption.latitude!,
+			longitude: adoption.longitude!,
 		};
 	}
 
 	getUpdatedTags (probe: Probe) {
-		const adoptedProbe = this.getByIp(probe.ipAddress);
+		const adoption = this.getByIp(probe.ipAddress);
 
-		if (!adoptedProbe || !adoptedProbe.tags.length) {
+		if (!adoption || !adoption.tags.length) {
 			return probe.tags;
 		}
 
 		return [
 			...probe.tags,
-			...adoptedProbe.tags,
+			...adoption.tags,
 		];
 	}
 
 	getUpdatedProbes (probes: Probe[]) {
 		return probes.map((probe) => {
-			const adopted = this.getByIp(probe.ipAddress);
+			const adoption = this.getByIp(probe.ipAddress);
 
-			if (!adopted) {
+			if (!adoption) {
 				return probe;
 			}
 
-			const isCustomCity = adopted.isCustomCity;
-			const hasUserTags = adopted.tags && adopted.tags.length;
+			const isCustomCity = adoption.isCustomCity;
+			const hasUserTags = adoption.tags && adoption.tags.length;
 
 			if (!isCustomCity && !hasUserTags) {
 				return probe;
@@ -200,19 +212,17 @@ export class AdoptedProbes {
 	}
 
 	async syncDashboardData () {
-		const allProbes = await this.fetchProbesWithAdminData();
+		const probes = await this.fetchProbesWithAdminData();
+		await this.fetchAdoptions();
 
-		this.connectedIpToProbe = new Map(allProbes.map(probe => [
-			[ probe.ipAddress, probe ] as const,
-			...probe.altIpAddresses.map(altIp => [ altIp, probe ] as const),
-		]).flat());
+		const { adoptionsWithProbe, adoptionsWithoutProbe } = this.matchAdoptionsAndProbes(probes);
+		const { updatedAdoptions, adoptionDataUpdates } = this.generateUpdatedAdoptions(adoptionsWithProbe, adoptionsWithoutProbe);
+		const { adoptionsToDelete, adoptionAltIpUpdates } = this.findDuplications(updatedAdoptions);
 
-		this.connectedUuidToProbe = new Map(allProbes.map(probe => [ probe.uuid, probe ]));
+		const adoptionUpdates = this.mergeUpdates(adoptionDataUpdates, adoptionAltIpUpdates);
 
-		await this.fetchAdoptedProbes();
-		await Bluebird.map(this.adoptedProbes, ({ ip, altIps, uuid }) => this.resolveIfError(this.syncProbeIds(ip, altIps, uuid)), { concurrency: 8 });
-		await Bluebird.map(this.adoptedProbes, adoptedProbe => this.resolveIfError(this.syncProbeData(adoptedProbe)), { concurrency: 8 });
-		await Bluebird.map(this.adoptedProbes, ({ ip, lastSyncDate }) => this.resolveIfError(this.updateSyncDate(ip, lastSyncDate)), { concurrency: 8 });
+		await this.resolveIfError(this.deleteAdoptions(adoptionsToDelete));
+		await Bluebird.map(adoptionUpdates, ({ adoption, update }) => this.resolveIfError(this.updateAdoption(adoption, update)), { concurrency: 8 });
 	}
 
 	private async resolveIfError (pr: Promise<void>): Promise<void> {
@@ -221,10 +231,14 @@ export class AdoptedProbes {
 		});
 	}
 
-	private async fetchAdoptedProbes () {
-		const rows = await this.sql(ADOPTED_PROBES_TABLE).select<Row[]>();
+	private async fetchAdoptions () {
+		const rows = await this.sql(ADOPTIONS_TABLE)
+			// First item will be preserved, so we are prioritizing online probes.
+			// Sorting by id at the end so order is the same in any table state.
+			.orderByRaw(`lastSyncDate DESC, onlineTimesToday DESC, FIELD(status, 'ready') DESC, id ASC`)
+			.select<Row[]>();
 
-		const adoptedProbes: AdoptedProbe[] = rows.map(row => ({
+		const adoptions: Adoption[] = rows.map(row => ({
 			...row,
 			altIps: JSON.parse(row.altIps) as string[],
 			tags: (JSON.parse(row.tags) as { prefix: string; value: string; }[])
@@ -235,185 +249,212 @@ export class AdoptedProbes {
 			isIPv6Supported: Boolean(row.isIPv6Supported),
 		}));
 
-		this.adoptedProbes = adoptedProbes;
+		this.adoptions = adoptions;
 
-		this.adoptedIpToProbe = new Map([
-			...adoptedProbes.map(probe => [ probe.ip, probe ] as const),
-			...adoptedProbes.map(probe => probe.altIps.map(altIp => [ altIp, probe ] as const)).flat(),
+		this.ipToAdoption = new Map([
+			...adoptions.map(adoption => [ adoption.ip, adoption ] as const),
+			...adoptions.map(adoption => adoption.altIps.map(altIp => [ altIp, adoption ] as const)).flat(),
 		]);
 	}
 
-	private async syncProbeIds (ip: string, altIps: string[], uuid: string | null) {
-		const connectedProbeByIp = this.connectedIpToProbe.get(ip);
+	private matchAdoptionsAndProbes (probes: Probe[]) {
+		const uuidToProbe = new Map(probes.map(probe => [ probe.uuid, probe ]));
+		const ipToProbe = new Map(probes.map(probe => [ probe.ipAddress, probe ]));
+		const altIpToProbe = new Map(probes.map(probe => probe.altIpAddresses.map(altIp => [ altIp, probe ] as const)).flat());
+		const adoptionsWithoutProbe = [ ...this.adoptions ];
+		const adoptionsWithProbe: { adoption: Adoption, probe: Probe }[] = [];
 
-		const sameUuid = connectedProbeByIp && connectedProbeByIp.uuid === uuid;
-		const sameAltIps = connectedProbeByIp && _.isEqual(connectedProbeByIp.altIpAddresses, altIps);
-
-		if (connectedProbeByIp && sameUuid && sameAltIps) { // probe was found by ip, and data is synced
-			return;
-		}
-
-		if (connectedProbeByIp) { // probe was found by ip, but data is outdated
-			return this.updateIds(ip, connectedProbeByIp);
-		}
-
-		let connectedProbeByAltIp: Probe | undefined;
-
-		for (const altIp of altIps) {
-			const probe = this.connectedIpToProbe.get(altIp);
+		// Searching probe for the adoption by: UUID.
+		[ ...adoptionsWithoutProbe ].forEach((adoption, i) => {
+			const probe = adoption.uuid && uuidToProbe.get(adoption.uuid);
 
 			if (probe) {
-				connectedProbeByAltIp = probe;
-				break;
-			}
-		}
-
-		if (connectedProbeByAltIp) { // probe was found by alt ip, need to update the adopted data
-			await this.updateIds(ip, connectedProbeByAltIp);
-		}
-
-		if (!uuid) { // uuid is null, so no searching by uuid is required
-			return;
-		}
-
-		const connectedProbeByUuid = this.connectedUuidToProbe.get(uuid);
-
-		if (connectedProbeByUuid) { // probe was found by uuid, need to update the adopted data
-			await this.updateIds(ip, connectedProbeByUuid);
-		}
-	}
-
-	getByIp (ip: string) {
-		return this.adoptedIpToProbe.get(ip);
-	}
-
-	private async syncProbeData (adoptedProbe: AdoptedProbe) {
-		const connectedProbe = this.connectedIpToProbe.get(adoptedProbe.ip);
-		const isCustomCity = adoptedProbe.isCustomCity;
-
-		if (!connectedProbe && adoptedProbe.status !== 'offline') {
-			await this.updateProbeData(adoptedProbe, { status: 'offline' });
-			return;
-		}
-
-		if (!connectedProbe) {
-			return;
-		}
-
-		const updateObject: Record<string, unknown> = {};
-
-		Object.entries(this.adoptedFieldToConnectedField).forEach(([ adoptedField, { connectedField, shouldUpdateIfCustomCity, formatter }]) => {
-			if (isCustomCity && !shouldUpdateIfCustomCity) {
-				return;
-			}
-
-			const adoptedValue = _.get(adoptedProbe, adoptedField) as unknown;
-			let connectedValue = _.get(connectedProbe, connectedField) as unknown;
-
-			if (formatter) {
-				connectedValue = formatter(connectedValue);
-			}
-
-			if (!_.isEqual(adoptedValue, connectedValue)) {
-				updateObject[adoptedField] = _.isObject(connectedValue) ? JSON.stringify(connectedValue) : connectedValue;
+				adoptionsWithoutProbe.splice(i, 1);
+				adoptionsWithProbe.push({ adoption, probe });
+				uuidToProbe.delete(probe.uuid);
+				ipToProbe.delete(probe.ipAddress);
+				probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
 			}
 		});
 
-		// if country of probe changes, but there is a custom city in prev country, send notification to user
-		if (updateObject['country']) {
-			if (adoptedProbe.countryOfCustomCity && adoptedProbe.country === adoptedProbe.countryOfCustomCity) {
-				await this.sendNotificationCityNotApplied(adoptedProbe, connectedProbe);
-			} else if (adoptedProbe.countryOfCustomCity && connectedProbe.location.country === adoptedProbe.countryOfCustomCity) {
-				await this.sendNotificationCityAppliedAgain(adoptedProbe, connectedProbe);
+		// Searching probe for the adoption by: adoption IP -> probe IP.
+		[ ...adoptionsWithoutProbe ].forEach((adoption, i) => {
+			const probe = ipToProbe.get(adoption.ip);
+
+			if (probe) {
+				adoptionsWithoutProbe.splice(i, 1);
+				adoptionsWithProbe.push({ adoption, probe });
+				uuidToProbe.delete(probe.uuid);
+				ipToProbe.delete(probe.ipAddress);
+				probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
 			}
-		}
+		});
 
-		if (!_.isEmpty(updateObject)) {
-			await this.updateProbeData(adoptedProbe, updateObject);
-		}
+		// Searching probe for the adoption by: adoption IP -> probe alt IP.
+		[ ...adoptionsWithoutProbe ].forEach((adoption, i) => {
+			const probe = altIpToProbe.get(adoption.ip);
+
+			if (probe) {
+				adoptionsWithoutProbe.splice(i, 1);
+				adoptionsWithProbe.push({ adoption, probe });
+				uuidToProbe.delete(probe.uuid);
+				ipToProbe.delete(probe.ipAddress);
+				probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
+			}
+		});
+
+		// Searching probe for the adoption by: adoption alt IP -> probe IP or alt IP.
+		[ ...adoptionsWithoutProbe ].forEach((adoption, i) => {
+			for (const altIp of adoption.altIps) {
+				const probe = ipToProbe.get(altIp) || altIpToProbe.get(altIp);
+
+				if (probe) {
+					adoptionsWithoutProbe.splice(i, 1);
+					adoptionsWithProbe.push({ adoption, probe });
+					uuidToProbe.delete(probe.uuid);
+					ipToProbe.delete(probe.ipAddress);
+					probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
+					break;
+				}
+			}
+		});
+
+		return { adoptionsWithProbe, adoptionsWithoutProbe };
 	}
 
-	private async updateSyncDate (ip: string, lastSyncDate: Date) {
-		if (this.isToday(lastSyncDate)) { // date is already synced
-			return;
-		}
+	private generateUpdatedAdoptions (adoptionsWithProbe: { adoption: Adoption, probe: Probe }[], adoptionsWithoutProbe: Adoption[]) {
+		const adoptionDataUpdates: { adoption: Adoption, update: Partial<Adoption> }[] = [];
+		const updatedAdoptions: Adoption[] = [];
 
-		const probeIsConnected = this.connectedIpToProbe.has(ip);
+		adoptionsWithProbe.forEach(({ adoption, probe }) => {
+			const updateObject: Record<string, unknown> = {};
 
-		if (probeIsConnected) { // date is old, but probe is connected, therefore updating the sync date
-			await this.updateLastSyncDate(ip);
-		}
-	}
+			Object.entries(this.adoptionFieldToProbeField).forEach(([ adoptionField, { probeField, shouldUpdateIfCustomCity, formatter }]) => {
+				if (adoption.isCustomCity && !shouldUpdateIfCustomCity) {
+					return;
+				}
 
-	private async updateIds (currentAdoptedIp: string, connectedProbe: Probe) {
-		const update = async () => {
-			await this.sql(ADOPTED_PROBES_TABLE).where({ ip: currentAdoptedIp }).update({
-				ip: connectedProbe.ipAddress,
-				altIps: JSON.stringify(connectedProbe.altIpAddresses),
-				uuid: connectedProbe.uuid,
+				const adoptionValue = _.get(adoption, adoptionField) as unknown;
+				let probeValue = _.get(probe, probeField) as unknown;
+
+				if (formatter) {
+					probeValue = formatter(probeValue);
+				}
+
+				if (!_.isEqual(adoptionValue, probeValue)) {
+					updateObject[adoptionField] = probeValue;
+				}
 			});
-		};
 
-		try {
-			await update();
-		} catch (err) {
-			const error = err as KnexError;
+			if (!this.isToday(adoption.lastSyncDate)) {
+				updateObject['lastSyncDate'] = new Date();
+			}
 
-			if (error && error.errno === ER_DUP_ENTRY_CODE) {
-				logger.warn(`Adopted probe duplication error: ${error.message}`);
-				await this.deleteDuplicates(currentAdoptedIp, connectedProbe);
-				await update();
-			} else {
-				throw error;
+			if (!_.isEmpty(updateObject)) {
+				adoptionDataUpdates.push({ adoption, update: updateObject });
+			}
+
+			updatedAdoptions.push({ ...adoption, ...updateObject });
+		});
+
+		adoptionsWithoutProbe.forEach((adoption) => {
+			const updateObject = {
+				...(adoption.status !== 'offline' && { status: 'offline' }),
+			};
+
+			if (!_.isEmpty(updateObject)) {
+				adoptionDataUpdates.push({ adoption, update: updateObject });
+			}
+
+			updatedAdoptions.push({ ...adoption, ...updateObject });
+		});
+
+		return { adoptionDataUpdates, updatedAdoptions };
+	}
+
+	private findDuplications (updatedAdoptions: Adoption[]) {
+		const adoptionsToDelete: Adoption[] = [];
+		const adoptionAltIpUpdates: { adoption: Adoption, update: { altIps: string[] } }[] = [];
+		const uniqUuids = new Set<string>();
+		const uniqIps = new Set<string>();
+
+		updatedAdoptions.forEach((adoption) => {
+			if ((adoption.uuid && uniqUuids.has(adoption.uuid)) || uniqIps.has(adoption.ip)) {
+				console.log('uniqIps', uniqIps);
+				console.log('potential dup ip', adoption.ip);
+				console.log('potential dup uuid', adoption.uuid);
+				console.log('uniqUuids', uniqUuids);
+				adoptionsToDelete.push(adoption);
+				return;
+			}
+
+			const duplicatedAltIps: string[] = [];
+			const newAltIps: string[] = [];
+
+			for (const altIp of adoption.altIps) {
+				if (uniqIps.has(altIp)) {
+					duplicatedAltIps.push(altIp);
+				} else {
+					newAltIps.push(altIp);
+				}
+			}
+
+			if (duplicatedAltIps.length) {
+				adoptionAltIpUpdates.push({ adoption, update: { altIps: newAltIps } });
+			}
+
+			adoption.uuid && uniqUuids.add(adoption.uuid);
+			uniqIps.add(adoption.ip);
+			newAltIps.forEach(altIp => uniqIps.add(altIp));
+		});
+
+		return { adoptionsToDelete, adoptionAltIpUpdates };
+	}
+
+	private mergeUpdates (
+		adoptionDataUpdates: { adoption: Adoption; update: Partial<Adoption> }[],
+		adoptionAltIpUpdates: { adoption: Adoption; update: { altIps: string[] } }[],
+	) {
+		// TODO: fix when there is item in adoptionAltIpUpdates but not in adoptionDataUpdates
+		const altIpUpdatesById = new Map(adoptionAltIpUpdates.map(({ adoption, update }) => [ adoption.id, update ]));
+
+		const adoptionUpdates = adoptionDataUpdates.map((adoptionDataUpdate) => {
+			const { adoption, update } = adoptionDataUpdate;
+			const altIpUpdate = altIpUpdatesById.get(adoption.id);
+
+			if (altIpUpdate) {
+				return { adoption, update: { ...update, ...altIpUpdate } };
+			}
+
+			return adoptionDataUpdate;
+		});
+
+		return adoptionUpdates;
+	}
+
+	private async updateAdoption (adoption: Adoption, update: Partial<Adoption>) {
+		const formattedUpdate = Object.fromEntries(Object.entries(update).map(([ key, value ]) => [
+			key, (_.isObject(value) && !_.isDate(value)) ? JSON.stringify(value) : value,
+		]));
+
+		console.log('updateAdoption:', adoption.ip, adoption.id);
+		console.log('formattedUpdate:', formattedUpdate);
+		await this.sql(ADOPTIONS_TABLE).where({ id: adoption.id }).update(formattedUpdate);
+
+		// if country of probe changes, but there is a custom city in prev country, send notification to user.
+		if (update.country) {
+			if (adoption.countryOfCustomCity && adoption.country === adoption.countryOfCustomCity) {
+				await this.sendNotificationCityNotApplied(adoption, update.country);
+			} else if (adoption.countryOfCustomCity && update.country === adoption.countryOfCustomCity) {
+				await this.sendNotificationCityAppliedAgain(adoption, update.country);
 			}
 		}
-
-		const adoptedProbe = this.getByIp(currentAdoptedIp);
-
-		if (adoptedProbe) {
-			this.adoptedIpToProbe.delete(adoptedProbe.ip);
-			adoptedProbe.altIps.forEach(altIp => this.adoptedIpToProbe.delete(altIp));
-			adoptedProbe.ip = connectedProbe.ipAddress;
-			adoptedProbe.altIps = connectedProbe.altIpAddresses;
-			adoptedProbe.uuid = connectedProbe.uuid;
-			this.adoptedIpToProbe.set(connectedProbe.ipAddress, adoptedProbe);
-			connectedProbe.altIpAddresses.forEach(altIp => this.adoptedIpToProbe.set(altIp, adoptedProbe));
-		}
 	}
 
-	private async updateProbeData (adoptedProbe: AdoptedProbe, updateObject: Record<string, unknown>) {
-		await this.sql(ADOPTED_PROBES_TABLE).where({ ip: adoptedProbe.ip }).update(updateObject);
-
-		for (const [ field, value ] of Object.entries(updateObject)) {
-			(adoptedProbe as Record<string, unknown>)[field] = value;
-		}
-	}
-
-	private async updateLastSyncDate (ip: string) {
-		const date = new Date();
-		await this.sql(ADOPTED_PROBES_TABLE).where({ ip }).update({ lastSyncDate: date });
-		const adoptedProbe = this.getByIp(ip);
-
-		if (adoptedProbe) {
-			adoptedProbe.lastSyncDate = date;
-		}
-	}
-
-	private async deleteDuplicates (currentAdoptedIp: string, connectedProbe: Probe) {
-		const duplicates = await this.sql(ADOPTED_PROBES_TABLE)
-			.where({ ip: currentAdoptedIp })
-			.orWhere({ ip: connectedProbe.ipAddress })
-			.orWhere({ uuid: connectedProbe.uuid })
-			// First item will be preserved, so we are prioritizing online probes.
-			.orderByRaw(`lastSyncDate DESC, onlineTimesToday DESC, FIELD(status, 'ready') DESC`)
-			.select<Row[]>([ 'id', 'ip', 'uuid', 'altIps', 'userId', 'country' ]);
-		logger.warn('Duplicated probes:', duplicates);
-
-		if (duplicates.length > 1) {
-			const original = duplicates[0]!;
-			const probesToDelete = duplicates.slice(1).filter(duplicate => duplicate.country === original.country && duplicate.userId === original.userId);
-			logger.warn('Deleting probes:', probesToDelete);
-			probesToDelete.length && await this.sql(ADOPTED_PROBES_TABLE).whereIn('id', probesToDelete.map(row => row.id)).delete();
+	private async deleteAdoptions (adoptionsToDelete: Adoption[]) {
+		if (adoptionsToDelete.length) {
+			console.log('Deleting ids:', adoptionsToDelete.map(({ id }) => id));
+			await this.sql(ADOPTIONS_TABLE).whereIn('id', adoptionsToDelete.map(({ id }) => id)).delete();
 		}
 	}
 
@@ -424,25 +465,25 @@ export class AdoptedProbes {
 		`, { recipient, subject, message });
 	}
 
-	private async sendNotificationCityNotApplied (adoptedProbe: AdoptedProbe, connectedProbe: Probe) {
-		const newCountry = countries[connectedProbe.location.country as keyof typeof countries]?.name || connectedProbe.location.country;
-		const oldCountry = countries[adoptedProbe.country as keyof typeof countries]?.name || adoptedProbe.country;
+	private async sendNotificationCityNotApplied (adoption: Adoption, probeCountry: string) {
+		const newCountry = countries[probeCountry as keyof typeof countries]?.name || probeCountry;
+		const oldCountry = countries[adoption.country as keyof typeof countries]?.name || adoption.country;
 
 		return this.sendNotification(
-			adoptedProbe.userId,
+			adoption.userId,
 			`Your probe's location has changed`,
-			`Globalping detected that your ${adoptedProbe.name ? `probe [**${adoptedProbe.name}**](/probes/${adoptedProbe.id}) with IP address **${adoptedProbe.ip}**` : `[probe with IP address **${adoptedProbe.ip}**](/probes/${adoptedProbe.id})`} has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoptedProbe.city}" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).`,
+			`Globalping detected that your ${adoption.name ? `probe [**${adoption.name}**](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address **${adoption.ip}**](/probes/${adoption.id})`} has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoption.city}" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).`,
 		);
 	}
 
-	private async sendNotificationCityAppliedAgain (adoptedProbe: AdoptedProbe, connectedProbe: Probe) {
-		const newCountry = countries[connectedProbe.location.country as keyof typeof countries]?.name || connectedProbe.location.country;
-		const oldCountry = countries[adoptedProbe.country as keyof typeof countries]?.name || adoptedProbe.country;
+	private async sendNotificationCityAppliedAgain (adoption: Adoption, probeCountry: string) {
+		const newCountry = countries[probeCountry as keyof typeof countries]?.name || probeCountry;
+		const oldCountry = countries[adoption.country as keyof typeof countries]?.name || adoption.country;
 
 		return this.sendNotification(
-			adoptedProbe.userId,
+			adoption.userId,
 			`Your probe's location has changed back`,
-			`Globalping detected that your ${adoptedProbe.name ? `probe [**${adoptedProbe.name}**](/probes/${adoptedProbe.id}) with IP address **${adoptedProbe.ip}**` : `[probe with IP address **${adoptedProbe.ip}**](/probes/${adoptedProbe.id})`} has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoptedProbe.city}" is now applied again.`,
+			`Globalping detected that your ${adoption.name ? `probe [**${adoption.name}**](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address **${adoption.ip}**](/probes/${adoption.id})`} has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoption.city}" is now applied again.`,
 		);
 	}
 
