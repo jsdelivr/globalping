@@ -212,8 +212,10 @@ export class AdoptedProbes {
 	}
 
 	async syncDashboardData () {
-		const probes = await this.fetchProbesWithAdminData();
-		await this.fetchAdoptions();
+		const [ probes ] = await Promise.all([
+			this.fetchProbesWithAdminData(),
+			this.fetchAdoptions(),
+		]);
 
 		const { adoptionsWithProbe, adoptionsWithoutProbe } = this.matchAdoptionsAndProbes(probes);
 		const { updatedAdoptions, adoptionDataUpdates } = this.generateUpdatedAdoptions(adoptionsWithProbe, adoptionsWithoutProbe);
@@ -394,17 +396,28 @@ export class AdoptedProbes {
 	private findDuplications (updatedAdoptions: Adoption[]) {
 		const adoptionsToDelete: Adoption[] = [];
 		const adoptionAltIpUpdates: { adoption: Adoption, update: { altIps: string[] } }[] = [];
-		const uniqUuids = new Set<string>();
-		const uniqIps = new Set<string>();
+		const uniqUuids = new Map<string, Adoption>();
+		const uniqIps = new Map<string, Adoption>();
 
 		updatedAdoptions.forEach((adoption) => {
-			if ((adoption.uuid && uniqUuids.has(adoption.uuid)) || uniqIps.has(adoption.ip)) {
-				console.log('uniqIps', uniqIps);
-				console.log('potential dup ip', adoption.ip);
-				console.log('potential dup uuid', adoption.uuid);
-				console.log('uniqUuids', uniqUuids);
+			let existingAdoption = adoption.uuid && uniqUuids.get(adoption.uuid);
+
+			if (existingAdoption && existingAdoption.country === adoption.country) {
+				logger.warn(`Duplication found by uuid: ${adoption.uuid}. Adoption to stay: `, _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]), 'Adoption to delete: ', _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]));
 				adoptionsToDelete.push(adoption);
 				return;
+			} else if (existingAdoption) {
+				logger.error(`Duplication found by uuid: ${adoption.uuid} but countries are different. 1st adoption: `, _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps', 'country' ]), '2nd adoption: ', _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps', 'country' ]));
+			}
+
+			existingAdoption = uniqIps.get(adoption.ip);
+
+			if (existingAdoption && existingAdoption.country === adoption.country) {
+				logger.warn(`Duplication found by ip: ${adoption.ip}. Adoption to stay: `, _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]), 'Adoption to delete: ', _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]));
+				adoptionsToDelete.push(adoption);
+				return;
+			} else if (existingAdoption) {
+				logger.error(`Duplication found by ip: ${adoption.ip} but countries are different. 1st adoption: `, _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps', 'country' ]), '2nd adoption: ', _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps', 'country' ]));
 			}
 
 			const duplicatedAltIps: string[] = [];
@@ -422,9 +435,9 @@ export class AdoptedProbes {
 				adoptionAltIpUpdates.push({ adoption, update: { altIps: newAltIps } });
 			}
 
-			adoption.uuid && uniqUuids.add(adoption.uuid);
-			uniqIps.add(adoption.ip);
-			newAltIps.forEach(altIp => uniqIps.add(altIp));
+			adoption.uuid && uniqUuids.set(adoption.uuid, adoption);
+			uniqIps.set(adoption.ip, adoption);
+			newAltIps.forEach(altIp => uniqIps.set(altIp, adoption));
 		});
 
 		return { adoptionsToDelete, adoptionAltIpUpdates };
