@@ -261,62 +261,81 @@ export class AdoptedProbes {
 		const uuidToProbe = new Map(probes.map(probe => [ probe.uuid, probe ]));
 		const ipToProbe = new Map(probes.map(probe => [ probe.ipAddress, probe ]));
 		const altIpToProbe = new Map(probes.map(probe => probe.altIpAddresses.map(altIp => [ altIp, probe ] as const)).flat());
-		const adoptionsWithoutProbe = [ ...this.adoptions ];
 		const adoptionsWithProbe: { adoption: Adoption, probe: Probe }[] = [];
 
 		// Searching probe for the adoption by: UUID.
-		[ ...adoptionsWithoutProbe ].forEach((adoption, i) => {
+		let adoptionsToCheck = [ ...this.adoptions ];
+		let adoptionsWithoutProbe: Adoption[] = [];
+
+		adoptionsToCheck.forEach((adoption) => {
 			const probe = adoption.uuid && uuidToProbe.get(adoption.uuid);
 
 			if (probe) {
-				adoptionsWithoutProbe.splice(i, 1);
+				console.log('found by uuid:', adoption.uuid);
 				adoptionsWithProbe.push({ adoption, probe });
 				uuidToProbe.delete(probe.uuid);
 				ipToProbe.delete(probe.ipAddress);
 				probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
+			} else {
+				adoptionsWithoutProbe.push(adoption);
 			}
 		});
 
 		// Searching probe for the adoption by: adoption IP -> probe IP.
-		[ ...adoptionsWithoutProbe ].forEach((adoption, i) => {
+		adoptionsToCheck = [ ...adoptionsWithoutProbe ];
+		adoptionsWithoutProbe = [];
+
+		adoptionsToCheck.forEach((adoption) => {
 			const probe = ipToProbe.get(adoption.ip);
 
 			if (probe) {
-				adoptionsWithoutProbe.splice(i, 1);
+				console.log('found by primary ips:', adoption.ip);
 				adoptionsWithProbe.push({ adoption, probe });
 				uuidToProbe.delete(probe.uuid);
 				ipToProbe.delete(probe.ipAddress);
 				probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
+			} else {
+				adoptionsWithoutProbe.push(adoption);
 			}
 		});
 
 		// Searching probe for the adoption by: adoption IP -> probe alt IP.
-		[ ...adoptionsWithoutProbe ].forEach((adoption, i) => {
+		adoptionsToCheck = [ ...adoptionsWithoutProbe ];
+		adoptionsWithoutProbe = [];
+
+		adoptionsToCheck.forEach((adoption) => {
 			const probe = altIpToProbe.get(adoption.ip);
 
 			if (probe) {
-				adoptionsWithoutProbe.splice(i, 1);
+				console.log('found by adoption ip -> probe alt ip:', adoption.ip);
 				adoptionsWithProbe.push({ adoption, probe });
 				uuidToProbe.delete(probe.uuid);
 				ipToProbe.delete(probe.ipAddress);
 				probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
+			} else {
+				adoptionsWithoutProbe.push(adoption);
 			}
 		});
 
 		// Searching probe for the adoption by: adoption alt IP -> probe IP or alt IP.
-		[ ...adoptionsWithoutProbe ].forEach((adoption, i) => {
+		adoptionsToCheck = [ ...adoptionsWithoutProbe ];
+		adoptionsWithoutProbe = [];
+
+		adoptionsToCheck.forEach((adoption) => {
 			for (const altIp of adoption.altIps) {
 				const probe = ipToProbe.get(altIp) || altIpToProbe.get(altIp);
 
 				if (probe) {
-					adoptionsWithoutProbe.splice(i, 1);
+					console.log('found by adoption alt ip -> probe ip or alt ip:', adoption.ip);
 					adoptionsWithProbe.push({ adoption, probe });
 					uuidToProbe.delete(probe.uuid);
 					ipToProbe.delete(probe.ipAddress);
 					probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
-					break;
+					return;
 				}
 			}
+
+			adoptionsWithoutProbe.push(adoption);
 		});
 
 		return { adoptionsWithProbe, adoptionsWithoutProbe };
@@ -414,22 +433,23 @@ export class AdoptedProbes {
 	private mergeUpdates (
 		adoptionDataUpdates: { adoption: Adoption; update: Partial<Adoption> }[],
 		adoptionAltIpUpdates: { adoption: Adoption; update: { altIps: string[] } }[],
-	) {
-		// TODO: fix when there is item in adoptionAltIpUpdates but not in adoptionDataUpdates
-		const altIpUpdatesById = new Map(adoptionAltIpUpdates.map(({ adoption, update }) => [ adoption.id, update ]));
+	): { adoption: Adoption; update: Partial<Adoption> }[] {
+		const altIpUpdatesById = new Map(adoptionAltIpUpdates.map(altIpUpdate => [ altIpUpdate.adoption.id, altIpUpdate ]));
 
 		const adoptionUpdates = adoptionDataUpdates.map((adoptionDataUpdate) => {
 			const { adoption, update } = adoptionDataUpdate;
 			const altIpUpdate = altIpUpdatesById.get(adoption.id);
 
 			if (altIpUpdate) {
-				return { adoption, update: { ...update, ...altIpUpdate } };
+				altIpUpdatesById.delete(adoption.id);
+				return { adoption, update: { ...update, ...altIpUpdate.update } };
 			}
 
 			return adoptionDataUpdate;
 		});
 
-		return adoptionUpdates;
+		// Some of the altIpUpdatesById are merged with adoptionUpdates, others are included here.
+		return [ ...adoptionUpdates, ...altIpUpdatesById.values() ];
 	}
 
 	private async updateAdoption (adoption: Adoption, update: Partial<Adoption>) {
