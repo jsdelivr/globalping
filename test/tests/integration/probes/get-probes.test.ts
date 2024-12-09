@@ -304,7 +304,7 @@ describe('Get Probes', () => {
 					asn: 61004,
 				});
 
-				await probeOverride.syncDashboardData();
+				await probeOverride.fetchDashboardData();
 			});
 
 			after(async () => {

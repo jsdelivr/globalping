@@ -699,7 +699,7 @@ describe('Create measurement', () => {
 					asn: 61004,
 				});
 
-				await probeOverride.syncDashboardData();
+				await probeOverride.fetchDashboardData();
 				await waitForProbesUpdate();
 			});
 

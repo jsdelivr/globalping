@@ -29,7 +29,7 @@ export const createServer = async (): Promise<Server> => {
 
 	await initWsServer();
 
-	await probeOverride.syncDashboardData();
+	await probeOverride.fetchDashboardData();
 	probeOverride.scheduleSync();
 
 	await auth.syncTokens();

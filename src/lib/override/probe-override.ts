@@ -8,9 +8,9 @@ export class ProbeOverride {
 		private readonly adminData: AdminData,
 	) {}
 
-	async syncDashboardData () {
+	async fetchDashboardData () {
 		await Promise.all([
-			this.adoptedProbes.syncDashboardData(),
+			this.adoptedProbes.fetchAdoptions(),
 			this.adminData.syncDashboardData(),
 		]);
 	}

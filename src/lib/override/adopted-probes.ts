@@ -233,7 +233,7 @@ export class AdoptedProbes {
 		});
 	}
 
-	private async fetchAdoptions () {
+	public async fetchAdoptions () {
 		const rows = await this.sql(ADOPTIONS_TABLE)
 			// First item will be preserved, so we are prioritizing online probes.
 			// Sorting by id at the end so order is the same in any table state.
@@ -273,7 +273,6 @@ export class AdoptedProbes {
 			const probe = adoption.uuid && uuidToProbe.get(adoption.uuid);
 
 			if (probe) {
-				console.log('found by uuid:', adoption.uuid);
 				adoptionsWithProbe.push({ adoption, probe });
 				uuidToProbe.delete(probe.uuid);
 				ipToProbe.delete(probe.ipAddress);
@@ -291,7 +290,6 @@ export class AdoptedProbes {
 			const probe = ipToProbe.get(adoption.ip);
 
 			if (probe) {
-				console.log('found by primary ips:', adoption.ip);
 				adoptionsWithProbe.push({ adoption, probe });
 				uuidToProbe.delete(probe.uuid);
 				ipToProbe.delete(probe.ipAddress);
@@ -309,7 +307,6 @@ export class AdoptedProbes {
 			const probe = altIpToProbe.get(adoption.ip);
 
 			if (probe) {
-				console.log('found by adoption ip -> probe alt ip:', adoption.ip);
 				adoptionsWithProbe.push({ adoption, probe });
 				uuidToProbe.delete(probe.uuid);
 				ipToProbe.delete(probe.ipAddress);
@@ -328,7 +325,6 @@ export class AdoptedProbes {
 				const probe = ipToProbe.get(altIp) || altIpToProbe.get(altIp);
 
 				if (probe) {
-					console.log('found by adoption alt ip -> probe ip or alt ip:', adoption.ip);
 					adoptionsWithProbe.push({ adoption, probe });
 					uuidToProbe.delete(probe.uuid);
 					ipToProbe.delete(probe.ipAddress);
