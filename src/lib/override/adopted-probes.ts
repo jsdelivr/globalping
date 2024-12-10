@@ -13,7 +13,6 @@ const logger = scopedLogger('adopted-probes');
 
 export const ADOPTIONS_TABLE = 'gp_adopted_probes';
 export const NOTIFICATIONS_TABLE = 'directus_notifications';
-export const ER_DUP_ENTRY_CODE = 1062;
 
 export type Adoption = {
 	id: string;
@@ -64,7 +63,7 @@ type AdoptionFieldDescription = {
 export class AdoptedProbes {
 	private adoptions: Adoption[] = [];
 	private ipToAdoption: Map<string, Adoption> = new Map();
-	private readonly adoptionFieldToProbeField: Record<string, AdoptionFieldDescription> = {
+	private readonly adoptionFieldToProbeField: Partial<Record<keyof Adoption, AdoptionFieldDescription>> = {
 		uuid: {
 			probeField: 'uuid',
 			shouldUpdateIfCustomCity: true,
@@ -221,7 +220,7 @@ export class AdoptedProbes {
 		const { updatedAdoptions, adoptionDataUpdates } = this.generateUpdatedAdoptions(adoptionsWithProbe, adoptionsWithoutProbe);
 		const { adoptionsToDelete, adoptionAltIpUpdates } = this.findDuplications(updatedAdoptions);
 
-		const adoptionUpdates = this.mergeUpdates(adoptionDataUpdates, adoptionAltIpUpdates);
+		const adoptionUpdates = this.mergeUpdates(adoptionDataUpdates, adoptionAltIpUpdates, adoptionsToDelete);
 
 		await this.resolveIfError(this.deleteAdoptions(adoptionsToDelete));
 		await Bluebird.map(adoptionUpdates, ({ adoption, update }) => this.resolveIfError(this.updateAdoption(adoption, update)), { concurrency: 8 });
@@ -396,24 +395,27 @@ export class AdoptedProbes {
 		const uniqIps = new Map<string, Adoption>();
 
 		updatedAdoptions.forEach((adoption) => {
-			let existingAdoption = adoption.uuid && uniqUuids.get(adoption.uuid);
+			const existingAdoptionByUuid = adoption.uuid && uniqUuids.get(adoption.uuid);
+			const existingAdoptionByIp = uniqIps.get(adoption.ip);
+			const existingAdoption = existingAdoptionByUuid || existingAdoptionByIp;
 
-			if (existingAdoption && existingAdoption.country === adoption.country) {
-				logger.warn(`Duplication found by uuid: ${adoption.uuid}. Adoption to stay: `, _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]), 'Adoption to delete: ', _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]));
+			if (
+				existingAdoption
+				&& existingAdoption.country === adoption.country
+				&& existingAdoption.userId === adoption.userId
+			) {
+				logger.warn(
+					existingAdoptionByUuid ? `Duplication found by UUID: ${adoption.uuid}.` : `Duplication found by IP: ${adoption.ip}.`,
+					{ stay: _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]), delete: _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]) },
+				);
+
 				adoptionsToDelete.push(adoption);
 				return;
 			} else if (existingAdoption) {
-				logger.error(`Duplication found by uuid: ${adoption.uuid} but countries are different. 1st adoption: `, _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps', 'country' ]), '2nd adoption: ', _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps', 'country' ]));
-			}
-
-			existingAdoption = uniqIps.get(adoption.ip);
-
-			if (existingAdoption && existingAdoption.country === adoption.country) {
-				logger.warn(`Duplication found by ip: ${adoption.ip}. Adoption to stay: `, _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]), 'Adoption to delete: ', _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]));
-				adoptionsToDelete.push(adoption);
-				return;
-			} else if (existingAdoption) {
-				logger.error(`Duplication found by ip: ${adoption.ip} but countries are different. 1st adoption: `, _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps', 'country' ]), '2nd adoption: ', _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps', 'country' ]));
+				logger.error(
+					existingAdoptionByUuid ? `Unremovable duplication found by UUID: ${adoption.uuid}.` : `Unremovable duplication found by IP: ${adoption.ip}.`,
+					{ stay: _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]), duplicate: _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]) },
+				);
 			}
 
 			const duplicatedAltIps: string[] = [];
@@ -442,6 +444,7 @@ export class AdoptedProbes {
 	private mergeUpdates (
 		adoptionDataUpdates: { adoption: Adoption; update: Partial<Adoption> }[],
 		adoptionAltIpUpdates: { adoption: Adoption; update: { altIps: string[] } }[],
+		adoptionsToDelete: Adoption[],
 	): { adoption: Adoption; update: Partial<Adoption> }[] {
 		const altIpUpdatesById = new Map(adoptionAltIpUpdates.map(altIpUpdate => [ altIpUpdate.adoption.id, altIpUpdate ]));
 
@@ -451,14 +454,19 @@ export class AdoptedProbes {
 
 			if (altIpUpdate) {
 				altIpUpdatesById.delete(adoption.id);
-				return { adoption, update: { ...update, ...altIpUpdate.update } };
+				return { adoption, update: { ...update, ...altIpUpdate.update } }; // TODO: use lodash merge here
 			}
 
 			return adoptionDataUpdate;
 		});
 
 		// Some of the altIpUpdatesById are merged with adoptionUpdates, others are included here.
-		return [ ...adoptionUpdates, ...altIpUpdatesById.values() ];
+		const allUpdates = [ ...adoptionUpdates, ...altIpUpdatesById.values() ];
+
+		// Removing updates of probes that will be deleted.
+		const deleteIds = adoptionsToDelete.map(({ id }) => id);
+		const filteredUpdates = allUpdates.filter(({ adoption }) => !deleteIds.includes(adoption.id));
+		return filteredUpdates;
 	}
 
 	private async updateAdoption (adoption: Adoption, update: Partial<Adoption>) {
@@ -466,8 +474,7 @@ export class AdoptedProbes {
 			key, (_.isObject(value) && !_.isDate(value)) ? JSON.stringify(value) : value,
 		]));
 
-		console.log('updateAdoption:', adoption.ip, adoption.id);
-		console.log('formattedUpdate:', formattedUpdate);
+		console.log(`updating ${adoption.id}:`, formattedUpdate);
 		await this.sql(ADOPTIONS_TABLE).where({ id: adoption.id }).update(formattedUpdate);
 
 		// if country of probe changes, but there is a custom city in prev country, send notification to user.
