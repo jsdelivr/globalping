@@ -405,7 +405,7 @@ export class AdoptedProbes {
 				&& existingAdoption.userId === adoption.userId
 			) {
 				logger.warn(
-					existingAdoptionByUuid ? `Duplication found by UUID: ${adoption.uuid}.` : `Duplication found by IP: ${adoption.ip}.`,
+					existingAdoptionByUuid ? `Duplication found by UUID: ${adoption.uuid}` : `Duplication found by IP: ${adoption.ip}`,
 					{ stay: _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]), delete: _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]) },
 				);
 
@@ -413,7 +413,7 @@ export class AdoptedProbes {
 				return;
 			} else if (existingAdoption) {
 				logger.error(
-					existingAdoptionByUuid ? `Unremovable duplication found by UUID: ${adoption.uuid}.` : `Unremovable duplication found by IP: ${adoption.ip}.`,
+					existingAdoptionByUuid ? `Unremovable duplication found by UUID: ${adoption.uuid}` : `Unremovable duplication found by IP: ${adoption.ip}`,
 					{ stay: _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]), duplicate: _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]) },
 				);
 			}
@@ -454,7 +454,7 @@ export class AdoptedProbes {
 
 			if (altIpUpdate) {
 				altIpUpdatesById.delete(adoption.id);
-				return { adoption, update: { ...update, ...altIpUpdate.update } }; // TODO: use lodash merge here
+				return { adoption, update: { ...update, ...altIpUpdate.update } };
 			}
 
 			return adoptionDataUpdate;

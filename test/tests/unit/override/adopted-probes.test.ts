@@ -121,40 +121,100 @@ describe('AdoptedProbes', () => {
 		expect(sql.select.callCount).to.equal(1);
 	});
 
-	it('class should update uuid if it is wrong', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
-		fetchProbesWithAdminData.resolves([{ ...defaultConnectedProbe, uuid: '2-2-2-2-2' }]);
+	it('class should match adoption to probe by: UUID', async () => {
+		sql.select.resolves([
+			{ ...defaultAdoptedProbe, ip: 'unsyncedIp' },
+			{ ...defaultAdoptedProbe, id: 'p-2', uuid: 'unsyncedUuid' },
+			{ ...defaultAdoptedProbe, id: 'p-3', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
+			{ ...defaultAdoptedProbe, id: 'p-4', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
+		]);
 
-		await adoptedProbes.syncDashboardData();
-
-		expect(sql.where.callCount).to.equal(1);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
-		expect(sql.update.callCount).to.equal(1);
-		expect(sql.update.args[0]).to.deep.equal([{ uuid: '2-2-2-2-2' }]);
-	});
-
-	it('class should update ip if it is wrong', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
-		fetchProbesWithAdminData.resolves([{ ...defaultConnectedProbe, ipAddress: '2.2.2.2' }]);
-
-		await adoptedProbes.syncDashboardData();
-
-		expect(sql.where.callCount).to.equal(1);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
-		expect(sql.update.callCount).to.equal(1);
-		expect(sql.update.args[0]).to.deep.equal([{ ip: '2.2.2.2' }]);
-	});
-
-	it('class should update alt ips if they are wrong', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
 		fetchProbesWithAdminData.resolves([{ ...defaultConnectedProbe, altIpAddresses: [ '2.2.2.2' ] }]);
 
+		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.update.callCount).to.equal(2);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ ip: '1.1.1.1', altIps: '["2.2.2.2"]' }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-4' }]);
+		expect(sql.update.args[1]).to.deep.equal([{ status: 'offline', altIps: '[]' }]);
+		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2', 'p-3' ] ]);
+		expect(sql.delete.callCount).to.equal(1);
+	});
+
+	it('class should match adoption to probe by: adoption IP -> probe IP', async () => {
+		sql.select.resolves([
+			{ ...defaultAdoptedProbe, uuid: 'unsyncedUuid' },
+			{ ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
+			{ ...defaultAdoptedProbe, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
+		]);
+
+		fetchProbesWithAdminData.resolves([{ ...defaultConnectedProbe, altIpAddresses: [ '2.2.2.2' ] }]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.update.callCount).to.equal(2);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ uuid: '1-1-1-1-1', altIps: '["2.2.2.2"]' }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-3' }]);
+		expect(sql.update.args[1]).to.deep.equal([{ status: 'offline', altIps: '[]' }]);
+		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2' ] ]);
+		expect(sql.delete.callCount).to.equal(1);
+	});
+
+	it('class should match adoption to probe by: adoption IP -> probe alt IP', async () => {
+		sql.select.resolves([
+			{ ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
+			{ ...defaultAdoptedProbe, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
+		]);
+
+		fetchProbesWithAdminData.resolves([{ ...defaultConnectedProbe, altIpAddresses: [ '2.2.2.2' ] }]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.update.callCount).to.equal(2);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-2' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ uuid: '1-1-1-1-1', ip: '1.1.1.1', altIps: '["2.2.2.2"]' }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-3' }]);
+		expect(sql.update.args[1]).to.deep.equal([{ status: 'offline', altIps: '[]' }]);
+		expect(sql.delete.callCount).to.equal(0);
+	});
+
+	it('class should match adoption to probe by: adoption alt IP -> probe IP', async () => {
+		sql.select.resolves([
+			{ ...defaultAdoptedProbe, ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["1.1.1.1"]' },
+		]);
+
+		fetchProbesWithAdminData.resolves([ defaultConnectedProbe ]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.where.callCount).to.equal(1);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.callCount).to.equal(1);
-		expect(sql.update.args[0]).to.deep.equal([{ altIps: '["2.2.2.2"]' }]);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ uuid: '1-1-1-1-1', ip: '1.1.1.1', altIps: '[]' }]);
+		expect(sql.delete.callCount).to.equal(0);
+	});
+
+	it('class should match adoption to probe by: adoption alt IP -> probe alt IP', async () => {
+		sql.select.resolves([
+			{ ...defaultAdoptedProbe, ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
+		]);
+
+		fetchProbesWithAdminData.resolves([{ ...defaultConnectedProbe, altIpAddresses: [ '2.2.2.2' ] }]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.where.callCount).to.equal(1);
+		expect(sql.update.callCount).to.equal(1);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ uuid: '1-1-1-1-1', ip: '1.1.1.1' }]);
+		expect(sql.delete.callCount).to.equal(0);
 	});
 
 	it('class should update status to "offline" if adopted probe was not found', async () => {
