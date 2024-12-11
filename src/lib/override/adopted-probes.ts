@@ -397,31 +397,28 @@ export class AdoptedProbes {
 	private findDuplications (updatedAdoptions: Adoption[]) {
 		const adoptionsToDelete: Adoption[] = [];
 		const adoptionAltIpUpdates: { adoption: Adoption, update: { altIps: string[] } }[] = [];
-		const uniqUuids = new Map<string, Adoption>();
 		const uniqIps = new Map<string, Adoption>();
 
 		updatedAdoptions.forEach((adoption) => {
-			const existingAdoptionByUuid = adoption.uuid && uniqUuids.get(adoption.uuid);
-			const existingAdoptionByIp = uniqIps.get(adoption.ip);
-			const existingAdoption = existingAdoptionByUuid || existingAdoptionByIp;
+			const existingAdoption = uniqIps.get(adoption.ip);
 
 			if (
 				existingAdoption
 				&& existingAdoption.country === adoption.country
 				&& existingAdoption.userId === adoption.userId
 			) {
-				logger.warn(
-					existingAdoptionByUuid ? `Duplication found by UUID: ${adoption.uuid}` : `Duplication found by IP: ${adoption.ip}`,
-					{ stay: _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]), delete: _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]) },
-				);
+				logger.warn(`Duplication found by IP ${adoption.ip}`, {
+					stay: _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]),
+					delete: _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]),
+				});
 
 				adoptionsToDelete.push(adoption);
 				return;
 			} else if (existingAdoption) {
-				logger.error(
-					existingAdoptionByUuid ? `Unremovable duplication found by UUID: ${adoption.uuid}` : `Unremovable duplication found by IP: ${adoption.ip}`,
-					{ stay: _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]), duplicate: _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]) },
-				);
+				logger.error(`Unremovable duplication found by IP ${adoption.ip}`, {
+					stay: _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]),
+					duplicate: _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]),
+				});
 			}
 
 			const duplicatedAltIps: string[] = [];
@@ -439,7 +436,6 @@ export class AdoptedProbes {
 				adoptionAltIpUpdates.push({ adoption, update: { altIps: newAltIps } });
 			}
 
-			adoption.uuid && uniqUuids.set(adoption.uuid, adoption);
 			uniqIps.set(adoption.ip, adoption);
 			newAltIps.forEach(altIp => uniqIps.set(altIp, adoption));
 		});
@@ -480,7 +476,6 @@ export class AdoptedProbes {
 			key, (_.isObject(value) && !_.isDate(value)) ? JSON.stringify(value) : value,
 		]));
 
-		console.log(`Updating id ${adoption.id}:`, formattedUpdate);
 		await this.sql(ADOPTIONS_TABLE).where({ id: adoption.id }).update(formattedUpdate);
 
 		// if country of probe changes, but there is a custom city in prev country, send notification to user.
@@ -495,7 +490,7 @@ export class AdoptedProbes {
 
 	private async deleteAdoptions (adoptionsToDelete: Adoption[]) {
 		if (adoptionsToDelete.length) {
-			console.log('Deleting ids:', adoptionsToDelete.map(({ id }) => id));
+			logger.warn('Deleting ids:', adoptionsToDelete.map(({ id }) => id));
 			await this.sql(ADOPTIONS_TABLE).whereIn('id', adoptionsToDelete.map(({ id }) => id)).delete();
 		}
 	}
