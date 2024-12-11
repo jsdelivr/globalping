@@ -21,8 +21,8 @@ describe('AdminData', () => {
 		city: 'Bydgoszcz',
 		state: null,
 		country: 'PL',
-		latitude: 53.1235,
-		longitude: 18.00762,
+		latitude: 53.12,
+		longitude: 18.01,
 	};
 
 	beforeEach(() => {
@@ -49,8 +49,8 @@ describe('AdminData', () => {
 				normalizedCity: 'bydgoszcz',
 				country: 'PL',
 				state: null,
-				latitude: 53.1235,
-				longitude: 18.00762,
+				latitude: 53.12,
+				longitude: 18.01,
 			},
 		});
 
@@ -76,8 +76,8 @@ describe('AdminData', () => {
 				normalizedCity: 'bydgoszcz',
 				country: 'PL',
 				state: null,
-				latitude: 53.1235,
-				longitude: 18.00762,
+				latitude: 53.12,
+				longitude: 18.01,
 			},
 		});
 

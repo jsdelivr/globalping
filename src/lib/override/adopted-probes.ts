@@ -248,6 +248,8 @@ export class AdoptedProbes {
 			isCustomCity: Boolean(row.isCustomCity),
 			isIPv4Supported: Boolean(row.isIPv4Supported),
 			isIPv6Supported: Boolean(row.isIPv6Supported),
+			latitude: row.latitude ? Math.round(row.latitude * 100) / 100 : row.latitude,
+			longitude: row.longitude ? Math.round(row.longitude * 100) / 100 : row.longitude,
 		}));
 
 		this.adoptions = adoptions;
@@ -474,7 +476,7 @@ export class AdoptedProbes {
 			key, (_.isObject(value) && !_.isDate(value)) ? JSON.stringify(value) : value,
 		]));
 
-		console.log(`updating ${adoption.id}:`, formattedUpdate);
+		console.log(`Updating id ${adoption.id}:`, formattedUpdate);
 		await this.sql(ADOPTIONS_TABLE).where({ id: adoption.id }).update(formattedUpdate);
 
 		// if country of probe changes, but there is a custom city in prev country, send notification to user.

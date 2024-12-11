@@ -693,8 +693,8 @@ describe('Create measurement', () => {
 					country: 'US',
 					countryOfCustomCity: 'US',
 					city: 'Oklahoma City',
-					latitude: 35.46756,
-					longitude: -97.51643,
+					latitude: 35.47,
+					longitude: -97.52,
 					network: 'InterBS S.R.L. (BAEHOST)',
 					asn: 61004,
 				});

@@ -26,8 +26,8 @@ describe('AdoptedProbes', () => {
 		state: null,
 		countryOfCustomCity: '',
 		city: 'Dublin',
-		latitude: 53.3331,
-		longitude: -6.2489,
+		latitude: 53.33,
+		longitude: -6.25,
 		asn: 16509,
 		network: 'Amazon.com, Inc.',
 	};
@@ -49,8 +49,8 @@ describe('AdoptedProbes', () => {
 			city: 'Dublin',
 			normalizedCity: 'dublin',
 			asn: 16509,
-			latitude: 53.3331,
-			longitude: -6.2489,
+			latitude: 53.33,
+			longitude: -6.25,
 			network: 'Amazon.com, Inc.',
 			normalizedNetwork: 'amazon.com, inc.',
 		},
@@ -290,8 +290,8 @@ describe('AdoptedProbes', () => {
 					state: null,
 					city: 'London',
 					asn: 20473,
-					latitude: 51.50853,
-					longitude: -0.12574,
+					latitude: 51.51,
+					longitude: -0.13,
 					network: 'The Constant Company, LLC',
 				},
 			} as Probe,
@@ -315,8 +315,8 @@ describe('AdoptedProbes', () => {
 			network: 'The Constant Company, LLC',
 			country: 'GB',
 			city: 'London',
-			latitude: 51.50853,
-			longitude: -0.12574,
+			latitude: 51.51,
+			longitude: -0.13,
 		}]);
 	});
 
@@ -356,8 +356,8 @@ describe('AdoptedProbes', () => {
 					state: null,
 					city: 'London',
 					asn: 20473,
-					latitude: 51.50853,
-					longitude: -0.12574,
+					latitude: 51.51,
+					longitude: -0.13,
 					network: 'The Constant Company, LLC',
 				},
 			} as Probe,
@@ -382,8 +382,8 @@ describe('AdoptedProbes', () => {
 					state: null,
 					city: 'London',
 					asn: 20473,
-					latitude: 51.50853,
-					longitude: -0.12574,
+					latitude: 51.51,
+					longitude: -0.13,
 					network: 'The Constant Company, LLC',
 				},
 			} as Probe,
@@ -458,8 +458,8 @@ describe('AdoptedProbes', () => {
 					state: null,
 					city: 'London',
 					asn: 20473,
-					latitude: 51.50853,
-					longitude: -0.12574,
+					latitude: 51.51,
+					longitude: -0.13,
 					network: 'The Constant Company, LLC',
 				},
 			} as Probe,
@@ -484,8 +484,8 @@ describe('AdoptedProbes', () => {
 					state: null,
 					city: 'London',
 					asn: 20473,
-					latitude: 51.50853,
-					longitude: -0.12574,
+					latitude: 51.51,
+					longitude: -0.13,
 					network: 'The Constant Company, LLC',
 				},
 			} as Probe,
@@ -563,8 +563,8 @@ describe('AdoptedProbes', () => {
 					state: null,
 					city: 'London',
 					asn: 20473,
-					latitude: 51.50853,
-					longitude: -0.12574,
+					latitude: 51.51,
+					longitude: -0.13,
 					network: 'The Constant Company, LLC',
 				},
 			} as Probe,
@@ -731,7 +731,7 @@ describe('AdoptedProbes', () => {
 			countryOfCustomCity: 'IE',
 			isCustomCity: 1,
 			latitude: 54,
-			longitude: -6.41667,
+			longitude: -6.42,
 		}]);
 
 		await adoptedProbes.syncDashboardData();
@@ -745,7 +745,7 @@ describe('AdoptedProbes', () => {
 			normalizedCity: 'dundalk',
 			asn: 16509,
 			latitude: 54,
-			longitude: -6.41667,
+			longitude: -6.42,
 			network: 'Amazon.com, Inc.',
 			normalizedNetwork: 'amazon.com, inc.',
 		});
@@ -759,8 +759,8 @@ describe('AdoptedProbes', () => {
 			countryOfCustomCity: 'GB',
 			city: 'London',
 			isCustomCity: 1,
-			latitude: 51.50853,
-			longitude: -0.12574,
+			latitude: 51.51,
+			longitude: -0.13,
 		}]);
 
 		await adoptedProbes.syncDashboardData();
@@ -775,7 +775,7 @@ describe('AdoptedProbes', () => {
 			city: 'Dundalk',
 			isCustomCity: 0,
 			latitude: 54,
-			longitude: -6.41667,
+			longitude: -6.42,
 		}]);
 
 		await adoptedProbes.syncDashboardData();
