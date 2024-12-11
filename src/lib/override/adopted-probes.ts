@@ -216,6 +216,10 @@ export class AdoptedProbes {
 			this.fetchAdoptions(),
 		]);
 
+		if (process.env['SHOULD_SYNC_ADOPTIONS'] !== 'true') {
+			return;
+		}
+
 		const { adoptionsWithProbe, adoptionsWithoutProbe } = this.matchAdoptionsAndProbes(probes);
 		const { updatedAdoptions, adoptionDataUpdates } = this.generateUpdatedAdoptions(adoptionsWithProbe, adoptionsWithoutProbe);
 		const { adoptionsToDelete, adoptionAltIpUpdates } = this.findDuplications(updatedAdoptions);

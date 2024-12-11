@@ -106,9 +106,28 @@ describe('AdoptedProbes', () => {
 		sql.select.resolves([ defaultAdoptedProbe ]);
 		sqlStub.returns(sql);
 		fetchProbesWithAdminData.resolves([ defaultConnectedProbe ]);
+		process.env['SHOULD_SYNC_ADOPTIONS'] = 'true';
+	});
+
+	after(() => {
+		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 	});
 
 	it('syncDashboardData method should sync the data', async () => {
+		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
+
+		expect(sqlStub.callCount).to.equal(0);
+		expect(sql.select.callCount).to.equal(0);
+
+		await adoptedProbes.syncDashboardData();
+
+		expect(sqlStub.callCount).to.equal(1);
+		expect(sqlStub.args[0]).deep.equal([ 'gp_adopted_probes' ]);
+		expect(sql.select.callCount).to.equal(1);
+	});
+
+	it('syncDashboardData method should fetch adoption data even without SHOULD_SYNC_ADOPTIONS', async () => {
+		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
 
 		expect(sqlStub.callCount).to.equal(0);
@@ -724,6 +743,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedLocation method should return updated location', async () => {
+		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
 		sql.select.resolves([{
 			...defaultAdoptedProbe,
@@ -752,6 +772,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedLocation method should return null if connected.country !== adopted.countryOfCustomCity', async () => {
+		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
 		sql.select.resolves([{
 			...defaultAdoptedProbe,
@@ -769,6 +790,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedLocation method should return null if "isCustomCity: false"', async () => {
+		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
 		sql.select.resolves([{
 			...defaultAdoptedProbe,
@@ -784,6 +806,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedTags method should return updated tags', async () => {
+		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
 
 		await adoptedProbes.syncDashboardData();
@@ -795,6 +818,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedTags method should return same tags array if user tags are empty', async () => {
+		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
 		sql.select.resolves([{ ...defaultAdoptedProbe, tags: '[]' }]);
 
