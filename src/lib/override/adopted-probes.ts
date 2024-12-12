@@ -271,10 +271,9 @@ export class AdoptedProbes {
 		const adoptionsWithProbe: { adoption: Adoption, probe: Probe }[] = [];
 
 		// Searching probe for the adoption by: UUID.
-		let adoptionsToCheck = [ ...this.adoptions ];
 		let adoptionsWithoutProbe: Adoption[] = [];
 
-		adoptionsToCheck.forEach((adoption) => {
+		this.adoptions.forEach((adoption) => {
 			const probe = adoption.uuid && uuidToProbe.get(adoption.uuid);
 
 			if (probe) {
@@ -288,7 +287,7 @@ export class AdoptedProbes {
 		});
 
 		// Searching probe for the adoption by: adoption IP -> probe IP.
-		adoptionsToCheck = [ ...adoptionsWithoutProbe ];
+		let adoptionsToCheck = [ ...adoptionsWithoutProbe ];
 		adoptionsWithoutProbe = [];
 
 		adoptionsToCheck.forEach((adoption) => {
