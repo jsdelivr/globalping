@@ -46,6 +46,8 @@ jobs:
         with:
           node-version: 20.x
       - uses: fscarmen/warp-on-actions@v1.3
+        with:
+          mode: client
       - name: Enable IPv6 for Docker containers
         run: |
           sudo cat /etc/docker/daemon.json | jq '. + { "ipv6": true, "fixed-cidr-v6": "2001:db8:1::/64", "experimental": true, "ip6tables": true }' > daemon.json
