@@ -20,8 +20,8 @@ const defaultLocation = {
 	region: '',
 	normalizedCity: '',
 	asn: 43_939,
-	latitude: 50.0787,
-	longitude: 19.874,
+	latitude: 50.08,
+	longitude: 19.87,
 	network: '',
 	normalizedNetwork: '',
 };

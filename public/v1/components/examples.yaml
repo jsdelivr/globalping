@@ -13,8 +13,8 @@ components:
               "city": "Ashburn",
               "asn": 14618,
               "network": "Amazon.com, Inc.",
-              "latitude": 39.0437,
-              "longitude": -77.4875
+              "latitude": 39.04,
+              "longitude": -77.49
             },
             "tags": [
               "aws-us-east-1",
@@ -127,8 +127,8 @@ components:
                 "state": null,
                 "city": "Auckland",
                 "asn": 61138,
-                "longitude": 174.76667,
-                "latitude": -36.86667,
+                "longitude": 174.77,
+                "latitude": -36.87,
                 "network": "Zappie Host LLC",
                 "tags": [
                   "datacenter-network"
@@ -169,8 +169,8 @@ components:
                 "state": null,
                 "city": "Sydney",
                 "asn": 16276,
-                "longitude": 151.207052,
-                "latitude": -33.86778,
+                "longitude": 151.21,
+                "latitude": -33.87,
                 "network": "OVH SAS",
                 "tags": [
                   "datacenter-network"
@@ -220,8 +220,8 @@ components:
                 "state": null,
                 "city": "Sydney",
                 "asn": 202422,
-                "longitude": 151.207052,
-                "latitude": -33.86778,
+                "longitude": 151.21,
+                "latitude": -33.87,
                 "network": "G-Core Labs S.A.",
                 "tags": [
                   "datacenter-network"
@@ -271,8 +271,8 @@ components:
                 "state": null,
                 "city": "Melbourne",
                 "asn": 20473,
-                "longitude": 144.96332,
-                "latitude": -37.814,
+                "longitude": 144.96,
+                "latitude": -37.81,
                 "network": "Choopa, LLC",
                 "tags": [ ],
                 "resolvers": [
@@ -379,8 +379,8 @@ components:
                 "state": null,
                 "city": "Johannesburg",
                 "asn": 199524,
-                "longitude": 28.04355,
-                "latitude": -26.20225,
+                "longitude": 28.04,
+                "latitude": -26.20,
                 "network": "G-Core Labs S.A.",
                 "tags": [
                   "datacenter-network"
@@ -446,8 +446,8 @@ components:
                 "state": null,
                 "city": "Seoul",
                 "asn": 40676,
-                "longitude": 126.977207,
-                "latitude": 37.566309,
+                "longitude": 126.98,
+                "latitude": 37.57,
                 "network": "Psychz Networks",
                 "tags": [
                   "datacenter-network"

@@ -13,13 +13,13 @@ const getProbeIp = (socket: Socket) => {
 	// Use random ip assigned by the API
 	if (process.env['FAKE_PROBE_IP']) {
 		const samples = [
+			'131.255.7.26', // Buenos Aires
 			'213.136.174.80', // Naples
+			'95.155.94.127', // Krakow
 			'18.200.0.1', // Dublin, AWS
 			'34.140.0.10', // Brussels, GCP
-			'95.155.94.127', // Krakow
 			'65.49.22.66',
 			'185.229.226.83',
-			'131.255.7.26',
 			'94.214.253.78',
 			'79.205.97.254',
 			'2a04:4e42:200::485', // San Francisco

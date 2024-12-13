@@ -15,12 +15,12 @@ describe('Create measurement', () => {
 	let getTestServer;
 	let requestAgent: Agent;
 	let probeOverride: ProbeOverride;
-	let ADOPTED_PROBES_TABLE: string;
+	let ADOPTIONS_TABLE: string;
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
 		({ getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } = await import('../../../utils/server.js'));
-		({ ADOPTED_PROBES_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
+		({ ADOPTIONS_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
 		({ probeOverride } = await import('../../../../src/lib/ws/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
@@ -677,7 +677,7 @@ describe('Create measurement', () => {
 
 		describe('adopted probes', () => {
 			before(async () => {
-				await client(ADOPTED_PROBES_TABLE).insert({
+				await client(ADOPTIONS_TABLE).insert({
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					lastSyncDate: new Date(),
 					ip: '1.2.3.4',
@@ -693,18 +693,18 @@ describe('Create measurement', () => {
 					country: 'US',
 					countryOfCustomCity: 'US',
 					city: 'Oklahoma City',
-					latitude: 35.46756,
-					longitude: -97.51643,
+					latitude: 35.47,
+					longitude: -97.52,
 					network: 'InterBS S.R.L. (BAEHOST)',
 					asn: 61004,
 				});
 
-				await probeOverride.syncDashboardData();
+				await probeOverride.fetchDashboardData();
 				await waitForProbesUpdate();
 			});
 
 			after(async () => {
-				await client(ADOPTED_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
+				await client(ADOPTIONS_TABLE).where({ city: 'Oklahoma City' }).delete();
 			});
 
 			it('should create measurement with adopted "city: Oklahoma City" location', async () => {

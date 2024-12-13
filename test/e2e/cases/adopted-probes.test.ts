@@ -3,13 +3,13 @@ import { expect } from 'chai';
 import { client } from '../../../src/lib/sql/client.js';
 import { waitProbeInCity } from '../utils.js';
 
-const ADOPTED_PROBES_TABLE = 'gp_adopted_probes';
+const ADOPTIONS_TABLE = 'gp_adopted_probes';
 
 describe('adopted probe', () => {
 	before(async function () {
 		this.timeout(80000);
 
-		await client(ADOPTED_PROBES_TABLE).insert({
+		await client(ADOPTIONS_TABLE).insert({
 			userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			lastSyncDate: new Date(),
 			ip: '51.158.22.211',
@@ -25,8 +25,8 @@ describe('adopted probe', () => {
 			country: 'FR',
 			countryOfCustomCity: 'FR',
 			city: 'Marseille',
-			latitude: 43.29695,
-			longitude: 5.38107,
+			latitude: 43.3,
+			longitude: 5.38,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			asn: 61004,
 		});
@@ -36,7 +36,7 @@ describe('adopted probe', () => {
 
 	after(async function () {
 		this.timeout(80000);
-		await client(ADOPTED_PROBES_TABLE).where({ city: 'Marseille' }).delete();
+		await client(ADOPTIONS_TABLE).where({ city: 'Marseille' }).delete();
 		await waitProbeInCity('Paris');
 	});
 

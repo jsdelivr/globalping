@@ -10,7 +10,7 @@ describe('index file', () => {
 	const sandbox = sinon.createSandbox();
 	const cluster: any = new EventEmitter();
 	cluster.isPrimary = true;
-	cluster.fork = sandbox.stub();
+	cluster.fork = sandbox.stub().returns({ process: { pid: 0 } });
 	let redis: RedisClient;
 	let persistentRedis: RedisClient;
 
@@ -34,12 +34,18 @@ describe('index file', () => {
 	});
 
 	it('master should restart a worker if it dies', async () => {
+		cluster.fork.onFirstCall().returns({ process: { pid: 1 } });
+		cluster.fork.onSecondCall().returns({ process: { pid: 2 } });
 		await import('../../../src/index.js');
-		cluster.fork.resetHistory();
 
-		cluster.emit('exit', { process: { pid: 123 } });
+		cluster.emit('exit', { process: { pid: 1 } });
+		cluster.emit('exit', { process: { pid: 2 } });
 
-		expect(cluster.fork.callCount).to.equal(1);
+		expect(cluster.fork.callCount).to.equal(4);
+		expect(cluster.fork.args[0]).to.deep.equal([{ SHOULD_SYNC_ADOPTIONS: true }]);
+		expect(cluster.fork.args[1]).to.deep.equal([]);
+		expect(cluster.fork.args[2]).to.deep.equal([{ SHOULD_SYNC_ADOPTIONS: true }]);
+		expect(cluster.fork.args[3]).to.deep.equal([]);
 	});
 
 	it('master should fork the configured number of processes', async () => {

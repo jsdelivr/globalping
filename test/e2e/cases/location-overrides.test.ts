@@ -18,8 +18,8 @@ describe('location overrides', () => {
 			country: 'US',
 			state: 'FL',
 			city: 'Miami',
-			latitude: 25.7743,
-			longitude: -80.1937,
+			latitude: 25.77,
+			longitude: -80.19,
 		});
 
 		await waitProbeInCity('Miami');
@@ -40,8 +40,8 @@ describe('location overrides', () => {
 			country: 'US',
 			state: 'FL',
 			city: 'Miami',
-			latitude: 25.7743,
-			longitude: -80.1937,
+			latitude: 25.77,
+			longitude: -80.19,
 		});
 	});
 
