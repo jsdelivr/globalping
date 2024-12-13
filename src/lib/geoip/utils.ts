@@ -12,3 +12,5 @@ export const normalizeCityName = (name: string): string => normalizeCityNamePubl
 export const normalizeFromPublicName = (name: string): string => name.toLowerCase();
 
 export const normalizeNetworkName = (name: string): string => name.toLowerCase();
+
+export const normalizeCoordinate = (coordinate: number) => Math.round(coordinate * 100) / 100;

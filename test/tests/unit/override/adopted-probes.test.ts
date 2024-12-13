@@ -647,6 +647,28 @@ describe('AdoptedProbes', () => {
 		expect(sql.update.args[0]).to.deep.equal([{ ip: '2.2.2.2' }]);
 	});
 
+	it('class should delete/update adoptions correctly in case of multiple duplications', async () => {
+		sql.select.resolves([
+			{ ...defaultAdoptedProbe, altIps: JSON.stringify([ '2.2.2.2' ]) },
+			{ ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: JSON.stringify([ '1.1.1.1' ]) },
+			{ ...defaultAdoptedProbe, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: JSON.stringify([ '1.1.1.1' ]) },
+		]);
+
+		fetchProbesWithAdminData.resolves([{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '2.2.2.2', altIpAddresses: [ '1.1.1.1' ] }]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, fetchProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.delete.callCount).to.equal(1);
+		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2' ] ]);
+
+		expect(sql.update.callCount).to.equal(2);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ ip: '2.2.2.2', altIps: '["1.1.1.1"]' }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-3' }]);
+		expect(sql.update.args[1]).to.deep.equal([{ status: 'offline', altIps: '[]' }]);
+	});
+
 	it('class should only delete duplicated probes in the same country', async () => {
 		// There are two rows for the same probe in the db.
 		sql.select.resolves([ defaultAdoptedProbe, { ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', country: 'anotherCountry' }]);

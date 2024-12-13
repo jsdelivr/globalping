@@ -5,7 +5,7 @@ import config from 'config';
 import { scopedLogger } from '../logger.js';
 import type { fetchProbesWithAdminData as serverFetchProbesWithAdminData } from '../ws/server.js';
 import type { Probe, ProbeLocation, Tag } from '../../probe/types.js';
-import { normalizeFromPublicName } from '../geoip/utils.js';
+import { normalizeCoordinate, normalizeFromPublicName } from '../geoip/utils.js';
 import { getIndex } from '../location/location.js';
 import { countries } from 'countries-list';
 
@@ -240,7 +240,7 @@ export class AdoptedProbes {
 		const rows = await this.sql(ADOPTIONS_TABLE)
 			// First item will be preserved, so we are prioritizing online probes.
 			// Sorting by id at the end so order is the same in any table state.
-			.orderByRaw(`lastSyncDate DESC, onlineTimesToday DESC, FIELD(status, 'ready') DESC, id ASC`)
+			.orderByRaw(`lastSyncDate DESC, onlineTimesToday DESC, FIELD(status, 'ready') DESC, id DESC`)
 			.select<Row[]>();
 
 		const adoptions: Adoption[] = rows.map(row => ({
@@ -252,8 +252,8 @@ export class AdoptedProbes {
 			isCustomCity: Boolean(row.isCustomCity),
 			isIPv4Supported: Boolean(row.isIPv4Supported),
 			isIPv6Supported: Boolean(row.isIPv6Supported),
-			latitude: row.latitude ? Math.round(row.latitude * 100) / 100 : row.latitude,
-			longitude: row.longitude ? Math.round(row.longitude * 100) / 100 : row.longitude,
+			latitude: row.latitude ? normalizeCoordinate(row.latitude) : row.latitude,
+			longitude: row.longitude ? normalizeCoordinate(row.longitude) : row.longitude,
 		}));
 
 		this.adoptions = adoptions;

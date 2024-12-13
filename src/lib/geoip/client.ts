@@ -14,6 +14,7 @@ import { ipmapLookup } from './providers/ipmap.js';
 import { ip2LocationLookup } from './providers/ip2location.js';
 import { isHostingOverrides } from './overrides.js';
 import NullCache from '../cache/null-cache.js';
+import { normalizeCoordinate } from './utils.js';
 
 type Provider = 'ipmap' | 'ip2location' | 'ipinfo' | 'maxmind' | 'fastly';
 export type LocationInfo = ProbeLocation & {isProxy: boolean | null, isHosting: boolean | null, isAnycast: boolean | null};
@@ -104,8 +105,8 @@ export default class GeoIpClient {
 			region: match.region,
 			normalizedCity: match.normalizedCity,
 			asn: Number(networkMatch.asn),
-			latitude: Math.round(Number(match.latitude) * 100) / 100,
-			longitude: Math.round(Number(match.longitude) * 100) / 100,
+			latitude: normalizeCoordinate(Number(match.latitude)),
+			longitude: normalizeCoordinate(Number(match.longitude)),
 			network: networkMatch.network,
 			normalizedNetwork: networkMatch.normalizedNetwork,
 			isProxy,
