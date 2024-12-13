@@ -21,6 +21,6 @@ export const reconnectProbes = () => {
 	}
 
 	setTimeout(() => {
-		disconnectProbes().catch(error => logger.error(error));
+		disconnectProbes().catch(error => logger.error('Error in disconnectProbes()', error));
 	}, TIME_UNTIL_VM_BECOMES_HEALTHY);
 };

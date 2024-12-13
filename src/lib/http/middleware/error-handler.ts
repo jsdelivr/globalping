@@ -1,5 +1,4 @@
 import createHttpError from 'http-errors';
-import newrelic from 'newrelic';
 import { scopedLogger } from '../../logger.js';
 import type { ExtendedMiddleware } from '../../../types.js';
 
@@ -25,11 +24,7 @@ export const errorHandlerMw: ExtendedMiddleware = async (ctx, next) => {
 			return;
 		}
 
-		if (error instanceof Error) {
-			newrelic.noticeError(error);
-		}
-
-		logger.error(error);
+		logger.error('Internal server error:', error);
 
 		ctx.status = 500;
 

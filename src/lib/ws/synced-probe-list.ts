@@ -1,11 +1,11 @@
 import _ from 'lodash';
+import { Logger } from 'h-logger2';
 import { randomBytes } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import TTLCache from '@isaacs/ttlcache';
-import { scopedLogger } from '../logger.js';
+import { scopedLoggerWithPrefix } from '../logger.js';
 import type { WsServerNamespace } from './server.js';
 import type { Probe, ProbeStats } from '../../probe/types.js';
-import type winston from 'winston';
 import type { ProbeOverride } from '../override/probe-override.js';
 import type { RedisClient } from '../redis/shared.js';
 
@@ -48,11 +48,11 @@ export class SyncedProbeList extends EventEmitter {
 	remoteDataTtl = 60 * 60 * 1000;
 	syncInterval = 2000;
 	syncTimeout = 5000;
+	logger: Logger;
 
 	readonly localUpdateEvent = 'spl:local-update';
 	readonly remoteEventsStream = 'gp:spl:events';
 
-	private logger: winston.Logger;
 	private rawProbes: Probe[];
 	private probesWithAdminData: Probe[];
 	private probes: Probe[];
@@ -77,12 +77,12 @@ export class SyncedProbeList extends EventEmitter {
 		super();
 		this.setMaxListeners(Infinity);
 		this.nodeId = randomBytes(8).toString('hex');
-		this.logger = scopedLogger('synced-probe-list', this.nodeId);
 		this.rawProbes = [];
 		this.probesWithAdminData = [];
 		this.probes = [];
 		this.oldest = Infinity;
 		this.lastReadEventId = Date.now().toString();
+		this.logger = scopedLoggerWithPrefix('synced-probe-list', `[${this.nodeId}]`);
 
 		this.nodeData = new TTLCache<string, NodeData>({
 			noDisposeOnSet: true,
@@ -499,7 +499,7 @@ export class SyncedProbeList extends EventEmitter {
 		this.pushTimer = setTimeout(() => {
 			this.syncPush()
 				.finally(() => this.schedulePush())
-				.catch(error => this.logger.error(error));
+				.catch(error => this.logger.error('Error in probe list syncPush()', error));
 		}, this.syncInterval).unref();
 	}
 
@@ -509,7 +509,7 @@ export class SyncedProbeList extends EventEmitter {
 		this.pullTimer = setTimeout(() => {
 			this.syncPull()
 				.finally(() => this.schedulePull())
-				.catch(error => this.logger.error(error));
+				.catch(error => this.logger.error('Error in probe list syncPull()', error));
 		}, this.syncInterval).unref();
 	}
 
@@ -534,7 +534,7 @@ export class SyncedProbeList extends EventEmitter {
 					try {
 						callback(parsedMessage);
 					} catch (error) {
-						this.logger.error(error);
+						this.logger.error('Error in probe list node callback', error);
 					}
 				});
 			}

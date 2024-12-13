@@ -40,7 +40,7 @@ export class Auth {
 		this.timer = setTimeout(() => {
 			this.syncTokens()
 				.finally(() => this.scheduleSync())
-				.catch(error => logger.error(error));
+				.catch(error => logger.error('Error in Auth.syncTokens()', error));
 		}, 60_000).unref();
 	}
 

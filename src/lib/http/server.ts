@@ -1,6 +1,8 @@
 import { createServer } from 'node:http';
 import * as zlib from 'node:zlib';
 import * as url from 'node:url';
+import apmAgent from 'elastic-apm-node';
+import { koa as koaElasticUtils } from 'elastic-apm-utils';
 import json from 'koa-json';
 import Router from '@koa/router';
 import conditionalGet from 'koa-conditional-get';
@@ -11,6 +13,7 @@ import koaFavicon from 'koa-favicon';
 import koaStatic from 'koa-static';
 import config from 'config';
 import Koa from 'koa';
+
 import { registerGetProbesRoute } from '../../probe/route/get-probes.js';
 import { registerGetMeasurementRoute } from '../../measurement/route/get-measurement.js';
 import { registerCreateMeasurementRoute } from '../../measurement/route/create-measurement.js';
@@ -83,6 +86,7 @@ app
 	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 	.use(errorHandlerMw)
 	.use(corsHandler())
+	.use(koaElasticUtils.middleware(apmAgent))
 	.use(rootRouter.routes())
 	.use(healthRouter.routes())
 	.use(apiRouter.routes())
