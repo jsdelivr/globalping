@@ -45,19 +45,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
+      - name: Build
+        run: |
+          npm ci
+          npm run build
       - uses: fscarmen/warp-on-actions@v1.3
-        with:
-          mode: client
       - name: Enable IPv6 for Docker containers
         run: |
           sudo cat /etc/docker/daemon.json | jq '. + { "ipv6": true, "fixed-cidr-v6": "2001:db8:1::/64", "experimental": true, "ip6tables": true }' > daemon.json
           sudo mv daemon.json /etc/docker/
           sudo systemctl restart docker
           docker restart $(docker ps -aq)
-      - name: Build
-        run: |
-          npm ci
-          npm run build
       - name: Test E2E
         run: |
           npm run test:e2e
