@@ -1,5 +1,4 @@
 import config from 'config';
-import newrelic from 'newrelic';
 import { type City, WebServiceClient } from '@maxmind/geoip2-node';
 import type { WebServiceClientError } from '@maxmind/geoip2-node/dist/src/types.js';
 import type { LocationInfo } from '../client.js';
@@ -10,7 +9,9 @@ import {
 } from '../utils.js';
 import { getCity } from '../city-approximation.js';
 import { getRegionByCountry } from '../../location/location.js';
+import { scopedLogger } from '../../logger.js';
 
+const logger = scopedLogger('geoip:maxmind');
 const client = new WebServiceClient(config.get('maxmind.accountId'), config.get('maxmind.licenseKey'));
 
 export const isMaxmindError = (error: unknown): error is WebServiceClientError => error as WebServiceClientError['code'] !== undefined;
@@ -26,7 +27,7 @@ const query = async (addr: string, retryCounter = 0): Promise<City> => {
 			}
 
 			if (error.code === 'ACCOUNT_ID_REQUIRED') {
-				newrelic.noticeError(new Error(error.error), { client: 'maxmind' });
+				logger.error('Maxmind query error', new Error(error.error));
 			}
 		}
 

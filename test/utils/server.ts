@@ -5,6 +5,7 @@ import { io, type Socket } from 'socket.io-client';
 import { scopedLogger } from '../../src/lib/logger.js';
 import { createServer } from '../../src/lib/server.js';
 import { fetchRawSockets, getSyncedProbeList } from '../../src/lib/ws/server.js';
+import { ConsoleWriter, Logger } from 'h-logger2';
 
 let app: Server;
 let url: string;
@@ -19,6 +20,7 @@ export const getTestServer = async (): Promise<Server> => {
 		url = `http://127.0.0.1:${port}/probes`;
 		getSyncedProbeList().syncInterval = 40;
 		getSyncedProbeList().syncTimeout = 200;
+		getSyncedProbeList().logger.writers = [ new ConsoleWriter(Logger.levels.warn) ];
 	}
 
 	return app;
@@ -63,7 +65,7 @@ export const addFakeProbes = async (count: number, events: object = {}, options:
 				client.on(event, listener);
 			}
 
-			client.on('connect_error', (error: Error) => logger.error(error));
+			client.on('connect_error', (error: Error) => logger.error('Client connect error.', error));
 
 			client.on('connect', () => {
 				resolve(client);

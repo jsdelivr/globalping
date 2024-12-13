@@ -21,10 +21,10 @@ export const createRedisClientInternal = (options?: RedisClientOptions): RedisCl
 	});
 
 	client
-		.on('error', (error: Error) => logger.error('connection error', error))
-		.on('ready', () => logger.info('connection ready'))
-		.on('reconnecting', () => logger.info('reconnecting'))
-		.connect().catch((error: Error) => logger.error('connection error', error));
+		.on('error', (error: Error) => logger.error('Redis connection error:', error))
+		.on('ready', () => logger.info('Redis connection ready.'))
+		.on('reconnecting', () => logger.info('Redis reconnecting.'))
+		.connect().catch((error: Error) => logger.error('Redis connection error:', error));
 
 	return client;
 };

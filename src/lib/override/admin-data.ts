@@ -55,7 +55,7 @@ export class AdminData {
 		setTimeout(() => {
 			this.syncDashboardData()
 				.finally(() => this.scheduleSync())
-				.catch(error => logger.error(error));
+				.catch(error => logger.error('Error in AdminData.syncDashboardData()', error));
 		}, config.get<number>('adminData.syncInterval')).unref();
 	}
 

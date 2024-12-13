@@ -5,10 +5,10 @@ import { updateGeonamesCitiesFile } from './geoip/city-approximation.js';
 
 const logger = scopedLogger('download-files');
 
-logger.info('updating malware blacklist JSON files');
+logger.info('Updating malware blacklist JSON files.');
 await updateMalwareFiles();
-logger.info('updating cloud ip ranges JSON files');
+logger.info('Updating cloud ip ranges JSON files.');
 await updateIpRangeFiles();
-logger.info('updating geonames cities CSV file');
+logger.info('Updating geonames cities CSV file.');
 await updateGeonamesCitiesFile();
-logger.info('update complete');
+logger.info('Update complete.');

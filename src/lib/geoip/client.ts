@@ -146,7 +146,7 @@ export default class GeoIpClient {
 		const best = ranked[0];
 
 		if (!best || best.provider === 'fastly') {
-			logger.error(`failed to find a correct value for a field "${field}"`, { field, sources });
+			logger.error(`Failed to find a correct value for a field "${field}"`, { field, sources });
 			throw new Error(`failed to find a correct value for a field "${field}"`);
 		}
 

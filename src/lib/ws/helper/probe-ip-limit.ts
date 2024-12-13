@@ -23,7 +23,7 @@ export class ProbeIpLimit {
 		this.timer = setTimeout(() => {
 			this.syncIpLimit()
 				.finally(() => this.scheduleSync())
-				.catch(error => logger.error(error));
+				.catch(error => logger.error('Error in ProbeIpLimit.syncIpLimit()', error));
 		}, 60_000 * 2 * Math.random() * numberOfProcesses).unref();
 	}
 

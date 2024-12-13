@@ -40,9 +40,9 @@ Most IDEs have plugins integrating the used linter (eslint), including support f
 
 ### Environment variables
 
-- `NEW_RELIC_LICENSE_KEY={value}` used in production to send APM metrics to new relic
-- `NEW_RELIC_APP_NAME={value}` used in production to send APM mentrics to new relic
-- `NEW_RELIC_ENABLED=false` used in development to disable newrelic monitoring
+- `ELASTIC_APM_SERVER_URL={value}` used in production to send APM metrics to elastic
+- `ELASTIC_APM_SECRET_TOKEN={value}` used in production to send APM metrics to elastic
+- `ELASTIC_SEARCH_URL={value}` used in production to send logs to elastic
 - `FAKE_PROBE_IP=1` used in development to use a random fake ip assigned by the API
 - `ADMIN_KEY={value}` used to access additional information over the API
 - `SYSTEM_API_KEY={value}` used for integration with the dashboard

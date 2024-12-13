@@ -1,6 +1,5 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as td from 'testdouble';
 import type { RedisClient } from '../../../src/lib/redis/client.js';
 import type RedisCache from '../../../src/lib/cache/redis-cache.js';
 
@@ -11,11 +10,9 @@ describe('RedisCache', () => {
 		get: sandbox.stub(),
 		del: sandbox.stub(),
 	};
-	const noticeError = sandbox.stub();
 	let redisCache: RedisCache;
 
 	before(async () => {
-		await td.replaceEsm('newrelic', {}, { noticeError });
 		const { default: RedisCache } = await import('../../../src/lib/cache/redis-cache.js');
 		redisCache = new RedisCache(redisClient as unknown as RedisClient);
 	});
@@ -40,7 +37,6 @@ describe('RedisCache', () => {
 			const result = await redisCache.set('testKey', 'testValue', 1000);
 
 			expect(result).to.equal(undefined);
-			expect(noticeError.args[0]).to.deep.equal([ error, { key: 'testKey', ttl: 1000 }]);
 		});
 	});
 
@@ -72,7 +68,6 @@ describe('RedisCache', () => {
 			const result = await redisCache.get('testKey');
 
 			expect(result).to.equal(null);
-			expect(noticeError.args[0]).to.deep.equal([ error, { key: 'testKey' }]);
 		});
 	});
 
@@ -96,7 +91,6 @@ describe('RedisCache', () => {
 			const result = await redisCache.delete('testKey');
 
 			expect(result).to.equal(null);
-			expect(noticeError.args[0]).to.deep.equal([ error, { key: 'testKey' }]);
 		});
 	});
 });

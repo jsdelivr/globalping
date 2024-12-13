@@ -159,7 +159,7 @@ export class AltIps {
 				return false;
 			}
 		} catch (e) {
-			logger.error(e);
+			logger.error('Failed to add an alt IP', e);
 			return false;
 		}
 
@@ -169,7 +169,7 @@ export class AltIps {
 
 	private subscribeToNodeMessages () {
 		this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, (reqMessage: PubSubMessage<AltIpReqBody>) => {
-			this.validateTokenFromPubSub(reqMessage).catch(error => logger.error(error));
+			this.validateTokenFromPubSub(reqMessage).catch(error => logger.error('failed to validate token from pub/sub', error));
 		});
 
 		this.syncedProbeList.subscribeToNodeMessages<AltIpResBody>(ALT_IP_RES_MESSAGE_TYPE, this.handleRes);

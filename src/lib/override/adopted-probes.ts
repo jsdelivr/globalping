@@ -206,7 +206,7 @@ export class AdoptedProbes {
 		setTimeout(() => {
 			this.syncDashboardData()
 				.finally(() => this.scheduleSync())
-				.catch(error => logger.error(error));
+				.catch(error => logger.error('Error in AdoptedProbes.syncDashboardData() (affects all probes)', error));
 		}, config.get<number>('adoptedProbes.syncInterval')).unref();
 	}
 
@@ -232,7 +232,7 @@ export class AdoptedProbes {
 
 	private async resolveIfError (pr: Promise<void>): Promise<void> {
 		return pr.catch((e) => {
-			logger.error(e);
+			logger.error('Error while syncing individual probe data.', e);
 		});
 	}
 

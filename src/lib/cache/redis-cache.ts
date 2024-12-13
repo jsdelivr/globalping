@@ -1,4 +1,3 @@
-import newrelic from 'newrelic';
 import { scopedLogger } from '../logger.js';
 import type { RedisClient } from '../redis/client.js';
 import type { CacheInterface } from './cache-interface.js';
@@ -12,8 +11,7 @@ export default class RedisCache implements CacheInterface {
 		try {
 			await this.redis.set(this.buildCacheKey(key), JSON.stringify(value), { PX: ttl });
 		} catch (error) {
-			logger.error('Failed to set cache value.', error);
-			newrelic.noticeError(error as Error, { key, ttl });
+			logger.error('Failed to set redis cache value.', error, { key, ttl });
 		}
 	}
 
@@ -27,8 +25,7 @@ export default class RedisCache implements CacheInterface {
 
 			return JSON.parse(raw) as T;
 		} catch (error) {
-			logger.error('Failed to get cached value.', error);
-			newrelic.noticeError(error as Error, { key });
+			logger.error('Failed to get redis cache value.', error, { key });
 			return null;
 		}
 	}
@@ -45,8 +42,7 @@ export default class RedisCache implements CacheInterface {
 
 			return JSON.parse(raw) as T;
 		} catch (error) {
-			logger.error('Failed to del cached value.', error);
-			newrelic.noticeError(error as Error, { key });
+			logger.error('Failed to del redis cache value.', error, { key });
 			return null;
 		}
 	}
