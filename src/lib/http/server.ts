@@ -36,7 +36,9 @@ const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../..
 const docsHost = config.get<string>('server.docsHost');
 
 const rootRouter = new Router({ strict: true, sensitive: true });
-rootRouter.prefix('/');
+
+rootRouter.prefix('/')
+	.use(koaElasticUtils.middleware(apmAgent));
 
 // GET /
 rootRouter.get<object, CustomContext>('/', '/', (ctx) => {
@@ -52,6 +54,7 @@ rootRouter.get<object, CustomContext>('/', '/', (ctx) => {
 const apiRouter = new Router({ strict: true, sensitive: true });
 
 apiRouter.prefix('/v1')
+	.use(koaElasticUtils.middleware(apmAgent, { prefix: '/v1' }))
 	.use(isAdminMw)
 	.use(isSystemMw);
 
@@ -71,6 +74,8 @@ registerAlternativeIpRoute(apiRouter);
 registerLimitsRoute(apiRouter);
 
 const healthRouter = new Router({ strict: true, sensitive: true });
+healthRouter.use(koaElasticUtils.middleware(apmAgent));
+
 // GET /health
 registerHealthRoute(healthRouter);
 
@@ -86,11 +91,11 @@ app
 	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 	.use(errorHandlerMw)
 	.use(corsHandler())
-	.use(koaElasticUtils.middleware(apmAgent))
 	.use(rootRouter.routes())
 	.use(healthRouter.routes())
 	.use(apiRouter.routes())
 	.use(apiRouter.allowedMethods())
+	.use(koaElasticUtils.middleware(apmAgent))
 	.use(koaStatic(publicPath, { format: false }));
 
 app.on('error', errorHandler);
