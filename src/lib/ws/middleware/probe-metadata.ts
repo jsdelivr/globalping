@@ -16,10 +16,12 @@ export const probeMetadata = errorHandler(async (socket: ServerSocket, next: (er
 		next();
 	} catch (error: unknown) {
 		let message = 'failed to collect probe metadata';
-		logger.error(message, error);
 
 		if (error instanceof ProbeError) {
 			message = error.message;
+			logger.warn(message, error);
+		} else {
+			logger.error(message, error);
 		}
 
 		throw new WsError(message, {

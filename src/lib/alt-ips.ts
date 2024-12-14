@@ -7,6 +7,7 @@ import createHttpError from 'http-errors';
 import { scopedLogger } from './logger.js';
 import GeoIpClient, { getGeoIpClient } from './geoip/client.js';
 import { isIpPrivate } from './private-ip.js';
+import { ProbeError } from './probe-error.js';
 
 const getRandomBytes = promisify(randomBytes);
 const logger = scopedLogger('alt-ips');
@@ -159,7 +160,12 @@ export class AltIps {
 				return false;
 			}
 		} catch (e) {
-			logger.error('Failed to add an alt IP', e);
+			if (e instanceof ProbeError) {
+				logger.warn('Failed to add an alt IP.', e);
+			} else {
+				logger.error('Failed to add an alt IP.', e);
+			}
+
 			return false;
 		}
 
@@ -169,7 +175,7 @@ export class AltIps {
 
 	private subscribeToNodeMessages () {
 		this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, (reqMessage: PubSubMessage<AltIpReqBody>) => {
-			this.validateTokenFromPubSub(reqMessage).catch(error => logger.error('failed to validate token from pub/sub', error));
+			this.validateTokenFromPubSub(reqMessage).catch(error => logger.error('Failed to validate token from pub/sub.', error));
 		});
 
 		this.syncedProbeList.subscribeToNodeMessages<AltIpResBody>(ALT_IP_RES_MESSAGE_TYPE, this.handleRes);
