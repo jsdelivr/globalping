@@ -53,6 +53,7 @@ export type Probe = {
 	tags: Tag[];
 	stats: ProbeStats;
 	hostInfo: HostInfo;
+	owner?: { id: string };
 };
 
 type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;
