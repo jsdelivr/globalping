@@ -33,7 +33,7 @@ io
 
 		socket.emit('api:connect:location', location);
 		socket.emit('api:connect:adoption', { isAdopted });
-		logger.info(`ws client ${socket.id} connected from ${location.city}, ${location.country} [${probe.ipAddress} - ${location.network}]`);
+		logger.info(`WS client connected`, { client: { id: socket.id, ip: probe.ipAddress }, location: { city: location.city, country: location.country, network: location.network } });
 
 		// Handlers
 		socket.on('probe:status:update', handleStatusUpdate(probe));

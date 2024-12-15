@@ -16,7 +16,7 @@ export const subscribeWithHandler = (socket: ServerSocket, event: string, method
 			const clientIp = probe.ipAddress;
 			const reason = isError(error) ? error.message : 'unknown';
 
-			logger.info(`Event "${event}" failed to handle. ${socket.id} for (${reason}) [${clientIp}]`);
+			logger.info(`Event "${event}" failed to handle for (${reason})`, { client: { id: socket.id, ip: clientIp } });
 			logger.debug(`Details:`, error);
 		}
 	});

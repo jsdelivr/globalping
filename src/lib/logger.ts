@@ -15,13 +15,17 @@ if (process.env['ELASTIC_SEARCH_URL']) {
 	});
 }
 
+const loggerOptions = {
+	inspectOptions: { breakLength: 120 },
+};
+
 const logger = new Logger(
 	'globalping-api',
 	esClient ? [
-		new ConsoleWriter(Number(process.env['LOG_LEVEL']) as LogLevelValue || Logger.levels.info),
+		new ConsoleWriter(Number(process.env['LOG_LEVEL']) as LogLevelValue || Logger.levels.info, loggerOptions),
 		new ElasticWriter(Number(process.env['LOG_LEVEL']) as LogLevelValue || Logger.levels.info, { esClient, apmClient: apmAgent }),
 	] : [
-		new ConsoleWriter(Number(process.env['LOG_LEVEL']) as LogLevelValue || Logger.levels.trace),
+		new ConsoleWriter(Number(process.env['LOG_LEVEL']) as LogLevelValue || Logger.levels.trace, loggerOptions),
 	],
 );
 
