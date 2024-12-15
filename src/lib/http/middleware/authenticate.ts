@@ -1,5 +1,6 @@
 import config from 'config';
 import { jwtVerify } from 'jose';
+import apmAgent from 'elastic-apm-node';
 
 import { auth } from '../auth.js';
 import type { ExtendedMiddleware } from '../../../types.js';
@@ -38,12 +39,14 @@ export const authenticate = (): ExtendedMiddleware => {
 			}
 
 			ctx.state.user = { id: result.userId, scopes: result.scopes, authMode: 'token', hashedToken: result.hashedToken };
+			apmAgent.setUserContext({ id: result.userId || 'anonymous-token' });
 		} else if (sessionCookie) {
 			try {
 				const result = await jwtVerify<SessionCookiePayload>(sessionCookie, sessionKey);
 
 				if (result.payload.id && result.payload.app_access) {
 					ctx.state.user = { id: result.payload.id, authMode: 'cookie' };
+					apmAgent.setUserContext({ id: result.payload.id });
 				}
 			} catch {}
 		}
