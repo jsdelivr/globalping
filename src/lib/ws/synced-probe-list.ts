@@ -534,7 +534,7 @@ export class SyncedProbeList extends EventEmitter {
 					try {
 						callback(parsedMessage);
 					} catch (error) {
-						this.logger.error('Error in probe list node callback', error);
+						this.logger.error('Error in probe list node callback.', error);
 					}
 				});
 			}

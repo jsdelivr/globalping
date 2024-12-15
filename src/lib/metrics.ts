@@ -148,6 +148,6 @@ function median (values: number[]): number | undefined {
 function registerGuardedMetric (name: string, callback: () => number | undefined): void {
 	apmAgent.registerMetric(name, () => {
 		const value = callback();
-		return typeof value !== 'number' ? NaN : value;
+		return value || 0; // NaN/undefined => 0
 	});
 }
