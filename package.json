@@ -20,7 +20,7 @@
 		"crypto-random-string": "^5.0.0",
 		"csv-parser": "^3.0.0",
 		"elastic-apm-node": "^4.8.1",
-		"elastic-apm-utils": "^4.1.0",
+		"elastic-apm-utils": "^4.1.1",
 		"got": "^14.2.1",
 		"gunzip-maybe": "^1.4.2",
 		"h-logger2": "^1.2.6",

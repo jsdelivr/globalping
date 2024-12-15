@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import * as zlib from 'node:zlib';
 import * as url from 'node:url';
 import apmAgent from 'elastic-apm-node';
-import { koa as koaElasticUtils } from 'elastic-apm-utils';
+import { apm as apmUtils, koa as koaElasticUtils } from 'elastic-apm-utils';
 import json from 'koa-json';
 import Router from '@koa/router';
 import conditionalGet from 'koa-conditional-get';
@@ -30,6 +30,10 @@ import { docsLink } from './middleware/docs-link.js';
 import type { CustomContext } from '../../types.js';
 import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternative-ip.js';
 import { registerLimitsRoute } from '../../limits/route/get-limits.js';
+
+apmAgent.addTransactionFilter(apmUtils.transactionFilter({
+	keepResponse: [ 'location' ],
+}));
 
 const app = new Koa();
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
