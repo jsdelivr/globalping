@@ -186,7 +186,7 @@ export class AdoptedProbes {
 			const hasUserTags = adoption.tags && adoption.tags.length;
 
 			if (!isCustomCity && !hasUserTags) {
-				return probe;
+				return { ...probe, owner: { id: adoption.userId } };
 			}
 
 			const newLocation = this.getUpdatedLocation(probe) || probe.location;
@@ -198,6 +198,7 @@ export class AdoptedProbes {
 				location: newLocation,
 				tags: newTags,
 				index: getIndex(newLocation, newTags),
+				owner: { id: adoption.userId },
 			};
 		});
 	}

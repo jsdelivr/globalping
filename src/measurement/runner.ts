@@ -1,6 +1,7 @@
 import config from 'config';
 import type { Server } from 'socket.io';
 import createHttpError from 'http-errors';
+import apmAgent from 'elastic-apm-node';
 import { getWsServer, PROBES_NAMESPACE } from '../lib/ws/server.js';
 import { getProbeRouter, type ProbeRouter } from '../probe/router.js';
 import type { Probe } from '../probe/types.js';
@@ -32,6 +33,7 @@ export class MeasurementRunner {
 		await this.checkRateLimit(ctx, onlineProbesMap.size);
 
 		const measurementId = await this.store.createMeasurement(request, onlineProbesMap, allProbes);
+		apmAgent.addLabels({ gpMeasurementId: measurementId, gpMeasurementType: request.type, gpMeasurementTarget: request.target });
 
 		if (onlineProbesMap.size) {
 			this.sendToProbes(measurementId, onlineProbesMap, request);
