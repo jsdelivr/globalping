@@ -449,6 +449,7 @@ components:
               enum:
                 - HEAD
                 - GET
+                - OPTIONS
               default: HEAD
             headers:
               type: object

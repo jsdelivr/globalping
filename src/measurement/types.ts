@@ -126,7 +126,7 @@ type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);
 
 type HttpTest = {
 	request: {
-		method: 'HEAD' | 'GET';
+		method: 'HEAD' | 'GET' | 'OPTIONS';
 		host?: string;
 		path: string;
 		query: string;

@@ -1,4 +1,4 @@
-export default function wallaby () {
+export default function w (wallaby) {
 	return {
 		testFramework: 'mocha',
 		files: [
@@ -30,6 +30,11 @@ export default function wallaby () {
 			params: {
 				env: 'NODE_ENV=test',
 			},
+		},
+		compilers: {
+			'**/*.ts?(x)': wallaby.compilers.typeScript({
+				module: 'ESNext',
+			}),
 		},
 		workers: { restart: true, initial: 1, regular: 1 },
 		runMode: 'onsave',

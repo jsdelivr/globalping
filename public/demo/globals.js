@@ -19,4 +19,4 @@ const ALLOWED_MTR_PROTOCOLS = [ 'TCP', 'UDP', 'ICMP' ];
 
 // http
 const ALLOWED_HTTP_PROTOCOLS = [ 'HTTP', 'HTTPS', 'HTTP2' ];
-const ALLOWED_HTTP_METHODS = [ 'GET', 'HEAD' ];
+const ALLOWED_HTTP_METHODS = [ 'GET', 'HEAD', 'OPTIONS' ];
