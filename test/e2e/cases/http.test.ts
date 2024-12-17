@@ -36,6 +36,25 @@ describe('http measurement', () => {
 		expect(response).to.matchApiSchema();
 	});
 
+	it('should finish successfully in case of OPTIONS request', async () => {
+		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
+			target: 'www.jsdelivr.com',
+			type: 'http',
+			measurementOptions: {
+				request: {
+					method: 'OPTIONS',
+				},
+			},
+		} }).json<any>();
+
+		const response = await waitMeasurementFinish(id);
+
+		expect(response.body.status).to.equal('finished');
+		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.rawBody.length).to.be.above(0);
+		expect(response).to.matchApiSchema();
+	});
+
 	it('should finish successfully in case of IPv6 domain target', async () => {
 		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',

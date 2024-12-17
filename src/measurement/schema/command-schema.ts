@@ -49,7 +49,7 @@ export const ipVersionDnsSchema = Joi.number().when(Joi.ref('resolver'), {
 export const validCmdTypes = [ 'ping', 'dns', 'traceroute', 'mtr', 'http' ];
 
 const allowedHttpProtocols = [ 'HTTP', 'HTTPS', 'HTTP2' ];
-const allowedHttpMethods = [ 'GET', 'HEAD' ];
+const allowedHttpMethods = [ 'GET', 'HEAD', 'OPTIONS' ];
 
 // Http
 const httpTargetSchema = Joi.alternatives()

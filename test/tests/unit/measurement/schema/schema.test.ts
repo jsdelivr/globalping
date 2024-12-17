@@ -2109,7 +2109,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"measurementOptions.request.method" must be one of [GET, HEAD]');
+			expect(valid.error!.message).to.equal('"measurementOptions.request.method" must be one of [GET, HEAD, OPTIONS]');
 		});
 
 		it('should fail (unsupported protocol)', () => {
