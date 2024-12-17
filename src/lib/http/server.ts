@@ -35,7 +35,7 @@ apmAgent.addTransactionFilter(apmUtils.transactionFilter({
 	keepResponse: [ 'location' ],
 }));
 
-const app = new Koa();
+const app = new Koa({ proxy: true });
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
 const docsHost = config.get<string>('server.docsHost');
 

@@ -1,8 +1,9 @@
 import type { DefaultContext, DefaultState, ParameterizedContext } from 'koa';
 import type Router from '@koa/router';
+import apmAgent from 'elastic-apm-node';
+import createHttpError from 'http-errors';
 import { getMeasurementStore } from '../store.js';
 import { getMeasurementRateLimit } from '../../lib/rate-limiter/rate-limiter-get.js';
-import createHttpError from 'http-errors';
 
 const store = getMeasurementStore();
 
@@ -15,6 +16,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 	}
 
 	const result = await store.getMeasurementString(id);
+	apmAgent.addLabels({ gpMeasurementId: id });
 
 	if (!result) {
 		throw createHttpError(404, `Couldn't find the requested measurement.`, { type: 'not_found' });

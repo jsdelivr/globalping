@@ -50,6 +50,7 @@ export class MetricsAgent {
 			return {
 				...countByContinent,
 				'gp.probe.count.adopted': probes.filter(probe => probe.owner).length,
+				'gp.probe.count.total': probes.length,
 			};
 		});
 	}
