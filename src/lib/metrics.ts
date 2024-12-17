@@ -1,10 +1,13 @@
 import _ from 'lodash';
 import apmAgent from 'elastic-apm-node';
 import type { Server as SocketServer } from 'socket.io';
+import type { Knex } from 'knex';
 
 import { scopedLogger } from './logger.js';
 import { fetchProbes, getWsServer, PROBES_NAMESPACE } from './ws/server.js';
 import { getMeasurementRedisClient, type RedisClient } from './redis/measurement-client.js';
+import { USERS_TABLE } from './http/auth.js';
+import { client } from './sql/client.js';
 
 const logger = scopedLogger('metrics');
 
@@ -19,6 +22,7 @@ export class MetricsAgent {
 	constructor (
 		private readonly io: SocketServer,
 		private readonly redis: RedisClient,
+		private readonly sql: Knex,
 	) {}
 
 	run (): void {
@@ -32,11 +36,11 @@ export class MetricsAgent {
 			// finished measurements use 2 keys
 			// 1 global key tracks the in-progress measurements
 			return Math.round((dbSize - awaitingSize - 1) / 2);
-		});
+		}, 60 * 1000);
 
 		this.registerAsyncCollector(`gp.probe.count.local`, async () => {
 			return this.io.of(PROBES_NAMESPACE).local.fetchSockets().then(sockets => sockets.length);
-		});
+		}, 10 * 1000);
 
 		this.registerAsyncGroupCollector('global probe stats', async () => {
 			const probes = await fetchProbes();
@@ -52,7 +56,24 @@ export class MetricsAgent {
 				'gp.probe.count.adopted': probes.filter(probe => probe.owner).length,
 				'gp.probe.count.total': probes.length,
 			};
-		});
+		}, 10 * 1000);
+
+		this.registerAsyncGroupCollector(`user stats`, async () => {
+			const result = await this.sql(USERS_TABLE)
+				.count('user_type as c')
+				.groupBy('user_type')
+				.select<{ user_type: string, c: number }[]>([ 'user_type' ]);
+
+			const countByType = _(result)
+				.mapKeys(record => `gp.user.count.${record.user_type}`)
+				.mapValues(record => record.c)
+				.value();
+
+			return {
+				...countByType,
+				'gp.user.count.total': _.sum(Object.values(countByType)),
+			};
+		}, 60 * 1000);
 	}
 
 	recordMeasurementTime (type: string, time: number): void {
@@ -138,17 +159,17 @@ export class MetricsAgent {
 		});
 	}
 
-	private registerAsyncCollector (name: string, callback: () => Promise<number>): void {
+	private registerAsyncCollector (name: string, callback: () => Promise<number>, interval: number): void {
 		this.timers[name] = setInterval(() => {
 			callback().then((value) => {
 				this.recordAsyncDatapoint(name, value);
 			}).catch((error) => {
 				logger.error(`Failed to collect an async metric "${name}"`, error);
 			});
-		}, 10 * 1000);
+		}, interval);
 	}
 
-	private registerAsyncGroupCollector (groupName: string, callback: () => Promise<{[k: string]: number}>): void {
+	private registerAsyncGroupCollector (groupName: string, callback: () => Promise<{[k: string]: number}>, interval: number): void {
 		this.timers[groupName] = setInterval(() => {
 			callback().then((group) => {
 				Object.entries(group).forEach(([ key, value ]) => {
@@ -157,7 +178,7 @@ export class MetricsAgent {
 			}).catch((error) => {
 				logger.error(`Failed to collect an async metric group "${groupName}"`, error);
 			});
-		}, 10 * 1000);
+		}, interval);
 	}
 }
 
@@ -165,7 +186,7 @@ let agent: MetricsAgent;
 
 export const getMetricsAgent = () => {
 	if (!agent) {
-		agent = new MetricsAgent(getWsServer(), getMeasurementRedisClient());
+		agent = new MetricsAgent(getWsServer(), getMeasurementRedisClient(), client);
 	}
 
 	return agent;
