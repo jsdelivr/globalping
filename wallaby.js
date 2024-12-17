@@ -1,7 +1,7 @@
 import * as path from 'node:path';
 import * as url from 'node:url';
 
-export default function wallaby (wallaby) {
+export default function w (wallaby) {
 	const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 	return {
@@ -44,7 +44,7 @@ export default function wallaby (wallaby) {
 			params: {
 				runner: '--experimental-specifier-resolution=node --loader '
 					+ url.pathToFileURL(path.join(__dirname, 'node_modules/testdouble/lib/index.mjs')),
-				env: 'NODE_ENV=test;NEW_RELIC_ENABLED=false;NEW_RELIC_LOG_ENABLED=false;TEST_MODE=unit',
+				env: 'NODE_ENV=test;TEST_MODE=unit',
 			},
 		},
 		compilers: {

@@ -51,7 +51,7 @@ describe('http measurement', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
-		expect(response.body.results[0].result.rawBody.length).to.be.above(0);
+		expect(response.body.results[0].result.rawBody).to.equal(null);
 		expect(response).to.matchApiSchema();
 	});
 
