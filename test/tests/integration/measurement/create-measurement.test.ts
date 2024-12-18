@@ -888,7 +888,7 @@ describe('Create measurement', () => {
 				await client('gp_location_overrides').where({ city: 'Paris' }).delete();
 			});
 
-			it.only('should ignore adopted custom city if admin data says it is another country', async () => {
+			it('should ignore adopted custom city if admin data says it is another country', async () => {
 				await requestAgent.post('/v1/measurements')
 					.send({
 						type: 'ping',
