@@ -3,7 +3,7 @@ import Bluebird from 'bluebird';
 import _ from 'lodash';
 import config from 'config';
 import { scopedLogger } from '../logger.js';
-import type { fetchProbesWithAdminData as serverFetchProbesWithAdminData } from '../ws/server.js';
+import type { getProbesWithAdminData as serverGetProbesWithAdminData } from '../ws/server.js';
 import type { Probe, ProbeLocation, Tag } from '../../probe/types.js';
 import { normalizeCoordinate, normalizeFromPublicName } from '../geoip/utils.js';
 import { getIndex } from '../location/location.js';
@@ -137,22 +137,22 @@ export class AdoptedProbes {
 
 	constructor (
 		private readonly sql: Knex,
-		private readonly fetchProbesWithAdminData: typeof serverFetchProbesWithAdminData,
+		private readonly getProbesWithAdminData: typeof serverGetProbesWithAdminData,
 	) {}
 
 	getByIp (ip: string) {
 		return this.ipToAdoption.get(ip);
 	}
 
-	getUpdatedLocation (probe: Probe): ProbeLocation | null {
-		const adoption = this.getByIp(probe.ipAddress);
+	getUpdatedLocation (ip: string, location: ProbeLocation): ProbeLocation | null {
+		const adoption = this.getByIp(ip);
 
-		if (!adoption || !adoption.isCustomCity || adoption.countryOfCustomCity !== probe.location.country) {
+		if (!adoption || !adoption.isCustomCity || adoption.countryOfCustomCity !== location.country) {
 			return null;
 		}
 
 		return {
-			...probe.location,
+			...location,
 			city: adoption.city!,
 			normalizedCity: normalizeFromPublicName(adoption.city!),
 			state: adoption.state,
@@ -189,7 +189,7 @@ export class AdoptedProbes {
 				return { ...probe, owner: { id: adoption.userId } };
 			}
 
-			const newLocation = this.getUpdatedLocation(probe) || probe.location;
+			const newLocation = this.getUpdatedLocation(probe.ipAddress, probe.location) || probe.location;
 
 			const newTags = this.getUpdatedTags(probe);
 
@@ -212,15 +212,13 @@ export class AdoptedProbes {
 	}
 
 	async syncDashboardData () {
-		const [ probes ] = await Promise.all([
-			this.fetchProbesWithAdminData(),
-			this.fetchAdoptions(),
-		]);
+		await this.fetchAdoptions();
 
 		if (process.env['SHOULD_SYNC_ADOPTIONS'] !== 'true') {
 			return;
 		}
 
+		const probes = this.getProbesWithAdminData();
 		const { adoptionsWithProbe, adoptionsWithoutProbe } = this.matchAdoptionsAndProbes(probes);
 		const { updatedAdoptions, adoptionDataUpdates } = this.generateUpdatedAdoptions(adoptionsWithProbe, adoptionsWithoutProbe);
 		const { adoptionsToDelete, adoptionAltIpUpdates } = this.findDuplications(updatedAdoptions);
