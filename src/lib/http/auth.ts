@@ -13,7 +13,8 @@ const logger = scopedLogger('auth');
 const TOKEN_TTL = 2 * 60 * 1000;
 
 export type Token = {
-	user_created?: string,
+	user_created: string | null,
+	user_github_username: string | null,
 	value: string,
 	expire: Date | null,
 	scopes: string[],
@@ -85,8 +86,10 @@ export class Auth {
 	}
 
 	async fetchTokens (filter: Partial<Row> = {}) {
-		const rows = await this.sql(GP_TOKENS_TABLE).where(filter)
-			.select<Row[]>([ 'user_created', 'value', 'expire', 'origins', 'date_last_used', 'scopes' ]);
+		const rows = await this.sql(GP_TOKENS_TABLE)
+			.leftJoin(USERS_TABLE, 'user_created', `${USERS_TABLE}.id`)
+			.where(filter)
+			.select<Row[]>([ 'user_created', 'value', 'expire', 'origins', 'date_last_used', 'scopes', 'github_username as user_github_username' ]);
 
 		const tokens: Token[] = rows.map(row => ({
 			...row,
@@ -127,7 +130,7 @@ export class Auth {
 		}
 
 		await this.updateLastUsedDate(token);
-		return { userId: token.user_created, scopes: token.scopes, hashedToken: token.value };
+		return { userId: token.user_created, username: token.user_github_username, scopes: token.scopes, hashedToken: token.value };
 	}
 
 	private async updateLastUsedDate (token: Token) {

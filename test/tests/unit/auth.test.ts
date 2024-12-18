@@ -11,8 +11,14 @@ describe('Auth', () => {
 		update: updateStub,
 		select: selectStub,
 	});
+	const leftJoinStub = sandbox.stub().returns({
+		where: whereStub,
+		update: updateStub,
+		select: selectStub,
+	});
 	const sqlStub = sandbox.stub().returns({
 		where: whereStub,
+		leftJoin: leftJoinStub,
 	}) as sinon.SinonStub<any[], any> & {raw: any};
 
 	beforeEach(() => {
@@ -29,6 +35,7 @@ describe('Auth', () => {
 		selectStub.onCall(1).resolves([{
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
+			user_github_username: 'gh_user1',
 		}]);
 
 		selectStub.onCall(2).resolves([]);
@@ -39,6 +46,7 @@ describe('Auth', () => {
 		const user1 = await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 		expect(user1).to.deep.equal({
 			userId: 'user1',
+			username: 'gh_user1',
 			scopes: [],
 			hashedToken: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 		});
@@ -46,9 +54,11 @@ describe('Auth', () => {
 		const user2 = await auth.validate('vumzijbzihrskmc2hj34yw22batpibmt', 'https://jsdelivr.com');
 		expect(user2).to.equal(null);
 
+		// should work without a username too
 		selectStub.onCall(3).resolves([{
 			value: '8YZ2pZoGQxfOeEGvUUkagX1yizZckq3weL+IN0chvU0=',
 			user_created: 'user2',
+			user_github_username: null,
 		}]);
 
 		selectStub.onCall(4).resolves([]);
@@ -60,6 +70,7 @@ describe('Auth', () => {
 		const user2afterSync = await auth.validate('vumzijbzihrskmc2hj34yw22batpibmt', 'https://jsdelivr.com');
 		expect(user2afterSync).to.deep.equal({
 			userId: 'user2',
+			username: null,
 			scopes: [],
 			hashedToken: '8YZ2pZoGQxfOeEGvUUkagX1yizZckq3weL+IN0chvU0=',
 		});
@@ -73,6 +84,7 @@ describe('Auth', () => {
 		selectStub.resolves([{
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
+			user_github_username: 'gh_user1',
 		}]);
 
 		await auth.syncTokens();
@@ -84,6 +96,7 @@ describe('Auth', () => {
 
 		expect(user).to.deep.equal({
 			userId: 'user1',
+			username: 'gh_user1',
 			scopes: [],
 			hashedToken: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 		});
@@ -97,6 +110,7 @@ describe('Auth', () => {
 		selectStub.resolves([{
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
+			user_github_username: 'gh_user1',
 		}]);
 
 		const user = await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
@@ -106,6 +120,7 @@ describe('Auth', () => {
 
 		expect(user).to.deep.equal({
 			userId: 'user1',
+			username: 'gh_user1',
 			scopes: [],
 			hashedToken: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 		});
@@ -119,6 +134,7 @@ describe('Auth', () => {
 		selectStub.resolves([{
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
+			user_github_username: 'gh_user1',
 			date_last_used: new Date(),
 		}]);
 
@@ -136,6 +152,7 @@ describe('Auth', () => {
 		selectStub.resolves([{
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
+			user_github_username: 'gh_user1',
 		}]);
 
 		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
