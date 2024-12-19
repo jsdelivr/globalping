@@ -845,5 +845,58 @@ describe('Create measurement', () => {
 					});
 			});
 		});
+
+		describe('adopted probes + admin overrides', () => {
+			before(async () => {
+				await client(ADOPTIONS_TABLE).insert({
+					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+					lastSyncDate: new Date(),
+					ip: '1.2.3.4',
+					uuid: '1-1-1-1-1',
+					isCustomCity: 1,
+					tags: '[{"prefix":"jsdelivr","value":"Dashboard-Tag"}]',
+					status: 'ready',
+					isIPv4Supported: true,
+					isIPv6Supported: true,
+					version: '0.26.0',
+					nodeVersion: 'v18.14.2',
+					hardwareDevice: null,
+					country: 'US',
+					countryOfCustomCity: 'US',
+					city: 'Oklahoma City',
+					latitude: 35.47,
+					longitude: -97.52,
+					network: 'InterBS S.R.L. (BAEHOST)',
+					asn: 61004,
+				});
+
+				await client('gp_location_overrides').insert({
+					id: 5,
+					ip_range: '1.2.3.4/24',
+					city: 'Paris',
+					country: 'FR',
+					latitude: 48.85,
+					longitude: 2.35,
+				});
+
+				await probeOverride.fetchDashboardData();
+				await waitForProbesUpdate();
+			});
+
+			after(async () => {
+				await client(ADOPTIONS_TABLE).where({ city: 'Oklahoma City' }).delete();
+				await client('gp_location_overrides').where({ city: 'Paris' }).delete();
+			});
+
+			it('should ignore adopted custom city if admin data says it is another country', async () => {
+				await requestAgent.post('/v1/measurements')
+					.send({
+						type: 'ping',
+						target: 'example.com',
+						locations: [{ city: 'Oklahoma City', limit: 2 }],
+					})
+					.expect(422);
+			});
+		});
 	});
 });

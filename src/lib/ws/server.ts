@@ -82,15 +82,7 @@ export const fetchRawSockets = async () => {
 	return io.of(PROBES_NAMESPACE).fetchSockets();
 };
 
-export const fetchRawProbes = async (): Promise<Probe[]> => {
-	if (!syncedProbeList) {
-		throw new Error('WS server not initialized yet');
-	}
-
-	return syncedProbeList.getRawProbes();
-};
-
-export const fetchProbesWithAdminData = async (): Promise<Probe[]> => {
+export const getProbesWithAdminData = (): Probe[] => {
 	if (!syncedProbeList) {
 		throw new Error('WS server not initialized yet');
 	}
@@ -118,7 +110,7 @@ export const getProbeByIp = async (ip: string, { allowStale = true } = {}): Prom
 	return syncedProbeList.getProbeByIp(ip);
 };
 
-export const adoptedProbes = new AdoptedProbes(client, fetchRawProbes);
+export const adoptedProbes = new AdoptedProbes(client, getProbesWithAdminData);
 
 export const adminData = new AdminData(client);
 
