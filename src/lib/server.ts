@@ -26,11 +26,11 @@ export const createServer = async (): Promise<Server> => {
 	await populateIpWhiteList();
 	// Populate cities info
 	await populateCitiesList();
-
-	await initWsServer();
-
+	// Populate Dashboard override data before using it during initWsServer()
 	await probeOverride.fetchDashboardData();
 	probeOverride.scheduleSync();
+
+	await initWsServer();
 
 	await auth.syncTokens();
 	auth.scheduleSync();
