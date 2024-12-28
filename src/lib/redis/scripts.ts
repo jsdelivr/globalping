@@ -25,32 +25,39 @@ export type RedisScripts = {
 };
 
 const recordResult: RecordResultScript = defineScript({
-	NUMBER_OF_KEYS: 4,
+	NUMBER_OF_KEYS: 2,
 	SCRIPT: `
-	local measurementId = KEYS[1]
-	local testId = KEYS[2]
-	local data = KEYS[3]
-	local date = KEYS[4]
-	local key = 'gp:m:'..measurementId..':results'
-	local awaitingKey = 'gp:m:'..measurementId..':probes_awaiting'
+	local keyMeasurementResults = KEYS[1]
+	local keyMeasurementAwaiting = KEYS[2]
+	local testId = ARGV[1]
+	local data = ARGV[2]
+	local date = ARGV[3]
 
-	local probesAwaiting = redis.call('GET', awaitingKey)
+	local probesAwaiting = redis.call('GET', keyMeasurementAwaiting)
 	if not probesAwaiting then
 		return
 	end
 
-	probesAwaiting = redis.call('DECR', awaitingKey)
-	redis.call('JSON.SET', key, '$.results['..testId..'].result', data)
-	redis.call('JSON.SET', key, '$.updatedAt', date)
+	probesAwaiting = redis.call('DECR', keyMeasurementAwaiting)
+	redis.call('JSON.SET', keyMeasurementResults, '$.results['..testId..'].result', data)
+	redis.call('JSON.SET', keyMeasurementResults, '$.updatedAt', date)
 
 	if probesAwaiting ~= 0 then
 		return
 	end
 
-	return redis.call('JSON.GET', key)
+	return redis.call('JSON.GET', keyMeasurementResults)
 	`,
 	transformArguments (measurementId, testId, data) {
-		return [ measurementId, testId, JSON.stringify(data), `"${new Date().toISOString()}"` ];
+		return [
+			// keys
+			`gp:m:${measurementId}:results`,
+			`gp:m:${measurementId}:probes_awaiting`,
+			// values
+			testId,
+			JSON.stringify(data),
+			`"${new Date().toISOString()}"`,
+		];
 	},
 	transformReply (reply) {
 		return JSON.parse(reply) as MeasurementRecord | null;
@@ -58,18 +65,26 @@ const recordResult: RecordResultScript = defineScript({
 });
 
 const markFinished: MarkFinishedScript = defineScript({
-	NUMBER_OF_KEYS: 1,
+	NUMBER_OF_KEYS: 3,
 	SCRIPT: `
-	local measurementId = KEYS[1]
-	local key = 'gp:m:'..measurementId..':results'
-	local awaitingKey = 'gp:m:'..measurementId..':probes_awaiting'
+	local keyInProgress = KEYS[1]
+	local keyMeasurementResults = KEYS[2]
+	local keyMeasurementAwaiting = KEYS[3]
+	local measurementId = ARGV[1]
 
-	redis.call('HDEL', 'gp:in-progress', measurementId)
-	redis.call('DEL', awaitingKey)
-	redis.call('JSON.SET', key, '$.status', '"finished"')
+	redis.call('HDEL', keyInProgress, measurementId)
+	redis.call('DEL', keyMeasurementAwaiting)
+	redis.call('JSON.SET', keyMeasurementResults, '$.status', '"finished"')
 	`,
 	transformArguments (measurementId) {
-		return [ measurementId ];
+		return [
+			// keys
+			'gp:in-progress',
+			`gp:m:${measurementId}:results`,
+			`gp:m:${measurementId}:probes_awaiting`,
+			// values
+			measurementId,
+		];
 	},
 	transformReply () {
 		return null;
