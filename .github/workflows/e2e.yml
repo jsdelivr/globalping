@@ -15,16 +15,6 @@ jobs:
       NODE_ENV: test
 
     services:
-      redis:
-        image: redis/redis-stack-server:latest
-        ports:
-          - 16379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
       mariadb:
         image: mariadb:10.11.5
         ports:
@@ -51,6 +41,9 @@ jobs:
           sudo mv daemon.json /etc/docker/
           sudo systemctl restart docker
           docker restart $(docker ps -aq)
+      - name: Set up Redis
+        run: |
+          docker compose --env-file config/redis/docker.env up -d
       - name: Build
         run: |
           npm ci

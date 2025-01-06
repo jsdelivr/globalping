@@ -15,16 +15,6 @@ jobs:
       NODE_ENV: test
 
     services:
-      redis:
-        image: redis/redis-stack-server:latest
-        ports:
-          - 16379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
       mariadb:
         image: mariadb:10.11.5
         ports:
@@ -45,6 +35,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20.x
+      - name: Set up Redis
+        run: |
+          docker compose --env-file config/redis/docker.env up -d
       - name: Build
         run: |
           npm ci
