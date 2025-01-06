@@ -6,6 +6,7 @@ coverage/
 dist/
 tmp/
 config/local*
+data/redis
 data/DOMAIN_BLACKLIST.json
 data/IP_BLACKLIST.json
 data/AWS_IP_RANGES.json

@@ -14,7 +14,4 @@ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
 ## Config
 
-1. Download redis.conf to /etc/redis/
-2. Download zip file with json module to same folder
-3. Unzip
-4. Restart
+See `docker-compose.yml` in the project root and the config files in this directory.

@@ -1,20 +1,150 @@
-version: "3.8"
-
 services:
-  redis:
-    image: redis/redis-stack-server
+  redis-standalone-1:
+    image: redis/redis-stack-server:7.4.0-v1
     ports:
-      - "16379:6379"
-
-  mariadb:
-    image: mariadb:10.11.5
-    environment:
-      - MARIADB_DATABASE=dashboard-globalping
-      - MARIADB_USER=directus
-      - MARIADB_PASSWORD=password
-      - MARIADB_ROOT_PASSWORD=root
-    ports:
-      - "13306:3306"
+      - "7001:6379"
     volumes:
-      - ./config/create-dbs.sql:/docker-entrypoint-initdb.d/01-create-dbs.sql
-      - ./migrations/create-tables.js.sql:/docker-entrypoint-initdb.d/02-create-tables.sql
+      - ./config/redis/standalone.conf:/redis-stack.conf
+      - /data/redis/7001:/data
+    env_file:
+      - ./config/redis/docker.env
+    restart: unless-stopped
+    stop_grace_period: 2m
+  redis-standalone-2:
+    image: redis/redis-stack-server:7.4.0-v1
+    ports:
+      - "7002:6379"
+    volumes:
+      - ./config/redis/standalone.conf:/redis-stack.conf
+      - /data/redis/7002:/data
+    env_file:
+      - ./config/redis/docker.env
+    restart: unless-stopped
+    stop_grace_period: 2m
+  redis-node-01:
+    image: redis/redis-stack-server:7.4.0-v1
+    command: [ "bash", "/home/runner/mounted/node.sh", "7101" ]
+    network_mode: "host"
+    volumes:
+      - ./config/redis:/home/runner/mounted
+      - /data/redis/7101:/data
+    env_file:
+      - ./config/redis/docker.env
+    restart: unless-stopped
+    stop_grace_period: 2m
+  redis-node-02:
+    image: redis/redis-stack-server:7.4.0-v1
+    command: [ "bash", "/home/runner/mounted/node.sh", "7102" ]
+    network_mode: "host"
+    volumes:
+      - ./config/redis:/home/runner/mounted
+      - /data/redis/7102:/data
+    env_file:
+      - ./config/redis/docker.env
+    restart: unless-stopped
+    stop_grace_period: 2m
+  redis-node-03:
+    image: redis/redis-stack-server:7.4.0-v1
+    command: [ "bash", "/home/runner/mounted/node.sh", "7103" ]
+    network_mode: "host"
+    volumes:
+      - ./config/redis:/home/runner/mounted
+      - /data/redis/7103:/data
+    env_file:
+      - ./config/redis/docker.env
+    restart: unless-stopped
+    stop_grace_period: 2m
+  redis-node-04:
+    image: redis/redis-stack-server:7.4.0-v1
+    command: [ "bash", "/home/runner/mounted/node.sh", "7104" ]
+    network_mode: "host"
+    volumes:
+      - ./config/redis:/home/runner/mounted
+      - /data/redis/7104:/data
+    env_file:
+      - ./config/redis/docker.env
+    restart: unless-stopped
+    stop_grace_period: 2m
+  redis-node-05:
+    image: redis/redis-stack-server:7.4.0-v1
+    command: [ "bash", "/home/runner/mounted/node.sh", "7105" ]
+    network_mode: "host"
+    volumes:
+      - ./config/redis:/home/runner/mounted
+      - /data/redis/7105:/data
+    env_file:
+      - ./config/redis/docker.env
+    restart: unless-stopped
+    stop_grace_period: 2m
+  redis-node-06:
+    image: redis/redis-stack-server:7.4.0-v1
+    command: [ "bash", "/home/runner/mounted/node.sh", "7106" ]
+    network_mode: "host"
+    volumes:
+      - ./config/redis:/home/runner/mounted
+      - /data/redis/7106:/data
+    env_file:
+      - ./config/redis/docker.env
+    restart: unless-stopped
+    stop_grace_period: 2m
+  redis-node-07:
+    image: redis/redis-stack-server:7.4.0-v1
+    command: [ "bash", "/home/runner/mounted/node.sh", "7107" ]
+    network_mode: "host"
+    volumes:
+      - ./config/redis:/home/runner/mounted
+      - /data/redis/7107:/data
+    env_file:
+      - ./config/redis/docker.env
+    restart: unless-stopped
+    stop_grace_period: 2m
+  redis-node-08:
+    image: redis/redis-stack-server:7.4.0-v1
+    command: [ "bash", "/home/runner/mounted/node.sh", "7108" ]
+    network_mode: "host"
+    volumes:
+      - ./config/redis:/home/runner/mounted
+      - /data/redis/7108:/data
+    env_file:
+      - ./config/redis/docker.env
+    restart: unless-stopped
+    stop_grace_period: 2m
+  redis-node-09:
+    image: redis/redis-stack-server:7.4.0-v1
+    command: [ "bash", "/home/runner/mounted/node.sh", "7109" ]
+    network_mode: "host"
+    volumes:
+      - ./config/redis:/home/runner/mounted
+      - /data/redis/7109:/data
+    env_file:
+      - ./config/redis/docker.env
+    restart: unless-stopped
+    stop_grace_period: 2m
+  redis-node-10:
+    image: redis/redis-stack-server:7.4.0-v1
+    command: [ "bash", "/home/runner/mounted/node.sh", "7110" ]
+    network_mode: "host"
+    volumes:
+      - ./config/redis:/home/runner/mounted
+      - /data/redis/7110:/data
+    env_file:
+      - ./config/redis/docker.env
+    restart: unless-stopped
+    stop_grace_period: 2m
+  redis-cluster-creator:
+    image: redis/redis-stack-server:7.4.0-v1
+    command: redis-cli -a "$REDIS_PASSWORD" --cluster create $REDIS_PUBLIC_IP:7101 $REDIS_PUBLIC_IP:7102 $REDIS_PUBLIC_IP:7103 $REDIS_PUBLIC_IP:7104 $REDIS_PUBLIC_IP:7105 $REDIS_PUBLIC_IP:7106 $REDIS_PUBLIC_IP:7107 $REDIS_PUBLIC_IP:7108 $REDIS_PUBLIC_IP:7109 $REDIS_PUBLIC_IP:7110 --cluster-replicas 0 --cluster-yes
+    network_mode: "host"
+    depends_on:
+      - redis-node-01
+      - redis-node-02
+      - redis-node-03
+      - redis-node-04
+      - redis-node-05
+      - redis-node-06
+      - redis-node-07
+      - redis-node-08
+      - redis-node-09
+      - redis-node-10
+    env_file:
+      - ./config/redis/docker.env
