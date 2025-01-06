@@ -37,7 +37,8 @@ jobs:
           node-version: 20.x
       - name: Set up Redis
         run: |
-          docker compose --env-file config/redis/docker.env up -d
+          cp config/redis/.env.redis ./
+          docker compose --env-file .env.redis up -d
       - name: Build
         run: |
           npm ci

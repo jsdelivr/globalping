@@ -12,6 +12,16 @@ swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
-## Config
+### Docker config
 
-See `docker-compose.yml` in the project root and the config files in this directory.
+Assuming you start in this directory:
+
+```
+cp .env.redis ../../
+```
+
+Set the redis password and return to the project root. Then:
+
+```
+docker compose --env-file .env.redis up -d
+```

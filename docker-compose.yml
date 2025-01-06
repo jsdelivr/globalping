@@ -7,7 +7,7 @@ services:
       - ./config/redis/standalone.conf:/redis-stack.conf
       - /data/redis/7001:/data
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 2m
   redis-standalone-2:
@@ -18,7 +18,7 @@ services:
       - ./config/redis/standalone.conf:/redis-stack.conf
       - /data/redis/7002:/data
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 2m
   redis-node-01:
@@ -29,7 +29,7 @@ services:
       - ./config/redis:/home/runner/mounted
       - /data/redis/7101:/data
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 2m
   redis-node-02:
@@ -40,7 +40,7 @@ services:
       - ./config/redis:/home/runner/mounted
       - /data/redis/7102:/data
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 2m
   redis-node-03:
@@ -51,7 +51,7 @@ services:
       - ./config/redis:/home/runner/mounted
       - /data/redis/7103:/data
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 2m
   redis-node-04:
@@ -62,7 +62,7 @@ services:
       - ./config/redis:/home/runner/mounted
       - /data/redis/7104:/data
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 2m
   redis-node-05:
@@ -73,7 +73,7 @@ services:
       - ./config/redis:/home/runner/mounted
       - /data/redis/7105:/data
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 2m
   redis-node-06:
@@ -84,7 +84,7 @@ services:
       - ./config/redis:/home/runner/mounted
       - /data/redis/7106:/data
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 2m
   redis-node-07:
@@ -95,7 +95,7 @@ services:
       - ./config/redis:/home/runner/mounted
       - /data/redis/7107:/data
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 2m
   redis-node-08:
@@ -106,7 +106,7 @@ services:
       - ./config/redis:/home/runner/mounted
       - /data/redis/7108:/data
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 2m
   redis-node-09:
@@ -117,7 +117,7 @@ services:
       - ./config/redis:/home/runner/mounted
       - /data/redis/7109:/data
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 2m
   redis-node-10:
@@ -128,7 +128,7 @@ services:
       - ./config/redis:/home/runner/mounted
       - /data/redis/7110:/data
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 2m
   redis-cluster-creator:
@@ -147,4 +147,4 @@ services:
       - redis-node-09
       - redis-node-10
     env_file:
-      - ./config/redis/docker.env
+      - ./.env.redis
