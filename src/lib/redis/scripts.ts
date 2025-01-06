@@ -25,6 +25,7 @@ export type RedisScripts = {
 };
 
 const recordResult: RecordResultScript = defineScript({
+	FIRST_KEY_INDEX: 0, // Needed in clusters: https://github.com/redis/node-redis/issues/2521
 	NUMBER_OF_KEYS: 2,
 	SCRIPT: `
 	local keyMeasurementResults = KEYS[1]
@@ -51,8 +52,8 @@ const recordResult: RecordResultScript = defineScript({
 	transformArguments (measurementId, testId, data) {
 		return [
 			// keys
-			`gp:m:${measurementId}:results`,
-			`gp:m:${measurementId}:probes_awaiting`,
+			`gp:m:{${measurementId}}:results`,
+			`gp:m:{${measurementId}}:probes_awaiting`,
 			// values
 			testId,
 			JSON.stringify(data),
@@ -65,25 +66,20 @@ const recordResult: RecordResultScript = defineScript({
 });
 
 const markFinished: MarkFinishedScript = defineScript({
-	NUMBER_OF_KEYS: 3,
+	FIRST_KEY_INDEX: 0, // Needed in clusters: https://github.com/redis/node-redis/issues/2521
+	NUMBER_OF_KEYS: 2,
 	SCRIPT: `
-	local keyInProgress = KEYS[1]
-	local keyMeasurementResults = KEYS[2]
-	local keyMeasurementAwaiting = KEYS[3]
-	local measurementId = ARGV[1]
+	local keyMeasurementResults = KEYS[1]
+	local keyMeasurementAwaiting = KEYS[2]
 
-	redis.call('HDEL', keyInProgress, measurementId)
 	redis.call('DEL', keyMeasurementAwaiting)
 	redis.call('JSON.SET', keyMeasurementResults, '$.status', '"finished"')
 	`,
 	transformArguments (measurementId) {
 		return [
 			// keys
-			'gp:in-progress',
-			`gp:m:${measurementId}:results`,
-			`gp:m:${measurementId}:probes_awaiting`,
-			// values
-			measurementId,
+			`gp:m:{${measurementId}}:results`,
+			`gp:m:{${measurementId}}:probes_awaiting`,
 		];
 	},
 	transformReply () {

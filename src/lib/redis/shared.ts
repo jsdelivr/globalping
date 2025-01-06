@@ -1,30 +1,72 @@
-import config from 'config';
 import {
 	createClient,
+	createCluster,
 	type RedisClientOptions,
 	type RedisClientType,
+	type RedisClusterOptions,
+	type RedisClusterType,
 	type RedisDefaultModules,
 	type RedisFunctions,
 } from 'redis';
+import Bluebird from 'bluebird';
 import { type RedisScripts, scripts } from './scripts.js';
 import { scopedLogger } from '../logger.js';
 
 const logger = scopedLogger('redis-client');
 
-export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts>;
+type ClusterExtensions = {
+	mapMasters: typeof mapMasters,
+	reduceMasters: typeof reduceMasters,
+};
 
-export const createRedisClientInternal = (options?: RedisClientOptions): RedisClient => {
+export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts>;
+export type RedisCluster = RedisClusterType<RedisDefaultModules, RedisFunctions, RedisScripts> & ClusterExtensions;
+export type RedisClientInternal = { connectPromise: Promise<unknown>, client: RedisClient };
+export type RedisClusterInternal = { connectPromise: Promise<unknown>, client: RedisCluster };
+
+export const createRedisClientInternal = (options: RedisClientOptions): RedisClientInternal => {
 	const client = createClient({
-		...config.util.toObject(config.get('redis')) as RedisClientOptions,
 		...options,
 		scripts,
 	});
 
-	client
+	const connectPromise = client
 		.on('error', (error: Error) => logger.error('Redis connection error:', error))
 		.on('ready', () => logger.info('Redis connection ready.'))
 		.on('reconnecting', () => logger.info('Redis reconnecting.'))
 		.connect().catch((error: Error) => logger.error('Redis connection error:', error));
 
-	return client;
+	return { client, connectPromise };
 };
+
+export const createRedisClusterInternal = (options: RedisClusterOptions): RedisClusterInternal => {
+	const cluster = createCluster({
+		...options,
+		scripts,
+	});
+
+	const client = Object.assign(cluster, {
+		mapMasters,
+		reduceMasters,
+	});
+
+	const connectPromise = client
+		.on('error', (error: Error) => logger.error('Redis connection error:', error))
+		.on('ready', () => logger.info('Redis connection ready.'))
+		.on('reconnecting', () => logger.info('Redis reconnecting.'))
+		.connect().catch((error: Error) => logger.error('Redis connection error:', error));
+
+	return { client, connectPromise };
+};
+
+function mapMasters<Result> (this: RedisCluster, mapper: (client: RedisClient) => Promise<Result>) {
+	return Bluebird.map(this.masters, (node) => {
+		return this.nodeClient(node);
+	}).map(mapper);
+}
+
+function reduceMasters<Result> (this: RedisCluster, reducer: (accumulator: Result, client: RedisClient) => Promise<Result>, initialValue: Result) {
+	return Bluebird.map(this.masters, (node) => {
+		return this.nodeClient(node);
+	}).reduce(reducer, initialValue);
+}

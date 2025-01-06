@@ -5,7 +5,7 @@ import type { Knex } from 'knex';
 
 import { scopedLogger } from './logger.js';
 import { fetchProbes, getWsServer, PROBES_NAMESPACE } from './ws/server.js';
-import { getMeasurementRedisClient, type RedisClient } from './redis/measurement-client.js';
+import { getMeasurementRedisClient, type RedisCluster } from './redis/measurement-client.js';
 import { USERS_TABLE } from './http/auth.js';
 import { client } from './sql/client.js';
 
@@ -21,14 +21,14 @@ export class MetricsAgent {
 
 	constructor (
 		private readonly io: SocketServer,
-		private readonly redis: RedisClient,
+		private readonly redis: RedisCluster,
 		private readonly sql: Knex,
 	) {}
 
 	run (): void {
 		this.registerAsyncCollector(`gp.measurement.stored.count`, async () => {
 			const [ dbSize, awaitingSize ] = await Promise.all([
-				this.redis.dbSize(),
+				this.redis.reduceMasters<number>(async (accumulator, client) => accumulator + await client.dbSize(), 0),
 				this.redis.hLen('gp:in-progress'),
 			]);
 

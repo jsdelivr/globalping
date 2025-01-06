@@ -17,9 +17,29 @@ module.exports = {
 		},
 	},
 	redis: {
-		url: 'redis://localhost:6379',
-		socket: {
-			tls: false,
+		standalonePersistent: {
+			url: 'redis://localhost:7001',
+		},
+		standaloneNonPersistent: {
+			url: 'redis://localhost:7002',
+		},
+		clusterMeasurements: {
+			// listing three nodes here is enough, the rest will be discovered automatically
+			rootNodes: [{
+				url: 'redis://localhost:7101',
+			},
+			{
+				url: 'redis://localhost:7102',
+			},
+			{
+				url: 'redis://localhost:7103',
+			}],
+		},
+		shared: {
+			password: 'PASSWORD',
+			socket: {
+				tls: false,
+			},
 		},
 	},
 	db: {

@@ -1,26 +1,20 @@
+import config from 'config';
 import type { RedisClientOptions } from 'redis';
-import { createRedisClientInternal, type RedisClient } from './shared.js';
+import { createRedisClientInternal, type RedisClientInternal } from './shared.js';
 
 export type { RedisClient } from './shared.js';
 
-let redis: RedisClient;
-
 export const initSubscriptionRedisClient = async () => {
-	redis = createSubscriptionRedisClient();
-	return redis;
+	const { connectPromise, client } = createSubscriptionRedisClient();
+	await connectPromise;
+	return client;
 };
 
-export const createSubscriptionRedisClient = (options?: RedisClientOptions): RedisClient => {
+export const createSubscriptionRedisClient = (options?: RedisClientOptions): RedisClientInternal => {
 	return createRedisClientInternal({
+		...config.util.toObject(config.get('redis.shared')) as RedisClientOptions,
+		...config.util.toObject(config.get('redis.standaloneNonPersistent')) as RedisClientOptions,
 		...options,
 		name: 'subscription',
 	});
-};
-
-export const getSubscriptionRedisClient = (): RedisClient => {
-	if (!redis) {
-		redis = createSubscriptionRedisClient();
-	}
-
-	return redis;
 };

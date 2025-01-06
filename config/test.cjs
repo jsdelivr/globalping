@@ -4,12 +4,6 @@ module.exports = {
 			cookieSecret: 'xxx',
 		},
 	},
-	redis: {
-		url: 'redis://localhost:16379',
-		socket: {
-			tls: false,
-		},
-	},
 	db: {
 		connection: {
 			port: 13306,

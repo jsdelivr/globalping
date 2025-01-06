@@ -48,3 +48,4 @@ Most IDEs have plugins integrating the used linter (eslint), including support f
 - `SYSTEM_API_KEY={value}` used for integration with the dashboard
 - `SERVER_SESSION_COOKIE_SECRET={value}` used to read the shared session cookie
 - `DB_CONNECTION_HOST`, `DB_CONNECTION_USER`, `DB_CONNECTION_PASSWORD`, and `DB_CONNECTION_DATABASE` database connection details
+- `REDIS_STANDALONE_PERSISTENT_URL`, `STANDALONE_NON_PERSISTENT_URL`, `CLUSTER_MEASUREMENTS_ROOT_NODES_0_URL`, `CLUSTER_MEASUREMENTS_ROOT_NODES_1_URL`, `CLUSTER_MEASUREMENTS_ROOT_NODES_2_URL`, and `REDIS_SHARED_PASSWORD` - redis connection details
