@@ -1,6 +1,7 @@
 import config from 'config';
 import type { RedisClientOptions } from 'redis';
 import { createRedisClientInternal, type RedisClient, type RedisClientInternal } from './shared.js';
+import { scopedLogger } from '../logger.js';
 
 export type { RedisClient } from './shared.js';
 
@@ -28,7 +29,7 @@ export const createPersistentRedisClient = (options?: RedisClientOptions): Redis
 		...config.util.toObject(config.get('redis.standalonePersistent')) as RedisClientOptions,
 		...options,
 		name: 'persistent',
-	});
+	}, scopedLogger('redis-persistent'));
 };
 
 export const getPersistentRedisClient = (): RedisClient => {

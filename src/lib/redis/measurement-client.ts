@@ -1,6 +1,7 @@
 import config from 'config';
 import type { RedisClientOptions, RedisClusterOptions } from 'redis';
 import { createRedisClusterInternal, type RedisCluster, type RedisClusterInternal } from './shared.js';
+import { scopedLogger } from '../logger.js';
 
 export type { RedisCluster } from './shared.js';
 
@@ -27,7 +28,7 @@ export const createMeasurementRedisClient = (options?: RedisClusterOptions): Red
 		defaults: { ...config.util.toObject(config.get('redis.shared')) as RedisClientOptions },
 		...config.util.toObject(config.get('redis.clusterMeasurements')) as RedisClusterOptions,
 		...options,
-	});
+	}, scopedLogger('redis-measurement'));
 };
 
 export const getMeasurementRedisClient = (): RedisCluster => {

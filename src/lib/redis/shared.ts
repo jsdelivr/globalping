@@ -10,9 +10,7 @@ import {
 } from 'redis';
 import Bluebird from 'bluebird';
 import { type RedisScripts, scripts } from './scripts.js';
-import { scopedLogger } from '../logger.js';
-
-const logger = scopedLogger('redis-client');
+import { type Logger } from 'h-logger2';
 
 type ClusterExtensions = {
 	mapMasters: typeof mapMasters,
@@ -24,7 +22,7 @@ export type RedisCluster = RedisClusterType<RedisDefaultModules, RedisFunctions,
 export type RedisClientInternal = { connectPromise: Promise<unknown>, client: RedisClient };
 export type RedisClusterInternal = { connectPromise: Promise<unknown>, client: RedisCluster };
 
-export const createRedisClientInternal = (options: RedisClientOptions): RedisClientInternal => {
+export const createRedisClientInternal = (options: RedisClientOptions, logger: Logger): RedisClientInternal => {
 	const client = createClient({
 		...options,
 		scripts,
@@ -39,7 +37,7 @@ export const createRedisClientInternal = (options: RedisClientOptions): RedisCli
 	return { client, connectPromise };
 };
 
-export const createRedisClusterInternal = (options: RedisClusterOptions): RedisClusterInternal => {
+export const createRedisClusterInternal = (options: RedisClusterOptions, logger: Logger): RedisClusterInternal => {
 	const cluster = createCluster({
 		...options,
 		scripts,
