@@ -52,7 +52,7 @@ export const createRedisClusterInternal = (options: RedisClusterOptions, logger:
 		.on('error', (error: Error) => logger.error('Redis connection error:', error))
 		.on('ready', () => logger.info('Redis connection ready.'))
 		.on('reconnecting', () => logger.info('Redis reconnecting.'))
-		.connect().catch((error: Error) => logger.error('Redis connection error:', error));
+		.connect();
 
 	return { client, connectPromise };
 };
