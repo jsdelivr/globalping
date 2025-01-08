@@ -87,31 +87,9 @@ services:
       - ./.env.redis
     restart: unless-stopped
     stop_grace_period: 3m
-  redis-node-07:
-    image: redis/redis-stack-server:7.4.0-v1
-    command: [ "bash", "/home/runner/mounted/node.sh", "7107" ]
-    network_mode: "host"
-    volumes:
-      - ./config/redis:/home/runner/mounted
-      - /data/redis/7107:/data
-    env_file:
-      - ./.env.redis
-    restart: unless-stopped
-    stop_grace_period: 3m
-  redis-node-08:
-    image: redis/redis-stack-server:7.4.0-v1
-    command: [ "bash", "/home/runner/mounted/node.sh", "7108" ]
-    network_mode: "host"
-    volumes:
-      - ./config/redis:/home/runner/mounted
-      - /data/redis/7108:/data
-    env_file:
-      - ./.env.redis
-    restart: unless-stopped
-    stop_grace_period: 3m
   redis-cluster-creator:
     image: redis/redis-stack-server:7.4.0-v1
-    command: redis-cli -a "$REDIS_PASSWORD" --cluster create $REDIS_PUBLIC_IP:7101 $REDIS_PUBLIC_IP:7102 $REDIS_PUBLIC_IP:7103 $REDIS_PUBLIC_IP:7104 $REDIS_PUBLIC_IP:7105 $REDIS_PUBLIC_IP:7106 $REDIS_PUBLIC_IP:7107 $REDIS_PUBLIC_IP:7108 --cluster-replicas 0 --cluster-yes
+    command: redis-cli -a "$REDIS_PASSWORD" --cluster create $REDIS_PUBLIC_IP:7101 $REDIS_PUBLIC_IP:7102 $REDIS_PUBLIC_IP:7103 $REDIS_PUBLIC_IP:7104 $REDIS_PUBLIC_IP:7105 $REDIS_PUBLIC_IP:7106 --cluster-replicas 0 --cluster-yes
     network_mode: "host"
     depends_on:
       - redis-node-01
@@ -120,7 +98,5 @@ services:
       - redis-node-04
       - redis-node-05
       - redis-node-06
-      - redis-node-07
-      - redis-node-08
     env_file:
       - ./.env.redis
