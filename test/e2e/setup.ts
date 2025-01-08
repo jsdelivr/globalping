@@ -1,10 +1,11 @@
+import _ from 'lodash';
 import config from 'config';
 import Bluebird from 'bluebird';
 import type { Knex } from 'knex';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as chai from 'chai';
-import { createClient } from 'redis';
+import { createClient, type RedisClientOptions } from 'redis';
 
 import { waitProbeToConnect } from './utils.js';
 import chaiOas from '../plugins/oas/index.js';
@@ -43,11 +44,18 @@ const dropAllTables = async (sql: Knex) => {
 };
 
 const flushRedis = async () => {
-	const dbs = [ 0, 1, 2 ];
-	await Promise.all(dbs.map(async (database) => {
+	const urls = [
+		config.get<string>('redis.standalonePersistent.url'),
+		config.get<string>('redis.standaloneNonPersistent.url'),
+		config.get<string>('redis.clusterMeasurements.nodes.0'),
+		config.get<string>('redis.clusterMeasurements.nodes.1'),
+		config.get<string>('redis.clusterMeasurements.nodes.2'),
+	];
+
+	await Promise.all(urls.map(async (url) => {
 		const client = createClient({
-			...config.util.toObject(config.get('redis')),
-			database,
+			url,
+			..._.cloneDeep(config.get('redis.sharedOptions') as RedisClientOptions),
 		});
 		await client.connect();
 		await client.flushDb();

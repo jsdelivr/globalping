@@ -8,6 +8,13 @@ module.exports = {
 		clusterMeasurements: {
 			options: {
 				nodeAddressMap (address) {
+					if (process.env.TEST_MODE !== 'e2e') {
+						return {
+							host: address.substring(0, address.lastIndexOf(':')),
+							port: address.substring(address.lastIndexOf(':') + 1),
+						};
+					}
+
 					return {
 						host: 'host.docker.internal',
 						port: address.substring(address.lastIndexOf(':') + 1),
