@@ -23,10 +23,11 @@ export const initMeasurementRedisClient = async () => {
 	return redis;
 };
 
-export const createMeasurementRedisClient = (options?: RedisClusterOptions): RedisClusterInternal => {
+export const createMeasurementRedisClient = (options?: Partial<RedisClusterOptions>): RedisClusterInternal => {
 	return createRedisClusterInternal({
-		defaults: { ...config.util.toObject(config.get('redis.shared')) as RedisClientOptions },
-		...config.util.toObject(config.get('redis.clusterMeasurements')) as RedisClusterOptions,
+		defaults: config.get<RedisClientOptions>('redis.sharedOptions'),
+		rootNodes: Object.values(config.get<{ [index: string]: string }>('redis.clusterMeasurements.nodes')).map(url => ({ url })),
+		...config.get<Partial<RedisClusterOptions>>('redis.clusterMeasurements.options'),
 		...options,
 	}, scopedLogger('redis-measurement'));
 };

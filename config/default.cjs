@@ -25,17 +25,14 @@ module.exports = {
 		},
 		clusterMeasurements: {
 			// listing three nodes here is enough, the rest will be discovered automatically
-			rootNodes: [{
-				url: 'redis://localhost:7101',
+			nodes: {
+				0: 'redis://localhost:7101',
+				1: 'redis://localhost:7102',
+				2: 'redis://localhost:7103',
 			},
-			{
-				url: 'redis://localhost:7102',
-			},
-			{
-				url: 'redis://localhost:7103',
-			}],
+			options: {},
 		},
-		shared: {
+		sharedOptions: {
 			password: 'PASSWORD',
 			socket: {
 				tls: false,
