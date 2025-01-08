@@ -25,8 +25,8 @@ export const initRedisClient = async () => {
 
 const createRedisClient = (options?: RedisClientOptions): RedisClientInternal => {
 	return createRedisClientInternal({
-		...config.util.toObject(config.get('redis.shared')) as RedisClientOptions,
-		...config.util.toObject(config.get('redis.standaloneNonPersistent')) as RedisClientOptions,
+		...config.get<RedisClientOptions>('redis.sharedOptions'),
+		...config.get<RedisClientOptions>('redis.standaloneNonPersistent'),
 		...options,
 		name: 'non-persistent',
 	}, scopedLogger('redis-non-persistent'));

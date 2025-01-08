@@ -8,6 +8,7 @@ import {
 	type RedisDefaultModules,
 	type RedisFunctions,
 } from 'redis';
+import _ from 'lodash';
 import Bluebird from 'bluebird';
 import { type RedisScripts, scripts } from './scripts.js';
 import { type Logger } from 'h-logger2';
@@ -24,7 +25,7 @@ export type RedisClusterInternal = { connectPromise: Promise<unknown>, client: R
 
 export const createRedisClientInternal = (options: RedisClientOptions, logger: Logger): RedisClientInternal => {
 	const client = createClient({
-		...options,
+		..._.cloneDeep(options),
 		scripts,
 	});
 
@@ -39,7 +40,7 @@ export const createRedisClientInternal = (options: RedisClientOptions, logger: L
 
 export const createRedisClusterInternal = (options: RedisClusterOptions, logger: Logger): RedisClusterInternal => {
 	const cluster = createCluster({
-		...options,
+		..._.cloneDeep(options),
 		scripts,
 	});
 
