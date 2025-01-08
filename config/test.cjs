@@ -4,6 +4,18 @@ module.exports = {
 			cookieSecret: 'xxx',
 		},
 	},
+	redis: {
+		clusterMeasurements: {
+			options: {
+				nodeAddressMap (address) {
+					return {
+						host: 'host.docker.internal',
+						port: address.substring(address.lastIndexOf(':') + 1),
+					};
+				},
+			},
+		},
+	},
 	db: {
 		connection: {
 			port: 13306,

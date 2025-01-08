@@ -15,11 +15,18 @@ class DockerManager {
 	}
 
 	public async createApiContainer () {
-		const redisUrl = config.get<string>('redis.url').replace('localhost', 'host.docker.internal');
 		const dbConnectionHost = config.get<string>('db.connection.host').replace('localhost', 'host.docker.internal');
 		const processes = config.get<string>('server.processes');
 
-		// docker run -e NODE_ENV=test -e TEST_MODE=e2e -e NEW_RELIC_ENABLED=false -e REDIS_URL=redis://host.docker.internal:6379 -e DB_CONNECTION_HOST=host.docker.internal --name globalping-api-e2e globalping-api-e2e
+		const redisUrls = [
+			'redis.standalonePersistent.url',
+			'redis.standaloneNonPersistent.url',
+			'redis.clusterMeasurements.nodes.0',
+			'redis.clusterMeasurements.nodes.1',
+			'redis.clusterMeasurements.nodes.2',
+		].map(key => config.get<string>(key).replace('localhost', 'host.docker.internal'));
+
+		// docker run -e [...] --name globalping-api-e2e globalping-api-e2e
 		const container = await this.docker.createContainer({
 			Image: 'globalping-api-e2e',
 			name: 'globalping-api-e2e',
@@ -27,7 +34,12 @@ class DockerManager {
 				'NODE_ENV=test',
 				'TEST_MODE=e2e',
 				'NEW_RELIC_ENABLED=false',
-				`REDIS_URL=${redisUrl}`,
+				`REDIS_STANDALONE_PERSISTENT_URL=${redisUrls[0]}`,
+				`REDIS_STANDALONE_NON_PERSISTENT_URL=${redisUrls[1]}`,
+				`REDIS_CLUSTER_MEASUREMENTS_NODES_0=${redisUrls[2]}`,
+				`REDIS_CLUSTER_MEASUREMENTS_NODES_1=${redisUrls[3]}`,
+				`REDIS_CLUSTER_MEASUREMENTS_NODES_2=${redisUrls[4]}`,
+				`REDIS_SHARED_OPTIONS_PASSWORD=${config.get<string>('redis.sharedOptions.password')}`,
 				`DB_CONNECTION_HOST=${dbConnectionHost}`,
 				`SERVER_PROCESSES=${processes}`,
 				`MEASUREMENT_TIMEOUT=5`,
