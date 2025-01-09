@@ -10,14 +10,14 @@ Hi! We're really excited that you're interested in contributing! Before submitti
 
 ## Project setup
 
-In order to run the Globalping API locally you will need Node.js 20 and Redis with [RedisJSON](https://oss.redis.com/redisjson/) module and MariaDB. All of them are included in docker-compose.yml file. You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
+In order to run the Globalping API locally you will need Node.js 20 and Redis with [RedisJSON](https://oss.redis.com/redisjson/) module and MariaDB. All of them are included in docker-compose.dev.yml file. You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
 
 The API uses 3000 port by default. This can be overridden by `PORT` environment variable.
 
 You can run the project by following these steps:
 
 1. Clone this repository.
-2. `docker-compose up -d` - Run Redis and MariaDB
+2. `docker compose -f docker-compose.dev.yml up -d` - Run Redis and MariaDB
 3. `npm install && npm run download:files`
 4. Run `npm run start:dev`
 
