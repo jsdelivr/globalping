@@ -1,16 +1,16 @@
-import _ from 'lodash';
-import config from 'config';
 import Bluebird from 'bluebird';
 import type { Knex } from 'knex';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as chai from 'chai';
-import { createClient, type RedisClientOptions } from 'redis';
 
 import { waitProbeToConnect } from './utils.js';
 import chaiOas from '../plugins/oas/index.js';
 import { docker } from './docker.js';
 import { client as sql } from '../../src/lib/sql/client.js';
+import { initRedisClient } from '../../src/lib/redis/client.js';
+import { initPersistentRedisClient } from '../../src/lib/redis/persistent-client.js';
+import { initMeasurementRedisClient } from '../../src/lib/redis/measurement-client.js';
 
 before(async () => {
 	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../../public/v1/spec.yaml') }));
@@ -44,20 +44,15 @@ const dropAllTables = async (sql: Knex) => {
 };
 
 const flushRedis = async () => {
-	const urls = [
-		config.get<string>('redis.standalonePersistent.url'),
-		config.get<string>('redis.standaloneNonPersistent.url'),
-		config.get<string>('redis.clusterMeasurements.nodes.0'),
-		config.get<string>('redis.clusterMeasurements.nodes.1'),
-		config.get<string>('redis.clusterMeasurements.nodes.2'),
-	];
+	const [ client1, client2, cluster1 ] = await Promise.all([
+		initRedisClient(),
+		initPersistentRedisClient(),
+		initMeasurementRedisClient(),
+	]);
 
-	await Promise.all(urls.map(async (url) => {
-		const client = createClient({
-			url,
-			..._.cloneDeep(config.get('redis.sharedOptions') as RedisClientOptions),
-		});
-		await client.connect();
-		await client.flushDb();
-	}));
+	await Bluebird.all([
+		client1.flushDb(),
+		client2.flushDb(),
+		cluster1.mapMasters(client => client.flushDb()),
+	]);
 };
