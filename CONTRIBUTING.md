@@ -17,9 +17,10 @@ The API uses 3000 port by default. This can be overridden by `PORT` environment 
 You can run the project by following these steps:
 
 1. Clone this repository.
-2. `docker compose -f docker-compose.dev.yml up -d` - Run Redis and MariaDB
-3. `npm install && npm run download:files`
-4. Run `npm run start:dev`
+2. [Enable host networking in Docker Desktop](https://docs.docker.com/engine/network/drivers/host/#docker-desktop) if you haven't already.
+3. `docker compose -f docker-compose.dev.yml up -d` - Run Redis and MariaDB
+4. `npm install && npm run download:files`
+5. Run `npm run start:dev`
 
 Once the API is live, you can spin up a probe instance by running as described at https://github.com/jsdelivr/globalping-probe/blob/master/CONTRIBUTING.md.
 
