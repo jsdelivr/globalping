@@ -55,7 +55,7 @@ services:
       - ./config/redis/.env.redis
   redis-cluster-creator:
     image: redis/redis-stack-server:7.4.0-v1
-    command: redis-cli -a "$REDIS_PASSWORD" --cluster create $REDIS_PUBLIC_IP:7101 $REDIS_PUBLIC_IP:7102 $REDIS_PUBLIC_IP:7103 $REDIS_PUBLIC_IP:7104 --cluster-replicas 0 --cluster-yes
+    command: bash -c 'redis-cli -a "$$REDIS_PASSWORD" --cluster create $$REDIS_PUBLIC_IP:7101 $$REDIS_PUBLIC_IP:7102 $$REDIS_PUBLIC_IP:7103 $$REDIS_PUBLIC_IP:7104 --cluster-replicas 0 --cluster-yes'
     network_mode: "host"
     depends_on:
       - redis-node-01

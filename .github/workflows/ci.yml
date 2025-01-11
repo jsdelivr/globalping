@@ -38,7 +38,7 @@ jobs:
       - name: Set up Redis
         run: |
           cp config/redis/.env.redis ./
-          docker compose --env-file .env.redis up -d
+          docker compose up -d
       - name: Build
         run: |
           npm ci

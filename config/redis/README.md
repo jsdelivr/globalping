@@ -23,5 +23,5 @@ cp .env.redis ../../
 Set the redis password and return to the project root. Then:
 
 ```
-docker compose --env-file .env.redis up -d
+docker compose up -d
 ```
