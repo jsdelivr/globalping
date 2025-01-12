@@ -2,18 +2,18 @@ services:
   redis-standalone-1:
     image: redis/redis-stack-server:7.4.0-v1
     ports:
-      - "7001:6379"
+      - "7001:7001"
     volumes:
-      - ./config/redis/standalone.conf:/redis-stack.conf
+      - ./config/redis/standalone-1.conf:/redis-stack.conf
       - ./data/redis/7001:/data
     env_file:
       - ./config/redis/.env.redis
   redis-standalone-2:
     image: redis/redis-stack-server:7.4.0-v1
     ports:
-      - "7002:6379"
+      - "7002:7002"
     volumes:
-      - ./config/redis/standalone.conf:/redis-stack.conf
+      - ./config/redis/standalone-2.conf:/redis-stack.conf
       - ./data/redis/7002:/data
     env_file:
       - ./config/redis/.env.redis
