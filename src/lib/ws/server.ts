@@ -8,7 +8,7 @@ import { ProbeOverride } from '../override/probe-override.js';
 import { ProbeIpLimit } from './helper/probe-ip-limit.js';
 import { AdoptedProbes } from '../override/adopted-probes.js';
 import { AdminData } from '../override/admin-data.js';
-import { getSubscriptionRedisClient } from '../redis/subscription-client.js';
+import { initSubscriptionRedisClient } from '../redis/subscription-client.js';
 
 export interface DefaultEventsMap {
 	// TODO: maybe create type definitions for the events?
@@ -35,11 +35,7 @@ let syncedProbeList: SyncedProbeList;
 
 export const initWsServer = async () => {
 	const redis = getRedisClient();
-	const redisSubClient = getSubscriptionRedisClient();
-	const pubClient = redis.duplicate();
-	const subClient = redis.duplicate();
-
-	await Promise.all([ pubClient.connect(), subClient.connect() ]);
+	const [ subClient1, subClient2 ] = await Promise.all([ initSubscriptionRedisClient(), initSubscriptionRedisClient() ]);
 
 	io = new Server({
 		transports: [ 'websocket' ],
@@ -48,11 +44,11 @@ export const initWsServer = async () => {
 		pingTimeout: 3000,
 	});
 
-	io.adapter(createShardedAdapter(pubClient, subClient, {
+	io.adapter(createShardedAdapter(redis, subClient1, {
 		subscriptionMode: 'dynamic-private',
 	}));
 
-	syncedProbeList = new SyncedProbeList(redis, redisSubClient, io.of(PROBES_NAMESPACE), probeOverride);
+	syncedProbeList = new SyncedProbeList(redis, subClient2, io.of(PROBES_NAMESPACE), probeOverride);
 
 	await syncedProbeList.sync();
 	syncedProbeList.scheduleSync();

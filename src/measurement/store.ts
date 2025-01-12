@@ -5,12 +5,12 @@ import type { OfflineProbe, Probe } from '../probe/types.js';
 import { scopedLogger } from '../lib/logger.js';
 import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType, MeasurementResultMessage } from './types.js';
 import { getDefaults } from './schema/utils.js';
-import { getMeasurementRedisClient, type RedisClient } from '../lib/redis/measurement-client.js';
+import { getMeasurementRedisClient, type RedisCluster } from '../lib/redis/measurement-client.js';
 
 const logger = scopedLogger('store');
 
 export const getMeasurementKey = (id: string, suffix: string = 'results'): string => {
-	return `gp:m:${id}:${suffix}`;
+	return `gp:m:{${id}}:${suffix}`;
 };
 
 const subtractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unknown> = {}) => {
@@ -35,10 +35,11 @@ const subtractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unk
 };
 
 export class MeasurementStore {
-	constructor (private readonly redis: RedisClient) {}
+	constructor (private readonly redis: RedisCluster) {}
 
 	async getMeasurementString (id: string): Promise<string> {
-		return this.redis.sendCommand([ 'JSON.GET', getMeasurementKey(id) ]);
+		const key = getMeasurementKey(id);
+		return this.redis.sendCommand(key, true, [ 'JSON.GET', key ]);
 	}
 
 	async getMeasurement (id: string) {
@@ -113,7 +114,10 @@ export class MeasurementStore {
 	}
 
 	async markFinished (id: string) {
-		await this.redis.markFinished(id);
+		await Promise.all([
+			this.redis.markFinished(id),
+			this.redis.hDel('gp:in-progress', id),
+		]);
 	}
 
 	async markFinishedByTimeout (ids: string[]): Promise<void> {

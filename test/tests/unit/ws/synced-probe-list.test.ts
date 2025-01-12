@@ -5,21 +5,22 @@ import { type WsServerNamespace } from '../../../../src/lib/ws/server.js';
 import { SyncedProbeList } from '../../../../src/lib/ws/synced-probe-list.js';
 import type { Probe } from '../../../../src/probe/types.js';
 import { getRegionByCountry } from '../../../../src/lib/location/location.js';
-import { getRedisClient } from '../../../../src/lib/redis/client.js';
+import { getRedisClient, RedisClient } from '../../../../src/lib/redis/client.js';
 import { ProbeOverride } from '../../../../src/lib/override/probe-override.js';
-import { getSubscriptionRedisClient } from '../../../../src/lib/redis/subscription-client.js';
+import { initSubscriptionRedisClient } from '../../../../src/lib/redis/subscription-client.js';
 
 describe('SyncedProbeList', () => {
 	const sandbox = sinon.createSandbox();
-	const redisClient = getRedisClient();
-	const subRedisClient = getSubscriptionRedisClient();
+	const redisClient = getRedisClient().duplicate();
+	let subRedisClient: RedisClient;
 	const localFetchSocketsStub = sandbox.stub();
 	const redisXAdd = sandbox.stub(redisClient, 'xAdd');
 	const redisXRange = sandbox.stub(redisClient, 'xRange');
 	const redisPExpire = sandbox.stub(redisClient, 'pExpire');
 	const redisJsonGet = sandbox.stub(redisClient.json, 'get');
 	const redisPublish = sandbox.stub(redisClient, 'publish');
-	const redisSubscribe = sandbox.stub(subRedisClient, 'subscribe');
+	let redisSubscribe: sinon.SinonStub;
+	redisClient.connect();
 
 	const idToIp = {
 		A: '1.1.1.1',
@@ -54,7 +55,7 @@ describe('SyncedProbeList', () => {
 
 	let syncedProbeList: SyncedProbeList;
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		redisXRange.resolves([]);
 		redisJsonGet.callThrough();
 		redisPExpire.callThrough();
@@ -62,6 +63,8 @@ describe('SyncedProbeList', () => {
 		probeOverride.addAdminData.returnsArg(0);
 		probeOverride.addAdoptedData.returnsArg(0);
 
+		subRedisClient = await initSubscriptionRedisClient();
+		redisSubscribe = sandbox.stub(subRedisClient, 'subscribe');
 		syncedProbeList = new SyncedProbeList(redisClient, subRedisClient, ioNamespace, probeOverride);
 	});
 

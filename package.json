@@ -16,6 +16,7 @@
 		"any-ascii": "^0.3.2",
 		"bluebird": "^3.7.2",
 		"config": "^3.3.12",
+		"config-mapper-env": "^3.0.0",
 		"countries-list": "^3.1.1",
 		"crypto-random-string": "^5.0.0",
 		"csv-parser": "^3.1.0",

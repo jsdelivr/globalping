@@ -10,16 +10,17 @@ Hi! We're really excited that you're interested in contributing! Before submitti
 
 ## Project setup
 
-In order to run the Globalping API locally you will need Node.js 20 and Redis with [RedisJSON](https://oss.redis.com/redisjson/) module and MariaDB. All of them are included in docker-compose.yml file. You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
+In order to run the Globalping API locally you will need Node.js 20 and Redis with [RedisJSON](https://oss.redis.com/redisjson/) module and MariaDB. All of them are included in docker-compose.dev.yml file. You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
 
 The API uses 3000 port by default. This can be overridden by `PORT` environment variable.
 
 You can run the project by following these steps:
 
 1. Clone this repository.
-2. `docker-compose up -d` - Run Redis and MariaDB
-3. `npm install && npm run download:files`
-4. Run `npm run start:dev`
+2. [Enable host networking in Docker Desktop](https://docs.docker.com/engine/network/drivers/host/#docker-desktop) if you haven't already.
+3. `docker compose -f docker-compose.dev.yml up -d` - Run Redis and MariaDB
+4. `npm install && npm run download:files`
+5. Run `npm run start:dev`
 
 Once the API is live, you can spin up a probe instance by running as described at https://github.com/jsdelivr/globalping-probe/blob/master/CONTRIBUTING.md.
 
@@ -48,3 +49,4 @@ Most IDEs have plugins integrating the used linter (eslint), including support f
 - `SYSTEM_API_KEY={value}` used for integration with the dashboard
 - `SERVER_SESSION_COOKIE_SECRET={value}` used to read the shared session cookie
 - `DB_CONNECTION_HOST`, `DB_CONNECTION_USER`, `DB_CONNECTION_PASSWORD`, and `DB_CONNECTION_DATABASE` database connection details
+- `REDIS_STANDALONE_PERSISTENT_URL`, `REDIS_STANDALONE_NON_PERSISTENT_URL`, `REDIS_CLUSTER_MEASUREMENTS_NODES_0`, `REDIS_CLUSTER_MEASUREMENTS_NODES_1`, `REDIS_CLUSTER_MEASUREMENTS_NODES_2`, and `REDIS_SHARED_OPTIONS_PASSWORD` - redis connection details

@@ -1,26 +1,21 @@
+import config from 'config';
 import type { RedisClientOptions } from 'redis';
-import { createRedisClientInternal, type RedisClient } from './shared.js';
+import { createRedisClientInternal, type RedisClientInternal } from './shared.js';
+import { scopedLogger } from '../logger.js';
 
 export type { RedisClient } from './shared.js';
 
-let redis: RedisClient;
-
 export const initSubscriptionRedisClient = async () => {
-	redis = createSubscriptionRedisClient();
-	return redis;
+	const { connectPromise, client } = createSubscriptionRedisClient();
+	await connectPromise;
+	return client;
 };
 
-export const createSubscriptionRedisClient = (options?: RedisClientOptions): RedisClient => {
+export const createSubscriptionRedisClient = (options?: RedisClientOptions): RedisClientInternal => {
 	return createRedisClientInternal({
+		...config.get<RedisClientOptions>('redis.sharedOptions'),
+		...config.get<RedisClientOptions>('redis.standaloneNonPersistent'),
 		...options,
 		name: 'subscription',
-	});
-};
-
-export const getSubscriptionRedisClient = (): RedisClient => {
-	if (!redis) {
-		redis = createSubscriptionRedisClient();
-	}
-
-	return redis;
+	}, scopedLogger('redis-subscription'));
 };

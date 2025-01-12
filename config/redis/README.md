@@ -12,9 +12,16 @@ swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
-## Config
+### Docker config
 
-1. Download redis.conf to /etc/redis/
-2. Download zip file with json module to same folder
-3. Unzip
-4. Restart
+Assuming you start in this directory:
+
+```
+cp .env.redis ../../
+```
+
+Set the redis password and return to the project root. Then:
+
+```
+docker compose up -d
+```

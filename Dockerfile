@@ -1,7 +1,7 @@
 FROM node:20-bullseye-slim AS builder
 RUN apt-get update -y && apt-get install util-linux curl git -y
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 COPY package.json package-lock.json /app/
 WORKDIR /app
@@ -12,7 +12,7 @@ RUN npm run build
 FROM node:20-bullseye-slim
 RUN apt-get update -y && apt-get install tini util-linux curl -y
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 COPY package.json package-lock.json /app/
 WORKDIR /app

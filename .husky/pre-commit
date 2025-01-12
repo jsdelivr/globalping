@@ -6,4 +6,4 @@ if ! type cygpath > /dev/null 2>&1; then
 	PATH="$PATH:$(type -ap git | grep 'cmd/git' | sed 's$cmd/git$usr/bin$')"
 fi
 
-node_modules/.bin/lint-staged --no-stash --quiet
+node_modules/.bin/lint-staged --quiet
