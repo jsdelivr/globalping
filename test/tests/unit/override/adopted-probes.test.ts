@@ -22,6 +22,7 @@ describe('AdoptedProbes', () => {
 		version: '0.26.0',
 		nodeVersion: 'v18.17.0',
 		hardwareDevice: null,
+		hardwareDeviceFirmware: null,
 		country: 'IE',
 		state: null,
 		countryOfCustomCity: '',
@@ -56,6 +57,7 @@ describe('AdoptedProbes', () => {
 		},
 		isHardware: false,
 		hardwareDevice: null,
+		hardwareDeviceFirmware: null,
 		tags: [{
 			type: 'system',
 			value: 'datacenter-network',
@@ -299,6 +301,7 @@ describe('AdoptedProbes', () => {
 				nodeVersion: 'v18.17.1',
 				isHardware: true,
 				hardwareDevice: 'v1',
+				hardwareDeviceFirmware: 'v2.2',
 				tags: [
 					{ type: 'system', value: 'eyeball-network' },
 				],
@@ -329,6 +332,7 @@ describe('AdoptedProbes', () => {
 			version: '0.27.0',
 			nodeVersion: 'v18.17.1',
 			hardwareDevice: 'v1',
+			hardwareDeviceFirmware: 'v2.2',
 			systemTags: '["eyeball-network"]',
 			asn: 20473,
 			network: 'The Constant Company, LLC',
@@ -365,6 +369,7 @@ describe('AdoptedProbes', () => {
 				nodeVersion: 'v18.17.0',
 				isHardware: false,
 				hardwareDevice: null,
+				hardwareDeviceFirmware: null,
 				tags: [
 					{ type: 'system', value: 'datacenter-network' },
 				],
@@ -391,6 +396,7 @@ describe('AdoptedProbes', () => {
 				nodeVersion: 'v18.17.0',
 				isHardware: false,
 				hardwareDevice: null,
+				hardwareDeviceFirmware: null,
 				tags: [
 					{ type: 'system', value: 'datacenter-network' },
 				],
@@ -467,6 +473,7 @@ describe('AdoptedProbes', () => {
 				nodeVersion: 'v18.17.0',
 				isHardware: false,
 				hardwareDevice: null,
+				hardwareDeviceFirmware: null,
 				tags: [
 					{ type: 'system', value: 'datacenter-network' },
 				],
@@ -493,6 +500,7 @@ describe('AdoptedProbes', () => {
 				nodeVersion: 'v18.17.0',
 				isHardware: false,
 				hardwareDevice: null,
+				hardwareDeviceFirmware: null,
 				tags: [
 					{ type: 'system', value: 'datacenter-network' },
 				],
@@ -572,6 +580,7 @@ describe('AdoptedProbes', () => {
 				nodeVersion: 'v18.17.0',
 				isHardware: false,
 				hardwareDevice: null,
+				hardwareDeviceFirmware: null,
 				tags: [
 					{ type: 'system', value: 'datacenter-network' },
 				],

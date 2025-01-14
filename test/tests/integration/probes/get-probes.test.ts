@@ -192,6 +192,9 @@ describe('Get Probes', () => {
 						host: '',
 						ipAddress: '1.2.3.4',
 						altIpAddresses: [],
+						isHardware: false,
+						hardwareDevice: null,
+						hardwareDeviceFirmware: null,
 						uuid: '1-1-1-1-1',
 						nodeVersion: 'v18.17.0',
 						location: {
@@ -294,7 +297,6 @@ describe('Get Probes', () => {
 					isIPv6Supported: false,
 					version: '0.26.0',
 					nodeVersion: 'v18.14.2',
-					hardwareDevice: null,
 					country: 'AR',
 					countryOfCustomCity: 'AR',
 					city: 'Cordoba',

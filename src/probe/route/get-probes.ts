@@ -5,39 +5,40 @@ import { fetchProbes } from '../../lib/ws/server.js';
 
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
 	const { isAdmin, isSystem } = ctx;
-	let sockets = await fetchProbes();
+	let probes = await fetchProbes();
 
 	if (!isAdmin && !isSystem) {
-		sockets = sockets.filter(socket => socket.status === 'ready');
+		probes = probes.filter(probe => probe.status === 'ready');
 	}
 
-	ctx.body = sockets.map((socket: Probe) => ({
-		status: (isAdmin || isSystem) ? socket.status : undefined,
-		version: socket.version,
-		isIPv4Supported: (isAdmin || isSystem) ? socket.isIPv4Supported : undefined,
-		isIPv6Supported: (isAdmin || isSystem) ? socket.isIPv6Supported : undefined,
-		nodeVersion: isAdmin ? socket.nodeVersion : undefined,
-		uuid: isAdmin ? socket.uuid : undefined,
-		ipAddress: (isAdmin || isSystem) ? socket.ipAddress : undefined,
-		altIpAddresses: (isAdmin || isSystem) ? socket.altIpAddresses : undefined,
+	ctx.body = probes.map((probe: Probe) => ({
+		status: (isAdmin || isSystem) ? probe.status : undefined,
+		version: probe.version,
+		isIPv4Supported: (isAdmin || isSystem) ? probe.isIPv4Supported : undefined,
+		isIPv6Supported: (isAdmin || isSystem) ? probe.isIPv6Supported : undefined,
+		nodeVersion: isAdmin ? probe.nodeVersion : undefined,
+		uuid: isAdmin ? probe.uuid : undefined,
+		ipAddress: (isAdmin || isSystem) ? probe.ipAddress : undefined,
+		altIpAddresses: (isAdmin || isSystem) ? probe.altIpAddresses : undefined,
 		location: {
-			continent: socket.location.continent,
-			region: socket.location.region,
-			country: socket.location.country,
-			state: socket.location.state,
-			city: socket.location.city,
-			asn: socket.location.asn,
-			latitude: socket.location.latitude,
-			longitude: socket.location.longitude,
-			network: socket.location.network,
+			continent: probe.location.continent,
+			region: probe.location.region,
+			country: probe.location.country,
+			state: probe.location.state,
+			city: probe.location.city,
+			asn: probe.location.asn,
+			latitude: probe.location.latitude,
+			longitude: probe.location.longitude,
+			network: probe.location.network,
 		},
-		tags: socket.tags.map(({ value }) => value),
-		...(isAdmin && socket.isHardware ? { isHardware: socket.isHardware } : null),
-		...(isAdmin && socket.hardwareDevice ? { hardwareDevice: socket.hardwareDevice } : null),
-		resolvers: socket.resolvers,
-		host: isAdmin ? socket.host : undefined,
-		stats: isAdmin ? socket.stats : undefined,
-		hostInfo: isAdmin ? socket.hostInfo : undefined,
+		tags: probe.tags.map(({ value }) => value),
+		isHardware: isAdmin ? probe.isHardware : undefined,
+		hardwareDevice: isAdmin ? probe.hardwareDevice : undefined,
+		hardwareDeviceFirmware: isAdmin ? probe.hardwareDeviceFirmware : undefined,
+		resolvers: probe.resolvers,
+		host: isAdmin ? probe.host : undefined,
+		stats: isAdmin ? probe.stats : undefined,
+		hostInfo: isAdmin ? probe.hostInfo : undefined,
 	}));
 };
 
