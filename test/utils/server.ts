@@ -55,6 +55,7 @@ export const addFakeProbes = async (count: number, events: object = {}, options:
 					uuid: '1-1-1-1-1',
 					isHardware: 'undefined',
 					hardwareDevice: 'undefined',
+					hardwareDeviceFirmware: 'undefined',
 					totalMemory: 1e9,
 					totalDiskSize: 2e3,
 					availableDiskSpace: 1e3,

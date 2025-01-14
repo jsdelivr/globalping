@@ -21,7 +21,6 @@ describe('adopted probe', () => {
 			isIPv6Supported: true,
 			version: '0.28.0',
 			nodeVersion: 'v18.14.2',
-			hardwareDevice: null,
 			country: 'FR',
 			countryOfCustomCity: 'FR',
 			city: 'Marseille',

@@ -294,7 +294,6 @@ describe('Get Probes', () => {
 					isIPv6Supported: false,
 					version: '0.26.0',
 					nodeVersion: 'v18.14.2',
-					hardwareDevice: null,
 					country: 'AR',
 					countryOfCustomCity: 'AR',
 					city: 'Cordoba',
