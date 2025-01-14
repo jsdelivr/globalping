@@ -44,6 +44,7 @@ export type Probe = {
 	uuid: string;
 	isHardware: boolean;
 	hardwareDevice: string | null;
+	hardwareDeviceFirmware: string | null;
 	ipAddress: string;
 	altIpAddresses: string[];
 	host: string;
@@ -66,6 +67,7 @@ export type OfflineProbe = Modify<Probe, {
 	uuid: null;
 	isHardware: false;
 	hardwareDevice: null;
+	hardwareDeviceFirmware: null;
 	host: null;
 	hostInfo: {
 		totalMemory: null;

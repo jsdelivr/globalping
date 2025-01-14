@@ -34,6 +34,7 @@ export type Adoption = {
 	version: string | null;
 	nodeVersion: string | null;
 	hardwareDevice: string | null;
+	hardwareDeviceFirmware: string | null;
 	country: string | null;
 	countryOfCustomCity: string | null;
 	city: string | null;
@@ -98,6 +99,10 @@ export class AdoptedProbes {
 		},
 		hardwareDevice: {
 			probeField: 'hardwareDevice',
+			shouldUpdateIfCustomCity: true,
+		},
+		hardwareDeviceFirmware: {
+			probeField: 'hardwareDeviceFirmware',
 			shouldUpdateIfCustomCity: true,
 		},
 		systemTags: {

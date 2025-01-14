@@ -17,6 +17,7 @@ describe('/adoption-code endpoint', () => {
 			city: 'Paris',
 			country: 'FR',
 			hardwareDevice: null,
+			hardwareDeviceFirmware: null,
 			state: null,
 			status: 'ready',
 		});

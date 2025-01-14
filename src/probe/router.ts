@@ -150,6 +150,7 @@ export class ProbeRouter {
 		uuid: null,
 		isHardware: false,
 		hardwareDevice: null,
+		hardwareDeviceFirmware: null,
 		ipAddress: ip,
 		altIpAddresses: [],
 		host: null,
