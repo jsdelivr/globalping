@@ -35,6 +35,19 @@ apmAgent.addTransactionFilter(apmUtils.transactionFilter({
 	keepResponse: [ 'location' ],
 }));
 
+// Filter out short SPUBLISH spans.
+apmAgent.addSpanFilter((payload) => {
+	if (payload['type'] !== 'db' || payload['subtype'] !== 'redis' || ![ 'SPUBLISH' ].includes(payload['name'] as string)) {
+		return payload;
+	}
+
+	if (payload['duration'] > 10) {
+		return payload;
+	}
+
+	return false;
+});
+
 const app = new Koa({ proxy: true });
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
 const docsHost = config.get<string>('server.docsHost');
