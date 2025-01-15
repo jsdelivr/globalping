@@ -22,8 +22,8 @@ describe('/limits endpoint', () => {
 				measurements: {
 					create: {
 						type: 'ip',
-						limit: 100000,
-						remaining: 100000,
+						limit: 250,
+						remaining: 250,
 						reset: 0,
 					},
 				},
@@ -46,8 +46,8 @@ describe('/limits endpoint', () => {
 
 		expect(response.body.rateLimit.measurements.create).to.deep.include({
 			type: 'ip',
-			limit: 100000,
-			remaining: 99999,
+			limit: 250,
+			remaining: 249,
 		});
 	});
 });

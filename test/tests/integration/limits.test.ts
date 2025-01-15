@@ -61,8 +61,8 @@ describe('rate limiter', () => {
 						measurements: {
 							create: {
 								type: 'ip',
-								limit: 100000,
-								remaining: 100000,
+								limit: 250,
+								remaining: 250,
 								reset: 0,
 							},
 						},
@@ -82,8 +82,8 @@ describe('rate limiter', () => {
 						measurements: {
 							create: {
 								type: 'ip',
-								limit: 100000,
-								remaining: 99999,
+								limit: 250,
+								remaining: 249,
 								reset: 3600,
 							},
 						},

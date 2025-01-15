@@ -225,7 +225,7 @@ describe('authenticate', () => {
 				});
 
 			expect(response.status).to.equal(202);
-			expect(response.headers['x-ratelimit-limit']).to.equal('100000');
+			expect(response.headers['x-ratelimit-limit']).to.equal('250');
 		});
 
 		it('should ignore if invalid cookie was passed', async () => {
@@ -241,7 +241,7 @@ describe('authenticate', () => {
 				});
 
 			expect(response.status).to.equal(202);
-			expect(response.headers['x-ratelimit-limit']).to.equal('100000');
+			expect(response.headers['x-ratelimit-limit']).to.equal('250');
 		});
 
 		it('should ignore if cookie signed with a different key was passed', async () => {
@@ -257,7 +257,7 @@ describe('authenticate', () => {
 				});
 
 			expect(response.status).to.equal(202);
-			expect(response.headers['x-ratelimit-limit']).to.equal('100000');
+			expect(response.headers['x-ratelimit-limit']).to.equal('250');
 		});
 	});
 });

@@ -122,9 +122,9 @@ describe('rate limiter', () => {
 				target: 'jsdelivr.com',
 			}).expect(202) as Response;
 
-			expect(response.headers['x-ratelimit-limit']).to.equal('100000');
+			expect(response.headers['x-ratelimit-limit']).to.equal('250');
 			expect(response.headers['x-ratelimit-consumed']).to.equal('1');
-			expect(response.headers['x-ratelimit-remaining']).to.equal('99999');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('249');
 			expect(response.headers['x-ratelimit-reset']).to.equal('3600');
 			expect(response.headers['x-request-cost']).to.equal('1');
 
@@ -133,9 +133,9 @@ describe('rate limiter', () => {
 				target: 'jsdelivr.com',
 			}).expect(202) as Response;
 
-			expect(response2.headers['x-ratelimit-limit']).to.equal('100000');
+			expect(response2.headers['x-ratelimit-limit']).to.equal('250');
 			expect(response.headers['x-ratelimit-consumed']).to.equal('1');
-			expect(response2.headers['x-ratelimit-remaining']).to.equal('99998');
+			expect(response2.headers['x-ratelimit-remaining']).to.equal('248');
 			expect(response2.headers['x-ratelimit-reset']).to.equal('3600');
 			expect(response.headers['x-request-cost']).to.equal('1');
 		});
@@ -190,11 +190,11 @@ describe('rate limiter', () => {
 				target: 'jsdelivr.com',
 			}).expect(202) as Response;
 
-			expect(response.headers['x-ratelimit-remaining']).to.equal('99999');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('249');
 		});
 
 		it('should fail (limit reached)', async () => {
-			await anonymousPostRateLimiter.set(clientIpv6, 100000, 0);
+			await anonymousPostRateLimiter.set(clientIpv6, 250, 0);
 
 			const response = await requestAgent.post('/v1/measurements').send({
 				type: 'ping',
@@ -205,7 +205,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should consume all points successfully or none at all (cost > remaining > 0)', async () => {
-			await anonymousPostRateLimiter.set(clientIpv6, 99999, 0); // 1 remaining
+			await anonymousPostRateLimiter.set(clientIpv6, 249, 0); // 1 remaining
 
 			const response = await requestAgent.post('/v1/measurements').send({
 				type: 'ping',
@@ -293,7 +293,7 @@ describe('rate limiter', () => {
 				}).expect(202) as Response;
 
 			const rateLimiterRes = await anonymousPostRateLimiter.get(`1CJTN06QAyM2JYA3r2FwaSytXEWg1r50xNlUyC1G98w=`);
-			expect(rateLimiterRes?.remainingPoints).to.equal(99999);
+			expect(rateLimiterRes?.remainingPoints).to.equal(249);
 		});
 	});
 

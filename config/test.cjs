@@ -44,9 +44,6 @@ module.exports = {
 	measurement: {
 		maxInProgressTests: 2,
 		rateLimit: {
-			post: {
-				anonymousLimit: 100000,
-			},
 			getPerMeasurement: {
 				limit: 1000,
 			},

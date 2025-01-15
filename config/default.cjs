@@ -85,7 +85,7 @@ module.exports = {
 		resultTTL: 7 * 24 * 60 * 60, // 7 days
 		rateLimit: {
 			post: {
-				anonymousLimit: 10000,
+				anonymousLimit: 250,
 				authenticatedLimit: 500,
 				reset: 3600,
 			},
