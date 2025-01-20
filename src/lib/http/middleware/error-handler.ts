@@ -1,3 +1,4 @@
+import apmAgent from 'elastic-apm-node';
 import createHttpError from 'http-errors';
 import { scopedLogger } from '../../logger.js';
 import type { ExtendedMiddleware } from '../../../types.js';
@@ -8,6 +9,11 @@ export const errorHandlerMw: ExtendedMiddleware = async (ctx, next) => {
 	try {
 		await next();
 	} catch (error: unknown) {
+		apmAgent.addLabels({
+			gpErrorType: (error as { type?: string } | undefined)?.type || 'api_error',
+			gpErrorMessage: (error as Error | undefined)?.message,
+		});
+
 		if (createHttpError.isHttpError(error)) {
 			ctx.status = error.status;
 
