@@ -68,7 +68,6 @@ export default class GeoIpClient {
 		const ipinfo = results.find(result => result.provider === 'ipinfo');
 		const resultsWithCities = results.filter(s => s.city);
 
-
 		const isProxy = (ip2location?.isProxy && !isAddrWhitelisted(addr)) ?? null;
 
 		if (isProxy) {
@@ -79,7 +78,7 @@ export default class GeoIpClient {
 			throw new ProbeError(`unresolvable geoip: ${addr}`);
 		}
 
-		const [ match, ranked ] = this.bestMatch('normalizedCity', results);
+		const [ match, ranked ] = this.bestMatch(results);
 		const networkMatch = this.matchNetwork(match, ranked);
 
 		if (!networkMatch) {
@@ -137,17 +136,23 @@ export default class GeoIpClient {
 		return undefined;
 	}
 
-	private bestMatch (field: keyof LocationInfo, sources: LocationInfoWithProvider[]): [LocationInfo, LocationInfoWithProvider[]] {
-		const filtered = sources.filter(s => s[field]);
-		// Group sources by the same field value
-		const grouped = Object.values(_.groupBy(filtered, field));
+	private bestMatch (sources: LocationInfoWithProvider[]): [LocationInfo, LocationInfoWithProvider[]] {
+		const filtered = sources.filter(s => s.normalizedCity);
+
+		// First, cluster the sources by country and select the most popular one.
+		// In case of a tie (e.g., [ 2, 2, 1 ]) we fall back to the provider priority by selecting the first group (array sort is stable).
+		const clusters = Object.values(_.groupBy(filtered, 'country'));
+		const rankedClusters = clusters.sort((a, b) => b.length - a.length);
+
+		// Select the most popular value within the most popular country.
+		const grouped = Object.values(_.groupBy(rankedClusters[0], 'normalizedCity'));
 		const ranked = grouped.sort((a, b) => b.length - a.length).flat();
 
 		const best = ranked[0];
 
 		if (!best || best.provider === 'fastly') {
-			logger.error(`Failed to find a correct value for a field "${field}"`, { field, sources });
-			throw new Error(`failed to find a correct value for a field "${field}"`);
+			logger.error(`Failed to find a good match`, { sources });
+			throw new Error(`failed to find a food match`);
 		}
 
 		const match = _.omit(best, 'provider');

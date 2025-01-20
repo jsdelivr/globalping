@@ -136,7 +136,7 @@ describe('geoip service', () => {
 	});
 
 	it('should choose top prioritized provider when all providers returned different cities', async () => {
-		nockGeoIpProviders({ ipmap: 'default', ip2location: 'argentina', maxmind: 'newYork', ipinfo: 'empty', fastly: 'bangkok' });
+		nockGeoIpProviders({ ipmap: 'default', ip2location: 'argentina', maxmind: 'empty', ipinfo: 'empty', fastly: 'bangkok' });
 
 		const info = await client.lookup(MOCK_IP);
 
@@ -155,6 +155,29 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: null,
 			isAnycast: null,
+		});
+	});
+
+	it('should consider only results in the most popular country', async () => {
+		nockGeoIpProviders({ ipmap: 'default', ip2location: 'newYork', maxmind: 'newYork', ipinfo: 'argentina', fastly: 'argentina' });
+
+		const info = await client.lookup(MOCK_IP);
+
+		expect(info).to.deep.equal({
+			asn: 80001,
+			city: 'New York',
+			continent: 'NA',
+			country: 'US',
+			isAnycast: null,
+			isHosting: true,
+			isProxy: false,
+			latitude: 40.71,
+			longitude: -74.01,
+			network: 'The Constant Company LLC',
+			normalizedCity: 'new york',
+			normalizedNetwork: 'the constant company llc',
+			region: 'Northern America',
+			state: 'NY',
 		});
 	});
 
