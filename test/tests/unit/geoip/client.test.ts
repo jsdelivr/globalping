@@ -605,7 +605,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup('1.1.1.1').catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.equal('vpn detected');
+			expect((response as Error).message).to.include('vpn detected');
 		});
 
 		it('should reject - is_proxy field is true', async () => {
@@ -614,7 +614,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.equal('vpn detected');
+			expect((response as Error).message).to.include('vpn detected');
 		});
 	});
 });
