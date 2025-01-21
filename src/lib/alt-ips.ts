@@ -146,17 +146,25 @@ export class AltIps {
 	 */
 	private async addAltIp (localSocket: ServerSocket, ip: string): Promise<boolean> {
 		if (localSocket.data.probe.altIpAddresses.includes(ip)) {
+			logger.info('Alt IP already in the list.', { ip });
 			return true;
 		}
 
 		if (isIpPrivate(ip)) {
+			logger.warn('Alt IP is private.', { ip });
 			return false;
 		}
 
 		try {
 			const altIpInfo = await this.geoIpClient.lookup(ip);
 
-			if (altIpInfo.country !== localSocket.data.probe.location.country || altIpInfo.isAnycast) {
+			if (altIpInfo.country !== localSocket.data.probe.location.country) {
+				logger.warn('Alt IP country doesn\'t match the probe country.', { ip, altIpInfo, probeLocation: localSocket.data.probe.location });
+				return false;
+			}
+
+			if (altIpInfo.isAnycast) {
+				logger.warn('Alt IP is anycast.', { ip, altIpInfo });
 				return false;
 			}
 		} catch (e) {
