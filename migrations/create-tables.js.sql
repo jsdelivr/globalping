@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS directus_users (
 	id CHAR(36) PRIMARY KEY,
 	github_username VARCHAR(255),
-	user_type VARCHAR(255) NOT NULL DEFAULT 'member'
+	user_type VARCHAR(255) NOT NULL DEFAULT 'member',
+	public_probes BOOLEAN DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS gp_adopted_probes (

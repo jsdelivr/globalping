@@ -47,7 +47,7 @@ export type Adoption = {
 	publicProbes: boolean;
 }
 
-type Row = Omit<Adoption, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes'> & {
+export type Row = Omit<Adoption, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes'> & {
 	altIps: string;
 	tags: string;
 	systemTags: string;
@@ -239,10 +239,10 @@ export class AdoptedProbes {
 	public async fetchAdoptions () {
 		const rows = await this.sql(ADOPTIONS_TABLE)
 			.leftJoin(USERS_TABLE, `${ADOPTIONS_TABLE}.userId`, `${USERS_TABLE}.id`)
-			.select<Row[]>(`${ADOPTIONS_TABLE}.*`, `${USERS_TABLE}.github_username AS githubUsername`, `${USERS_TABLE}.public_probes as publicProbes`)
 			// First item will be preserved, so we are prioritizing online probes.
 			// Sorting by id at the end so order is the same in any table state.
-			.orderByRaw(`${ADOPTIONS_TABLE}.lastSyncDate DESC, ${ADOPTIONS_TABLE}.onlineTimesToday DESC, FIELD(${ADOPTIONS_TABLE}.status, 'ready') DESC, ${ADOPTIONS_TABLE}.id DESC`);
+			.orderByRaw(`${ADOPTIONS_TABLE}.lastSyncDate DESC, ${ADOPTIONS_TABLE}.onlineTimesToday DESC, FIELD(${ADOPTIONS_TABLE}.status, 'ready') DESC, ${ADOPTIONS_TABLE}.id DESC`)
+			.select<Row[]>(`${ADOPTIONS_TABLE}.*`, `${USERS_TABLE}.github_username AS githubUsername`, `${USERS_TABLE}.public_probes as publicProbes`);
 
 		const adoptions: Adoption[] = rows.map(row => ({
 			...row,
