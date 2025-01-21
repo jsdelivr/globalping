@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS gp_adopted_probes (
 	asn INTEGER NOT NULL,
 	network VARCHAR(255) NOT NULL,
 	countryOfCustomCity VARCHAR(255)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS directus_notifications (
 	id CHAR(10),
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS directus_notifications (
 	timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	subject VARCHAR(255),
 	message TEXT
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `gp_tokens` (
 	`date_created` timestamp NULL DEFAULT NULL,
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS gp_credits (
 	user_id VARCHAR(36) NOT NULL,
 	CONSTRAINT gp_credits_user_id_unique UNIQUE (user_id),
 	CONSTRAINT gp_credits_amount_positive CHECK (`amount` >= 0)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS gp_location_overrides (
 	id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -87,4 +87,4 @@ CREATE TABLE IF NOT EXISTS gp_location_overrides (
 	country VARCHAR(255),
 	latitude FLOAT(10, 5),
 	longitude FLOAT(10, 5)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
