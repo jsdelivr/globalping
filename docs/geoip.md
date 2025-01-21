@@ -109,7 +109,8 @@ New data state:
 
 Sort accoriding to the priority. All providers are prioritized so we are able to make a decision in draw situations. Current priority is: `["ipinfo", "ip2location", "maxmind", "ipmap", "fastly"]`, where `"ipinfo"` is the top prioritized.
 Sorting rules are:
-- providers with the same "city" are grouped and go first
+- providers with the same "country" are grouped and go first
+- providers with the same "city" within the top "country" are grouped and go first
 - if there are several groups of the same size, group with the most prioritized provider goes first
 - groups are sorted internally by the priority of providers
 
