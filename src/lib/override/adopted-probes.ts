@@ -13,6 +13,7 @@ const logger = scopedLogger('adopted-probes');
 
 export const ADOPTIONS_TABLE = 'gp_adopted_probes';
 export const NOTIFICATIONS_TABLE = 'directus_notifications';
+export const USERS_TABLE = 'directus_users';
 
 export type Adoption = {
 	id: string;
@@ -29,8 +30,8 @@ export type Adoption = {
 	systemTags: string[];
 	isCustomCity: boolean;
 	status: string;
-	isIPv4Supported: boolean,
-	isIPv6Supported: boolean,
+	isIPv4Supported: boolean;
+	isIPv6Supported: boolean;
 	version: string | null;
 	nodeVersion: string | null;
 	hardwareDevice: string | null;
@@ -42,15 +43,18 @@ export type Adoption = {
 	longitude: number | null;
 	asn: number | null;
 	network: string | null;
+	githubUsername: string | null;
+	publicProbes: boolean;
 }
 
-type Row = Omit<Adoption, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported'> & {
+type Row = Omit<Adoption, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes'> & {
 	altIps: string;
 	tags: string;
 	systemTags: string;
 	isCustomCity: number;
 	isIPv4Supported: number;
 	isIPv6Supported: number;
+	publicProbes: number;
 }
 
 type AdoptionFieldDescription = {
@@ -161,16 +165,20 @@ export class AdoptedProbes {
 		};
 	}
 
-	getUpdatedTags (probe: Probe) {
+	getUpdatedTags (probe: Probe): Tag[] {
 		const adoption = this.getByIp(probe.ipAddress);
 
-		if (!adoption || !adoption.tags.length) {
+		if (!adoption || (!adoption.tags.length && !adoption.publicProbes)) {
 			return probe.tags;
 		}
 
 		return [
 			...probe.tags,
 			...adoption.tags,
+			...(adoption.publicProbes && adoption.githubUsername ? [{
+				type: 'user' as const,
+				value: `u-${adoption.githubUsername}`,
+			}] : []),
 		];
 	}
 
@@ -180,13 +188,6 @@ export class AdoptedProbes {
 
 			if (!adoption) {
 				return probe;
-			}
-
-			const isCustomCity = adoption.isCustomCity;
-			const hasUserTags = adoption.tags && adoption.tags.length;
-
-			if (!isCustomCity && !hasUserTags) {
-				return { ...probe, owner: { id: adoption.userId } };
 			}
 
 			const newLocation = this.getUpdatedLocation(probe.ipAddress, probe.location) || probe.location;
@@ -237,10 +238,11 @@ export class AdoptedProbes {
 
 	public async fetchAdoptions () {
 		const rows = await this.sql(ADOPTIONS_TABLE)
+			.leftJoin(USERS_TABLE, `${ADOPTIONS_TABLE}.userId`, `${USERS_TABLE}.id`)
+			.select<Row[]>(`${ADOPTIONS_TABLE}.*`, `${USERS_TABLE}.github_username AS githubUsername`, `${USERS_TABLE}.public_probes as publicProbes`)
 			// First item will be preserved, so we are prioritizing online probes.
 			// Sorting by id at the end so order is the same in any table state.
-			.orderByRaw(`lastSyncDate DESC, onlineTimesToday DESC, FIELD(status, 'ready') DESC, id DESC`)
-			.select<Row[]>();
+			.orderByRaw(`${ADOPTIONS_TABLE}.lastSyncDate DESC, ${ADOPTIONS_TABLE}.onlineTimesToday DESC, FIELD(${ADOPTIONS_TABLE}.status, 'ready') DESC, ${ADOPTIONS_TABLE}.id DESC`);
 
 		const adoptions: Adoption[] = rows.map(row => ({
 			...row,
@@ -253,6 +255,7 @@ export class AdoptedProbes {
 			isIPv6Supported: Boolean(row.isIPv6Supported),
 			latitude: row.latitude ? normalizeCoordinate(row.latitude) : row.latitude,
 			longitude: row.longitude ? normalizeCoordinate(row.longitude) : row.longitude,
+			publicProbes: Boolean(row.publicProbes),
 		}));
 
 		this.adoptions = adoptions;
