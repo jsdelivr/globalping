@@ -416,14 +416,16 @@ describe('AdoptedProbes', () => {
 
 		expect(sql.raw.callCount).to.equal(2);
 
-		expect(sql.raw.args[0]![1]).to.deep.include({
+		expect(sql.raw.args[0]![1]).to.deep.equal({
 			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
 			subject: 'Your probe\'s location has changed',
+			message: 'Globalping detected that your probe [**probe-1**](/probes/p-1) with IP address **1.1.1.1** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).',
 		});
 
-		expect(sql.raw.args[1]![1]).to.deep.include({
+		expect(sql.raw.args[1]![1]).to.deep.equal({
 			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
-			subject: `Your probe's location has changed`,
+			subject: 'Your probe\'s location has changed',
+			message: 'Globalping detected that your probe [**probe-gb-london-01**](/probes/p-9) with IP address **9.9.9.9** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).',
 		});
 
 		expect(sql.where.callCount).to.equal(2);
@@ -516,9 +518,10 @@ describe('AdoptedProbes', () => {
 
 		expect(sql.raw.callCount).to.equal(4);
 
-		expect(sql.raw.args[2]![1]).to.deep.include({
+		expect(sql.raw.args[2]![1]).to.deep.equal({
 			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
-			subject: `Your probe's location has changed back`,
+			subject: 'Your probe\'s location has changed back',
+			message: 'Globalping detected that your probe [**probe-1**](/probes/p-1) with IP address **1.1.1.1** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 
 		expect(sql.raw.args[3]![1]).to.deep.equal({
