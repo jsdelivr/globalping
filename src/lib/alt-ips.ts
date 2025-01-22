@@ -144,40 +144,42 @@ export class AltIps {
 	/**
 	 * @returns was alt IP added.
 	 */
-	private async addAltIp (localSocket: ServerSocket, ip: string): Promise<boolean> {
-		if (localSocket.data.probe.altIpAddresses.includes(ip)) {
-			logger.info('Alt IP already in the list.', { ip });
+	private async addAltIp (localSocket: ServerSocket, altIp: string): Promise<boolean> {
+		const probeInfo = { probeIp: localSocket.data.probe.ipAddress, probeLocation: localSocket.data.probe.location };
+
+		if (localSocket.data.probe.altIpAddresses.includes(altIp)) {
+			logger.info('Alt IP already in the list.', { altIp });
 			return true;
 		}
 
-		if (isIpPrivate(ip)) {
-			logger.warn('Alt IP is private.', { ip });
+		if (isIpPrivate(altIp)) {
+			logger.warn('Alt IP is private.', { altIp });
 			return false;
 		}
 
 		try {
-			const altIpInfo = await this.geoIpClient.lookup(ip);
+			const altIpInfo = await this.geoIpClient.lookup(altIp);
 
 			if (altIpInfo.country !== localSocket.data.probe.location.country) {
-				logger.warn('Alt IP country doesn\'t match the probe country.', { ip, altIpInfo, probeLocation: localSocket.data.probe.location });
+				logger.warn('Alt IP country doesn\'t match the probe country.', { altIp, altIpInfo, ...probeInfo });
 				return false;
 			}
 
 			if (altIpInfo.isAnycast) {
-				logger.warn('Alt IP is anycast.', { ip, altIpInfo });
+				logger.warn('Alt IP is anycast.', { altIp, altIpInfo, ...probeInfo });
 				return false;
 			}
 		} catch (e) {
 			if (e instanceof ProbeError) {
-				logger.warn('Failed to add an alt IP.', e, { ip });
+				logger.warn('Failed to add an alt IP.', e, { altIp, ...probeInfo });
 			} else {
-				logger.error('Failed to add an alt IP.', e, { ip });
+				logger.error('Failed to add an alt IP.', e, { altIp, ...probeInfo });
 			}
 
 			return false;
 		}
 
-		localSocket.data.probe.altIpAddresses.push(ip);
+		localSocket.data.probe.altIpAddresses.push(altIp);
 		return true;
 	}
 
