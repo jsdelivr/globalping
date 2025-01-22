@@ -767,7 +767,6 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedLocation method should return updated location', async () => {
-		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{
 			...defaultAdoptedProbe,
@@ -796,7 +795,6 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedLocation method should return null if connected.country !== adopted.countryOfCustomCity', async () => {
-		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{
 			...defaultAdoptedProbe,
@@ -814,7 +812,6 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedLocation method should return null if "isCustomCity: false"', async () => {
-		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{
 			...defaultAdoptedProbe,
@@ -830,7 +827,6 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedTags method should return same tags array', async () => {
-		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{ ...defaultAdoptedProbe, tags: '[]' }]);
 
@@ -840,7 +836,6 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedTags method should return user tags', async () => {
-		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 
 		await adoptedProbes.syncDashboardData();
@@ -852,7 +847,6 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedTags method should include user tag if public_probes: true', async () => {
-		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{ ...defaultAdoptedProbe, tags: '[]', publicProbes: 1 }]);
 
