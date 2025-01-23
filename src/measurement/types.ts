@@ -223,10 +223,6 @@ export type MeasurementRecord = {
 /**
  * Probe Messages
  */
-export type MeasurementAckMessage = {
-	id: string;
-	measurementId: string;
-};
 
 export type MeasurementProgressMessage = {
 	testId: string;

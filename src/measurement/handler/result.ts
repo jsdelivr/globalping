@@ -1,8 +1,11 @@
+import type { Probe } from '../../probe/types.js';
 import type { MeasurementResultMessage } from '../types.js';
 import { getMeasurementRunner } from '../runner.js';
+import { probeValidator } from '../../lib/probe-validator.js';
 
 const runner = getMeasurementRunner();
 
-export const handleMeasurementResult = async (data: MeasurementResultMessage): Promise<void> => {
+export const handleMeasurementResult = (probe: Probe) => async (data: MeasurementResultMessage): Promise<void> => {
+	probeValidator.validateProbe(data.measurementId, data.testId, probe.uuid);
 	await runner.recordResult(data);
 };

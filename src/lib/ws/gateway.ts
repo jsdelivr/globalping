@@ -1,4 +1,5 @@
 import { getMetricsAgent } from '../metrics.js';
+import { listenMeasurementRequest } from '../../measurement/handler/request.js';
 import { handleMeasurementAck } from '../../measurement/handler/ack.js';
 import { handleMeasurementResult } from '../../measurement/handler/result.js';
 import { handleMeasurementProgress } from '../../measurement/handler/progress.js';
@@ -41,9 +42,10 @@ io
 		socket.on('probe:isIPv4Supported:update', handleIsIPv4SupportedUpdate(probe));
 		socket.on('probe:dns:update', handleDnsUpdate(probe));
 		socket.on('probe:stats:report', handleStatsReport(probe));
+		socket.onAnyOutgoing(listenMeasurementRequest(probe));
 		subscribeWithHandler(socket, 'probe:measurement:ack', handleMeasurementAck(probe));
-		subscribeWithHandler(socket, 'probe:measurement:progress', handleMeasurementProgress);
-		subscribeWithHandler(socket, 'probe:measurement:result', handleMeasurementResult);
+		subscribeWithHandler(socket, 'probe:measurement:progress', handleMeasurementProgress(probe));
+		subscribeWithHandler(socket, 'probe:measurement:result', handleMeasurementResult(probe));
 
 		socket.on('disconnect', (reason) => {
 			logger.debug(`Probe disconnected. (reason: ${reason}) [${socket.id}][${probe.ipAddress}]`);
