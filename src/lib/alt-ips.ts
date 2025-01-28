@@ -84,7 +84,6 @@ export class AltIps {
 			return;
 		}
 
-
 		if (nodeId === this.syncedProbeList.getNodeId()) {
 			throw createHttpError(400, 'Token value is wrong.', { type: 'wrong_token' });
 		}

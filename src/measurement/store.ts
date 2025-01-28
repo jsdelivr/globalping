@@ -87,20 +87,11 @@ export class MeasurementStore {
 	}
 
 	async storeMeasurementProgress (data: MeasurementProgressMessage): Promise<void> {
-		const key = getMeasurementKey(data.measurementId);
-		const entries = Object.entries(data.result);
-		let progressUpdatePromises;
-
 		if (data.overwrite) {
-			progressUpdatePromises = entries.map(([ field, value ]) => void this.redis.json.set(key, `$.results[${data.testId}].result.${field}`, value));
+			await this.redis.recordProgress(data.measurementId, data.testId, data.result);
 		} else {
-			progressUpdatePromises = entries.map(([ field, value ]) => void this.redis.json.strAppend(key, `$.results[${data.testId}].result.${field}`, value));
+			await this.redis.recordProgressAppend(data.measurementId, data.testId, data.result);
 		}
-
-		await Promise.all([
-			...progressUpdatePromises,
-			this.redis.json.set(key, '$.updatedAt', new Date().toISOString()),
-		]);
 	}
 
 	async storeMeasurementResult (data: MeasurementResultMessage) {
@@ -145,6 +136,7 @@ export class MeasurementStore {
 
 		await Promise.all([
 			this.redis.hDel('gp:in-progress', ids),
+			this.redis.del(ids.map(id => getMeasurementKey(id, 'probes_awaiting'))),
 			...updateMeasurementPromises,
 		]);
 	}

@@ -138,7 +138,7 @@ type HttpTest = {
 	ipVersion: 4 | 6;
 };
 
-type HttpProgress = TestProgress & {
+export type HttpProgress = TestProgress & {
 	rawHeaders?: string;
 	rawBody?: string;
 };
@@ -162,7 +162,7 @@ type HttpResult = TestResult & {
 	};
 };
 
-type TestProgress = {
+export type TestProgress = {
 	rawOutput: string;
 };
 
