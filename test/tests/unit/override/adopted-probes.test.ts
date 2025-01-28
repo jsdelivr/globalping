@@ -1,14 +1,14 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import relativeDayUtc from 'relative-day-utc';
-import { AdoptedProbes } from '../../../../src/lib/override/adopted-probes.js';
+import { AdoptedProbes, Row } from '../../../../src/lib/override/adopted-probes.js';
 import type { Probe } from '../../../../src/probe/types.js';
 
 describe('AdoptedProbes', () => {
-	const defaultAdoptedProbe = {
+	const defaultAdoptedProbe: Row = {
 		id: 'p-1',
+		name: 'probe-1',
 		userId: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
-		username: 'jimaek',
 		ip: '1.1.1.1',
 		altIps: '[]',
 		uuid: '1-1-1-1-1',
@@ -31,6 +31,8 @@ describe('AdoptedProbes', () => {
 		longitude: -6.25,
 		asn: 16509,
 		network: 'Amazon.com, Inc.',
+		githubUsername: 'jimaek',
+		publicProbes: 0,
 	};
 
 	const defaultConnectedProbe: Probe = {
@@ -89,6 +91,7 @@ describe('AdoptedProbes', () => {
 		where: sandbox.stub(),
 		orWhere: sandbox.stub(),
 		whereIn: sandbox.stub(),
+		leftJoin: sandbox.stub(),
 		orderByRaw: sandbox.stub(),
 	} as any;
 	const sqlStub = sandbox.stub() as any;
@@ -104,6 +107,7 @@ describe('AdoptedProbes', () => {
 		sql.where.returns(sql);
 		sql.orWhere.returns(sql);
 		sql.whereIn.returns(sql);
+		sql.leftJoin.returns(sql);
 		sql.orderByRaw.returns(sql);
 		sql.select.resolves([ defaultAdoptedProbe ]);
 		sqlStub.returns(sql);
@@ -420,13 +424,13 @@ describe('AdoptedProbes', () => {
 
 		expect(sql.raw.args[0]![1]).to.deep.equal({
 			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
-			subject: `Your probe's location has changed`,
-			message: 'Globalping detected that your [probe with IP address **1.1.1.1**](/probes/p-1) has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).',
+			subject: 'Your probe\'s location has changed',
+			message: 'Globalping detected that your probe [**probe-1**](/probes/p-1) with IP address **1.1.1.1** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).',
 		});
 
 		expect(sql.raw.args[1]![1]).to.deep.equal({
 			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
-			subject: `Your probe's location has changed`,
+			subject: 'Your probe\'s location has changed',
 			message: 'Globalping detected that your probe [**probe-gb-london-01**](/probes/p-9) with IP address **9.9.9.9** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).',
 		});
 
@@ -524,8 +528,8 @@ describe('AdoptedProbes', () => {
 
 		expect(sql.raw.args[2]![1]).to.deep.equal({
 			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
-			subject: `Your probe's location has changed back`,
-			message: 'Globalping detected that your [probe with IP address **1.1.1.1**](/probes/p-1) has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
+			subject: 'Your probe\'s location has changed back',
+			message: 'Globalping detected that your probe [**probe-1**](/probes/p-1) with IP address **1.1.1.1** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 
 		expect(sql.raw.args[3]![1]).to.deep.equal({
@@ -770,11 +774,11 @@ describe('AdoptedProbes', () => {
 			isCustomCity: false,
 			isIPv4Supported: true,
 			isIPv6Supported: true,
+			publicProbes: false,
 		});
 	});
 
 	it('getUpdatedLocation method should return updated location', async () => {
-		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{
 			...defaultAdoptedProbe,
@@ -803,7 +807,6 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedLocation method should return null if connected.country !== adopted.countryOfCustomCity', async () => {
-		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{
 			...defaultAdoptedProbe,
@@ -821,7 +824,6 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedLocation method should return null if "isCustomCity: false"', async () => {
-		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{
 			...defaultAdoptedProbe,
@@ -836,8 +838,16 @@ describe('AdoptedProbes', () => {
 		expect(updatedLocation).to.equal(null);
 	});
 
-	it('getUpdatedTags method should return updated tags', async () => {
-		delete process.env['SHOULD_SYNC_ADOPTIONS'];
+	it('getUpdatedTags method should return same tags array', async () => {
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		sql.select.resolves([{ ...defaultAdoptedProbe, tags: '[]' }]);
+
+		await adoptedProbes.syncDashboardData();
+		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
+		expect(updatedTags).to.equal(defaultConnectedProbe.tags);
+	});
+
+	it('getUpdatedTags method should return user tags', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 
 		await adoptedProbes.syncDashboardData();
@@ -848,13 +858,15 @@ describe('AdoptedProbes', () => {
 		]);
 	});
 
-	it('getUpdatedTags method should return same tags array if user tags are empty', async () => {
-		delete process.env['SHOULD_SYNC_ADOPTIONS'];
+	it('getUpdatedTags method should include user tag if public_probes: true', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
-		sql.select.resolves([{ ...defaultAdoptedProbe, tags: '[]' }]);
+		sql.select.resolves([{ ...defaultAdoptedProbe, tags: '[]', publicProbes: 1 }]);
 
 		await adoptedProbes.syncDashboardData();
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
-		expect(updatedTags).to.equal(defaultConnectedProbe.tags);
+		expect(updatedTags).to.deep.equal([
+			{ type: 'system', value: 'datacenter-network' },
+			{ type: 'user', value: 'u-jimaek' },
+		]);
 	});
 });
