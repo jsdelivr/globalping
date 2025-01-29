@@ -39,6 +39,7 @@ describe('measurement store', () => {
 		hSet: sandbox.stub(),
 		set: sandbox.stub(),
 		expire: sandbox.stub(),
+		del: sandbox.stub(),
 		json: {
 			mGet: sandbox.stub(),
 			set: sandbox.stub(),
@@ -105,6 +106,9 @@ describe('measurement store', () => {
 		expect(redisMock.json.mGet.firstCall.args).to.deep.equal([ [ 'gp:m:{id1}:results', 'gp:m:{id2}:results' ], '.' ]);
 		expect(redisMock.hDel.callCount).to.equal(1);
 		expect(redisMock.hDel.firstCall.args).to.deep.equal([ 'gp:in-progress', [ 'id1', 'id2' ] ]);
+		expect(redisMock.del.callCount).to.equal(2);
+		expect(redisMock.del.firstCall.args).to.deep.equal([ 'gp:m:{id1}:probes_awaiting' ]);
+		expect(redisMock.del.secondCall.args).to.deep.equal([ 'gp:m:{id2}:probes_awaiting' ]);
 		expect(redisMock.json.set.callCount).to.equal(1);
 
 		expect(redisMock.json.set.firstCall.args).to.have.lengthOf(3);

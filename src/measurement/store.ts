@@ -136,7 +136,7 @@ export class MeasurementStore {
 
 		await Promise.all([
 			this.redis.hDel('gp:in-progress', ids),
-			ids.map(id => this.redis.del((getMeasurementKey(id, 'probes_awaiting')))),
+			...ids.map(id => this.redis.del((getMeasurementKey(id, 'probes_awaiting')))),
 			...updateMeasurementPromises,
 		]);
 	}
