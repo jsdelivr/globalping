@@ -5,7 +5,7 @@ type RecordProgressScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
 	transformArguments (measurementId: string, testId: string, keyToValue: TestProgress | HttpProgress): string[];
-	transformReply (reply: string): null;
+	transformReply (): null;
 } & {
 	SHA1: string;
 };
@@ -14,7 +14,7 @@ type RecordProgressAppendScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
 	transformArguments (measurementId: string, testId: string, keyToValue: TestProgress | HttpProgress): string[];
-	transformReply (reply: string): null;
+	transformReply (): null;
 } & {
 	SHA1: string;
 };
@@ -51,7 +51,7 @@ const recordProgress: RecordProgressScript = defineScript({
 	local keyMeasurementResults = KEYS[1]
 	local keyMeasurementAwaiting = KEYS[2]
 	local testId = ARGV[1]
-	local pathToValueJson = ARGV[2]
+	local keyToValueJson = ARGV[2]
 	local date = ARGV[3]
 
 	local probesAwaiting = redis.call('GET', keyMeasurementAwaiting)
@@ -59,9 +59,9 @@ const recordProgress: RecordProgressScript = defineScript({
 		return
 	end
 
-	local pathToValue = cjson.decode(pathToValueJson)
+	local keyToValue = cjson.decode(keyToValueJson)
 
-	for key, value in pairs(pathToValue) do
+	for key, value in pairs(keyToValue) do
 		redis.call('JSON.SET', keyMeasurementResults, key, value)
 	end
 
@@ -90,7 +90,7 @@ const recordProgressAppend: RecordProgressAppendScript = defineScript({
 	local keyMeasurementResults = KEYS[1]
 	local keyMeasurementAwaiting = KEYS[2]
 	local testId = ARGV[1]
-	local pathToValueJson = ARGV[2]
+	local keyToValueJson = ARGV[2]
 	local date = ARGV[3]
 
 	local probesAwaiting = redis.call('GET', keyMeasurementAwaiting)
@@ -98,9 +98,9 @@ const recordProgressAppend: RecordProgressAppendScript = defineScript({
 		return
 	end
 
-	local pathToValue = cjson.decode(pathToValueJson)
+	local keyToValue = cjson.decode(keyToValueJson)
 
-	for key, value in pairs(pathToValue) do
+	for key, value in pairs(keyToValue) do
 		redis.call('JSON.STRAPPEND', keyMeasurementResults, key, value)
 	end
 
