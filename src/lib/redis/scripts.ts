@@ -4,7 +4,7 @@ import type { HttpProgress, MeasurementRecord, MeasurementResultMessage, TestPro
 type RecordProgressScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
-	transformArguments (measurementId: string, testId: string, keyToValue: TestProgress | HttpProgress): string[];
+	transformArguments (measurementId: string, testId: string, progress: TestProgress | HttpProgress): string[];
 	transformReply (): null;
 } & {
 	SHA1: string;
@@ -13,7 +13,7 @@ type RecordProgressScript = {
 type RecordProgressAppendScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
-	transformArguments (measurementId: string, testId: string, keyToValue: TestProgress | HttpProgress): string[];
+	transformArguments (measurementId: string, testId: string, progress: TestProgress | HttpProgress): string[];
 	transformReply (): null;
 } & {
 	SHA1: string;
@@ -50,31 +50,43 @@ const recordProgress: RecordProgressScript = defineScript({
 	SCRIPT: `
 	local keyMeasurementResults = KEYS[1]
 	local keyMeasurementAwaiting = KEYS[2]
-	local testId = ARGV[1]
-	local keyToValueJson = ARGV[2]
-	local date = ARGV[3]
+	local rawOutputKey = ARGV[1]
+	local rawOutputValue = ARGV[2]
+	local rawHeadersKey = ARGV[3]
+	local rawHeadersValue = ARGV[4]
+	local rawBodyKey = ARGV[5]
+	local rawBodyValue = ARGV[6]
+	local date = ARGV[7]
 
 	local probesAwaiting = redis.call('GET', keyMeasurementAwaiting)
 	if not probesAwaiting then
 		return
 	end
 
-	local keyToValue = cjson.decode(keyToValueJson)
+	redis.call('JSON.SET', keyMeasurementResults, rawOutputKey, rawOutputValue)
 
-	for key, value in pairs(keyToValue) do
-		redis.call('JSON.SET', keyMeasurementResults, key, value)
+	if rawHeadersValue ~= 'nil' then
+		redis.call('JSON.SET', keyMeasurementResults, rawHeadersKey, rawHeadersValue)
+	end
+
+	if rawBodyValue ~= 'nil' then
+		redis.call('JSON.SET', keyMeasurementResults, rawBodyKey, rawBodyValue)
 	end
 
 	redis.call('JSON.SET', keyMeasurementResults, '$.updatedAt', date)
 	`,
-	transformArguments (measurementId, testId, keyToValue) {
+	transformArguments (measurementId, testId, progress) {
 		return [
 			// keys
 			`gp:m:{${measurementId}}:results`,
 			`gp:m:{${measurementId}}:probes_awaiting`,
 			// values
-			testId,
-			JSON.stringify(Object.fromEntries(Object.entries(keyToValue).map(([ key, value ]) => [ `$.results[${testId}].result.${key}`, JSON.stringify(value) ]))),
+			`$.results[${testId}].result.rawOutput`,
+			JSON.stringify(progress.rawOutput),
+			`$.results[${testId}].result.rawHeaders`,
+			'rawHeaders' in progress ? JSON.stringify(progress.rawHeaders) : 'nil',
+			`$.results[${testId}].result.rawBody`,
+			'rawBody' in progress ? JSON.stringify(progress.rawBody) : 'nil',
 			`"${new Date().toISOString()}"`,
 		];
 	},
@@ -89,31 +101,43 @@ const recordProgressAppend: RecordProgressAppendScript = defineScript({
 	SCRIPT: `
 	local keyMeasurementResults = KEYS[1]
 	local keyMeasurementAwaiting = KEYS[2]
-	local testId = ARGV[1]
-	local keyToValueJson = ARGV[2]
-	local date = ARGV[3]
+	local rawOutputKey = ARGV[1]
+	local rawOutputValue = ARGV[2]
+	local rawHeadersKey = ARGV[3]
+	local rawHeadersValue = ARGV[4]
+	local rawBodyKey = ARGV[5]
+	local rawBodyValue = ARGV[6]
+	local date = ARGV[7]
 
 	local probesAwaiting = redis.call('GET', keyMeasurementAwaiting)
 	if not probesAwaiting then
 		return
 	end
 
-	local keyToValue = cjson.decode(keyToValueJson)
+	redis.call('JSON.STRAPPEND', keyMeasurementResults, rawOutputKey, rawOutputValue)
 
-	for key, value in pairs(keyToValue) do
-		redis.call('JSON.STRAPPEND', keyMeasurementResults, key, value)
+	if rawHeadersValue ~= 'nil' then
+		redis.call('JSON.STRAPPEND', keyMeasurementResults, rawHeadersKey, rawHeadersValue)
+	end
+
+	if rawBodyValue ~= 'nil' then
+		redis.call('JSON.STRAPPEND', keyMeasurementResults, rawBodyKey, rawBodyValue)
 	end
 
 	redis.call('JSON.SET', keyMeasurementResults, '$.updatedAt', date)
 	`,
-	transformArguments (measurementId, testId, keyToValue) {
+	transformArguments (measurementId, testId, progress) {
 		return [
 			// keys
 			`gp:m:{${measurementId}}:results`,
 			`gp:m:{${measurementId}}:probes_awaiting`,
 			// values
-			testId,
-			JSON.stringify(Object.fromEntries(Object.entries(keyToValue).map(([ key, value ]) => [ `$.results[${testId}].result.${key}`, JSON.stringify(value) ]))),
+			`$.results[${testId}].result.rawOutput`,
+			JSON.stringify(progress.rawOutput),
+			`$.results[${testId}].result.rawHeaders`,
+			'rawHeaders' in progress ? JSON.stringify(progress.rawHeaders) : 'nil',
+			`$.results[${testId}].result.rawBody`,
+			'rawBody' in progress ? JSON.stringify(progress.rawBody) : 'nil',
 			`"${new Date().toISOString()}"`,
 		];
 	},
