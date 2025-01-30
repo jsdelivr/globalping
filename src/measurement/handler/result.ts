@@ -6,6 +6,6 @@ import { probeValidator } from '../../lib/probe-validator.js';
 const runner = getMeasurementRunner();
 
 export const handleMeasurementResult = (probe: Probe) => async (data: MeasurementResultMessage): Promise<void> => {
-	probeValidator.validateProbe(data.measurementId, data.testId, probe.uuid);
+	await probeValidator.validateProbe(data.measurementId, data.testId, probe.uuid);
 	await runner.recordResult(data);
 };
