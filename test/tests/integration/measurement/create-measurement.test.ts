@@ -634,7 +634,6 @@ describe('Create measurement', () => {
 					.send({
 						type: 'ping',
 						target: 'example.com',
-						limit: 2,
 						locations: [{
 							continent: 'NA',
 						}],
@@ -666,7 +665,6 @@ describe('Create measurement', () => {
 				await requestAgent.get(`/v1/measurements/${id2}`)
 					.expect(200)
 					.expect((response) => {
-						expect(response.body.limit).to.equal(2);
 						expect(response.body.locations).to.deep.equal([{ continent: 'NA' }]);
 						expect(response.body.results[0].result.status).to.equal('offline');
 						expect(response.body.results[0].result.rawOutput).to.equal('This probe is currently offline. Please try again later.');

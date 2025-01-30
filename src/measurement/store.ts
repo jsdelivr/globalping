@@ -73,9 +73,10 @@ export class MeasurementStore {
 			results,
 		};
 		const measurementWithoutDefaults = this.removeDefaults(measurement, request);
+		const testsToProbes = Object.fromEntries(Array.from(onlineProbesMap, ([ testId, probe ]) => [ `${id}_${testId}`, probe.uuid ]));
 
 		await Promise.all([
-			this.redis.hSet('gp:test-to-probe', Object.fromEntries(Array.from(onlineProbesMap, ([ testId, probe ]) => [ `${id}_${testId}`, probe.uuid ]))),
+			!_.isEmpty(testsToProbes) && this.redis.hSet('gp:test-to-probe', testsToProbes),
 			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
 			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: probesAwaitingTtl }),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
