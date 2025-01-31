@@ -336,7 +336,7 @@ describe('Get Probes', () => {
 								asn: 61004,
 								network: 'InterBS S.R.L. (BAEHOST)',
 							},
-							tags: [ 'u-jimaek-dashboardtag1' ],
+							tags: [ 'u-jimaek:dashboardtag1' ],
 							resolvers: [],
 						});
 

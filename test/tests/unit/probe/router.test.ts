@@ -1038,13 +1038,13 @@ describe('probe router', () => {
 			const probe = await buildProbe(String(Date.now()), location);
 			probe.tags = [
 				...probe.tags,
-				{ type: 'user', value: 'u-MartinKolarik-DashboardTag' },
+				{ type: 'user', value: 'u-MartinKolarik:DashboardTag' },
 			];
 
 			const probes: DeepPartial<Probe[]> = [ probe ];
 
 			const locations: Location[] = [
-				{ tags: [ 'u-martinkolarik-dashboardtag' ] },
+				{ tags: [ 'u-martinkolarik:dashboardtag' ] },
 			];
 
 			fetchProbesMock.resolves(probes as never);
