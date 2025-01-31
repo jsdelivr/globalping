@@ -39,11 +39,13 @@ describe('measurement store', () => {
 		hSet: sandbox.stub(),
 		set: sandbox.stub(),
 		expire: sandbox.stub(),
+		del: sandbox.stub(),
 		json: {
 			mGet: sandbox.stub(),
 			set: sandbox.stub(),
-			strAppend: sandbox.stub(),
 		},
+		recordProgress: sandbox.stub(),
+		recordProgressAppend: sandbox.stub(),
 		recordResult: sandbox.stub(),
 		markFinished: sandbox.stub(),
 	};
@@ -104,6 +106,9 @@ describe('measurement store', () => {
 		expect(redisMock.json.mGet.firstCall.args).to.deep.equal([ [ 'gp:m:{id1}:results', 'gp:m:{id2}:results' ], '.' ]);
 		expect(redisMock.hDel.callCount).to.equal(1);
 		expect(redisMock.hDel.firstCall.args).to.deep.equal([ 'gp:in-progress', [ 'id1', 'id2' ] ]);
+		expect(redisMock.del.callCount).to.equal(2);
+		expect(redisMock.del.firstCall.args).to.deep.equal([ 'gp:m:{id1}:probes_awaiting' ]);
+		expect(redisMock.del.secondCall.args).to.deep.equal([ 'gp:m:{id2}:probes_awaiting' ]);
 		expect(redisMock.json.set.callCount).to.equal(1);
 
 		expect(redisMock.json.set.firstCall.args).to.have.lengthOf(3);
@@ -531,7 +536,6 @@ describe('measurement store', () => {
 	});
 
 	it('should store rawHeaders and rawBody fields for the http in-progress updates', async () => {
-		const now = clock.pause().now;
 		const store = getMeasurementStore();
 		await store.storeMeasurementProgress({
 			testId: 'testid',
@@ -543,32 +547,12 @@ describe('measurement store', () => {
 			},
 		});
 
-		expect(redisMock.json.strAppend.callCount).to.equal(3);
+		expect(redisMock.recordProgressAppend.callCount).to.equal(1);
 
-		expect(redisMock.json.strAppend.firstCall.args).to.deep.equal([
-			'gp:m:{measurementid}:results',
-			'$.results[testid].result.rawHeaders',
-			'headers',
-		]);
-
-		expect(redisMock.json.strAppend.secondCall.args).to.deep.equal([
-			'gp:m:{measurementid}:results',
-			'$.results[testid].result.rawBody',
-			'body',
-		]);
-
-		expect(redisMock.json.strAppend.thirdCall.args).to.deep.equal([
-			'gp:m:{measurementid}:results',
-			'$.results[testid].result.rawOutput',
-			'output',
-		]);
-
-		expect(redisMock.json.set.callCount).to.equal(1);
-
-		expect(redisMock.json.set.firstCall.args).to.deep.equal([
-			'gp:m:{measurementid}:results',
-			'$.updatedAt',
-			new Date(now).toISOString(),
+		expect(redisMock.recordProgressAppend.firstCall.args).to.deep.equal([
+			'measurementid',
+			'testid',
+			{ rawHeaders: 'headers', rawBody: 'body', rawOutput: 'output' },
 		]);
 	});
 
@@ -583,8 +567,11 @@ describe('measurement store', () => {
 			},
 		});
 
-		expect(redisMock.json.strAppend.callCount).to.equal(0);
-		expect(redisMock.json.set.callCount).to.equal(2);
+		expect(redisMock.recordProgressAppend.callCount).to.equal(0);
+
+		expect(redisMock.recordProgress.callCount).to.equal(1);
+
+		expect(redisMock.recordProgress.firstCall.args).to.deep.equal([ 'measurementid', 'testid', { rawOutput: 'output' }]);
 	});
 
 	it('should mark measurement as finished if storeMeasurementResult returned record', async () => {
