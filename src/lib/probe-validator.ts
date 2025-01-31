@@ -1,8 +1,11 @@
+import config from 'config';
 import TTLCache from '@isaacs/ttlcache';
 import { type RedisCluster, getMeasurementRedisClient } from './redis/measurement-client.js';
 
 export class ProbeValidator {
-	private readonly testIdToProbeId = new TTLCache<string, string>({ ttl: 60 * 1000 });
+	private readonly testIdToProbeId = new TTLCache<string, string>({
+		ttl: (config.get<number>('measurement.timeout') + 30) * 1000,
+	});
 
 	constructor (private readonly redis: RedisCluster) {}
 
@@ -35,4 +38,12 @@ export class ProbeValidator {
 	}
 }
 
-export const probeValidator = new ProbeValidator(getMeasurementRedisClient());
+let probeValidator: ProbeValidator;
+
+export const getProbeValidator = () => {
+	if (!probeValidator) {
+		probeValidator = new ProbeValidator(getMeasurementRedisClient());
+	}
+
+	return probeValidator;
+};

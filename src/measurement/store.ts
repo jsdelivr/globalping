@@ -54,8 +54,6 @@ export class MeasurementStore {
 	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, Probe>, allProbes: (Probe | OfflineProbe)[]): Promise<string> {
 		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
-
-		const probesAwaitingTtl = config.get<number>('measurement.timeout') + 5;
 		const startTime = new Date();
 		const results = this.probesToResults(allProbes, request.type);
 
@@ -76,13 +74,14 @@ export class MeasurementStore {
 		const testsToProbes = Object.fromEntries(Array.from(onlineProbesMap, ([ testId, probe ]) => [ `${id}_${testId}`, probe.uuid ]));
 
 		await Promise.all([
-			!_.isEmpty(testsToProbes) && this.redis.hSet('gp:test-to-probe', testsToProbes),
 			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
-			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: probesAwaitingTtl }),
+			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: config.get<number>('measurement.timeout') + 30 }),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
 			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', allProbes.map(probe => probe.ipAddress)),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
 			this.redis.expire(getMeasurementKey(id, 'ips'), config.get<number>('measurement.resultTTL')),
+			!_.isEmpty(testsToProbes) && this.redis.hSet('gp:test-to-probe', testsToProbes),
+			!_.isEmpty(testsToProbes) && this.redis.hExpire('gp:test-to-probe', Object.keys(testsToProbes), config.get<number>('measurement.timeout') + 30),
 		]);
 
 		return id;
