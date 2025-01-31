@@ -720,12 +720,12 @@ describe('Create measurement', () => {
 					});
 			});
 
-			it('should create measurement with adopted "tags: ["u-jsdelivr-dashboard-tag"]" location', async () => {
+			it('should create measurement with adopted "tags: ["u-jsdelivr:dashboard-tag"]" location', async () => {
 				await requestAgent.post('/v1/measurements')
 					.send({
 						type: 'ping',
 						target: 'example.com',
-						locations: [{ tags: [ 'u-jsdelivr-dashboard-tag' ], limit: 2 }],
+						locations: [{ tags: [ 'u-jsdelivr:dashboard-tag' ], limit: 2 }],
 					})
 					.expect(202)
 					.expect((response) => {
@@ -736,12 +736,12 @@ describe('Create measurement', () => {
 					});
 			});
 
-			it('should create measurement with adopted "tags: ["u-jsdelivr-Dashboard-Tag"]" in any letter case', async () => {
+			it('should create measurement with adopted "tags: ["u-jsdelivr:Dashboard-Tag"]" in any letter case', async () => {
 				await requestAgent.post('/v1/measurements')
 					.send({
 						type: 'ping',
 						target: 'example.com',
-						locations: [{ tags: [ 'u-jsdelivr-Dashboard-Tag' ], limit: 2 }],
+						locations: [{ tags: [ 'u-jsdelivr:Dashboard-Tag' ], limit: 2 }],
 					})
 					.expect(202)
 					.expect((response) => {
@@ -763,7 +763,7 @@ describe('Create measurement', () => {
 					// Creating an AR probe which has a tag value inside of the content (network name).
 					nock('https://ipinfo.io').get(/.*/).reply(200, {
 						...geoIpMocks.ipinfo.argentina,
-						org: 'AS61004 InterBS u-jsdelivr-dashboard-tag S.R.L.',
+						org: 'AS61004 InterBS u-jsdelivr:dashboard-tag S.R.L.',
 					});
 
 					probe2 = await addFakeProbe();
@@ -783,7 +783,7 @@ describe('Create measurement', () => {
 						.send({
 							type: 'ping',
 							target: 'example.com',
-							locations: [{ magic: 'u-jsdelivr-dashboard-tag', limit: 2 }],
+							locations: [{ magic: 'u-jsdelivr:dashboard-tag', limit: 2 }],
 						})
 						.expect(202)
 						.expect((response) => {
@@ -808,7 +808,7 @@ describe('Create measurement', () => {
 					.send({
 						type: 'ping',
 						target: 'example.com',
-						locations: [{ magic: 'u-jsdelivr-dashboard-tag', limit: 2 }],
+						locations: [{ magic: 'u-jsdelivr:dashboard-tag', limit: 2 }],
 					})
 					.expect(202)
 					.expect((response) => {
@@ -831,7 +831,7 @@ describe('Create measurement', () => {
 					.send({
 						type: 'ping',
 						target: 'example.com',
-						locations: [{ magic: 'U-JSdelivr-Dashboard-TAG', limit: 2 }],
+						locations: [{ magic: 'U-JSdelivr:Dashboard-TAG', limit: 2 }],
 					})
 					.expect(202)
 					.expect((response) => {

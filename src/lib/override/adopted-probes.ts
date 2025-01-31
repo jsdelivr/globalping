@@ -252,8 +252,14 @@ export class AdoptedProbes {
 		const adoptions: Adoption[] = rows.map(row => ({
 			...row,
 			altIps: JSON.parse(row.altIps) as string[],
-			tags: (JSON.parse(row.tags) as { prefix: string; value: string; }[])
-				.map(({ prefix, value }) => ({ type: 'user' as const, value: `u-${prefix}-${value}` })),
+			tags: (JSON.parse(row.tags) as { prefix: string; value: string; format?: string; }[])
+				.map(({ prefix, value, format }) => {
+					if (format === 'v1') {
+						return { type: 'user' as const, value: `u-${prefix}-${value}` };
+					}
+
+					return { type: 'user' as const, value: `u-${prefix}:${value}` };
+				}),
 			systemTags: JSON.parse(row.systemTags) as string[],
 			isCustomCity: Boolean(row.isCustomCity),
 			isIPv4Supported: Boolean(row.isIPv4Supported),
