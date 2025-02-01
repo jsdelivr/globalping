@@ -8,6 +8,7 @@ import type { PingResult } from '../../../../src/measurement/types.js';
 
 const getProbe = (id: string, ip: string) => ({
 	ipAddress: ip,
+	uuid: `${id}-${id}-${id}-${id}-${id}`,
 	altIpAddresses: [],
 	location: {
 		network: id,
@@ -37,6 +38,7 @@ describe('measurement store', () => {
 		hScan: sandbox.stub(),
 		hDel: sandbox.stub(),
 		hSet: sandbox.stub(),
+		hExpire: sandbox.stub(),
 		set: sandbox.stub(),
 		expire: sandbox.stub(),
 		del: sandbox.stub(),
@@ -149,10 +151,11 @@ describe('measurement store', () => {
 			[ getProbe('z', '1.1.1.1'), getProbe('10', '2.2.2.2'), getProbe('x', '3.3.3.3'), getProbe('0', '4.4.4.4') ],
 		);
 
-		expect(redisMock.hSet.callCount).to.equal(1);
+		expect(redisMock.hSet.callCount).to.equal(2);
+
 		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', 'measurementid', now ]);
 		expect(redisMock.set.callCount).to.equal(1);
-		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:m:{measurementid}:probes_awaiting', 4, { EX: 35 }]);
+		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:m:{measurementid}:probes_awaiting', 4, { EX: 60 }]);
 		expect(redisMock.json.set.callCount).to.equal(2);
 
 		expect(redisMock.json.set.args[0]).to.deep.equal([ 'gp:m:{measurementid}:results', '$', {
@@ -235,6 +238,26 @@ describe('measurement store', () => {
 		expect(redisMock.json.set.args[1]).to.deep.equal([ 'gp:m:{measurementid}:ips', '$', [ '1.1.1.1', '2.2.2.2', '3.3.3.3', '4.4.4.4' ] ]);
 
 		expect(redisMock.expire.args[1]).to.deep.equal([ 'gp:m:{measurementid}:ips', 604800 ]);
+
+		expect(redisMock.hSet.args[1]).to.deep.equal([ 'gp:test-to-probe', {
+			measurementid_0: 'z-z-z-z-z',
+			measurementid_1: '10-10-10-10-10',
+			measurementid_2: 'x-x-x-x-x',
+			measurementid_3: '0-0-0-0-0',
+		}]);
+
+		expect(redisMock.hExpire.callCount).to.equal(1);
+
+		expect(redisMock.hExpire.args[0]).to.deep.equal([
+			'gp:test-to-probe',
+			[
+				'measurementid_0',
+				'measurementid_1',
+				'measurementid_2',
+				'measurementid_3',
+			],
+			60,
+		]);
 	});
 
 	it('should initialize measurement object with the proper default values', async () => {
@@ -400,7 +423,7 @@ describe('measurement store', () => {
 			},
 		]);
 
-		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:m:{measurementid}:probes_awaiting', 0, { EX: 35 }]);
+		expect(redisMock.set.args[0]).to.deep.equal([ 'gp:m:{measurementid}:probes_awaiting', 0, { EX: 60 }]);
 	});
 
 	it('should store non-default fields of the measurement request', async () => {

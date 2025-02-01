@@ -223,10 +223,16 @@ export type MeasurementRecord = {
 /**
  * Probe Messages
  */
-export type MeasurementAckMessage = {
-	id: string;
+
+export type MeasurementRequestMessage = {
+	testId: string;
 	measurementId: string;
-};
+	measurement: MeasurementOptions & {
+		type: MeasurementRequest['type'];
+		target: MeasurementRequest['target'];
+		inProgressUpdates: MeasurementRequest['inProgressUpdates'];
+	}
+}
 
 export type MeasurementProgressMessage = {
 	testId: string;
