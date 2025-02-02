@@ -62,7 +62,7 @@ describe('adopted probe', () => {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
-				tags: [ 'u-jimaek-dashboardtag1' ],
+				tags: [ 'u-jimaek:dashboardtag1' ],
 			}],
 		} });
 

@@ -770,7 +770,7 @@ describe('AdoptedProbes', () => {
 			...defaultAdoptedProbe,
 			altIps: [],
 			systemTags: [ 'datacenter-network' ],
-			tags: [{ type: 'user', value: 'u-jimaek-dashboardtag' }],
+			tags: [{ type: 'user', value: 'u-jimaek:dashboardtag' }],
 			isCustomCity: false,
 			isIPv4Supported: true,
 			isIPv6Supported: true,
@@ -854,7 +854,7 @@ describe('AdoptedProbes', () => {
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
 		expect(updatedTags).to.deep.equal([
 			{ type: 'system', value: 'datacenter-network' },
-			{ type: 'user', value: 'u-jimaek-dashboardtag' },
+			{ type: 'user', value: 'u-jimaek:dashboardtag' },
 		]);
 	});
 

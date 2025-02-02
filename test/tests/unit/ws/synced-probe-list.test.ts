@@ -301,7 +301,7 @@ describe('SyncedProbeList', () => {
 		const probe2 = getProbe('B');
 		const sockets = [{ data: { probe: probe1 } }, { data: { probe: probe2 } }];
 
-		const tags = [{ type: 'user', value: 'u-name-tag1' }] as Probe['tags'];
+		const tags = [{ type: 'user', value: 'u-name:tag1' }] as Probe['tags'];
 
 		const adoptedData = { tags } as Probe;
 
