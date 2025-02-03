@@ -5,7 +5,7 @@ import type { ServerSocket } from '../server.js';
 const logger = scopedLogger('ws:handler:error');
 const isError = (error: unknown): error is Error => Boolean(error as Error['message']);
 
-type HandlerMethod = (...args: never[]) => Promise<void>;
+type HandlerMethod = (...args: never[]) => Promise<void> | void;
 
 export const subscribeWithHandler = (socket: ServerSocket, event: string, method: HandlerMethod) => {
 	socket.on(event, async (...args) => {
@@ -21,11 +21,7 @@ export const subscribeWithHandler = (socket: ServerSocket, event: string, method
 			}
 
 			if (Joi.isError(error)) {
-				const messages = error.details.map(({ message, context }) => `${message}. Received: "${context?.value}"`);
-
-				if (messages.length) {
-					details = messages.join('\n');
-				}
+				details = formatJoiError(error);
 			}
 
 			logger.info(`Event "${event}" failed to handle for (${details})`, {
@@ -35,4 +31,18 @@ export const subscribeWithHandler = (socket: ServerSocket, event: string, method
 			logger.debug(`Details:`, error);
 		}
 	});
+};
+
+const formatJoiError = (error: Joi.ValidationError) => {
+	const messages = error.details.map(({ message, context }) => {
+		let str = `${message}.`;
+
+		if (context?.value) {
+			str += `Received: "${context?.value}".`;
+		}
+
+		return str;
+	});
+
+	return messages.length ? error.message : messages.join('\n');
 };

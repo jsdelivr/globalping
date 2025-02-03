@@ -20,13 +20,17 @@ type PingTiming = {
 };
 
 export type PingResult = TestResult & {
+	resolvedAddress: string | null,
+	resolvedHostname: string | null,
 	timings: PingTiming[];
 	stats: {
-		min: number;
-		avg: number;
-		max: number;
-		stddev: number;
-		packetLoss: number;
+		min: number | null,
+		max: number | null,
+		avg: number | null,
+		total: number | null,
+		loss: number | null,
+		rcv: number | null,
+		drop: number | null,
 	};
 };
 
