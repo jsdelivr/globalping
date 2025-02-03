@@ -4,7 +4,7 @@ import type { Location } from '../lib/location/types.js';
  * Network Tests
  */
 
-type TestResult = {
+export type TestResult = {
 	rawOutput: string;
 	status: 'in-progress' | 'finished' | 'failed' | 'offline';
 };
@@ -20,13 +20,17 @@ type PingTiming = {
 };
 
 export type PingResult = TestResult & {
-	timings: PingTiming[];
-	stats: {
-		min: number;
-		avg: number;
-		max: number;
-		stddev: number;
-		packetLoss: number;
+	resolvedAddress?: string | null;
+	resolvedHostname?: string | null;
+	timings?: PingTiming[];
+	stats?: {
+		min: number | null;
+		max: number | null;
+		avg: number | null;
+		total: number | null;
+		loss: number | null;
+		rcv: number | null;
+		drop: number | null;
 	};
 };
 
@@ -41,15 +45,15 @@ type TraceHopTiming = {
 };
 
 type TraceHopResult = {
-	resolvedHostname: string;
-	resolvedAddress: string;
+	resolvedHostname: string | null;
+	resolvedAddress: string | null;
 	timings: TraceHopTiming[];
 };
 
-type TracerouteResult = TestResult & {
-	resolvedHostname: string;
-	resolvedAddress: string;
-	hops: TraceHopResult[];
+export type TracerouteResult = TestResult & {
+	resolvedHostname?: string | null;
+	resolvedAddress?: string | null;
+	hops?: TraceHopResult[];
 };
 
 type MtrTest = {
@@ -71,6 +75,7 @@ type MtrResultHop = {
 		total: number;
 		rcv: number;
 		drop: number;
+		loss: number;
 		stDev: number;
 		jMin: number;
 		jMax: number;
@@ -78,15 +83,14 @@ type MtrResultHop = {
 	};
 	asn: number[];
 	timings: MtrResultHopTiming[];
-	resolvedAddres: string;
-	resolvedHostname: string;
-	duplicate: boolean;
+	resolvedAddress: string | null;
+	resolvedHostname: string | null;
 };
 
-type MtrResult = TestResult & {
-	resolvedAddress: string;
-	resolvedHostname: string;
-	hops: MtrResultHop[];
+export type MtrResult = TestResult & {
+	resolvedAddress?: string | null;
+	resolvedHostname?: string | null;
+	hops?: MtrResultHop[];
 };
 
 type DnsQueryTypes = 'A' | 'AAAA' | 'ANY' | 'CNAME' | 'DNSKEY' | 'DS' | 'HTTPS' | 'MX' | 'NS' | 'NSEC' | 'PTR' | 'RRSIG' | 'SOA' | 'TXT' | 'SRV';
@@ -103,26 +107,28 @@ type DnsTest = {
 };
 
 type DnsAnswer = {
-	name: string;
-	type: DnsQueryTypes;
+	name: string | null;
+	type: DnsQueryTypes | null;
 	ttl: number;
-	class: string;
+	class: string | null;
 	value: string;
 };
 
-type DnsRegularResult = {
-	answers: DnsAnswer[];
-	timings: {
-		total: number;
+export type DnsRegularResult = {
+	statusCodeName?: string;
+	statusCode?: number | null;
+	answers?: DnsAnswer[];
+	resolver?: string | null;
+	timings?: {
+		total: number | null;
 	};
-	resolver: string;
 };
 
-type DnsTraceResult = {
-	hops: DnsRegularResult;
+export type DnsTraceResult = {
+	hops?: DnsRegularResult;
 };
 
-type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);
+export type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);
 
 type HttpTest = {
 	request: {
@@ -143,22 +149,29 @@ export type HttpProgress = TestProgress & {
 	rawBody?: string;
 };
 
-type HttpResult = TestResult & {
-	resolvedAddress: string;
-	headers: Record<string, string>;
-	rawHeaders: string;
-	rawBody: string;
-	truncated: boolean;
-	statusCode: number;
-	timings: Record<string, number>;
-	tls: {
-		[key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type HttpResult = TestResult & {
+	resolvedAddress?: string | null;
+	headers?: Record<string, string | string[]>;
+	rawHeaders?: string | null;
+	rawBody?: string | null;
+	truncated?: boolean;
+	statusCode?: number | null;
+	statusCodeName?: string | null;
+	timings?: Record<string, number | null>;
+	tls?: {
 		authorized: boolean;
-		authorizationError?: string;
+		protocol: string;
+		cipherName: string;
 		createdAt: string;
 		expiresAt: string;
-		issuer: Record<string, string>;
+		authorizationError?: string;
 		subject: Record<string, string>;
+		issuer: Record<string, string>;
+		keyType: 'RSA' | 'EC' | null;
+		keyBits: number | null;
+		serialNumber: string;
+		fingerprint256: string;
+		publicKey: string | null;
 	};
 };
 
@@ -244,6 +257,5 @@ export type MeasurementProgressMessage = {
 export type MeasurementResultMessage = {
 	testId: string;
 	measurementId: string;
-	overwrite?: boolean;
 	result: PingResult | TracerouteResult | DnsResult | MtrResult | HttpResult;
 };

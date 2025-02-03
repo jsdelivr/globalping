@@ -495,6 +495,8 @@ components:
                 "timings": { "total": 325, "download": 1, "firstByte": 219, "dns": 37, "tls": 36, "tcp": 32 },
                 "tls": {
                   "authorized": true,
+                  "protocol": "TLSv1.3",
+                  "cipherName": "TLS_AES_256_GCM_SHA384",
                   "createdAt": "2023-05-02T00:00:00.000Z",
                   "expiresAt": "2024-05-01T23:59:59.000Z",
                   "issuer": {

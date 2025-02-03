@@ -1178,9 +1178,13 @@ components:
                 Indicates whether the `rawBody` value was truncated due to being too big.
             headers:
               type: object
-              description: The HTTP response headers.
+              description: The HTTP response headers. The value may be an array of strings for headers with multiple values, e.g., `Set-Cookie`.
               additionalProperties:
-                type: string
+                oneOf:
+                  - type: string
+                  - type: array
+                    items:
+                      type: string
             statusCode:
               $ref: 'schemas.yaml#/components/schemas/HttpStatusCode'
             statusCodeName:
@@ -1276,6 +1280,8 @@ components:
       title: TlsCertificate
       required:
         - authorized
+        - protocol
+        - cipherName
         - createdAt
         - expiresAt
         - subject
@@ -1290,6 +1296,14 @@ components:
           type: boolean
           description: |
             Indicates whether a trusted authority signed the certificate.
+        protocol:
+          type: string
+          description: |
+            The negotiated SSL/TLS protocol version.
+        cipherName:
+          type: string
+          description: |
+            OpenSSL name of the cipher suite.
         error:
           type: string
           description: |
@@ -1337,10 +1351,6 @@ components:
     TlsCertificateIssuer:
       type: object
       description: Information about the certificate issuer.
-      required:
-        - C
-        - O
-        - CN
       properties:
         C:
           type: string
@@ -1354,9 +1364,6 @@ components:
     TlsCertificateSubject:
       type: object
       description: Information about the certificate subject.
-      required:
-        - CN
-        - alt
       properties:
         CN:
           type: string
