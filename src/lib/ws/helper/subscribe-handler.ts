@@ -1,6 +1,6 @@
-import type { ServerSocket } from '../server.js';
-
+import Joi from 'joi';
 import { scopedLogger } from '../../logger.js';
+import type { ServerSocket } from '../server.js';
 
 const logger = scopedLogger('ws:handler:error');
 const isError = (error: unknown): error is Error => Boolean(error as Error['message']);
@@ -14,9 +14,24 @@ export const subscribeWithHandler = (socket: ServerSocket, event: string, method
 		} catch (error: unknown) {
 			const probe = socket.data.probe;
 			const clientIp = probe.ipAddress;
-			const reason = isError(error) ? error.message : 'unknown';
+			let details = 'unknown';
 
-			logger.info(`Event "${event}" failed to handle for (${reason})`, { client: { id: socket.id, ip: clientIp } });
+			if (isError(error)) {
+				details = error.message;
+			}
+
+			if (Joi.isError(error)) {
+				const messages = error.details.map(({ message, context }) => `${message}. Received: "${context?.value}"`);
+
+				if (messages.length) {
+					details = messages.join('\n');
+				}
+			}
+
+			logger.info(`Event "${event}" failed to handle for (${details})`, {
+				client: { id: socket.id, ip: clientIp },
+			});
+
 			logger.debug(`Details:`, error);
 		}
 	});

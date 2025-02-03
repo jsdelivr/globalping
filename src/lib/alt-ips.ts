@@ -146,6 +146,10 @@ export class AltIps {
 	private async addAltIp (localSocket: ServerSocket, altIp: string): Promise<boolean> {
 		const probeInfo = { probeIp: localSocket.data.probe.ipAddress, probeLocation: localSocket.data.probe.location };
 
+		if (process.env['FAKE_PROBE_IP']) {
+			return false;
+		}
+
 		if (localSocket.data.probe.altIpAddresses.includes(altIp)) {
 			logger.info('Alt IP already in the list.', { altIp });
 			return true;

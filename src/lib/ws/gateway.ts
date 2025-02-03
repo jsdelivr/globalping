@@ -37,7 +37,7 @@ io
 		logger.info(`WS client connected.`, { client: { id: socket.id, ip: probe.ipAddress }, location: { city: location.city, country: location.country, network: location.network } });
 
 		// Handlers
-		socket.on('probe:status:update', handleStatusUpdate(probe));
+		subscribeWithHandler(socket, 'probe:status:update', handleStatusUpdate(probe));
 		socket.on('probe:isIPv6Supported:update', handleIsIPv6SupportedUpdate(probe));
 		socket.on('probe:isIPv4Supported:update', handleIsIPv4SupportedUpdate(probe));
 		socket.on('probe:dns:update', handleDnsUpdate(probe));
