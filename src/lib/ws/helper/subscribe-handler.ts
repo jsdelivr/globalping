@@ -14,19 +14,21 @@ export const subscribeWithHandler = (socket: ServerSocket, event: string, method
 		} catch (error: unknown) {
 			const probe = socket.data.probe;
 			const clientIp = probe.ipAddress;
-			let details = 'unknown';
+			const metadata: Record<string, unknown> = {
+				client: { id: socket.id, ip: clientIp },
+				details: 'unknown',
+			};
 
 			if (isError(error)) {
-				details = error.message;
+				metadata['details'] = error.message;
 			}
 
 			if (Joi.isError(error)) {
-				details = formatJoiError(error);
+				metadata['details'] = formatJoiError(error);
+				metadata['validationInput'] = error._original;
 			}
 
-			logger.info(`Event "${event}" failed to handle for (${details})`, {
-				client: { id: socket.id, ip: clientIp },
-			});
+			logger.info(`Event "${event}" failed to handle`, metadata);
 
 			logger.debug(`Details:`, error);
 		}
