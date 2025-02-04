@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import type { Probe } from '../../probe/types.js';
-import type { DnsRegularResult, DnsTraceResult, MeasurementResultMessage, PingResult, TestResult, TracerouteResult } from '../types.js';
+import type { DnsRegularResult, DnsTraceResult, MeasurementResultMessage, MtrResult, PingResult, TestResult, TracerouteResult } from '../types.js';
 import { getMeasurementRunner } from '../runner.js';
 import { getProbeValidator } from '../../lib/probe-validator.js';
 
@@ -32,9 +32,9 @@ const tracerouteResultSchema = Joi.object<TracerouteResult>({
 	hops: Joi.array().items(Joi.object({
 		resolvedAddress: Joi.string().allow(null).required(),
 		resolvedHostname: Joi.string().allow(null).required(),
-		timings: Joi.array().items({
+		timings: Joi.array().items(Joi.object({
 			rtt: Joi.number().required(),
-		}).required(),
+		})).required(),
 	})),
 });
 
@@ -42,22 +42,22 @@ const dnsResultSchema = Joi.alternatives([
 	Joi.object<TestResult & DnsRegularResult>({
 		status: Joi.string().valid('finished', 'failed').required(),
 		rawOutput: Joi.string().required(),
-		statusCodeName: Joi.string().required(),
-		statusCode: Joi.number().allow(null).required(),
-		resolver: Joi.string().allow(null).required(),
+		statusCodeName: Joi.string(),
+		statusCode: Joi.number().allow(null),
+		resolver: Joi.string().allow(null),
 		timings: Joi.object({
-			total: Joi.number().allow(null),
-		}).required(),
+			total: Joi.number().allow(null).required(),
+		}),
 		answers: Joi.array().items(Joi.alternatives([
 			Joi.object({
-				name: Joi.string().allow(null),
-				type: Joi.string().allow(null),
-				ttl: Joi.number(),
-				class: Joi.string().allow(null),
-				value: Joi.string(),
+				name: Joi.string().allow(null).required(),
+				type: Joi.string().allow(null).required(),
+				ttl: Joi.number().required(),
+				class: Joi.string().allow(null).required(),
+				value: Joi.string().required(),
 			}),
 			Joi.object({}),
-		])).required(),
+		])),
 	}),
 	Joi.object<TestResult & DnsTraceResult>({
 		status: Joi.string().valid('finished', 'failed').required(),
@@ -65,21 +65,50 @@ const dnsResultSchema = Joi.alternatives([
 		hops: Joi.array().items(Joi.object({
 			resolver: Joi.string().allow(null).required(),
 			timings: Joi.object({
-				total: Joi.number().allow(null),
+				total: Joi.number().allow(null).required(),
 			}).required(),
 			answers: Joi.array().items(Joi.alternatives([
 				Joi.object({
-					name: Joi.string().allow(null),
-					type: Joi.string().allow(null),
-					ttl: Joi.number(),
-					class: Joi.string().allow(null),
-					value: Joi.string(),
+					name: Joi.string().allow(null).required(),
+					type: Joi.string().allow(null).required(),
+					ttl: Joi.number().required(),
+					class: Joi.string().allow(null).required(),
+					value: Joi.string().required(),
 				}),
 				Joi.object({}),
 			])).required(),
 		})),
 	}),
 ]);
+
+const mtrResultSchema = Joi.object<MtrResult>({
+	status: Joi.string().valid('finished', 'failed').required(),
+	rawOutput: Joi.string().required(),
+	resolvedAddress: Joi.string().allow(null),
+	resolvedHostname: Joi.string().allow(null),
+	hops: Joi.array().items(Joi.object({
+		asn: Joi.array().items(Joi.number()).required(),
+		resolvedAddress: Joi.string().allow(null).required(),
+		resolvedHostname: Joi.string().allow(null).required(),
+		stats: Joi.object({
+			min: Joi.number().required(),
+			max: Joi.number().required(),
+			avg: Joi.number().required(),
+			total: Joi.number().required(),
+			loss: Joi.number().required(),
+			rcv: Joi.number().required(),
+			drop: Joi.number().required(),
+			stDev: Joi.number().required(),
+			jMin: Joi.number().required(),
+			jMax: Joi.number().required(),
+			jAvg: Joi.number().required(),
+		}).required(),
+		timings: Joi.array().items(Joi.object({
+			seq: Joi.string(),
+			rtt: Joi.number(),
+		})).required(),
+	})),
+});
 
 const schema = Joi.object<MeasurementResultMessage>({
 	testId: Joi.string().required(),
@@ -89,6 +118,7 @@ const schema = Joi.object<MeasurementResultMessage>({
 		pingResultSchema,
 		tracerouteResultSchema,
 		dnsResultSchema,
+		mtrResultSchema,
 	]).required(),
 }).required();
 
