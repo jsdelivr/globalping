@@ -1,27 +1,41 @@
 import Joi from 'joi';
 import type { Probe } from '../../probe/types.js';
-import type { MeasurementResultMessage, PingResult } from '../types.js';
+import type { MeasurementResultMessage, PingResult, TracerouteResult } from '../types.js';
 import { getMeasurementRunner } from '../runner.js';
 import { getProbeValidator } from '../../lib/probe-validator.js';
 
 const pingResultSchema = Joi.object<PingResult>({
 	status: Joi.string().required(),
 	rawOutput: Joi.string().required(),
-	resolvedAddress: Joi.string().required().allow(null),
-	resolvedHostname: Joi.string().required().allow(null),
+	resolvedAddress: Joi.string().allow(null),
+	resolvedHostname: Joi.string().allow(null),
 	timings: Joi.array().items(Joi.object({
 		rtt: Joi.number().required(),
 		ttl: Joi.number().required(),
-	})).required(),
+	})),
 	stats: Joi.object({
-		min: Joi.number().required().allow(null),
-		max: Joi.number().required().allow(null),
-		avg: Joi.number().required().allow(null),
-		total: Joi.number().required().allow(null),
-		loss: Joi.number().required().allow(null),
-		rcv: Joi.number().required().allow(null),
-		drop: Joi.number().required().allow(null),
-	}).required(),
+		min: Joi.number().allow(null).required(),
+		max: Joi.number().allow(null).required(),
+		avg: Joi.number().allow(null).required(),
+		total: Joi.number().allow(null).required(),
+		loss: Joi.number().allow(null).required(),
+		rcv: Joi.number().allow(null).required(),
+		drop: Joi.number().allow(null).required(),
+	}),
+});
+
+const tracerouteResultSchema = Joi.object<TracerouteResult>({
+	status: Joi.string().required(),
+	rawOutput: Joi.string().required(),
+	resolvedAddress: Joi.string().allow(null),
+	resolvedHostname: Joi.string().allow(null),
+	hops: Joi.array().items(Joi.object({
+		resolvedAddress: Joi.string().allow(null).required(),
+		resolvedHostname: Joi.string().allow(null).required(),
+		timings: Joi.array().items({
+			rtt: Joi.number().required(),
+		}).required(),
+	})),
 });
 
 const schema = Joi.object<MeasurementResultMessage>({
@@ -30,6 +44,7 @@ const schema = Joi.object<MeasurementResultMessage>({
 	overwrite: Joi.boolean(),
 	result: Joi.alternatives([
 		pingResultSchema,
+		tracerouteResultSchema,
 	]).required(),
 }).required();
 

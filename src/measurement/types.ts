@@ -45,14 +45,14 @@ type TraceHopTiming = {
 };
 
 type TraceHopResult = {
-	resolvedHostname: string;
-	resolvedAddress: string;
+	resolvedHostname: string | null;
+	resolvedAddress: string | null;
 	timings: TraceHopTiming[];
 };
 
-type TracerouteResult = TestResult & {
-	resolvedHostname: string;
-	resolvedAddress: string;
+export type TracerouteResult = TestResult & {
+	resolvedHostname: string | null;
+	resolvedAddress: string | null;
 	hops: TraceHopResult[];
 };
 
@@ -87,7 +87,7 @@ type MtrResultHop = {
 	duplicate: boolean;
 };
 
-type MtrResult = TestResult & {
+export type MtrResult = TestResult & {
 	resolvedAddress: string;
 	resolvedHostname: string;
 	hops: MtrResultHop[];
@@ -126,7 +126,7 @@ type DnsTraceResult = {
 	hops: DnsRegularResult;
 };
 
-type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);
+export type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);
 
 type HttpTest = {
 	request: {
@@ -147,7 +147,7 @@ export type HttpProgress = TestProgress & {
 	rawBody?: string;
 };
 
-type HttpResult = TestResult & {
+export type HttpResult = TestResult & {
 	resolvedAddress: string;
 	headers: Record<string, string>;
 	rawHeaders: string;
