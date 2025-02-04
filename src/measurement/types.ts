@@ -4,7 +4,7 @@ import type { Location } from '../lib/location/types.js';
  * Network Tests
  */
 
-type TestResult = {
+export type TestResult = {
 	rawOutput: string;
 	status: 'in-progress' | 'finished' | 'failed' | 'offline';
 };
@@ -107,22 +107,24 @@ type DnsTest = {
 };
 
 type DnsAnswer = {
-	name: string;
-	type: DnsQueryTypes;
+	name: string | null;
+	type: DnsQueryTypes | null;
 	ttl: number;
-	class: string;
+	class: string | null;
 	value: string;
 };
 
-type DnsRegularResult = {
+export type DnsRegularResult = {
+	statusCodeName: string;
+	statusCode: number | null;
 	answers: DnsAnswer[];
 	timings: {
-		total: number;
+		total: number | null;
 	};
-	resolver: string;
+	resolver: string | null;
 };
 
-type DnsTraceResult = {
+export type DnsTraceResult = {
 	hops: DnsRegularResult;
 };
 
