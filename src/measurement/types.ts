@@ -20,17 +20,17 @@ type PingTiming = {
 };
 
 export type PingResult = TestResult & {
-	resolvedAddress: string | null,
-	resolvedHostname: string | null,
+	resolvedAddress: string | null;
+	resolvedHostname: string | null;
 	timings: PingTiming[];
 	stats: {
-		min: number | null,
-		max: number | null,
-		avg: number | null,
-		total: number | null,
-		loss: number | null,
-		rcv: number | null,
-		drop: number | null,
+		min: number | null;
+		max: number | null;
+		avg: number | null;
+		total: number | null;
+		loss: number | null;
+		rcv: number | null;
+		drop: number | null;
 	};
 };
 
@@ -150,21 +150,33 @@ export type HttpProgress = TestProgress & {
 };
 
 export type HttpResult = TestResult & {
-	resolvedAddress: string;
+	resolvedAddress: string | null;
 	headers: Record<string, string>;
-	rawHeaders: string;
-	rawBody: string;
+	rawHeaders: string | null;
+	rawBody: string | null;
 	truncated: boolean;
-	statusCode: number;
+	statusCode: number | null;
+	statusCodeName: string | null;
 	timings: Record<string, number>;
 	tls: {
-		[key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 		authorized: boolean;
-		authorizationError?: string;
 		createdAt: string;
 		expiresAt: string;
-		issuer: Record<string, string>;
-		subject: Record<string, string>;
+		authorizationError?: string;
+		subject: {
+			CN: string;
+			alt: string | null;
+		};
+		issuer: {
+			C: string;
+			O: string;
+			CN: string;
+		};
+		keyType: 'RSA' | 'EC' | null;
+		keyBits: number | null;
+		serialNumber: string;
+		fingerprint256: string;
+		publicKey: string | null;
 	};
 };
 

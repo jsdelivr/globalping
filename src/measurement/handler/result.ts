@@ -1,6 +1,6 @@
 import Joi from 'joi';
 import type { Probe } from '../../probe/types.js';
-import type { DnsRegularResult, DnsTraceResult, MeasurementResultMessage, MtrResult, PingResult, TestResult, TracerouteResult } from '../types.js';
+import type { DnsRegularResult, DnsTraceResult, HttpResult, MeasurementResultMessage, MtrResult, PingResult, TestResult, TracerouteResult } from '../types.js';
 import { getMeasurementRunner } from '../runner.js';
 import { getProbeValidator } from '../../lib/probe-validator.js';
 
@@ -110,6 +110,38 @@ const mtrResultSchema = Joi.object<MtrResult>({
 	})),
 });
 
+const httpResultSchema = Joi.object<HttpResult>({
+	status: Joi.string().valid('finished', 'failed').required(),
+	rawOutput: Joi.string().allow(null).required(),
+	resolvedAddress: Joi.string().allow(null),
+	headers: Joi.object().pattern(Joi.string(), Joi.string()),
+	rawHeaders: Joi.string().allow(null),
+	rawBody: Joi.string().allow(null),
+	truncated: Joi.boolean(),
+	statusCode: Joi.number().allow(null),
+	statusCodeName: Joi.string().allow(null),
+	timings: Joi.object().pattern(Joi.string(), Joi.number().allow(null)),
+	tls: Joi.object({
+		authorized: Joi.boolean().required(),
+		createdAt: Joi.string(),
+		expiresAt: Joi.string(),
+		subject: Joi.object({
+			CN: Joi.string().required(),
+			alt: Joi.string().allow(null).required(),
+		}).required(),
+		issuer: Joi.object({
+			C: Joi.string().required(),
+			O: Joi.string().required(),
+			CN: Joi.string().required(),
+		}).required(),
+		keyType: Joi.string().valid('RSA', 'EC').allow(null).required(),
+		keyBits: Joi.number().allow(null).required(),
+		serialNumber: Joi.string().required(),
+		fingerprint256: Joi.string().required(),
+		publicKey: Joi.string().allow(null).required(),
+	}).allow(null),
+});
+
 const schema = Joi.object<MeasurementResultMessage>({
 	testId: Joi.string().required(),
 	measurementId: Joi.string().required(),
@@ -119,6 +151,7 @@ const schema = Joi.object<MeasurementResultMessage>({
 		tracerouteResultSchema,
 		dnsResultSchema,
 		mtrResultSchema,
+		httpResultSchema,
 	]).required(),
 }).required();
 
