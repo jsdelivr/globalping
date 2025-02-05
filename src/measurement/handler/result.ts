@@ -42,7 +42,7 @@ const dnsResultSchema = Joi.alternatives([
 	Joi.object<TestResult & DnsRegularResult>({
 		status: Joi.string().valid('finished', 'failed').required(),
 		rawOutput: Joi.string().required(),
-		statusCodeName: Joi.string(),
+		statusCodeName: Joi.string().allow(null),
 		statusCode: Joi.number().allow(null),
 		resolver: Joi.string().allow(null),
 		timings: Joi.object({
