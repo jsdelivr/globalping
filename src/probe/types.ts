@@ -81,7 +81,6 @@ export type OfflineProbe = Modify<Probe, {
 	}[];
 	stats: {
 		cpu: {
-			count: null;
 			load: [];
 		};
 		jobs: {

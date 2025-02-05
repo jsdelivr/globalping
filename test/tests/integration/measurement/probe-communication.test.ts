@@ -6,10 +6,10 @@ import type { Socket } from 'socket.io-client';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
-import { waitForProbesUpdate } from '../../../utils/server.js';
 
 describe('Create measurement request', () => {
 	let probe: Socket;
+	let waitForProbesUpdate: () => Promise<void>;
 	let addFakeProbe: (events?: Record<string, any>) => Promise<Socket>;
 	let deleteFakeProbes: () => Promise<void>;
 	let getTestServer;
@@ -24,7 +24,7 @@ describe('Create measurement request', () => {
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
-		({ getTestServer, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
+		({ getTestServer, waitForProbesUpdate, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
 	});
@@ -303,30 +303,105 @@ describe('Create measurement request', () => {
 			});
 	});
 
+	it('should validate incoming messages', async () => {
+		probe.emit('probe:status:update', 'ready');
+		probe.emit('probe:isIPv4Supported:update', true);
+		probe.emit('probe:isIPv6Supported:update', true);
+		await waitForProbesUpdate();
+
+		await requestAgent.post('/v1/measurements').send({
+			type: 'ping',
+			target: 'jsdelivr.com',
+			locations: [{ country: 'US' }],
+			measurementOptions: {
+				packets: 4,
+			},
+		});
+
+		await setTimeout(20);
+
+		await requestAgent.get(`/v1/measurements/measurementid`).send().expect(200).expect((response) => {
+			expect(response.body.results[0].result).to.deep.include({
+				status: 'in-progress',
+				rawOutput: '',
+			});
+		});
+
+		probe.emit('probe:measurement:ack', null, () => {});
+
+		probe.emit('probe:measurement:progress', {
+			testId: '0',
+			measurementId: 'measurementid',
+			result: {
+				invalidField: 'Invalid field value',
+			},
+		});
+
+		await requestAgent.get(`/v1/measurements/measurementid`).send().expect(200).expect((response) => {
+			expect(response.body.results[0].result).to.deep.include({
+				status: 'in-progress',
+				rawOutput: '',
+			});
+		});
+
+		probe.emit('probe:measurement:progress', {
+			testId: '0',
+			measurementId: 'measurementid',
+			result: {
+				rawOutput: 'Valid progress value',
+			},
+		});
+
+		await requestAgent.get(`/v1/measurements/measurementid`).send().expect(200).expect((response) => {
+			expect(response.body.results[0].result).to.deep.include({
+				status: 'in-progress',
+				rawOutput: 'Valid progress value',
+			});
+		});
+
+		probe.emit('probe:measurement:result', {
+			testId: '0',
+			measurementId: 'measurementid',
+			result: {
+				status: 'invalid-status',
+				rawOutput: 'Result with invalid status value',
+				resolvedHostname: 'jsdelivr.com',
+				resolvedAddress: '1.1.1.1',
+				stats: {
+					min: 1,
+					avg: 1,
+					max: 1,
+					total: 4,
+					rcv: 4,
+					drop: 0,
+					loss: 0,
+				},
+				timings: [],
+			},
+		});
+
+		await setTimeout(100); // We need to wait until all redis writes finish
+
+		await requestAgent.get(`/v1/measurements/measurementid`).send()
+			.expect(200).expect((response) => {
+				expect(response.body.results[0].result).to.deep.equal({
+					status: 'failed',
+					rawOutput: 'Measurement result validation failed',
+				});
+			});
+	});
+
 	it('should handle stats event from probe', async () => {
 		probe.emit('probe:stats:report', {
 			jobs: {
 				count: 0,
 			},
 			cpu: {
-				count: 4,
 				load: [
-					{
-						usage: 1.02,
-						idle: 98.98,
-					},
-					{
-						usage: 6.32,
-						idle: 93.68,
-					},
-					{
-						usage: 2.06,
-						idle: 97.94,
-					},
-					{
-						usage: 43,
-						idle: 57,
-					},
+					{ usage: 1.02 },
+					{ usage: 6.32 },
+					{ usage: 2.06 },
+					{ usage: 43 },
 				],
 			},
 		});
@@ -361,12 +436,11 @@ describe('Create measurement request', () => {
 							count: 0,
 						},
 						cpu: {
-							count: 4,
 							load: [
-								{ usage: 1.02, idle: 98.98 },
-								{ usage: 6.32, idle: 93.68 },
-								{ usage: 2.06, idle: 97.94 },
-								{ usage: 43, idle: 57 },
+								{ usage: 1.02 },
+								{ usage: 6.32 },
+								{ usage: 2.06 },
+								{ usage: 43 },
 							],
 						},
 					},

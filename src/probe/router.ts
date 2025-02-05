@@ -177,7 +177,6 @@ export class ProbeRouter {
 		tags: test.probe.tags.map(tag => ({ value: tag, type: 'offline' })),
 		stats: {
 			cpu: {
-				count: null,
 				load: [],
 			},
 			jobs: { count: null },
