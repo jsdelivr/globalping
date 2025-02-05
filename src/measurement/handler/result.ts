@@ -145,7 +145,6 @@ const httpResultSchema = Joi.object<HttpResult>({
 const schema = Joi.object<MeasurementResultMessage>({
 	testId: Joi.string().required(),
 	measurementId: Joi.string().required(),
-	overwrite: Joi.boolean(),
 	result: Joi.alternatives([
 		pingResultSchema,
 		tracerouteResultSchema,
@@ -158,12 +157,22 @@ const schema = Joi.object<MeasurementResultMessage>({
 const runner = getMeasurementRunner();
 
 export const handleMeasurementResult = (probe: Probe) => async (data: MeasurementResultMessage): Promise<void> => {
+	await getProbeValidator().validateProbe(data.measurementId, data.testId, probe.uuid);
+
 	const validation = schema.validate(data);
 
 	if (validation.error) {
+		(data.measurementId && data.testId) && await runner.recordResult({
+			measurementId: data.measurementId,
+			testId: data.testId,
+			result: {
+				status: 'failed',
+				rawOutput: 'Measurement result validation failed',
+			},
+		});
+
 		throw validation.error;
 	}
 
-	await getProbeValidator().validateProbe(data.measurementId, data.testId, probe.uuid);
 	await runner.recordResult(data);
 };
