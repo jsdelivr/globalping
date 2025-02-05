@@ -20,10 +20,10 @@ type PingTiming = {
 };
 
 export type PingResult = TestResult & {
-	resolvedAddress: string | null;
-	resolvedHostname: string | null;
-	timings: PingTiming[];
-	stats: {
+	resolvedAddress?: string | null;
+	resolvedHostname?: string | null;
+	timings?: PingTiming[];
+	stats?: {
 		min: number | null;
 		max: number | null;
 		avg: number | null;
@@ -51,9 +51,9 @@ type TraceHopResult = {
 };
 
 export type TracerouteResult = TestResult & {
-	resolvedHostname: string | null;
-	resolvedAddress: string | null;
-	hops: TraceHopResult[];
+	resolvedHostname?: string | null;
+	resolvedAddress?: string | null;
+	hops?: TraceHopResult[];
 };
 
 type MtrTest = {
@@ -88,9 +88,9 @@ type MtrResultHop = {
 };
 
 export type MtrResult = TestResult & {
-	resolvedAddress: string;
-	resolvedHostname: string;
-	hops: MtrResultHop[];
+	resolvedAddress?: string;
+	resolvedHostname?: string;
+	hops?: MtrResultHop[];
 };
 
 type DnsQueryTypes = 'A' | 'AAAA' | 'ANY' | 'CNAME' | 'DNSKEY' | 'DS' | 'HTTPS' | 'MX' | 'NS' | 'NSEC' | 'PTR' | 'RRSIG' | 'SOA' | 'TXT' | 'SRV';
@@ -115,17 +115,17 @@ type DnsAnswer = {
 };
 
 export type DnsRegularResult = {
-	statusCodeName: string;
-	statusCode: number | null;
-	answers: DnsAnswer[];
-	timings: {
+	statusCodeName?: string;
+	statusCode?: number | null;
+	answers?: DnsAnswer[];
+	resolver?: string | null;
+	timings?: {
 		total: number | null;
 	};
-	resolver: string | null;
 };
 
 export type DnsTraceResult = {
-	hops: DnsRegularResult;
+	hops?: DnsRegularResult;
 };
 
 export type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);
@@ -150,15 +150,15 @@ export type HttpProgress = TestProgress & {
 };
 
 export type HttpResult = TestResult & {
-	resolvedAddress: string | null;
-	headers: Record<string, string>;
-	rawHeaders: string | null;
-	rawBody: string | null;
-	truncated: boolean;
-	statusCode: number | null;
-	statusCodeName: string | null;
-	timings: Record<string, number>;
-	tls: {
+	resolvedAddress?: string | null;
+	headers?: Record<string, string>;
+	rawHeaders?: string | null;
+	rawBody?: string | null;
+	truncated?: boolean;
+	statusCode?: number | null;
+	statusCodeName?: string | null;
+	timings?: Record<string, number>;
+	tls?: {
 		authorized: boolean;
 		createdAt: string;
 		expiresAt: string;
@@ -262,6 +262,5 @@ export type MeasurementProgressMessage = {
 export type MeasurementResultMessage = {
 	testId: string;
 	measurementId: string;
-	overwrite?: boolean;
 	result: PingResult | TracerouteResult | DnsResult | MtrResult | HttpResult;
 };
