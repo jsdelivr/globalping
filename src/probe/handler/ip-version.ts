@@ -1,10 +1,8 @@
-import Joi from 'joi';
 import type { Probe } from '../types.js';
-
-const schema = Joi.boolean().required();
+import { ipVersionSchema } from '../schema/probe-response-schema.js';
 
 export const handleIsIPv4SupportedUpdate = (probe: Probe) => (isIPv4Supported: boolean): void => {
-	const validation = schema.validate(isIPv4Supported);
+	const validation = ipVersionSchema.validate(isIPv4Supported);
 
 	if (validation.error) {
 		throw validation.error;
@@ -14,7 +12,7 @@ export const handleIsIPv4SupportedUpdate = (probe: Probe) => (isIPv4Supported: b
 };
 
 export const handleIsIPv6SupportedUpdate = (probe: Probe) => (isIPv6Supported: boolean): void => {
-	const validation = schema.validate(isIPv6Supported);
+	const validation = ipVersionSchema.validate(isIPv6Supported);
 
 	if (validation.error) {
 		throw validation.error;
