@@ -24,5 +24,5 @@ export const handleMeasurementResult = (probe: Probe) => async (data: Measuremen
 		throw validation.error;
 	}
 
-	await runner.recordResult(data);
+	await runner.recordResult(validation.value);
 };

@@ -157,21 +157,14 @@ export type HttpResult = TestResult & {
 	truncated?: boolean;
 	statusCode?: number | null;
 	statusCodeName?: string | null;
-	timings?: Record<string, number>;
+	timings?: Record<string, number | null>;
 	tls?: {
 		authorized: boolean;
 		createdAt: string;
 		expiresAt: string;
 		authorizationError?: string;
-		subject: {
-			CN: string;
-			alt: string | null;
-		};
-		issuer: {
-			C: string;
-			O: string;
-			CN: string;
-		};
+		subject: Record<string, string | null>;
+		issuer: Record<string, string | null>;
 		keyType: 'RSA' | 'EC' | null;
 		keyBits: number | null;
 		serialNumber: string;
