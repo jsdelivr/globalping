@@ -9,9 +9,9 @@ const schema = Joi.object<MeasurementProgressMessage>({
 	measurementId: Joi.string().required(),
 	overwrite: Joi.boolean(),
 	result: Joi.object({
-		rawOutput: Joi.string().required(),
-		rawHeaders: Joi.string(),
-		rawBody: Joi.string(),
+		rawOutput: Joi.string().allow('', null).required(),
+		rawHeaders: Joi.string().allow('', null),
+		rawBody: Joi.string().allow('', null),
 	}).required(),
 }).required();
 
