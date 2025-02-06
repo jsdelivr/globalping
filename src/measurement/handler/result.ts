@@ -116,7 +116,7 @@ const httpResultSchema = Joi.object<HttpResult>({
 	resolvedAddress: Joi.string().allow('', null),
 	headers: Joi.object().pattern(Joi.string(), Joi.alternatives([
 		Joi.string().allow('', null),
-		Joi.array(),
+		Joi.array().items(Joi.string().allow('', null)),
 	])),
 	rawHeaders: Joi.string().allow('', null),
 	rawBody: Joi.string().allow('', null),
