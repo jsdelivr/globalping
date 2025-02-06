@@ -5,7 +5,7 @@ import { AdoptedProbes, Row } from '../../../../src/lib/override/adopted-probes.
 import type { Probe } from '../../../../src/probe/types.js';
 
 describe('AdoptedProbes', () => {
-	const defaultAdoptedProbe: Row = {
+	const defaultAdoption: Row = {
 		id: 'p-1',
 		name: 'probe-1',
 		userId: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
@@ -109,7 +109,7 @@ describe('AdoptedProbes', () => {
 		sql.whereIn.returns(sql);
 		sql.leftJoin.returns(sql);
 		sql.orderByRaw.returns(sql);
-		sql.select.resolves([ defaultAdoptedProbe ]);
+		sql.select.resolves([ defaultAdoption ]);
 		sqlStub.returns(sql);
 		getProbesWithAdminData.returns([ defaultConnectedProbe ]);
 		process.env['SHOULD_SYNC_ADOPTIONS'] = 'true';
@@ -148,10 +148,10 @@ describe('AdoptedProbes', () => {
 
 	it('class should match adoption to probe by: UUID', async () => {
 		sql.select.resolves([
-			{ ...defaultAdoptedProbe, ip: 'unsyncedIp' },
-			{ ...defaultAdoptedProbe, id: 'p-2', uuid: 'unsyncedUuid' },
-			{ ...defaultAdoptedProbe, id: 'p-3', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
-			{ ...defaultAdoptedProbe, id: 'p-4', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
+			{ ...defaultAdoption, ip: 'unsyncedIp' },
+			{ ...defaultAdoption, id: 'p-2', uuid: 'unsyncedUuid' },
+			{ ...defaultAdoption, id: 'p-3', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
+			{ ...defaultAdoption, id: 'p-4', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
 		]);
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, altIpAddresses: [ '2.2.2.2' ] }]);
@@ -170,9 +170,9 @@ describe('AdoptedProbes', () => {
 
 	it('class should match adoption to probe by: adoption IP -> probe IP', async () => {
 		sql.select.resolves([
-			{ ...defaultAdoptedProbe, uuid: 'unsyncedUuid' },
-			{ ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
-			{ ...defaultAdoptedProbe, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
+			{ ...defaultAdoption, uuid: 'unsyncedUuid' },
+			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
+			{ ...defaultAdoption, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
 		]);
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, altIpAddresses: [ '2.2.2.2' ] }]);
@@ -191,8 +191,8 @@ describe('AdoptedProbes', () => {
 
 	it('class should match adoption to probe by: adoption IP -> probe alt IP', async () => {
 		sql.select.resolves([
-			{ ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
-			{ ...defaultAdoptedProbe, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
+			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
+			{ ...defaultAdoption, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
 		]);
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, altIpAddresses: [ '2.2.2.2' ] }]);
@@ -210,7 +210,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should match adoption to probe by: adoption alt IP -> probe IP', async () => {
 		sql.select.resolves([
-			{ ...defaultAdoptedProbe, ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["1.1.1.1"]' },
+			{ ...defaultAdoption, ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["1.1.1.1"]' },
 		]);
 
 		getProbesWithAdminData.returns([ defaultConnectedProbe ]);
@@ -227,7 +227,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should match adoption to probe by: adoption alt IP -> probe alt IP', async () => {
 		sql.select.resolves([
-			{ ...defaultAdoptedProbe, ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
+			{ ...defaultAdoption, ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
 		]);
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, altIpAddresses: [ '2.2.2.2' ] }]);
@@ -244,7 +244,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should update status to "offline" if adopted probe was not found', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
-		sql.select.resolves([{ ...defaultAdoptedProbe, lastSyncDate: relativeDayUtc(-15) }]);
+		sql.select.resolves([{ ...defaultAdoption, lastSyncDate: relativeDayUtc(-15) }]);
 		getProbesWithAdminData.returns([]);
 
 		await adoptedProbes.syncDashboardData();
@@ -257,7 +257,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should do nothing if adopted probe was not found but it is already "offline"', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
-		sql.select.resolves([{ ...defaultAdoptedProbe, lastSyncDate: relativeDayUtc(-15), status: 'offline' }]);
+		sql.select.resolves([{ ...defaultAdoption, lastSyncDate: relativeDayUtc(-15), status: 'offline' }]);
 		getProbesWithAdminData.returns([]);
 
 		await adoptedProbes.syncDashboardData();
@@ -269,7 +269,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should update lastSyncDate if probe is connected', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
-		sql.select.resolves([{ ...defaultAdoptedProbe, lastSyncDate: relativeDayUtc(-15) }]);
+		sql.select.resolves([{ ...defaultAdoption, lastSyncDate: relativeDayUtc(-15) }]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -349,17 +349,17 @@ describe('AdoptedProbes', () => {
 
 	it('class should update country and send notification if country of the probe changes', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
-		const defaultAdoptedProbes = [
-			defaultAdoptedProbe,
+		const defaultAdoptions = [
+			defaultAdoption,
 			{
-				...defaultAdoptedProbe,
+				...defaultAdoption,
 				id: 'p-9',
 				ip: '9.9.9.9',
 				uuid: '9-9-9-9-9',
 				name: 'probe-gb-london-01',
 			}];
 
-		sql.select.resolves(defaultAdoptedProbes.map(probe => ({ ...probe, countryOfCustomCity: 'IE', isCustomCity: 1 })));
+		sql.select.resolves(defaultAdoptions.map(probe => ({ ...probe, countryOfCustomCity: 'IE', isCustomCity: 1 })));
 
 		getProbesWithAdminData.returns([
 			{
@@ -463,7 +463,7 @@ describe('AdoptedProbes', () => {
 			},
 		]);
 
-		sql.select.resolves(defaultAdoptedProbes.map(probe => ({ ...probe, country: 'GB', countryOfCustomCity: 'IE', isCustomCity: 1 })));
+		sql.select.resolves(defaultAdoptions.map(probe => ({ ...probe, country: 'GB', countryOfCustomCity: 'IE', isCustomCity: 1 })));
 
 		getProbesWithAdminData.returns([
 			{
@@ -570,7 +570,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should partially update probe meta info if it is outdated and "isCustomCity: true"', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
-		sql.select.resolves([{ ...defaultAdoptedProbe, countryOfCustomCity: 'IE', isCustomCity: 1 }]);
+		sql.select.resolves([{ ...defaultAdoption, countryOfCustomCity: 'IE', isCustomCity: 1 }]);
 
 		getProbesWithAdminData.returns([
 			{
@@ -631,7 +631,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should treat null and undefined values as equal', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
-		sql.select.resolves([{ ...defaultAdoptedProbe, state: null }]);
+		sql.select.resolves([{ ...defaultAdoption, state: null }]);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -642,7 +642,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should delete duplicated adopted probes', async () => {
 		// There are two rows for the same probe in the db.
-		sql.select.resolves([ defaultAdoptedProbe, { ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2' }]);
+		sql.select.resolves([ defaultAdoption, { ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2' }]);
 
 		// Now probe connects with the uuid of first adoption and ip of second.
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '2.2.2.2' }]);
@@ -662,9 +662,9 @@ describe('AdoptedProbes', () => {
 
 	it('class should delete/update adoptions correctly in case of multiple duplications', async () => {
 		sql.select.resolves([
-			{ ...defaultAdoptedProbe, altIps: JSON.stringify([ '2.2.2.2' ]) },
-			{ ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: JSON.stringify([ '1.1.1.1' ]) },
-			{ ...defaultAdoptedProbe, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: JSON.stringify([ '1.1.1.1' ]) },
+			{ ...defaultAdoption, altIps: JSON.stringify([ '2.2.2.2' ]) },
+			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: JSON.stringify([ '1.1.1.1' ]) },
+			{ ...defaultAdoption, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: JSON.stringify([ '1.1.1.1' ]) },
 		]);
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '2.2.2.2', altIpAddresses: [ '1.1.1.1' ] }]);
@@ -684,7 +684,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should only delete duplicated probes in the same country', async () => {
 		// There are two rows for the same probe in the db.
-		sql.select.resolves([ defaultAdoptedProbe, { ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', country: 'anotherCountry' }]);
+		sql.select.resolves([ defaultAdoption, { ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', country: 'anotherCountry' }]);
 
 		// Now probe connects with the uuid of first adoption and ip of second.
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '2.2.2.2' }]);
@@ -705,7 +705,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should only delete duplicated probes of the same user', async () => {
 		// There are two rows for the same probe in the db.
-		sql.select.resolves([ defaultAdoptedProbe, { ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', userId: 'anotherUserId' }]);
+		sql.select.resolves([ defaultAdoption, { ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', userId: 'anotherUserId' }]);
 
 		// Now probe connects with the uuid of first adoption and ip of second.
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '2.2.2.2' }]);
@@ -726,8 +726,8 @@ describe('AdoptedProbes', () => {
 
 	it('class should not delete adotions in case of duplicated alt IP, only update the altIps list', async () => {
 		sql.select.resolves([
-			{ ...defaultAdoptedProbe, altIps: JSON.stringify([ '9.9.9.9' ]) },
-			{ ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: JSON.stringify([ '9.9.9.9' ]) },
+			{ ...defaultAdoption, altIps: JSON.stringify([ '9.9.9.9' ]) },
+			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: JSON.stringify([ '9.9.9.9' ]) },
 		]);
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, altIpAddresses: [ '9.9.9.9' ] }]);
@@ -741,7 +741,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should proceed with syncing other probes if one probe sync fails', async () => {
-		sql.select.resolves([ defaultAdoptedProbe, { ...defaultAdoptedProbe, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2' }]);
+		sql.select.resolves([ defaultAdoption, { ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2' }]);
 
 		// UUID of 2 probes changed.
 		getProbesWithAdminData.returns([
@@ -767,7 +767,7 @@ describe('AdoptedProbes', () => {
 
 		const adoption = adoptedProbes.getByIp('1.1.1.1');
 		expect(adoption).to.deep.equal({
-			...defaultAdoptedProbe,
+			...defaultAdoption,
 			altIps: [],
 			systemTags: [ 'datacenter-network' ],
 			tags: [{ type: 'user', value: 'u-jimaek:dashboardtag' }],
@@ -781,7 +781,7 @@ describe('AdoptedProbes', () => {
 	it('getUpdatedLocation method should return updated location', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{
-			...defaultAdoptedProbe,
+			...defaultAdoption,
 			city: 'Dundalk',
 			countryOfCustomCity: 'IE',
 			isCustomCity: 1,
@@ -809,7 +809,7 @@ describe('AdoptedProbes', () => {
 	it('getUpdatedLocation method should return null if connected.country !== adopted.countryOfCustomCity', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{
-			...defaultAdoptedProbe,
+			...defaultAdoption,
 			country: 'IE',
 			countryOfCustomCity: 'GB',
 			city: 'London',
@@ -826,7 +826,7 @@ describe('AdoptedProbes', () => {
 	it('getUpdatedLocation method should return null if "isCustomCity: false"', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{
-			...defaultAdoptedProbe,
+			...defaultAdoption,
 			city: 'Dundalk',
 			isCustomCity: 0,
 			latitude: 54,
@@ -840,7 +840,7 @@ describe('AdoptedProbes', () => {
 
 	it('getUpdatedTags method should return same tags array', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
-		sql.select.resolves([{ ...defaultAdoptedProbe, tags: '[]' }]);
+		sql.select.resolves([{ ...defaultAdoption, tags: '[]' }]);
 
 		await adoptedProbes.syncDashboardData();
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
@@ -860,13 +860,17 @@ describe('AdoptedProbes', () => {
 
 	it('getUpdatedTags method should include user tag if public_probes: true', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
-		sql.select.resolves([{ ...defaultAdoptedProbe, tags: '[]', publicProbes: 1 }]);
+		sql.select.resolves([{ ...defaultAdoption, tags: '[]', publicProbes: 1 }]);
 
 		await adoptedProbes.syncDashboardData();
+
+		expect(sql.update.callCount).to.equal(1);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ systemTags: '["datacenter-network","u-jimaek"]' }]);
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
 		expect(updatedTags).to.deep.equal([
 			{ type: 'system', value: 'datacenter-network' },
-			{ type: 'user', value: 'u-jimaek' },
+			{ type: 'system', value: 'u-jimaek' },
 		]);
 	});
 });

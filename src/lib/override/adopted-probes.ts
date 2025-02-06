@@ -62,7 +62,7 @@ type AdoptionFieldDescription = {
 	probeField: string,
 	shouldUpdateIfCustomCity: boolean,
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	formatter?: (probeValue: any) => unknown
+	formatter?: (probeValue: any, probe: Probe, adoption: Adoption) => unknown
 }
 
 export class AdoptedProbes {
@@ -112,7 +112,10 @@ export class AdoptedProbes {
 		systemTags: {
 			probeField: 'tags',
 			shouldUpdateIfCustomCity: true,
-			formatter: (probeTags: Tag[]) => probeTags.filter(({ type }) => type === 'system').map(({ value }) => value),
+			formatter: (probeTags: Tag[], _probe: Probe, adoption: Adoption) => [
+				...probeTags.filter(({ type }) => type === 'system').map(({ value }) => value),
+				...(adoption.publicProbes ? [ this.getGlobalUserTag(adoption.githubUsername!) ] : []),
+			],
 		},
 		asn: {
 			probeField: 'location.asn',
@@ -181,8 +184,8 @@ export class AdoptedProbes {
 			...probe.tags,
 			...adoption.tags,
 			...(adoption.publicProbes && adoption.githubUsername ? [{
-				type: 'user' as const,
-				value: `u-${adoption.githubUsername}`,
+				type: 'system' as const,
+				value: this.getGlobalUserTag(adoption.githubUsername),
 			}] : []),
 		];
 	}
@@ -372,7 +375,7 @@ export class AdoptedProbes {
 				let probeValue = _.get(probe, probeField) as unknown;
 
 				if (formatter) {
-					probeValue = formatter(probeValue);
+					probeValue = formatter(probeValue, probe, adoption);
 				}
 
 				if (!_.isEqual(adoptionValue, probeValue)) {
@@ -539,5 +542,9 @@ export class AdoptedProbes {
 	private isToday (date: Date) {
 		const currentDate = new Date();
 		return date.toDateString() === currentDate.toDateString();
+	}
+
+	private getGlobalUserTag (githubUsername: string) {
+		return `u-${githubUsername}`;
 	}
 }
