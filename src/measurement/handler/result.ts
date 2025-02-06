@@ -6,7 +6,7 @@ import { getProbeValidator } from '../../lib/probe-validator.js';
 
 const pingResultSchema = Joi.object<PingResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
-	rawOutput: Joi.string().required(),
+	rawOutput: Joi.string().allow('').required(),
 	resolvedAddress: Joi.string().allow(null),
 	resolvedHostname: Joi.string().allow(null),
 	timings: Joi.array().items(Joi.object({
@@ -26,7 +26,7 @@ const pingResultSchema = Joi.object<PingResult>({
 
 const tracerouteResultSchema = Joi.object<TracerouteResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
-	rawOutput: Joi.string().required(),
+	rawOutput: Joi.string().allow('').required(),
 	resolvedAddress: Joi.string().allow(null),
 	resolvedHostname: Joi.string().allow(null),
 	hops: Joi.array().items(Joi.object({
@@ -41,7 +41,7 @@ const tracerouteResultSchema = Joi.object<TracerouteResult>({
 const dnsResultSchema = Joi.alternatives([
 	Joi.object<TestResult & DnsRegularResult>({
 		status: Joi.string().valid('finished', 'failed').required(),
-		rawOutput: Joi.string().required(),
+		rawOutput: Joi.string().allow('').required(),
 		statusCodeName: Joi.string().allow(null),
 		statusCode: Joi.number().allow(null),
 		resolver: Joi.string().allow(null),
@@ -61,7 +61,7 @@ const dnsResultSchema = Joi.alternatives([
 	}),
 	Joi.object<TestResult & DnsTraceResult>({
 		status: Joi.string().valid('finished', 'failed').required(),
-		rawOutput: Joi.string().required(),
+		rawOutput: Joi.string().allow('').required(),
 		hops: Joi.array().items(Joi.object({
 			resolver: Joi.string().allow(null).required(),
 			timings: Joi.object({
@@ -83,7 +83,7 @@ const dnsResultSchema = Joi.alternatives([
 
 const mtrResultSchema = Joi.object<MtrResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
-	rawOutput: Joi.string().required(),
+	rawOutput: Joi.string().allow('').required(),
 	resolvedAddress: Joi.string().allow(null),
 	resolvedHostname: Joi.string().allow(null),
 	hops: Joi.array().items(Joi.object({
@@ -112,11 +112,14 @@ const mtrResultSchema = Joi.object<MtrResult>({
 
 const httpResultSchema = Joi.object<HttpResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
-	rawOutput: Joi.string().allow(null).required(),
+	rawOutput: Joi.string().allow('', null).required(),
 	resolvedAddress: Joi.string().allow(null),
-	headers: Joi.object().pattern(Joi.string(), Joi.string()),
-	rawHeaders: Joi.string().allow(null),
-	rawBody: Joi.string().allow(null),
+	headers: Joi.object().pattern(Joi.string(), Joi.alternatives([
+		Joi.string().allow(''),
+		Joi.array(),
+	])),
+	rawHeaders: Joi.string().allow('', null),
+	rawBody: Joi.string().allow('', null),
 	truncated: Joi.boolean(),
 	statusCode: Joi.number().allow(null),
 	statusCodeName: Joi.string().allow(null),
@@ -125,15 +128,9 @@ const httpResultSchema = Joi.object<HttpResult>({
 		authorized: Joi.boolean().required(),
 		createdAt: Joi.string().allow(null),
 		expiresAt: Joi.string().allow(null),
-		subject: Joi.object({
-			CN: Joi.string().allow(null).required(),
-			alt: Joi.string().allow(null).required(),
-		}).required(),
-		issuer: Joi.object({
-			C: Joi.string().allow(null).required(),
-			O: Joi.string().allow(null).required(),
-			CN: Joi.string().allow(null).required(),
-		}).required(),
+		error: Joi.string().allow(null),
+		subject: Joi.object().pattern(Joi.string(), Joi.string().allow(null)).required(),
+		issuer: Joi.object().pattern(Joi.string(), Joi.string().allow(null)).required(),
 		keyType: Joi.string().valid('RSA', 'EC').allow(null).required(),
 		keyBits: Joi.number().allow(null).required(),
 		serialNumber: Joi.string().allow(null).required(),
