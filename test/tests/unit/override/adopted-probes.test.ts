@@ -870,7 +870,7 @@ describe('AdoptedProbes', () => {
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
 		expect(updatedTags).to.deep.equal([
 			{ type: 'system', value: 'datacenter-network' },
-			{ type: 'user', value: 'u-jimaek' },
+			{ type: 'system', value: 'u-jimaek' },
 		]);
 	});
 });
