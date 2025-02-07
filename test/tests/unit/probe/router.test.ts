@@ -1267,5 +1267,36 @@ describe('probe router', () => {
 			expect(allProbes.length).to.equal(0);
 			expect(onlineProbesMap.size).to.equal(0);
 		});
+
+		it(`should return same result if placed in 'locations' or 'magic' fields`, async () => {
+			const probes: Array<DeepPartial<Probe>> = [
+				await buildProbe('socket-1', { continent: 'EU', country: 'PL' }),
+			];
+			fetchProbesMock.resolves(probes as never);
+			store.getMeasurementIps.resolves([ '1.2.3.4' ]);
+
+			store.getMeasurement.resolves({
+				results: [{
+					probe: {
+						continent: 'EU',
+						country: 'PL',
+						city: 'Warsaw',
+						network: 'Liberty Global B.V.',
+						tags: [],
+					},
+				}],
+			});
+
+			const locationsResult = await router.findMatchingProbes({ locations: 'measurementid', measurementOptions: { ipVersion: 6 } } as UserRequest);
+			const magicResult = await router.findMatchingProbes({ locations: [{ magic: 'measurementid' }], measurementOptions: { ipVersion: 6 } } as UserRequest);
+
+			expect(locationsResult.allProbes[0]!.location.country).to.equal('PL');
+			expect(locationsResult.allProbes[0]!.status).to.equal('ready');
+			expect(locationsResult.onlineProbesMap.get(0)?.location.country).to.equal('PL');
+
+			expect(magicResult.allProbes[0]!.location.country).to.equal('PL');
+			expect(magicResult.allProbes[0]!.status).to.equal('ready');
+			expect(magicResult.onlineProbesMap.get(0)?.location.country).to.equal('PL');
+		});
 	});
 });
