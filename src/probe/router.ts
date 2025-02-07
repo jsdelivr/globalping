@@ -32,29 +32,24 @@ export class ProbeRouter {
 		const preferredIpVersion = userRequest.measurementOptions?.ipVersion ?? 4;
 		const connectedProbesFilteredByIpVersion = this.probesFilter.filterByIpVersion(connectedProbes, preferredIpVersion);
 
+		let filtered: Probe[] = [];
+
 		if (locations.some(l => l.limit)) {
-			const filtered = this.findWithLocationLimit(connectedProbesFilteredByIpVersion, locations);
-			return this.processFiltered(filtered, connectedProbesFilteredByIpVersion, locations, userRequest);
+			filtered = this.findWithLocationLimit(connectedProbesFilteredByIpVersion, locations);
+		} else if (locations.length > 0) {
+			filtered = this.findWithGlobalLimit(connectedProbesFilteredByIpVersion, locations, globalLimit);
+		} else {
+			filtered = this.findGloballyDistributed(connectedProbesFilteredByIpVersion, globalLimit);
 		}
 
-		if (locations.length > 0) {
-			const filtered = this.findWithGlobalLimit(connectedProbesFilteredByIpVersion, locations, globalLimit);
-			return this.processFiltered(filtered, connectedProbesFilteredByIpVersion, locations, userRequest);
-		}
-
-		const filtered = this.findGloballyDistributed(connectedProbesFilteredByIpVersion, globalLimit);
-		return this.processFiltered(filtered, connectedProbesFilteredByIpVersion, locations, userRequest);
-	}
-
-	private async processFiltered (filtered: Probe[], connectedProbes: Probe[], locations: LocationWithLimit[], request: UserRequest) {
 		if (filtered.length === 0 && locations.length === 1 && locations[0]?.magic) {
-			return this.findWithMeasurementId(connectedProbes, locations[0].magic, request);
+			return this.findWithMeasurementId(connectedProbes, locations[0].magic, userRequest);
 		}
 
 		return {
 			allProbes: filtered,
 			onlineProbesMap: new Map(filtered.entries()),
-			request: request as MeasurementRequest,
+			request: userRequest as MeasurementRequest,
 		};
 	}
 
