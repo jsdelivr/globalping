@@ -68,6 +68,29 @@ describe('AltIps', () => {
 		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
 	});
 
+	it('should keep only one alt ip if same are added in parallel', async () => {
+		const token = await altIps.generateToken(socket);
+		await Promise.all([
+			altIps.validateTokenFromHttp({
+				socketId: 'socketId1',
+				ip: '2.2.2.2',
+				token,
+			}),
+			altIps.validateTokenFromHttp({
+				socketId: 'socketId1',
+				ip: '2.2.2.2',
+				token,
+			}),
+			altIps.validateTokenFromHttp({
+				socketId: 'socketId1',
+				ip: '2.2.2.2',
+				token,
+			}),
+		]);
+
+		expect(socket.data.probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
+	});
+
 	it('should throw for duplicated connected ip', async () => {
 		syncedProbeList.getNodeIdBySocketId.returns(null);
 
