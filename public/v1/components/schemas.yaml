@@ -1178,9 +1178,13 @@ components:
                 Indicates whether the `rawBody` value was truncated due to being too big.
             headers:
               type: object
-              description: The HTTP response headers.
+              description: The HTTP response headers. Value may be an array of strings for headers with multiple values, e.g. `Set-Cookie`.
               additionalProperties:
-                type: string
+                oneOf:
+                  - type: string
+                  - type: array
+                    items:
+                      type: string
             statusCode:
               $ref: 'schemas.yaml#/components/schemas/HttpStatusCode'
             statusCodeName:
@@ -1276,8 +1280,6 @@ components:
       title: TlsCertificate
       required:
         - authorized
-        - createdAt
-        - expiresAt
         - subject
         - issuer
         - keyType
@@ -1362,8 +1364,10 @@ components:
           type: string
           description: The subject's common name.
         alt:
-          type: string
-          description: The subject's alternative names.
+          type:
+            - string
+            - 'null'
+          description: The subject's alternative names, or `null` if missing.
     Limits:
       type: object
       required:
