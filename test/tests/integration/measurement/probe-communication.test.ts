@@ -386,7 +386,7 @@ describe('Create measurement request', () => {
 			.expect(200).expect((response) => {
 				expect(response.body.results[0].result).to.deep.equal({
 					status: 'failed',
-					rawOutput: 'Measurement result validation failed',
+					rawOutput: 'The probe reported an invalid result.',
 				});
 			});
 	});

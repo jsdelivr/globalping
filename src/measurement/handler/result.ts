@@ -17,7 +17,7 @@ export const handleMeasurementResult = (probe: Probe) => async (data: Measuremen
 			testId: data.testId,
 			result: {
 				status: 'failed',
-				rawOutput: 'Measurement result validation failed',
+				rawOutput: 'The probe reported an invalid result.',
 			},
 		});
 

@@ -2,22 +2,22 @@ import Joi from 'joi';
 import { DnsRegularResult, DnsTraceResult, HttpResult, MeasurementProgressMessage, MeasurementResultMessage, MtrResult, PingResult, TestResult, TracerouteResult } from '../types.js';
 
 export const progressSchema = Joi.object<MeasurementProgressMessage>({
-	testId: Joi.string().required(),
-	measurementId: Joi.string().required(),
+	testId: Joi.string().max(1024).required(),
+	measurementId: Joi.string().max(1024).required(),
 	overwrite: Joi.boolean(),
 	result: Joi.object({
-		rawOutput: Joi.string().allow('', null).required(),
-		rawHeaders: Joi.string().allow('', null),
-		rawBody: Joi.string().allow('', null),
+		rawOutput: Joi.string().max(20200).allow('', null).required(),
+		rawHeaders: Joi.string().max(10100).allow('', null),
+		rawBody: Joi.string().max(10100).allow('', null),
 	}).required(),
 }).required();
 
 const pingResultSchema = Joi.object<PingResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
-	rawOutput: Joi.string().allow('').required(),
-	resolvedAddress: Joi.string().allow(null),
-	resolvedHostname: Joi.string().allow(null),
-	timings: Joi.array().items(Joi.object({
+	rawOutput: Joi.string().max(10000).allow('').required(),
+	resolvedAddress: Joi.string().max(1024).allow(null),
+	resolvedHostname: Joi.string().max(1024).allow(null),
+	timings: Joi.array().max(1024).items(Joi.object({
 		rtt: Joi.number().required(),
 		ttl: Joi.number().required(),
 	})),
@@ -34,13 +34,13 @@ const pingResultSchema = Joi.object<PingResult>({
 
 const tracerouteResultSchema = Joi.object<TracerouteResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
-	rawOutput: Joi.string().allow('').required(),
-	resolvedAddress: Joi.string().allow(null),
-	resolvedHostname: Joi.string().allow(null),
-	hops: Joi.array().items(Joi.object({
-		resolvedAddress: Joi.string().allow(null).required(),
-		resolvedHostname: Joi.string().allow(null).required(),
-		timings: Joi.array().items(Joi.object({
+	rawOutput: Joi.string().max(10000).allow('').required(),
+	resolvedAddress: Joi.string().max(1024).allow(null),
+	resolvedHostname: Joi.string().max(1024).allow(null),
+	hops: Joi.array().max(1024).items(Joi.object({
+		resolvedAddress: Joi.string().max(1024).allow(null).required(),
+		resolvedHostname: Joi.string().max(1024).allow(null).required(),
+		timings: Joi.array().max(1024).items(Joi.object({
 			rtt: Joi.number().required(),
 		})).required(),
 	})),
@@ -49,39 +49,39 @@ const tracerouteResultSchema = Joi.object<TracerouteResult>({
 const dnsResultSchema = Joi.alternatives([
 	Joi.object<TestResult & DnsRegularResult>({
 		status: Joi.string().valid('finished', 'failed').required(),
-		rawOutput: Joi.string().allow('').required(),
-		statusCodeName: Joi.string().allow(null),
+		rawOutput: Joi.string().max(10000).allow('').required(),
+		statusCodeName: Joi.string().max(1024).allow(null),
 		statusCode: Joi.number().allow(null),
-		resolver: Joi.string().allow(null),
+		resolver: Joi.string().max(1024).allow(null),
 		timings: Joi.object({
 			total: Joi.number().required(),
 		}),
-		answers: Joi.array().items(Joi.alternatives([
+		answers: Joi.array().max(1024).items(Joi.alternatives([
 			Joi.object({
-				name: Joi.string().required(),
-				type: Joi.string().required(),
+				name: Joi.string().max(1024).required(),
+				type: Joi.string().max(1024).required(),
 				ttl: Joi.number().required(),
-				class: Joi.string().required(),
-				value: Joi.string().required(),
+				class: Joi.string().max(1024).required(),
+				value: Joi.string().max(1024).required(),
 			}),
 			Joi.object({}),
 		])),
 	}),
 	Joi.object<TestResult & DnsTraceResult>({
 		status: Joi.string().valid('finished', 'failed').required(),
-		rawOutput: Joi.string().allow('').required(),
-		hops: Joi.array().items(Joi.object({
-			resolver: Joi.string().allow(null).required(),
+		rawOutput: Joi.string().max(10000).allow('').required(),
+		hops: Joi.array().max(1024).items(Joi.object({
+			resolver: Joi.string().max(1024).allow(null).required(),
 			timings: Joi.object({
 				total: Joi.number().required(),
 			}).required(),
-			answers: Joi.array().items(Joi.alternatives([
+			answers: Joi.array().max(1024).items(Joi.alternatives([
 				Joi.object({
-					name: Joi.string().required(),
-					type: Joi.string().required(),
+					name: Joi.string().max(1024).required(),
+					type: Joi.string().max(1024).required(),
 					ttl: Joi.number().required(),
-					class: Joi.string().required(),
-					value: Joi.string().required(),
+					class: Joi.string().max(1024).required(),
+					value: Joi.string().max(1024).required(),
 				}),
 				Joi.object({}),
 			])).required(),
@@ -91,13 +91,13 @@ const dnsResultSchema = Joi.alternatives([
 
 const mtrResultSchema = Joi.object<MtrResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
-	rawOutput: Joi.string().allow('').required(),
-	resolvedAddress: Joi.string().allow(null),
-	resolvedHostname: Joi.string().allow(null),
-	hops: Joi.array().items(Joi.object({
-		asn: Joi.array().items(Joi.number()).required(),
-		resolvedAddress: Joi.string().allow(null).required(),
-		resolvedHostname: Joi.string().allow(null).required(),
+	rawOutput: Joi.string().max(10000).allow('').required(),
+	resolvedAddress: Joi.string().max(1024).allow(null),
+	resolvedHostname: Joi.string().max(1024).allow(null),
+	hops: Joi.array().max(1024).items(Joi.object({
+		asn: Joi.array().max(1024).items(Joi.number()).required(),
+		resolvedAddress: Joi.string().max(1024).allow(null).required(),
+		resolvedHostname: Joi.string().max(1024).allow(null).required(),
 		stats: Joi.object({
 			min: Joi.number().required(),
 			max: Joi.number().required(),
@@ -111,8 +111,8 @@ const mtrResultSchema = Joi.object<MtrResult>({
 			rcv: Joi.number().required(),
 			drop: Joi.number().required(),
 		}).required(),
-		timings: Joi.array().items(Joi.object({
-			seq: Joi.string(),
+		timings: Joi.array().max(1024).items(Joi.object({
+			seq: Joi.string().max(1024),
 			rtt: Joi.number(),
 		})).required(),
 	})),
@@ -120,40 +120,40 @@ const mtrResultSchema = Joi.object<MtrResult>({
 
 const httpResultSchema = Joi.object<HttpResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
-	rawOutput: Joi.string().allow('').required(),
-	resolvedAddress: Joi.string().allow(null),
-	headers: Joi.object().pattern(Joi.string(), Joi.alternatives([
-		Joi.string().allow(''),
+	rawOutput: Joi.string().max(20200).allow('').required(),
+	rawHeaders: Joi.string().max(10100).allow('', null),
+	rawBody: Joi.string().max(10100).allow('', null),
+	resolvedAddress: Joi.string().max(1024).allow(null),
+	headers: Joi.object().pattern(Joi.string().max(1024), Joi.alternatives([
+		Joi.string().max(1024).allow(''),
 		Joi.number(),
-		Joi.array().items(Joi.string().allow('')),
+		Joi.array().max(1024).items(Joi.string().max(1024).allow('')),
 	])),
-	rawHeaders: Joi.string().allow('', null),
-	rawBody: Joi.string().allow('', null),
 	truncated: Joi.boolean(),
 	statusCode: Joi.number().allow(null),
-	statusCodeName: Joi.string().allow(null),
-	timings: Joi.object().pattern(Joi.string(), Joi.number().allow(null)),
+	statusCodeName: Joi.string().max(1024).allow(null),
+	timings: Joi.object().pattern(Joi.string().max(1024), Joi.number().allow(null)),
 	tls: Joi.object({
 		authorized: Joi.boolean().required(),
-		createdAt: Joi.string(),
-		expiresAt: Joi.string(),
-		error: Joi.string(),
-		subject: Joi.object().pattern(Joi.string(), Joi.string()).required(),
-		issuer: Joi.object().pattern(Joi.string(), Joi.alternatives(
-			Joi.string(),
-			Joi.array().items(Joi.string()),
+		createdAt: Joi.string().max(1024),
+		expiresAt: Joi.string().max(1024),
+		error: Joi.string().max(1024),
+		subject: Joi.object().pattern(Joi.string().max(1024), Joi.string().max(1024)).required(),
+		issuer: Joi.object().pattern(Joi.string().max(1024), Joi.alternatives(
+			Joi.string().max(1024),
+			Joi.array().max(1024).items(Joi.string().max(1024)),
 		)).required(),
-		keyType: Joi.string().valid('RSA', 'EC').allow(null).required(),
+		keyType: Joi.string().max(1024).valid('RSA', 'EC').allow(null).required(),
 		keyBits: Joi.number().allow(null).required(),
-		serialNumber: Joi.string().required(),
-		fingerprint256: Joi.string().required(),
-		publicKey: Joi.string().allow(null).required(),
+		serialNumber: Joi.string().max(1024).required(),
+		fingerprint256: Joi.string().max(1024).required(),
+		publicKey: Joi.string().max(1024).allow(null).required(),
 	}).allow(null),
 });
 
 export const resultSchema = Joi.object<MeasurementResultMessage>({
-	testId: Joi.string().required(),
-	measurementId: Joi.string().required(),
+	testId: Joi.string().max(1024).required(),
+	measurementId: Joi.string().max(1024).required(),
 	result: Joi.alternatives([
 		pingResultSchema,
 		tracerouteResultSchema,
