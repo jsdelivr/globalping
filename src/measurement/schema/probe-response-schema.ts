@@ -124,22 +124,22 @@ const httpResultSchema = Joi.object<HttpResult>({
 	rawHeaders: Joi.string().max(10100).allow('', null),
 	rawBody: Joi.string().max(10100).allow('', null),
 	resolvedAddress: Joi.string().max(1024).allow(null),
-	headers: Joi.object().pattern(Joi.string().max(1024), Joi.alternatives([
-		Joi.string().max(1024).allow(''),
+	headers: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.alternatives([
+		Joi.string().max(10000).allow(''),
 		Joi.number(),
 		Joi.array().max(1024).items(Joi.string().max(1024).allow('')),
 	])),
 	truncated: Joi.boolean(),
 	statusCode: Joi.number().allow(null),
 	statusCodeName: Joi.string().max(1024).allow(null),
-	timings: Joi.object().pattern(Joi.string().max(1024), Joi.number().allow(null)),
+	timings: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.number().allow(null)),
 	tls: Joi.object({
 		authorized: Joi.boolean().required(),
 		createdAt: Joi.string().max(1024),
 		expiresAt: Joi.string().max(1024),
 		error: Joi.string().max(1024),
-		subject: Joi.object().pattern(Joi.string().max(1024), Joi.string().max(1024)).required(),
-		issuer: Joi.object().pattern(Joi.string().max(1024), Joi.alternatives(
+		subject: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.string().max(20000)).required(),
+		issuer: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.alternatives(
 			Joi.string().max(1024),
 			Joi.array().max(1024).items(Joi.string().max(1024)),
 		)).required(),
@@ -147,7 +147,7 @@ const httpResultSchema = Joi.object<HttpResult>({
 		keyBits: Joi.number().allow(null).required(),
 		serialNumber: Joi.string().max(1024).required(),
 		fingerprint256: Joi.string().max(1024).required(),
-		publicKey: Joi.string().max(1024).allow(null).required(),
+		publicKey: Joi.string().max(10000).allow(null).required(),
 	}).allow(null),
 });
 
