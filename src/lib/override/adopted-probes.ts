@@ -11,7 +11,7 @@ import { countries } from 'countries-list';
 
 const logger = scopedLogger('adopted-probes');
 
-export const ADOPTIONS_TABLE = 'gp_adopted_probes';
+export const ADOPTIONS_TABLE = 'gp_probes';
 export const NOTIFICATIONS_TABLE = 'directus_notifications';
 export const USERS_TABLE = 'directus_users';
 

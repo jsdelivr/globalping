@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { client } from '../../../src/lib/sql/client.js';
 import { waitProbeInCity } from '../utils.js';
 
-const ADOPTIONS_TABLE = 'gp_adopted_probes';
+const ADOPTIONS_TABLE = 'gp_probes';
 
 describe('adopted probe', () => {
 	before(async function () {
