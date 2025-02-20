@@ -125,12 +125,11 @@ const httpResultSchema = Joi.object<HttpResult>({
 	resolvedAddress: Joi.string().max(1024).allow(null),
 	headers: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.alternatives([
 		Joi.string().max(10000).allow(''),
-		Joi.number(),
 		Joi.array().max(1024).items(Joi.string().max(1024).allow('')),
 	])),
 	truncated: Joi.boolean(),
 	statusCode: Joi.number().allow(null),
-	statusCodeName: Joi.string().max(1024).allow(null),
+	statusCodeName: Joi.string().max(1024).allow('', null),
 	timings: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.number().allow(null)),
 	tls: Joi.object({
 		authorized: Joi.boolean().required(),
