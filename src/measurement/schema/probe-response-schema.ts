@@ -112,7 +112,6 @@ const mtrResultSchema = Joi.object<MtrResult>({
 			drop: Joi.number().required(),
 		}).required(),
 		timings: Joi.array().max(1024).items(Joi.object({
-			seq: Joi.string().max(1024),
 			rtt: Joi.number(),
 		})).required(),
 	})),
