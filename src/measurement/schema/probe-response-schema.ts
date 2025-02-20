@@ -136,11 +136,15 @@ const httpResultSchema = Joi.object<HttpResult>({
 		createdAt: Joi.string().max(1024),
 		expiresAt: Joi.string().max(1024),
 		error: Joi.string().max(1024),
-		subject: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.string().max(20000)).required(),
-		issuer: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.alternatives(
-			Joi.string().max(1024),
-			Joi.array().max(1024).items(Joi.string().max(1024)),
-		)).required(),
+		subject: Joi.object({
+			CN: Joi.string().max(20000).allow(null).required(),
+			alt: Joi.string().max(20000).allow(null).required(),
+		}).required(),
+		issuer: Joi.object({
+			C: Joi.string().max(20000).allow(null).required(),
+			O: Joi.string().max(20000).allow(null).required(),
+			CN: Joi.string().max(20000).allow(null).required(),
+		}).required(),
 		keyType: Joi.string().max(1024).valid('RSA', 'EC').allow(null).required(),
 		keyBits: Joi.number().allow(null).required(),
 		serialNumber: Joi.string().max(1024).required(),
