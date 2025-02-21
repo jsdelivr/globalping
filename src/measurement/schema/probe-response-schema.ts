@@ -10,9 +10,9 @@ export const progressSchema = Joi.object<MeasurementProgressMessage>({
 		rawHeaders: Joi.string().max(10100).allow('', null),
 		rawBody: Joi.string().max(10100).allow('', null),
 	}).required(),
-}).required();
+}).options({ convert: false });
 
-const pingResultSchema = Joi.object<PingResult>({
+export const pingResultSchema = Joi.object<PingResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
 	rawOutput: Joi.string().max(10000).allow('').required(),
 	resolvedAddress: Joi.string().max(1024).allow(null),
@@ -30,9 +30,9 @@ const pingResultSchema = Joi.object<PingResult>({
 		rcv: Joi.number().allow(null).required(),
 		drop: Joi.number().allow(null).required(),
 	}),
-});
+}).options({ convert: false });
 
-const tracerouteResultSchema = Joi.object<TracerouteResult>({
+export const tracerouteResultSchema = Joi.object<TracerouteResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
 	rawOutput: Joi.string().max(10000).allow('').required(),
 	resolvedAddress: Joi.string().max(1024).allow(null),
@@ -44,9 +44,9 @@ const tracerouteResultSchema = Joi.object<TracerouteResult>({
 			rtt: Joi.number().required(),
 		})).required(),
 	})),
-});
+}).options({ convert: false });
 
-const dnsResultSchema = Joi.alternatives([
+export const dnsResultSchema = Joi.alternatives([
 	Joi.object<TestResult & DnsRegularResult>({
 		status: Joi.string().valid('finished', 'failed').required(),
 		rawOutput: Joi.string().max(10000).allow('').required(),
@@ -87,9 +87,9 @@ const dnsResultSchema = Joi.alternatives([
 			])).required(),
 		})),
 	}),
-]);
+]).options({ convert: false });
 
-const mtrResultSchema = Joi.object<MtrResult>({
+export const mtrResultSchema = Joi.object<MtrResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
 	rawOutput: Joi.string().max(10000).allow('').required(),
 	resolvedAddress: Joi.string().max(1024).allow(null),
@@ -115,9 +115,9 @@ const mtrResultSchema = Joi.object<MtrResult>({
 			rtt: Joi.number(),
 		})).required(),
 	})),
-});
+}).options({ convert: false });
 
-const httpResultSchema = Joi.object<HttpResult>({
+export const httpResultSchema = Joi.object<HttpResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
 	rawOutput: Joi.string().max(20200).allow('').required(),
 	rawHeaders: Joi.string().max(10100).allow('', null),
@@ -151,7 +151,7 @@ const httpResultSchema = Joi.object<HttpResult>({
 		fingerprint256: Joi.string().max(1024).required(),
 		publicKey: Joi.string().max(10000).allow(null).required(),
 	}).allow(null),
-});
+}).options({ convert: false });
 
 export const resultSchema = Joi.object<MeasurementResultMessage>({
 	testId: Joi.string().max(1024).required(),

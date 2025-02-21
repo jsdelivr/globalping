@@ -75,6 +75,7 @@ type MtrResultHop = {
 		total: number;
 		rcv: number;
 		drop: number;
+		loss: number;
 		stDev: number;
 		jMin: number;
 		jMax: number;
@@ -82,14 +83,13 @@ type MtrResultHop = {
 	};
 	asn: number[];
 	timings: MtrResultHopTiming[];
-	resolvedAddres: string;
-	resolvedHostname: string;
-	duplicate: boolean;
+	resolvedAddress: string | null;
+	resolvedHostname: string | null;
 };
 
 export type MtrResult = TestResult & {
-	resolvedAddress?: string;
-	resolvedHostname?: string;
+	resolvedAddress?: string | null;
+	resolvedHostname?: string | null;
 	hops?: MtrResultHop[];
 };
 
@@ -151,7 +151,7 @@ export type HttpProgress = TestProgress & {
 
 export type HttpResult = TestResult & {
 	resolvedAddress?: string | null;
-	headers?: Record<string, string>;
+	headers?: Record<string, string | string[]>;
 	rawHeaders?: string | null;
 	rawBody?: string | null;
 	truncated?: boolean;

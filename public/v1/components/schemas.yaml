@@ -1345,13 +1345,19 @@ components:
         - CN
       properties:
         C:
-          type: string
+          type:
+            - string
+            - 'null'
           description: The issuer's country.
         O:
-          type: string
+          type:
+            - string
+            - 'null'
           description: The issuer's organization.
         CN:
-          type: string
+          type:
+            - string
+            - 'null'
           description: The issuer's common name.
     TlsCertificateSubject:
       type: object
