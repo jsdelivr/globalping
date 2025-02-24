@@ -125,7 +125,7 @@ export const httpResultSchema = Joi.object<HttpResult>({
 	resolvedAddress: Joi.string().max(1024).allow(null),
 	headers: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.alternatives([
 		Joi.string().max(10000).allow(''),
-		Joi.array().max(1024).items(Joi.string().max(1024).allow('')),
+		Joi.array().max(1024).items(Joi.string().max(10000).allow('')),
 	])),
 	truncated: Joi.boolean(),
 	statusCode: Joi.number().allow(null),
@@ -133,6 +133,8 @@ export const httpResultSchema = Joi.object<HttpResult>({
 	timings: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.number().allow(null)),
 	tls: Joi.object({
 		authorized: Joi.boolean().required(),
+		protocol: Joi.string().max(1024).required(),
+		cipherName: Joi.string().max(1024).required(),
 		createdAt: Joi.string().max(1024).allow(null).required(),
 		expiresAt: Joi.string().max(1024).allow(null).required(),
 		error: Joi.string().max(1024),

@@ -1280,6 +1280,8 @@ components:
       title: TlsCertificate
       required:
         - authorized
+        - protocol
+        - cipherName
         - createdAt
         - expiresAt
         - subject
@@ -1294,6 +1296,14 @@ components:
           type: boolean
           description: |
             Indicates whether a trusted authority signed the certificate.
+        protocol:
+          type: string
+          description: |
+            The minimum TLS protocol version supported by this cipher suite.
+        cipherName:
+          type: string
+          description: |
+            OpenSSL name for the cipher suite.
         error:
           type: string
           description: |

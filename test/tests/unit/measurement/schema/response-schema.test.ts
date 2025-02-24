@@ -496,6 +496,8 @@ const defaultHttpResponseBody = {
 				},
 				tls: {
 					authorized: true,
+					protocol: 'TLSv1.3',
+					cipherName: 'TLS_AES_256_GCM_SHA384',
 					createdAt: '2025-01-27T16:52:44.000Z',
 					expiresAt: '2025-04-27T17:52:41.000Z',
 					issuer: {
@@ -769,6 +771,8 @@ describe('resultSchema', () => {
 			},
 			tls: {
 				authorized: true,
+				protocol: 'TLSv1.3',
+				cipherName: 'TLS_AES_256_GCM_SHA384',
 				createdAt: '2025-01-27T16:52:44.000Z',
 				expiresAt: '2025-04-27T17:52:41.000Z',
 				issuer: {
@@ -780,7 +784,7 @@ describe('resultSchema', () => {
 					CN: 'globalping.io',
 					alt: 'DNS:globalping.io',
 				},
-				keyType: null,
+				keyType: 'RSA',
 				keyBits: null,
 				serialNumber: 'E5:50:05:12:BE:8A:BD:FC:0E:2B:B3:C5:AD:A7:6F:1C',
 				fingerprint256: 'B5:6F:C1:11:5C:D4:8F:31:40:75:D7:ED:3C:02:76:FA:08:44:FE:FB:43:19:56:76:D5:D8:7B:4F:C2:55:6D:67',
