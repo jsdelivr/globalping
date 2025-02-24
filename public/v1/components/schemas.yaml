@@ -1280,6 +1280,8 @@ components:
       title: TlsCertificate
       required:
         - authorized
+        - createdAt
+        - expiresAt
         - subject
         - issuer
         - keyType
