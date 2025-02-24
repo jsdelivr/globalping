@@ -1178,7 +1178,7 @@ components:
                 Indicates whether the `rawBody` value was truncated due to being too big.
             headers:
               type: object
-              description: The HTTP response headers. Value may be an array of strings for headers with multiple values, e.g. `Set-Cookie`.
+              description: The HTTP response headers. The value may be an array of strings for headers with multiple values, e.g., `Set-Cookie`.
               additionalProperties:
                 oneOf:
                   - type: string

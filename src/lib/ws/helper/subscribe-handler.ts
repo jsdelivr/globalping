@@ -16,35 +16,18 @@ export const subscribeWithHandler = (socket: ServerSocket, event: string, method
 			const clientIp = probe.ipAddress;
 			const metadata: Record<string, unknown> = {
 				client: { id: socket.id, ip: clientIp },
-				details: 'unknown',
+				message: 'unknown',
 			};
 
 			if (isError(error)) {
-				metadata['details'] = error.message;
+				metadata['message'] = error.message;
 			}
 
 			if (Joi.isError(error)) {
-				metadata['details'] = formatJoiError(error);
-				metadata['validationInput'] = error._original;
+				metadata['details'] = error;
 			}
 
-			logger.info(`Event "${event}" failed to handle`, metadata);
-
-			logger.debug(`Details:`, error);
+			logger.warn(`Event "${event}" failed to handle`, metadata);
 		}
 	});
-};
-
-const formatJoiError = (error: Joi.ValidationError) => {
-	const messages = error.details.map(({ message, context }) => {
-		let str = `${message}.`;
-
-		if (context?.value) {
-			str += `Received: "${context?.value}".`;
-		}
-
-		return str;
-	});
-
-	return messages.length ? error.message : messages.join('\n');
 };
