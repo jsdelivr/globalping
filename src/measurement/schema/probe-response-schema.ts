@@ -133,7 +133,7 @@ export const httpResultSchema = Joi.object<HttpResult>({
 	timings: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.number().allow(null)),
 	tls: Joi.object({
 		authorized: Joi.boolean().required(),
-		protocol: Joi.string().max(1024).required(),
+		protocol: Joi.string().max(1024).allow(null).required(),
 		cipherName: Joi.string().max(1024).required(),
 		createdAt: Joi.string().max(1024).allow(null).required(),
 		expiresAt: Joi.string().max(1024).allow(null).required(),

@@ -1299,7 +1299,7 @@ components:
         protocol:
           type: string
           description: |
-            The minimum TLS protocol version supported by this cipher suite.
+            The negotiated SSL/TLS protocol version of the connection.
         cipherName:
           type: string
           description: |
