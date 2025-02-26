@@ -165,7 +165,7 @@ export type HttpResult = TestResult & {
 		createdAt: string;
 		expiresAt: string;
 		authorizationError?: string;
-		subject: Record<string, string | null>;
+		subject: Record<string, string>;
 		issuer: Record<string, string | null>;
 		keyType: 'RSA' | 'EC' | null;
 		keyBits: number | null;

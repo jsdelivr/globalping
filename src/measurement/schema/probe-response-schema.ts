@@ -143,9 +143,9 @@ export const httpResultSchema = Joi.object<HttpResult>({
 			alt: Joi.string().max(20000).allow(null).required(),
 		}).required(),
 		issuer: Joi.object({
-			C: Joi.string().max(20000).allow(null).required(),
-			O: Joi.string().max(20000).allow(null).required(),
-			CN: Joi.string().max(20000).allow(null).required(),
+			C: Joi.string().max(20000),
+			O: Joi.string().max(20000),
+			CN: Joi.string().max(20000),
 		}).required(),
 		keyType: Joi.string().max(1024).valid('RSA', 'EC').allow(null).required(),
 		keyBits: Joi.number().allow(null).required(),

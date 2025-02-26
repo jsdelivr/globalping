@@ -775,11 +775,7 @@ describe('resultSchema', () => {
 				cipherName: 'TLS_AES_256_GCM_SHA384',
 				createdAt: '2025-01-27T16:52:44.000Z',
 				expiresAt: '2025-04-27T17:52:41.000Z',
-				issuer: {
-					C: null,
-					O: null,
-					CN: null,
-				},
+				issuer: {},
 				subject: {
 					CN: 'globalping.io',
 					alt: 'DNS:globalping.io',

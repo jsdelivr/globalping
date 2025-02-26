@@ -1351,25 +1351,15 @@ components:
     TlsCertificateIssuer:
       type: object
       description: Information about the certificate issuer.
-      required:
-        - C
-        - O
-        - CN
       properties:
         C:
-          type:
-            - string
-            - 'null'
+          type: string
           description: The issuer's country.
         O:
-          type:
-            - string
-            - 'null'
+          type: string
           description: The issuer's organization.
         CN:
-          type:
-            - string
-            - 'null'
+          type: string
           description: The issuer's common name.
     TlsCertificateSubject:
       type: object
