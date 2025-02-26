@@ -150,11 +150,6 @@ export class AltIps {
 			return false;
 		}
 
-		if (localSocket.data.probe.altIpAddresses.includes(altIp)) {
-			logger.info('Alt IP already in the list.', { altIp });
-			return true;
-		}
-
 		if (isIpPrivate(altIp)) {
 			logger.warn('Alt IP is private.', { altIp });
 			return false;
@@ -180,6 +175,10 @@ export class AltIps {
 			}
 
 			return false;
+		}
+
+		if (localSocket.data.probe.ipAddress === altIp || localSocket.data.probe.altIpAddresses.includes(altIp)) {
+			return true;
 		}
 
 		localSocket.data.probe.altIpAddresses.push(altIp);
