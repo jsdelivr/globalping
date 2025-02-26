@@ -139,8 +139,8 @@ export const httpResultSchema = Joi.object<HttpResult>({
 		expiresAt: Joi.string().max(1024).allow(null).required(),
 		error: Joi.string().max(1024),
 		subject: Joi.object({
-			CN: Joi.string().max(20000).allow(null).required(),
-			alt: Joi.string().max(20000).allow(null).required(),
+			CN: Joi.string().max(20000),
+			alt: Joi.string().max(20000),
 		}).required(),
 		issuer: Joi.object({
 			C: Joi.string().max(20000),

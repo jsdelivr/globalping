@@ -776,10 +776,7 @@ describe('resultSchema', () => {
 				createdAt: '2025-01-27T16:52:44.000Z',
 				expiresAt: '2025-04-27T17:52:41.000Z',
 				issuer: {},
-				subject: {
-					CN: 'globalping.io',
-					alt: 'DNS:globalping.io',
-				},
+				subject: {},
 				keyType: 'RSA',
 				keyBits: null,
 				serialNumber: 'E5:50:05:12:BE:8A:BD:FC:0E:2B:B3:C5:AD:A7:6F:1C',

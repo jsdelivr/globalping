@@ -1364,18 +1364,13 @@ components:
     TlsCertificateSubject:
       type: object
       description: Information about the certificate subject.
-      required:
-        - CN
-        - alt
       properties:
         CN:
           type: string
           description: The subject's common name.
         alt:
-          type:
-            - string
-            - 'null'
-          description: The subject's alternative names, or `null` if missing.
+          type: string
+          description: The subject's alternative names.
     Limits:
       type: object
       required:
