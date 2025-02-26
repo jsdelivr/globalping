@@ -1299,11 +1299,11 @@ components:
         protocol:
           type: string
           description: |
-            The negotiated SSL/TLS protocol version of the connection.
+            The negotiated SSL/TLS protocol version.
         cipherName:
           type: string
           description: |
-            OpenSSL name for the cipher suite.
+            OpenSSL name of the cipher suite.
         error:
           type: string
           description: |
