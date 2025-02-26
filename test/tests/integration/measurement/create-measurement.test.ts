@@ -20,7 +20,7 @@ describe('Create measurement', () => {
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
 		({ getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } = await import('../../../utils/server.js'));
-		({ ADOPTIONS_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
+		({ D_PROBES_TABLE: ADOPTIONS_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
 		({ probeOverride } = await import('../../../../src/lib/ws/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
