@@ -2,14 +2,18 @@ import got from 'got';
 import { expect } from 'chai';
 import { client } from '../../../src/lib/sql/client.js';
 import { waitProbeInCity } from '../utils.js';
+import { randomUUID } from 'crypto';
 
-const ADOPTIONS_TABLE = 'gp_probes';
+const PROBES_TABLE = 'gp_probes';
 
-describe('adopted probe', () => {
+describe('adopted probes', () => {
 	before(async function () {
 		this.timeout(80000);
 
-		await client(ADOPTIONS_TABLE).insert({
+		await client(PROBES_TABLE).delete();
+
+		await client(PROBES_TABLE).insert({
+			id: randomUUID(),
 			userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			lastSyncDate: new Date(),
 			ip: '1.2.3.4',
@@ -35,7 +39,7 @@ describe('adopted probe', () => {
 
 	after(async function () {
 		this.timeout(80000);
-		await client(ADOPTIONS_TABLE).where({ city: 'San Luis' }).delete();
+		await client(PROBES_TABLE).delete();
 		await waitProbeInCity('Buenos Aires');
 	});
 

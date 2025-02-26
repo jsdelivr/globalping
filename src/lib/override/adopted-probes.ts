@@ -8,16 +8,17 @@ import type { Probe, ProbeLocation, Tag } from '../../probe/types.js';
 import { normalizeCoordinate, normalizeFromPublicName } from '../geoip/utils.js';
 import { getIndex } from '../location/location.js';
 import { countries } from 'countries-list';
+import { randomUUID } from 'crypto';
 
 const logger = scopedLogger('adopted-probes');
 
-export const ADOPTIONS_TABLE = 'gp_probes';
+export const DASH_PROBES_TABLE = 'gp_probes';
 export const NOTIFICATIONS_TABLE = 'directus_notifications';
 export const USERS_TABLE = 'directus_users';
 
-export type Adoption = {
+type DProbe = {
 	id: string;
-	userId: string;
+	userId: string | null;
 	ip: string;
 	name: string | null;
 	altIps: string[];
@@ -48,7 +49,11 @@ export type Adoption = {
 	publicProbes: boolean;
 }
 
-export type Row = Omit<Adoption, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes'> & {
+export type Adoption = Omit<DProbe, 'userId'> & {
+	userId: string;
+}
+
+export type Row = Omit<DProbe, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes'> & {
 	altIps: string;
 	tags: string;
 	systemTags: string;
@@ -58,17 +63,19 @@ export type Row = Omit<Adoption, 'isCustomCity' | 'tags' | 'systemTags' | 'altIp
 	publicProbes: number;
 }
 
-type AdoptionFieldDescription = {
+type DProbeFieldDescription = {
 	probeField: string,
 	shouldUpdateIfCustomCity: boolean,
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	formatter?: (probeValue: any, probe: Probe, adoption: Adoption) => unknown
+	formatter?: (probeValue: any, probe: Probe, dProbe?: DProbe) => unknown
 }
 
 export class AdoptedProbes {
+	private dProbes: DProbe[] = [];
 	private adoptions: Adoption[] = [];
 	private ipToAdoption: Map<string, Adoption> = new Map();
-	private readonly adoptionFieldToProbeField: Partial<Record<keyof Adoption, AdoptionFieldDescription>> = {
+	private syncBackToDashboard = process.env['SHOULD_SYNC_ADOPTIONS'] === 'true';
+	private readonly dProbeFieldToProbeField: Partial<Record<keyof DProbe, DProbeFieldDescription>> = {
 		uuid: {
 			probeField: 'uuid',
 			shouldUpdateIfCustomCity: true,
@@ -112,8 +119,8 @@ export class AdoptedProbes {
 		systemTags: {
 			probeField: 'tags',
 			shouldUpdateIfCustomCity: true,
-			formatter: (probeTags: Tag[], _probe: Probe, adoption: Adoption) => [
-				...(adoption.publicProbes ? [ this.getGlobalUserTag(adoption.githubUsername!) ] : []),
+			formatter: (probeTags: Tag[], _probe: Probe, dProbe?: DProbe) => [
+				...(dProbe && dProbe.publicProbes ? [ this.getGlobalUserTag(dProbe.githubUsername!) ] : []),
 				...probeTags.filter(({ type }) => type === 'system').map(({ value }) => value),
 			],
 		},
@@ -221,21 +228,23 @@ export class AdoptedProbes {
 	}
 
 	async syncDashboardData () {
-		await this.fetchAdoptions();
+		await this.fetchDProbes();
 
-		if (process.env['SHOULD_SYNC_ADOPTIONS'] !== 'true') {
+		if (!this.syncBackToDashboard) {
 			return;
 		}
 
 		const probes = this.getProbesWithAdminData();
-		const { adoptionsWithProbe, adoptionsWithoutProbe } = this.matchAdoptionsAndProbes(probes);
-		const { updatedAdoptions, adoptionDataUpdates } = this.generateUpdatedAdoptions(adoptionsWithProbe, adoptionsWithoutProbe);
-		const { adoptionsToDelete, adoptionAltIpUpdates } = this.findDuplications(updatedAdoptions);
+		// 'probe' - usual API probe. 'dProbe' - dashboard probe data stored in sql.
+		const { dProbesWithProbe, dProbesWithoutProbe, probesWithoutDProbe } = this.matchDProbesAndProbes(probes);
+		const { updatedDProbes, dProbeDataUpdates } = this.generateUpdatedDProbes(dProbesWithProbe, dProbesWithoutProbe);
+		const { dProbesToDelete, dProbeAltIpUpdates } = this.findDuplications(updatedDProbes);
 
-		const adoptionUpdates = this.mergeUpdates(adoptionDataUpdates, adoptionAltIpUpdates, adoptionsToDelete);
+		const dProbeUpdates = this.mergeUpdates(dProbeDataUpdates, dProbeAltIpUpdates, dProbesToDelete);
 
-		await this.resolveIfError(this.deleteAdoptions(adoptionsToDelete));
-		await Bluebird.map(adoptionUpdates, ({ adoption, update }) => this.resolveIfError(this.updateAdoption(adoption, update)), { concurrency: 8 });
+		await this.resolveIfError(this.deleteDProbes(dProbesToDelete));
+		await Bluebird.map(dProbeUpdates, ({ dProbe, update }) => this.resolveIfError(this.updateDProbe(dProbe, update)), { concurrency: 8 });
+		await Bluebird.map(probesWithoutDProbe, probe => this.resolveIfError(this.createDProbe(probe)), { concurrency: 8 });
 	}
 
 	private async resolveIfError (pr: Promise<void>): Promise<void> {
@@ -244,15 +253,17 @@ export class AdoptedProbes {
 		});
 	}
 
-	public async fetchAdoptions () {
-		const rows = await this.sql(ADOPTIONS_TABLE)
-			.leftJoin(USERS_TABLE, `${ADOPTIONS_TABLE}.userId`, `${USERS_TABLE}.id`)
+	public async fetchDProbes () {
+		const rows = await this.sql(DASH_PROBES_TABLE)
+			.leftJoin(USERS_TABLE, `${DASH_PROBES_TABLE}.userId`, `${USERS_TABLE}.id`)
+			// Fetch only adopted probes if sync back to dashboard is not required.
+			.where((builder) => { !this.syncBackToDashboard && void builder.whereNotNull('userId'); })
 			// First item will be preserved, so we are prioritizing online probes.
 			// Sorting by id at the end so order is the same in any table state.
-			.orderByRaw(`${ADOPTIONS_TABLE}.lastSyncDate DESC, ${ADOPTIONS_TABLE}.onlineTimesToday DESC, FIELD(${ADOPTIONS_TABLE}.status, 'ready') DESC, ${ADOPTIONS_TABLE}.id DESC`)
-			.select<Row[]>(`${ADOPTIONS_TABLE}.*`, `${USERS_TABLE}.github_username AS githubUsername`, `${USERS_TABLE}.public_probes as publicProbes`);
+			.orderByRaw(`${DASH_PROBES_TABLE}.lastSyncDate DESC, ${DASH_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${DASH_PROBES_TABLE}.status, 'ready') DESC, ${DASH_PROBES_TABLE}.id DESC`)
+			.select<Row[]>(`${DASH_PROBES_TABLE}.*`, `${USERS_TABLE}.github_username AS githubUsername`, `${USERS_TABLE}.public_probes as publicProbes`);
 
-		const adoptions: Adoption[] = rows.map(row => ({
+		const dProbes: DProbe[] = rows.map(row => ({
 			...row,
 			altIps: JSON.parse(row.altIps) as string[],
 			tags: (JSON.parse(row.tags) as { prefix: string; value: string; format?: string; }[])
@@ -272,80 +283,81 @@ export class AdoptedProbes {
 			publicProbes: Boolean(row.publicProbes),
 		}));
 
-		this.adoptions = adoptions;
+		this.dProbes = dProbes;
+		this.adoptions = dProbes.filter((dProbe): dProbe is Adoption => !!dProbe.userId);
 
 		this.ipToAdoption = new Map([
-			...adoptions.map(adoption => [ adoption.ip, adoption ] as const),
-			...adoptions.map(adoption => adoption.altIps.map(altIp => [ altIp, adoption ] as const)).flat(),
+			...this.adoptions.map(adoption => [ adoption.ip, adoption ] as const),
+			...this.adoptions.map(adoption => adoption.altIps.map(altIp => [ altIp, adoption ] as const)).flat(),
 		]);
 	}
 
-	private matchAdoptionsAndProbes (probes: Probe[]) {
+	private matchDProbesAndProbes (probes: Probe[]) {
 		const uuidToProbe = new Map(probes.map(probe => [ probe.uuid, probe ]));
 		const ipToProbe = new Map(probes.map(probe => [ probe.ipAddress, probe ]));
 		const altIpToProbe = new Map(probes.map(probe => probe.altIpAddresses.map(altIp => [ altIp, probe ] as const)).flat());
-		const adoptionsWithProbe: { adoption: Adoption, probe: Probe }[] = [];
+		const dProbesWithProbe: { dProbe: DProbe, probe: Probe }[] = [];
 
-		// Searching probe for the adoption by: UUID.
-		let adoptionsWithoutProbe: Adoption[] = [];
+		// Searching probe for the dProbe by: UUID.
+		let dProbesWithoutProbe: DProbe[] = [];
 
-		this.adoptions.forEach((adoption) => {
-			const probe = adoption.uuid && uuidToProbe.get(adoption.uuid);
+		this.dProbes.forEach((dProbe) => {
+			const probe = dProbe.uuid && uuidToProbe.get(dProbe.uuid);
 
 			if (probe) {
-				adoptionsWithProbe.push({ adoption, probe });
+				dProbesWithProbe.push({ dProbe, probe });
 				uuidToProbe.delete(probe.uuid);
 				ipToProbe.delete(probe.ipAddress);
 				probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
 			} else {
-				adoptionsWithoutProbe.push(adoption);
+				dProbesWithoutProbe.push(dProbe);
 			}
 		});
 
-		// Searching probe for the adoption by: adoption IP -> probe IP.
-		let adoptionsToCheck = [ ...adoptionsWithoutProbe ];
-		adoptionsWithoutProbe = [];
+		// Searching probe for the dProbe by: dProbe IP -> probe IP.
+		let dProbesToCheck = [ ...dProbesWithoutProbe ];
+		dProbesWithoutProbe = [];
 
-		adoptionsToCheck.forEach((adoption) => {
-			const probe = ipToProbe.get(adoption.ip);
+		dProbesToCheck.forEach((dProbe) => {
+			const probe = ipToProbe.get(dProbe.ip);
 
 			if (probe) {
-				adoptionsWithProbe.push({ adoption, probe });
+				dProbesWithProbe.push({ dProbe, probe });
 				uuidToProbe.delete(probe.uuid);
 				ipToProbe.delete(probe.ipAddress);
 				probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
 			} else {
-				adoptionsWithoutProbe.push(adoption);
+				dProbesWithoutProbe.push(dProbe);
 			}
 		});
 
-		// Searching probe for the adoption by: adoption IP -> probe alt IP.
-		adoptionsToCheck = [ ...adoptionsWithoutProbe ];
-		adoptionsWithoutProbe = [];
+		// Searching probe for the dProbe by: dProbe IP -> probe alt IP.
+		dProbesToCheck = [ ...dProbesWithoutProbe ];
+		dProbesWithoutProbe = [];
 
-		adoptionsToCheck.forEach((adoption) => {
-			const probe = altIpToProbe.get(adoption.ip);
+		dProbesToCheck.forEach((dProbe) => {
+			const probe = altIpToProbe.get(dProbe.ip);
 
 			if (probe) {
-				adoptionsWithProbe.push({ adoption, probe });
+				dProbesWithProbe.push({ dProbe, probe });
 				uuidToProbe.delete(probe.uuid);
 				ipToProbe.delete(probe.ipAddress);
 				probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
 			} else {
-				adoptionsWithoutProbe.push(adoption);
+				dProbesWithoutProbe.push(dProbe);
 			}
 		});
 
-		// Searching probe for the adoption by: adoption alt IP -> probe IP or alt IP.
-		adoptionsToCheck = [ ...adoptionsWithoutProbe ];
-		adoptionsWithoutProbe = [];
+		// Searching probe for the dProbe by: dProbe alt IP -> probe IP or alt IP.
+		dProbesToCheck = [ ...dProbesWithoutProbe ];
+		dProbesWithoutProbe = [];
 
-		adoptionsToCheck.forEach((adoption) => {
-			for (const altIp of adoption.altIps) {
+		dProbesToCheck.forEach((dProbe) => {
+			for (const altIp of dProbe.altIps) {
 				const probe = ipToProbe.get(altIp) || altIpToProbe.get(altIp);
 
 				if (probe) {
-					adoptionsWithProbe.push({ adoption, probe });
+					dProbesWithProbe.push({ dProbe, probe });
 					uuidToProbe.delete(probe.uuid);
 					ipToProbe.delete(probe.ipAddress);
 					probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
@@ -353,93 +365,94 @@ export class AdoptedProbes {
 				}
 			}
 
-			adoptionsWithoutProbe.push(adoption);
+			dProbesWithoutProbe.push(dProbe);
 		});
 
-		return { adoptionsWithProbe, adoptionsWithoutProbe };
+		const probesWithoutDProbe = [ ...uuidToProbe.values() ];
+		return { dProbesWithProbe, dProbesWithoutProbe, probesWithoutDProbe };
 	}
 
-	private generateUpdatedAdoptions (adoptionsWithProbe: { adoption: Adoption, probe: Probe }[], adoptionsWithoutProbe: Adoption[]) {
-		const adoptionDataUpdates: { adoption: Adoption, update: Partial<Adoption> }[] = [];
-		const updatedAdoptions: Adoption[] = [];
+	private generateUpdatedDProbes (dProbesWithProbe: { dProbe: DProbe, probe: Probe }[], dProbesWithoutProbe: DProbe[]) {
+		const dProbeDataUpdates: { dProbe: DProbe, update: Partial<DProbe> }[] = [];
+		const updatedDProbes: DProbe[] = [];
 
-		adoptionsWithProbe.forEach(({ adoption, probe }) => {
+		dProbesWithProbe.forEach(({ dProbe, probe }) => {
 			const updateObject: Record<string, unknown> = {};
 
-			Object.entries(this.adoptionFieldToProbeField).forEach(([ adoptionField, { probeField, shouldUpdateIfCustomCity, formatter }]) => {
-				if (adoption.isCustomCity && !shouldUpdateIfCustomCity) {
+			Object.entries(this.dProbeFieldToProbeField).forEach(([ dProbeField, { probeField, shouldUpdateIfCustomCity, formatter }]) => {
+				if (dProbe.isCustomCity && !shouldUpdateIfCustomCity) {
 					return;
 				}
 
-				const adoptionValue = _.get(adoption, adoptionField) as unknown;
+				const dProbeValue = _.get(dProbe, dProbeField) as unknown;
 				let probeValue = _.get(probe, probeField) as unknown;
 
 				if (formatter) {
-					probeValue = formatter(probeValue, probe, adoption);
+					probeValue = formatter(probeValue, probe, dProbe);
 				}
 
-				if (!_.isEqual(adoptionValue, probeValue)) {
-					updateObject[adoptionField] = probeValue;
+				if (!_.isEqual(dProbeValue, probeValue)) {
+					updateObject[dProbeField] = probeValue;
 				}
 			});
 
-			if (!this.isToday(adoption.lastSyncDate)) {
+			if (!this.isToday(dProbe.lastSyncDate)) {
 				updateObject['lastSyncDate'] = new Date();
 			}
 
 			if (!_.isEmpty(updateObject)) {
-				adoptionDataUpdates.push({ adoption, update: updateObject });
+				dProbeDataUpdates.push({ dProbe, update: updateObject });
 			}
 
-			updatedAdoptions.push({ ...adoption, ...updateObject });
+			updatedDProbes.push({ ...dProbe, ...updateObject });
 		});
 
-		adoptionsWithoutProbe.forEach((adoption) => {
+		dProbesWithoutProbe.forEach((dProbe) => {
 			const updateObject = {
-				...(adoption.status !== 'offline' && { status: 'offline' }),
+				...(dProbe.status !== 'offline' && { status: 'offline' }),
 			};
 
 			if (!_.isEmpty(updateObject)) {
-				adoptionDataUpdates.push({ adoption, update: updateObject });
+				dProbeDataUpdates.push({ dProbe, update: updateObject });
 			}
 
-			updatedAdoptions.push({ ...adoption, ...updateObject });
+			updatedDProbes.push({ ...dProbe, ...updateObject });
 		});
 
-		return { adoptionDataUpdates, updatedAdoptions };
+		return { dProbeDataUpdates, updatedDProbes };
 	}
 
-	private findDuplications (updatedAdoptions: Adoption[]) {
-		const adoptionsToDelete: Adoption[] = [];
-		const adoptionAltIpUpdates: { adoption: Adoption, update: { altIps: string[] } }[] = [];
-		const uniqIps = new Map<string, Adoption>();
+	private findDuplications (updatedDProbes: DProbe[]) {
+		const dProbesToDelete: DProbe[] = [];
+		const dProbeAltIpUpdates: { dProbe: DProbe, update: { altIps: string[] } }[] = [];
+		const uniqIps = new Map<string, DProbe>();
 
-		updatedAdoptions.forEach((adoption) => {
-			const existingAdoption = uniqIps.get(adoption.ip);
+		updatedDProbes.forEach((dProbe) => {
+			const existingDProbe = uniqIps.get(dProbe.ip);
 
 			if (
-				existingAdoption
-				&& existingAdoption.country === adoption.country
-				&& existingAdoption.userId === adoption.userId
+				existingDProbe
+				&& existingDProbe.country === dProbe.country
+				&& existingDProbe.userId === dProbe.userId
 			) {
-				logger.warn(`Duplication found by IP ${adoption.ip}`, {
-					stay: _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]),
-					delete: _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]),
+				logger.warn(`Duplication found by IP ${dProbe.ip}`, {
+					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps' ]),
+					delete: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps' ]),
 				});
 
-				adoptionsToDelete.push(adoption);
+				dProbesToDelete.push(dProbe);
 				return;
-			} else if (existingAdoption) {
-				logger.error(`Unremovable duplication found by IP ${adoption.ip}`, {
-					stay: _.pick(existingAdoption, [ 'id', 'uuid', 'ip', 'altIps' ]),
-					duplicate: _.pick(adoption, [ 'id', 'uuid', 'ip', 'altIps' ]),
+			} else if (existingDProbe) {
+				logger.error(`Unremovable duplication found by IP ${dProbe.ip}`, {
+					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps' ]),
+					duplicate: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps' ]),
 				});
 			}
 
 			const duplicatedAltIps: string[] = [];
 			const newAltIps: string[] = [];
 
-			for (const altIp of adoption.altIps) {
+			for (const altIp of dProbe.altIps) {
 				if (uniqIps.has(altIp)) {
 					duplicatedAltIps.push(altIp);
 				} else {
@@ -448,66 +461,92 @@ export class AdoptedProbes {
 			}
 
 			if (duplicatedAltIps.length) {
-				adoptionAltIpUpdates.push({ adoption, update: { altIps: newAltIps } });
+				dProbeAltIpUpdates.push({ dProbe, update: { altIps: newAltIps } });
 			}
 
-			uniqIps.set(adoption.ip, adoption);
-			newAltIps.forEach(altIp => uniqIps.set(altIp, adoption));
+			uniqIps.set(dProbe.ip, dProbe);
+			newAltIps.forEach(altIp => uniqIps.set(altIp, dProbe));
 		});
 
-		return { adoptionsToDelete, adoptionAltIpUpdates };
+		return { dProbesToDelete, dProbeAltIpUpdates };
 	}
 
 	private mergeUpdates (
-		adoptionDataUpdates: { adoption: Adoption; update: Partial<Adoption> }[],
-		adoptionAltIpUpdates: { adoption: Adoption; update: { altIps: string[] } }[],
-		adoptionsToDelete: Adoption[],
-	): { adoption: Adoption; update: Partial<Adoption> }[] {
-		const altIpUpdatesById = new Map(adoptionAltIpUpdates.map(altIpUpdate => [ altIpUpdate.adoption.id, altIpUpdate ]));
+		dProbeDataUpdates: { dProbe: DProbe; update: Partial<DProbe> }[],
+		dProbeAltIpUpdates: { dProbe: DProbe; update: { altIps: string[] } }[],
+		dProbesToDelete: DProbe[],
+	): { dProbe: DProbe; update: Partial<DProbe> }[] {
+		const altIpUpdatesById = new Map(dProbeAltIpUpdates.map(altIpUpdate => [ altIpUpdate.dProbe.id, altIpUpdate ]));
 
-		const adoptionUpdates = adoptionDataUpdates.map((adoptionDataUpdate) => {
-			const { adoption, update } = adoptionDataUpdate;
-			const altIpUpdate = altIpUpdatesById.get(adoption.id);
+		const dProbeUpdates = dProbeDataUpdates.map((dProbeDataUpdate) => {
+			const { dProbe, update } = dProbeDataUpdate;
+			const altIpUpdate = altIpUpdatesById.get(dProbe.id);
 
 			if (altIpUpdate) {
-				altIpUpdatesById.delete(adoption.id);
-				return { adoption, update: { ...update, ...altIpUpdate.update } };
+				altIpUpdatesById.delete(dProbe.id);
+				return { dProbe, update: { ...update, ...altIpUpdate.update } };
 			}
 
-			return adoptionDataUpdate;
+			return dProbeDataUpdate;
 		});
 
-		// Some of the altIpUpdatesById are merged with adoptionUpdates, others are included here.
-		const allUpdates = [ ...adoptionUpdates, ...altIpUpdatesById.values() ];
+		// Some of the altIpUpdatesById are merged with dProbeUpdates, others are included here.
+		const allUpdates = [ ...dProbeUpdates, ...altIpUpdatesById.values() ];
 
 		// Removing updates of probes that will be deleted.
-		const deleteIds = adoptionsToDelete.map(({ id }) => id);
-		const filteredUpdates = allUpdates.filter(({ adoption }) => !deleteIds.includes(adoption.id));
+		const deleteIds = dProbesToDelete.map(({ id }) => id);
+		const filteredUpdates = allUpdates.filter(({ dProbe }) => !deleteIds.includes(dProbe.id));
 		return filteredUpdates;
 	}
 
-	private async updateAdoption (adoption: Adoption, update: Partial<Adoption>) {
+	private async updateDProbe (dProbe: DProbe, update: Partial<DProbe>) {
 		const formattedUpdate = Object.fromEntries(Object.entries(update).map(([ key, value ]) => [
 			key, (_.isObject(value) && !_.isDate(value)) ? JSON.stringify(value) : value,
 		]));
 
-		await this.sql(ADOPTIONS_TABLE).where({ id: adoption.id }).update(formattedUpdate);
+		await this.sql(DASH_PROBES_TABLE).where({ id: dProbe.id }).update(formattedUpdate);
 
 		// if country of probe changes, but there is a custom city in prev country, send notification to user.
-		if (update.country) {
-			if (adoption.countryOfCustomCity && adoption.country === adoption.countryOfCustomCity) {
+		if (update.country && dProbe.userId) {
+			const adoption = dProbe as Adoption;
+
+			if (dProbe.countryOfCustomCity && dProbe.country === dProbe.countryOfCustomCity) {
 				await this.sendNotificationCityNotApplied(adoption, update.country);
-			} else if (adoption.countryOfCustomCity && update.country === adoption.countryOfCustomCity) {
+			} else if (dProbe.countryOfCustomCity && update.country === dProbe.countryOfCustomCity) {
 				await this.sendNotificationCityAppliedAgain(adoption, update.country);
 			}
 		}
 	}
 
-	private async deleteAdoptions (adoptionsToDelete: Adoption[]) {
-		if (adoptionsToDelete.length) {
-			logger.warn('Deleting ids:', adoptionsToDelete.map(({ id }) => id));
-			await this.sql(ADOPTIONS_TABLE).whereIn('id', adoptionsToDelete.map(({ id }) => id)).delete();
+	private async deleteDProbes (dProbesToDelete: DProbe[]) {
+		if (dProbesToDelete.length) {
+			logger.warn('Deleting ids:', dProbesToDelete.map(({ id }) => id));
+			await this.sql(DASH_PROBES_TABLE).whereIn('id', dProbesToDelete.map(({ id }) => id)).delete();
 		}
+	}
+
+	private async createDProbe (probe: Probe) {
+		const dProbe: Record<string, unknown> = {
+			id: randomUUID(),
+			date_created: new Date(),
+			lastSyncDate: new Date(),
+		};
+
+		Object.entries(this.dProbeFieldToProbeField).forEach(([ dProbeField, { probeField, formatter }]) => {
+			let probeValue = _.get(probe, probeField) as unknown;
+
+			if (formatter) {
+				probeValue = formatter(probeValue, probe);
+			}
+
+			if (_.isObject(probeValue) && !_.isDate(probeValue)) {
+				probeValue = JSON.stringify(probeValue);
+			}
+
+			dProbe[dProbeField] = probeValue;
+		});
+
+		await this.sql(DASH_PROBES_TABLE).insert(dProbe);
 	}
 
 	private async sendNotification (recipient: string, subject: string, message: string) {

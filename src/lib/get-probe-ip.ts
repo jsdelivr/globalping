@@ -12,6 +12,11 @@ const getProbeIp = (socket: Socket) => {
 
 	// Use random ip assigned by the API
 	if (process.env['FAKE_PROBE_IP']) {
+		// Use fake ip provided by the probe if exists
+		if (socket.handshake.query['fakeIp']) {
+			return socket.handshake.query['fakeIp'] as string;
+		}
+
 		const samples = [
 			'131.255.7.26', // Buenos Aires
 			'213.136.174.80', // Naples
@@ -28,11 +33,6 @@ const getProbeIp = (socket: Socket) => {
 		const lastGroup = (socket.handshake.query['uuid'] as string).split('-').pop() || '0';
 		const index = parseInt(lastGroup, 16) % samples.length;
 		return samples[index];
-	}
-
-	// Use fake ip provided by the probe
-	if (process.env['TEST_MODE'] === 'perf') {
-		return socket.handshake.query['fakeIp'] as string;
 	}
 
 	const clientIp = requestIp.getClientIp(socket.request);
