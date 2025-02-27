@@ -51,7 +51,7 @@ describe('api', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('failed');
-		expect(response.body.results[0].result.rawOutput).to.equal('\n\nThe measurement timed out');
+		expect(response.body.results[0].result.rawOutput).to.equal('\n\nThe measurement timed out.');
 		expect(response).to.matchApiSchema();
 	}).timeout(40000);
 });

@@ -129,7 +129,7 @@ export class MeasurementStore {
 
 			for (const resultObject of inProgressResults) {
 				resultObject.result.status = 'failed';
-				resultObject.result.rawOutput += '\n\nThe measurement timed out';
+				resultObject.result.rawOutput += '\n\nThe measurement timed out.';
 			}
 		}
 

@@ -127,7 +127,7 @@ describe('measurement store', () => {
 				probe: {},
 				result: {
 					status: 'failed',
-					rawOutput: '\n\nThe measurement timed out',
+					rawOutput: '\n\nThe measurement timed out.',
 				},
 			}],
 		});

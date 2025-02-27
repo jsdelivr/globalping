@@ -17,6 +17,7 @@ export const subscribeWithHandler = (socket: ServerSocket, event: string, method
 			const metadata: Record<string, unknown> = {
 				client: { id: socket.id, ip: clientIp },
 				message: 'unknown',
+				args,
 			};
 
 			if (isError(error)) {
