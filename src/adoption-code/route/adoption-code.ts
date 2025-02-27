@@ -30,6 +30,8 @@ const handle = async (ctx: Context): Promise<void> => {
 		longitude: probe.location.longitude,
 		asn: probe.location.asn,
 		network: probe.location.network,
+		isIPv4Supported: probe.isIPv4Supported,
+		isIPv6Supported: probe.isIPv6Supported,
 	};
 };
 
