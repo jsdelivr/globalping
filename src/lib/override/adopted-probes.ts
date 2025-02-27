@@ -113,8 +113,8 @@ export class AdoptedProbes {
 			probeField: 'tags',
 			shouldUpdateIfCustomCity: true,
 			formatter: (probeTags: Tag[], _probe: Probe, adoption: Adoption) => [
-				...probeTags.filter(({ type }) => type === 'system').map(({ value }) => value),
 				...(adoption.publicProbes ? [ this.getGlobalUserTag(adoption.githubUsername!) ] : []),
+				...probeTags.filter(({ type }) => type === 'system').map(({ value }) => value),
 			],
 		},
 		asn: {

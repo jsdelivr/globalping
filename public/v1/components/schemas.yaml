@@ -1292,10 +1292,6 @@ components:
         - fingerprint256
         - publicKey
       properties:
-        authorized:
-          type: boolean
-          description: |
-            Indicates whether a trusted authority signed the certificate.
         protocol:
           type: string
           description: |
@@ -1303,7 +1299,11 @@ components:
         cipherName:
           type: string
           description: |
-            OpenSSL name of the cipher suite.
+            The OpenSSL name of the cipher suite.
+        authorized:
+          type: boolean
+          description: |
+            Indicates whether a trusted authority signed the certificate.
         error:
           type: string
           description: |

@@ -866,7 +866,7 @@ describe('AdoptedProbes', () => {
 
 		expect(sql.update.callCount).to.equal(1);
 		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
-		expect(sql.update.args[0]).to.deep.equal([{ systemTags: '["datacenter-network","u-jimaek"]' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ systemTags: '["u-jimaek","datacenter-network"]' }]);
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
 		expect(updatedTags).to.deep.equal([
 			{ type: 'system', value: 'datacenter-network' },
