@@ -74,6 +74,7 @@ export class AdoptedProbes {
 	private dProbes: DProbe[] = [];
 	private adoptions: Adoption[] = [];
 	private ipToAdoption: Map<string, Adoption> = new Map();
+	private syncBackToDashboard = process.env['SHOULD_SYNC_ADOPTIONS'] === 'true';
 	private readonly dProbeFieldToProbeField: Partial<Record<keyof DProbe, DProbeFieldDescription>> = {
 		uuid: {
 			probeField: 'uuid',
@@ -227,9 +228,9 @@ export class AdoptedProbes {
 	}
 
 	async syncDashboardData () {
-		await this.fetchAdoptions();
+		await this.fetchDProbes();
 
-		if (process.env['SHOULD_SYNC_ADOPTIONS'] !== 'true') {
+		if (!this.syncBackToDashboard) {
 			return;
 		}
 
@@ -252,9 +253,11 @@ export class AdoptedProbes {
 		});
 	}
 
-	public async fetchAdoptions () {
+	public async fetchDProbes () {
 		const rows = await this.sql(D_PROBES_TABLE)
 			.leftJoin(USERS_TABLE, `${D_PROBES_TABLE}.userId`, `${USERS_TABLE}.id`)
+			// Fetch only adopted probes if sync back to dashboard is not required.
+			.where((builder) => { !this.syncBackToDashboard && void builder.whereNotNull('userId'); })
 			// First item will be preserved, so we are prioritizing online probes.
 			// Sorting by id at the end so order is the same in any table state.
 			.orderByRaw(`${D_PROBES_TABLE}.lastSyncDate DESC, ${D_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${D_PROBES_TABLE}.status, 'ready') DESC, ${D_PROBES_TABLE}.id DESC`)
