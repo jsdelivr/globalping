@@ -10,7 +10,7 @@ export class ProbeOverride {
 
 	async fetchDashboardData () {
 		await Promise.all([
-			this.adoptedProbes.fetchAdoptions(),
+			this.adoptedProbes.fetchDProbes(),
 			this.adminData.syncDashboardData(),
 		]);
 	}
