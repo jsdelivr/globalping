@@ -128,7 +128,7 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		expect(sqlStub.callCount).to.equal(1);
-		expect(sqlStub.args[0]).deep.equal([ 'gp_adopted_probes' ]);
+		expect(sqlStub.args[0]).deep.equal([ 'gp_probes' ]);
 		expect(sql.select.callCount).to.equal(1);
 	});
 
@@ -142,7 +142,7 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		expect(sqlStub.callCount).to.equal(1);
-		expect(sqlStub.args[0]).deep.equal([ 'gp_adopted_probes' ]);
+		expect(sqlStub.args[0]).deep.equal([ 'gp_probes' ]);
 		expect(sql.select.callCount).to.equal(1);
 	});
 
