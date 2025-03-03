@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { randomUUID } from 'node:crypto';
 import nock from 'nock';
 import { expect } from 'chai';
 import request, { type Agent } from 'supertest';
@@ -286,6 +287,7 @@ describe('Get Probes', () => {
 		describe('adopted probes', () => {
 			before(async () => {
 				await client(D_PROBES_TABLE).insert({
+					id: randomUUID(),
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					lastSyncDate: new Date(),
 					ip: '1.2.3.4',
