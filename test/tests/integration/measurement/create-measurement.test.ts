@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { expect } from 'chai';
 import request, { type Agent } from 'supertest';
 import * as td from 'testdouble';
@@ -15,12 +16,12 @@ describe('Create measurement', () => {
 	let getTestServer;
 	let requestAgent: Agent;
 	let probeOverride: ProbeOverride;
-	let ADOPTIONS_TABLE: string;
+	let D_PROBES_TABLE: string;
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
 		({ getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } = await import('../../../utils/server.js'));
-		({ D_PROBES_TABLE: ADOPTIONS_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
+		({ D_PROBES_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
 		({ probeOverride } = await import('../../../../src/lib/ws/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
@@ -675,7 +676,8 @@ describe('Create measurement', () => {
 
 		describe('adopted probes', () => {
 			before(async () => {
-				await client(ADOPTIONS_TABLE).insert({
+				await client(D_PROBES_TABLE).insert({
+					id: randomUUID(),
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					lastSyncDate: new Date(),
 					ip: '1.2.3.4',
@@ -701,7 +703,7 @@ describe('Create measurement', () => {
 			});
 
 			after(async () => {
-				await client(ADOPTIONS_TABLE).where({ city: 'Oklahoma City' }).delete();
+				await client(D_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
 			});
 
 			it('should create measurement with adopted "city: Oklahoma City" location', async () => {
@@ -845,7 +847,8 @@ describe('Create measurement', () => {
 
 		describe('adopted probes + admin overrides', () => {
 			before(async () => {
-				await client(ADOPTIONS_TABLE).insert({
+				await client(D_PROBES_TABLE).insert({
+					id: randomUUID(),
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					lastSyncDate: new Date(),
 					ip: '1.2.3.4',
@@ -880,7 +883,7 @@ describe('Create measurement', () => {
 			});
 
 			after(async () => {
-				await client(ADOPTIONS_TABLE).where({ city: 'Oklahoma City' }).delete();
+				await client(D_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
 				await client('gp_location_overrides').where({ city: 'Paris' }).delete();
 			});
 
