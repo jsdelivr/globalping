@@ -146,7 +146,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.select.callCount).to.equal(1);
 	});
 
-	it('class should match adoption to probe by: UUID', async () => {
+	it('class should match dProbe to probe by: UUID', async () => {
 		sql.select.resolves([
 			{ ...defaultAdoption, ip: 'unsyncedIp' },
 			{ ...defaultAdoption, id: 'p-2', uuid: 'unsyncedUuid' },
@@ -160,15 +160,18 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.update.callCount).to.equal(2);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ ip: '1.1.1.1', altIps: '["2.2.2.2"]' }]);
-		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-4' }]);
+
+		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-4' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ status: 'offline', altIps: '[]' }]);
+
 		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2', 'p-3' ] ]);
 		expect(sql.delete.callCount).to.equal(1);
 	});
 
-	it('class should match adoption to probe by: adoption IP -> probe IP', async () => {
+	it('class should match dProbe to probe by: adoption IP -> probe IP', async () => {
 		sql.select.resolves([
 			{ ...defaultAdoption, uuid: 'unsyncedUuid' },
 			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
@@ -181,15 +184,18 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.update.callCount).to.equal(2);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ uuid: '1-1-1-1-1', altIps: '["2.2.2.2"]' }]);
-		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-3' }]);
+
+		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-3' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ status: 'offline', altIps: '[]' }]);
+
 		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2' ] ]);
 		expect(sql.delete.callCount).to.equal(1);
 	});
 
-	it('class should match adoption to probe by: adoption IP -> probe alt IP', async () => {
+	it('class should match dProbe to probe by: adoption IP -> probe alt IP', async () => {
 		sql.select.resolves([
 			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
 			{ ...defaultAdoption, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
@@ -201,14 +207,16 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.update.callCount).to.equal(2);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-2' }]);
+
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-2' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ uuid: '1-1-1-1-1', ip: '1.1.1.1', altIps: '["2.2.2.2"]' }]);
-		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-3' }]);
+
+		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-3' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ status: 'offline', altIps: '[]' }]);
 		expect(sql.delete.callCount).to.equal(0);
 	});
 
-	it('class should match adoption to probe by: adoption alt IP -> probe IP', async () => {
+	it('class should match dProbe to probe by: adoption alt IP -> probe IP', async () => {
 		sql.select.resolves([
 			{ ...defaultAdoption, ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["1.1.1.1"]' },
 		]);
@@ -218,14 +226,14 @@ describe('AdoptedProbes', () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.where.callCount).to.equal(1);
+		expect(sql.where.callCount).to.equal(2);
 		expect(sql.update.callCount).to.equal(1);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ uuid: '1-1-1-1-1', ip: '1.1.1.1', altIps: '[]' }]);
 		expect(sql.delete.callCount).to.equal(0);
 	});
 
-	it('class should match adoption to probe by: adoption alt IP -> probe alt IP', async () => {
+	it('class should match dProbe to probe by: adoption alt IP -> probe alt IP', async () => {
 		sql.select.resolves([
 			{ ...defaultAdoption, ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
 		]);
@@ -235,9 +243,9 @@ describe('AdoptedProbes', () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.where.callCount).to.equal(1);
+		expect(sql.where.callCount).to.equal(2);
 		expect(sql.update.callCount).to.equal(1);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ uuid: '1-1-1-1-1', ip: '1.1.1.1' }]);
 		expect(sql.delete.callCount).to.equal(0);
 	});
@@ -249,7 +257,7 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.where.callCount).to.equal(1);
+		expect(sql.where.callCount).to.equal(2);
 		expect(sql.update.callCount).to.equal(1);
 		expect(sql.update.args[0]).to.deep.equal([{ status: 'offline' }]);
 		expect(sql.delete.callCount).to.equal(0);
@@ -262,7 +270,7 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.where.callCount).to.equal(0);
+		expect(sql.where.callCount).to.equal(1);
 		expect(sql.update.callCount).to.equal(0);
 		expect(sql.delete.callCount).to.equal(0);
 	});
@@ -273,8 +281,8 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.where.callCount).to.equal(1);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.where.callCount).to.equal(2);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.callCount).to.equal(1);
 		expect(sql.update.firstCall.args[0].lastSyncDate).to.be.greaterThanOrEqual(relativeDayUtc());
 		expect(sql.delete.callCount).to.equal(0);
@@ -285,7 +293,7 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.where.callCount).to.equal(0);
+		expect(sql.where.callCount).to.equal(1);
 		expect(sql.update.callCount).to.equal(0);
 		expect(sql.delete.callCount).to.equal(0);
 	});
@@ -325,8 +333,8 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.where.callCount).to.equal(1);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.where.callCount).to.equal(2);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.callCount).to.equal(1);
 
 		expect(sql.update.args[0]).to.deep.equal([{
@@ -434,9 +442,9 @@ describe('AdoptedProbes', () => {
 			message: 'Globalping detected that your probe [**probe-gb-london-01**](/probes/p-9) with IP address **9.9.9.9** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).',
 		});
 
-		expect(sql.where.callCount).to.equal(2);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
-		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-9' }]);
+		expect(sql.where.callCount).to.equal(3);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-9' }]);
 		expect(sql.update.callCount).to.equal(2);
 
 		expect(sql.update.args[0]).to.deep.equal([
@@ -538,9 +546,9 @@ describe('AdoptedProbes', () => {
 			message: 'Globalping detected that your probe [**probe-gb-london-01**](/probes/p-9) with IP address **9.9.9.9** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 
-		expect(sql.where.callCount).to.equal(4);
-		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-1' }]);
-		expect(sql.where.args[3]).to.deep.equal([{ id: 'p-9' }]);
+		expect(sql.where.callCount).to.equal(6);
+		expect(sql.where.args[4]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.where.args[5]).to.deep.equal([{ id: 'p-9' }]);
 		expect(sql.update.callCount).to.equal(4);
 
 		expect(sql.update.args[2]).to.deep.equal([
@@ -604,8 +612,8 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.where.callCount).to.equal(1);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.where.callCount).to.equal(2);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.callCount).to.equal(1);
 
 		expect(sql.update.args[0]).to.deep.equal([{
@@ -624,7 +632,7 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.where.callCount).to.equal(0);
+		expect(sql.where.callCount).to.equal(1);
 		expect(sql.update.callCount).to.equal(0);
 		expect(sql.delete.callCount).to.equal(0);
 	});
@@ -635,7 +643,7 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.where.callCount).to.equal(0);
+		expect(sql.where.callCount).to.equal(1);
 		expect(sql.update.callCount).to.equal(0);
 		expect(sql.delete.callCount).to.equal(0);
 	});
@@ -656,7 +664,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2' ] ]);
 
 		expect(sql.update.callCount).to.equal(1);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ ip: '2.2.2.2' }]);
 	});
 
@@ -676,9 +684,9 @@ describe('AdoptedProbes', () => {
 		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2' ] ]);
 
 		expect(sql.update.callCount).to.equal(2);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ ip: '2.2.2.2', altIps: '["1.1.1.1"]' }]);
-		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-3' }]);
+		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-3' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ status: 'offline', altIps: '[]' }]);
 	});
 
@@ -697,9 +705,9 @@ describe('AdoptedProbes', () => {
 
 		// Match found by UUID.
 		expect(sql.update.callCount).to.equal(2);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ ip: '2.2.2.2' }]);
-		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-2' }]);
+		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-2' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ status: 'offline' }]);
 	});
 
@@ -718,9 +726,9 @@ describe('AdoptedProbes', () => {
 
 		// Match found by UUID.
 		expect(sql.update.callCount).to.equal(2);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ ip: '2.2.2.2' }]);
-		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-2' }]);
+		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-2' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ status: 'offline' }]);
 	});
 
@@ -736,7 +744,7 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.update.callCount).to.equal(1);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-2' }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-2' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ status: 'offline', altIps: '[]' }]);
 	});
 
@@ -865,7 +873,7 @@ describe('AdoptedProbes', () => {
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.update.callCount).to.equal(1);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ systemTags: '["u-jimaek","datacenter-network"]' }]);
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
 		expect(updatedTags).to.deep.equal([
