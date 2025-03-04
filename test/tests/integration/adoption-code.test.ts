@@ -6,6 +6,7 @@ import * as sinon from 'sinon';
 import request, { type Agent } from 'supertest';
 import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
+import { getProbeByIp } from '../../../src/lib/ws/server.js';
 
 describe('Adoption code', () => {
 	let app: Server;
@@ -13,6 +14,7 @@ describe('Adoption code', () => {
 
 	const sandbox = sinon.createSandbox();
 	const adoptionCodeStub = sandbox.stub();
+	const altIpTokenStub = sandbox.stub();
 
 	before(async () => {
 		app = await getTestServer();
@@ -21,7 +23,21 @@ describe('Adoption code', () => {
 
 		await addFakeProbe({
 			'probe:adoption:code': adoptionCodeStub,
+			'api:connect:alt-ips-token': altIpTokenStub,
 		});
+
+		// Add alt IP to the probe.
+		nockGeoIpProviders();
+		const { token, socketId } = altIpTokenStub.args[0]![0];
+		await requestAgent.post('/v1/alternative-ip')
+			.set('X-Forwarded-For', '97.247.234.249')
+			.send({
+				token,
+				socketId,
+			});
+
+		// Wait until alt IP is synced in synced-probe-list.ts.
+		await getProbeByIp('97.247.234.249', { allowStale: false });
 	});
 
 	afterEach(async () => {
@@ -33,7 +49,7 @@ describe('Adoption code', () => {
 		await deleteFakeProbes();
 	});
 
-	it('should send code to the requested probe', async () => {
+	it('should send code to the probe', async () => {
 		await requestAgent.post('/v1/adoption-code?systemkey=system')
 			.send({
 				ip: '1.2.3.4',
@@ -59,6 +75,19 @@ describe('Adoption code', () => {
 					isIPv6Supported: false,
 				});
 			});
+
+		await setTimeout(20);
+		expect(adoptionCodeStub.callCount).to.equal(1);
+		expect(adoptionCodeStub.args[0]).to.deep.equal([{ code: '123456' }]);
+	});
+
+	it('should send code to the probe found by alt IP', async () => {
+		await requestAgent.post('/v1/adoption-code?systemkey=system')
+			.send({
+				ip: '97.247.234.249',
+				code: '123456',
+			}).retry(100)
+			.expect(200);
 
 		await setTimeout(20);
 		expect(adoptionCodeStub.callCount).to.equal(1);
