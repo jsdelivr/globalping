@@ -159,6 +159,8 @@ describe('Create measurement request', () => {
 			},
 		});
 
+		await setTimeout(100); // We need to wait until all redis writes are finished
+
 		await requestAgent.get(`/v1/measurements/measurementid`).send()
 			.expect(200).expect((response) => {
 				expect(response.body).to.deep.include({
@@ -199,6 +201,8 @@ describe('Create measurement request', () => {
 				rawOutput: 'def',
 			},
 		});
+
+		await setTimeout(100);
 
 		await requestAgent.get(`/v1/measurements/measurementid`).send()
 			.expect(200).expect((response) => {
@@ -252,7 +256,7 @@ describe('Create measurement request', () => {
 			},
 		});
 
-		await setTimeout(100); // We need to wait until all redis writes finish
+		await setTimeout(100);
 
 		await requestAgent.get(`/v1/measurements/measurementid`).send()
 			.expect(200).expect((response) => {
@@ -380,7 +384,7 @@ describe('Create measurement request', () => {
 			},
 		});
 
-		await setTimeout(100); // We need to wait until all redis writes finish
+		await setTimeout(100);
 
 		await requestAgent.get(`/v1/measurements/measurementid`).send()
 			.expect(200).expect((response) => {
