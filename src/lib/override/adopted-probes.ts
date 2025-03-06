@@ -74,6 +74,7 @@ export class AdoptedProbes {
 	private dProbes: DProbe[] = [];
 	private adoptions: Adoption[] = [];
 	private ipToAdoption: Map<string, Adoption> = new Map();
+	private uuidToAdoption: Map<string, Adoption> = new Map();
 	private syncBackToDashboard = process.env['SHOULD_SYNC_ADOPTIONS'] === 'true';
 	private readonly dProbeFieldToProbeField: Partial<Record<keyof DProbe, DProbeFieldDescription>> = {
 		uuid: {
@@ -160,7 +161,11 @@ export class AdoptedProbes {
 	) {}
 
 	getByIp (ip: string) {
-		return this.ipToAdoption.get(ip);
+		return this.ipToAdoption.get(ip) || null;
+	}
+
+	getByUuid (uuid: string) {
+		return this.uuidToAdoption.get(uuid) || null;
 	}
 
 	getUpdatedLocation (ip: string, location: ProbeLocation): ProbeLocation | null {
@@ -189,11 +194,11 @@ export class AdoptedProbes {
 
 		return [
 			...probe.tags,
-			...adoption.tags,
 			...(adoption.publicProbes && adoption.githubUsername ? [{
 				type: 'system' as const,
 				value: this.getGlobalUserTag(adoption.githubUsername),
 			}] : []),
+			...adoption.tags,
 		];
 	}
 
@@ -258,9 +263,9 @@ export class AdoptedProbes {
 			.leftJoin(USERS_TABLE, `${DASH_PROBES_TABLE}.userId`, `${USERS_TABLE}.id`)
 			// Fetch only adopted probes if sync back to dashboard is not required.
 			.where((builder) => { !this.syncBackToDashboard && void builder.whereNotNull('userId'); })
-			// First item will be preserved, so we are prioritizing online probes.
+			// First item will be preserved, so we are prioritizing adopted and online probes.
 			// Sorting by id at the end so order is the same in any table state.
-			.orderByRaw(`${DASH_PROBES_TABLE}.lastSyncDate DESC, ${DASH_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${DASH_PROBES_TABLE}.status, 'ready') DESC, ${DASH_PROBES_TABLE}.id DESC`)
+			.orderByRaw(`IF (${DASH_PROBES_TABLE}.userId IS NOT NULL, 1, 2), ${DASH_PROBES_TABLE}.lastSyncDate DESC, ${DASH_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${DASH_PROBES_TABLE}.status, 'ready') DESC, ${DASH_PROBES_TABLE}.id DESC`)
 			.select<Row[]>(`${DASH_PROBES_TABLE}.*`, `${USERS_TABLE}.github_username AS githubUsername`, `${USERS_TABLE}.public_probes as publicProbes`);
 
 		const dProbes: DProbe[] = rows.map(row => ({
@@ -290,6 +295,8 @@ export class AdoptedProbes {
 			...this.adoptions.map(adoption => [ adoption.ip, adoption ] as const),
 			...this.adoptions.map(adoption => adoption.altIps.map(altIp => [ altIp, adoption ] as const)).flat(),
 		]);
+
+		this.uuidToAdoption = new Map(this.adoptions.filter(({ uuid }) => !!uuid).map(adoption => [ adoption.uuid!, adoption ]));
 	}
 
 	private matchDProbesAndProbes (probes: Probe[]) {
@@ -585,5 +592,33 @@ export class AdoptedProbes {
 
 	private getGlobalUserTag (githubUsername: string) {
 		return `u-${githubUsername}`;
+	}
+
+	static formatProbeAsDProbe (probe: Probe): Omit<DProbe, 'id' | 'lastSyncDate' | 'githubUsername' | 'publicProbes'> {
+		return {
+			userId: null,
+			ip: probe.ipAddress,
+			name: null,
+			altIps: probe.altIpAddresses,
+			uuid: probe.uuid,
+			tags: [],
+			systemTags: probe.tags.filter(({ type }) => type === 'system').map(({ value }) => value),
+			status: probe.status,
+			isIPv4Supported: probe.isIPv4Supported,
+			isIPv6Supported: probe.isIPv6Supported,
+			version: probe.version,
+			nodeVersion: probe.nodeVersion,
+			hardwareDevice: probe.hardwareDevice,
+			hardwareDeviceFirmware: probe.hardwareDeviceFirmware,
+			city: probe.location.city,
+			state: probe.location.state,
+			country: probe.location.country,
+			latitude: probe.location.latitude,
+			longitude: probe.location.longitude,
+			asn: probe.location.asn,
+			network: probe.location.network,
+			isCustomCity: false,
+			countryOfCustomCity: null,
+		};
 	}
 }

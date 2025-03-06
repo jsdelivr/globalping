@@ -2,11 +2,13 @@ CREATE TABLE IF NOT EXISTS directus_users (
 	id CHAR(36) PRIMARY KEY,
 	github_username VARCHAR(255),
 	user_type VARCHAR(255) NOT NULL DEFAULT 'member',
-	public_probes BOOLEAN DEFAULT 0
+	public_probes BOOLEAN DEFAULT 0,
+	adoption_token VARCHAR(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS gp_probes (
 	id CHAR(36) PRIMARY KEY,
+	name VARCHAR(255),
 	user_created CHAR(36),
 	date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	user_updated CHAR(36),
@@ -23,17 +25,17 @@ CREATE TABLE IF NOT EXISTS gp_probes (
 	onlineTimesToday INT DEFAULT 0 NOT NULL,
 	isIPv4Supported BOOLEAN,
 	isIPv6Supported BOOLEAN,
-	version VARCHAR(255) NOT NULL,
-	nodeVersion VARCHAR(255) NOT NULL,
+	version VARCHAR(255) NULL,
+	nodeVersion VARCHAR(255) NULL,
 	hardwareDevice VARCHAR(255) NULL,
 	hardwareDeviceFirmware VARCHAR(255) NULL,
-	country VARCHAR(255) NOT NULL,
+	country VARCHAR(255) NULL,
 	city VARCHAR(255),
 	state VARCHAR(255),
 	latitude FLOAT(10, 5),
 	longitude FLOAT(10, 5),
-	asn INTEGER NOT NULL,
-	network VARCHAR(255) NOT NULL,
+	asn INTEGER NULL,
+	network VARCHAR(255) NULL,
 	countryOfCustomCity VARCHAR(255)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

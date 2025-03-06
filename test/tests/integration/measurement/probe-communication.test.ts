@@ -79,7 +79,7 @@ describe('Create measurement request', () => {
 		}]);
 
 		expect(adoptionHandlerStub.callCount).to.equal(1);
-		expect(adoptionHandlerStub.firstCall.args).to.deep.equal([{ isAdopted: false }]);
+		expect(adoptionHandlerStub.firstCall.args).to.deep.equal([{ message: 'You can register this probe at https://dash.globalping.io to earn extra measurement credits.' }]);
 	});
 
 	it('should send and handle proper events during measurement request', async () => {

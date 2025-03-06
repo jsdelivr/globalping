@@ -6,6 +6,7 @@ import { bodyParser } from '../../lib/http/middleware/body-parser.js';
 import { validate } from '../../lib/http/middleware/validate.js';
 import { schema } from '../schema.js';
 import { codeSender } from '../sender.js';
+import { AdoptedProbes } from '../../lib/override/adopted-probes.js';
 
 const handle = async (ctx: Context): Promise<void> => {
 	if (!ctx['isSystem']) {
@@ -15,24 +16,7 @@ const handle = async (ctx: Context): Promise<void> => {
 	const request = ctx.request.body as AdoptionCodeRequest;
 	const probe = await codeSender.sendCode(request);
 
-	ctx.body = {
-		uuid: probe.uuid,
-		version: probe.version,
-		nodeVersion: probe.nodeVersion,
-		hardwareDevice: probe.hardwareDevice,
-		hardwareDeviceFirmware: probe.hardwareDeviceFirmware,
-		status: probe.status,
-		systemTags: probe.tags.filter(({ type }) => type === 'system').map(({ value }) => value),
-		city: probe.location.city,
-		state: probe.location.state,
-		country: probe.location.country,
-		latitude: probe.location.latitude,
-		longitude: probe.location.longitude,
-		asn: probe.location.asn,
-		network: probe.location.network,
-		isIPv4Supported: probe.isIPv4Supported,
-		isIPv6Supported: probe.isIPv6Supported,
-	};
+	ctx.body = AdoptedProbes.formatProbeAsDProbe(probe);
 };
 
 export const registerSendCodeRoute = (router: Router): void => {
