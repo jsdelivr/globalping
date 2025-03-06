@@ -4,22 +4,22 @@ import type { Probe } from '../types.js';
 import { fetchProbes } from '../../lib/ws/server.js';
 
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
-	const { isAdmin, isSystem } = ctx;
+	const { isAdmin } = ctx;
 	let probes = await fetchProbes();
 
-	if (!isAdmin && !isSystem) {
+	if (!isAdmin) {
 		probes = probes.filter(probe => probe.status === 'ready');
 	}
 
 	ctx.body = probes.map((probe: Probe) => ({
-		status: (isAdmin || isSystem) ? probe.status : undefined,
+		status: isAdmin ? probe.status : undefined,
 		version: probe.version,
-		isIPv4Supported: (isAdmin || isSystem) ? probe.isIPv4Supported : undefined,
-		isIPv6Supported: (isAdmin || isSystem) ? probe.isIPv6Supported : undefined,
+		isIPv4Supported: isAdmin ? probe.isIPv4Supported : undefined,
+		isIPv6Supported: isAdmin ? probe.isIPv6Supported : undefined,
 		nodeVersion: isAdmin ? probe.nodeVersion : undefined,
 		uuid: isAdmin ? probe.uuid : undefined,
-		ipAddress: (isAdmin || isSystem) ? probe.ipAddress : undefined,
-		altIpAddresses: (isAdmin || isSystem) ? probe.altIpAddresses : undefined,
+		ipAddress: isAdmin ? probe.ipAddress : undefined,
+		altIpAddresses: isAdmin ? probe.altIpAddresses : undefined,
 		location: {
 			continent: probe.location.continent,
 			region: probe.location.region,

@@ -8,10 +8,13 @@ describe('/adoption-code endpoint', () => {
 	});
 
 	it('should send code to the probe', async () => {
-		const response = await got.post('http://localhost:80/v1/adoption-code?systemkey=system', {
+		const response = await got.post('http://localhost:80/v1/adoption-code', {
 			json: {
 				ip: '1.2.3.4',
 				code: '123456',
+			},
+			headers: {
+				'X-Api-Key': 'system',
 			},
 			responseType: 'json',
 		});

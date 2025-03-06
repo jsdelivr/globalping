@@ -49,6 +49,9 @@ module.exports = {
 			port: 3306,
 		},
 	},
+	dashboard: {
+		directusUrl: 'https://dash-directus.globalping.io',
+	},
 	admin: {
 		key: '',
 	},

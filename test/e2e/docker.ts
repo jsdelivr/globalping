@@ -66,6 +66,7 @@ class DockerManager {
 			name: 'globalping-probe-e2e',
 			Env: [
 				'API_HOST=ws://host.docker.internal:80',
+				'GP_ADOPTION_TOKEN=telimyn6kx7kppcp5uuk3xfwsgsjqoxb',
 			],
 			HostConfig: {
 				ExtraHosts: [ 'host.docker.internal:host-gateway' ],

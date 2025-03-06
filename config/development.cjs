@@ -9,6 +9,9 @@ module.exports = {
 			port: 13306,
 		},
 	},
+	dashboard: {
+		directusUrl: 'http://localhost:18055',
+	},
 	admin: {
 		key: 'admin',
 	},
