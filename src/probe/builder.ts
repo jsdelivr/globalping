@@ -22,8 +22,8 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	const isHardware = socket.handshake.query['isHardware'] === 'true' || socket.handshake.query['isHardware'] === '1';
 	const hardwareDeviceValue = socket.handshake.query['hardwareDevice'];
 	const hardwareDeviceFirmwareValue = socket.handshake.query['hardwareDeviceFirmware'];
-	const hardwareDevice = (!hardwareDeviceValue || hardwareDeviceValue === 'undefined') ? null : String(hardwareDeviceValue);
-	const hardwareDeviceFirmware = (!hardwareDeviceFirmwareValue || hardwareDeviceFirmwareValue === 'undefined') ? null : String(hardwareDeviceFirmwareValue);
+	const hardwareDevice = !hardwareDeviceValue ? null : String(hardwareDeviceValue);
+	const hardwareDeviceFirmware = !hardwareDeviceFirmwareValue ? null : String(hardwareDeviceFirmwareValue);
 	const host = process.env['HOSTNAME'] ?? '';
 
 	const ip = getProbeIp(socket);
