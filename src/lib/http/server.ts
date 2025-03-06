@@ -17,7 +17,7 @@ import Koa from 'koa';
 import { registerGetProbesRoute } from '../../probe/route/get-probes.js';
 import { registerGetMeasurementRoute } from '../../measurement/route/get-measurement.js';
 import { registerCreateMeasurementRoute } from '../../measurement/route/create-measurement.js';
-import { registerSendCodeRoute } from '../../adoption-code/route/adoption-code.js';
+import { registerSendCodeRoute } from '../../adoption/route/adoption-code.js';
 import { registerHealthRoute } from '../../health/route/get.js';
 import { registerSpecRoute } from './spec.js';
 import { errorHandler } from './error-handler.js';
