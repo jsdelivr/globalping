@@ -9,5 +9,5 @@ export const handleAdoptionToken = (probe: Probe) => async (token: string): Prom
 		throw validation.error;
 	}
 
-	await adoptionToken.validate(token, probe.ipAddress);
+	await adoptionToken.validate(token, probe);
 };
