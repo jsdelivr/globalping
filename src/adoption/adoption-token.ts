@@ -6,6 +6,7 @@ import { Probe } from '../probe/types.js';
 
 const USERS_TABLE = 'directus_users';
 const PROBES_TABLE = 'gp_probes';
+const NOTIFICATIONS_TABLE = 'directus_notifications';
 
 const logger = scopedLogger('adoption-token');
 
@@ -13,6 +14,13 @@ type User = {
 	id: string;
 	adoption_token: string;
 };
+
+type DProbe = {
+	id: string;
+	name: string;
+	ip: string;
+	userId: string | null;
+}
 
 export class AdoptionToken {
 	private tokensToUsers = new Map<string, User>();
@@ -39,7 +47,7 @@ export class AdoptionToken {
 		this.tokensToUsers = new Map(users.map(user => ([ user.adoption_token, user ])));
 	}
 
-	async fetchSpecificUser (token: string) {
+	private async fetchSpecificUser (token: string) {
 		const users = await this.fetchUsers({ adoption_token: token });
 
 		if (users.length === 0) {
@@ -52,7 +60,7 @@ export class AdoptionToken {
 		return user;
 	}
 
-	async fetchUsers (filter: Record<string, unknown> = {}) {
+	private async fetchUsers (filter: Record<string, unknown> = {}) {
 		const users = await this.sql(USERS_TABLE)
 			.where(filter)
 			.select<User[]>([ 'id', 'adoption_token' ]);
@@ -71,25 +79,54 @@ export class AdoptionToken {
 			return;
 		}
 
-		// Check here if user.id is equal to adoptedProbes.getByIp(probe.ipAddress).userId. If it is the same user => do nothing.
+		const dProbe = await this.fetchProbe(probe);
 
-		await this.adoptProbe(probe, user);
-	}
+		if (dProbe && dProbe.userId === user.id) {
+			return;
+		}
 
-	async adoptProbe (probe: Probe, user: User) {
-		const numberOfUpdates = await this.sql(PROBES_TABLE).where({ ip: probe.ipAddress }).orWhere({ uuid: probe.uuid, userId: null }).update({ userId: user.id });
-
-		if (numberOfUpdates === 0) {
+		if (dProbe) {
+			await this.adoptProbe(dProbe, probe, user);
+		} else {
 			await this.createProbe(probe, user);
 		}
 	}
 
-	async createProbe (probe: Probe, user: User) {
+	private async fetchProbe (probe: Probe) {
+		const dProbe = await this.sql(PROBES_TABLE)
+			.where({ uuid: probe.uuid })
+			.orWhere({ ip: probe.ipAddress })
+			.orWhereRaw('JSON_CONTAINS(altIps, ?)', [ probe.ipAddress ])
+			.first<DProbe>();
+
+		return dProbe;
+	}
+
+	private async adoptProbe (dProbe: DProbe, probe: Probe, user: User) {
+		const name = await this.getDefaultProbeName(probe, user);
+
+		await this.sql(PROBES_TABLE).where({ id: dProbe.id }).update({
+			name,
+			userId: user.id,
+			tags: '[]',
+			isCustomCity: false,
+			countryOfCustomCity: null,
+		});
+
+		await this.sendNotificationProbeAdopted(dProbe.id, name, probe.ipAddress, user);
+
+		if (dProbe.userId && dProbe.userId !== user.id) {
+			await this.sendNotificationProbeUnassigned(dProbe);
+		}
+	}
+
+	private async createProbe (probe: Probe, user: User) {
+		const name = await this.getDefaultProbeName(probe, user);
 		const newProbe = {
 			id: randomUUID(),
 			ip: probe.ipAddress,
 			uuid: probe.uuid,
-			name: await this.getDefaultProbeName(probe, user),
+			name,
 			version: probe.version,
 			nodeVersion: probe.nodeVersion,
 			hardwareDevice: probe.hardwareDevice,
@@ -108,20 +145,42 @@ export class AdoptionToken {
 			isIPv6Supported: probe.isIPv6Supported,
 		};
 		await this.sql(PROBES_TABLE).insert(newProbe);
+		await this.sendNotificationProbeAdopted(newProbe.id, newProbe.name, newProbe.ip, user);
 	}
 
-	async getDefaultProbeName (probe: Probe, user: User) {
-		let name = null;
-		const namePrefix = probe.location.country && probe.location.city ? `probe-${probe.location.country.toLowerCase().replaceAll(' ', '-')}-${probe.location.city.toLowerCase().replaceAll(' ', '-')}` : null;
+	private async sendNotificationProbeAdopted (id: string, name: string, ip: string, user: User) {
+		await this.sendNotification(
+			user.id,
+			'New probe adopted',
+			`New probe [**${name}**](/probes/${id}) with IP address **${ip}** was successfully assigned to your account.`,
+		);
+	}
 
-		if (namePrefix) {
-			const result = await this.sql(PROBES_TABLE).where({
-				userId: user.id,
-				country: probe.location.country,
-				city: probe.location.city,
-			}).count<[{ count: number }]>({ count: '*' });
-			name = `${namePrefix}-${(Number(result[0]?.count) + 1).toString().padStart(2, '0')}`;
-		}
+	private async sendNotificationProbeUnassigned (dProbe: DProbe) {
+		await this.sendNotification(
+			dProbe.userId as string,
+			'Probe was unassigned',
+			`Your probe **${dProbe.name}** with IP address **${dProbe.ip}** was assigned to another account. That happened because probe specified adoption token of that account.`,
+		);
+	}
+
+	private async sendNotification (recipient: string, subject: string, message: string) {
+		await this.sql.raw(`
+			INSERT INTO ${NOTIFICATIONS_TABLE} (recipient, subject, message) SELECT :recipient, :subject, :message
+			WHERE NOT EXISTS (SELECT 1 FROM ${NOTIFICATIONS_TABLE} WHERE recipient = :recipient AND message = :message AND DATE(timestamp) = CURRENT_DATE)
+		`, { recipient, subject, message });
+	}
+
+	private async getDefaultProbeName (probe: Probe, user: User) {
+		let name = null;
+		const namePrefix = `probe-${probe.location.country.toLowerCase().replaceAll(' ', '-')}-${probe.location.city.toLowerCase().replaceAll(' ', '-')}`;
+
+		const result = await this.sql(PROBES_TABLE).where({
+			userId: user.id,
+			country: probe.location.country,
+			city: probe.location.city,
+		}).count<[{ count: number }]>({ count: '*' });
+		name = `${namePrefix}-${(Number(result[0]!.count) + 1).toString().padStart(2, '0')}`;
 
 		return name;
 	}
