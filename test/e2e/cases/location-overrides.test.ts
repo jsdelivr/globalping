@@ -14,7 +14,7 @@ describe('location overrides', () => {
 			date_created: new Date(),
 			user_updated: null,
 			date_updated: null,
-			ip_range: '51.158.22.0/24',
+			ip_range: '1.2.3.4/24',
 			country: 'US',
 			state: 'FL',
 			city: 'Miami',
@@ -28,7 +28,7 @@ describe('location overrides', () => {
 	after(async function () {
 		this.timeout(80000);
 		await client(LOCATION_OVERRIDES_TABLE).where({ city: 'Miami' }).delete();
-		await waitProbeInCity('Paris');
+		await waitProbeInCity('Buenos Aires');
 	});
 
 	it('should return probe list with updated location', async () => {
@@ -62,7 +62,7 @@ describe('location overrides', () => {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
-				city: 'Paris',
+				city: 'Buenos Aires',
 			}],
 		}, throwHttpErrors: false });
 

@@ -7,7 +7,7 @@ const getProbeIp = (socket: Socket) => {
 	}
 
 	if (process.env['TEST_MODE'] === 'e2e') {
-		return '51.158.22.211'; // Paris
+		return '1.2.3.4'; // Uses a fake lookup.
 	}
 
 	// Use random ip assigned by the API

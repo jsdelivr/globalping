@@ -12,7 +12,7 @@ describe('adopted probe', () => {
 		await client(ADOPTIONS_TABLE).insert({
 			userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			lastSyncDate: new Date(),
-			ip: '51.158.22.211',
+			ip: '1.2.3.4',
 			uuid: '1-1-1-1-1',
 			isCustomCity: 1,
 			tags: '[{"prefix":"jimaek","value":"dashboardtag1"}]',
@@ -21,28 +21,28 @@ describe('adopted probe', () => {
 			isIPv6Supported: true,
 			version: '0.28.0',
 			nodeVersion: 'v18.14.2',
-			country: 'FR',
-			countryOfCustomCity: 'FR',
-			city: 'Marseille',
-			latitude: 43.3,
-			longitude: 5.38,
+			country: 'AR',
+			countryOfCustomCity: 'AR',
+			city: 'San Luis',
+			latitude: -34.61,
+			longitude: -58.38,
 			network: 'InterBS S.R.L. (BAEHOST)',
-			asn: 61004,
+			asn: 61003,
 		});
 
-		await waitProbeInCity('Marseille');
+		await waitProbeInCity('San Luis');
 	});
 
 	after(async function () {
 		this.timeout(80000);
-		await client(ADOPTIONS_TABLE).where({ city: 'Marseille' }).delete();
-		await waitProbeInCity('Paris');
+		await client(ADOPTIONS_TABLE).where({ city: 'San Luis' }).delete();
+		await waitProbeInCity('Buenos Aires');
 	});
 
 	it('should return probe list with updated city', async () => {
 		const probes = await got('http://localhost:80/v1/probes').json<any>();
 
-		expect(probes[0].location.city).to.equal('Marseille');
+		expect(probes[0].location.city).to.equal('San Luis');
 	});
 
 	it('should create measurement by its new location', async () => {
@@ -50,7 +50,7 @@ describe('adopted probe', () => {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
-				city: 'Marseille',
+				city: 'San Luis',
 			}],
 		} });
 
@@ -74,7 +74,7 @@ describe('adopted probe', () => {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
-				city: 'Paris',
+				city: 'Buenos Aires',
 			}],
 		}, throwHttpErrors: false });
 

@@ -16,7 +16,7 @@ describe('locations filter', () => {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
-				city: 'Paris',
+				city: 'Buenos Aires',
 			}],
 		} });
 
@@ -40,7 +40,7 @@ describe('locations filter', () => {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
-				magic: 'Paris',
+				magic: 'Buenos Aires',
 			}],
 		} });
 
