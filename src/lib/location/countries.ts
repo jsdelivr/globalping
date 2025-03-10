@@ -5,7 +5,7 @@
  * ]
  * */
 export const aliases = [
-	[ 'gb', 'uk', 'united kingdom', 'england', 'northern ireland', 'wales', 'scotland' ],
+	[ 'gb', 'uk', 'great britain', 'england', 'northern ireland', 'wales', 'scotland' ],
 ];
 
 /* eslint @typescript-eslint/naming-convention: 0 */
