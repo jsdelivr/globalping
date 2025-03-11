@@ -1,7 +1,12 @@
 import got from 'got';
 import { expect } from 'chai';
+import { client } from '../../../src/lib/sql/client.js';
 
 describe('/adoption-code endpoint', () => {
+	after(async () => {
+		await client('gp_probes').delete();
+	});
+
 	it('should send code to the probe', async () => {
 		const response = await got.post('http://localhost:80/v1/adoption-code?systemkey=system', {
 			json: {

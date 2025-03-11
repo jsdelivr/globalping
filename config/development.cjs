@@ -15,5 +15,11 @@ module.exports = {
 	systemApi: {
 		key: 'system',
 	},
+	adoptedProbes: {
+		syncInterval: 5000,
+	},
+	adminData: {
+		syncInterval: 5000,
+	},
 	reconnectProbesDelay: 0,
 };
