@@ -12,7 +12,7 @@ import { randomUUID } from 'crypto';
 
 const logger = scopedLogger('adopted-probes');
 
-export const D_PROBES_TABLE = 'gp_probes';
+export const DASH_PROBES_TABLE = 'gp_probes';
 export const NOTIFICATIONS_TABLE = 'directus_notifications';
 export const USERS_TABLE = 'directus_users';
 
@@ -244,7 +244,7 @@ export class AdoptedProbes {
 
 		await this.resolveIfError(this.deleteDProbes(dProbesToDelete));
 		await Bluebird.map(dProbeUpdates, ({ dProbe, update }) => this.resolveIfError(this.updateDProbe(dProbe, update)), { concurrency: 8 });
-		await Bluebird.map(probesWithoutDProbe, probe => this.resolveIfError(this.createDProbes(probe)), { concurrency: 8 });
+		await Bluebird.map(probesWithoutDProbe, probe => this.resolveIfError(this.createDProbe(probe)), { concurrency: 8 });
 	}
 
 	private async resolveIfError (pr: Promise<void>): Promise<void> {
@@ -254,14 +254,14 @@ export class AdoptedProbes {
 	}
 
 	public async fetchDProbes () {
-		const rows = await this.sql(D_PROBES_TABLE)
-			.leftJoin(USERS_TABLE, `${D_PROBES_TABLE}.userId`, `${USERS_TABLE}.id`)
+		const rows = await this.sql(DASH_PROBES_TABLE)
+			.leftJoin(USERS_TABLE, `${DASH_PROBES_TABLE}.userId`, `${USERS_TABLE}.id`)
 			// Fetch only adopted probes if sync back to dashboard is not required.
 			.where((builder) => { !this.syncBackToDashboard && void builder.whereNotNull('userId'); })
 			// First item will be preserved, so we are prioritizing online probes.
 			// Sorting by id at the end so order is the same in any table state.
-			.orderByRaw(`${D_PROBES_TABLE}.lastSyncDate DESC, ${D_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${D_PROBES_TABLE}.status, 'ready') DESC, ${D_PROBES_TABLE}.id DESC`)
-			.select<Row[]>(`${D_PROBES_TABLE}.*`, `${USERS_TABLE}.github_username AS githubUsername`, `${USERS_TABLE}.public_probes as publicProbes`);
+			.orderByRaw(`${DASH_PROBES_TABLE}.lastSyncDate DESC, ${DASH_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${DASH_PROBES_TABLE}.status, 'ready') DESC, ${DASH_PROBES_TABLE}.id DESC`)
+			.select<Row[]>(`${DASH_PROBES_TABLE}.*`, `${USERS_TABLE}.github_username AS githubUsername`, `${USERS_TABLE}.public_probes as publicProbes`);
 
 		const dProbes: DProbe[] = rows.map(row => ({
 			...row,
@@ -504,7 +504,7 @@ export class AdoptedProbes {
 			key, (_.isObject(value) && !_.isDate(value)) ? JSON.stringify(value) : value,
 		]));
 
-		await this.sql(D_PROBES_TABLE).where({ id: dProbe.id }).update(formattedUpdate);
+		await this.sql(DASH_PROBES_TABLE).where({ id: dProbe.id }).update(formattedUpdate);
 
 		// if country of probe changes, but there is a custom city in prev country, send notification to user.
 		if (update.country && dProbe.userId) {
@@ -521,11 +521,11 @@ export class AdoptedProbes {
 	private async deleteDProbes (dProbesToDelete: DProbe[]) {
 		if (dProbesToDelete.length) {
 			logger.warn('Deleting ids:', dProbesToDelete.map(({ id }) => id));
-			await this.sql(D_PROBES_TABLE).whereIn('id', dProbesToDelete.map(({ id }) => id)).delete();
+			await this.sql(DASH_PROBES_TABLE).whereIn('id', dProbesToDelete.map(({ id }) => id)).delete();
 		}
 	}
 
-	private async createDProbes (probe: Probe) {
+	private async createDProbe (probe: Probe) {
 		const dProbe: Record<string, unknown> = {
 			id: randomUUID(),
 			date_created: new Date(),
@@ -546,7 +546,7 @@ export class AdoptedProbes {
 			dProbe[dProbeField] = probeValue;
 		});
 
-		await this.sql(D_PROBES_TABLE).insert(dProbe);
+		await this.sql(DASH_PROBES_TABLE).insert(dProbe);
 	}
 
 	private async sendNotification (recipient: string, subject: string, message: string) {

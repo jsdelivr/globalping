@@ -10,6 +10,8 @@ describe('adopted probes', () => {
 	before(async function () {
 		this.timeout(80000);
 
+		await client(PROBES_TABLE).delete();
+
 		await client(PROBES_TABLE).insert({
 			id: randomUUID(),
 			userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
@@ -37,7 +39,7 @@ describe('adopted probes', () => {
 
 	after(async function () {
 		this.timeout(80000);
-		await client(PROBES_TABLE).where({ city: 'San Luis' }).delete();
+		await client(PROBES_TABLE).delete();
 		await waitProbeInCity('Buenos Aires');
 	});
 

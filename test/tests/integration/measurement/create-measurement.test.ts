@@ -16,12 +16,12 @@ describe('Create measurement', () => {
 	let getTestServer;
 	let requestAgent: Agent;
 	let probeOverride: ProbeOverride;
-	let D_PROBES_TABLE: string;
+	let DASH_PROBES_TABLE: string;
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
 		({ getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } = await import('../../../utils/server.js'));
-		({ D_PROBES_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
+		({ DASH_PROBES_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
 		({ probeOverride } = await import('../../../../src/lib/ws/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
@@ -676,7 +676,7 @@ describe('Create measurement', () => {
 
 		describe('adopted probes', () => {
 			before(async () => {
-				await client(D_PROBES_TABLE).insert({
+				await client(DASH_PROBES_TABLE).insert({
 					id: randomUUID(),
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					lastSyncDate: new Date(),
@@ -703,7 +703,7 @@ describe('Create measurement', () => {
 			});
 
 			after(async () => {
-				await client(D_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
+				await client(DASH_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
 			});
 
 			it('should create measurement with adopted "city: Oklahoma City" location', async () => {
@@ -847,7 +847,7 @@ describe('Create measurement', () => {
 
 		describe('adopted probes + admin overrides', () => {
 			before(async () => {
-				await client(D_PROBES_TABLE).insert({
+				await client(DASH_PROBES_TABLE).insert({
 					id: randomUUID(),
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					lastSyncDate: new Date(),
@@ -883,7 +883,7 @@ describe('Create measurement', () => {
 			});
 
 			after(async () => {
-				await client(D_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
+				await client(DASH_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
 				await client('gp_location_overrides').where({ city: 'Paris' }).delete();
 			});
 
