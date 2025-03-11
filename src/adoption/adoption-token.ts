@@ -160,7 +160,7 @@ export class AdoptionToken {
 		await this.sendNotification(
 			dProbe.userId as string,
 			'Probe was unassigned',
-			`Your probe **${dProbe.name}** with IP address **${dProbe.ip}** was assigned to another account. That happened because probe specified adoption token of that account.`,
+			`Your probe ${dProbe.name ? `**${dProbe.name}** ` : ''}with IP address **${dProbe.ip}** was assigned to another account. That happened because probe specified adoption token of that account.`,
 		);
 	}
 

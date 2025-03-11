@@ -4,7 +4,7 @@ import { client } from '../../../src/lib/sql/client.js';
 import { docker } from '../docker.js';
 import { waitProbeToConnect, waitProbeToDisconnect, waitRowInTable } from '../utils.js';
 
-describe.only('adoption token', () => {
+describe('adoption token', () => {
 	beforeEach(async function () {
 		this.timeout(60000);
 		await docker.startProbeContainer();
