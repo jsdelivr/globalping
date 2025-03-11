@@ -258,9 +258,9 @@ export class AdoptedProbes {
 			.leftJoin(USERS_TABLE, `${DASH_PROBES_TABLE}.userId`, `${USERS_TABLE}.id`)
 			// Fetch only adopted probes if sync back to dashboard is not required.
 			.where((builder) => { !this.syncBackToDashboard && void builder.whereNotNull('userId'); })
-			// First item will be preserved, so we are prioritizing online probes.
+			// First item will be preserved, so we are prioritizing adopted and online probes.
 			// Sorting by id at the end so order is the same in any table state.
-			.orderByRaw(`${DASH_PROBES_TABLE}.lastSyncDate DESC, ${DASH_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${DASH_PROBES_TABLE}.status, 'ready') DESC, ${DASH_PROBES_TABLE}.id DESC`)
+			.orderByRaw(`IF (${DASH_PROBES_TABLE}.userId IS NOT NULL, 1, 2), ${DASH_PROBES_TABLE}.lastSyncDate DESC, ${DASH_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${DASH_PROBES_TABLE}.status, 'ready') DESC, ${DASH_PROBES_TABLE}.id DESC`)
 			.select<Row[]>(`${DASH_PROBES_TABLE}.*`, `${USERS_TABLE}.github_username AS githubUsername`, `${USERS_TABLE}.public_probes as publicProbes`);
 
 		const dProbes: DProbe[] = rows.map(row => ({

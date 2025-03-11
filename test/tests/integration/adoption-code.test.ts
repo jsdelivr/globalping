@@ -63,7 +63,6 @@ describe('Adoption code', () => {
 					hardwareDevice: null,
 					hardwareDeviceFirmware: null,
 					status: 'initializing',
-					systemTags: [ 'datacenter-network' ],
 					city: 'Dallas',
 					state: 'TX',
 					country: 'US',

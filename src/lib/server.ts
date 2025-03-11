@@ -11,6 +11,7 @@ import { initPersistentRedisClient } from './redis/persistent-client.js';
 import { initMeasurementRedisClient } from './redis/measurement-client.js';
 import { initSubscriptionRedisClient } from './redis/subscription-client.js';
 import { auth } from './http/auth.js';
+import { adoptionToken } from '../adoption/adoption-token.js';
 
 export const createServer = async (): Promise<Server> => {
 	await initRedisClient();
@@ -29,6 +30,8 @@ export const createServer = async (): Promise<Server> => {
 	// Populate Dashboard override data before using it during initWsServer()
 	await probeOverride.fetchDashboardData();
 	probeOverride.scheduleSync();
+
+	adoptionToken.scheduleSync();
 
 	await initWsServer();
 

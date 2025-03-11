@@ -13,6 +13,7 @@ import { errorHandler } from './helper/error-handler.js';
 import { subscribeWithHandler } from './helper/subscribe-handler.js';
 import { handleIsIPv4SupportedUpdate, handleIsIPv6SupportedUpdate } from '../../probe/handler/ip-version.js';
 import { getAltIpsClient } from '../alt-ips.js';
+import { handleAdoptionToken } from '../../probe/handler/adoption-token.js';
 
 const io = getWsServer();
 const logger = scopedLogger('gateway');
@@ -41,6 +42,7 @@ io
 		subscribeWithHandler(socket, 'probe:isIPv6Supported:update', handleIsIPv6SupportedUpdate(probe));
 		subscribeWithHandler(socket, 'probe:isIPv4Supported:update', handleIsIPv4SupportedUpdate(probe));
 		subscribeWithHandler(socket, 'probe:dns:update', handleDnsUpdate(probe));
+		subscribeWithHandler(socket, 'probe:adoption:token', handleAdoptionToken(probe));
 		subscribeWithHandler(socket, 'probe:stats:report', handleStatsReport(probe));
 		socket.onAnyOutgoing(listenMeasurementRequest(probe));
 		subscribeWithHandler(socket, 'probe:measurement:ack', handleMeasurementAck(probe));
