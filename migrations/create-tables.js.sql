@@ -25,17 +25,17 @@ CREATE TABLE IF NOT EXISTS gp_probes (
 	onlineTimesToday INT DEFAULT 0 NOT NULL,
 	isIPv4Supported BOOLEAN,
 	isIPv6Supported BOOLEAN,
-	version VARCHAR(255) NOT NULL,
-	nodeVersion VARCHAR(255) NOT NULL,
+	version VARCHAR(255) NULL,
+	nodeVersion VARCHAR(255) NULL,
 	hardwareDevice VARCHAR(255) NULL,
 	hardwareDeviceFirmware VARCHAR(255) NULL,
-	country VARCHAR(255) NOT NULL,
+	country VARCHAR(255) NULL,
 	city VARCHAR(255),
 	state VARCHAR(255),
 	latitude FLOAT(10, 5),
 	longitude FLOAT(10, 5),
-	asn INTEGER NOT NULL,
-	network VARCHAR(255) NOT NULL,
+	asn INTEGER NULL,
+	network VARCHAR(255) NULL,
 	countryOfCustomCity VARCHAR(255)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

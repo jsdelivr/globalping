@@ -5,12 +5,6 @@ import { docker } from '../docker.js';
 import { waitProbeToConnect, waitProbeToDisconnect, waitRowInTable } from '../utils.js';
 
 describe('adoption token', () => {
-	beforeEach(async function () {
-		this.timeout(60000);
-		await docker.startProbeContainer();
-		await waitProbeToConnect();
-	});
-
 	after(async function () {
 		this.timeout(60000);
 		await docker.startProbeContainer();
@@ -21,6 +15,7 @@ describe('adoption token', () => {
 		await docker.stopProbeContainer();
 		await waitProbeToDisconnect();
 
+		await client('gp_probes').delete();
 		const userId = randomUUID();
 		await client('directus_users').insert({
 			id: userId,
