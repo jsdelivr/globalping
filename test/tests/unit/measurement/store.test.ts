@@ -256,7 +256,7 @@ describe('measurement store', () => {
 				'measurementid_2',
 				'measurementid_3',
 			],
-			60,
+			150,
 		]);
 	});
 
