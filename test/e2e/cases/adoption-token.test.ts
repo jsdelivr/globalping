@@ -28,6 +28,7 @@ describe('adoption token', () => {
 			adoption_token: 'telimyn6kx7kppcp5uuk3xfwsgsjqoxb',
 		});
 
+		await client('gp_probes').delete();
 		await docker.startProbeContainer();
 		await waitProbeToConnect();
 
