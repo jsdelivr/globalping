@@ -26,7 +26,7 @@ io
 		const probe = socket.data.probe;
 		const location = probeOverride.getUpdatedLocation(probe);
 
-		void adoptionToken.validate(socket);
+		adoptionToken.validate(socket).catch(err => logger.warn('Error during adoption token validation:', err));
 		socket.emit('api:connect:alt-ips-token', { token: await getAltIpsClient().generateToken(socket), socketId: socket.id, ip: probe.ipAddress });
 		socket.emit('api:connect:location', location);
 		logger.info(`WS client connected.`, { client: { id: socket.id, ip: probe.ipAddress }, location: { city: location.city, country: location.country, network: location.network } });
