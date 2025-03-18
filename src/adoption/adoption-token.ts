@@ -4,6 +4,7 @@ import { scopedLogger } from '../lib/logger.js';
 import { client } from '../lib/sql/client.js';
 import { Probe } from '../probe/types.js';
 import { ServerSocket, adoptedProbes } from '../lib/ws/server.js';
+import { AdoptedProbes } from '../lib/override/adopted-probes.js';
 
 const USERS_TABLE = 'directus_users';
 const PROBES_TABLE = 'gp_probes';
@@ -18,7 +19,7 @@ type User = {
 
 type DProbe = {
 	id: string;
-	name: string;
+	name: string | null;
 	ip: string;
 	userId: string | null;
 }
@@ -27,7 +28,10 @@ export class AdoptionToken {
 	private tokensToUsers = new Map<string, User>();
 	private timer: NodeJS.Timeout | undefined;
 
-	constructor (private readonly sql: Knex) {}
+	constructor (
+		private readonly sql: Knex,
+		private readonly adoptedProbes: AdoptedProbes,
+	) {}
 
 	scheduleSync () {
 		clearTimeout(this.timer);
@@ -98,7 +102,11 @@ export class AdoptionToken {
 			return `User not found for the provided adoption token: ${token}.`;
 		}
 
-		const dProbe = await this.fetchProbe(probe);
+		let dProbe: DProbe | null = this.adoptedProbes.getByIp(probe.ipAddress) || this.adoptedProbes.getByUuid(probe.uuid);
+
+		if (!dProbe || dProbe.userId !== user.id) {
+			dProbe = await this.fetchProbe(probe);
+		}
 
 		if (dProbe && dProbe.userId === user.id) {
 			return null;
@@ -207,4 +215,4 @@ export class AdoptionToken {
 	}
 }
 
-export const adoptionToken = new AdoptionToken(client);
+export const adoptionToken = new AdoptionToken(client, adoptedProbes);

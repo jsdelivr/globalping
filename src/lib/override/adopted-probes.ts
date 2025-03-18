@@ -74,6 +74,7 @@ export class AdoptedProbes {
 	private dProbes: DProbe[] = [];
 	private adoptions: Adoption[] = [];
 	private ipToAdoption: Map<string, Adoption> = new Map();
+	private uuidToAdoption: Map<string, Adoption> = new Map();
 	private syncBackToDashboard = process.env['SHOULD_SYNC_ADOPTIONS'] === 'true';
 	private readonly dProbeFieldToProbeField: Partial<Record<keyof DProbe, DProbeFieldDescription>> = {
 		uuid: {
@@ -160,7 +161,11 @@ export class AdoptedProbes {
 	) {}
 
 	getByIp (ip: string) {
-		return this.ipToAdoption.get(ip);
+		return this.ipToAdoption.get(ip) || null;
+	}
+
+	getByUuid (uuid: string) {
+		return this.uuidToAdoption.get(uuid) || null;
 	}
 
 	getUpdatedLocation (ip: string, location: ProbeLocation): ProbeLocation | null {
@@ -290,6 +295,8 @@ export class AdoptedProbes {
 			...this.adoptions.map(adoption => [ adoption.ip, adoption ] as const),
 			...this.adoptions.map(adoption => adoption.altIps.map(altIp => [ altIp, adoption ] as const)).flat(),
 		]);
+
+		this.uuidToAdoption = new Map(this.adoptions.filter(({ uuid }) => !!uuid).map(adoption => [ adoption.uuid!, adoption ]));
 	}
 
 	private matchDProbesAndProbes (probes: Probe[]) {
