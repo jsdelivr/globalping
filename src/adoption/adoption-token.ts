@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { scopedLogger } from '../lib/logger.js';
 import { client } from '../lib/sql/client.js';
 import { Probe } from '../probe/types.js';
+import { ServerSocket, adoptedProbes } from '../lib/ws/server.js';
 
 const USERS_TABLE = 'directus_users';
 const PROBES_TABLE = 'gp_probes';
@@ -67,7 +68,25 @@ export class AdoptionToken {
 		return users;
 	}
 
-	async validate (token: string, probe: Probe) {
+	async validate (socket: ServerSocket) {
+		const tokenValue = socket.handshake.query['adoptionToken'];
+		const token = (!tokenValue || tokenValue === 'undefined') ? null : String(tokenValue);
+		const probe = socket.data.probe;
+		const isAdopted = !!adoptedProbes.getByIp(probe.ipAddress);
+
+		if (!token) {
+			!isAdopted && socket.emit('api:connect:adoption', { message: 'You can register this probe at https://dash.globalping.io to earn extra measurement credits.' });
+			return;
+		}
+
+		const message = await this.validateToken(token, probe);
+
+		if (message) {
+			socket.emit('api:connect:adoption', { message });
+		}
+	}
+
+	async validateToken (token: string, probe: Probe) {
 		let user = this.tokensToUsers.get(token);
 
 		if (!user) {
@@ -76,13 +95,13 @@ export class AdoptionToken {
 
 		if (!user) {
 			logger.info('User not found for the provided adoption token.', { token });
-			return;
+			return `User not found for the provided adoption token: ${token}.`;
 		}
 
 		const dProbe = await this.fetchProbe(probe);
 
 		if (dProbe && dProbe.userId === user.id) {
-			return;
+			return null;
 		}
 
 		if (dProbe) {
@@ -90,6 +109,8 @@ export class AdoptionToken {
 		} else {
 			await this.createProbe(probe, user);
 		}
+
+		return 'Probe successfully adopted by token.';
 	}
 
 	private async fetchProbe (probe: Probe) {

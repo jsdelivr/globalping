@@ -7,8 +7,6 @@ export const ipVersionSchema = Joi.boolean().required();
 
 export const dnsSchema = Joi.array<string[]>().max(1024).items(Joi.string().max(1024)).required();
 
-export const adoptionTokenSchema = Joi.string().max(1024).required();
-
 export const statsSchema = Joi.object<ProbeStats>({
 	cpu: Joi.object({
 		load: Joi.array().max(1024).items(Joi.object({
