@@ -31,8 +31,7 @@ describe('Adoption token', () => {
 
 	it('should adopt probe by token', async () => {
 		nockGeoIpProviders();
-		const probe = await addFakeProbe();
-		probe.emit('probe:adoption:token', 'adoptionTokenValue');
+		await addFakeProbe({}, { query: { adoptionToken: 'adoptionTokenValue' } });
 		await waitForProbesUpdate();
 
 		const dProbe = await client('gp_probes').first();
@@ -58,8 +57,7 @@ describe('Adoption token', () => {
 		});
 
 		nockGeoIpProviders();
-		const probe = await addFakeProbe();
-		probe.emit('probe:adoption:token', 'adoptionTokenValue');
+		await addFakeProbe({}, { query: { adoptionToken: 'adoptionTokenValue' } });
 		await waitForProbesUpdate();
 
 		const dProbe = await client('gp_probes').first();
@@ -91,8 +89,7 @@ describe('Adoption token', () => {
 		});
 
 		nockGeoIpProviders();
-		const probe = await addFakeProbe();
-		probe.emit('probe:adoption:token', 'adoptionTokenValue');
+		await addFakeProbe({}, { query: { adoptionToken: 'adoptionTokenValue' } });
 		await waitForProbesUpdate();
 
 		const dProbe = await client('gp_probes').first();
