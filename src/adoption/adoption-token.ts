@@ -74,7 +74,7 @@ export class AdoptionToken {
 
 	async validate (socket: ServerSocket) {
 		const tokenValue = socket.handshake.query['adoptionToken'];
-		const token = (!tokenValue || tokenValue === 'undefined') ? null : String(tokenValue);
+		const token = !tokenValue ? null : String(tokenValue);
 		const probe = socket.data.probe;
 		const isAdopted = !!adoptedProbes.getByIp(probe.ipAddress);
 
