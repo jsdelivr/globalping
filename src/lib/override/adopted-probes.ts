@@ -194,11 +194,11 @@ export class AdoptedProbes {
 
 		return [
 			...probe.tags,
-			...adoption.tags,
 			...(adoption.publicProbes && adoption.githubUsername ? [{
 				type: 'system' as const,
 				value: this.getGlobalUserTag(adoption.githubUsername),
 			}] : []),
+			...adoption.tags,
 		];
 	}
 
