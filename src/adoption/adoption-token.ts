@@ -83,14 +83,14 @@ export class AdoptionToken {
 			return;
 		}
 
-		const message = await this.validateToken(token, probe);
+		const { message, level } = await this.validateToken(token, probe);
 
 		if (message) {
-			socket.emit('api:connect:adoption', { message });
+			socket.emit('api:connect:adoption', { message, level });
 		}
 	}
 
-	async validateToken (token: string, probe: Probe) {
+	async validateToken (token: string, probe: Probe): Promise<{ message: string | null, level?: 'info' | 'warn' }> {
 		let user = this.tokensToUsers.get(token);
 
 		if (!user) {
@@ -99,7 +99,7 @@ export class AdoptionToken {
 
 		if (!user) {
 			logger.info('User not found for the provided adoption token.', { token });
-			return `User not found for the provided adoption token: ${token}.`;
+			return { message: `User not found for the provided adoption token: ${token}.`, level: 'warn' };
 		}
 
 		let dProbe: DProbe | null = this.adoptedProbes.getByIp(probe.ipAddress) || this.adoptedProbes.getByUuid(probe.uuid);
@@ -109,7 +109,7 @@ export class AdoptionToken {
 		}
 
 		if (dProbe && dProbe.userId === user.id) {
-			return null;
+			return { message: null };
 		}
 
 		if (dProbe) {
@@ -118,7 +118,7 @@ export class AdoptionToken {
 			await this.createProbe(probe, user);
 		}
 
-		return 'Probe successfully adopted by token.';
+		return { message: 'Probe successfully adopted by token.' };
 	}
 
 	private async fetchProbe (probe: Probe) {

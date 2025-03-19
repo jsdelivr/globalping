@@ -10,6 +10,8 @@ import { randomUUID } from 'crypto';
 describe('Adoption token', () => {
 	const sandbox = sinon.createSandbox();
 
+	const adoptionStatusStub = sandbox.stub();
+
 	before(async () => {
 		await getTestServer();
 		await client('directus_users').insert({ id: 'userIdValue', adoption_token: 'adoptionTokenValue' });
@@ -31,7 +33,7 @@ describe('Adoption token', () => {
 
 	it('should adopt probe by token', async () => {
 		nockGeoIpProviders();
-		await addFakeProbe({}, { query: { adoptionToken: 'adoptionTokenValue' } });
+		await addFakeProbe({ 'api:connect:adoption': adoptionStatusStub }, { query: { adoptionToken: 'adoptionTokenValue' } });
 		await waitForProbesUpdate();
 
 		const dProbe = await client('gp_probes').first();
@@ -44,6 +46,9 @@ describe('Adoption token', () => {
 			recipient: 'userIdValue',
 			subject: 'New probe adopted',
 		});
+
+		expect(adoptionStatusStub.callCount).to.equal(1);
+		expect(adoptionStatusStub.args[0]).to.deep.equal([{ message: 'Probe successfully adopted by token.' }]);
 	});
 
 	it('should reassign probe by token', async () => {
@@ -57,7 +62,7 @@ describe('Adoption token', () => {
 		});
 
 		nockGeoIpProviders();
-		await addFakeProbe({}, { query: { adoptionToken: 'adoptionTokenValue' } });
+		await addFakeProbe({ 'api:connect:adoption': adoptionStatusStub }, { query: { adoptionToken: 'adoptionTokenValue' } });
 		await waitForProbesUpdate();
 
 		const dProbe = await client('gp_probes').first();
@@ -76,6 +81,9 @@ describe('Adoption token', () => {
 			recipient: 'prevUserIdValue',
 			subject: 'Probe was unassigned',
 		});
+
+		expect(adoptionStatusStub.callCount).to.equal(1);
+		expect(adoptionStatusStub.args[0]).to.deep.equal([{ message: 'Probe successfully adopted by token.' }]);
 	});
 
 	it('should do nothing if it is the same user', async () => {
@@ -89,7 +97,7 @@ describe('Adoption token', () => {
 		});
 
 		nockGeoIpProviders();
-		await addFakeProbe({}, { query: { adoptionToken: 'adoptionTokenValue' } });
+		await addFakeProbe({ 'api:connect:adoption': adoptionStatusStub }, { query: { adoptionToken: 'adoptionTokenValue' } });
 		await waitForProbesUpdate();
 
 		const dProbe = await client('gp_probes').first();
@@ -99,5 +107,6 @@ describe('Adoption token', () => {
 
 		const notifications = await client('directus_notifications').select();
 		expect(notifications.length).to.equal(0);
+		expect(adoptionStatusStub.callCount).to.equal(0);
 	});
 });
