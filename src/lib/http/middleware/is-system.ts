@@ -1,8 +1,19 @@
 import type { Middleware } from 'koa';
 import config from 'config';
 
+const systemKey = config.get<string>('systemApi.key');
+
 export const isSystemMw: Middleware = async (ctx, next) => {
-	const systemKey = config.get<string>('systemApi.key');
-	ctx['isSystem'] = systemKey.length > 0 && ctx.query['systemkey'] === systemKey;
+	ctx['isSystem'] = false;
+	const authorization = ctx.headers.authorization;
+
+	if (authorization) {
+		const parts = authorization.split(' ');
+
+		if (parts.length === 2 && parts[0] === 'Bearer' && parts[1] === systemKey) {
+			ctx['isSystem'] = true;
+		}
+	}
+
 	return next();
 };
