@@ -50,19 +50,28 @@ describe('Adoption code', () => {
 	});
 
 	it('should send code to the probe', async () => {
-		await requestAgent.post('/v1/adoption-code?systemkey=system')
+		await requestAgent.post('/v1/adoption-code')
 			.send({
 				ip: '1.2.3.4',
 				code: '123456',
 			})
+			.set('X-Api-Key', 'system')
 			.expect(200).expect((response) => {
 				expect(response.body).to.deep.equal({
+					userId: null,
+					ip: '1.2.3.4',
+					name: null,
+					altIps: [ '97.247.234.249' ],
 					uuid: '1-1-1-1-1',
+					tags: [],
+					systemTags: [ 'datacenter-network' ],
+					status: 'initializing',
+					isIPv4Supported: false,
+					isIPv6Supported: false,
 					version: '0.14.0',
 					nodeVersion: 'v18.17.0',
 					hardwareDevice: null,
 					hardwareDeviceFirmware: null,
-					status: 'initializing',
 					city: 'Dallas',
 					state: 'TX',
 					country: 'US',
@@ -70,8 +79,8 @@ describe('Adoption code', () => {
 					longitude: -96.81,
 					asn: 20004,
 					network: 'The Constant Company LLC',
-					isIPv4Supported: false,
-					isIPv6Supported: false,
+					isCustomCity: false,
+					countryOfCustomCity: null,
 				});
 			});
 
@@ -81,11 +90,13 @@ describe('Adoption code', () => {
 	});
 
 	it('should send code to the probe found by alt IP', async () => {
-		await requestAgent.post('/v1/adoption-code?systemkey=system')
+		await requestAgent.post('/v1/adoption-code')
 			.send({
 				ip: '97.247.234.249',
 				code: '123456',
-			}).retry(100)
+			})
+			.set('X-Api-Key', 'system')
+			.retry(100)
 			.expect(200);
 
 		await setTimeout(20);
@@ -94,11 +105,12 @@ describe('Adoption code', () => {
 	});
 
 	it('should return 403 for wrong system key', async () => {
-		await requestAgent.post('/v1/adoption-code?systemkey=wrongkey')
+		await requestAgent.post('/v1/adoption-code')
 			.send({
 				ip: '1.2.3.4',
 				code: '123456',
 			})
+			.set('X-Api-Key', 'wrongkey')
 			.expect(403).expect((response) => {
 				expect(response.body.error.message).to.equal('Forbidden');
 			});
@@ -108,11 +120,12 @@ describe('Adoption code', () => {
 	});
 
 	it('should return 422 if probe not found', async () => {
-		await requestAgent.post('/v1/adoption-code?systemkey=system')
+		await requestAgent.post('/v1/adoption-code')
 			.send({
 				ip: '9.9.9.9',
 				code: '123456',
 			})
+			.set('X-Api-Key', 'system')
 			.expect(422).expect((response) => {
 				expect(response.body.error.message).to.equal('No suitable probes found.');
 			});

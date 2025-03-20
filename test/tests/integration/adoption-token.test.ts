@@ -1,6 +1,6 @@
 import nock from 'nock';
 import * as sinon from 'sinon';
-import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
+import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { expect } from 'chai';
 import { client } from '../../../src/lib/sql/client.js';
@@ -33,54 +33,41 @@ describe('Adoption token', () => {
 
 	it('should adopt probe by token', async () => {
 		nockGeoIpProviders();
+
+		nock('https://dash-directus.globalping.io').post('/adoption-code/adopt-by-token', (body) => {
+			expect(body).to.deep.equal({
+				probe: {
+					userId: null,
+					ip: '1.2.3.4',
+					name: null,
+					altIps: [],
+					uuid: '1-1-1-1-1',
+					tags: [],
+					systemTags: [ 'datacenter-network' ],
+					status: 'initializing',
+					isIPv4Supported: false,
+					isIPv6Supported: false,
+					version: '0.14.0',
+					nodeVersion: 'v18.17.0',
+					hardwareDevice: null,
+					hardwareDeviceFirmware: null,
+					city: 'Dallas',
+					state: 'TX',
+					country: 'US',
+					latitude: 32.78,
+					longitude: -96.81,
+					asn: 20004,
+					network: 'The Constant Company LLC',
+					isCustomCity: false,
+					countryOfCustomCity: null,
+				},
+				user: { id: 'userIdValue' },
+			});
+
+			return true;
+		}).reply(200);
+
 		await addFakeProbe({ 'api:connect:adoption': adoptionStatusStub }, { query: { adoptionToken: 'adoptionTokenValue' } });
-		await waitForProbesUpdate();
-
-		const dProbe = await client('gp_probes').first();
-		expect(dProbe).to.include({
-			userId: 'userIdValue',
-		});
-
-		const notification = await client('directus_notifications').first();
-		expect(notification).to.include({
-			recipient: 'userIdValue',
-			subject: 'New probe adopted',
-		});
-
-		expect(adoptionStatusStub.callCount).to.equal(1);
-		expect(adoptionStatusStub.args[0]).to.deep.equal([{ message: 'Probe successfully adopted by token.' }]);
-	});
-
-	it('should reassign probe by token', async () => {
-		await client('gp_probes').insert({
-			id: randomUUID(),
-			uuid: '1-1-1-1-1',
-			ip: '1.2.3.4',
-			userId: 'prevUserIdValue',
-			lastSyncDate: new Date(),
-			status: 'offline',
-		});
-
-		nockGeoIpProviders();
-		await addFakeProbe({ 'api:connect:adoption': adoptionStatusStub }, { query: { adoptionToken: 'adoptionTokenValue' } });
-		await waitForProbesUpdate();
-
-		const dProbe = await client('gp_probes').first();
-		expect(dProbe).to.include({
-			userId: 'userIdValue',
-		});
-
-		const notifications = await client('directus_notifications').select();
-
-		expect(notifications[0]).to.include({
-			recipient: 'userIdValue',
-			subject: 'New probe adopted',
-		});
-
-		expect(notifications[1]).to.include({
-			recipient: 'prevUserIdValue',
-			subject: 'Probe was unassigned',
-		});
 
 		expect(adoptionStatusStub.callCount).to.equal(1);
 		expect(adoptionStatusStub.args[0]).to.deep.equal([{ message: 'Probe successfully adopted by token.' }]);
@@ -97,16 +84,9 @@ describe('Adoption token', () => {
 		});
 
 		nockGeoIpProviders();
+
 		await addFakeProbe({ 'api:connect:adoption': adoptionStatusStub }, { query: { adoptionToken: 'adoptionTokenValue' } });
-		await waitForProbesUpdate();
 
-		const dProbe = await client('gp_probes').first();
-		expect(dProbe).to.include({
-			userId: 'userIdValue',
-		});
-
-		const notifications = await client('directus_notifications').select();
-		expect(notifications.length).to.equal(0);
 		expect(adoptionStatusStub.callCount).to.equal(0);
 	});
 });

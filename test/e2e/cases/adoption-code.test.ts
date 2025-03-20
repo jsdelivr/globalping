@@ -14,7 +14,7 @@ describe('/adoption-code endpoint', () => {
 				code: '123456',
 			},
 			headers: {
-				Authorization: `Bearer system`,
+				'X-Api-Key': 'system',
 			},
 			responseType: 'json',
 		});

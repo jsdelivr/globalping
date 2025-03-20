@@ -594,15 +594,13 @@ export class AdoptedProbes {
 		return `u-${githubUsername}`;
 	}
 
-	static formatProbeAsDProbe (probe: Probe): Omit<DProbe, 'githubUsername' | 'publicProbes'> {
+	static formatProbeAsDProbe (probe: Probe): Omit<DProbe, 'id' | 'lastSyncDate' | 'githubUsername' | 'publicProbes'> {
 		return {
-			id: '',
 			userId: null,
 			ip: probe.ipAddress,
 			name: null,
 			altIps: probe.altIpAddresses,
 			uuid: probe.uuid,
-			lastSyncDate: new Date(),
 			tags: [],
 			systemTags: probe.tags.filter(({ type }) => type === 'system').map(({ value }) => value),
 			status: probe.status,

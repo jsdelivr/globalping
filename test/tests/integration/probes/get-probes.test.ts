@@ -225,44 +225,6 @@ describe('Get Probes', () => {
 				});
 		});
 
-		it('should add extra info if system key is provided', async () => {
-			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
-
-			const probe = await addFakeProbe();
-			probe.emit('probe:status:update', 'ready');
-			await waitForProbesUpdate();
-
-			await requestAgent.get('/v1/probes?systemkey=system')
-				.send()
-				.expect(200)
-				.expect((response) => {
-					expect(response.body[0]).to.deep.equal({
-						version: '0.14.0',
-						ipAddress: '1.2.3.4',
-						altIpAddresses: [],
-						location: {
-							continent: 'SA',
-							region: 'South America',
-							country: 'AR',
-							state: null,
-							city: 'Buenos Aires',
-							asn: 61004,
-							latitude: -34.61,
-							longitude: -58.38,
-							network: 'InterBS S.R.L. (BAEHOST)',
-						},
-						status: 'ready',
-						isIPv4Supported: false,
-						isIPv6Supported: false,
-						tags: [],
-						resolvers: [],
-					});
-
-					expect(response.body[0].ipAddress).to.be.a('string');
-					expect(response).to.matchApiSchema();
-				});
-		});
-
 		it('should add hardware info if admin key is provided and there is hardware info', async () => {
 			nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
 
