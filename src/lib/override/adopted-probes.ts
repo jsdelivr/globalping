@@ -593,4 +593,34 @@ export class AdoptedProbes {
 	private getGlobalUserTag (githubUsername: string) {
 		return `u-${githubUsername}`;
 	}
+
+	static formatProbeAsDProbe (probe: Probe): Omit<DProbe, 'githubUsername' | 'publicProbes'> {
+		return {
+			id: '',
+			userId: null,
+			ip: probe.ipAddress,
+			name: null,
+			altIps: probe.altIpAddresses,
+			uuid: probe.uuid,
+			lastSyncDate: new Date(),
+			tags: [],
+			systemTags: probe.tags.filter(({ type }) => type === 'system').map(({ value }) => value),
+			status: probe.status,
+			isIPv4Supported: probe.isIPv4Supported,
+			isIPv6Supported: probe.isIPv6Supported,
+			version: probe.version,
+			nodeVersion: probe.nodeVersion,
+			hardwareDevice: probe.hardwareDevice,
+			hardwareDeviceFirmware: probe.hardwareDeviceFirmware,
+			city: probe.location.city,
+			state: probe.location.state,
+			country: probe.location.country,
+			latitude: probe.location.latitude,
+			longitude: probe.location.longitude,
+			asn: probe.location.asn,
+			network: probe.location.network,
+			isCustomCity: false,
+			countryOfCustomCity: null,
+		};
+	}
 }

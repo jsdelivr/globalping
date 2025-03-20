@@ -5,12 +5,16 @@ import { client } from '../lib/sql/client.js';
 import { Probe } from '../probe/types.js';
 import { ServerSocket, adoptedProbes } from '../lib/ws/server.js';
 import { AdoptedProbes } from '../lib/override/adopted-probes.js';
+import got from 'got';
+import config from 'config';
 
 const USERS_TABLE = 'directus_users';
 const PROBES_TABLE = 'gp_probes';
 const NOTIFICATIONS_TABLE = 'directus_notifications';
 
 const logger = scopedLogger('adoption-token');
+const directusUrl = config.get<string>('dashboard.directusUrl');
+const systemKey = config.get<string>('systemApi.key');
 
 type User = {
 	id: string;
@@ -112,11 +116,13 @@ export class AdoptionToken {
 			return { message: null };
 		}
 
-		if (dProbe) {
-			await this.adoptProbe(dProbe, probe, user);
-		} else {
-			await this.createProbe(probe, user);
-		}
+		await this.adoptProbe2(probe, user);
+
+		// if (dProbe) {
+		// 	await this.adoptProbe(dProbe, probe, user);
+		// } else {
+		// 	await this.createProbe(probe, user);
+		// }
 
 		return { message: 'Probe successfully adopted by token.' };
 	}
@@ -129,6 +135,20 @@ export class AdoptionToken {
 			.first<DProbe>();
 
 		return dProbe;
+	}
+
+	private async adoptProbe2 (probe: Probe, user: User) {
+		await got.post(`${directusUrl}/adoption-code/adopt-by-token`, {
+			json: {
+				probe: AdoptedProbes.formatProbeAsDProbe(probe),
+				user: {
+					id: user.id,
+				},
+			},
+			headers: {
+				'X-Api-Key': systemKey,
+			},
+		});
 	}
 
 	private async adoptProbe (dProbe: DProbe, probe: Probe, user: User) {
