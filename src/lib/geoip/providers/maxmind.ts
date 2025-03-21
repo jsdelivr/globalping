@@ -37,13 +37,15 @@ const query = async (addr: string, retryCounter = 0): Promise<City> => {
 
 export const maxmindLookup = async (addr: string): Promise<LocationInfo> => {
 	const data = await query(addr);
-	const city = await getCity(data.city?.names?.en, data.country?.isoCode, data.location?.latitude, data.location?.longitude);
+	const originalCity = data.city?.names?.en || '';
+	const originalState = data.country?.isoCode === 'US' ? data.subdivisions?.map(s => s.isoCode)[0] ?? '' : null;
+	const { city, state } = await getCity({ city: originalCity, state: originalState }, data.country?.isoCode, data.location?.latitude, data.location?.longitude);
 
 	return {
 		continent: data.continent?.code ?? '',
 		region: data.country?.isoCode ? getRegionByCountry(data.country?.isoCode) : '',
 		country: data.country?.isoCode ?? '',
-		state: data.country?.isoCode === 'US' ? data.subdivisions?.map(s => s.isoCode)[0] ?? '' : null,
+		state,
 		city: normalizeCityNamePublic(city),
 		normalizedCity: normalizeCityName(city),
 		asn: data.traits?.autonomousSystemNumber ?? 0,

@@ -35,13 +35,14 @@ export const fastlyLookup = async (addr: string): Promise<LocationInfo> => {
 
 	const data = result['geo-digitalelement'];
 	const originalCity = data.city.replace(/^(private|reserved)/, '');
-	const city = await getCity(originalCity, data.country_code, Number(data.latitude), Number(data.longitude));
+	const originalState = data.country_code === 'US' ? data.region : null;
+	const { city, state } = await getCity({ city: originalCity, state: originalState }, data.country_code, Number(data.latitude), Number(data.longitude));
 
 	return {
 		continent: data.continent_code,
 		region: getRegionByCountry(data.country_code),
 		country: data.country_code,
-		state: data.country_code === 'US' ? data.region : null,
+		state,
 		city: normalizeCityNamePublic(city),
 		normalizedCity: normalizeCityName(city),
 		asn: result.as.number,

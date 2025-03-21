@@ -31,12 +31,15 @@ export const ipinfoLookup = async (addr: string): Promise<LocationInfo> => {
 	const match = /^AS(\d+)/.exec(result.org ?? '');
 	const parsedAsn = match?.[1] ? Number(match[1]) : null;
 	const network = (result.org ?? '').split(' ').slice(1).join(' ');
-	const city = await getCity(result.city, result.country, Number(lat), Number(lon));
+
+	const originalCity = result.city || '';
+	const originalState = result.country === 'US' && result.region ? getStateIsoByName(result.region) : null;
+	const { city, state } = await getCity({ city: originalCity, state: originalState }, result.country, Number(lat), Number(lon));
 
 	return {
 		continent: result.country ? getContinentByCountry(result.country) : '',
 		region: result.country ? getRegionByCountry(result.country) : '',
-		state: result.country === 'US' && result.region ? getStateIsoByName(result.region) : null,
+		state,
 		country: result.country ?? '',
 		city: normalizeCityNamePublic(city),
 		normalizedCity: normalizeCityName(city),
