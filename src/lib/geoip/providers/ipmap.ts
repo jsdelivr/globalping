@@ -20,12 +20,15 @@ export type IpmapResponse = {
 export const ipmapLookup = async (addr: string): Promise<LocationInfo> => {
 	const result = await got.get(`https://ipmap-api.ripe.net/v1/locate/${addr}`).json<IpmapResponse>();
 	const location = result?.locations?.[0] || {};
-	const city = await getCity(location.cityName, location.countryCodeAlpha2, Number(location.latitude), Number(location.longitude));
+
+	const originalCity = location.cityName || '';
+	const originalState = location.countryCodeAlpha2 === 'US' && location.stateAnsiCode ? location.stateAnsiCode : null;
+	const { city, state } = await getCity({ city: originalCity, state: originalState }, location.countryCodeAlpha2, Number(location.latitude), Number(location.longitude));
 
 	return {
 		continent: location.countryCodeAlpha2 ? getContinentByCountry(location.countryCodeAlpha2) : '',
 		region: location.countryCodeAlpha2 ? getRegionByCountry(location.countryCodeAlpha2) : '',
-		state: location.countryCodeAlpha2 === 'US' && location.stateAnsiCode ? location.stateAnsiCode : null,
+		state,
 		country: location.countryCodeAlpha2 ?? '',
 		city: normalizeCityNamePublic(city),
 		normalizedCity: normalizeCityName(city),

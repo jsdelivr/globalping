@@ -41,12 +41,14 @@ export const ip2LocationLookup = async (addr: string): Promise<LocationInfo> => 
 		timeout: { request: 5000 },
 	}).json<Ip2LocationResponse>();
 
-	const city = await getCity(result.city_name, result.country_code, result.latitude, result.longitude);
+	const originalCity = result.city_name || '';
+	const originalState = result.country_code === 'US' && result.region_name ? getStateIsoByName(result.region_name) : null;
+	const { city, state } = await getCity({ city: originalCity, state: originalState }, result.country_code, result.latitude, result.longitude);
 
 	return {
 		continent: result.country_code ? getContinentByCountry(result.country_code) : '',
 		region: result.country_code ? getRegionByCountry(result.country_code) : '',
-		state: result.country_code === 'US' && result.region_name ? getStateIsoByName(result.region_name) : null,
+		state,
 		country: result.country_code ?? '',
 		city: normalizeCityNamePublic(city),
 		normalizedCity: normalizeCityName(city),

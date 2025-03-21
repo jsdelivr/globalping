@@ -56,16 +56,16 @@ export const updateGeonamesCitiesFile = async (): Promise<void> => {
 let redis: RedisClient;
 let geonamesCities: Map<string, City> = new Map();
 
-export const getCity = async (city = '', country?: string, latitude?: number, longitude?: number) => {
-	if (city === '') { return city; }
+export const getCity = async (original: { city: string, state: string | null }, country?: string, latitude?: number, longitude?: number): Promise<{ city: string, state: string | null }> => {
+	if (!original.city || original.city === '') { return original; }
 
-	const isDcCity = getIsDcCity(city, country);
+	const isDcCity = getIsDcCity(original.city, country);
 
-	if (isDcCity) { return city; }
+	if (isDcCity) { return original; }
 
 	const approximatedCity = await getApproximatedCity(country, latitude, longitude);
 
-	if (!approximatedCity) { return city; }
+	if (!approximatedCity) { return original; }
 
 	return approximatedCity;
 };
@@ -92,7 +92,7 @@ const throttledPopulateCitiesList = throttle(async () => {
 	await populateCitiesList();
 }, 1);
 
-const getApproximatedCity = async (country?: string, latitude?: number, longitude?: number) => {
+const getApproximatedCity = async (country?: string, latitude?: number, longitude?: number): Promise<{ city: string, state: string | null } | null> => {
 	if (geonamesCities.size === 0 || !redis) {
 		throw new Error('City approximation is not initialized.');
 	}
@@ -122,7 +122,7 @@ const getApproximatedCity = async (country?: string, latitude?: number, longitud
 
 	const biggestCity = _.maxBy(cities, 'population');
 
-	return biggestCity?.name ?? null;
+	return biggestCity ? { city: biggestCity.name, state: biggestCity.countryCode === 'US' ? biggestCity.admin1Code : null } : null;
 };
 
 const readCitiesCsvFile = () => new Promise((resolve, reject) => {
