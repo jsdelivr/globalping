@@ -2,6 +2,7 @@ import _ from 'lodash';
 import { countries } from 'countries-list';
 import { regions, aliases as regionAliases } from './regions.js';
 import { states } from './states.js';
+import { statesIso } from './states-iso.js';
 import {
 	alpha as countryAlpha,
 	aliases as countryAliases,
@@ -47,6 +48,16 @@ export const getStateNameByIso = (iso: string): string => {
 
 	if (!state) {
 		throw new Error(`state not found ${iso}`);
+	}
+
+	return state;
+};
+
+export const getStateExtendedIsoByIso = (iso: string): string => {
+	const state = statesIso[iso];
+
+	if (!state) {
+		throw new Error(`state ISO 3166-2 not found ${iso}`);
 	}
 
 	return state;
@@ -105,6 +116,7 @@ export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
 		getCountryAliases(location.country),
 		[ location.normalizedCity ],
 		location.state ? [ location.state ] : [],
+		location.state ? [ getStateExtendedIsoByIso(location.state) ] : [],
 		location.state ? [ getStateNameByIso(location.state) ] : [],
 		[ location.continent ],
 		getContinentAliases(location.continent),
