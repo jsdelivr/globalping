@@ -932,7 +932,7 @@ describe('probe router', () => {
 		});
 
 		describe('Location type - State', () => {
-			for (const testCase of [ 'dc', 'district of columbia', 'district' ]) {
+			for (const testCase of [ 'dc', 'district of columbia', 'district', 'us-dc' ]) {
 				it(`should match state value - ${testCase}`, async () => {
 					const location = {
 						continent: 'NA',
