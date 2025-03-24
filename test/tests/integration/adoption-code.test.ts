@@ -127,7 +127,7 @@ describe('Adoption code', () => {
 			})
 			.set('X-Api-Key', 'system')
 			.expect(422).expect((response) => {
-				expect(response.body.error.message).to.equal('No suitable probes found.');
+				expect(response.body.error.message).to.equal('No matching probes found.');
 			});
 
 		expect(adoptionCodeStub.callCount).to.equal(0);

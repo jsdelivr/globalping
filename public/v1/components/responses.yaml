@@ -90,7 +90,7 @@ components:
               value:
                 error:
                   type: no_probes_found
-                  message: No suitable probes found.
+                  message: No matching IPv4 probes available.
     measurements429:
       description: |
         If you've exceeded the API rate limit, you'll receive status `429 Too Many Requests` and a body containing more information about the error.

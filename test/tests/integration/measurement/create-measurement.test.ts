@@ -44,7 +44,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes supporting IPv4 found.',
+							message: 'No matching IPv4 probes available.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -96,7 +96,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes supporting IPv4 found.',
+							message: 'No matching IPv4 probes available.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -123,7 +123,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes supporting IPv4 found.',
+							message: 'No matching IPv4 probes available.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -390,7 +390,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes supporting IPv4 found.',
+							message: 'No matching IPv4 probes available.',
 							type: 'no_probes_found',
 						},
 						links: {
@@ -610,7 +610,7 @@ describe('Create measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal({
 						error: {
-							message: 'No suitable probes supporting IPv4 found.',
+							message: 'No matching IPv4 probes available.',
 							type: 'no_probes_found',
 						},
 						links: {

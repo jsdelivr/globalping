@@ -27,7 +27,7 @@ export class MeasurementRunner {
 		const ipVersion = userRequest.measurementOptions?.ipVersion;
 
 		if (allProbes.length === 0) {
-			throw createHttpError(422, `No suitable probes supporting IPv${ipVersion} found.`, { type: 'no_probes_found' });
+			throw createHttpError(422, `No matching IPv${ipVersion} probes available.`, { type: 'no_probes_found' });
 		}
 
 		await this.checkRateLimit(ctx, onlineProbesMap.size);

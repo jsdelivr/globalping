@@ -13,7 +13,7 @@ export class CodeSender {
 		const probe = await this.getProbeByIp(request.ip);
 
 		if (!probe) {
-			throw createHttpError(422, 'No suitable probes found.', { type: 'no_probes_found' });
+			throw createHttpError(422, 'No matching probes found.', { type: 'no_probes_found' });
 		}
 
 		this.sendToProbe(probe, request.code);
