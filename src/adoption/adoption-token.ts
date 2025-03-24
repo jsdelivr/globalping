@@ -130,7 +130,7 @@ export class AdoptionToken {
 	}
 
 	private async adoptProbe (probe: Probe, user: User) {
-		await got.post(`${directusUrl}/adoption-code/adopt-by-token`, {
+		await got.put(`${directusUrl}/adoption-code/adopt-by-token`, {
 			json: {
 				probe: AdoptedProbes.formatProbeAsDProbe(probe),
 				user: {
@@ -142,6 +142,9 @@ export class AdoptionToken {
 			},
 			timeout: {
 				request: 5000,
+			},
+			retry: {
+				limit: 2,
 			},
 		});
 	}
