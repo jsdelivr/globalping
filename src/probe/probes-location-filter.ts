@@ -80,7 +80,7 @@ export class ProbesLocationFilter {
 
 	public filterByLocation (probes: Probe[], location: Location): Probe[] {
 		if (location.magic?.toLowerCase() === 'world') {
-			return _.shuffle(this.filterGloballyDistributed(probes, probes.length));
+			return this.diversifiedShuffle(this.filterGloballyDistributed(probes, probes.length));
 		}
 
 		let filteredProbes = probes;
@@ -103,7 +103,7 @@ export class ProbesLocationFilter {
 
 		const isMagicSorting = Object.keys(location).includes('magic');
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		return isMagicSorting ? this.magicSort(filteredProbes, location.magic!) : _.shuffle(filteredProbes);
+		return isMagicSorting ? this.magicSort(filteredProbes, location.magic!) : this.diversifiedShuffle(filteredProbes);
 	}
 
 	public filterByLocationAndWeight (probes: Probe[], distribution: Map<Location, number>, limit: number): Probe[] {
@@ -157,10 +157,34 @@ export class ProbesLocationFilter {
 
 		const probesGroupedByIndexPosition = _.groupBy(probes, getClosestIndexPosition);
 		const groupsSortedByIndexPosition = Object.values(probesGroupedByIndexPosition); // Object.values sorts values by key
-		const groupsWithShuffledItems = groupsSortedByIndexPosition.map(group => _.shuffle(group));
+		const groupsWithShuffledItems = groupsSortedByIndexPosition.map(group => this.diversifiedShuffle(group));
 		const resultProbes = groupsWithShuffledItems.flat();
 
 		return resultProbes;
+	}
+
+	// Returns the probes in randomized order while prioritizing unique locations.
+	// See https://github.com/jsdelivr/globalping/issues/636#issuecomment-2748843542
+	private diversifiedShuffle (probes: Probe[]): Probe[] {
+		const shuffledProbes: Probe[] = [];
+		let groupedProbes = _(probes)
+			.shuffle() // Ensure the initial order of groups and their content is random.
+			.groupBy(probe => `${probe.location.country}-${probe.location.state}-${probe.location.city}-${probe.location.asn}`)
+			.values()
+			.sort((a, b) => Math.ceil(Math.log2(b.length)) - Math.ceil(Math.log2(a.length))) // Prioritize groups with more probes but preserve a bit of randomness.
+			.value();
+
+		while (shuffledProbes.length < probes.length) {
+			for (const group of groupedProbes) {
+				if (group.length) {
+					shuffledProbes.push(group.pop()!);
+				}
+			}
+
+			groupedProbes = groupedProbes.filter(group => group.length);
+		}
+
+		return shuffledProbes;
 	}
 
 	private getDistributionConfig () {

@@ -1,5 +1,6 @@
 import nock from 'nock';
 import * as sinon from 'sinon';
+import { setTimeout } from 'node:timers/promises';
 import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { expect } from 'chai';
@@ -69,6 +70,7 @@ describe('Adoption token', () => {
 
 		await addFakeProbe({ 'api:connect:adoption': adoptionStatusStub }, { query: { adoptionToken: 'adoptionTokenValue' } });
 
+		await setTimeout(100);
 		expect(adoptionStatusStub.callCount).to.equal(1);
 		expect(adoptionStatusStub.args[0]).to.deep.equal([{ message: 'Probe successfully adopted by token.' }]);
 	});
@@ -87,6 +89,7 @@ describe('Adoption token', () => {
 
 		await addFakeProbe({ 'api:connect:adoption': adoptionStatusStub }, { query: { adoptionToken: 'adoptionTokenValue' } });
 
+		await setTimeout(100);
 		expect(adoptionStatusStub.callCount).to.equal(0);
 	});
 });
