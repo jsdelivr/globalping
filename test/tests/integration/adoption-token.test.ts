@@ -35,7 +35,7 @@ describe('Adoption token', () => {
 	it('should adopt probe by token', async () => {
 		nockGeoIpProviders();
 
-		nock('https://dash-directus.globalping.io').post('/adoption-code/adopt-by-token', (body) => {
+		nock('https://dash-directus.globalping.io').put('/adoption-code/adopt-by-token', (body) => {
 			expect(body).to.deep.equal({
 				probe: {
 					userId: null,
