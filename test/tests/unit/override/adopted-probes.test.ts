@@ -264,6 +264,29 @@ describe('AdoptedProbes', () => {
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
+	it('class should match dProbe to probe by: offline dProbe token+asn+city -> probe token+asn+city', async () => {
+		sql.select.resolves([{ ...defaultAdoption, status: 'offline', adoptionToken: 'adoptionTokenValue' }]);
+
+		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, ipAddress: '2.2.2.2', uuid: '2-2-2-2-2', altIpAddresses: [ '2.2.2.2' ], adoptionToken: 'adoptionTokenValue' }]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.where.callCount).to.equal(2);
+		expect(sql.update.callCount).to.equal(1);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
+
+		expect(sql.update.args[0]).to.deep.equal([{
+			uuid: '2-2-2-2-2',
+			ip: '2.2.2.2',
+			altIps: '["2.2.2.2"]',
+			status: 'ready',
+		}]);
+
+		expect(sql.delete.callCount).to.equal(0);
+		expect(sql.insert.callCount).to.equal(0);
+	});
+
 	it('class should update status to "offline" if probe was not found', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{ ...defaultAdoption, lastSyncDate: relativeDayUtc(-15) }]);
