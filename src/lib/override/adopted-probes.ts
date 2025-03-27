@@ -47,6 +47,7 @@ type DProbe = {
 	network: string | null;
 	githubUsername: string | null;
 	publicProbes: boolean;
+	adoptionToken: string | null;
 }
 
 export type Adoption = Omit<DProbe, 'userId'> & {
@@ -266,7 +267,7 @@ export class AdoptedProbes {
 			// First item will be preserved, so we are prioritizing adopted and online probes.
 			// Sorting by id at the end so order is the same in any table state.
 			.orderByRaw(`IF (${DASH_PROBES_TABLE}.userId IS NOT NULL, 1, 2), ${DASH_PROBES_TABLE}.lastSyncDate DESC, ${DASH_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${DASH_PROBES_TABLE}.status, 'ready') DESC, ${DASH_PROBES_TABLE}.id DESC`)
-			.select<Row[]>(`${DASH_PROBES_TABLE}.*`, `${USERS_TABLE}.github_username AS githubUsername`, `${USERS_TABLE}.public_probes as publicProbes`);
+			.select<Row[]>(`${DASH_PROBES_TABLE}.*`, `${USERS_TABLE}.github_username AS githubUsername`, `${USERS_TABLE}.public_probes as publicProbes`, `${USERS_TABLE}.adoption_token AS adoptionToken`);
 
 		const dProbes: DProbe[] = rows.map(row => ({
 			...row,
@@ -373,6 +374,26 @@ export class AdoptedProbes {
 			}
 
 			dProbesWithoutProbe.push(dProbe);
+		});
+
+		// Searching probe for the dProbe by: offline dProbe token+asn+city -> probe token+asn+city.
+		dProbesToCheck = [ ...dProbesWithoutProbe ];
+		dProbesWithoutProbe = [];
+
+		const adoptionTokenToProbes = _.groupBy(probes.filter(probe => !!probe.adoptionToken), probe => `${probe.adoptionToken}-${probe.location.asn}-${probe.location.city}`);
+
+		dProbesToCheck.forEach((dProbe) => {
+			const probes = dProbe.adoptionToken && dProbe.status === 'offline' && adoptionTokenToProbes[`${dProbe.adoptionToken}-${dProbe.asn}-${dProbe.city}`];
+			const probe = probes && probes.length > 0 && probes.shift();
+
+			if (probe) {
+				dProbesWithProbe.push({ dProbe, probe });
+				uuidToProbe.delete(probe.uuid);
+				ipToProbe.delete(probe.ipAddress);
+				probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
+			} else {
+				dProbesWithoutProbe.push(dProbe);
+			}
 		});
 
 		const probesWithoutDProbe = [ ...uuidToProbe.values() ];
@@ -619,6 +640,7 @@ export class AdoptedProbes {
 			network: probe.location.network,
 			isCustomCity: false,
 			countryOfCustomCity: null,
+			adoptionToken: probe.adoptionToken,
 		};
 	}
 }

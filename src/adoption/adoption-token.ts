@@ -78,7 +78,7 @@ export class AdoptionToken {
 		const tokenValue = socket.handshake.query['adoptionToken'];
 		const token = !tokenValue ? null : String(tokenValue);
 		const probe = socket.data.probe;
-		const isAdopted = !!adoptedProbes.getByIp(probe.ipAddress);
+		const isAdopted = !!this.adoptedProbes.getByIp(probe.ipAddress);
 
 		if (!token) {
 			!isAdopted && socket.emit('api:connect:adoption', { message: 'You can register this probe at https://dash.globalping.io to earn extra measurement credits.' });
@@ -92,12 +92,18 @@ export class AdoptionToken {
 		}
 	}
 
-	async validateToken (token: string, probe: Probe): Promise<{ message: string | null, level?: 'info' | 'warn' }> {
+	async getUserByToken (token: string) {
 		let user = this.tokensToUsers.get(token);
 
 		if (!user) {
 			user = await this.fetchSpecificUser(token);
 		}
+
+		return user;
+	}
+
+	async validateToken (token: string, probe: Probe): Promise<{ message: string | null, level?: 'info' | 'warn' }> {
+		const user = await this.getUserByToken(token);
 
 		if (!user) {
 			logger.info('User not found for the provided adoption token.', { token });

@@ -33,6 +33,7 @@ describe('AdoptedProbes', () => {
 		network: 'Amazon.com, Inc.',
 		githubUsername: 'jimaek',
 		publicProbes: 0,
+		adoptionToken: null,
 	};
 
 	const defaultConnectedProbe: Probe = {
@@ -79,6 +80,7 @@ describe('AdoptedProbes', () => {
 			totalDiskSize: 0,
 			availableDiskSpace: 0,
 		},
+		adoptionToken: null,
 	};
 
 	const sandbox = sinon.createSandbox();
