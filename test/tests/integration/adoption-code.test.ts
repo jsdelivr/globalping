@@ -81,6 +81,7 @@ describe('Adoption code', () => {
 					network: 'The Constant Company LLC',
 					isCustomCity: false,
 					countryOfCustomCity: null,
+					adoptionToken: null,
 				});
 			});
 
