@@ -379,8 +379,7 @@ export class AdoptedProbes {
 		// Searching probe for the dProbe by: offline dProbe token+asn+city -> probe token+asn+city.
 		dProbesToCheck = [ ...dProbesWithoutProbe ];
 		dProbesWithoutProbe = [];
-
-		const adoptionTokenToProbes = _.groupBy(probes.filter(probe => !!probe.adoptionToken), probe => `${probe.adoptionToken}-${probe.location.asn}-${probe.location.city}`);
+		const adoptionTokenToProbes = _.groupBy(([ ...uuidToProbe.values() ]).filter(probe => !!probe.adoptionToken), probe => `${probe.adoptionToken}-${probe.location.asn}-${probe.location.city}`);
 
 		dProbesToCheck.forEach((dProbe) => {
 			const probes = dProbe.adoptionToken && dProbe.status === 'offline' && adoptionTokenToProbes[`${dProbe.adoptionToken}-${dProbe.asn}-${dProbe.city}`];
