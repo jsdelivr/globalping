@@ -21,9 +21,11 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	const uuid = String(socket.handshake.query['uuid']);
 	const isHardware = socket.handshake.query['isHardware'] === 'true' || socket.handshake.query['isHardware'] === '1';
 	const hardwareDeviceValue = socket.handshake.query['hardwareDevice'];
-	const hardwareDeviceFirmwareValue = socket.handshake.query['hardwareDeviceFirmware'];
 	const hardwareDevice = !hardwareDeviceValue ? null : String(hardwareDeviceValue);
+	const hardwareDeviceFirmwareValue = socket.handshake.query['hardwareDeviceFirmware'];
 	const hardwareDeviceFirmware = !hardwareDeviceFirmwareValue ? null : String(hardwareDeviceFirmwareValue);
+	const adoptionTokenValue = socket.handshake.query['adoptionToken'];
+	const adoptionToken = !adoptionTokenValue ? null : String(adoptionTokenValue);
 	const host = process.env['HOSTNAME'] ?? '';
 
 	const ip = getProbeIp(socket);
@@ -87,6 +89,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		status: 'initializing',
 		isIPv4Supported: false,
 		isIPv6Supported: false,
+		adoptionToken,
 	};
 };
 

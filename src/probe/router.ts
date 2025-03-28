@@ -176,6 +176,7 @@ export class ProbeRouter {
 			},
 			jobs: { count: null },
 		},
+		adoptionToken: null,
 	});
 }
 

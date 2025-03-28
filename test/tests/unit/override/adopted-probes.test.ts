@@ -33,6 +33,7 @@ describe('AdoptedProbes', () => {
 		network: 'Amazon.com, Inc.',
 		githubUsername: 'jimaek',
 		publicProbes: 0,
+		adoptionToken: null,
 	};
 
 	const defaultConnectedProbe: Probe = {
@@ -79,6 +80,7 @@ describe('AdoptedProbes', () => {
 			totalDiskSize: 0,
 			availableDiskSpace: 0,
 		},
+		adoptionToken: null,
 	};
 
 	const sandbox = sinon.createSandbox();
@@ -258,6 +260,45 @@ describe('AdoptedProbes', () => {
 		expect(sql.update.callCount).to.equal(1);
 		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ uuid: '1-1-1-1-1', ip: '1.1.1.1' }]);
+		expect(sql.delete.callCount).to.equal(0);
+		expect(sql.insert.callCount).to.equal(0);
+	});
+
+	it('class should match dProbe to probe by: offline dProbe token+asn+city -> probe token+asn+city', async () => {
+		sql.select.resolves([{ ...defaultAdoption, status: 'offline', adoptionToken: 'adoptionTokenValue' }]);
+
+		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, ipAddress: '2.2.2.2', uuid: '2-2-2-2-2', altIpAddresses: [ '2.2.2.2' ], adoptionToken: 'adoptionTokenValue' }]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.where.callCount).to.equal(2);
+		expect(sql.update.callCount).to.equal(1);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
+
+		expect(sql.update.args[0]).to.deep.equal([{
+			uuid: '2-2-2-2-2',
+			ip: '2.2.2.2',
+			altIps: '["2.2.2.2"]',
+			status: 'ready',
+		}]);
+
+		expect(sql.delete.callCount).to.equal(0);
+		expect(sql.insert.callCount).to.equal(0);
+	});
+
+	it('class should not use already matched probes in search by: offline dProbe token+asn+city -> probe token+asn+city', async () => {
+		sql.select.resolves([
+			defaultAdoption,
+			{ ...defaultAdoption, status: 'offline', ip: '2.2.2.2', uuid: '2-2-2-2-2', adoptionToken: 'adoptionTokenValue' },
+		]);
+
+		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, adoptionToken: 'adoptionTokenValue' }]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.update.callCount).to.equal(0);
 		expect(sql.delete.callCount).to.equal(0);
 		expect(sql.insert.callCount).to.equal(0);
 	});

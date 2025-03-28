@@ -55,6 +55,7 @@ export type Probe = {
 	stats: ProbeStats;
 	hostInfo: HostInfo;
 	owner?: { id: string };
+	adoptionToken: string | null;
 };
 
 type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;
