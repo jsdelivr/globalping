@@ -166,22 +166,51 @@ export class ProbesLocationFilter {
 	// Returns the probes in randomized order while prioritizing unique locations.
 	// See https://github.com/jsdelivr/globalping/issues/636#issuecomment-2748843542
 	private diversifiedShuffle (probes: Probe[]): Probe[] {
-		const shuffledProbes: Probe[] = [];
+		// Prioritize groups with more probes but preserve a bit of randomness by reducing the number of unique values.
+		const groupRank = (count: number) => count < 8 ? Math.floor(count / 2) : Math.ceil(Math.log2(count));
+
+		// Group by unique location + ASN, order by the ranking function.
 		let groupedProbes = _(probes)
 			.shuffle() // Ensure the initial order of groups and their content is random.
 			.groupBy(probe => `${probe.location.country}-${probe.location.state}-${probe.location.city}-${probe.location.asn}`)
-			.values()
-			.sort((a, b) => Math.ceil(Math.log2(b.length)) - Math.ceil(Math.log2(a.length))) // Prioritize groups with more probes but preserve a bit of randomness.
+			.map((probes, groupKey) => ({ probes, rank: groupRank(probes.length), cityKey: groupKey.split('-').slice(0, -1).join('-'), prevSameCity: 0 }))
+			.sort((a, b) => b.rank - a.rank)
 			.value();
+
+		// For each group, compute the frequency of the same city in earlier groups.
+		const counts: {[k: string]: { values: number[], currentRank: number }} = {};
+		const shuffledProbes: Probe[] = [];
+
+		for (const group of groupedProbes) {
+			const cityR = counts[group.cityKey] ?? (counts[group.cityKey] = { values: [ 0 ], currentRank: group.rank });
+
+			if (group.rank === cityR.currentRank) {
+				cityR.values[cityR.values.length - 1]++;
+			} else if (group.rank < cityR.currentRank) {
+				cityR.values.push((cityR.values.at(-1) || 0) + 1);
+				cityR.currentRank = group.rank;
+			}
+
+			group.prevSameCity = cityR.values.at(-2) || 0;
+		}
+
+		// Prioritize less common cities within the same ranking group.
+		groupedProbes.sort((a, b) => {
+			if (a.rank === b.rank) {
+				return a.prevSameCity - b.prevSameCity;
+			}
+
+			return b.rank - a.rank;
+		});
 
 		while (shuffledProbes.length < probes.length) {
 			for (const group of groupedProbes) {
-				if (group.length) {
-					shuffledProbes.push(group.pop()!);
+				if (group.probes.length) {
+					shuffledProbes.push(group.probes.pop()!);
 				}
 			}
 
-			groupedProbes = groupedProbes.filter(group => group.length);
+			groupedProbes = groupedProbes.filter(group => group.probes.length);
 		}
 
 		return shuffledProbes;
