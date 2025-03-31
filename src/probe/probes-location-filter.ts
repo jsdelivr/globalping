@@ -178,20 +178,12 @@ export class ProbesLocationFilter {
 			.value();
 
 		// For each group, compute the frequency of the same city in earlier groups.
-		const counts: {[k: string]: { values: number[], currentRank: number }} = {};
+		const counts: {[k: string]: number} = {};
 		const shuffledProbes: Probe[] = [];
 
 		for (const group of groupedProbes) {
-			const cityR = counts[group.cityKey] ?? (counts[group.cityKey] = { values: [ 0 ], currentRank: group.rank });
-
-			if (group.rank === cityR.currentRank) {
-				cityR.values[cityR.values.length - 1]++;
-			} else if (group.rank < cityR.currentRank) {
-				cityR.values.push((cityR.values.at(-1) || 0) + 1);
-				cityR.currentRank = group.rank;
-			}
-
-			group.prevSameCity = cityR.values.at(-2) || 0;
+			group.prevSameCity = counts[group.cityKey] ?? (counts[group.cityKey] = 0);
+			counts[group.cityKey]++;
 		}
 
 		// Prioritize less common cities within the same ranking group.
