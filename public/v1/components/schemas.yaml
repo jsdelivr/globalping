@@ -363,6 +363,7 @@ components:
                 - SOA
                 - TXT
                 - SRV
+                - SVCB
               default: A
         resolver:
           $ref: 'schemas.yaml#/components/schemas/MeasurementResolver'

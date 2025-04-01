@@ -113,7 +113,7 @@ export const tracerouteSchema = Joi.object({
 	ipVersion: ipVersionSchema,
 }).default().messages(schemaErrorMessages);
 
-const allowedDnsTypes = [ 'A', 'AAAA', 'ANY', 'CNAME', 'DNSKEY', 'DS', 'HTTPS', 'MX', 'NS', 'NSEC', 'PTR', 'RRSIG', 'SOA', 'TXT', 'SRV' ];
+const allowedDnsTypes = [ 'A', 'AAAA', 'ANY', 'CNAME', 'DNSKEY', 'DS', 'HTTPS', 'MX', 'NS', 'NSEC', 'PTR', 'RRSIG', 'SOA', 'TXT', 'SRV', 'SVCB' ];
 const allowedDnsProtocols = [ 'UDP', 'TCP' ];
 
 // Dns
