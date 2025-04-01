@@ -32,6 +32,8 @@ describe('adopted probes', () => {
 			longitude: -58.38,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			asn: 61003,
+			default_prefix: 'jimaek',
+			publicProbes: true,
 		});
 
 		await waitProbeInCity('San Luis');
@@ -61,7 +63,19 @@ describe('adopted probes', () => {
 		expect(response.statusCode).to.equal(202);
 	});
 
-	it('should create measurement by user tag', async () => {
+	it('should not create measurement by its old location', async () => {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
+			target: 'www.jsdelivr.com',
+			type: 'ping',
+			locations: [{
+				city: 'Buenos Aires',
+			}],
+		}, throwHttpErrors: false });
+
+		expect(response.statusCode).to.equal(422);
+	});
+
+	it('should create measurement by assigneduser tag', async () => {
 		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
@@ -73,15 +87,15 @@ describe('adopted probes', () => {
 		expect(response.statusCode).to.equal(202);
 	});
 
-	it('should not create measurement by its old location', async () => {
+	it('should create measurement by global user tag', async () => {
 		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
-				city: 'Buenos Aires',
+				tags: [ 'u-jimaek' ],
 			}],
-		}, throwHttpErrors: false });
+		} });
 
-		expect(response.statusCode).to.equal(422);
+		expect(response.statusCode).to.equal(202);
 	});
 });
