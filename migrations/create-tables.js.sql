@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS directus_users (
 	id CHAR(36) PRIMARY KEY,
 	github_username VARCHAR(255),
+	github_organizations longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`github_organizations`)),
 	user_type VARCHAR(255) NOT NULL DEFAULT 'member',
 	public_probes BOOLEAN DEFAULT 0,
 	adoption_token VARCHAR(255) NOT NULL,

@@ -10,6 +10,17 @@ describe('adopted probes', () => {
 	before(async function () {
 		this.timeout(80000);
 
+		await client('directus_users').delete();
+
+		await client('directus_users').insert({
+			id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+			adoption_token: 'adoptionTokenValue',
+			github_username: 'jimaek',
+			github_organizations: JSON.stringify([ 'jsdelivr' ]),
+			default_prefix: 'jsdelivr',
+			public_probes: true,
+		});
+
 		await client(PROBES_TABLE).delete();
 
 		await client(PROBES_TABLE).insert({
@@ -32,8 +43,6 @@ describe('adopted probes', () => {
 			longitude: -58.38,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			asn: 61003,
-			default_prefix: 'jimaek',
-			publicProbes: true,
 		});
 
 		await waitProbeInCity('San Luis');
@@ -92,7 +101,7 @@ describe('adopted probes', () => {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
-				tags: [ 'u-jimaek' ],
+				tags: [ 'u-jsdelivr' ],
 			}],
 		} });
 
