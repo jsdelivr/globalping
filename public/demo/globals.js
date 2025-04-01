@@ -11,7 +11,7 @@ const ALLOWED_IP_VERSIONS = [ 4, 6 ];
 const ALLOWED_TRACE_PROTOCOLS = [ 'TCP', 'UDP', 'ICMP' ];
 
 // dns
-const ALLOWED_DNS_TYPES = [ 'A', 'AAAA', 'ANY', 'CNAME', 'DNSKEY', 'DS', 'HTTPS', 'MX', 'NS', 'NSEC', 'PTR', 'RRSIG', 'SOA', 'TXT', 'SRV' ];
+const ALLOWED_DNS_TYPES = [ 'A', 'AAAA', 'ANY', 'CNAME', 'DNSKEY', 'DS', 'HTTPS', 'MX', 'NS', 'NSEC', 'PTR', 'RRSIG', 'SOA', 'TXT', 'SRV', 'SVCB' ];
 const ALLOWED_DNS_PROTOCOLS = [ 'UDP', 'TCP' ];
 
 // mtr
