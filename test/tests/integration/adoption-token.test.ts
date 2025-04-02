@@ -15,7 +15,7 @@ describe('Adoption token', () => {
 
 	before(async () => {
 		await getTestServer();
-		await client('directus_users').insert({ id: 'userIdValue', adoption_token: 'adoptionTokenValue' });
+		await client('directus_users').insert({ id: 'userIdValue', adoption_token: 'adoptionTokenValue', default_prefix: 'defaultPrefixValue' });
 		await adoptionToken.syncTokens();
 	});
 

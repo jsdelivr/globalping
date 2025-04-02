@@ -10,6 +10,17 @@ describe('adopted probes', () => {
 	before(async function () {
 		this.timeout(80000);
 
+		await client('directus_users').delete();
+
+		await client('directus_users').insert({
+			id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+			adoption_token: 'adoptionTokenValue',
+			github_username: 'jimaek',
+			github_organizations: JSON.stringify([ 'jsdelivr' ]),
+			default_prefix: 'jsdelivr',
+			public_probes: true,
+		});
+
 		await client(PROBES_TABLE).delete();
 
 		await client(PROBES_TABLE).insert({
@@ -61,7 +72,19 @@ describe('adopted probes', () => {
 		expect(response.statusCode).to.equal(202);
 	});
 
-	it('should create measurement by user tag', async () => {
+	it('should not create measurement by its old location', async () => {
+		const response = await got.post('http://localhost:80/v1/measurements', { json: {
+			target: 'www.jsdelivr.com',
+			type: 'ping',
+			locations: [{
+				city: 'Buenos Aires',
+			}],
+		}, throwHttpErrors: false });
+
+		expect(response.statusCode).to.equal(422);
+	});
+
+	it('should create measurement by assigneduser tag', async () => {
 		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
@@ -73,15 +96,15 @@ describe('adopted probes', () => {
 		expect(response.statusCode).to.equal(202);
 	});
 
-	it('should not create measurement by its old location', async () => {
+	it('should create measurement by global user tag', async () => {
 		const response = await got.post('http://localhost:80/v1/measurements', { json: {
 			target: 'www.jsdelivr.com',
 			type: 'ping',
 			locations: [{
-				city: 'Buenos Aires',
+				tags: [ 'u-jsdelivr' ],
 			}],
-		}, throwHttpErrors: false });
+		} });
 
-		expect(response.statusCode).to.equal(422);
+		expect(response.statusCode).to.equal(202);
 	});
 });

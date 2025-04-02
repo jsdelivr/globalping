@@ -31,7 +31,7 @@ describe('AdoptedProbes', () => {
 		longitude: -6.25,
 		asn: 16509,
 		network: 'Amazon.com, Inc.',
-		githubUsername: 'jimaek',
+		defaultPrefix: 'jimaek',
 		publicProbes: 0,
 		adoptionToken: null,
 	};

@@ -45,7 +45,7 @@ type DProbe = {
 	longitude: number | null;
 	asn: number | null;
 	network: string | null;
-	githubUsername: string | null;
+	defaultPrefix: string | null;
 	publicProbes: boolean;
 	adoptionToken: string | null;
 }
@@ -122,7 +122,7 @@ export class AdoptedProbes {
 			probeField: 'tags',
 			shouldUpdateIfCustomCity: true,
 			formatter: (probeTags: Tag[], _probe: Probe, dProbe?: DProbe) => [
-				...(dProbe && dProbe.publicProbes ? [ this.getGlobalUserTag(dProbe.githubUsername!) ] : []),
+				...(dProbe && dProbe.publicProbes ? [ this.getGlobalUserTag(dProbe.defaultPrefix!) ] : []),
 				...probeTags.filter(({ type }) => type === 'system').map(({ value }) => value),
 			],
 		},
@@ -195,9 +195,9 @@ export class AdoptedProbes {
 
 		return [
 			...probe.tags,
-			...(adoption.publicProbes && adoption.githubUsername ? [{
+			...(adoption.publicProbes && adoption.defaultPrefix ? [{
 				type: 'system' as const,
-				value: this.getGlobalUserTag(adoption.githubUsername),
+				value: this.getGlobalUserTag(adoption.defaultPrefix),
 			}] : []),
 			...adoption.tags,
 		];
@@ -267,7 +267,7 @@ export class AdoptedProbes {
 			// First item will be preserved, so we are prioritizing adopted and online probes.
 			// Sorting by id at the end so order is the same in any table state.
 			.orderByRaw(`IF (${DASH_PROBES_TABLE}.userId IS NOT NULL, 1, 2), ${DASH_PROBES_TABLE}.lastSyncDate DESC, ${DASH_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${DASH_PROBES_TABLE}.status, 'ready') DESC, ${DASH_PROBES_TABLE}.id DESC`)
-			.select<Row[]>(`${DASH_PROBES_TABLE}.*`, `${USERS_TABLE}.github_username AS githubUsername`, `${USERS_TABLE}.public_probes as publicProbes`, `${USERS_TABLE}.adoption_token AS adoptionToken`);
+			.select<Row[]>(`${DASH_PROBES_TABLE}.*`, `${USERS_TABLE}.default_prefix AS defaultPrefix`, `${USERS_TABLE}.public_probes as publicProbes`, `${USERS_TABLE}.adoption_token AS adoptionToken`);
 
 		const dProbes: DProbe[] = rows.map(row => ({
 			...row,
@@ -610,11 +610,11 @@ export class AdoptedProbes {
 		return date.toDateString() === currentDate.toDateString();
 	}
 
-	private getGlobalUserTag (githubUsername: string) {
-		return `u-${githubUsername}`;
+	private getGlobalUserTag (defaultPrefix: string) {
+		return `u-${defaultPrefix}`;
 	}
 
-	static formatProbeAsDProbe (probe: Probe): Omit<DProbe, 'id' | 'lastSyncDate' | 'githubUsername' | 'publicProbes'> {
+	static formatProbeAsDProbe (probe: Probe): Omit<DProbe, 'id' | 'lastSyncDate' | 'defaultPrefix' | 'publicProbes'> {
 		return {
 			userId: null,
 			ip: probe.ipAddress,
