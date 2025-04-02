@@ -48,13 +48,14 @@ type DProbe = {
 	defaultPrefix: string | null;
 	publicProbes: boolean;
 	adoptionToken: string | null;
+	possibleCountries: string[];
 }
 
 export type Adoption = Omit<DProbe, 'userId'> & {
 	userId: string;
 }
 
-export type Row = Omit<DProbe, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes'> & {
+export type Row = Omit<DProbe, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'possibleCountries'> & {
 	altIps: string;
 	tags: string;
 	systemTags: string;
@@ -62,6 +63,7 @@ export type Row = Omit<DProbe, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps'
 	isIPv4Supported: number;
 	isIPv6Supported: number;
 	publicProbes: number;
+	possibleCountries: string;
 }
 
 type DProbeFieldDescription = {
@@ -153,6 +155,10 @@ export class AdoptedProbes {
 		longitude: {
 			probeField: 'location.longitude',
 			shouldUpdateIfCustomCity: false,
+		},
+		possibleCountries: {
+			probeField: 'location.possibleCountries',
+			shouldUpdateIfCustomCity: true,
 		},
 	};
 
@@ -287,6 +293,7 @@ export class AdoptedProbes {
 			latitude: row.latitude ? normalizeCoordinate(row.latitude) : row.latitude,
 			longitude: row.longitude ? normalizeCoordinate(row.longitude) : row.longitude,
 			publicProbes: Boolean(row.publicProbes),
+			possibleCountries: JSON.parse(row.possibleCountries) as string[],
 		}));
 
 		this.dProbes = dProbes;
@@ -531,6 +538,7 @@ export class AdoptedProbes {
 			key, (_.isObject(value) && !_.isDate(value)) ? JSON.stringify(value) : value,
 		]));
 
+		console.log('updateDProbe', dProbe.id, formattedUpdate);
 		await this.sql(DASH_PROBES_TABLE).where({ id: dProbe.id }).update(formattedUpdate);
 
 		// if country of probe changes, but there is a custom city in prev country, send notification to user.
@@ -640,6 +648,7 @@ export class AdoptedProbes {
 			isCustomCity: false,
 			countryOfCustomCity: null,
 			adoptionToken: probe.adoptionToken,
+			possibleCountries: probe.location.possibleCountries,
 		};
 	}
 }

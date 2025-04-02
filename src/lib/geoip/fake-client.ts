@@ -16,5 +16,6 @@ export const fakeLookup = (): LocationInfo => {
 		isProxy: false,
 		isHosting: null,
 		isAnycast: false,
+		possibleCountries: [ 'AR' ],
 	};
 };
