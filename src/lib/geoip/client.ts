@@ -17,8 +17,8 @@ import NullCache from '../cache/null-cache.js';
 import { normalizeCoordinate } from './utils.js';
 
 type Provider = 'ipmap' | 'ip2location' | 'ipinfo' | 'maxmind' | 'fastly';
-export type LocationInfo = ProbeLocation & {isProxy: boolean | null, isHosting: boolean | null, isAnycast: boolean | null};
-export type LocationInfoWithProvider = LocationInfo & {provider: Provider};
+export type LocationInfo = ProbeLocation & { isProxy: boolean | null, isHosting: boolean | null, isAnycast: boolean | null };
+export type ProviderLocationInfo = Omit<LocationInfo, 'possibleCountries'> & { provider: Provider };
 export type NetworkInfo = {
 	network: string;
 	normalizedNetwork: string;
@@ -50,19 +50,19 @@ export default class GeoIpClient {
 				this.lookupWithCache(`geoip:fastly:${addr}`, async () => fastlyLookup(addr)),
 			])
 			.then(([ ipinfo, ip2location, maxmind, ipmap, fastly ]) => {
-				const fulfilled: (LocationInfoWithProvider | null)[] = [];
+				const fulfilled: (ProviderLocationInfo | null)[] = [];
 
 				// Providers here are pushed in a desc prioritized order
 				fulfilled.push(
-					ipinfo.status === 'fulfilled' ? { ...ipinfo.value, provider: 'ipinfo' } : null,
-					ip2location.status === 'fulfilled' ? { ...ip2location.value, provider: 'ip2location' } : null,
-					maxmind.status === 'fulfilled' ? { ...maxmind.value, provider: 'maxmind' } : null,
-					ipmap.status === 'fulfilled' ? { ...ipmap.value, provider: 'ipmap' } : null,
-					fastly.status === 'fulfilled' ? { ...fastly.value, provider: 'fastly' } : null,
+					ipinfo.status === 'fulfilled' ? ipinfo.value : null,
+					ip2location.status === 'fulfilled' ? ip2location.value : null,
+					maxmind.status === 'fulfilled' ? maxmind.value : null,
+					ipmap.status === 'fulfilled' ? ipmap.value : null,
+					fastly.status === 'fulfilled' ? fastly.value : null,
 				);
 
 				return fulfilled.filter(Boolean).flat();
-			}) as LocationInfoWithProvider[];
+			}) as ProviderLocationInfo[];
 
 		const ip2location = results.find(result => result.provider === 'ip2location');
 		const ipinfo = results.find(result => result.provider === 'ipinfo');
@@ -111,10 +111,11 @@ export default class GeoIpClient {
 			isProxy,
 			isHosting,
 			isAnycast,
+			possibleCountries: this.getPossibleCountries(results),
 		};
 	}
 
-	private matchNetwork (best: LocationInfo, rankedSources: LocationInfoWithProvider[]): NetworkInfo | undefined {
+	private matchNetwork (best: ProviderLocationInfo, rankedSources: ProviderLocationInfo[]): NetworkInfo | undefined {
 		if (best.asn && best.network) {
 			return {
 				asn: best.asn,
@@ -136,7 +137,7 @@ export default class GeoIpClient {
 		return undefined;
 	}
 
-	private bestMatch (sources: LocationInfoWithProvider[]): [LocationInfo, LocationInfoWithProvider[]] {
+	private bestMatch (sources: ProviderLocationInfo[]): [ProviderLocationInfo, ProviderLocationInfo[]] {
 		const filtered = sources.filter(s => s.normalizedCity);
 
 		// First, cluster the sources by country and select the most popular one.
@@ -148,14 +149,13 @@ export default class GeoIpClient {
 		const grouped = Object.values(_.groupBy(rankedClusters[0], 'normalizedCity'));
 		const ranked = grouped.sort((a, b) => b.length - a.length).flat();
 
-		const best = ranked[0];
+		const match = ranked[0];
 
-		if (!best || best.provider === 'fastly') {
+		if (!match || match.provider === 'fastly') {
 			logger.error(`Failed to find a good match`, { sources });
 			throw new Error(`failed to find a food match`);
 		}
 
-		const match = _.omit(best, 'provider');
 		return [ match, ranked ];
 	}
 
@@ -172,5 +172,9 @@ export default class GeoIpClient {
 		await this.cache.set(key, info, ttl);
 
 		return info;
+	}
+
+	private getPossibleCountries (results: ProviderLocationInfo[]): string[] {
+		return _.uniq(results.filter(r => r.country).map(r => r.country));
 	}
 }

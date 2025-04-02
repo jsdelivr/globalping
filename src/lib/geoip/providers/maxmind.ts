@@ -1,7 +1,7 @@
 import config from 'config';
 import { type City, WebServiceClient } from '@maxmind/geoip2-node';
 import type { WebServiceClientError } from '@maxmind/geoip2-node/dist/src/types.js';
-import type { LocationInfo } from '../client.js';
+import type { ProviderLocationInfo } from '../client.js';
 import {
 	normalizeCityName,
 	normalizeCityNamePublic,
@@ -35,13 +35,14 @@ const query = async (addr: string, retryCounter = 0): Promise<City> => {
 	}
 };
 
-export const maxmindLookup = async (addr: string): Promise<LocationInfo> => {
+export const maxmindLookup = async (addr: string): Promise<ProviderLocationInfo> => {
 	const data = await query(addr);
 	const originalCity = data.city?.names?.en || '';
 	const originalState = data.country?.isoCode === 'US' ? data.subdivisions?.map(s => s.isoCode)[0] ?? '' : null;
 	const { city, state } = await getCity({ city: originalCity, state: originalState }, data.country?.isoCode, data.location?.latitude, data.location?.longitude);
 
 	return {
+		provider: 'maxmind',
 		continent: data.continent?.code ?? '',
 		region: data.country?.isoCode ? getRegionByCountry(data.country?.isoCode) : '',
 		country: data.country?.isoCode ?? '',

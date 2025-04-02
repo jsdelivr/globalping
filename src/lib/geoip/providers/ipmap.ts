@@ -1,6 +1,6 @@
 import got from 'got';
 import { getContinentByCountry, getRegionByCountry } from '../../location/location.js';
-import type { LocationInfo } from '../client.js';
+import type { ProviderLocationInfo } from '../client.js';
 import {
 	normalizeCityName,
 	normalizeCityNamePublic,
@@ -17,7 +17,7 @@ export type IpmapResponse = {
 	}[]
 };
 
-export const ipmapLookup = async (addr: string): Promise<LocationInfo> => {
+export const ipmapLookup = async (addr: string): Promise<ProviderLocationInfo> => {
 	const result = await got.get(`https://ipmap-api.ripe.net/v1/locate/${addr}`).json<IpmapResponse>();
 	const location = result?.locations?.[0] || {};
 
@@ -26,6 +26,7 @@ export const ipmapLookup = async (addr: string): Promise<LocationInfo> => {
 	const { city, state } = await getCity({ city: originalCity, state: originalState }, location.countryCodeAlpha2, Number(location.latitude), Number(location.longitude));
 
 	return {
+		provider: 'ipmap',
 		continent: location.countryCodeAlpha2 ? getContinentByCountry(location.countryCodeAlpha2) : '',
 		region: location.countryCodeAlpha2 ? getRegionByCountry(location.countryCodeAlpha2) : '',
 		state,
