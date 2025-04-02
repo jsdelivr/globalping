@@ -682,7 +682,6 @@ describe('Create measurement', () => {
 					lastSyncDate: new Date(),
 					ip: '1.2.3.4',
 					uuid: '1-1-1-1-1',
-					isCustomCity: 1,
 					tags: '[{"prefix":"jsdelivr","value":"Dashboard-Tag"}]',
 					status: 'ready',
 					isIPv4Supported: true,
@@ -690,12 +689,20 @@ describe('Create measurement', () => {
 					version: '0.26.0',
 					nodeVersion: 'v18.14.2',
 					country: 'US',
-					countryOfCustomCity: 'US',
 					city: 'Oklahoma City',
 					latitude: 35.47,
 					longitude: -97.52,
+					state: 'OK',
 					network: 'InterBS S.R.L. (BAEHOST)',
 					asn: 61004,
+					allowedCountries: '["US"]',
+					customLocation: JSON.stringify({
+						country: 'US',
+						city: 'Oklahoma City',
+						latitude: 35.47,
+						longitude: -97.52,
+						state: 'OK',
+					}),
 				});
 
 				await probeOverride.fetchDashboardData();
@@ -853,7 +860,6 @@ describe('Create measurement', () => {
 					lastSyncDate: new Date(),
 					ip: '1.2.3.4',
 					uuid: '1-1-1-1-1',
-					isCustomCity: 1,
 					tags: '[{"prefix":"jsdelivr","value":"Dashboard-Tag"}]',
 					status: 'ready',
 					isIPv4Supported: true,
@@ -861,12 +867,20 @@ describe('Create measurement', () => {
 					version: '0.26.0',
 					nodeVersion: 'v18.14.2',
 					country: 'US',
-					countryOfCustomCity: 'US',
 					city: 'Oklahoma City',
 					latitude: 35.47,
 					longitude: -97.52,
+					state: 'OK',
 					network: 'InterBS S.R.L. (BAEHOST)',
 					asn: 61004,
+					allowedCountries: '["US"]',
+					customLocation: JSON.stringify({
+						country: 'US',
+						city: 'Oklahoma City',
+						latitude: 35.47,
+						longitude: -97.52,
+						state: 'OK',
+					}),
 				});
 
 				await client('gp_location_overrides').insert({

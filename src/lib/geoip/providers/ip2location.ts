@@ -5,7 +5,7 @@ import {
 	getRegionByCountry,
 	getStateIsoByName,
 } from '../../location/location.js';
-import type { LocationInfo } from '../client.js';
+import type { ProviderLocationInfo } from '../client.js';
 import {
 	normalizeCityName,
 	normalizeCityNamePublic,
@@ -32,7 +32,7 @@ type Ip2LocationResponse = {
 // https://blog.ip2location.com/knowledge-base/what-is-usage-type/
 const HOSTING_USAGE_TYPES = [ 'CDN', 'DCH' ];
 
-export const ip2LocationLookup = async (addr: string): Promise<LocationInfo> => {
+export const ip2LocationLookup = async (addr: string): Promise<ProviderLocationInfo> => {
 	const result = await got(`https://api.ip2location.io`, {
 		searchParams: {
 			key: config.get<string>('ip2location.apiKey'),
@@ -46,6 +46,7 @@ export const ip2LocationLookup = async (addr: string): Promise<LocationInfo> => 
 	const { city, state } = await getCity({ city: originalCity, state: originalState }, result.country_code, result.latitude, result.longitude);
 
 	return {
+		provider: 'ip2location',
 		continent: result.country_code ? getContinentByCountry(result.country_code) : '',
 		region: result.country_code ? getRegionByCountry(result.country_code) : '',
 		state,

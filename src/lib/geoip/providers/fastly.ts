@@ -1,7 +1,7 @@
 import got from 'got';
 import { getRegionByCountry } from '../../location/location.js';
 import { getCity } from '../city-approximation.js';
-import type { LocationInfo } from '../client.js';
+import type { ProviderLocationInfo } from '../client.js';
 import {
 	normalizeCityName,
 	normalizeCityNamePublic,
@@ -28,7 +28,7 @@ type FastlyResponse = {
 	};
 };
 
-export const fastlyLookup = async (addr: string): Promise<LocationInfo> => {
+export const fastlyLookup = async (addr: string): Promise<ProviderLocationInfo> => {
 	const result = await got(`https://globalping-geoip.global.ssl.fastly.net/${addr}`, {
 		timeout: { request: 5000 },
 	}).json<FastlyResponse>();
@@ -39,6 +39,7 @@ export const fastlyLookup = async (addr: string): Promise<LocationInfo> => {
 	const { city, state } = await getCity({ city: originalCity, state: originalState }, data.country_code, Number(data.latitude), Number(data.longitude));
 
 	return {
+		provider: 'fastly',
 		continent: data.continent_code,
 		region: getRegionByCountry(data.country_code),
 		country: data.country_code,

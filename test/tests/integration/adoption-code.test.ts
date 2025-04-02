@@ -79,9 +79,9 @@ describe('Adoption code', () => {
 					longitude: -96.81,
 					asn: 20004,
 					network: 'The Constant Company LLC',
-					isCustomCity: false,
-					countryOfCustomCity: null,
 					adoptionToken: null,
+					customLocation: null,
+					allowedCountries: [ 'US' ],
 				});
 			});
 

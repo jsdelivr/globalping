@@ -15,7 +15,6 @@ describe('AdoptedProbes', () => {
 		lastSyncDate: new Date(),
 		tags: '[{"prefix":"jimaek","value":"dashboardtag"}]',
 		systemTags: '["datacenter-network"]',
-		isCustomCity: 0,
 		status: 'ready',
 		isIPv4Supported: 1,
 		isIPv6Supported: 1,
@@ -25,15 +24,16 @@ describe('AdoptedProbes', () => {
 		hardwareDeviceFirmware: null,
 		country: 'IE',
 		state: null,
-		countryOfCustomCity: '',
 		city: 'Dublin',
 		latitude: 53.33,
 		longitude: -6.25,
 		asn: 16509,
 		network: 'Amazon.com, Inc.',
-		defaultPrefix: 'jimaek',
+		defaultPrefix: 'jsdelivr',
 		publicProbes: 0,
 		adoptionToken: null,
+		allowedCountries: '["IE"]',
+		customLocation: null,
 	};
 
 	const defaultConnectedProbe: Probe = {
@@ -57,6 +57,7 @@ describe('AdoptedProbes', () => {
 			longitude: -6.25,
 			network: 'Amazon.com, Inc.',
 			normalizedNetwork: 'amazon.com, inc.',
+			allowedCountries: [ 'IE' ],
 		},
 		isHardware: false,
 		hardwareDevice: null,
@@ -355,7 +356,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
-	it('class should update probe meta info if it is outdated and "isCustomCity: false"', async () => {
+	it('class should update probe info if it is outdated', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 
 		getProbesWithAdminData.returns([
@@ -384,6 +385,7 @@ describe('AdoptedProbes', () => {
 					latitude: 51.51,
 					longitude: -0.13,
 					network: 'The Constant Company, LLC',
+					allowedCountries: [ 'GB' ],
 				},
 			} as Probe,
 		]);
@@ -409,6 +411,7 @@ describe('AdoptedProbes', () => {
 			city: 'London',
 			latitude: 51.51,
 			longitude: -0.13,
+			allowedCountries: '["GB"]',
 		}]);
 
 		expect(sql.insert.callCount).to.equal(0);
@@ -417,16 +420,32 @@ describe('AdoptedProbes', () => {
 	it('class should update country and send notification if country of the probe changes', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		const defaultAdoptions = [
-			defaultAdoption,
 			{
 				...defaultAdoption,
+				customLocation: JSON.stringify({
+					country: 'IE',
+					city: 'Dublin',
+					state: null,
+					latitude: 53.33,
+					longitude: -6.25,
+				}),
+			},
+			{
+				...defaultAdoption,
+				customLocation: JSON.stringify({
+					country: 'IE',
+					city: 'Dublin',
+					state: null,
+					latitude: 53.33,
+					longitude: -6.25,
+				}),
 				id: 'p-9',
 				ip: '9.9.9.9',
 				uuid: '9-9-9-9-9',
-				name: 'probe-gb-london-01',
+				name: 'probe-2',
 			}];
 
-		sql.select.resolves(defaultAdoptions.map(probe => ({ ...probe, countryOfCustomCity: 'IE', isCustomCity: 1 })));
+		sql.select.resolves(defaultAdoptions);
 
 		getProbesWithAdminData.returns([
 			{
@@ -454,6 +473,7 @@ describe('AdoptedProbes', () => {
 					latitude: 51.51,
 					longitude: -0.13,
 					network: 'The Constant Company, LLC',
+					allowedCountries: [ 'GB' ],
 				},
 			} as Probe,
 			{
@@ -481,6 +501,7 @@ describe('AdoptedProbes', () => {
 					latitude: 51.51,
 					longitude: -0.13,
 					network: 'The Constant Company, LLC',
+					allowedCountries: [ 'GB' ],
 				},
 			} as Probe,
 		]);
@@ -498,7 +519,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.raw.args[1]![1]).to.deep.equal({
 			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
 			subject: 'Your probe\'s location has changed',
-			message: 'Globalping detected that your probe [**probe-gb-london-01**](/probes/p-9) with IP address **9.9.9.9** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).',
+			message: 'Globalping detected that your probe [**probe-2**](/probes/p-9) with IP address **9.9.9.9** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).',
 		});
 
 		expect(sql.where.callCount).to.equal(3);
@@ -515,6 +536,10 @@ describe('AdoptedProbes', () => {
 				asn: 20473,
 				network: 'The Constant Company, LLC',
 				country: 'GB',
+				city: 'London',
+				latitude: 51.51,
+				longitude: -0.13,
+				allowedCountries: '["GB"]',
 			},
 		]);
 
@@ -527,10 +552,22 @@ describe('AdoptedProbes', () => {
 				asn: 20473,
 				network: 'The Constant Company, LLC',
 				country: 'GB',
+				city: 'London',
+				latitude: 51.51,
+				longitude: -0.13,
+				allowedCountries: '["GB"]',
 			},
 		]);
 
-		sql.select.resolves(defaultAdoptions.map(probe => ({ ...probe, country: 'GB', countryOfCustomCity: 'IE', isCustomCity: 1 })));
+		sql.select.resolves(defaultAdoptions.map(probe => ({
+			...probe,
+			country: 'GB',
+			state: null,
+			city: 'London',
+			asn: 20473,
+			latitude: 51.51,
+			longitude: -0.13,
+		})));
 
 		getProbesWithAdminData.returns([
 			{
@@ -552,12 +589,13 @@ describe('AdoptedProbes', () => {
 					continent: 'EU',
 					region: 'Northern Europe',
 					country: 'IE',
+					city: 'Dublin',
 					state: null,
-					city: 'London',
+					latitude: 53.33,
+					longitude: -6.25,
 					asn: 20473,
-					latitude: 51.51,
-					longitude: -0.13,
 					network: 'The Constant Company, LLC',
+					allowedCountries: [ 'IE' ],
 				},
 			} as Probe,
 			{
@@ -579,12 +617,13 @@ describe('AdoptedProbes', () => {
 					continent: 'EU',
 					region: 'Northern Europe',
 					country: 'IE',
+					city: 'Dublin',
 					state: null,
-					city: 'London',
+					latitude: 53.33,
+					longitude: -6.25,
 					asn: 20473,
-					latitude: 51.51,
-					longitude: -0.13,
 					network: 'The Constant Company, LLC',
+					allowedCountries: [ 'IE' ],
 				},
 			} as Probe,
 		]);
@@ -602,7 +641,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.raw.args[3]![1]).to.deep.equal({
 			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
 			subject: `Your probe's location has changed back`,
-			message: 'Globalping detected that your probe [**probe-gb-london-01**](/probes/p-9) with IP address **9.9.9.9** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
+			message: 'Globalping detected that your probe [**probe-2**](/probes/p-9) with IP address **9.9.9.9** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 
 		expect(sql.where.callCount).to.equal(6);
@@ -616,9 +655,11 @@ describe('AdoptedProbes', () => {
 				isIPv4Supported: false,
 				isIPv6Supported: false,
 				version: '0.27.0',
-				asn: 20473,
 				network: 'The Constant Company, LLC',
 				country: 'IE',
+				city: 'Dublin',
+				latitude: 53.33,
+				longitude: -6.25,
 			},
 		]);
 
@@ -628,18 +669,28 @@ describe('AdoptedProbes', () => {
 				isIPv4Supported: false,
 				isIPv6Supported: false,
 				version: '0.27.0',
-				asn: 20473,
 				network: 'The Constant Company, LLC',
 				country: 'IE',
+				city: 'Dublin',
+				latitude: 53.33,
+				longitude: -6.25,
 			},
 		]);
 
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
-	it('class should partially update probe meta info if it is outdated and "isCustomCity: true"', async () => {
+	it('class should partially update probe meta info if it is outdated and there is "customLocation"', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
-		sql.select.resolves([{ ...defaultAdoption, countryOfCustomCity: 'IE', isCustomCity: 1 }]);
+		sql.select.resolves([{
+			...defaultAdoption,
+			customLocation: JSON.stringify({
+				country: 'IE',
+				city: 'Dublin',
+				latitude: 53.33,
+				longitude: -6.25,
+			}),
+		}]);
 
 		getProbesWithAdminData.returns([
 			{
@@ -667,6 +718,7 @@ describe('AdoptedProbes', () => {
 					latitude: 51.51,
 					longitude: -0.13,
 					network: 'The Constant Company, LLC',
+					allowedCountries: [ 'GB', 'IE' ],
 				},
 			} as Probe,
 		]);
@@ -677,15 +729,18 @@ describe('AdoptedProbes', () => {
 		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.callCount).to.equal(1);
 
-		expect(sql.update.args[0]).to.deep.equal([{
-			status: 'initializing',
-			isIPv4Supported: false,
-			isIPv6Supported: false,
-			version: '0.27.0',
-			country: 'GB',
-			asn: 20473,
-			network: 'The Constant Company, LLC',
-		}]);
+		expect(sql.update.args[0]).to.deep.equal([
+			{
+				status: 'initializing',
+				isIPv4Supported: false,
+				isIPv6Supported: false,
+				version: '0.27.0',
+				asn: 20473,
+				network: 'The Constant Company, LLC',
+				state: undefined,
+				allowedCountries: '["GB","IE"]',
+			},
+		]);
 
 		expect(sql.insert.callCount).to.equal(0);
 	});
@@ -888,10 +943,10 @@ describe('AdoptedProbes', () => {
 			altIps: [],
 			systemTags: [ 'datacenter-network' ],
 			tags: [{ type: 'user', value: 'u-jimaek:dashboardtag' }],
-			isCustomCity: false,
 			isIPv4Supported: true,
 			isIPv6Supported: true,
 			publicProbes: false,
+			allowedCountries: [ 'IE' ],
 		});
 	});
 
@@ -900,14 +955,21 @@ describe('AdoptedProbes', () => {
 		sql.select.resolves([{
 			...defaultAdoption,
 			city: 'Dundalk',
-			countryOfCustomCity: 'IE',
-			isCustomCity: 1,
+			country: 'IE',
+			state: null,
 			latitude: 54,
 			longitude: -6.42,
+			customLocation: JSON.stringify({
+				city: 'Dundalk',
+				country: 'IE',
+				state: null,
+				latitude: 54,
+				longitude: -6.42,
+			}),
 		}]);
 
 		await adoptedProbes.syncDashboardData();
-		const updatedLocation = adoptedProbes.getUpdatedLocation(defaultConnectedProbe.ipAddress, defaultConnectedProbe.location);
+		const updatedLocation = adoptedProbes.getUpdatedLocation(defaultConnectedProbe);
 		expect(updatedLocation).to.deep.equal({
 			continent: 'EU',
 			region: 'Northern Europe',
@@ -920,38 +982,38 @@ describe('AdoptedProbes', () => {
 			longitude: -6.42,
 			network: 'Amazon.com, Inc.',
 			normalizedNetwork: 'amazon.com, inc.',
+			allowedCountries: [ 'IE' ],
 		});
 	});
 
-	it('getUpdatedLocation method should return null if connected.country !== adopted.countryOfCustomCity', async () => {
+	it('getUpdatedLocation method should return null if !connected.allowedCountries.includes(adopted.country)', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{
 			...defaultAdoption,
-			country: 'IE',
-			countryOfCustomCity: 'GB',
+			country: 'GB',
 			city: 'London',
-			isCustomCity: 1,
 			latitude: 51.51,
 			longitude: -0.13,
+			customLocation: JSON.stringify({
+				country: 'GB',
+				city: 'London',
+				state: null,
+				latitude: 51.51,
+				longitude: -0.13,
+			}),
 		}]);
 
 		await adoptedProbes.syncDashboardData();
-		const updatedLocation = adoptedProbes.getUpdatedLocation(defaultConnectedProbe.ipAddress, defaultConnectedProbe.location);
+		const updatedLocation = adoptedProbes.getUpdatedLocation(defaultConnectedProbe);
 		expect(updatedLocation).to.equal(null);
 	});
 
-	it('getUpdatedLocation method should return null if "isCustomCity: false"', async () => {
+	it('getUpdatedLocation method should return null if "!adopted.customLocation"', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
-		sql.select.resolves([{
-			...defaultAdoption,
-			city: 'Dundalk',
-			isCustomCity: 0,
-			latitude: 54,
-			longitude: -6.42,
-		}]);
+		sql.select.resolves([ defaultAdoption ]);
 
 		await adoptedProbes.syncDashboardData();
-		const updatedLocation = adoptedProbes.getUpdatedLocation(defaultConnectedProbe.ipAddress, defaultConnectedProbe.location);
+		const updatedLocation = adoptedProbes.getUpdatedLocation(defaultConnectedProbe);
 		expect(updatedLocation).to.equal(null);
 	});
 
@@ -983,11 +1045,11 @@ describe('AdoptedProbes', () => {
 
 		expect(sql.update.callCount).to.equal(1);
 		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
-		expect(sql.update.args[0]).to.deep.equal([{ systemTags: '["u-jimaek","datacenter-network"]' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ systemTags: '["u-jsdelivr","datacenter-network"]' }]);
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
 		expect(updatedTags).to.deep.equal([
 			{ type: 'system', value: 'datacenter-network' },
-			{ type: 'system', value: 'u-jimaek' },
+			{ type: 'system', value: 'u-jsdelivr' },
 		]);
 	});
 });
