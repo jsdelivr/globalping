@@ -10,7 +10,7 @@ export type ProbeLocation = {
 	state: string | null;
 	network: string;
 	normalizedNetwork: string;
-	possibleCountries: string[];
+	allowedCountries: string[];
 };
 
 export type ProbeStats = {
