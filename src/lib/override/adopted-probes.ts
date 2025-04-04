@@ -48,14 +48,14 @@ type DProbe = {
 	defaultPrefix: string | null;
 	publicProbes: boolean;
 	adoptionToken: string | null;
-	possibleCountries: string[];
+	allowedCountries: string[];
 }
 
 export type Adoption = Omit<DProbe, 'userId'> & {
 	userId: string;
 }
 
-export type Row = Omit<DProbe, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'possibleCountries'> & {
+export type Row = Omit<DProbe, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries'> & {
 	altIps: string;
 	tags: string;
 	systemTags: string;
@@ -63,7 +63,7 @@ export type Row = Omit<DProbe, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps'
 	isIPv4Supported: number;
 	isIPv6Supported: number;
 	publicProbes: number;
-	possibleCountries: string;
+	allowedCountries: string;
 }
 
 type DProbeFieldDescription = {
@@ -156,8 +156,8 @@ export class AdoptedProbes {
 			probeField: 'location.longitude',
 			shouldUpdateIfCustomCity: false,
 		},
-		possibleCountries: {
-			probeField: 'location.possibleCountries',
+		allowedCountries: {
+			probeField: 'location.allowedCountries',
 			shouldUpdateIfCustomCity: true,
 		},
 	};
@@ -293,7 +293,7 @@ export class AdoptedProbes {
 			latitude: row.latitude ? normalizeCoordinate(row.latitude) : row.latitude,
 			longitude: row.longitude ? normalizeCoordinate(row.longitude) : row.longitude,
 			publicProbes: Boolean(row.publicProbes),
-			possibleCountries: JSON.parse(row.possibleCountries) as string[],
+			allowedCountries: JSON.parse(row.allowedCountries) as string[],
 		}));
 
 		this.dProbes = dProbes;
@@ -648,7 +648,7 @@ export class AdoptedProbes {
 			isCustomCity: false,
 			countryOfCustomCity: null,
 			adoptionToken: probe.adoptionToken,
-			possibleCountries: probe.location.possibleCountries,
+			allowedCountries: probe.location.allowedCountries,
 		};
 	}
 }

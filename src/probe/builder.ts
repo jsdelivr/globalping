@@ -105,7 +105,7 @@ const getLocation = (ipInfo: LocationInfo): ProbeLocation => ({
 	longitude: ipInfo.longitude,
 	network: ipInfo.network,
 	normalizedNetwork: ipInfo.normalizedNetwork,
-	possibleCountries: ipInfo.possibleCountries,
+	allowedCountries: ipInfo.allowedCountries,
 });
 
 const getTags = (clientIp: string, ipInfo: LocationInfo) => {

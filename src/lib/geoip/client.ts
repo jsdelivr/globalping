@@ -18,7 +18,7 @@ import { normalizeCoordinate } from './utils.js';
 
 type Provider = 'ipmap' | 'ip2location' | 'ipinfo' | 'maxmind' | 'fastly';
 export type LocationInfo = ProbeLocation & { isProxy: boolean | null, isHosting: boolean | null, isAnycast: boolean | null };
-export type ProviderLocationInfo = Omit<LocationInfo, 'possibleCountries'> & { provider: Provider };
+export type ProviderLocationInfo = Omit<LocationInfo, 'allowedCountries'> & { provider: Provider };
 export type NetworkInfo = {
 	network: string;
 	normalizedNetwork: string;
@@ -111,7 +111,7 @@ export default class GeoIpClient {
 			isProxy,
 			isHosting,
 			isAnycast,
-			possibleCountries: this.getPossibleCountries(results),
+			allowedCountries: _.uniq(results.filter(r => r.country).map(r => r.country)),
 		};
 	}
 
@@ -172,9 +172,5 @@ export default class GeoIpClient {
 		await this.cache.set(key, info, ttl);
 
 		return info;
-	}
-
-	private getPossibleCountries (results: ProviderLocationInfo[]): string[] {
-		return _.uniq(results.filter(r => r.country).map(r => r.country));
 	}
 }
