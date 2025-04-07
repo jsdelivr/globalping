@@ -680,9 +680,17 @@ describe('AdoptedProbes', () => {
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
-	it('class should partially update probe meta info if it is outdated and "isCustomCity: true"', async () => {
+	it('class should partially update probe meta info if it is outdated and there is "customLocation"', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
-		sql.select.resolves([{ ...defaultAdoption, countryOfCustomCity: 'IE', isCustomCity: 1 }]);
+		sql.select.resolves([{
+			...defaultAdoption,
+			customLocation: JSON.stringify({
+				country: 'IE',
+				city: 'Dublin',
+				latitude: 53.33,
+				longitude: -6.25,
+			}),
+		}]);
 
 		getProbesWithAdminData.returns([
 			{
@@ -710,7 +718,7 @@ describe('AdoptedProbes', () => {
 					latitude: 51.51,
 					longitude: -0.13,
 					network: 'The Constant Company, LLC',
-					allowedCountries: [ 'GB' ],
+					allowedCountries: [ 'GB', 'IE' ],
 				},
 			} as Probe,
 		]);
@@ -729,11 +737,8 @@ describe('AdoptedProbes', () => {
 				version: '0.27.0',
 				asn: 20473,
 				network: 'The Constant Company, LLC',
-				country: 'GB',
-				city: 'London',
-				latitude: 51.51,
-				longitude: -0.13,
-				allowedCountries: '["GB"]',
+				state: undefined,
+				allowedCountries: '["GB","IE"]',
 			},
 		]);
 

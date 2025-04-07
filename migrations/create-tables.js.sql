@@ -37,7 +37,6 @@ CREATE TABLE IF NOT EXISTS gp_probes (
 	longitude FLOAT(10, 5),
 	asn INTEGER NULL,
 	network VARCHAR(255) NULL,
-	countryOfCustomCity VARCHAR(255),
 	allowedCountries LONGTEXT COLLATE utf8mb4_bin NULL CHECK (json_valid(`allowedCountries`)),
 	customLocation LONGTEXT COLLATE utf8mb4_bin NULL CHECK (json_valid(`customLocation`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
