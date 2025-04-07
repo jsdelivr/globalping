@@ -29,7 +29,6 @@ type DProbe = {
 		value: string;
 	}[];
 	systemTags: string[];
-	isCustomCity: boolean;
 	status: string;
 	isIPv4Supported: boolean;
 	isIPv6Supported: boolean;
@@ -38,7 +37,6 @@ type DProbe = {
 	hardwareDevice: string | null;
 	hardwareDeviceFirmware: string | null;
 	country: string | null;
-	countryOfCustomCity: string | null;
 	city: string | null;
 	state: string | null;
 	latitude: number | null;
@@ -48,6 +46,13 @@ type DProbe = {
 	defaultPrefix: string | null;
 	publicProbes: boolean;
 	adoptionToken: string | null;
+	customLocation: {
+		country: string;
+		city: string;
+		latitude: number;
+		longitude: number;
+		state: string | null;
+	} | null;
 	allowedCountries: string[];
 }
 
@@ -55,20 +60,20 @@ export type Adoption = Omit<DProbe, 'userId'> & {
 	userId: string;
 }
 
-export type Row = Omit<DProbe, 'isCustomCity' | 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries'> & {
+export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation'> & {
 	altIps: string;
 	tags: string;
 	systemTags: string;
-	isCustomCity: number;
 	isIPv4Supported: number;
 	isIPv6Supported: number;
 	publicProbes: number;
+	customLocation: string | null;
 	allowedCountries: string;
 }
 
 type DProbeFieldDescription = {
 	probeField: string,
-	shouldUpdateIfCustomCity: boolean,
+	mayBeCustom: boolean,
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	formatter?: (probeValue: any, probe: Probe, dProbe?: DProbe) => unknown
 }
@@ -82,47 +87,47 @@ export class AdoptedProbes {
 	private readonly dProbeFieldToProbeField: Partial<Record<keyof DProbe, DProbeFieldDescription>> = {
 		uuid: {
 			probeField: 'uuid',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 		ip: {
 			probeField: 'ipAddress',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 		altIps: {
 			probeField: 'altIpAddresses',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 		status: {
 			probeField: 'status',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 		isIPv4Supported: {
 			probeField: 'isIPv4Supported',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 		isIPv6Supported: {
 			probeField: 'isIPv6Supported',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 		version: {
 			probeField: 'version',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 		nodeVersion: {
 			probeField: 'nodeVersion',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 		hardwareDevice: {
 			probeField: 'hardwareDevice',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 		hardwareDeviceFirmware: {
 			probeField: 'hardwareDeviceFirmware',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 		systemTags: {
 			probeField: 'tags',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 			formatter: (probeTags: Tag[], _probe: Probe, dProbe?: DProbe) => [
 				...(dProbe && dProbe.publicProbes ? [ this.getGlobalUserTag(dProbe.defaultPrefix!) ] : []),
 				...probeTags.filter(({ type }) => type === 'system').map(({ value }) => value),
@@ -130,35 +135,35 @@ export class AdoptedProbes {
 		},
 		asn: {
 			probeField: 'location.asn',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 		network: {
 			probeField: 'location.network',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 		country: {
 			probeField: 'location.country',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: true,
 		},
 		city: {
 			probeField: 'location.city',
-			shouldUpdateIfCustomCity: false,
+			mayBeCustom: true,
 		},
 		state: {
 			probeField: 'location.state',
-			shouldUpdateIfCustomCity: false,
+			mayBeCustom: true,
 		},
 		latitude: {
 			probeField: 'location.latitude',
-			shouldUpdateIfCustomCity: false,
+			mayBeCustom: true,
 		},
 		longitude: {
 			probeField: 'location.longitude',
-			shouldUpdateIfCustomCity: false,
+			mayBeCustom: true,
 		},
 		allowedCountries: {
 			probeField: 'location.allowedCountries',
-			shouldUpdateIfCustomCity: true,
+			mayBeCustom: false,
 		},
 	};
 
@@ -175,15 +180,16 @@ export class AdoptedProbes {
 		return this.uuidToAdoption.get(uuid) || null;
 	}
 
-	getUpdatedLocation (ip: string, location: ProbeLocation): ProbeLocation | null {
-		const adoption = this.getByIp(ip);
+	getUpdatedLocation (probe: Probe, adminLocation?: ProbeLocation | null): ProbeLocation | null {
+		const adoption = this.getByIp(probe.ipAddress);
 
-		if (!adoption || !adoption.isCustomCity || adoption.countryOfCustomCity !== location.country) {
+		if (!adoption || !adoption.customLocation || !adoption.country || !probe.location.allowedCountries.includes(adoption.country)) {
 			return null;
 		}
 
 		return {
-			...location,
+			...(adminLocation || probe.location),
+			country: adoption.country,
 			city: adoption.city!,
 			normalizedCity: normalizeFromPublicName(adoption.city!),
 			state: adoption.state,
@@ -217,7 +223,7 @@ export class AdoptedProbes {
 				return probe;
 			}
 
-			const newLocation = this.getUpdatedLocation(probe.ipAddress, probe.location) || probe.location;
+			const newLocation = this.getUpdatedLocation(probe) || probe.location;
 
 			const newTags = this.getUpdatedTags(probe);
 
@@ -287,13 +293,13 @@ export class AdoptedProbes {
 					return { type: 'user' as const, value: `u-${prefix}:${value}` };
 				}),
 			systemTags: JSON.parse(row.systemTags) as string[],
-			isCustomCity: Boolean(row.isCustomCity),
 			isIPv4Supported: Boolean(row.isIPv4Supported),
 			isIPv6Supported: Boolean(row.isIPv6Supported),
 			latitude: row.latitude ? normalizeCoordinate(row.latitude) : row.latitude,
 			longitude: row.longitude ? normalizeCoordinate(row.longitude) : row.longitude,
 			publicProbes: Boolean(row.publicProbes),
 			allowedCountries: JSON.parse(row.allowedCountries) as string[],
+			customLocation: row.customLocation ? JSON.parse(row.customLocation) as DProbe['customLocation'] : null,
 		}));
 
 		this.dProbes = dProbes;
@@ -413,11 +419,7 @@ export class AdoptedProbes {
 		dProbesWithProbe.forEach(({ dProbe, probe }) => {
 			const updateObject: Record<string, unknown> = {};
 
-			Object.entries(this.dProbeFieldToProbeField).forEach(([ dProbeField, { probeField, shouldUpdateIfCustomCity, formatter }]) => {
-				if (dProbe.isCustomCity && !shouldUpdateIfCustomCity) {
-					return;
-				}
-
+			Object.entries(this.dProbeFieldToProbeField).forEach(([ dProbeField, { probeField, mayBeCustom, formatter }]) => {
 				const dProbeValue = _.get(dProbe, dProbeField) as unknown;
 				let probeValue = _.get(probe, probeField) as unknown;
 
@@ -425,8 +427,15 @@ export class AdoptedProbes {
 					probeValue = formatter(probeValue, probe, dProbe);
 				}
 
-				if (!_.isEqual(dProbeValue, probeValue)) {
-					updateObject[dProbeField] = probeValue;
+				let targetValue = probeValue;
+
+				if (mayBeCustom && dProbe.customLocation && probe.location.allowedCountries.includes(dProbe.customLocation.country)) {
+					const customValue = _.get(dProbe.customLocation, dProbeField) as unknown;
+					targetValue = customValue;
+				}
+
+				if (!_.isEqual(dProbeValue, targetValue)) {
+					updateObject[dProbeField] = targetValue;
 				}
 			});
 
@@ -538,16 +547,15 @@ export class AdoptedProbes {
 			key, (_.isObject(value) && !_.isDate(value)) ? JSON.stringify(value) : value,
 		]));
 
-		console.log('updateDProbe', dProbe.id, formattedUpdate);
 		await this.sql(DASH_PROBES_TABLE).where({ id: dProbe.id }).update(formattedUpdate);
 
-		// if country of probe changes, but there is a custom city in prev country, send notification to user.
+		// If there is a custom city in a country that is no longer in the allowedCountries list, send notification to user.
 		if (update.country && dProbe.userId) {
 			const adoption = dProbe as Adoption;
 
-			if (dProbe.countryOfCustomCity && dProbe.country === dProbe.countryOfCustomCity) {
+			if (dProbe.customLocation && dProbe.country === dProbe.customLocation.country) {
 				await this.sendNotificationCityNotApplied(adoption, update.country);
-			} else if (dProbe.countryOfCustomCity && update.country === dProbe.countryOfCustomCity) {
+			} else if (dProbe.customLocation && update.country === dProbe.customLocation.country) {
 				await this.sendNotificationCityAppliedAgain(adoption, update.country);
 			}
 		}
@@ -598,7 +606,7 @@ export class AdoptedProbes {
 		return this.sendNotification(
 			adoption.userId,
 			`Your probe's location has changed`,
-			`Globalping detected that your ${adoption.name ? `probe [**${adoption.name}**](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address **${adoption.ip}**](/probes/${adoption.id})`} has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoption.city}" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).`,
+			`Globalping detected that your ${adoption.name ? `probe [**${adoption.name}**](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address **${adoption.ip}**](/probes/${adoption.id})`} has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is not applied anymore.\n\nIf this change is not right, please report it in [this issue](https://github.com/jsdelivr/globalping/issues/268).`,
 		);
 	}
 
@@ -609,7 +617,7 @@ export class AdoptedProbes {
 		return this.sendNotification(
 			adoption.userId,
 			`Your probe's location has changed back`,
-			`Globalping detected that your ${adoption.name ? `probe [**${adoption.name}**](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address **${adoption.ip}**](/probes/${adoption.id})`} has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoption.city}" is now applied again.`,
+			`Globalping detected that your ${adoption.name ? `probe [**${adoption.name}**](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address **${adoption.ip}**](/probes/${adoption.id})`} has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is now applied again.`,
 		);
 	}
 
@@ -645,10 +653,9 @@ export class AdoptedProbes {
 			longitude: probe.location.longitude,
 			asn: probe.location.asn,
 			network: probe.location.network,
-			isCustomCity: false,
-			countryOfCustomCity: null,
 			adoptionToken: probe.adoptionToken,
 			allowedCountries: probe.location.allowedCountries,
+			customLocation: null,
 		};
 	}
 }

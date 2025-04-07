@@ -34,6 +34,7 @@ type UpdatedFields = {
 	state: string | null;
 	latitude: number;
 	longitude: number;
+	allowedCountries: string[];
 }
 
 export class AdminData {
@@ -71,6 +72,7 @@ export class AdminData {
 			state: override.state,
 			latitude: override.latitude,
 			longitude: override.longitude,
+			allowedCountries: [ override.country ],
 		}]));
 
 		const newLastUpdate = overrides.reduce((lastUpdate, { date_created, date_updated }) => {

@@ -36,6 +36,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: true,
 			isAnycast: null,
+			allowedCountries: [ 'US', 'AR' ],
 		});
 	});
 
@@ -63,6 +64,7 @@ describe('geoip service', () => {
 			isProxy: null,
 			isHosting: null,
 			isAnycast: null,
+			allowedCountries: [ 'AR' ],
 		});
 	});
 
@@ -86,6 +88,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: null,
 			isAnycast: null,
+			allowedCountries: [ 'AR', 'US' ],
 		});
 	});
 
@@ -109,6 +112,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: null,
 			isAnycast: null,
+			allowedCountries: [ 'US' ],
 		});
 	});
 
@@ -132,6 +136,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: true,
 			isAnycast: null,
+			allowedCountries: [ 'AR', 'US' ],
 		});
 	});
 
@@ -155,6 +160,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: null,
 			isAnycast: null,
+			allowedCountries: [ 'AR', 'US', 'TH' ],
 		});
 	});
 
@@ -178,6 +184,7 @@ describe('geoip service', () => {
 			normalizedNetwork: 'the constant company llc',
 			region: 'Northern America',
 			state: 'NY',
+			allowedCountries: [ 'AR', 'US' ],
 		});
 	});
 
@@ -214,6 +221,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: null,
 			isAnycast: null,
+			allowedCountries: [ 'EG' ],
 		});
 	});
 
@@ -237,6 +245,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: null,
 			isAnycast: null,
+			allowedCountries: [ 'DE' ],
 		});
 	});
 
@@ -260,6 +269,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: null,
 			isAnycast: null,
+			allowedCountries: [ 'DE' ],
 		});
 	});
 
@@ -283,6 +293,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: true,
 			isAnycast: null,
+			allowedCountries: [ 'US' ],
 		});
 	});
 
@@ -306,6 +317,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: null,
 			isAnycast: null,
+			allowedCountries: [ 'AR' ],
 		});
 	});
 
@@ -329,6 +341,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: true,
 			isAnycast: null,
+			allowedCountries: [ 'US' ],
 		});
 	});
 
@@ -352,6 +365,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: null,
 			isAnycast: null,
+			allowedCountries: [ 'EG', 'US' ],
 		});
 	});
 
@@ -375,6 +389,7 @@ describe('geoip service', () => {
 			isProxy: false,
 			isHosting: true,
 			isAnycast: true,
+			allowedCountries: [ 'US' ],
 		});
 	});
 
@@ -399,6 +414,7 @@ describe('geoip service', () => {
 				isProxy: false,
 				isHosting: null,
 				isAnycast: null,
+				allowedCountries: [ 'US' ],
 			});
 		});
 
@@ -422,6 +438,7 @@ describe('geoip service', () => {
 				isProxy: false,
 				isHosting: null,
 				isAnycast: null,
+				allowedCountries: [ 'US' ],
 			});
 		});
 
@@ -445,6 +462,7 @@ describe('geoip service', () => {
 				isProxy: false,
 				isHosting: null,
 				isAnycast: null,
+				allowedCountries: [ 'US' ],
 			});
 		});
 
@@ -468,6 +486,7 @@ describe('geoip service', () => {
 				isProxy: false,
 				isHosting: true,
 				isAnycast: null,
+				allowedCountries: [ 'US' ],
 			});
 
 			nockGeoIpProviders({ ip2location: 'empty', ipmap: 'empty', maxmind: 'empty', ipinfo: 'washington', fastly: 'empty' });
@@ -489,6 +508,7 @@ describe('geoip service', () => {
 				isProxy: false,
 				isHosting: null,
 				isAnycast: null,
+				allowedCountries: [ 'US' ],
 			});
 		});
 
@@ -526,6 +546,7 @@ describe('geoip service', () => {
 				isProxy: false,
 				isHosting: true,
 				isAnycast: null,
+				allowedCountries: [ 'US' ],
 			});
 		});
 
@@ -549,6 +570,7 @@ describe('geoip service', () => {
 				isProxy: false,
 				isHosting: true,
 				isAnycast: null,
+				allowedCountries: [ 'US' ],
 			});
 		});
 
@@ -580,6 +602,7 @@ describe('geoip service', () => {
 				isProxy: false,
 				isHosting: true,
 				isAnycast: null,
+				allowedCountries: [ 'US' ],
 			});
 		});
 
@@ -611,6 +634,7 @@ describe('geoip service', () => {
 				isProxy: false,
 				isHosting: true,
 				isAnycast: null,
+				allowedCountries: [ 'US' ],
 			});
 		});
 

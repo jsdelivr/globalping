@@ -59,9 +59,9 @@ describe('Adoption token', () => {
 					longitude: -96.81,
 					asn: 20004,
 					network: 'The Constant Company LLC',
-					isCustomCity: false,
-					countryOfCustomCity: null,
 					adoptionToken: 'adoptionTokenValue',
+					customLocation: null,
+					allowedCountries: [ 'US' ],
 				},
 				user: { id: 'userIdValue' },
 			});

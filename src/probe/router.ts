@@ -166,6 +166,7 @@ export class ProbeRouter {
 			state: test.probe.state,
 			network: test.probe.network,
 			normalizedNetwork: normalizeNetworkName(test.probe.network),
+			allowedCountries: [ test.probe.country ],
 		},
 		index: [],
 		resolvers: test.probe.resolvers,

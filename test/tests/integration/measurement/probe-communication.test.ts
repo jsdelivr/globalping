@@ -64,19 +64,22 @@ describe('Create measurement request', () => {
 
 		expect(locationHandlerStub.callCount).to.equal(1);
 
-		expect(locationHandlerStub.firstCall.args).to.deep.equal([{
-			continent: 'NA',
-			region: 'Northern America',
-			country: 'US',
-			state: 'TX',
-			city: 'Dallas',
-			normalizedCity: 'dallas',
-			asn: 20004,
-			latitude: 32.78,
-			longitude: -96.81,
-			network: 'The Constant Company LLC',
-			normalizedNetwork: 'the constant company llc',
-		}]);
+		expect(locationHandlerStub.firstCall.args).to.deep.equal([
+			{
+				continent: 'NA',
+				region: 'Northern America',
+				country: 'US',
+				state: 'TX',
+				city: 'Dallas',
+				normalizedCity: 'dallas',
+				asn: 20004,
+				latitude: 32.78,
+				longitude: -96.81,
+				network: 'The Constant Company LLC',
+				normalizedNetwork: 'the constant company llc',
+				allowedCountries: [ 'US' ],
+			},
+		]);
 
 		expect(adoptionHandlerStub.callCount).to.equal(1);
 		expect(adoptionHandlerStub.firstCall.args).to.deep.equal([{ message: 'You can register this probe at https://dash.globalping.io to earn extra measurement credits.' }]);

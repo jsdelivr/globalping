@@ -254,7 +254,6 @@ describe('Get Probes', () => {
 					lastSyncDate: new Date(),
 					ip: '1.2.3.4',
 					uuid: '1-1-1-1-1',
-					isCustomCity: 1,
 					tags: '[{"prefix":"jimaek","value":"dashboardtag1"}]',
 					status: 'ready',
 					isIPv4Supported: false,
@@ -262,12 +261,19 @@ describe('Get Probes', () => {
 					version: '0.26.0',
 					nodeVersion: 'v18.14.2',
 					country: 'AR',
-					countryOfCustomCity: 'AR',
 					city: 'Cordoba',
 					latitude: -31.41,
 					longitude: -64.18,
 					network: 'InterBS S.R.L. (BAEHOST)',
 					asn: 61004,
+					allowedCountries: '["AR"]',
+					customLocation: JSON.stringify({
+						country: 'AR',
+						city: 'Cordoba',
+						latitude: -31.41,
+						longitude: -64.18,
+						state: null,
+					}),
 				});
 
 				await probeOverride.fetchDashboardData();

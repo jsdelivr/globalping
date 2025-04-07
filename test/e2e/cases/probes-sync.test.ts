@@ -13,7 +13,6 @@ describe('probes sync', () => {
 			userId: null,
 			ip: '1.2.3.4',
 			altIps: '[]',
-			isCustomCity: 0,
 			tags: '[]',
 			systemTags: '[]',
 			hardwareDevice: null,
@@ -25,7 +24,8 @@ describe('probes sync', () => {
 			longitude: -58.38,
 			asn: 61003,
 			network: 'InterBS S.R.L. (BAEHOST)',
-			countryOfCustomCity: null,
+			allowedCountries: '["AR"]',
+			customLocation: null,
 		});
 	});
 });

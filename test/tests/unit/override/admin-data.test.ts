@@ -51,6 +51,7 @@ describe('AdminData', () => {
 				state: null,
 				latitude: 53.12,
 				longitude: 18.01,
+				allowedCountries: [ 'PL' ],
 			},
 		});
 
@@ -78,6 +79,7 @@ describe('AdminData', () => {
 				state: null,
 				latitude: 53.12,
 				longitude: 18.01,
+				allowedCountries: [ 'PL' ],
 			},
 		});
 

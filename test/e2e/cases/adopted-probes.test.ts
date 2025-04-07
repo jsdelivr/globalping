@@ -29,7 +29,6 @@ describe('adopted probes', () => {
 			lastSyncDate: new Date(),
 			ip: '1.2.3.4',
 			uuid: '1-1-1-1-1',
-			isCustomCity: 1,
 			tags: '[{"prefix":"jimaek","value":"dashboardtag1"}]',
 			status: 'ready',
 			isIPv4Supported: true,
@@ -37,12 +36,19 @@ describe('adopted probes', () => {
 			version: '0.28.0',
 			nodeVersion: 'v18.14.2',
 			country: 'AR',
-			countryOfCustomCity: 'AR',
 			city: 'San Luis',
-			latitude: -34.61,
-			longitude: -58.38,
+			latitude: -33.3,
+			longitude: -66.34,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			asn: 61003,
+			allowedCountries: '["AR"]',
+			customLocation: JSON.stringify({
+				country: 'AR',
+				city: 'San Luis',
+				latitude: -33.3,
+				longitude: -66.34,
+				state: null,
+			}),
 		});
 
 		await waitProbeInCity('San Luis');
