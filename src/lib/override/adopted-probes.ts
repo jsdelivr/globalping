@@ -129,7 +129,7 @@ export class AdoptedProbes {
 			probeField: 'tags',
 			mayBeCustom: false,
 			formatter: (probeTags: Tag[], _probe: Probe, dProbe?: DProbe) => [
-				...(dProbe && dProbe.publicProbes ? [ this.getGlobalUserTag(dProbe.defaultPrefix!) ] : []),
+				...(dProbe && dProbe.publicProbes && dProbe.defaultPrefix ? [ this.getGlobalUserTag(dProbe.defaultPrefix) ] : []),
 				...probeTags.filter(({ type }) => type === 'system').map(({ value }) => value),
 			],
 		},
