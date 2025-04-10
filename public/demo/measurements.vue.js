@@ -268,11 +268,14 @@ const app = () => ({
 				body.limit = limit;
 			}
 
+			const token = new URLSearchParams(window.location.search).get('token');
+
 			const response = await fetch(url, {
 				method: 'post',
 				body: JSON.stringify(body),
 				headers: {
 					'content-type': 'application/json',
+					...(token ? { Authorization: `Bearer ${token}` } : {}),
 				},
 			});
 
