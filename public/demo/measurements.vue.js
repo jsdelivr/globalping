@@ -2,6 +2,7 @@
 const app = () => ({
 	data () {
 		return {
+			token: new URLSearchParams(window.location.search).get('token') || '',
 			query: {
 				type: 'ping',
 				locations: [],
@@ -36,6 +37,11 @@ const app = () => ({
 			if (status === 'finished') {
 				clearInterval(this.resultInterval);
 			}
+		},
+		token (newToken) {
+			const url = new URL(window.location);
+			newToken ? url.searchParams.set('token', newToken) : url.searchParams.delete('token');
+			window.history.replaceState({}, '', url);
 		},
 	},
 	computed: {
@@ -268,14 +274,12 @@ const app = () => ({
 				body.limit = limit;
 			}
 
-			const token = new URLSearchParams(window.location.search).get('token');
-
 			const response = await fetch(url, {
 				method: 'post',
 				body: JSON.stringify(body),
 				headers: {
 					'content-type': 'application/json',
-					...(token ? { Authorization: `Bearer ${token}` } : {}),
+					...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
 				},
 			});
 
@@ -318,6 +322,12 @@ const app = () => ({
 		</div>
 		<div class="row border border-primary">
 			<form @submit="submitPostMeasurement" class="col">
+				<div class="form-group row">
+					<label for="token" class="col-sm-2 col-form-label">token</label>
+					<div class="col-sm-10">
+						<input v-model="token" name="token" id="token" placeholder="GP API token" />
+					</div>
+				</div>
 				<div class="form-group row">
 					<label for="query_type" class="col-sm-2 col-form-label">type</label>
 					<div class="col-sm-10">
