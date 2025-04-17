@@ -313,6 +313,16 @@ export class AdoptedProbes {
 		this.uuidToAdoption = new Map(this.adoptions.filter(({ uuid }) => !!uuid).map(adoption => [ adoption.uuid!, adoption ]));
 	}
 
+	/**
+	 * Matches probes with dProbes. Priority order:
+	 * 1. Match by UUID
+	 * 2. Match by IP + adopted
+	 * 3. Match by alt IP + adopted
+	 * 4. Match by IP
+	 * 5. Match by alt IP
+	 *
+	 * This ensures that adopted probes take precedence over non-adopted ones when matching by IP or alt IP.
+	 */
 	private matchDProbesAndProbes (probes: Probe[]) {
 		const uuidToProbe = new Map(probes.map(probe => [ probe.uuid, probe ]));
 		const ipToProbe = new Map(probes.map(probe => [ probe.ipAddress, probe ]));
@@ -335,8 +345,62 @@ export class AdoptedProbes {
 			}
 		});
 
-		// Searching probe for the dProbe by: dProbe IP -> probe IP.
+		// Searching probe for the dProbe by: adopted dProbe IP -> probe IP.
 		let dProbesToCheck = [ ...dProbesWithoutProbe ];
+		dProbesWithoutProbe = [];
+
+		dProbesToCheck.forEach((dProbe) => {
+			const probe = ipToProbe.get(dProbe.ip);
+
+			if (probe && dProbe.userId) {
+				dProbesWithProbe.push({ dProbe, probe });
+				uuidToProbe.delete(probe.uuid);
+				ipToProbe.delete(probe.ipAddress);
+				probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
+			} else {
+				dProbesWithoutProbe.push(dProbe);
+			}
+		});
+
+		// Searching probe for the dProbe by: adopted dProbe IP -> probe alt IP.
+		dProbesToCheck = [ ...dProbesWithoutProbe ];
+		dProbesWithoutProbe = [];
+
+		dProbesToCheck.forEach((dProbe) => {
+			const probe = altIpToProbe.get(dProbe.ip);
+
+			if (probe && dProbe.userId) {
+				dProbesWithProbe.push({ dProbe, probe });
+				uuidToProbe.delete(probe.uuid);
+				ipToProbe.delete(probe.ipAddress);
+				probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
+			} else {
+				dProbesWithoutProbe.push(dProbe);
+			}
+		});
+
+		// Searching probe for the dProbe by: adopted dProbe alt IP -> probe IP or alt IP.
+		dProbesToCheck = [ ...dProbesWithoutProbe ];
+		dProbesWithoutProbe = [];
+
+		dProbesToCheck.forEach((dProbe) => {
+			for (const altIp of dProbe.altIps) {
+				const probe = ipToProbe.get(altIp) || altIpToProbe.get(altIp);
+
+				if (probe && dProbe.userId) {
+					dProbesWithProbe.push({ dProbe, probe });
+					uuidToProbe.delete(probe.uuid);
+					ipToProbe.delete(probe.ipAddress);
+					probe.altIpAddresses.forEach(altIp => altIpToProbe.delete(altIp));
+					return;
+				}
+			}
+
+			dProbesWithoutProbe.push(dProbe);
+		});
+
+		// Searching probe for the dProbe by: dProbe IP -> probe IP.
+		dProbesToCheck = [ ...dProbesWithoutProbe ];
 		dProbesWithoutProbe = [];
 
 		dProbesToCheck.forEach((dProbe) => {
@@ -476,7 +540,7 @@ export class AdoptedProbes {
 			if (
 				existingDProbe
 				&& existingDProbe.country === dProbe.country
-				&& existingDProbe.userId === dProbe.userId
+				&& (existingDProbe.userId === dProbe.userId || dProbe.userId === null)
 			) {
 				logger.warn(`Duplication found by IP ${dProbe.ip}`, {
 					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps' ]),
