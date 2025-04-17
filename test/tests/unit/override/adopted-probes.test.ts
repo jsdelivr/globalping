@@ -834,7 +834,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
-	it('class should only delete duplicated probes of the same user', async () => {
+	it('class should delete duplicated probes of the same user', async () => {
 		// There are two rows for the same probe in the db.
 		sql.select.resolves([ defaultAdoption, { ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', userId: 'anotherUserId' }]);
 
@@ -853,6 +853,28 @@ describe('AdoptedProbes', () => {
 		expect(sql.update.args[0]).to.deep.equal([{ ip: '2.2.2.2' }]);
 		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-2' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ status: 'offline' }]);
+		expect(sql.insert.callCount).to.equal(0);
+	});
+
+	it('class should delete duplicated probe without user', async () => {
+		sql.select.resolves([
+			{ ...defaultAdoption, altIps: '["2.2.2.2"]' },
+			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', userId: null },
+		]);
+
+		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '3-3-3-3-3', ipAddress: '2.2.2.2' }]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		// Duplicated probe with ip 1.1.1.1 is deleted.
+		expect(sql.delete.callCount).to.equal(1);
+		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2' ] ]);
+
+		// Match found by UUID.
+		expect(sql.update.callCount).to.equal(1);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ uuid: '3-3-3-3-3', ip: '2.2.2.2', altIps: '[]' }]);
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
