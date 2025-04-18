@@ -857,24 +857,35 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should delete duplicated probe without user', async () => {
+		// 'p-2' is a duplicate of 'p-1', 'p-4' is a duplicate of 'p-3'.
 		sql.select.resolves([
 			{ ...defaultAdoption, altIps: '["2.2.2.2"]' },
+			{ ...defaultAdoption, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3' },
 			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', userId: null },
+			{ ...defaultAdoption, id: 'p-4', ip: '4.4.4.4', uuid: '4-4-4-4-4', userId: null },
 		]);
 
-		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '3-3-3-3-3', ipAddress: '2.2.2.2' }]);
+		getProbesWithAdminData.returns([
+			{ ...defaultConnectedProbe, uuid: null, ipAddress: '2.2.2.2' },
+			{ ...defaultConnectedProbe, uuid: '3-3-3-3-3', ipAddress: '4.4.4.4' },
+		]);
 
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		await adoptedProbes.syncDashboardData();
 
-		// Duplicated probe with ip 1.1.1.1 is deleted.
 		expect(sql.delete.callCount).to.equal(1);
-		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2' ] ]);
+		// Duplicated unassigned probe 'p-2' is deleted.
+		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2', 'p-4' ] ]);
 
 		// Match found by UUID.
-		expect(sql.update.callCount).to.equal(1);
-		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
-		expect(sql.update.args[0]).to.deep.equal([{ uuid: '3-3-3-3-3', ip: '2.2.2.2', altIps: '[]' }]);
+		expect(sql.update.callCount).to.equal(2);
+
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-3' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ ip: '4.4.4.4' }]);
+
+		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.args[1]).to.deep.equal([{ uuid: null, ip: '2.2.2.2', altIps: '[]' }]);
+
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
