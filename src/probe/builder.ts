@@ -10,7 +10,7 @@ import { getRegion } from '../lib/cloud-ip-ranges.js';
 import type { Probe, ProbeLocation, Tag } from './types.js';
 import { probeIpLimit } from '../lib/ws/server.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
-
+import { isIpBlocked } from '../lib/blocked-ip-ranges.js';
 
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	const version = String(socket.handshake.query['version']);
@@ -32,6 +32,10 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 
 	if (!ip) {
 		throw new Error('failed to detect ip address of connected probe');
+	}
+
+	if (isIpBlocked(ip)) {
+		throw new ProbeError(`vpn detected: ${ip}`);
 	}
 
 	if (!semver.satisfies(version, '>=0.9.0')) {

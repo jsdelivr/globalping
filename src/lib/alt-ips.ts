@@ -8,6 +8,7 @@ import { scopedLogger } from './logger.js';
 import GeoIpClient, { getGeoIpClient } from './geoip/client.js';
 import { isIpPrivate } from './private-ip.js';
 import { ProbeError } from './probe-error.js';
+import { isIpBlocked } from './blocked-ip-ranges.js';
 
 const getRandomBytes = promisify(randomBytes);
 const logger = scopedLogger('alt-ips');
@@ -152,6 +153,11 @@ export class AltIps {
 
 		if (isIpPrivate(altIp)) {
 			logger.warn('Alt IP is private.', { altIp });
+			return false;
+		}
+
+		if (isIpBlocked(altIp)) {
+			logger.warn('Alt IP is blocked.', { altIp });
 			return false;
 		}
 
