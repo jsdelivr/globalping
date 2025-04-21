@@ -1,6 +1,6 @@
 import { scopedLogger } from './logger.js';
 import { updateMalwareFiles } from './malware/client.js';
-import { updateIpRangeFiles } from './ip-ranges.js';
+import { updateIpRangeFiles } from './cloud-ip-ranges.js';
 import { updateGeonamesCitiesFile } from './geoip/city-approximation.js';
 
 const logger = scopedLogger('download-files');

@@ -12,7 +12,7 @@ import {
 	populateMemList as populateMemDomainList,
 	updateList as updateListDomain,
 } from '../../src/lib/malware/domain.js';
-import { updateIpRangeFiles, sources } from '../../src/lib/ip-ranges.js';
+import { updateIpRangeFiles, sources } from '../../src/lib/cloud-ip-ranges.js';
 import { populateCitiesList, updateGeonamesCitiesFile, URL as citiesListUrl } from '../../src/lib/geoip/city-approximation.js';
 
 const mockDataPath = path.join(path.resolve(), 'test/mocks');

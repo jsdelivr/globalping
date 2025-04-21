@@ -6,7 +6,7 @@ import { getIndex } from '../lib/location/location.js';
 import { ProbeError } from '../lib/probe-error.js';
 import { getGeoIpClient, LocationInfo } from '../lib/geoip/client.js';
 import getProbeIp from '../lib/get-probe-ip.js';
-import { getRegion } from '../lib/ip-ranges.js';
+import { getRegion } from '../lib/cloud-ip-ranges.js';
 import type { Probe, ProbeLocation, Tag } from './types.js';
 import { probeIpLimit } from '../lib/ws/server.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
