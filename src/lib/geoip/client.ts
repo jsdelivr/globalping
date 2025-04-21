@@ -25,6 +25,10 @@ export type NetworkInfo = {
 	asn: number;
 };
 
+const BLOCKED_ASNS = [
+	13335, // Cloudflare
+];
+
 const logger = scopedLogger('geoip');
 
 let geoIpClient: GeoIpClient;
@@ -83,6 +87,10 @@ export default class GeoIpClient {
 
 		if (!networkMatch) {
 			throw new ProbeError(`unresolvable geoip: ${addr}`);
+		}
+
+		if (BLOCKED_ASNS.includes(Number(networkMatch.asn))) {
+			throw new ProbeError(`vpn detected: ${addr}`);
 		}
 
 		let isHosting = ip2location?.isHosting ?? null;

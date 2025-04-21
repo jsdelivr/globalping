@@ -663,5 +663,14 @@ describe('geoip service', () => {
 			expect(response).to.be.instanceof(Error);
 			expect((response as Error).message).to.include('vpn detected');
 		});
+
+		it('should reject - ASN is blocked', async () => {
+			nockGeoIpProviders({ ipinfo: 'blockedAsn' });
+
+			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
+
+			expect(response).to.be.instanceof(Error);
+			expect((response as Error).message).to.include('vpn detected');
+		});
 	});
 });
