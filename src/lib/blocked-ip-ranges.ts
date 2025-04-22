@@ -29,12 +29,10 @@ const query = async (url: string): Promise<string> => {
 	return result;
 };
 
-const populateAppleRelayList = async () => {
+const populateAppleRelayList = async (newBlockedRangesIPv4: Set<ParsedIpRange>, newBlockedRangesIPv6: Set<ParsedIpRange>) => {
 	const appleRelaySource = sources.appleRelay;
 	const filePath = path.join(path.resolve(), appleRelaySource.file);
 	const csv = await readFile(filePath, 'utf8');
-	const newBlockedRangesIPv4 = new Set<ParsedIpRange>();
-	const newBlockedRangesIPv6 = new Set<ParsedIpRange>();
 
 	csv.split('\n').forEach((line) => {
 		const [ range ] = line.split(',');
@@ -51,16 +49,19 @@ const populateAppleRelayList = async () => {
 			newBlockedRangesIPv6.add(parsedRange);
 		}
 	});
+};
+
+export const populateMemList = async (): Promise<void> => {
+	const newBlockedRangesIPv4 = new Set<ParsedIpRange>();
+	const newBlockedRangesIPv6 = new Set<ParsedIpRange>();
+
+	await Promise.all([
+		populateAppleRelayList(newBlockedRangesIPv4, newBlockedRangesIPv6),
+	]);
 
 	blockedRangesIPv4 = newBlockedRangesIPv4;
 	blockedRangesIPv6 = newBlockedRangesIPv6;
 	ipsCache = new Map<string, boolean>();
-};
-
-export const populateMemList = async (): Promise<void> => {
-	await Promise.all([
-		populateAppleRelayList(),
-	]);
 };
 
 export const updateBlockedIpRangesFiles = async (): Promise<void> => {
