@@ -12,8 +12,16 @@ import {
 	populateMemList as populateMemDomainList,
 	updateList as updateListDomain,
 } from '../../src/lib/malware/domain.js';
-import { updateIpRangeFiles, sources as cloudIpRangesSources } from '../../src/lib/cloud-ip-ranges.js';
-import { updateBlockedIpRangesFiles, sources as blockedIpRangesSources } from '../../src/lib/blocked-ip-ranges.js';
+import {
+	updateIpRangeFiles,
+	sources as cloudIpRangesSources,
+	populateMemList as populateMemCloudIpRangesList,
+} from '../../src/lib/cloud-ip-ranges.js';
+import {
+	updateBlockedIpRangesFiles,
+	sources as blockedIpRangesSources,
+	populateMemList as populateMemBlockedIpRangesList,
+} from '../../src/lib/blocked-ip-ranges.js';
 import { populateCitiesList, updateGeonamesCitiesFile, URL as citiesListUrl } from '../../src/lib/geoip/city-approximation.js';
 
 const mockDataPath = path.join(path.resolve(), 'test/mocks');
@@ -56,12 +64,14 @@ export const populateCloudIpRangesList = async (): Promise<void> => {
 	nock(gcpUrl.origin).get(gcpUrl.pathname).reply(200, gcpMockRanges);
 	nock(awsUrl.origin).get(awsUrl.pathname).reply(200, awsMockRanges);
 	await updateIpRangeFiles();
+	await populateMemCloudIpRangesList();
 };
 
 export const populateBlockedIpRangesList = async (): Promise<void> => {
 	const appleRelayUrl = new URL(blockedIpRangesSources.appleRelay.url);
 	nock(appleRelayUrl.origin).get(appleRelayUrl.pathname).reply(200, appleRelayMockRanges);
 	await updateBlockedIpRangesFiles();
+	await populateMemBlockedIpRangesList();
 };
 
 export const populateNockCitiesList = async (): Promise<void> => {
