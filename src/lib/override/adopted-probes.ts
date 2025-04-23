@@ -313,6 +313,16 @@ export class AdoptedProbes {
 		this.uuidToAdoption = new Map(this.adoptions.filter(({ uuid }) => !!uuid).map(adoption => [ adoption.uuid!, adoption ]));
 	}
 
+	/**
+	 * Matches probes with dProbes. Priority order:
+	 * 1. Match by UUID
+	 * 2. Match by IP + adopted
+	 * 3. Match by alt IP + adopted
+	 * 4. Match by IP
+	 * 5. Match by alt IP
+	 *
+	 * This ensures that adopted probes take precedence over non-adopted ones when matching by IP or alt IP.
+	 */
 	private matchDProbesAndProbes (probes: Probe[]) {
 		const uuidToProbe = new Map(probes.map(probe => [ probe.uuid, probe ]));
 		const ipToProbe = new Map(probes.map(probe => [ probe.ipAddress, probe ]));
