@@ -158,7 +158,7 @@ describe('MeasurementRunner', () => {
 		}]);
 
 		expect(metrics.recordMeasurement.callCount).to.equal(1);
-		expect(metrics.recordMeasurement.args[0]).to.deep.equal([ 'ping' ]);
+		expect(metrics.recordMeasurement.args[0]).to.deep.equal([ 'ping', 4 ]);
 	});
 
 	it('should send `inProgressUpdates: true` to the first N probes if requested', async () => {
@@ -258,7 +258,7 @@ describe('MeasurementRunner', () => {
 		}]);
 
 		expect(metrics.recordMeasurement.callCount).to.equal(1);
-		expect(metrics.recordMeasurement.args[0]).to.deep.equal([ 'ping' ]);
+		expect(metrics.recordMeasurement.args[0]).to.deep.equal([ 'ping', 4 ]);
 	});
 
 	it('should properly handle result events from probes', async () => {
