@@ -10,7 +10,7 @@ type Source = {
 	file: string;
 };
 
-let blockedRangesIPv4 = new Set<ParsedIpRange>();
+export let blockedRangesIPv4 = new Set<ParsedIpRange>();
 let blockedRangesIPv6 = new Set<ParsedIpRange>();
 let ipsCache = new Map<string, boolean>();
 
@@ -75,7 +75,7 @@ export const updateBlockedIpRangesFiles = async (): Promise<void> => {
 export const isIpBlocked = (ip: string) => {
 	const cached = ipsCache.get(ip);
 
-	if (cached) {
+	if (cached !== undefined) {
 		return cached;
 	}
 
