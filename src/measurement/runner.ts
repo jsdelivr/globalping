@@ -37,12 +37,12 @@ export class MeasurementRunner {
 
 		if (onlineProbesMap.size) {
 			this.sendToProbes(measurementId, onlineProbesMap, request);
-			// If all selected probes are offline, immediately mark measurement as finished
+			// If all selected probes are offline, immediately mark the measurement as finished
 		} else {
 			await this.store.markFinished(measurementId);
 		}
 
-		this.metrics.recordMeasurement(request.type);
+		this.metrics.recordMeasurement(request.type, onlineProbesMap.size);
 
 		return { measurementId, probesCount: allProbes.length };
 	}

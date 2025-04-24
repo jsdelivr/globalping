@@ -80,9 +80,11 @@ export class MetricsAgent {
 		this.recordStats(`gp.measurement.time.${type}`, time);
 	}
 
-	recordMeasurement (type: string): void {
+	recordMeasurement (type: string, probeCount: number): void {
 		this.incrementCounter(`gp.measurement.count.${type}`);
 		this.incrementCounter('gp.measurement.count.total');
+		this.incrementCounter(`gp.test.count.${type}`, probeCount);
+		this.incrementCounter('gp.test.count.total', probeCount);
 	}
 
 	recordDisconnect (type: string): void {
