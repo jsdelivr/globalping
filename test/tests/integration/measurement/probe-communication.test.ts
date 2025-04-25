@@ -23,7 +23,7 @@ describe('Create measurement request', () => {
 
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
-		await td.replaceEsm('../../../../src/lib/ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
+		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
 		({ getTestServer, waitForProbesUpdate, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);

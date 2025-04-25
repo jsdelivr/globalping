@@ -13,6 +13,7 @@ data/AWS_IP_RANGES.json
 data/GCP_IP_RANGES.json
 data/GEONAMES_CITIES.csv
 data/LAST_API_COMMIT_HASH.txt
+data/APPLE_RELAY_IP_RANGES.csv
 probes-stats/known-result.csv
 probes-stats/known-result.json
 probes-stats/all-result.csv

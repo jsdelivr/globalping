@@ -1,4 +1,98 @@
 {
+	"ipinfo": {
+		"default": {
+			"city": "Dallas",
+			"region": "Texas",
+			"country": "US",
+			"loc": "32.7831,-96.8067",
+			"org": "AS20004 The Constant Company LLC",
+			"privacy": {
+				"hosting": true
+			}
+		},
+		"argentina": {
+			"city": "Buenos Aires",
+			"region": "Pernambuco",
+			"country": "AR",
+			"loc": "-34.6131,-58.3772",
+			"org": "AS61004 InterBS S.R.L. (BAEHOST)"
+		},
+		"empty": {
+			"city": "",
+			"region": "",
+			"country": "",
+			"loc": "",
+			"org": ""
+		},
+		"emptyCity": {
+			"city": "",
+			"region": "",
+			"country": "EG",
+			"loc": "23.878,26.487",
+			"org": ""
+		},
+		"emptyLocation": {
+			"city": "El-Rashda",
+			"region": "",
+			"country": "EG",
+			"loc": "23.878,26.487",
+			"org": ""
+		},
+		"newYork": {
+			"city": "The New York City",
+			"region": "New York",
+			"country": "US",
+			"loc": "40.7143,-74.0060",
+			"org": "AS80004 The Constant Company LLC",
+			"privacy": {
+				"hosting": true
+			}
+		},
+		"washington": {
+			"city": "Washington",
+			"region": "Washington, D.C.",
+			"country": "US",
+			"loc": "38.89539,-77.039476",
+			"org": "AS701 Verizon Business",
+			"privacy": {
+				"hosting": false
+			}
+		},
+		"emptyNetwork": {
+			"city": "Dallas",
+			"region": "Texas",
+			"country": "US",
+			"loc": "32.7831,-96.8067",
+			"org": ""
+		},
+		"undefinedNetwork": {
+			"city": "Dallas",
+			"region": "Texas",
+			"country": "US",
+			"loc": "32.7831,-96.8067"
+		},
+		"anycast": {
+			"city": "Dallas",
+			"region": "Texas",
+			"country": "US",
+			"loc": "32.7831,-96.8067",
+			"org": "AS20004 The Constant Company LLC",
+			"privacy": {
+				"hosting": true
+			},
+			"anycast": true
+		},
+		"blockedAsn": {
+			"city": "Dallas",
+			"region": "Texas",
+			"country": "US",
+			"loc": "32.7831,-96.8067",
+			"org": "AS13335 Cloudflare, Inc.",
+			"privacy": {
+				"hosting": true
+			}
+		}
+	},
 	"ip2location": {
 		"default": {
 			"country_code": "US",
@@ -117,71 +211,6 @@
 			"asn": "20001",
 			"as": "The Constant Company LLC",
 			"usage_type": "DCH"
-		}
-	},
-	"ipmap": {
-		"default": {
-			"locations": [
-				{
-					"cityName": "Dallas",
-					"latitude": 32.7831,
-					"longitude": -96.8067,
-					"stateAnsiCode": "TX",
-					"countryCodeAlpha2": "US"
-				}
-			]
-		},
-		"argentina": {
-			"locations": [
-				{
-					"cityName": "Buenos Aires",
-					"latitude": -34.6131,
-					"longitude": -58.3772,
-					"stateAnsiCode": "",
-					"countryCodeAlpha2": "AR"
-				}
-			]
-		},
-		"newYork": {
-			"locations": [
-				{
-					"cityName": "New York City",
-					"latitude": 40.7143,
-					"longitude": -74.0060,
-					"stateAnsiCode": "NY",
-					"countryCodeAlpha2": "US"
-				}
-			]
-		},
-		"empty": {
-			"locations": [
-				{
-					"cityName": "",
-					"latitude": 0,
-					"longitude": 0,
-					"countryCodeAlpha2": ""
-				}
-			]
-		},
-		"emptyCity": {
-			"locations": [
-				{
-					"cityName": "",
-					"latitude": 23.878,
-					"longitude": 26.487,
-					"countryCodeAlpha2": "EG"
-				}
-			]
-		},
-		"emptyLocation": {
-			"locations": [
-				{
-					"cityName": "El-Rashda",
-					"latitude": 23.878,
-					"longitude": 26.487,
-					"countryCodeAlpha2": "EG"
-				}
-			]
 		}
 	},
 	"maxmind": {
@@ -327,88 +356,69 @@
 			}
 		}
 	},
-	"ipinfo": {
+	"ipmap": {
 		"default": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7831,-96.8067",
-			"org": "AS20004 The Constant Company LLC",
-			"privacy": {
-				"hosting": true
-			}
+			"locations": [
+				{
+					"cityName": "Dallas",
+					"latitude": 32.7831,
+					"longitude": -96.8067,
+					"stateAnsiCode": "TX",
+					"countryCodeAlpha2": "US"
+				}
+			]
 		},
 		"argentina": {
-			"city": "Buenos Aires",
-			"region": "Pernambuco",
-			"country": "AR",
-			"loc": "-34.6131,-58.3772",
-			"org": "AS61004 InterBS S.R.L. (BAEHOST)"
-		},
-		"empty": {
-			"city": "",
-			"region": "",
-			"country": "",
-			"loc": "",
-			"org": ""
-		},
-		"emptyCity": {
-			"city": "",
-			"region": "",
-			"country": "EG",
-			"loc": "23.878,26.487",
-			"org": ""
-		},
-		"emptyLocation": {
-			"city": "El-Rashda",
-			"region": "",
-			"country": "EG",
-			"loc": "23.878,26.487",
-			"org": ""
+			"locations": [
+				{
+					"cityName": "Buenos Aires",
+					"latitude": -34.6131,
+					"longitude": -58.3772,
+					"stateAnsiCode": "",
+					"countryCodeAlpha2": "AR"
+				}
+			]
 		},
 		"newYork": {
-			"city": "The New York City",
-			"region": "New York",
-			"country": "US",
-			"loc": "40.7143,-74.0060",
-			"org": "AS80004 The Constant Company LLC",
-			"privacy": {
-				"hosting": true
-			}
+			"locations": [
+				{
+					"cityName": "New York City",
+					"latitude": 40.7143,
+					"longitude": -74.0060,
+					"stateAnsiCode": "NY",
+					"countryCodeAlpha2": "US"
+				}
+			]
 		},
-		"washington": {
-			"city": "Washington",
-			"region": "Washington, D.C.",
-			"country": "US",
-			"loc": "38.89539,-77.039476",
-			"org": "AS701 Verizon Business",
-			"privacy": {
-				"hosting": false
-			}
+		"empty": {
+			"locations": [
+				{
+					"cityName": "",
+					"latitude": 0,
+					"longitude": 0,
+					"countryCodeAlpha2": ""
+				}
+			]
 		},
-		"emptyNetwork": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7831,-96.8067",
-			"org": ""
+		"emptyCity": {
+			"locations": [
+				{
+					"cityName": "",
+					"latitude": 23.878,
+					"longitude": 26.487,
+					"countryCodeAlpha2": "EG"
+				}
+			]
 		},
-		"undefinedNetwork": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7831,-96.8067"
-		},
-		"anycast": {
-			"city": "Dallas",
-			"region": "Texas",
-			"country": "US",
-			"loc": "32.7831,-96.8067",
-			"org": "AS20004 The Constant Company LLC",
-			"privacy": {
-				"hosting": true
-			},
-			"anycast": true
+		"emptyLocation": {
+			"locations": [
+				{
+					"cityName": "El-Rashda",
+					"latitude": 23.878,
+					"longitude": 26.487,
+					"countryCodeAlpha2": "EG"
+				}
+			]
 		}
 	},
 	"fastly": {

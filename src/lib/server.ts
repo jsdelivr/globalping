@@ -3,7 +3,8 @@ import { initRedisClient } from './redis/client.js';
 import { probeOverride, probeIpLimit, initWsServer } from './ws/server.js';
 import { getMetricsAgent } from './metrics.js';
 import { populateMemList as populateMemMalwareList } from './malware/client.js';
-import { populateMemList as populateMemIpRangesList } from './ip-ranges.js';
+import { populateMemList as populateMemCloudIpRangesList } from './cloud-ip-ranges.js';
+import { populateMemList as populateMemBlockedIpRangesList } from './blocked-ip-ranges.js';
 import { populateMemList as populateIpWhiteList } from './geoip/whitelist.js';
 import { populateCitiesList } from './geoip/city-approximation.js';
 import { reconnectProbes } from './ws/helper/reconnect-probes.js';
@@ -22,7 +23,9 @@ export const createServer = async (): Promise<Server> => {
 	// Populate memory malware list
 	await populateMemMalwareList();
 	// Populate memory cloud regions list
-	await populateMemIpRangesList();
+	await populateMemCloudIpRangesList();
+	// Populate memory blocked ip ranges list
+	await populateMemBlockedIpRangesList();
 	// Populate ip whitelist
 	await populateIpWhiteList();
 	// Populate cities info

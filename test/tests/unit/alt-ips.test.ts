@@ -288,6 +288,29 @@ describe('AltIps', () => {
 		]);
 	});
 
+	it('should throw if alt ip is blocked', async () => {
+		const token = await altIps.generateToken(socket);
+
+		await altIps.validateTokenFromPubSub({
+			id: 'message1',
+			reqNodeId: 'node1',
+			type: ALT_IP_REQ_MESSAGE_TYPE,
+			body: {
+				socketId: 'socketId2',
+				ip: '172.224.226.1',
+				token,
+			},
+		});
+
+		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
+
+		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
+			'node1',
+			'alt-ip:res',
+			{ result: 'invalid-alt-ip', reqMessageId: 'message1' },
+		]);
+	});
+
 	it('should throw if alt ip is not in the same country', async () => {
 		const token = await altIps.generateToken(socket);
 		geoIpClient.lookup.resolves({ country: 'FR', isAnycast: false });

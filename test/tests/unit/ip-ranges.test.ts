@@ -2,9 +2,9 @@ import { writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import nock from 'nock';
 import { expect } from 'chai';
-import { updateIpRangeFiles, sources, populateMemList, getRegion } from '../../../src/lib/ip-ranges.js';
+import { updateIpRangeFiles, sources, populateMemList, getRegion } from '../../../src/lib/cloud-ip-ranges.js';
 
-const mockDataPath = path.join(path.resolve(), 'test/mocks/ip-ranges');
+const mockDataPath = path.join(path.resolve(), 'test/mocks/cloud-ip-ranges');
 const gcpMockRanges = await readFile(path.join(mockDataPath, 'nock-gcp.json'), 'utf8');
 const awsMockRanges = await readFile(path.join(mockDataPath, 'nock-aws.json'), 'utf8');
 const gcpUrl = new URL(sources.gcp.url);

@@ -19,8 +19,9 @@ import { populateMemList } from '../src/lib/geoip/whitelist.js';
 import {
 	populateIpList,
 	populateDomainList,
-	populateIpRangeList,
+	populateCloudIpRangesList,
 	populateNockCitiesList,
+	populateBlockedIpRangesList,
 } from './utils/populate-static-files.js';
 import chaiOas from './plugins/oas/index.js';
 import { initRedisClient } from '../src/lib/redis/client.js';
@@ -59,7 +60,8 @@ before(async () => {
 
 	await populateIpList();
 	await populateDomainList();
-	await populateIpRangeList();
+	await populateCloudIpRangesList();
+	await populateBlockedIpRangesList();
 	await populateMemList();
 	await populateNockCitiesList();
 });
