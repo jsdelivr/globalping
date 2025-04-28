@@ -6,7 +6,7 @@ import { scopedLogger } from '../logger.js';
 import type { getProbesWithAdminData as serverGetProbesWithAdminData } from '../ws/server.js';
 import type { Probe, ProbeLocation, Tag } from '../../probe/types.js';
 import { normalizeCoordinate, normalizeFromPublicName } from '../geoip/utils.js';
-import { getIndex } from '../location/location.js';
+import { getContinentByCountry, getIndex, getRegionByCountry } from '../location/location.js';
 import { countries } from 'countries-list';
 import { randomUUID } from 'crypto';
 
@@ -189,6 +189,8 @@ export class AdoptedProbes {
 
 		return {
 			...(adminLocation || probe.location),
+			continent: getContinentByCountry(adoption.country),
+			region: getRegionByCountry(adoption.country),
 			country: adoption.country,
 			city: adoption.city!,
 			normalizedCity: normalizeFromPublicName(adoption.city!),
