@@ -987,35 +987,43 @@ describe('AdoptedProbes', () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{
 			...defaultAdoption,
-			city: 'Dundalk',
-			country: 'IE',
+			city: 'Nuuk',
+			country: 'GL',
 			state: null,
-			latitude: 54,
-			longitude: -6.42,
+			latitude: 64.18,
+			longitude: -51.73,
 			customLocation: JSON.stringify({
-				city: 'Dundalk',
-				country: 'IE',
+				city: 'Nuuk',
+				country: 'GL',
 				state: null,
-				latitude: 54,
-				longitude: -6.42,
+				latitude: 64.18,
+				longitude: -51.73,
 			}),
 		}]);
 
 		await adoptedProbes.syncDashboardData();
-		const updatedLocation = adoptedProbes.getUpdatedLocation(defaultConnectedProbe);
+
+		const updatedLocation = adoptedProbes.getUpdatedLocation({
+			...defaultConnectedProbe,
+			location: {
+				...defaultConnectedProbe.location,
+				allowedCountries: [ 'IE', 'GL' ],
+			},
+		});
+
 		expect(updatedLocation).to.deep.equal({
-			continent: 'EU',
-			region: 'Northern Europe',
-			country: 'IE',
-			city: 'Dundalk',
+			continent: 'NA',
+			region: 'Northern America',
+			country: 'GL',
+			city: 'Nuuk',
 			state: null,
-			normalizedCity: 'dundalk',
+			normalizedCity: 'nuuk',
 			asn: 16509,
-			latitude: 54,
-			longitude: -6.42,
+			latitude: 64.18,
+			longitude: -51.73,
 			network: 'Amazon.com, Inc.',
 			normalizedNetwork: 'amazon.com, inc.',
-			allowedCountries: [ 'IE' ],
+			allowedCountries: [ 'IE', 'GL' ],
 		});
 	});
 
