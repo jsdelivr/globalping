@@ -164,7 +164,7 @@ export class AltIps {
 		try {
 			const altIpInfo = await this.geoIpClient.lookup(altIp);
 
-			if (altIpInfo.country !== localSocket.data.probe.location.country) {
+			if (!localSocket.data.probe.location.allowedCountries.includes(altIpInfo.country)) {
 				logger.warn('Alt IP country doesn\'t match the probe country.', { altIp, altIpInfo, ...probeInfo });
 				return false;
 			}
