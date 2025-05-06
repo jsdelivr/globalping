@@ -19,6 +19,7 @@ describe('AltIps', () => {
 			altIpAddresses: [],
 			location: {
 				country: 'IT',
+				allowedCountries: [ 'IT', 'FR' ],
 			},
 		} } } as unknown as ServerSocket;
 
@@ -245,6 +246,30 @@ describe('AltIps', () => {
 		]);
 	});
 
+	it('should add alt ip if it is in the allowed countries list', async () => {
+		const token = await altIps.generateToken(socket);
+		geoIpClient.lookup.resolves({ country: 'FR', isAnycast: false });
+
+		await altIps.validateTokenFromPubSub({
+			id: 'message1',
+			reqNodeId: 'node1',
+			type: ALT_IP_REQ_MESSAGE_TYPE,
+			body: {
+				socketId: 'socketId2',
+				ip: '2.2.2.2',
+				token,
+			},
+		});
+
+		expect(socket.data.probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
+
+		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
+			'node1',
+			'alt-ip:res',
+			{ result: 'success', reqMessageId: 'message1' },
+		]);
+	});
+
 	it('should throw if local probe not found after pub/sub message', async () => {
 		await altIps.validateTokenFromPubSub({
 			id: 'message1',
@@ -311,9 +336,9 @@ describe('AltIps', () => {
 		]);
 	});
 
-	it('should throw if alt ip is not in the same country', async () => {
+	it('should throw if alt ip is not in the allowed countries list', async () => {
 		const token = await altIps.generateToken(socket);
-		geoIpClient.lookup.resolves({ country: 'FR', isAnycast: false });
+		geoIpClient.lookup.resolves({ country: 'DE', isAnycast: false });
 
 		await altIps.validateTokenFromPubSub({
 			id: 'message1',
