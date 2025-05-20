@@ -35,6 +35,7 @@ type CsvCityRow = City & { population: string };
 
 const logger = scopedLogger('city-approximation');
 
+// Cities with population >= 15 000
 export const URL = 'https://download.geonames.org/export/dump/cities15000.zip';
 const FILENAME = 'GEONAMES_CITIES.csv';
 
