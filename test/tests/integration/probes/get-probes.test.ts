@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { randomUUID } from 'node:crypto';
 import nock from 'nock';
 import { expect } from 'chai';

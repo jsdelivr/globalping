@@ -30,7 +30,7 @@ export type PubSubMessage<T = object> = {
 	reqNodeId: string;
 	type: string;
 	body: T;
-}
+};
 
 type Callback = (message: PubSubMessage) => void;
 
@@ -457,7 +457,7 @@ export class SyncedProbeList extends EventEmitter {
 
 			changes.updateStats.forEach((stats, id) => {
 				if (probesById[id]) {
-					probesById[id]!.stats = stats;
+					probesById[id].stats = stats;
 				}
 			});
 

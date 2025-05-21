@@ -9,6 +9,5 @@ export default class NullCache implements CacheInterface {
 		return null;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
 	async set (): Promise<void> {}
 }

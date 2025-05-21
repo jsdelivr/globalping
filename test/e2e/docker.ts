@@ -130,7 +130,7 @@ class DockerManager {
 		container.modem.demuxStream(stream, process.stdout, process.stderr);
 	}
 
-	private async getContainer (name: string): Promise<{ container: Docker.Container | null, state: string | null }> {
+	private async getContainer (name: string): Promise<{ container: Docker.Container | null; state: string | null }> {
 		const containers = await this.docker.listContainers({ all: true });
 		const containerInfo = containers.find(c => c.Names.includes(`/${name}`));
 

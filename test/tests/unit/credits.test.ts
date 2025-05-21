@@ -13,7 +13,7 @@ describe('Credits', () => {
 	});
 	const sqlStub = sandbox.stub().returns({
 		where: whereStub,
-	}) as sinon.SinonStub<any[], any> & {raw: any};
+	}) as sinon.SinonStub<any[], any> & { raw: any };
 	sqlStub.raw = sandbox.stub();
 
 	beforeEach(() => {
@@ -45,7 +45,7 @@ describe('Credits', () => {
 	});
 
 	it(`should return false if update throws ER_CONSTRAINT_FAILED_CODE`, async () => {
-		const error: Error & {errno?: number} = new Error('constraint');
+		const error: Error & { errno?: number } = new Error('constraint');
 		error.errno = 4025;
 		updateStub.rejects(error);
 		firstStub.resolves({ amount: 5 });

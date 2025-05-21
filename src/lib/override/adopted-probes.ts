@@ -54,11 +54,11 @@ type DProbe = {
 		state: string | null;
 	} | null;
 	allowedCountries: string[];
-}
+};
 
 export type Adoption = Omit<DProbe, 'userId'> & {
 	userId: string;
-}
+};
 
 export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation'> & {
 	altIps: string;
@@ -69,14 +69,14 @@ export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Support
 	publicProbes: number;
 	customLocation: string | null;
 	allowedCountries: string;
-}
+};
 
 type DProbeFieldDescription = {
-	probeField: string,
-	mayBeCustom: boolean,
+	probeField: string;
+	mayBeCustom: boolean;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	formatter?: (probeValue: any, probe: Probe, dProbe?: DProbe) => unknown
-}
+	formatter?: (probeValue: any, probe: Probe, dProbe?: DProbe) => unknown;
+};
 
 export class AdoptedProbes {
 	private dProbes: DProbe[] = [];
@@ -286,7 +286,7 @@ export class AdoptedProbes {
 		const dProbes: DProbe[] = rows.map(row => ({
 			...row,
 			altIps: JSON.parse(row.altIps) as string[],
-			tags: (JSON.parse(row.tags) as { prefix: string; value: string; format?: string; }[])
+			tags: (JSON.parse(row.tags) as { prefix: string; value: string; format?: string }[])
 				.map(({ prefix, value, format }) => {
 					if (format === 'v1') {
 						return { type: 'user' as const, value: `u-${prefix}-${value}` };
@@ -329,7 +329,7 @@ export class AdoptedProbes {
 		const uuidToProbe = new Map(probes.map(probe => [ probe.uuid, probe ]));
 		const ipToProbe = new Map(probes.map(probe => [ probe.ipAddress, probe ]));
 		const altIpToProbe = new Map(probes.map(probe => probe.altIpAddresses.map(altIp => [ altIp, probe ] as const)).flat());
-		const dProbesWithProbe: { dProbe: DProbe, probe: Probe }[] = [];
+		const dProbesWithProbe: { dProbe: DProbe; probe: Probe }[] = [];
 
 		// Searching probe for the dProbe by: UUID.
 		let dProbesWithoutProbe: DProbe[] = [];
@@ -478,8 +478,8 @@ export class AdoptedProbes {
 		return { dProbesWithProbe, dProbesWithoutProbe, probesWithoutDProbe };
 	}
 
-	private generateUpdatedDProbes (dProbesWithProbe: { dProbe: DProbe, probe: Probe }[], dProbesWithoutProbe: DProbe[]) {
-		const dProbeDataUpdates: { dProbe: DProbe, update: Partial<DProbe> }[] = [];
+	private generateUpdatedDProbes (dProbesWithProbe: { dProbe: DProbe; probe: Probe }[], dProbesWithoutProbe: DProbe[]) {
+		const dProbeDataUpdates: { dProbe: DProbe; update: Partial<DProbe> }[] = [];
 		const updatedDProbes: DProbe[] = [];
 
 		dProbesWithProbe.forEach(({ dProbe, probe }) => {
@@ -533,7 +533,7 @@ export class AdoptedProbes {
 
 	private findDuplications (updatedDProbes: DProbe[]) {
 		const dProbesToDelete: DProbe[] = [];
-		const dProbeAltIpUpdates: { dProbe: DProbe, update: { altIps: string[] } }[] = [];
+		const dProbeAltIpUpdates: { dProbe: DProbe; update: { altIps: string[] } }[] = [];
 		const uniqIps = new Map<string, DProbe>();
 
 		updatedDProbes.forEach((dProbe) => {

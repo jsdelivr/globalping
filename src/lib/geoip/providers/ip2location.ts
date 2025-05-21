@@ -53,7 +53,7 @@ export const ip2LocationLookup = async (addr: string): Promise<ProviderLocationI
 		country: result.country_code ?? '',
 		city: normalizeCityNamePublic(city),
 		normalizedCity: normalizeCityName(city),
-		asn: Number(result.asn) ?? 0,
+		asn: Number(result.asn ?? 0),
 		latitude: result.latitude ?? 0,
 		longitude: result.longitude ?? 0,
 		network: result.as ?? '',

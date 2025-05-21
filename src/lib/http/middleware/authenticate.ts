@@ -56,5 +56,5 @@ export const authenticate = (): ExtendedMiddleware => {
 	};
 };
 
-export type AuthenticateOptions = { session: { cookieName: string, cookieSecret: string } };
-export type AuthenticateState = { user?: { id: string | null, username: string | null, scopes?: string[], hashedToken?: string, authMode: 'cookie' | 'token' } };
+export type AuthenticateOptions = { session: { cookieName: string; cookieSecret: string } };
+export type AuthenticateState = { user?: { id: string | null; username: string | null; scopes?: string[]; hashedToken?: string; authMode: 'cookie' | 'token' } };

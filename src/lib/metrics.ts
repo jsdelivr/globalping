@@ -62,7 +62,7 @@ export class MetricsAgent {
 			const result = await this.sql(USERS_TABLE)
 				.count('user_type as c')
 				.groupBy('user_type')
-				.select<{ user_type: string, c: number }[]>([ 'user_type' ]);
+				.select<{ user_type: string; c: number }[]>([ 'user_type' ]);
 
 			const countByType = _(result)
 				.mapKeys(record => `gp.user.count.${record.user_type}`)
@@ -96,7 +96,7 @@ export class MetricsAgent {
 			this.registerCounter(name);
 		}
 
-		this.counters[name] += value;
+		this.counters[name]! += value;
 	}
 
 	private registerCounter (name: string): void {
@@ -171,7 +171,7 @@ export class MetricsAgent {
 		}, interval);
 	}
 
-	private registerAsyncGroupCollector (groupName: string, callback: () => Promise<{[k: string]: number}>, interval: number): void {
+	private registerAsyncGroupCollector (groupName: string, callback: () => Promise<{ [k: string]: number }>, interval: number): void {
 		this.timers[groupName] = setInterval(() => {
 			callback().then((group) => {
 				Object.entries(group).forEach(([ key, value ]) => {

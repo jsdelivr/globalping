@@ -163,7 +163,7 @@ describe('MeasurementRunner', () => {
 
 	it('should send `inProgressUpdates: true` to the first N probes if requested', async () => {
 		const request = {
-			type: 'ping'as const,
+			type: 'ping' as const,
 			target: 'jsdelivr.com',
 			measurementOptions: {
 				packets: 3,

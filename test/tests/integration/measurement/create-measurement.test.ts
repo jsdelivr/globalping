@@ -7,7 +7,7 @@ import type { Socket } from 'socket.io-client';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { client } from '../../../../src/lib/sql/client.js';
 import type { ProbeOverride } from '../../../../src/lib/override/probe-override.js';
-import geoIpMocks from '../../../mocks/nock-geoip.json' assert { type: 'json' };
+import geoIpMocks from '../../../mocks/nock-geoip.json' with { type: 'json' };
 
 describe('Create measurement', () => {
 	let addFakeProbe: () => Promise<Socket>;

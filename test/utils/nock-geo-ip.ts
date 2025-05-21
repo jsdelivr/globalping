@@ -1,12 +1,12 @@
 import nock from 'nock';
-import geoIpMocks from '../mocks/nock-geoip.json' assert { type: 'json' };
+import geoIpMocks from '../mocks/nock-geoip.json' with { type: 'json' };
 
 type ProviderToMockname = {
-  ipmap?: keyof(typeof geoIpMocks.ipmap);
-  ip2location?: keyof(typeof geoIpMocks.ip2location);
-  maxmind?: keyof(typeof geoIpMocks.maxmind);
-  ipinfo?: keyof(typeof geoIpMocks.ipinfo);
-  fastly?: keyof(typeof geoIpMocks.fastly);
+	ipmap?: keyof(typeof geoIpMocks.ipmap);
+	ip2location?: keyof(typeof geoIpMocks.ip2location);
+	maxmind?: keyof(typeof geoIpMocks.maxmind);
+	ipinfo?: keyof(typeof geoIpMocks.ipinfo);
+	fastly?: keyof(typeof geoIpMocks.fastly);
 };
 
 const nockGeoIpProviders = (providersToMockname: ProviderToMockname = {}) => {

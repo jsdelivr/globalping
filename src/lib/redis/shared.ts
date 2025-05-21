@@ -14,14 +14,14 @@ import { type RedisScripts, scripts } from './scripts.js';
 import { type Logger } from 'h-logger2';
 
 type ClusterExtensions = {
-	mapMasters: typeof mapMasters,
-	reduceMasters: typeof reduceMasters,
+	mapMasters: typeof mapMasters;
+	reduceMasters: typeof reduceMasters;
 };
 
 export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts>;
 export type RedisCluster = RedisClusterType<RedisDefaultModules, RedisFunctions, RedisScripts> & ClusterExtensions;
-export type RedisClientInternal = { connectPromise: Promise<unknown>, client: RedisClient };
-export type RedisClusterInternal = { connectPromise: Promise<unknown>, client: RedisCluster };
+export type RedisClientInternal = { connectPromise: Promise<unknown>; client: RedisClient };
+export type RedisClusterInternal = { connectPromise: Promise<unknown>; client: RedisCluster };
 
 export const createRedisClientInternal = (options: RedisClientOptions, logger: Logger): RedisClientInternal => {
 	const client = createClient({

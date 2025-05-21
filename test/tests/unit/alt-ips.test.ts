@@ -13,15 +13,20 @@ describe('AltIps', () => {
 	let altIps: AltIps;
 
 	beforeEach(() => {
-		socket = { id: 'socketId1', data: { probe: {
-			client: 'socketId1',
-			ipAddress: '1.1.1.1',
-			altIpAddresses: [],
-			location: {
-				country: 'IT',
-				allowedCountries: [ 'IT', 'FR' ],
+		socket = {
+			id: 'socketId1',
+			data: {
+				probe: {
+					client: 'socketId1',
+					ipAddress: '1.1.1.1',
+					altIpAddresses: [],
+					location: {
+						country: 'IT',
+						allowedCountries: [ 'IT', 'FR' ],
+					},
+				},
 			},
-		} } } as unknown as ServerSocket;
+		} as unknown as ServerSocket;
 
 		syncedProbeList = {
 			subscribeToNodeMessages: sandbox.stub(),

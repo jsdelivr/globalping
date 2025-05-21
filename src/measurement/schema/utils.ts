@@ -66,7 +66,7 @@ export const joiValidateTarget = (type: string) => (value: string, helpers?: Cus
 
 export const whenTypeApply = (mType: string, schema: AnySchema) => Joi.any().when(Joi.ref('/type'), { is: mType, then: schema });
 
-export const globalIpOptions: {version: string[]; cidr: PresenceMode} = { version: [ 'ipv4', 'ipv6' ], cidr: 'forbidden' };
+export const globalIpOptions: { version: string[]; cidr: PresenceMode } = { version: [ 'ipv4', 'ipv6' ], cidr: 'forbidden' };
 
 export const GLOBAL_DEFAULTS = {
 	locations: [],

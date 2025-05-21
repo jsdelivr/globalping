@@ -23,7 +23,7 @@ type LocationOverride = {
 	state: string | null;
 	latitude: number;
 	longitude: number;
-}
+};
 
 type UpdatedFields = {
 	continent: string;
@@ -35,7 +35,7 @@ type UpdatedFields = {
 	latitude: number;
 	longitude: number;
 	allowedCountries: string[];
-}
+};
 
 export class AdminData {
 	private rangesToUpdatedFields: Map<ParsedIpRange, UpdatedFields> = new Map();

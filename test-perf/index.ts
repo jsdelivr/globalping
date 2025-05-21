@@ -1,5 +1,3 @@
-/* eslint-disable no-await-in-loop */
-
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 
