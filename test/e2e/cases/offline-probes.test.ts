@@ -18,19 +18,23 @@ describe('api', () => {
 	});
 
 	it('should create measurement with "offline" result if requested probe is not connected', async () => {
-		const { id: locationId } = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'ping',
-		} }).json<any>();
+		const { id: locationId } = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				target: 'www.jsdelivr.com',
+				type: 'ping',
+			},
+		}).json<any>();
 
 		await docker.stopProbeContainer();
 		await waitProbeToDisconnect();
 
-		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'ping',
-			locations: locationId,
-		} }).json<any>();
+		const { id } = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				target: 'www.jsdelivr.com',
+				type: 'ping',
+				locations: locationId,
+			},
+		}).json<any>();
 
 		const response = await waitMeasurementFinish(id);
 
@@ -40,10 +44,12 @@ describe('api', () => {
 	});
 
 	it('should create measurement with "failed" result if probe failed to send result', async () => {
-		const { id } = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'ping',
-		} }).json<any>();
+		const { id } = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				target: 'www.jsdelivr.com',
+				type: 'ping',
+			},
+		}).json<any>();
 
 		await docker.stopProbeContainer();
 

@@ -19,7 +19,7 @@ describe('Auth', () => {
 	const sqlStub = sandbox.stub().returns({
 		where: whereStub,
 		leftJoin: leftJoinStub,
-	}) as sinon.SinonStub<any[], any> & {raw: any};
+	}) as sinon.SinonStub<any[], any> & { raw: any };
 
 	beforeEach(() => {
 		sandbox.resetHistory();

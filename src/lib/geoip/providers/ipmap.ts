@@ -14,7 +14,7 @@ export type IpmapResponse = {
 		countryCodeAlpha2?: string;
 		latitude?: string;
 		longitude?: string;
-	}[]
+	}[];
 };
 
 export const ipmapLookup = async (addr: string): Promise<ProviderLocationInfo> => {
@@ -34,8 +34,8 @@ export const ipmapLookup = async (addr: string): Promise<ProviderLocationInfo> =
 		city: normalizeCityNamePublic(city),
 		normalizedCity: normalizeCityName(city),
 		asn: 0,
-		latitude: Number(location.latitude) ?? 0,
-		longitude: Number(location.longitude) ?? 0,
+		latitude: Number(location.latitude ?? 0),
+		longitude: Number(location.longitude ?? 0),
 		network: '',
 		normalizedNetwork: '',
 		isProxy: null,

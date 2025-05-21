@@ -17,7 +17,7 @@ import NullCache from '../cache/null-cache.js';
 import { normalizeCoordinate } from './utils.js';
 
 type Provider = 'ipmap' | 'ip2location' | 'ipinfo' | 'maxmind' | 'fastly';
-export type LocationInfo = ProbeLocation & { isProxy: boolean | null, isHosting: boolean | null, isAnycast: boolean | null };
+export type LocationInfo = ProbeLocation & { isProxy: boolean | null; isHosting: boolean | null; isAnycast: boolean | null };
 export type ProviderLocationInfo = Omit<LocationInfo, 'allowedCountries'> & { provider: Provider };
 export type NetworkInfo = {
 	network: string;

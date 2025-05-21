@@ -21,7 +21,7 @@ describe('rate limiter', () => {
 		app = await getTestServer();
 		requestAgent = request(app);
 
-		const httpResponse = await requestAgent.post('/v1/').send() as Response & {req: any};
+		const httpResponse = await requestAgent.post('/v1/').send() as Response & { req: any };
 		// Supertest renders request as ipv4
 		const clientIp = requestIp.getClientIp(httpResponse.req);
 		// Koa sees ipv6-ipv4 monster

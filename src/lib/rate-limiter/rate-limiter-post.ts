@@ -23,9 +23,9 @@ export const authenticatedRateLimiter = new RateLimiterRedis({
 });
 
 const getRateLimiter = (ctx: ExtendedContext): {
-	type: 'user'| 'ip',
-	id: string,
-	rateLimiter: RateLimiterRedis
+	type: 'user' | 'ip';
+	id: string;
+	rateLimiter: RateLimiterRedis;
 } => {
 	if (ctx.state.user?.id) {
 		return {

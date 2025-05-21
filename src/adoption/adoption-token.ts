@@ -24,7 +24,7 @@ type DProbe = {
 	name: string | null;
 	ip: string;
 	userId: string | null;
-}
+};
 
 export class AdoptionToken {
 	private tokensToUsers = new Map<string, User>();
@@ -102,7 +102,7 @@ export class AdoptionToken {
 		return user;
 	}
 
-	async validateToken (token: string, probe: Probe): Promise<{ message: string | null, level?: 'info' | 'warn' }> {
+	async validateToken (token: string, probe: Probe): Promise<{ message: string | null; level?: 'info' | 'warn' }> {
 		const user = await this.getUserByToken(token);
 
 		if (!user) {

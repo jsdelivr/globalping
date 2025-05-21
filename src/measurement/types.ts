@@ -182,7 +182,7 @@ export type TestProgress = {
 export type RequestType = 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 
 export type MeasurementOptions = PingTest | TracerouteTest | MtrTest | DnsTest | HttpTest;
-export type LocationWithLimit = Location & {limit?: number};
+export type LocationWithLimit = Location & { limit?: number };
 
 /**
  * Measurement Objects
@@ -191,7 +191,7 @@ export type LocationWithLimit = Location & {limit?: number};
 export type UserRequest = Omit<MeasurementRequest, 'locations' | 'limit'> & {
 	locations: LocationWithLimit[] | string;
 	limit: number;
-}
+};
 
 export type MeasurementRequest = {
 	type: 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
@@ -207,7 +207,7 @@ export type MeasurementResult = {
 		continent: string;
 		region: string;
 		country: string;
-		state: string | null; // eslint-disable-line @typescript-eslint/ban-types
+		state: string | null;
 		city: string;
 		asn: number;
 		longitude: number;
@@ -244,14 +244,14 @@ export type MeasurementRequestMessage = {
 		type: MeasurementRequest['type'];
 		target: MeasurementRequest['target'];
 		inProgressUpdates: MeasurementRequest['inProgressUpdates'];
-	}
-}
+	};
+};
 
 export type MeasurementProgressMessage = {
 	testId: string;
 	measurementId: string;
 	overwrite?: boolean;
-	result: TestProgress | HttpProgress
+	result: TestProgress | HttpProgress;
 };
 
 export type MeasurementResultMessage = {

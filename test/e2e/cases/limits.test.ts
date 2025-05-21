@@ -32,10 +32,12 @@ describe('/limits endpoint', () => {
 	});
 
 	it('should return an active limits object', async () => {
-		await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'ping',
-		} });
+		await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				target: 'www.jsdelivr.com',
+				type: 'ping',
+			},
+		});
 
 		const response = await got<any>('http://localhost:80/v1/limits', {
 			responseType: 'json',

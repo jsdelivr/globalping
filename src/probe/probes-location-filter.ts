@@ -68,7 +68,7 @@ export class ProbesLocationFilter {
 		return this.filterByLocationAndWeight(probes, distribution, limit);
 	}
 
-	public filterByIpVersion (probes: Probe[], ipVersion: 4 | 6) : Probe[] {
+	public filterByIpVersion (probes: Probe[], ipVersion: 4 | 6): Probe[] {
 		if (ipVersion === 4) {
 			return probes.filter(probe => probe.isIPv4Supported);
 		} else if (ipVersion === 6) {
@@ -87,10 +87,8 @@ export class ProbesLocationFilter {
 
 		Object.keys(location).forEach((key) => {
 			if (key === 'tags') {
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				filteredProbes = probes.filter(probe => location.tags!.every(tag => ProbesLocationFilter.hasTag(probe, tag)));
 			} else if (key === 'magic') {
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				filteredProbes = ProbesLocationFilter.magicFilter(filteredProbes, location.magic!);
 			} else {
 				const probeKey = Object.hasOwn(locationKeyMap, key) ? locationKeyMap[key as keyof typeof locationKeyMap] : key;
@@ -102,7 +100,7 @@ export class ProbesLocationFilter {
 		});
 
 		const isMagicSorting = Object.keys(location).includes('magic');
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
 		return isMagicSorting ? this.magicSort(filteredProbes, location.magic!) : this.diversifiedShuffle(filteredProbes);
 	}
 
@@ -178,12 +176,12 @@ export class ProbesLocationFilter {
 			.value();
 
 		// For each group, compute the frequency of the same city in earlier groups.
-		const counts: {[k: string]: number} = {};
+		const counts: { [k: string]: number } = {};
 		const shuffledProbes: Probe[] = [];
 
 		for (const group of groupedProbes) {
 			group.prevSameCity = counts[group.cityKey] ?? (counts[group.cityKey] = 0);
-			counts[group.cityKey]++;
+			counts[group.cityKey]!++;
 		}
 
 		// Prioritize less common cities within the same ranking group.

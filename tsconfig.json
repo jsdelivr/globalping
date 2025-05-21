@@ -9,12 +9,7 @@
 		"target": "ES2022",
 		"moduleResolution": "NodeNext",
 		"resolveJsonModule": true,
-		"sourceMap": true,
-		"paths": {
-			"chai": [
-				"./test/plugins/oas"
-			]
-		}
+		"sourceMap": true
 	},
 	"include": [
 		"src/**/*",

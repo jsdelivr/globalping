@@ -10,31 +10,32 @@ import { scopedLogger } from '../logger.js';
 import { getIsDcCity } from './dc-cities.js';
 
 type City = {
-	geonameId: string
-	name: string
-	asciiName: string
-	alternateNames: string
-	latitude: string
-	longitude: string
-	featureClass: string
-	featureCode: string
-	countryCode: string
-	cc2: string
-	admin1Code: string
-	admin2Code: string
-	admin3Code: string
-	admin4Code: string
-	population: number
-	elevation: string
-	dem: string
-	timezone: string
-	modificationDate: string
-}
+	geonameId: string;
+	name: string;
+	asciiName: string;
+	alternateNames: string;
+	latitude: string;
+	longitude: string;
+	featureClass: string;
+	featureCode: string;
+	countryCode: string;
+	cc2: string;
+	admin1Code: string;
+	admin2Code: string;
+	admin3Code: string;
+	admin4Code: string;
+	population: number;
+	elevation: string;
+	dem: string;
+	timezone: string;
+	modificationDate: string;
+};
 
 type CsvCityRow = City & { population: string };
 
 const logger = scopedLogger('city-approximation');
 
+// Cities with population >= 15 000
 export const URL = 'https://download.geonames.org/export/dump/cities15000.zip';
 const FILENAME = 'GEONAMES_CITIES.csv';
 
@@ -56,7 +57,7 @@ export const updateGeonamesCitiesFile = async (): Promise<void> => {
 let redis: RedisClient;
 let geonamesCities: Map<string, City> = new Map();
 
-export const getCity = async (original: { city: string, state: string | null }, country?: string, latitude?: number, longitude?: number): Promise<{ city: string, state: string | null }> => {
+export const getCity = async (original: { city: string; state: string | null }, country?: string, latitude?: number, longitude?: number): Promise<{ city: string; state: string | null }> => {
 	if (!original.city || original.city === '') { return original; }
 
 	const isDcCity = getIsDcCity(original.city, country);
@@ -92,7 +93,7 @@ const throttledPopulateCitiesList = throttle(async () => {
 	await populateCitiesList();
 }, 1);
 
-const getApproximatedCity = async (country?: string, latitude?: number, longitude?: number): Promise<{ city: string, state: string | null } | null> => {
+const getApproximatedCity = async (country?: string, latitude?: number, longitude?: number): Promise<{ city: string; state: string | null } | null> => {
 	if (geonamesCities.size === 0 || !redis) {
 		throw new Error('City approximation is not initialized.');
 	}

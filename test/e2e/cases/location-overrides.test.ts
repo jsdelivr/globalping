@@ -46,25 +46,30 @@ describe('location overrides', () => {
 	});
 
 	it('should create measurement by its new location', async () => {
-		const response = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'ping',
-			locations: [{
-				city: 'Miami',
-			}],
-		} });
+		const response = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				target: 'www.jsdelivr.com',
+				type: 'ping',
+				locations: [{
+					city: 'Miami',
+				}],
+			},
+		});
 
 		expect(response.statusCode).to.equal(202);
 	});
 
 	it('should not create measurement by its old location', async () => {
-		const response = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'ping',
-			locations: [{
-				city: 'Buenos Aires',
-			}],
-		}, throwHttpErrors: false });
+		const response = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				target: 'www.jsdelivr.com',
+				type: 'ping',
+				locations: [{
+					city: 'Buenos Aires',
+				}],
+			},
+			throwHttpErrors: false,
+		});
 
 		expect(response.statusCode).to.equal(422);
 	});

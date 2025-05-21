@@ -76,11 +76,14 @@ describe('measurement store', () => {
 	it('should call proper redis methods during timeout checks', async () => {
 		const now = clock.pause().now;
 
-		redisMock.hScan.resolves({ cursor: 0, tuples: [
-			{ field: 'id1', value: relativeDayUtc(-1).valueOf() }, // Timed out measurement
-			{ field: 'id2', value: relativeDayUtc(-1).valueOf() }, // Non-existing measurement
-			{ field: 'id3', value: relativeDayUtc(1).valueOf() }, // Not timed out measurement
-		] });
+		redisMock.hScan.resolves({
+			cursor: 0,
+			tuples: [
+				{ field: 'id1', value: relativeDayUtc(-1).valueOf() }, // Timed out measurement
+				{ field: 'id2', value: relativeDayUtc(-1).valueOf() }, // Non-existing measurement
+				{ field: 'id3', value: relativeDayUtc(1).valueOf() }, // Not timed out measurement
+			],
+		});
 
 		redisMock.json.mGet.resolves([{
 			id: 'id1',

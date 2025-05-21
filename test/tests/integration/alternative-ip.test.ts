@@ -34,7 +34,7 @@ describe('Alternative IPs', () => {
 		let socketId: string | undefined;
 
 		const probe = await addFakeProbe({
-			'api:connect:alt-ips-token': (data: { token: string, socketId: string }) => {
+			'api:connect:alt-ips-token': (data: { token: string; socketId: string }) => {
 				token = data.token;
 				socketId = data.socketId;
 			},
@@ -66,7 +66,7 @@ describe('Alternative IPs', () => {
 		let socketId: string | undefined;
 
 		const probe = await addFakeProbe({
-			'api:connect:alt-ips-token': (data: { token: string, socketId: string }) => {
+			'api:connect:alt-ips-token': (data: { token: string; socketId: string }) => {
 				token = data.token;
 				socketId = data.socketId;
 			},
@@ -102,7 +102,7 @@ describe('Alternative IPs', () => {
 		let socketId: string | undefined;
 
 		await addFakeProbe({
-			'api:connect:alt-ips-token': (data: { token: string, socketId: string }) => {
+			'api:connect:alt-ips-token': (data: { token: string; socketId: string }) => {
 				socketId = data.socketId;
 			},
 		});

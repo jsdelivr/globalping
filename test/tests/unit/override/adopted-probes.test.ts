@@ -443,7 +443,8 @@ describe('AdoptedProbes', () => {
 				ip: '9.9.9.9',
 				uuid: '9-9-9-9-9',
 				name: 'probe-2',
-			}];
+			},
+		];
 
 		sql.select.resolves(defaultAdoptions);
 

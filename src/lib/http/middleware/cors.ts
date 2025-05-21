@@ -13,7 +13,7 @@ export const corsHandler = () => async (ctx: Context, next: Next) => {
 	ctx.set('Timing-Allow-Origin', '*');
 	ctx.set('Vary', 'Accept-Encoding');
 
-	return next();
+	await next();
 };
 
 export const corsAuthHandler = () => {
@@ -47,7 +47,7 @@ export const corsAuthHandler = () => {
 		ctx.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
 		ctx.set('Access-Control-Expose-Headers', exposeHeaders);
 
-		return next();
+		await next();
 	};
 };
 

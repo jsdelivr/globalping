@@ -2,11 +2,11 @@ import type Koa from 'koa';
 import type Router from '@koa/router';
 
 export const docsLink = (options: DocsLinkOptions): DocsLinkMiddleware => async (ctx, next) => {
-	ctx.getDocsLink = (routeName = ctx._matchedRouteName as string, method = ctx.method === 'HEAD' ? 'GET' : ctx.method) => {
+	ctx.getDocsLink = (routeName = ctx._matchedRouteName!, method = ctx.method === 'HEAD' ? 'GET' : ctx.method) => {
 		return `${options.docsHost}/docs/api.globalping.io${getDocsPath(ctx.router, routeName, method)}`;
 	};
 
-	return next();
+	await next();
 };
 
 const getDocsPath = (router: Router<Koa.DefaultState, DocsLinkContext>, routeName: string | undefined, method: string) => {

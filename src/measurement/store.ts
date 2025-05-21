@@ -118,7 +118,6 @@ export class MeasurementStore {
 		}
 
 		const keys = ids.map(id => getMeasurementKey(id));
-		// eslint-disable-next-line @typescript-eslint/ban-types
 		const measurements = await this.redis.json.mGet(keys, '.') as Array<MeasurementRecord | null>;
 		const existingMeasurements = measurements.filter((measurement): measurement is MeasurementRecord => Boolean(measurement));
 
