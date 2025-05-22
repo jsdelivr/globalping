@@ -1,4 +1,3 @@
-
-|Supporter| Website |
-|--|--|
-| ![https://rarecloud.io](https://rarecloud.io/rarecloud.png) | [Website](https://rarecloud.io/) |
+| Supporter                                                                                                                 | Website                       |
+| :------------------------------------------------------------------------------------------------------------------------ | :---------------------------- |
+| <img src="https://rarecloud.io/rarecloud.png" alt="RareCloud logo" style="max-width: 150px; max-height: 80px; width: auto; height: auto;"> | [Website](https://rarecloud.io/) |
