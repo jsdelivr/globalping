@@ -1,4 +1,4 @@
-FROM node:20-bullseye-slim AS builder
+FROM node:24-bullseye-slim AS builder
 RUN apt-get update -y && apt-get install util-linux curl git -y
 
 ENV NODE_ENV=production
@@ -9,7 +9,7 @@ RUN npm ci --include=dev
 COPY . /app
 RUN npm run build
 
-FROM node:20-bullseye-slim
+FROM node:24-bullseye-slim
 RUN apt-get update -y && apt-get install tini util-linux curl -y
 
 ENV NODE_ENV=production
