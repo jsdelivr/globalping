@@ -28,7 +28,7 @@ export class ProbeValidator {
 		}
 
 		if (!probeId) {
-			throw new Error(`Probe ID not found for measurement ID: ${measurementId}, test ID: ${testId}`);
+			throw new Error(`Probe ID not found for measurement ID: ${measurementId}, test ID: ${testId}. Most likely test timeout was reached.`);
 		} else if (probeId !== probeUuid) {
 			throw new Error(`Probe ID is wrong for measurement ID: ${measurementId}, test ID: ${testId}. Expected: ${probeId}, actual: ${probeUuid}`);
 		}

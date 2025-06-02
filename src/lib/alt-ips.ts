@@ -175,7 +175,7 @@ export class AltIps {
 			}
 		} catch (e) {
 			if (e instanceof ProbeError) {
-				logger.warn('Failed to add an alt IP.', e, { altIp, ...probeInfo });
+				logger.warn('Alt IP rejected.', e, { altIp, ...probeInfo });
 			} else {
 				logger.error('Failed to add an alt IP.', e, { altIp, ...probeInfo });
 			}

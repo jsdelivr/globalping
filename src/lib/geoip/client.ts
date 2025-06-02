@@ -75,22 +75,22 @@ export default class GeoIpClient {
 		const isProxy = (ip2location?.isProxy && !isAddrWhitelisted(addr)) ?? null;
 
 		if (isProxy) {
-			throw new ProbeError(`vpn detected: ${addr}`);
+			throw new ProbeError(`VPN detected: ${addr}.`);
 		}
 
 		if (resultsWithCities.length === 0 || (resultsWithCities.length === 1 && resultsWithCities[0]?.provider === 'fastly')) {
-			throw new ProbeError(`unresolvable geoip: ${addr}`);
+			throw new ProbeError(`Unresolvable geoip: ${addr}.`);
 		}
 
 		const [ match, ranked ] = this.bestMatch(results);
 		const networkMatch = this.matchNetwork(match, ranked);
 
 		if (!networkMatch) {
-			throw new ProbeError(`unresolvable geoip: ${addr}`);
+			throw new ProbeError(`Unresolvable geoip: ${addr}.`);
 		}
 
 		if (BLOCKED_ASNS.includes(Number(networkMatch.asn))) {
-			throw new ProbeError(`vpn detected: ${addr}`);
+			throw new ProbeError(`VPN detected: ${addr}.`);
 		}
 
 		let isHosting = ip2location?.isHosting ?? null;

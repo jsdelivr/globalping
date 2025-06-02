@@ -16,11 +16,11 @@ export const probeMetadata = errorHandler(async (socket: ServerSocket, next: (er
 		socket.data.probe = await buildProbe(socket);
 		next();
 	} catch (error: unknown) {
-		let message = 'failed to collect probe metadata';
+		let message = 'Failed to collect probe metadata.';
 
 		if (error instanceof ProbeError) {
-			logger.warn(message, error);
 			message = error.message;
+			logger.warn(message, error);
 		} else {
 			logger.error(message, error);
 		}
