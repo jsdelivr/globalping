@@ -28,7 +28,6 @@ describe('Alternative IPs', () => {
 	});
 
 	it('should add alternative ip to the probe', async () => {
-		console.log('process.version', process.version);
 		nockGeoIpProviders();
 
 		let token: string | undefined;
