@@ -79,7 +79,7 @@
 		"@types/lodash": "^4.17.17",
 		"@types/mocha": "^10.0.10",
 		"@types/mock-fs": "^4.13.4",
-		"@types/node": "^20.17.50",
+		"@types/node": "^22.15.29",
 		"@types/physical-cpu-count": "^2.0.2",
 		"@types/request-ip": "^0.0.41",
 		"@types/semver": "^7.7.0",
