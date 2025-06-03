@@ -198,7 +198,7 @@ describe('geoip service', () => {
 		const info = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 		expect(info).to.be.an.instanceof(Error);
-		expect((info as Error).message).to.equal(`unresolvable geoip: ${MOCK_IP}`);
+		expect((info as Error).message).to.equal(`Unresolvable geoip: ${MOCK_IP}.`);
 	});
 
 	it('should use provided cities when aproximated cities wasn\'t found', async () => {
@@ -652,7 +652,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup('1.1.1.1').catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.include('vpn detected');
+			expect((response as Error).message).to.include('VPN detected');
 		});
 
 		it('should reject - is_proxy field is true', async () => {
@@ -661,7 +661,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.include('vpn detected');
+			expect((response as Error).message).to.include('VPN detected');
 		});
 
 		it('should reject - ASN is blocked', async () => {
@@ -670,7 +670,7 @@ describe('geoip service', () => {
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
 
 			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.include('vpn detected');
+			expect((response as Error).message).to.include('VPN detected');
 		});
 	});
 });

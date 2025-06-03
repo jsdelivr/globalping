@@ -27,7 +27,7 @@ describe('ProbeValidator', () => {
 
 	it('should throw for missing key', async () => {
 		const error = await probeValidator.validateProbe('missing-measurement-id', 'test-id', 'probe-uuid').catch(err => err);
-		expect(error.message).to.equal('Probe ID not found for measurement ID: missing-measurement-id, test ID: test-id');
+		expect(error.message).to.equal('Probe ID not found for measurement ID: missing-measurement-id, test ID: test-id. Most likely test timeout was reached.');
 	});
 
 	it('should search key in redis if not found locally', async () => {
