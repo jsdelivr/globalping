@@ -104,7 +104,7 @@ describe('http measurement', () => {
 	it('should return 400 for blacklisted target', async () => {
 		const response = await got.post('http://localhost:80/v1/measurements', {
 			json: {
-				target: 'dpd.96594345154.xyz',
+				target: 'google-ads.xyz',
 				type: 'http',
 			},
 			throwHttpErrors: false,
@@ -120,7 +120,7 @@ describe('http measurement', () => {
 				type: 'http',
 				measurementOptions: {
 					request: {
-						host: 'dpd.96594345154.xyz',
+						host: 'google-ads.xyz',
 					},
 				},
 			},

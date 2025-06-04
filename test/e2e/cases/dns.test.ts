@@ -65,7 +65,7 @@ describe('dns measurement', () => {
 		const response = await got.post('http://localhost:80/v1/measurements', {
 			json: {
 				type: 'dns',
-				target: 'dpd.96594345154.xyz',
+				target: 'google-ads.xyz',
 				measurementOptions: { resolver },
 			},
 			throwHttpErrors: false,
