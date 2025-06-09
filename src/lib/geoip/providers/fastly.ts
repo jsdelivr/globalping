@@ -9,11 +9,11 @@ import {
 } from '../utils.js';
 
 type FastlyResponse = {
-	as: {
+	'as': {
 		name: string;
 		number: number;
 	};
-	client: {
+	'client': {
 		proxy_desc: string;
 		proxy_type: string;
 	};

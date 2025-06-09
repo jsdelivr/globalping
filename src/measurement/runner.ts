@@ -21,7 +21,7 @@ export class MeasurementRunner {
 		private readonly metrics: MetricsAgent,
 	) {}
 
-	async run (ctx: ExtendedContext): Promise<{measurementId: string; probesCount: number;}> {
+	async run (ctx: ExtendedContext): Promise<{ measurementId: string; probesCount: number }> {
 		const userRequest = ctx.request.body as UserRequest;
 		const { onlineProbesMap, allProbes, request } = await this.router.findMatchingProbes(userRequest);
 		const ipVersion = userRequest.measurementOptions?.ipVersion;

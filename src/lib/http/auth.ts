@@ -13,20 +13,20 @@ const logger = scopedLogger('auth');
 const TOKEN_TTL = 2 * 60 * 1000;
 
 export type Token = {
-	user_created: string | null,
-	user_github_username: string | null,
-	value: string,
-	expire: Date | null,
-	scopes: string[],
-	origins: string[],
-	date_last_used: Date | null,
-	type: 'access_token' | 'refresh_token',
-}
+	user_created: string | null;
+	user_github_username: string | null;
+	value: string;
+	expire: Date | null;
+	scopes: string[];
+	origins: string[];
+	date_last_used: Date | null;
+	type: 'access_token' | 'refresh_token';
+};
 
 type Row = Omit<Token, 'scopes' | 'origins'> & {
-	scopes: string | null,
-	origins: string | null,
-}
+	scopes: string | null;
+	origins: string | null;
+};
 
 export class Auth {
 	private validTokens = new TTLCache<string, Token>({ ttl: TOKEN_TTL });

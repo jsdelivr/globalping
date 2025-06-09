@@ -306,6 +306,7 @@ describe('SyncedProbeList', () => {
 		const adoptedData = { tags } as Probe;
 
 		localFetchSocketsStub.resolves(sockets);
+		probeOverride.addAdoptedData.reset();
 		probeOverride.addAdoptedData.returns([{ ...probe1, ...adoptedData }, probe2 ]);
 
 		const fetchedProbesPromise = syncedProbeList.fetchProbes();
@@ -339,6 +340,7 @@ describe('SyncedProbeList', () => {
 		const updatedProbe1 = { ...probe1, location: { ...probe1.location, city: 'Miami' } } as unknown as Probe;
 
 		localFetchSocketsStub.resolves(sockets);
+		probeOverride.addAdminData.reset();
 		probeOverride.addAdminData.returns([ updatedProbe1, probe2 ]);
 
 		const fetchedProbesPromise = syncedProbeList.fetchProbes();

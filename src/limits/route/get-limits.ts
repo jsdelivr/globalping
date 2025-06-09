@@ -17,9 +17,11 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 				create: rateLimitState,
 			},
 		},
-		...(ctx.state.user?.id && { credits: {
-			remaining: remainingCredits,
-		} }),
+		...(ctx.state.user?.id && {
+			credits: {
+				remaining: remainingCredits,
+			},
+		}),
 	};
 };
 

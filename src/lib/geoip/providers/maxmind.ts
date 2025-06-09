@@ -22,7 +22,7 @@ const query = async (addr: string, retryCounter = 0): Promise<City> => {
 		return city;
 	} catch (error: unknown) {
 		if (isMaxmindError(error)) {
-			if (error.code === 'SERVER_ERROR' && retryCounter < 3) {
+			if ([ 'SERVER_ERROR', 'HTTP_STATUS_CODE_ERROR', 'INVALID_RESPONSE_BODY', 'FETCH_ERROR' ].includes(error.code) && retryCounter < 3) {
 				return query(addr, retryCounter + 1);
 			}
 

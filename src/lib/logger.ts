@@ -3,7 +3,6 @@ import apmAgent from 'elastic-apm-node';
 import ElasticWriter from 'h-logger2-elastic';
 import { ConsoleWriter, Logger } from 'h-logger2';
 import { Client as ElasticSearch } from '@elastic/elasticsearch';
-// eslint-disable-next-line n/no-missing-import
 import type { LogLevelValue } from 'h-logger2/src/types.js';
 
 let esClient: ElasticSearch | undefined;

@@ -1,5 +1,5 @@
 
-import dcCitiesJson from './dc-cities.json' assert { type: 'json' };
+import dcCitiesJson from './dc-cities.json' with { type: 'json' };
 import { normalizeCityName } from './utils.js';
 
 const dcCountries = new Map(dcCitiesJson.map(({ country, cities }) => {

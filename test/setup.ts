@@ -33,7 +33,7 @@ import { extendSinonClock } from './utils/clock.js';
 
 global.clock = extendSinonClock(clock);
 
-const dbConfig = config.get<{ connection: { database: string, host: string } }>('db');
+const dbConfig = config.get<{ connection: { database: string; host: string } }>('db');
 
 if (!dbConfig.connection.database.endsWith('-test') && dbConfig.connection.host !== 'localhost') {
 	throw new Error(`Database name for test env needs to end with "-test" or the host must be "localhost". Got "${dbConfig.connection.database}"@"${dbConfig.connection.host}".`);

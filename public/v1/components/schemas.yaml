@@ -375,7 +375,8 @@ components:
       properties:
         port:
           type: integer
-          description: The destination port for the data packets.
+          description: |
+            The destination port for the data packets. Applies only for the `TCP` protocol.
           minimum: 0
           maximum: 65535
           default: 80
@@ -419,7 +420,8 @@ components:
       properties:
         port:
           type: integer
-          description: The port number to use.
+          description: |
+            The destination port for the data packets. Applies only for the `TCP` and `UDP` protocols.
           minimum: 0
           maximum: 65535
           default: 80

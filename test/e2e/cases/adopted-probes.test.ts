@@ -67,49 +67,58 @@ describe('adopted probes', () => {
 	});
 
 	it('should create measurement by its new location', async () => {
-		const response = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'ping',
-			locations: [{
-				city: 'San Luis',
-			}],
-		} });
+		const response = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				target: 'www.jsdelivr.com',
+				type: 'ping',
+				locations: [{
+					city: 'San Luis',
+				}],
+			},
+		});
 
 		expect(response.statusCode).to.equal(202);
 	});
 
 	it('should not create measurement by its old location', async () => {
-		const response = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'ping',
-			locations: [{
-				city: 'Buenos Aires',
-			}],
-		}, throwHttpErrors: false });
+		const response = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				target: 'www.jsdelivr.com',
+				type: 'ping',
+				locations: [{
+					city: 'Buenos Aires',
+				}],
+			},
+			throwHttpErrors: false,
+		});
 
 		expect(response.statusCode).to.equal(422);
 	});
 
 	it('should create measurement by assigneduser tag', async () => {
-		const response = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'ping',
-			locations: [{
-				tags: [ 'u-jimaek:dashboardtag1' ],
-			}],
-		} });
+		const response = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				target: 'www.jsdelivr.com',
+				type: 'ping',
+				locations: [{
+					tags: [ 'u-jimaek:dashboardtag1' ],
+				}],
+			},
+		});
 
 		expect(response.statusCode).to.equal(202);
 	});
 
 	it('should create measurement by global user tag', async () => {
-		const response = await got.post('http://localhost:80/v1/measurements', { json: {
-			target: 'www.jsdelivr.com',
-			type: 'ping',
-			locations: [{
-				tags: [ 'u-jsdelivr' ],
-			}],
-		} });
+		const response = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				target: 'www.jsdelivr.com',
+				type: 'ping',
+				locations: [{
+					tags: [ 'u-jsdelivr' ],
+				}],
+			},
+		});
 
 		expect(response.statusCode).to.equal(202);
 	});

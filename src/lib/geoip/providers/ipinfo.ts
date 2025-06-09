@@ -17,7 +17,7 @@ type IpinfoResponse = {
 	loc: string | undefined;
 	privacy?: {
 		hosting: boolean;
-	},
+	};
 	anycast?: boolean;
 };
 

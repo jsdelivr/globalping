@@ -7,13 +7,13 @@ const ER_CONSTRAINT_FAILED_CODE = 4025;
 export class Credits {
 	constructor (private readonly sql: Knex) {}
 
-	async consume (userId: string, credits: number): Promise<{ isConsumed: boolean, remainingCredits: number }> {
+	async consume (userId: string, credits: number): Promise<{ isConsumed: boolean; remainingCredits: number }> {
 		let numberOfUpdates = null;
 
 		try {
 			numberOfUpdates = await this.sql(CREDITS_TABLE).where({ user_id: userId }).update({ amount: this.sql.raw('amount - ?', [ credits ]) });
 		} catch (error) {
-			if (error && (error as Error & {errno?: number}).errno === ER_CONSTRAINT_FAILED_CODE) {
+			if (error && (error as Error & { errno?: number }).errno === ER_CONSTRAINT_FAILED_CODE) {
 				const remainingCredits = await this.getRemainingCredits(userId);
 				return { isConsumed: false, remainingCredits };
 			}

@@ -8,7 +8,7 @@ import { errorHandler } from '../../../../src/lib/ws/helper/error-handler.js';
 class MockSocket {
 	public isConnected = true;
 
-	public store: Array<{type: string; event: string; payload: any}> = [];
+	public store: Array<{ type: string; event: string; payload: any }> = [];
 
 	public request: any = {};
 

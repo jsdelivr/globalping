@@ -75,7 +75,7 @@ export type OfflineProbe = Modify<Probe, {
 		totalMemory: null;
 		totalDiskSize: null;
 		availableDiskSpace: null;
-	}
+	};
 	index: [];
 	tags: {
 		type: 'offline';
@@ -86,7 +86,7 @@ export type OfflineProbe = Modify<Probe, {
 			load: [];
 		};
 		jobs: {
-			count: null
+			count: null;
 		};
 	};
-}>
+}>;
