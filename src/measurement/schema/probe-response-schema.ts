@@ -19,7 +19,7 @@ export const pingResultSchema = Joi.object<PingResult>({
 	resolvedHostname: Joi.string().max(1024).allow(null),
 	timings: Joi.array().max(1024).items(Joi.object({
 		rtt: Joi.number().required(),
-		ttl: Joi.number().required(),
+		ttl: Joi.number(),
 	})),
 	stats: Joi.object({
 		min: Joi.number().allow(null).required(),

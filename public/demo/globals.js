@@ -7,6 +7,9 @@ const ALLOWED_LOCATION_TYPES = [ 'continent', 'region', 'country', 'state', 'cit
 // ip versions
 const ALLOWED_IP_VERSIONS = [ 4, 6 ];
 
+// ping
+const ALLOWED_PING_PROTOCOLS = [ 'TCP', 'ICMP' ];
+
 // traceroute
 const ALLOWED_TRACE_PROTOCOLS = [ 'TCP', 'UDP', 'ICMP' ];
 
