@@ -15,6 +15,8 @@ describe('traceroute measurement', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.hops.at(-1).timings.at(-1).rtt).to.be.above(1);
+		expect(response.body.results[0].result.hops.at(-1).timings.at(-1).rtt).to.be.below(1000);
 		expect(response).to.matchApiSchema();
 	});
 
@@ -33,6 +35,8 @@ describe('traceroute measurement', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.hops.at(-1).timings.at(-1).rtt).to.be.above(1);
+		expect(response.body.results[0].result.hops.at(-1).timings.at(-1).rtt).to.be.below(1000);
 		expect(response).to.matchApiSchema();
 	});
 
@@ -48,6 +52,8 @@ describe('traceroute measurement', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.hops.at(-1).timings.at(-1).rtt).to.be.above(1);
+		expect(response.body.results[0].result.hops.at(-1).timings.at(-1).rtt).to.be.below(1000);
 		expect(response).to.matchApiSchema();
 	});
 
