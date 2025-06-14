@@ -49,6 +49,10 @@ module.exports = {
 			port: 3306,
 		},
 	},
+	data: {
+		domainBlacklistPath: 'data/DOMAIN_BLACKLIST.json',
+		ipBlacklistPath: 'data/IP_BLACKLIST.json',
+	},
 	dashboard: {
 		directusUrl: 'https://dash-directus.globalping.io',
 	},
