@@ -100,6 +100,8 @@ export const COMMAND_DEFAULTS = {
 	},
 	ping: {
 		packets: 3,
+		protocol: 'ICMP',
+		port: 80,
 		ipVersion: 4,
 	},
 	traceroute: {
