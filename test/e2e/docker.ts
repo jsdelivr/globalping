@@ -40,6 +40,8 @@ class DockerManager {
 				`REDIS_CLUSTER_MEASUREMENTS_NODES_1=${redisUrls[3]}`,
 				`REDIS_CLUSTER_MEASUREMENTS_NODES_2=${redisUrls[4]}`,
 				`REDIS_SHARED_OPTIONS_PASSWORD=${config.get<string>('redis.sharedOptions.password')}`,
+				'DATA_DOMAIN_BLACKLIST_PATH=data/DOMAIN_BLACKLIST_E2E.json',
+				'DATA_IP_BLACKLIST_PATH=data/IP_BLACKLIST_E2E.json',
 				`DB_CONNECTION_HOST=${dbConnectionHost}`,
 				`SERVER_PROCESSES=${processes}`,
 				`MEASUREMENT_TIMEOUT=5`,
