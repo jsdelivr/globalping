@@ -63,6 +63,7 @@ components:
         - SVCB
       default: A
     HttpProtocol:
+      type: string
       enum:
         - HTTP
         - HTTPS
