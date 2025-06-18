@@ -781,6 +781,8 @@ describe('command schema', async () => {
 				target: 'abc.com',
 				measurementOptions: {
 					packets: 1,
+					protocol: 'ICMP',
+					port: 80,
 					ipVersion: 4,
 				},
 			};
@@ -810,6 +812,8 @@ describe('command schema', async () => {
 				inProgressUpdates: false,
 				measurementOptions: {
 					packets: 3,
+					protocol: 'ICMP',
+					port: 80,
 					ipVersion: 4,
 				},
 				limit: 1,
@@ -827,6 +831,8 @@ describe('command schema', async () => {
 				target: 'abc.com',
 				measurementOptions: {
 					packets: 1,
+					protocol: 'ICMP',
+					port: 80,
 					ipVersion: 6,
 				},
 			};
@@ -850,6 +856,8 @@ describe('command schema', async () => {
 				target: '1.1.1.1',
 				measurementOptions: {
 					packets: 1,
+					protocol: 'ICMP',
+					port: 80,
 					ipVersion: 4,
 				},
 			};
@@ -873,6 +881,8 @@ describe('command schema', async () => {
 				limit: 1,
 				measurementOptions: {
 					packets: 3,
+					protocol: 'ICMP',
+					port: 80,
 					ipVersion: 4,
 				},
 			};
@@ -896,6 +906,8 @@ describe('command schema', async () => {
 				limit: 1,
 				measurementOptions: {
 					packets: 3,
+					protocol: 'ICMP',
+					port: 80,
 					ipVersion: 6,
 				},
 			};
