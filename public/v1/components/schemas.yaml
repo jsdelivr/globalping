@@ -435,6 +435,12 @@ components:
       title: MtrOptions
       additionalProperties: false
       properties:
+        packets:
+          type: integer
+          description: The number of packets to send to each hop.
+          default: 3
+          minimum: 1
+          maximum: 16
         protocol:
           $ref: 'schemas.yaml#/components/schemas/MtrProtocol'
         port:
@@ -446,12 +452,6 @@ components:
           default: 80
         ipVersion:
           $ref: 'schemas.yaml#/components/schemas/IpVersion'
-        packets:
-          type: integer
-          description: The number of packets to send to each hop.
-          default: 3
-          minimum: 1
-          maximum: 16
     MeasurementHttpOptions:
       type: object
       title: HttpOptions
@@ -482,14 +482,14 @@ components:
                 type: string
         resolver:
           $ref: 'schemas.yaml#/components/schemas/MeasurementResolver'
+        protocol:
+          $ref: 'schemas.yaml#/components/schemas/HttpProtocol'
         port:
           type: integer
           description: The port number to use.
           minimum: 0
           maximum: 65535
           default: 80
-        protocol:
-          $ref: 'schemas.yaml#/components/schemas/HttpProtocol'
         ipVersion:
           $ref: 'schemas.yaml#/components/schemas/IpVersion'
     MeasurementProbesCount:
