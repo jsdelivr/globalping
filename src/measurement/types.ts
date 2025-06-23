@@ -11,6 +11,8 @@ export type TestResult = {
 
 type PingTest = {
 	packets: number;
+	protocol: 'TCP' | 'ICMP';
+	port: number;
 	ipVersion: 4 | 6;
 };
 
