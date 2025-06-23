@@ -161,6 +161,7 @@ export class MeasurementStore {
 			.map(({ field: id }) => id);
 
 		await this.markFinishedByTimeout(timedOutIds);
+		await this.persistentRedis.zRemRangeByScore('gp:measurement-keys-by-date', '-inf', Date.now() - config.get<number>('measurement.resultTTL') * 1000);
 	}
 
 	scheduleCleanup () {
