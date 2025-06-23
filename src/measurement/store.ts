@@ -6,6 +6,7 @@ import { scopedLogger } from '../lib/logger.js';
 import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType, MeasurementResultMessage } from './types.js';
 import { getDefaults } from './schema/utils.js';
 import { getMeasurementRedisClient, type RedisCluster } from '../lib/redis/measurement-client.js';
+import { getPersistentRedisClient, type RedisClient } from '../lib/redis/persistent-client.js';
 
 const logger = scopedLogger('store');
 
@@ -34,8 +35,14 @@ const subtractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unk
 	return result;
 };
 
+// Adding a random suffix to minimize the chance of duplicate.
+const getDateScore = () => Date.now() * 1000 + Math.floor(Math.random() * 1000);
+
 export class MeasurementStore {
-	constructor (private readonly redis: RedisCluster) {}
+	constructor (
+		private readonly redis: RedisCluster,
+		private readonly persistentRedis: RedisClient,
+	) {}
 
 	async getMeasurementString (id: string): Promise<string> {
 		const key = getMeasurementKey(id);
@@ -109,6 +116,7 @@ export class MeasurementStore {
 		await Promise.all([
 			this.redis.markFinished(id),
 			this.redis.hDel('gp:in-progress', id),
+			this.persistentRedis.zAdd('gp:measurement-keys-by-date', [{ score: getDateScore(), value: getMeasurementKey(id) }]),
 		]);
 	}
 
@@ -135,9 +143,10 @@ export class MeasurementStore {
 		const updateMeasurementPromises = existingMeasurements.map(measurement => this.redis.json.set(getMeasurementKey(measurement.id), '$', measurement));
 
 		await Promise.all([
-			this.redis.hDel('gp:in-progress', ids),
 			...ids.map(id => this.redis.del((getMeasurementKey(id, 'probes_awaiting')))),
 			...updateMeasurementPromises,
+			this.redis.hDel('gp:in-progress', ids),
+			this.persistentRedis.zAdd('gp:measurement-keys-by-date', ids.map(id => ({ score: getDateScore(), value: getMeasurementKey(id) }))),
 		]);
 	}
 
@@ -155,6 +164,7 @@ export class MeasurementStore {
 			.map(({ field: id }) => id);
 
 		await this.markFinishedByTimeout(timedOutIds);
+		await this.persistentRedis.zRemRangeByScore('gp:measurement-keys-by-date', '-inf', getDateScore() - config.get<number>('measurement.resultTTL') * 1000 * 1000);
 	}
 
 	scheduleCleanup () {
@@ -228,7 +238,7 @@ let store: MeasurementStore;
 
 export const getMeasurementStore = () => {
 	if (!store) {
-		store = new MeasurementStore(getMeasurementRedisClient());
+		store = new MeasurementStore(getMeasurementRedisClient(), getPersistentRedisClient());
 		store.scheduleCleanup();
 	}
 

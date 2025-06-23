@@ -11,6 +11,8 @@ export type TestResult = {
 
 type PingTest = {
 	packets: number;
+	protocol: 'TCP' | 'ICMP';
+	port: number;
 	ipVersion: 4 | 6;
 };
 
@@ -125,7 +127,7 @@ export type DnsRegularResult = {
 };
 
 export type DnsTraceResult = {
-	hops?: DnsRegularResult;
+	hops?: Omit<DnsRegularResult, 'statusCode' | 'statusCodeName'>[];
 };
 
 export type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);

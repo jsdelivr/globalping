@@ -1,3 +1,4 @@
+import config from 'config';
 import * as td from 'testdouble';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
@@ -52,11 +53,17 @@ describe('measurement store', () => {
 		markFinished: sandbox.stub(),
 	};
 
+	const persistentRedisMock = {
+		zAdd: sandbox.stub(),
+		zRemRangeByScore: sandbox.stub(),
+	};
+
 	sandbox.stub(Math, 'random').returns(0.8);
 
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', null, () => 'measurementid');
 		await td.replaceEsm('../../../../src/lib/redis/measurement-client.ts', { getMeasurementRedisClient: () => redisMock });
+		await td.replaceEsm('../../../../src/lib/redis/persistent-client.ts', { getPersistentRedisClient: () => persistentRedisMock });
 		getMeasurementStore = (await import('../../../../src/measurement/store.js')).getMeasurementStore;
 	});
 
@@ -111,6 +118,8 @@ describe('measurement store', () => {
 		expect(redisMock.json.mGet.firstCall.args).to.deep.equal([ [ 'gp:m:{id1}:results', 'gp:m:{id2}:results' ], '.' ]);
 		expect(redisMock.hDel.callCount).to.equal(1);
 		expect(redisMock.hDel.firstCall.args).to.deep.equal([ 'gp:in-progress', [ 'id1', 'id2' ] ]);
+		expect(persistentRedisMock.zRemRangeByScore.callCount).to.equal(1);
+		expect(persistentRedisMock.zRemRangeByScore.firstCall.args[2]).to.be.within((now - config.get<number>('measurement.resultTTL') * 1000) * 1000, Date.now() * 1000);
 		expect(redisMock.del.callCount).to.equal(2);
 		expect(redisMock.del.firstCall.args).to.deep.equal([ 'gp:m:{id1}:probes_awaiting' ]);
 		expect(redisMock.del.secondCall.args).to.deep.equal([ 'gp:m:{id2}:probes_awaiting' ]);
@@ -144,7 +153,7 @@ describe('measurement store', () => {
 		await store.createMeasurement(
 			{
 				type: 'ping',
-				measurementOptions: { packets: 3, ipVersion: 4 },
+				measurementOptions: { packets: 3, ipVersion: 4, port: 80, protocol: 'ICMP' },
 				target: 'jsdelivr.com',
 				locations: [],
 				limit: 4,
@@ -269,7 +278,7 @@ describe('measurement store', () => {
 		await store.createMeasurement(
 			{
 				type: 'ping',
-				measurementOptions: { packets: 3, ipVersion: 4 },
+				measurementOptions: { packets: 3, ipVersion: 4, port: 80, protocol: 'ICMP' },
 				target: 'jsdelivr.com',
 				locations: [],
 				limit: 1,
@@ -381,7 +390,7 @@ describe('measurement store', () => {
 		await store.createMeasurement(
 			{
 				type: 'ping',
-				measurementOptions: { packets: 3, ipVersion: 4 },
+				measurementOptions: { packets: 3, ipVersion: 4, port: 80, protocol: 'ICMP' },
 				target: 'jsdelivr.com',
 				locations: [],
 				limit: 1,
@@ -601,6 +610,7 @@ describe('measurement store', () => {
 	});
 
 	it('should mark measurement as finished if storeMeasurementResult returned record', async () => {
+		const now = clock.pause().now;
 		redisMock.recordResult.resolves({});
 
 		const store = getMeasurementStore();
@@ -623,6 +633,12 @@ describe('measurement store', () => {
 
 		expect(redisMock.markFinished.callCount).to.equal(1);
 		expect(redisMock.markFinished.args[0]).to.deep.equal([ 'measurementid' ]);
+		expect(redisMock.hDel.callCount).to.equal(1);
+		expect(redisMock.hDel.args[0]).to.deep.equal([ 'gp:in-progress', 'measurementid' ]);
+		expect(persistentRedisMock.zAdd.callCount).to.equal(1);
+		expect(persistentRedisMock.zAdd.args[0]?.[0]).to.equal('gp:measurement-keys-by-date');
+		expect(persistentRedisMock.zAdd.args[0]?.[1][0].value).to.equal('gp:m:{measurementid}:results');
+		expect(persistentRedisMock.zAdd.args[0]?.[1][0].score).to.be.within(now, Date.now() * 1000 + 800);
 	});
 
 	it('should not mark measurement as finished if storeMeasurementResult didn\'t return record', async () => {
