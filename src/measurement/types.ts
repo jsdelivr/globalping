@@ -127,7 +127,7 @@ export type DnsRegularResult = {
 };
 
 export type DnsTraceResult = {
-	hops?: DnsRegularResult;
+	hops?: Omit<DnsRegularResult, 'statusCode' | 'statusCodeName'>[];
 };
 
 export type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);

@@ -35,6 +35,9 @@ const subtractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unk
 	return result;
 };
 
+// Adding a random suffix to minimize the chance of duplicate.
+const getDateScore = () => Date.now() * 1000 + Math.floor(Math.random() * 1000);
+
 export class MeasurementStore {
 	constructor (
 		private readonly redis: RedisCluster,
@@ -113,7 +116,7 @@ export class MeasurementStore {
 		await Promise.all([
 			this.redis.markFinished(id),
 			this.redis.hDel('gp:in-progress', id),
-			this.persistentRedis.zAdd('gp:measurement-keys-by-date', [{ score: Date.now(), value: getMeasurementKey(id) }]),
+			this.persistentRedis.zAdd('gp:measurement-keys-by-date', [{ score: getDateScore(), value: getMeasurementKey(id) }]),
 		]);
 	}
 
@@ -143,7 +146,7 @@ export class MeasurementStore {
 			...ids.map(id => this.redis.del((getMeasurementKey(id, 'probes_awaiting')))),
 			...updateMeasurementPromises,
 			this.redis.hDel('gp:in-progress', ids),
-			this.persistentRedis.zAdd('gp:measurement-keys-by-date', ids.map(id => ({ score: Date.now(), value: getMeasurementKey(id) }))),
+			this.persistentRedis.zAdd('gp:measurement-keys-by-date', ids.map(id => ({ score: getDateScore(), value: getMeasurementKey(id) }))),
 		]);
 	}
 
@@ -161,7 +164,7 @@ export class MeasurementStore {
 			.map(({ field: id }) => id);
 
 		await this.markFinishedByTimeout(timedOutIds);
-		await this.persistentRedis.zRemRangeByScore('gp:measurement-keys-by-date', '-inf', Date.now() - config.get<number>('measurement.resultTTL') * 1000);
+		await this.persistentRedis.zRemRangeByScore('gp:measurement-keys-by-date', '-inf', getDateScore() - config.get<number>('measurement.resultTTL') * 1000 * 1000);
 	}
 
 	scheduleCleanup () {
