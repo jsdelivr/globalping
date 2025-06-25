@@ -63,6 +63,7 @@ components:
         - SVCB
       default: A
     HttpProtocol:
+      type: string
       enum:
         - HTTP
         - HTTPS
@@ -90,6 +91,13 @@ components:
         - ICMP
         - TCP
         - UDP
+      default: ICMP
+    PingProtocol:
+      type: string
+      description: The transport protocol to use.
+      enum:
+        - ICMP
+        - TCP
       default: ICMP
     TracerouteProtocol:
       type: string
@@ -366,6 +374,15 @@ components:
           default: 3
           minimum: 1
           maximum: 16
+        protocol:
+          $ref: 'schemas.yaml#/components/schemas/PingProtocol'
+        port:
+          type: integer
+          description: |
+            The destination port for the packets. Applies only for the `TCP` protocol.
+          minimum: 0
+          maximum: 65535
+          default: 80
         ipVersion:
           $ref: 'schemas.yaml#/components/schemas/IpVersion'
     MeasurementTracerouteOptions:
@@ -373,15 +390,15 @@ components:
       title: TracerouteOptions
       additionalProperties: false
       properties:
+        protocol:
+          $ref: 'schemas.yaml#/components/schemas/TracerouteProtocol'
         port:
           type: integer
           description: |
-            The destination port for the data packets. Applies only for the `TCP` protocol.
+            The destination port for the packets. Applies only for the `TCP` protocol.
           minimum: 0
           maximum: 65535
           default: 80
-        protocol:
-          $ref: 'schemas.yaml#/components/schemas/TracerouteProtocol'
         ipVersion:
           $ref: 'schemas.yaml#/components/schemas/IpVersion'
     MeasurementDnsOptions:
@@ -398,14 +415,14 @@ components:
               $ref: 'schemas.yaml#/components/schemas/DnsQueryType'
         resolver:
           $ref: 'schemas.yaml#/components/schemas/MeasurementResolver'
+        protocol:
+          $ref: 'schemas.yaml#/components/schemas/DnsProtocol'
         port:
           type: integer
           description: The port number to send the query to.
           minimum: 0
           maximum: 65535
           default: 53
-        protocol:
-          $ref: 'schemas.yaml#/components/schemas/DnsProtocol'
         ipVersion:
           $ref: 'schemas.yaml#/components/schemas/IpVersion'
         trace:
@@ -418,23 +435,23 @@ components:
       title: MtrOptions
       additionalProperties: false
       properties:
-        port:
-          type: integer
-          description: |
-            The destination port for the data packets. Applies only for the `TCP` and `UDP` protocols.
-          minimum: 0
-          maximum: 65535
-          default: 80
-        protocol:
-          $ref: 'schemas.yaml#/components/schemas/MtrProtocol'
-        ipVersion:
-          $ref: 'schemas.yaml#/components/schemas/IpVersion'
         packets:
           type: integer
           description: The number of packets to send to each hop.
           default: 3
           minimum: 1
           maximum: 16
+        protocol:
+          $ref: 'schemas.yaml#/components/schemas/MtrProtocol'
+        port:
+          type: integer
+          description: |
+            The destination port for the packets. Applies only for the `TCP` and `UDP` protocols.
+          minimum: 0
+          maximum: 65535
+          default: 80
+        ipVersion:
+          $ref: 'schemas.yaml#/components/schemas/IpVersion'
     MeasurementHttpOptions:
       type: object
       title: HttpOptions
@@ -465,14 +482,14 @@ components:
                 type: string
         resolver:
           $ref: 'schemas.yaml#/components/schemas/MeasurementResolver'
+        protocol:
+          $ref: 'schemas.yaml#/components/schemas/HttpProtocol'
         port:
           type: integer
           description: The port number to use.
           minimum: 0
           maximum: 65535
           default: 80
-        protocol:
-          $ref: 'schemas.yaml#/components/schemas/HttpProtocol'
         ipVersion:
           $ref: 'schemas.yaml#/components/schemas/IpVersion'
     MeasurementProbesCount:
@@ -902,15 +919,28 @@ components:
                 An array containing details for each packet.
                 All times are in milliseconds.
               items:
-                type: object
-                required:
-                  - rtt
-                  - ttl
-                properties:
-                  rtt:
-                    $ref: 'schemas.yaml#/components/schemas/TimingPacketRtt'
-                  ttl:
-                    $ref: 'schemas.yaml#/components/schemas/TimingPacketTtl'
+                anyOf:
+                  - $ref: 'schemas.yaml#/components/schemas/IcmpPingTiming'
+                  - $ref: 'schemas.yaml#/components/schemas/TcpPingTiming'
+    IcmpPingTiming:
+      type: object
+      title: IcmpPingTiming
+      required:
+        - rtt
+        - ttl
+      properties:
+        rtt:
+          $ref: 'schemas.yaml#/components/schemas/TimingPacketRtt'
+        ttl:
+          $ref: 'schemas.yaml#/components/schemas/TimingPacketTtl'
+    TcpPingTiming:
+      type: object
+      title: TcpPingTiming
+      required:
+        - rtt
+      properties:
+        rtt:
+          $ref: 'schemas.yaml#/components/schemas/TimingPacketRtt'
     FinishedTracerouteTestResult:
       title: FinishedTracerouteTestResult
       description: Represents a `finished` traceroute test.

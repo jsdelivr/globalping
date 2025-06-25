@@ -97,6 +97,8 @@ const pingTargetSchema = Joi.alternatives()
 
 export const pingSchema = Joi.object({
 	packets: Joi.number().min(1).max(16).default(COMMAND_DEFAULTS.ping.packets),
+	protocol: Joi.string().valid('TCP', 'ICMP').insensitive().default(COMMAND_DEFAULTS.ping.protocol),
+	port: Joi.number().port().default(COMMAND_DEFAULTS.ping.port),
 	ipVersion: ipVersionSchema,
 }).default().messages(schemaErrorMessages);
 

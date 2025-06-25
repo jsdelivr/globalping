@@ -18,6 +18,7 @@ describe('dns measurement', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.answers.length).to.be.above(0);
 		expect(response.body.results[0].result.hops).to.not.exist;
 		expect(response).to.matchApiSchema();
 	});
@@ -57,6 +58,7 @@ describe('dns measurement', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.answers.length).to.be.above(0);
 		expect(response.body.results[0].result.hops).to.not.exist;
 		expect(response).to.matchApiSchema();
 	});

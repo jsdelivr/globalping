@@ -15,6 +15,9 @@ describe('mtr measurement', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.hops.length).to.be.above(0);
+		expect(response.body.results[0].result.hops.at(-1).stats.avg).to.be.above(1);
+		expect(response.body.results[0].result.hops.at(-1).stats.avg).to.be.below(1000);
 		expect(response).to.matchApiSchema();
 	});
 
@@ -33,6 +36,8 @@ describe('mtr measurement', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.hops.at(-1).stats.avg).to.be.above(1);
+		expect(response.body.results[0].result.hops.at(-1).stats.avg).to.be.below(1000);
 		expect(response).to.matchApiSchema();
 	});
 
@@ -48,6 +53,8 @@ describe('mtr measurement', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.hops.at(-1).stats.avg).to.be.above(1);
+		expect(response.body.results[0].result.hops.at(-1).stats.avg).to.be.below(1000);
 		expect(response).to.matchApiSchema();
 	});
 
