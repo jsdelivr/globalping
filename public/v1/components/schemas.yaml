@@ -146,9 +146,15 @@ components:
           type: string
           description: |
             Locations defined in a single string instead of the respective location properties.
-            The API performs fuzzy matching on the `country`, `city`, `state`, `continent`, `region`, `asn` (using `AS` prefix, e.g., `AS123`), `tags`, and `network` values.
+            The API performs fuzzy matching on the `country`, `city`, `state` (using `US-` prefix, e.g., `US-NY`), `continent`, `region`, `asn` (using `AS` prefix, e.g., `AS123`), `tags`, and `network` values.
             Supports full names, ISO codes (where applicable), and common aliases.
-            Multiple conditions can be combined using the `+` character, which behaves like a logical `AND`.
+            Multiple conditions can be combined using the `+` character, which behaves as a logical `AND`.
+
+            Note that in some cases, the names of cities, states, and countries, as well as the ISO codes of countries and continents, overlap. Additionally, city names are not unique across countries.
+            We recommend that you:
+             - refer to US states via their full [ISO 3166-2](https://en.wikipedia.org/wiki/ISO_3166-2:US) codes, e.g., `US-NY`,
+             - refer to cities in combination with their country or US state,
+             - refer to continents by their name (not the two letter codes).
         limit:
           type: integer
           description: |
