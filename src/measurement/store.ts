@@ -141,12 +141,13 @@ export class MeasurementStore {
 			}
 		}
 
-		const updateMeasurementPromises = measurements.map(measurement => this.redis.json.set(getMeasurementKey(measurement.id), '$', measurement));
+		const updateMeasurements = Bluebird.map(measurements, measurement => this.redis.json.set(getMeasurementKey(measurement.id), '$', measurement), { concurrency: 32 });
+		const deleteAwaitingKeys = Bluebird.map(ids, id => this.redis.del(getMeasurementKey(id, 'probes_awaiting')), { concurrency: 32 });
 
 		await Promise.all([
-			...ids.map(id => this.redis.del((getMeasurementKey(id, 'probes_awaiting')))),
-			...updateMeasurementPromises,
 			this.redis.hDel('gp:in-progress', ids),
+			deleteAwaitingKeys,
+			updateMeasurements,
 			this.persistentRedis.zAdd('gp:measurement-keys-by-date', ids.map(id => ({ score: getDateScore(), value: getMeasurementKey(id) }))),
 		]);
 	}
