@@ -44,7 +44,7 @@ describe('measurement store', () => {
 		expire: sandbox.stub(),
 		del: sandbox.stub(),
 		json: {
-			mGet: sandbox.stub(),
+			get: sandbox.stub(),
 			set: sandbox.stub(),
 		},
 		recordProgress: sandbox.stub(),
@@ -92,7 +92,7 @@ describe('measurement store', () => {
 			],
 		});
 
-		redisMock.json.mGet.resolves([{
+		redisMock.json.get.onFirstCall().resolves({
 			id: 'id1',
 			type: 'ping',
 			status: 'in-progress',
@@ -106,7 +106,9 @@ describe('measurement store', () => {
 					rawOutput: '',
 				},
 			}],
-		}]);
+		});
+
+		redisMock.json.get.onSecondCall().resolves(null);
 
 		getMeasurementStore();
 
@@ -114,8 +116,9 @@ describe('measurement store', () => {
 
 		expect(redisMock.hScan.callCount).to.equal(1);
 		expect(redisMock.hScan.firstCall.args).to.deep.equal([ 'gp:in-progress', 0, { COUNT: 5000 }]);
-		expect(redisMock.json.mGet.callCount).to.equal(1);
-		expect(redisMock.json.mGet.firstCall.args).to.deep.equal([ [ 'gp:m:{id1}:results', 'gp:m:{id2}:results' ], '.' ]);
+		expect(redisMock.json.get.callCount).to.equal(2);
+		expect(redisMock.json.get.firstCall.args).to.deep.equal([ 'gp:m:{id1}:results' ]);
+		expect(redisMock.json.get.secondCall.args).to.deep.equal([ 'gp:m:{id2}:results' ]);
 		expect(redisMock.hDel.callCount).to.equal(1);
 		expect(redisMock.hDel.firstCall.args).to.deep.equal([ 'gp:in-progress', [ 'id1', 'id2' ] ]);
 		expect(persistentRedisMock.zRemRangeByScore.callCount).to.equal(1);
