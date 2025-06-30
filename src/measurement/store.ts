@@ -1,3 +1,5 @@
+import is from '@sindresorhus/is';
+import Bluebird from 'bluebird';
 import config from 'config';
 import _ from 'lodash';
 import cryptoRandomString from 'crypto-random-string';
@@ -126,10 +128,9 @@ export class MeasurementStore {
 		}
 
 		const keys = ids.map(id => getMeasurementKey(id));
-		const measurements = await this.redis.json.mGet(keys, '.') as Array<MeasurementRecord | null>;
-		const existingMeasurements = measurements.filter((measurement): measurement is MeasurementRecord => Boolean(measurement));
+		const measurements = (await Bluebird.map(keys, key => this.redis.json.get(key) as Promise<MeasurementRecord | null>, { concurrency: 8 })).filter(is.truthy);
 
-		for (const measurement of existingMeasurements) {
+		for (const measurement of measurements) {
 			measurement.status = 'finished';
 			measurement.updatedAt = new Date().toISOString();
 			const inProgressResults = Object.values(measurement.results).filter(resultObject => resultObject.result.status === 'in-progress');
@@ -140,12 +141,13 @@ export class MeasurementStore {
 			}
 		}
 
-		const updateMeasurementPromises = existingMeasurements.map(measurement => this.redis.json.set(getMeasurementKey(measurement.id), '$', measurement));
+		const updateMeasurements = Bluebird.map(measurements, measurement => this.redis.json.set(getMeasurementKey(measurement.id), '$', measurement), { concurrency: 32 });
+		const deleteAwaitingKeys = Bluebird.map(ids, id => this.redis.del(getMeasurementKey(id, 'probes_awaiting')), { concurrency: 32 });
 
 		await Promise.all([
-			...ids.map(id => this.redis.del((getMeasurementKey(id, 'probes_awaiting')))),
-			...updateMeasurementPromises,
 			this.redis.hDel('gp:in-progress', ids),
+			deleteAwaitingKeys,
+			updateMeasurements,
 			this.persistentRedis.zAdd('gp:measurement-keys-by-date', ids.map(id => ({ score: getDateScore(), value: getMeasurementKey(id) }))),
 		]);
 	}
