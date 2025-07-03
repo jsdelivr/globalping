@@ -102,8 +102,8 @@ module.exports = {
 			},
 		},
 		limits: {
-			anonymousTestsPerLocation: 200,
-			anonymousTestsPerMeasurement: 500,
+			anonymousTestsPerLocation: 50,
+			anonymousTestsPerMeasurement: 50,
 			authenticatedTestsPerLocation: 500,
 			authenticatedTestsPerMeasurement: 500,
 		},

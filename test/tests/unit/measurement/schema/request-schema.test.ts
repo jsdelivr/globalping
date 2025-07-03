@@ -83,7 +83,7 @@ describe('command schema', async () => {
 				const input = {
 					type: 'ping',
 					target: 'abc.com',
-					limit: 500,
+					limit: 50,
 				};
 
 				const valid = globalSchema.validate(input, { convert: true });
@@ -95,12 +95,12 @@ describe('command schema', async () => {
 				const input = {
 					type: 'ping',
 					target: 'abc.com',
-					limit: 501,
+					limit: 51,
 				};
 
 				const valid = globalSchema.validate(input, { convert: true });
 
-				expect(valid?.error?.details?.[0]?.message).to.equal('"limit" must be less than or equal to 500');
+				expect(valid?.error?.details?.[0]?.message).to.equal('"limit" must be less than or equal to 50');
 			});
 
 			it('should pass (valid authenticated global limit)', () => {
@@ -133,19 +133,19 @@ describe('command schema', async () => {
 					target: 'abc.com',
 					locations: [{
 						country: 'BR',
-						limit: 200,
+						limit: 20,
 					}, {
 						country: 'CZ',
-						limit: 200,
+						limit: 20,
 					}, {
 						country: 'DE',
-						limit: 200,
+						limit: 20,
 					}],
 				};
 
 				const valid = globalSchema.validate(input, { convert: true });
 
-				expect(valid?.error?.details?.[0]?.message).to.equal('the sum of limits must be less than or equal to 500');
+				expect(valid?.error?.details?.[0]?.message).to.equal('the sum of limits must be less than or equal to 50');
 			});
 
 			it('should return an error (locations authenticated limit sum is bigger than global limit)', () => {
@@ -406,7 +406,7 @@ describe('command schema', async () => {
 				const input = [
 					{
 						city: 'Warsaw',
-						limit: 200,
+						limit: 50,
 					},
 				];
 
@@ -425,7 +425,7 @@ describe('command schema', async () => {
 
 				const valid = locationSchema.validate(input);
 
-				expect(valid?.error?.details?.[0]?.message).to.equal('"[0].limit" must be less than or equal to 200');
+				expect(valid?.error?.details?.[0]?.message).to.equal('"[0].limit" must be less than or equal to 50');
 			});
 
 			it('should pass (valid authenticated location limit)', () => {
