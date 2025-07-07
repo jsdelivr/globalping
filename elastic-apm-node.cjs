@@ -15,6 +15,7 @@ module.exports = {
 	serviceVersion: version,
 	logLevel: 'fatal',
 	centralConfig: false,
+	captureBody: 'all',
 	captureExceptions: false,
 	captureErrorLogStackTraces: 'always',
 	ignoreUrls: [ '/favicon.ico', '/health', '/amp_preconnect_polyfill_404_or_other_error_expected._Do_not_worry_about_it' ],
