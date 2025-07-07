@@ -4,7 +4,7 @@ import requestIp from 'request-ip';
 import { expect } from 'chai';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
-import { anonymousRateLimiter as anonymousPostRateLimiter, authenticatedRateLimiter as authenticatedPostRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-post.js';
+import { anonymousRateLimiter as anonymousPostRateLimiter, authenticatedRateLimiter as authenticatedPostRateLimiter, failedCreditsAttempts } from '../../../src/lib/rate-limiter/rate-limiter-post.js';
 import { rateLimiter as getRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-get.js';
 import { client } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
@@ -60,6 +60,7 @@ describe('rate limiter', () => {
 		]);
 
 		getKeys.length && await redis.del(getKeys);
+		failedCreditsAttempts.clear();
 	});
 
 	after(async () => {

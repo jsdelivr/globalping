@@ -1,4 +1,5 @@
 import config from 'config';
+import TTLCache from '@isaacs/ttlcache';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 import requestIp from 'request-ip';
 import { getPersistentRedisClient } from '../redis/persistent-client.js';
@@ -6,7 +7,14 @@ import createHttpError from 'http-errors';
 import type { ExtendedContext } from '../../types.js';
 import { credits } from '../credits.js';
 
+type FailedCreditsAttemptValue = {
+	requiredCredits: number;
+	remainingCredits: number;
+};
+
 const redisClient = getPersistentRedisClient();
+
+export const failedCreditsAttempts = new TTLCache<string, FailedCreditsAttemptValue>({ ttl: 60_000 });
 
 export const anonymousRateLimiter = new RateLimiterRedis({
 	storeClient: redisClient,
@@ -108,7 +116,22 @@ export const getRateLimitState = async (ctx: ExtendedContext) => {
 const consumeCredits = async (userId: string, rateLimiterRes: RateLimiterRes, numberOfProbes: number) => {
 	const freeCredits = config.get<number>('measurement.rateLimit.post.authenticatedLimit');
 	const requiredCredits = Math.min(rateLimiterRes.consumedPoints - freeCredits, numberOfProbes);
+	const attempt = failedCreditsAttempts.get(userId);
+
+	// If there was a recent attempt to use credits, and it failed, and requiredCredits is same or higher, reject immediately.
+	if (attempt && requiredCredits >= attempt.requiredCredits) {
+		return {
+			isConsumed: false,
+			requiredCredits,
+			remainingCredits: attempt.remainingCredits, // This can technically be off a little if another request with lower requiredCredits succeeded in the meantime, but that's ok.
+		};
+	}
+
 	const { isConsumed, remainingCredits } = await credits.consume(userId, requiredCredits);
+
+	if (!isConsumed) {
+		failedCreditsAttempts.set(userId, { requiredCredits, remainingCredits });
+	}
 
 	return {
 		isConsumed,
