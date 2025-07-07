@@ -18,7 +18,7 @@ export type IpmapResponse = {
 };
 
 export const ipmapLookup = async (addr: string): Promise<ProviderLocationInfo> => {
-	const result = await got.get(`https://ipmap-api.ripe.net/v1/locate/${addr}`).json<IpmapResponse>();
+	const result = await got(`https://ipmap-api.ripe.net/v1/locate/${addr}`, { timeout: { request: 5000 } }).json<IpmapResponse>();
 	const location = result?.locations?.[0] || {};
 
 	const originalCity = location.cityName || '';
