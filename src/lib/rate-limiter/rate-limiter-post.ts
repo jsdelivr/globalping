@@ -13,7 +13,8 @@ type FailedCreditsAttemptValue = {
 };
 
 const redisClient = getPersistentRedisClient();
-const failedCreditsAttempts = new TTLCache<string, FailedCreditsAttemptValue>({ ttl: 60_000 });
+
+export const failedCreditsAttempts = new TTLCache<string, FailedCreditsAttemptValue>({ ttl: 60_000 });
 
 export const anonymousRateLimiter = new RateLimiterRedis({
 	storeClient: redisClient,
