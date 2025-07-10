@@ -1,9 +1,9 @@
-export const aliases = [
-	[ 'eu', 'europe' ],
-	[ 'na', 'north america' ],
-	[ 'sa', 'south america' ],
-	[ 'as', 'asia' ],
-	[ 'oc', 'oceania' ],
-	[ 'af', 'africa' ],
-	[ 'an', 'antarctica' ],
-];
+export const continents = {
+	EU: 'Europe',
+	NA: 'North America',
+	SA: 'South America',
+	AS: 'Asia',
+	OC: 'Oceania',
+	AF: 'Africa',
+	AN: 'Antarctica',
+};
