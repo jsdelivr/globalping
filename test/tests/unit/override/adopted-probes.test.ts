@@ -23,7 +23,9 @@ describe('AdoptedProbes', () => {
 		hardwareDevice: null,
 		hardwareDeviceFirmware: null,
 		country: 'IE',
+		countryName: 'Ireland',
 		state: null,
+		stateName: null,
 		city: 'Dublin',
 		latitude: 53.33,
 		longitude: -6.25,
@@ -34,6 +36,9 @@ describe('AdoptedProbes', () => {
 		adoptionToken: null,
 		allowedCountries: '["IE"]',
 		customLocation: null,
+		continent: 'EU',
+		continentName: 'Europe',
+		region: 'Northern Europe',
 	};
 
 	const defaultConnectedProbe: Probe = {
@@ -408,6 +413,7 @@ describe('AdoptedProbes', () => {
 			asn: 20473,
 			network: 'The Constant Company, LLC',
 			country: 'GB',
+			countryName: 'United Kingdom',
 			city: 'London',
 			latitude: 51.51,
 			longitude: -0.13,
@@ -537,6 +543,7 @@ describe('AdoptedProbes', () => {
 				asn: 20473,
 				network: 'The Constant Company, LLC',
 				country: 'GB',
+				countryName: 'United Kingdom',
 				city: 'London',
 				latitude: 51.51,
 				longitude: -0.13,
@@ -553,6 +560,7 @@ describe('AdoptedProbes', () => {
 				asn: 20473,
 				network: 'The Constant Company, LLC',
 				country: 'GB',
+				countryName: 'United Kingdom',
 				city: 'London',
 				latitude: 51.51,
 				longitude: -0.13,
@@ -686,10 +694,10 @@ describe('AdoptedProbes', () => {
 		sql.select.resolves([{
 			...defaultAdoption,
 			customLocation: JSON.stringify({
-				country: 'IE',
-				city: 'Dublin',
-				latitude: 53.33,
-				longitude: -6.25,
+				country: 'PT',
+				city: 'Lisbon',
+				latitude: 38.73,
+				longitude: -9.15,
 			}),
 		}]);
 
@@ -719,7 +727,7 @@ describe('AdoptedProbes', () => {
 					latitude: 51.51,
 					longitude: -0.13,
 					network: 'The Constant Company, LLC',
-					allowedCountries: [ 'GB', 'IE' ],
+					allowedCountries: [ 'GB', 'PT' ],
 				},
 			} as Probe,
 		]);
@@ -730,18 +738,21 @@ describe('AdoptedProbes', () => {
 		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.callCount).to.equal(1);
 
-		expect(sql.update.args[0]).to.deep.equal([
-			{
-				status: 'initializing',
-				isIPv4Supported: false,
-				isIPv6Supported: false,
-				version: '0.39.0',
-				asn: 20473,
-				network: 'The Constant Company, LLC',
-				state: undefined,
-				allowedCountries: '["GB","IE"]',
-			},
-		]);
+		expect(sql.update.args[0]).to.deep.equal([{
+			status: 'initializing',
+			isIPv4Supported: false,
+			isIPv6Supported: false,
+			version: '0.39.0',
+			asn: 20473,
+			network: 'The Constant Company, LLC',
+			country: 'PT',
+			countryName: 'Portugal',
+			city: 'Lisbon',
+			region: 'Southern Europe',
+			latitude: 38.73,
+			longitude: -9.15,
+			allowedCountries: '["GB","PT"]',
+		}]);
 
 		expect(sql.insert.callCount).to.equal(0);
 	});

@@ -31,14 +31,20 @@ CREATE TABLE IF NOT EXISTS gp_probes (
 	hardwareDevice VARCHAR(255) NULL,
 	hardwareDeviceFirmware VARCHAR(255) NULL,
 	country VARCHAR(255) NULL,
+	countryName VARCHAR(255) NULL,
 	city VARCHAR(255),
 	state VARCHAR(255),
+	stateName VARCHAR(255) NULL,
+	continent VARCHAR(255) NULL,
+	continentName VARCHAR(255) NULL,
+	region VARCHAR(255) NULL,
 	latitude FLOAT(10, 5),
 	longitude FLOAT(10, 5),
 	asn INTEGER NULL,
 	network VARCHAR(255) NULL,
 	allowedCountries LONGTEXT COLLATE utf8mb4_bin NULL CHECK (json_valid(`allowedCountries`)),
-	customLocation LONGTEXT COLLATE utf8mb4_bin NULL CHECK (json_valid(`customLocation`))
+	customLocation LONGTEXT COLLATE utf8mb4_bin NULL CHECK (json_valid(`customLocation`)),
+	searchIndex VARCHAR(4090) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS directus_notifications (
