@@ -152,12 +152,12 @@ export class AltIps {
 		}
 
 		if (isIpPrivate(altIp)) {
-			logger.warn('Alt IP is private.', { altIp });
+			logger.warn('Alt IP is private.', { altIp, ...probeInfo });
 			return false;
 		}
 
 		if (isIpBlocked(altIp)) {
-			logger.warn('Alt IP is blocked.', { altIp });
+			logger.warn('Alt IP is blocked.', { altIp, ...probeInfo });
 			return false;
 		}
 
