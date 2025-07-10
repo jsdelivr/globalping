@@ -2,13 +2,13 @@ import _ from 'lodash';
 import { countries } from 'countries-list';
 import { regions, aliases as regionAliases } from './regions.js';
 import { states } from './states.js';
-import { statesIso } from './states-iso.js';
+import { statesIso } from './states.js';
 import {
 	alpha as countryAlpha,
 	aliases as countryAliases,
 } from './countries.js';
 import { aliases as networkAliases } from './networks.js';
-import { aliases as continentAliases } from './continents.js';
+import { continents } from './continents.js';
 import type { ProbeLocation, Tag } from '../../probe/types.js';
 
 const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [ c, r ])));
@@ -95,10 +95,14 @@ export const getNetworkAliases = (key: string): string[] => {
 	return array ?? [];
 };
 
-export const getContinentAliases = (key: string): string[] => {
-	const array = continentAliases.find(n => n.includes(key.toLowerCase()));
+export const getContinentName = (key: string): string => {
+	const continent = continents[key as keyof typeof continents];
 
-	return array ?? [];
+	if (!continent) {
+		throw new Error(`continent not found ${key}`);
+	}
+
+	return continent;
 };
 
 export const getRegionAliases = (key: string): string[] => {
@@ -108,7 +112,7 @@ export const getRegionAliases = (key: string): string[] => {
 };
 
 export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
-	// Storing index as string[][] so every category will have it's exact position in the index array across all probes
+	// Storing the index as string[][] so each category has its exact position in the index array across all probes.
 	const index = [
 		[ location.country ],
 		[ getCountryIso3ByIso2(location.country) ],
@@ -119,7 +123,7 @@ export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
 		location.state ? [ getStateExtendedIsoByIso(location.state) ] : [],
 		location.state ? [ getStateNameByIso(location.state) ] : [],
 		[ location.continent ],
-		getContinentAliases(location.continent),
+		[ getContinentName(location.continent) ],
 		[ location.region ],
 		getRegionAliases(location.region),
 		[ `as${location.asn}` ],

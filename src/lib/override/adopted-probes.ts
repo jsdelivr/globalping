@@ -6,7 +6,7 @@ import { scopedLogger } from '../logger.js';
 import type { getProbesWithAdminData as serverGetProbesWithAdminData } from '../ws/server.js';
 import type { Probe, ProbeLocation, Tag } from '../../probe/types.js';
 import { normalizeCoordinate, normalizeFromPublicName } from '../geoip/utils.js';
-import { getContinentByCountry, getIndex, getRegionByCountry } from '../location/location.js';
+import { getContinentByCountry, getContinentName, getCountryByIso, getIndex, getRegionByCountry, getStateNameByIso } from '../location/location.js';
 import { countries } from 'countries-list';
 import { randomUUID } from 'crypto';
 
@@ -37,8 +37,13 @@ type DProbe = {
 	hardwareDevice: string | null;
 	hardwareDeviceFirmware: string | null;
 	country: string | null;
+	countryName: string | null;
 	city: string | null;
 	state: string | null;
+	stateName: string | null;
+	continent: string | null;
+	continentName: string | null;
+	region: string | null;
 	latitude: number | null;
 	longitude: number | null;
 	asn: number | null;
@@ -48,10 +53,15 @@ type DProbe = {
 	adoptionToken: string | null;
 	customLocation: {
 		country: string;
+		countryName: string; // TODO: calculate the value instead of storing
 		city: string;
 		latitude: number;
 		longitude: number;
 		state: string | null;
+		stateName: string | null; // TODO: calculate the value instead of storing
+		continent: string; // TODO: calculate the value instead of storing
+		continentName: string; // TODO: calculate the value instead of storing
+		region: string; // TODO: calculate the value instead of storing
 	} | null;
 	allowedCountries: string[];
 };
@@ -84,7 +94,7 @@ export class AdoptedProbes {
 	private ipToAdoption: Map<string, Adoption> = new Map();
 	private uuidToAdoption: Map<string, Adoption> = new Map();
 	private syncBackToDashboard = process.env['SHOULD_SYNC_ADOPTIONS'] === 'true';
-	private readonly dProbeFieldToProbeField: Partial<Record<keyof DProbe, DProbeFieldDescription>> = {
+	static readonly dProbeFieldToProbeField = {
 		uuid: {
 			probeField: 'uuid',
 			mayBeCustom: false,
@@ -128,8 +138,8 @@ export class AdoptedProbes {
 		systemTags: {
 			probeField: 'tags',
 			mayBeCustom: false,
-			formatter: (probeTags: Tag[], _probe: Probe, dProbe?: DProbe) => [
-				...(dProbe && dProbe.publicProbes && dProbe.defaultPrefix ? [ this.getGlobalUserTag(dProbe.defaultPrefix) ] : []),
+			formatter: (probeTags: Tag[], _probe?: Probe, dProbe?: DProbe) => [
+				...(dProbe && dProbe.publicProbes && dProbe.defaultPrefix ? [ AdoptedProbes.getGlobalUserTag(dProbe.defaultPrefix) ] : []),
 				...probeTags.filter(({ type }) => type === 'system').map(({ value }) => value),
 			],
 		},
@@ -145,12 +155,35 @@ export class AdoptedProbes {
 			probeField: 'location.country',
 			mayBeCustom: true,
 		},
+		countryName: {
+			probeField: 'location.country',
+			mayBeCustom: true,
+			formatter: (country: string | null) => country ? getCountryByIso(country) : null,
+		},
 		city: {
 			probeField: 'location.city',
 			mayBeCustom: true,
 		},
 		state: {
 			probeField: 'location.state',
+			mayBeCustom: true,
+		},
+		stateName: {
+			probeField: 'location.state',
+			mayBeCustom: true,
+			formatter: (state: string | null) => state ? getStateNameByIso(state) : null,
+		},
+		continent: {
+			probeField: 'location.continent',
+			mayBeCustom: true,
+		},
+		continentName: {
+			probeField: 'location.continent',
+			mayBeCustom: true,
+			formatter: (continent: string | null) => continent ? getContinentName(continent) : null,
+		},
+		region: {
+			probeField: 'location.region',
 			mayBeCustom: true,
 		},
 		latitude: {
@@ -211,7 +244,7 @@ export class AdoptedProbes {
 			...probe.tags,
 			...(adoption.publicProbes && adoption.defaultPrefix ? [{
 				type: 'system' as const,
-				value: this.getGlobalUserTag(adoption.defaultPrefix),
+				value: AdoptedProbes.getGlobalUserTag(adoption.defaultPrefix),
 			}] : []),
 			...adoption.tags,
 		];
@@ -485,7 +518,8 @@ export class AdoptedProbes {
 		dProbesWithProbe.forEach(({ dProbe, probe }) => {
 			const updateObject: Record<string, unknown> = {};
 
-			Object.entries(this.dProbeFieldToProbeField).forEach(([ dProbeField, { probeField, mayBeCustom, formatter }]) => {
+			const entries: [string, DProbeFieldDescription][] = Object.entries(AdoptedProbes.dProbeFieldToProbeField);
+			entries.forEach(([ dProbeField, { probeField, mayBeCustom, formatter }]) => {
 				const dProbeValue = _.get(dProbe, dProbeField) as unknown;
 				let probeValue = _.get(probe, probeField) as unknown;
 
@@ -641,7 +675,8 @@ export class AdoptedProbes {
 			lastSyncDate: new Date(),
 		};
 
-		Object.entries(this.dProbeFieldToProbeField).forEach(([ dProbeField, { probeField, formatter }]) => {
+		const entries: [string, DProbeFieldDescription][] = Object.entries(AdoptedProbes.dProbeFieldToProbeField);
+		entries.forEach(([ dProbeField, { probeField, formatter }]) => {
 			let probeValue = _.get(probe, probeField) as unknown;
 
 			if (formatter) {
@@ -692,7 +727,7 @@ export class AdoptedProbes {
 		return date.toDateString() === currentDate.toDateString();
 	}
 
-	private getGlobalUserTag (defaultPrefix: string) {
+	static getGlobalUserTag (defaultPrefix: string) {
 		return `u-${defaultPrefix}`;
 	}
 
@@ -704,7 +739,7 @@ export class AdoptedProbes {
 			altIps: probe.altIpAddresses,
 			uuid: probe.uuid,
 			tags: [],
-			systemTags: probe.tags.filter(({ type }) => type === 'system').map(({ value }) => value),
+			systemTags: AdoptedProbes.dProbeFieldToProbeField.systemTags.formatter(probe.tags),
 			status: probe.status,
 			isIPv4Supported: probe.isIPv4Supported,
 			isIPv6Supported: probe.isIPv6Supported,
@@ -714,7 +749,12 @@ export class AdoptedProbes {
 			hardwareDeviceFirmware: probe.hardwareDeviceFirmware,
 			city: probe.location.city,
 			state: probe.location.state,
+			stateName: AdoptedProbes.dProbeFieldToProbeField.stateName.formatter(probe.location.state),
 			country: probe.location.country,
+			countryName: AdoptedProbes.dProbeFieldToProbeField.countryName.formatter(probe.location.country),
+			continent: probe.location.continent,
+			continentName: AdoptedProbes.dProbeFieldToProbeField.continentName.formatter(probe.location.continent),
+			region: probe.location.region,
 			latitude: probe.location.latitude,
 			longitude: probe.location.longitude,
 			asn: probe.location.asn,
