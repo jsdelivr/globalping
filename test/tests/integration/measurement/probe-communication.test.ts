@@ -421,7 +421,7 @@ describe('Create measurement request', () => {
 					status: 'initializing',
 					isIPv4Supported: false,
 					isIPv6Supported: false,
-					version: '0.14.0',
+					version: '0.39.0',
 					nodeVersion: 'v18.17.0',
 					uuid: '1-1-1-1-1',
 					location: {
@@ -470,7 +470,7 @@ describe('Create measurement request', () => {
 					status: 'ready',
 					isIPv4Supported: true,
 					isIPv6Supported: true,
-					version: '0.14.0',
+					version: '0.39.0',
 					nodeVersion: 'v18.17.0',
 					uuid: '1-1-1-1-1',
 					location: {
@@ -513,7 +513,7 @@ describe('Create measurement request', () => {
 					status: 'ready',
 					isIPv4Supported: true,
 					isIPv6Supported: false,
-					version: '0.14.0',
+					version: '0.39.0',
 					nodeVersion: 'v18.17.0',
 					uuid: '1-1-1-1-1',
 					location: {
@@ -556,7 +556,7 @@ describe('Create measurement request', () => {
 					status: 'ready',
 					isIPv4Supported: false,
 					isIPv6Supported: true,
-					version: '0.14.0',
+					version: '0.39.0',
 					nodeVersion: 'v18.17.0',
 					uuid: '1-1-1-1-1',
 					location: {
@@ -599,7 +599,7 @@ describe('Create measurement request', () => {
 					status: 'ping-test-failed',
 					isIPv4Supported: false,
 					isIPv6Supported: false,
-					version: '0.14.0',
+					version: '0.39.0',
 					nodeVersion: 'v18.17.0',
 					uuid: '1-1-1-1-1',
 					location: {

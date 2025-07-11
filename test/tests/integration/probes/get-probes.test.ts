@@ -71,7 +71,7 @@ describe('Get Probes', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal([
 						{
-							version: '0.14.0',
+							version: '0.39.0',
 							location: {
 								continent: 'SA',
 								region: 'South America',
@@ -87,7 +87,7 @@ describe('Get Probes', () => {
 							resolvers: [],
 						},
 						{
-							version: '0.14.0',
+							version: '0.39.0',
 							location: {
 								continent: 'NA',
 								region: 'Northern America',
@@ -103,7 +103,7 @@ describe('Get Probes', () => {
 							resolvers: [],
 						},
 						{
-							version: '0.14.0',
+							version: '0.39.0',
 							location: {
 								continent: 'NA',
 								region: 'Northern America',
@@ -119,7 +119,7 @@ describe('Get Probes', () => {
 							resolvers: [],
 						},
 						{
-							version: '0.14.0',
+							version: '0.39.0',
 							location: {
 								asn: 701,
 								city: 'Washington',
@@ -154,7 +154,7 @@ describe('Get Probes', () => {
 				.expect(200)
 				.expect((response) => {
 					expect(response.body).to.deep.equal([{
-						version: '0.14.0',
+						version: '0.39.0',
 						location: {
 							continent: 'SA',
 							region: 'South America',
@@ -186,7 +186,7 @@ describe('Get Probes', () => {
 				.expect(200)
 				.expect((response) => {
 					expect(response.body[0]).to.deep.equal({
-						version: '0.14.0',
+						version: '0.39.0',
 						isIPv4Supported: false,
 						isIPv6Supported: false,
 						host: '',
@@ -293,7 +293,7 @@ describe('Get Probes', () => {
 					.expect(200)
 					.expect((response) => {
 						expect(response.body[0]).to.deep.equal({
-							version: '0.14.0',
+							version: '0.39.0',
 							location: {
 								continent: 'SA',
 								region: 'South America',
