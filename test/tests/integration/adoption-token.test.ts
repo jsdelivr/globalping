@@ -48,7 +48,7 @@ describe('Adoption token', () => {
 					status: 'initializing',
 					isIPv4Supported: false,
 					isIPv6Supported: false,
-					version: '0.14.0',
+					version: '0.39.0',
 					nodeVersion: 'v18.17.0',
 					hardwareDevice: null,
 					hardwareDeviceFirmware: null,

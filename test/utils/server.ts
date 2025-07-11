@@ -50,7 +50,7 @@ export const addFakeProbes = async (count: number, events: object = {}, options:
 				reconnectionDelay: 100,
 				reconnectionDelayMax: 500,
 				query: {
-					version: '0.14.0',
+					version: '0.39.0',
 					nodeVersion: 'v18.17.0',
 					uuid: '1-1-1-1-1',
 					isHardware: 'undefined',

@@ -38,7 +38,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		throw new ProbeError(`vpn detected: ${ip}`);
 	}
 
-	if (!semver.satisfies(version, '>=0.9.0')) {
+	if (!semver.satisfies(version, '>=0.39.0')) {
 		throw new ProbeError(`invalid probe version (${version})`);
 	}
 

@@ -48,7 +48,7 @@ describe('probe router', () => {
 			id,
 			handshake: {
 				query: {
-					version: '0.11.0',
+					version: '0.39.0',
 				},
 			},
 			data: {},
