@@ -33,7 +33,7 @@ describe('adopted probes', () => {
 			status: 'ready',
 			isIPv4Supported: true,
 			isIPv6Supported: true,
-			version: '0.28.0',
+			version: '0.39.0',
 			nodeVersion: 'v18.14.2',
 			country: 'AR',
 			city: 'San Luis',
