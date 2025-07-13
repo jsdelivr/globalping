@@ -74,7 +74,9 @@ describe('Adoption code', () => {
 					hardwareDeviceFirmware: null,
 					city: 'Dallas',
 					state: 'TX',
+					stateName: 'Texas',
 					country: 'US',
+					countryName: 'United States',
 					latitude: 32.78,
 					longitude: -96.81,
 					asn: 20004,
@@ -82,6 +84,9 @@ describe('Adoption code', () => {
 					adoptionToken: null,
 					customLocation: null,
 					allowedCountries: [ 'US' ],
+					continent: 'NA',
+					continentName: 'North America',
+					region: 'Northern America',
 				});
 			});
 

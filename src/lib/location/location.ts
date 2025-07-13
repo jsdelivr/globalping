@@ -158,7 +158,7 @@ export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
 		location.state ? [ getStateExtendedIsoByIso(location.state) ] : [],
 		location.state ? [ getStateNameByIso(location.state) ] : [],
 		[ location.continent ],
-		[ getContinentName(location.continent) ],
+		location.continent ? [ getContinentName(location.continent) ] : [],
 		[ location.region ],
 		getRegionAliases(location.region),
 		[ `as${location.asn}` ],
