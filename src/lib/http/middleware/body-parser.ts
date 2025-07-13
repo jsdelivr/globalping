@@ -1,9 +1,8 @@
-import { Context } from 'koa';
 import koaBodyParser from 'koa-bodyparser';
 import createHttpError from 'http-errors';
-import { UnknownNext } from '../../../types.js';
+import { ExtendedMiddleware } from '../../../types.js';
 
-export const bodyParser = () => {
+export const bodyParser = (): ExtendedMiddleware => {
 	const parser = koaBodyParser({
 		enableTypes: [ 'json' ],
 		jsonLimit: '100kb',
@@ -12,7 +11,7 @@ export const bodyParser = () => {
 		},
 	});
 
-	return async (ctx: Context, next: UnknownNext) => {
+	return async (ctx, next) => {
 		await parser(ctx, async () => {
 			// Elastic APM expects this on the underlying request.
 			(ctx.req as unknown as { body: unknown }).body = ctx.request.body;
