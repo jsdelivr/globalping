@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS gp_probes (
 	network VARCHAR(255) NULL,
 	allowedCountries LONGTEXT COLLATE utf8mb4_bin NULL CHECK (json_valid(`allowedCountries`)),
 	customLocation LONGTEXT COLLATE utf8mb4_bin NULL CHECK (json_valid(`customLocation`)),
-	searchIndex VARCHAR(8190) NULL
+	searchIndex VARCHAR(4090) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS directus_notifications (
