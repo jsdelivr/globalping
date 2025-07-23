@@ -18,8 +18,8 @@ export const pingResultSchema = Joi.object<PingResult>({
 	resolvedAddress: Joi.string().max(1024).allow(null),
 	resolvedHostname: Joi.string().max(1024).allow(null),
 	timings: Joi.array().max(1024).items(Joi.object({
-		rtt: Joi.number().required(),
-		ttl: Joi.number(),
+		rtt: Joi.number().min(0).required(),
+		ttl: Joi.number().min(0),
 	})),
 	stats: Joi.object({
 		min: Joi.number().allow(null).required(),
@@ -41,7 +41,7 @@ export const tracerouteResultSchema = Joi.object<TracerouteResult>({
 		resolvedAddress: Joi.string().max(1024).allow(null).required(),
 		resolvedHostname: Joi.string().max(1024).allow(null).required(),
 		timings: Joi.array().max(1024).items(Joi.object({
-			rtt: Joi.number().required(),
+			rtt: Joi.number().min(0).required(),
 		})).required(),
 	})),
 }).options({ convert: false });
@@ -54,7 +54,7 @@ export const dnsResultSchema = Joi.alternatives([
 		statusCode: Joi.number().allow(null),
 		resolver: Joi.string().max(1024).allow(null),
 		timings: Joi.object({
-			total: Joi.number().required(),
+			total: Joi.number().min(0).required(),
 		}),
 		answers: Joi.array().max(1024).items(Joi.alternatives([
 			Joi.object({
@@ -73,7 +73,7 @@ export const dnsResultSchema = Joi.alternatives([
 		hops: Joi.array().max(1024).items(Joi.object({
 			resolver: Joi.string().max(1024).allow(null).required(),
 			timings: Joi.object({
-				total: Joi.number().required(),
+				total: Joi.number().min(0).required(),
 			}).required(),
 			answers: Joi.array().max(1024).items(Joi.alternatives([
 				Joi.object({
@@ -112,7 +112,7 @@ export const mtrResultSchema = Joi.object<MtrResult>({
 			drop: Joi.number().required(),
 		}).required(),
 		timings: Joi.array().max(1024).items(Joi.object({
-			rtt: Joi.number(),
+			rtt: Joi.number().min(0),
 		})).required(),
 	})),
 }).options({ convert: false });
