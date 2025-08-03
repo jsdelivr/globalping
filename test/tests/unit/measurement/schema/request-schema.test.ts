@@ -110,7 +110,7 @@ describe('command schema', async () => {
 					limit: 500,
 				};
 
-				const valid = globalSchema.validate(input, { convert: true, context: { userId: '1-1-1-1-1' } });
+				const valid = globalSchema.validate(input, { convert: true, context: { user: {} } });
 
 				expect(valid.error).to.not.exist;
 			});
@@ -122,7 +122,7 @@ describe('command schema', async () => {
 					limit: 501,
 				};
 
-				const valid = globalSchema.validate(input, { convert: true, context: { userId: '1-1-1-1-1' } });
+				const valid = globalSchema.validate(input, { convert: true, context: { user: {} } });
 
 				expect(valid?.error?.details?.[0]?.message).to.equal('"limit" must be less than or equal to 500');
 			});
@@ -164,7 +164,7 @@ describe('command schema', async () => {
 					}],
 				};
 
-				const valid = globalSchema.validate(input, { convert: true, context: { userId: '1-1-1-1-1' } });
+				const valid = globalSchema.validate(input, { convert: true, context: { user: {} } });
 
 				expect(valid?.error?.details?.[0]?.message).to.equal('the sum of limits must be less than or equal to 500');
 			});
@@ -436,7 +436,7 @@ describe('command schema', async () => {
 					},
 				];
 
-				const valid = locationSchema.validate(input, { context: { userId: '1-1-1-1-1' } });
+				const valid = locationSchema.validate(input, { context: { user: {} } });
 
 				expect(valid.error).to.not.exist;
 			});
@@ -449,7 +449,7 @@ describe('command schema', async () => {
 					},
 				];
 
-				const valid = locationSchema.validate(input, { context: { userId: '1-1-1-1-1' } });
+				const valid = locationSchema.validate(input, { context: { user: {} } });
 
 				expect(valid?.error?.details?.[0]?.message).to.equal('"[0].limit" must be less than or equal to 500');
 			});

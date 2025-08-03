@@ -15,7 +15,7 @@ export const schema = Joi.object({
 	target: targetSchema,
 	measurementOptions: measurementSchema,
 	locations: locationSchema,
-	limit: Joi.number().min(1).when('$userId', {
+	limit: Joi.number().min(1).when('$user', {
 		is: Joi.exist(),
 		then: Joi.number().max(authenticatedTestsPerMeasurement),
 		otherwise: Joi.number().max(anonymousTestsPerMeasurement),
