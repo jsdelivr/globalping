@@ -181,6 +181,41 @@ describe('authenticate', () => {
 				});
 		});
 
+		it('should use anonymousTestsPerMeasurement limit for anonymous tokens', async () => {
+			await client(GP_TOKENS_TABLE).insert({
+				name: 'test token',
+				user_created: null,
+				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
+			});
+
+			await requestAgent.post('/v1/measurements')
+				.set('Authorization', 'Bearer hf2fnprguymlgliirdk7qv23664c2xcr')
+				.send({
+					type: 'ping',
+					limit: 50,
+					target: 'example.com',
+				})
+				.expect(202);
+
+			await requestAgent.post('/v1/measurements')
+				.set('Authorization', 'Bearer hf2fnprguymlgliirdk7qv23664c2xcr')
+				.send({
+					type: 'ping',
+					limit: 51,
+					target: 'example.com',
+				})
+				.expect(400, {
+					error: {
+						type: 'validation_error',
+						message: 'Parameter validation failed.',
+						params: { limit: '"limit" must be less than or equal to 50' },
+					},
+					links: {
+						documentation: 'https://globalping.io/docs/api.globalping.io#post-/v1/measurements',
+					},
+				});
+		});
+
 		it('should reject with 401 if invalid token was passed', async () => {
 			await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'invalidValue')
