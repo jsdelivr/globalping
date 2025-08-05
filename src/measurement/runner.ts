@@ -33,7 +33,7 @@ export class MeasurementRunner {
 		await this.checkRateLimit(ctx, onlineProbesMap.size);
 
 		const measurementId = await this.store.createMeasurement(request, onlineProbesMap, allProbes);
-		apmAgent.addLabels({ gpMeasurementId: measurementId, gpMeasurementType: request.type, gpMeasurementTarget: request.target });
+		apmAgent.addLabels({ gpMeasurementId: measurementId, gpMeasurementType: request.type, gpMeasurementTarget: request.target, gpMeasurementProbes: onlineProbesMap.size }, false);
 
 		if (onlineProbesMap.size) {
 			this.sendToProbes(measurementId, onlineProbesMap, request);
