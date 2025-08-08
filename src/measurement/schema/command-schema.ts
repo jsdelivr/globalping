@@ -18,6 +18,7 @@ export const schemaErrorMessages = {
 	...joiMalwareSchemaErrorMessages,
 	'ip.private': '{{#label}} must not be a private hostname',
 	'domain.invalid': '{{#label}} must be a valid domain name',
+	'type.invalid': '{{#label}} does not match any of the allowed types',
 };
 
 

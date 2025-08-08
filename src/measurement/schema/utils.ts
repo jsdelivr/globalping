@@ -22,7 +22,7 @@ const isBracketed = (value: string) => {
 
 export const joiValidateBracketedIpv6 = () => (value: string, helpers: CustomHelpers): string | ErrorReport => {
 	if (!isBracketed(value)) {
-		return helpers.error('target.invalid');
+		return helpers.error('type.invalid');
 	}
 
 	value = value.slice(1, -1);
@@ -31,7 +31,7 @@ export const joiValidateBracketedIpv6 = () => (value: string, helpers: CustomHel
 	const { error } = Joi.string().ip(ipOptions).validate(value);
 
 	if (error) {
-		return helpers.error('target.invalid');
+		return helpers.error('type.invalid');
 	}
 
 	return value;
