@@ -17,7 +17,7 @@ export const schemaErrorMessages = {
 	...joiMalwareSchemaErrorMessages,
 	'ip.private': '{{#label}} must not be a private hostname',
 	'domain.invalid': '{{#label}} must be a valid domain name',
-	'ip.invalid': '{{#label}} must be a valid ip address of one of the following versions [ipv4, ipv6] with a forbidden CIDR',
+	'ip.invalid': '{{#label}} must be a valid ipv4 or ipv6 address',
 };
 
 
