@@ -14,6 +14,29 @@ import { joiValidate as joiMalwareValidateDomain } from '../../lib/malware/domai
 import type { MeasurementRecord, MeasurementRequest } from '../types.js';
 import { isIpPrivate } from '../../lib/private-ip.js';
 
+export const globalIpOptions: { version: string[]; cidr: PresenceMode } = { version: [ 'ipv4', 'ipv6' ], cidr: 'forbidden' };
+
+const isBracketed = (value: string) => {
+	return value.startsWith('[') && value.endsWith(']');
+};
+
+export const joiValidateIp = (ipOptions = globalIpOptions) => (value: string, helpers: CustomHelpers): string | ErrorReport => {
+	let ipVersions = ipOptions.version;
+
+	if (isBracketed(value)) {
+		value = value.slice(1, -1);
+		ipVersions = [ 'ipv6' ];
+	}
+
+	const { error } = Joi.string().ip({ ...ipOptions, version: ipVersions }).validate(value);
+
+	if (error) {
+		return helpers.error('ip.invalid');
+	}
+
+	return value;
+};
+
 export const joiValidateDomain = () => (value: string, helpers: CustomHelpers): string | ErrorReport => {
 	const options = {
 		allow_underscores: true,
@@ -66,8 +89,6 @@ export const joiValidateTarget = (type: string) => (value: string, helpers?: Cus
 
 export const whenTypeApply = (mType: string, schema: AnySchema) => Joi.any().when(Joi.ref('/type'), { is: mType, then: schema });
 
-export const globalIpOptions: { version: string[]; cidr: PresenceMode } = { version: [ 'ipv4', 'ipv6' ], cidr: 'forbidden' };
-
 export const GLOBAL_DEFAULTS = {
 	locations: [],
 	limit: (request: MeasurementRequest) => {
@@ -81,6 +102,7 @@ export const GLOBAL_DEFAULTS = {
 };
 
 export const DEFAULT_IP_VERSION = 4;
+
 export const COMMAND_DEFAULTS = {
 	http: {
 		request: {
