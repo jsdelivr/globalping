@@ -20,18 +20,18 @@ const isBracketed = (value: string) => {
 	return value.startsWith('[') && value.endsWith(']');
 };
 
-export const joiValidateBracketedIpv6 = () => (value: string, helpers: CustomHelpers): string | ErrorReport => {
-	if (!isBracketed(value)) {
-		return helpers.error('type.invalid');
+export const joiValidateIp = (ipOptions = globalIpOptions) => (value: string, helpers: CustomHelpers): string | ErrorReport => {
+	let ipVersions = ipOptions.version;
+
+	if (isBracketed(value)) {
+		value = value.slice(1, -1);
+		ipVersions = [ 'ipv6' ];
 	}
 
-	value = value.slice(1, -1);
-	const ipOptions = { ...globalIpOptions, version: [ 'ipv6' ] };
-
-	const { error } = Joi.string().ip(ipOptions).validate(value);
+	const { error } = Joi.string().ip({ ...ipOptions, version: ipVersions }).validate(value);
 
 	if (error) {
-		return helpers.error('type.invalid');
+		return helpers.error('ip.invalid');
 	}
 
 	return value;
@@ -102,7 +102,6 @@ export const GLOBAL_DEFAULTS = {
 };
 
 export const DEFAULT_IP_VERSION = 4;
-export const SECONDARY_IP_VERSION = 6;
 
 export const COMMAND_DEFAULTS = {
 	http: {

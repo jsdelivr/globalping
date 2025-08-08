@@ -1897,7 +1897,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
+			expect(valid.error!.message).to.equal('"target" must be a valid ip address of one of the following versions [ipv4, ipv6] with a forbidden CIDR');
 		});
 
 		it('should fail (uses blacklisted ipv4 for target)', () => {
@@ -2019,7 +2019,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.exist;
-			expect(valid.error!.message).to.equal('"target" does not match any of the allowed types');
+			expect(valid.error!.message).to.equal('"target" must be a valid ip address of one of the following versions [ipv4, ipv6] with a forbidden CIDR');
 		});
 
 		it('should pass (uses ipv4 for target incorrect caps for type)', () => {
