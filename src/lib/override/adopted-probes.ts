@@ -555,20 +555,19 @@ export class AdoptedProbes {
 
 			if (
 				existingDProbe
-				&& existingDProbe.country === dProbe.country
 				&& (existingDProbe.userId === dProbe.userId || dProbe.userId === null)
 			) {
 				logger.warn(`Duplication found by IP ${dProbe.ip}`, {
-					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps' ]),
-					delete: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps' ]),
+					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
+					delete: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
 				});
 
 				dProbesToDelete.push(dProbe);
 				return;
 			} else if (existingDProbe) {
 				logger.error(`Unremovable duplication found by IP ${dProbe.ip}`, {
-					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps' ]),
-					duplicate: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps' ]),
+					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
+					duplicate: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
 				});
 			}
 
