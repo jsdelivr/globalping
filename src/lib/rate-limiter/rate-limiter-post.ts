@@ -1,11 +1,11 @@
 import config from 'config';
 import TTLCache from '@isaacs/ttlcache';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
-import requestIp from 'request-ip';
 import { getPersistentRedisClient } from '../redis/persistent-client.js';
 import createHttpError from 'http-errors';
 import type { ExtendedContext } from '../../types.js';
 import { credits } from '../credits.js';
+import { getClientId } from './get-client-id.js';
 
 type FailedCreditsAttemptValue = {
 	requiredCredits: number;
@@ -45,7 +45,7 @@ const getRateLimiter = (ctx: ExtendedContext): {
 
 	return {
 		type: 'ip',
-		id: ctx.state.user?.hashedToken ?? requestIp.getClientIp(ctx.req) ?? '',
+		id: ctx.state.user?.hashedToken ?? getClientId(ctx.req),
 		rateLimiter: anonymousRateLimiter,
 	};
 };
