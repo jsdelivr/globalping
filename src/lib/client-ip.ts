@@ -1,5 +1,7 @@
 import requestIp from 'request-ip';
 
+const ipv4MappedPattern = /^::ffff:/i;
+
 export const getIpFromRequest = (request: requestIp.Request) => {
 	const ip = requestIp.getClientIp(request);
 
@@ -7,7 +9,7 @@ export const getIpFromRequest = (request: requestIp.Request) => {
 		return ip;
 	}
 
-	if (ip.startsWith('::ffff:')) {
+	if (ipv4MappedPattern.test(ip)) {
 		return ip.slice(7);
 	}
 
