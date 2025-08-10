@@ -11,7 +11,7 @@ import { getIpFromRequest } from '../../lib/client-ip.js';
 const handle = async (ctx: Context): Promise<void> => {
 	const request = ctx.request.body as AlternativeIpRequest;
 
-	const ip = getIpFromRequest(ctx.request);
+	const ip = getIpFromRequest(ctx.req);
 
 	if (!ip) {
 		throw createHttpError(400, 'Unable to get requester ip.', { type: 'no_ip' });

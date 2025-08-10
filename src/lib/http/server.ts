@@ -63,7 +63,7 @@ apmAgent.addSpanFilter((payload) => {
 	return false;
 });
 
-const app = new Koa({ proxy: true });
+const app = new Koa({ proxy: true, maxIpsCount: 1 });
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
 const docsHost = config.get<string>('server.docsHost');
 

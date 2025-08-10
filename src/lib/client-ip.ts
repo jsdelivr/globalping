@@ -1,9 +1,10 @@
-import requestIp from 'request-ip';
+import { IncomingMessage } from 'node:http';
+import proxyaddr from 'proxy-addr';
 
 const ipv4MappedPattern = /^::ffff:/i;
 
-export const getIpFromRequest = (request: requestIp.Request) => {
-	const ip = requestIp.getClientIp(request);
+export const getIpFromRequest = (request: IncomingMessage) => {
+	const ip = proxyaddr(request, (_address, index) => index < 1);
 
 	if (!ip) {
 		return ip;
