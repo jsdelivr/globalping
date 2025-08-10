@@ -1,6 +1,7 @@
 import type { Server } from 'node:http';
 import request, { type Response } from 'supertest';
 import { expect } from 'chai';
+import _ from 'lodash';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { anonymousRateLimiter as anonymousPostRateLimiter, authenticatedRateLimiter as authenticatedPostRateLimiter, failedCreditsAttempts } from '../../../src/lib/rate-limiter/rate-limiter-post.js';
@@ -22,7 +23,8 @@ describe('rate limiter', () => {
 		requestAgent = request(app);
 
 		const httpResponse = await requestAgent.post('/v1/').send() as Response & { req: any };
-		clientId = getIdFromRequest({ headers: {}, ...httpResponse.req }) || '127.0.0.1';
+		_.defaults(httpResponse.req, { headers: {} });
+		clientId = getIdFromRequest(httpResponse.req) || '127.0.0.1';
 
 		nockGeoIpProviders();
 		nockGeoIpProviders();
