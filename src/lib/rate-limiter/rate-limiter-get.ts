@@ -1,9 +1,9 @@
 import config from 'config';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
-import requestIp from 'request-ip';
 import { getPersistentRedisClient } from '../redis/persistent-client.js';
 import createHttpError from 'http-errors';
 import type { ExtendedContext, UnknownNext } from '../../types.js';
+import { getIdFromRequest } from './get-id-from-request.js';
 
 const redisClient = getPersistentRedisClient();
 
@@ -20,9 +20,9 @@ export const getMeasurementRateLimit = async (ctx: ExtendedContext, next: Unknow
 		return next();
 	}
 
-	const ip = requestIp.getClientIp(ctx.req) ?? '';
+	const clientId = getIdFromRequest(ctx.req);
 	const measurementId = ctx.params['id'] ?? '';
-	const id = `${ip}:${measurementId}`;
+	const id = `${clientId}:${measurementId}`;
 
 	try {
 		await rateLimiter.consume(id);

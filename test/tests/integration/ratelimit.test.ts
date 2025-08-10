@@ -1,6 +1,5 @@
 import type { Server } from 'node:http';
 import request, { type Response } from 'supertest';
-import requestIp from 'request-ip';
 import { expect } from 'chai';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
@@ -10,11 +9,12 @@ import { client } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
 import { CREDITS_TABLE } from '../../../src/lib/credits.js';
 import { getPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
+import { getIdFromRequest } from '../../../src/lib/rate-limiter/get-id-from-request.js';
 
 describe('rate limiter', () => {
 	let app: Server;
 	let requestAgent: any;
-	let clientIpv6: string;
+	let clientId: string;
 	const redis = getPersistentRedisClient();
 
 	before(async () => {
@@ -22,10 +22,7 @@ describe('rate limiter', () => {
 		requestAgent = request(app);
 
 		const httpResponse = await requestAgent.post('/v1/').send() as Response & { req: any };
-		// Supertest renders request as ipv4
-		const clientIp = requestIp.getClientIp(httpResponse.req);
-		// Koa sees ipv6-ipv4 monster
-		clientIpv6 = `::ffff:${clientIp ?? '127.0.0.1'}`;
+		clientId = getIdFromRequest(httpResponse.req) || '127.0.0.1';
 
 		nockGeoIpProviders();
 		nockGeoIpProviders();
@@ -54,8 +51,8 @@ describe('rate limiter', () => {
 
 	afterEach(async () => {
 		const [ getKeys ] = await Promise.all([
-			await redis.keys(`rate:get:${clientIpv6}:*`),
-			await anonymousPostRateLimiter.delete(clientIpv6),
+			await redis.keys(`rate:get:${clientId}:*`),
+			await anonymousPostRateLimiter.delete(clientId),
 			await authenticatedPostRateLimiter.delete('89da69bd-a236-4ab7-9c5d-b5f52ce09959'),
 		]);
 
@@ -175,7 +172,7 @@ describe('rate limiter', () => {
 					type: 'ping',
 					target: 'jsdelivr.com',
 				}).expect(202) as Response;
-			await getRateLimiter.set(`${clientIpv6}:${id}`, 999, 0);
+			await getRateLimiter.set(`${clientId}:${id}`, 999, 0);
 			const response = await requestAgent.get(`/v1/measurements/${id}`).send().expect(200) as Response;
 
 			expect(response.headers['Retry-After']).to.not.exist;
@@ -184,7 +181,7 @@ describe('rate limiter', () => {
 
 	describe('anonymous access', () => {
 		it('should succeed (limit not reached)', async () => {
-			await anonymousPostRateLimiter.set(clientIpv6, 0, 0);
+			await anonymousPostRateLimiter.set(clientId, 0, 0);
 
 			const response = await requestAgent.post('/v1/measurements').send({
 				type: 'ping',
@@ -195,7 +192,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should fail (limit reached)', async () => {
-			await anonymousPostRateLimiter.set(clientIpv6, 250, 0);
+			await anonymousPostRateLimiter.set(clientId, 250, 0);
 
 			const response = await requestAgent.post('/v1/measurements').send({
 				type: 'ping',
@@ -206,7 +203,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should consume all points successfully or none at all (cost > remaining > 0)', async () => {
-			await anonymousPostRateLimiter.set(clientIpv6, 249, 0); // 1 remaining
+			await anonymousPostRateLimiter.set(clientId, 249, 0); // 1 remaining
 
 			const response = await requestAgent.post('/v1/measurements').send({
 				type: 'ping',
@@ -223,7 +220,7 @@ describe('rate limiter', () => {
 					type: 'ping',
 					target: 'jsdelivr.com',
 				}).expect(202) as Response;
-			await getRateLimiter.set(`${clientIpv6}:${id}`, 1000, 0);
+			await getRateLimiter.set(`${clientId}:${id}`, 1000, 0);
 			const response = await requestAgent.get(`/v1/measurements/${id}`).send().expect(429) as Response;
 
 			expect(response.headers['retry-after']).to.equal('5');
@@ -277,7 +274,7 @@ describe('rate limiter', () => {
 					type: 'ping',
 					target: 'jsdelivr.com',
 				}).expect(202) as Response;
-			await getRateLimiter.set(`${clientIpv6}:${id}`, 1000, 0);
+			await getRateLimiter.set(`${clientId}:${id}`, 1000, 0);
 			const response = await requestAgent.get(`/v1/measurements/${id}`)
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
 				.send().expect(429) as Response;
