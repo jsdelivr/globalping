@@ -21,7 +21,7 @@ describe('rate limiter', () => {
 
 		const httpResponse = await requestAgent.post('/v1/').send() as Response & { req: any };
 		_.defaults(httpResponse.req, { headers: {} });
-		clientId = getIdFromRequest({ headers: {}, ...httpResponse.req }) || '127.0.0.1';
+		clientId = getIdFromRequest(httpResponse.req) || '127.0.0.1';
 
 		nockGeoIpProviders();
 
