@@ -5,6 +5,7 @@ import {
 import {
 	joiValidateDomain,
 	joiValidateDomainForDns,
+	joiValidateIp,
 	joiValidateTarget,
 	whenTypeApply,
 	globalIpOptions,
@@ -16,6 +17,7 @@ export const schemaErrorMessages = {
 	...joiMalwareSchemaErrorMessages,
 	'ip.private': '{{#label}} must not be a private hostname',
 	'domain.invalid': '{{#label}} must be a valid domain name',
+	'ip.invalid': '{{#label}} must be a valid ipv4 or ipv6 address',
 };
 
 
@@ -25,7 +27,7 @@ export const ipVersionSchema = Joi.number().when(Joi.ref('...target'), {
 	is: Joi.custom(joiValidateDomain()),
 	then: Joi.valid(...allowedIpVersions).optional().default(DEFAULT_IP_VERSION),
 	otherwise: Joi.when(Joi.ref('...target'), {
-		is: Joi.string().ip({ version: [ 'ipv6' ], cidr: 'forbidden' }),
+		is: Joi.custom(joiValidateIp({ version: [ 'ipv6' ], cidr: 'forbidden' })),
 		then: Joi.forbidden().default(6),
 		otherwise: Joi.forbidden().default(DEFAULT_IP_VERSION),
 	}),
@@ -37,7 +39,7 @@ export const ipVersionDnsSchema = Joi.number().when(Joi.ref('resolver'), {
 	is: Joi.custom(joiValidateDomain()),
 	then: Joi.valid(...allowedIpVersions).optional().default(DEFAULT_IP_VERSION),
 	otherwise: Joi.when(Joi.ref('resolver'), {
-		is: Joi.string().ip({ version: [ 'ipv6' ], cidr: 'forbidden' }),
+		is: Joi.custom(joiValidateIp({ version: [ 'ipv6' ], cidr: 'forbidden' })),
 		then: Joi.forbidden().default(6),
 		otherwise: Joi.forbidden().default(DEFAULT_IP_VERSION),
 	}),
@@ -53,7 +55,7 @@ const allowedHttpMethods = [ 'GET', 'HEAD', 'OPTIONS' ];
 
 // Http
 const httpTargetSchema = Joi.alternatives()
-	.try(Joi.string().ip(globalIpOptions), Joi.custom(joiValidateDomain()))
+	.try(Joi.custom(joiValidateIp()), Joi.custom(joiValidateDomain()))
 	.custom(joiValidateTarget('any'))
 	.required()
 	.messages(schemaErrorMessages);
@@ -74,7 +76,7 @@ export const httpSchema = Joi.object({
 
 // Mtr
 const mtrTargetSchema = Joi.alternatives()
-	.try(Joi.string().ip(globalIpOptions), Joi.custom(joiValidateDomain()))
+	.try(Joi.custom(joiValidateIp()), Joi.custom(joiValidateDomain()))
 	.custom(joiValidateTarget('any'))
 	.required()
 	.messages(schemaErrorMessages);
@@ -90,7 +92,7 @@ export const mtrSchema = Joi.object({
 
 // Ping
 const pingTargetSchema = Joi.alternatives()
-	.try(Joi.string().ip(globalIpOptions), Joi.custom(joiValidateDomain()))
+	.try(Joi.custom(joiValidateIp()), Joi.custom(joiValidateDomain()))
 	.custom(joiValidateTarget('any'))
 	.required()
 	.messages(schemaErrorMessages);
@@ -104,7 +106,7 @@ export const pingSchema = Joi.object({
 
 // Traceroute
 const tracerouteTargetSchema = Joi.alternatives()
-	.try(Joi.string().ip(globalIpOptions), Joi.custom(joiValidateDomain()))
+	.try(Joi.custom(joiValidateIp()), Joi.custom(joiValidateDomain()))
 	.custom(joiValidateTarget('any'))
 	.required()
 	.messages(schemaErrorMessages);
@@ -120,7 +122,7 @@ const allowedDnsProtocols = [ 'UDP', 'TCP' ];
 
 // Dns
 const dnsDefaultTargetSchema = Joi.custom(joiValidateDomainForDns()).custom(joiValidateTarget('domain')).required().messages(schemaErrorMessages);
-const dnsPtrTargetSchema = Joi.string().ip(globalIpOptions).custom(joiValidateTarget('ip')).required().messages(schemaErrorMessages);
+const dnsPtrTargetSchema = Joi.custom(joiValidateIp()).custom(joiValidateTarget('ip')).required().messages(schemaErrorMessages);
 const dnsTargetSchema = Joi.when(Joi.ref('..measurementOptions.query.type'), { is: Joi.string().insensitive().valid('PTR').required(), then: dnsPtrTargetSchema, otherwise: dnsDefaultTargetSchema });
 
 export const dnsSchema = Joi.object({
