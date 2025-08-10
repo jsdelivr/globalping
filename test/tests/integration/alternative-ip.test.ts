@@ -46,7 +46,7 @@ describe('Alternative IPs', () => {
 
 		await requestAgent.post('/v1/alternative-ip')
 			.send({ socketId, token })
-			.set('x-client-ip', '89.64.80.78')
+			.set('X-Forwarded-For', '89.64.80.78')
 			.expect(200);
 
 		await waitForProbesUpdate();
@@ -78,12 +78,12 @@ describe('Alternative IPs', () => {
 
 		await requestAgent.post('/v1/alternative-ip')
 			.send({ socketId, token })
-			.set('x-client-ip', '89.64.80.78')
+			.set('X-Forwarded-For', '89.64.80.78')
 			.expect(200);
 
 		await requestAgent.post('/v1/alternative-ip')
 			.send({ socketId, token })
-			.set('x-client-ip', '89.64.80.78')
+			.set('X-Forwarded-For', '89.64.80.78')
 			.expect(200);
 
 		await waitForProbesUpdate();
@@ -130,7 +130,7 @@ describe('Alternative IPs', () => {
 
 		await requestAgent.post('/v1/alternative-ip')
 			.send({ socketId, token })
-			.set('x-client-ip', '89.64.80.78')
+			.set('X-Forwarded-For', '89.64.80.78')
 			.expect(400)
 			.expect((response) => {
 				expect(response.body.error.type).to.equal('probe_not_found');
