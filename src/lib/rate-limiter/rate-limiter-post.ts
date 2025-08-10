@@ -5,7 +5,7 @@ import { getPersistentRedisClient } from '../redis/persistent-client.js';
 import createHttpError from 'http-errors';
 import type { ExtendedContext } from '../../types.js';
 import { credits } from '../credits.js';
-import { getClientId } from './get-client-id.js';
+import { getIdFromRequest } from './get-id-from-request.js';
 
 type FailedCreditsAttemptValue = {
 	requiredCredits: number;
@@ -45,7 +45,7 @@ const getRateLimiter = (ctx: ExtendedContext): {
 
 	return {
 		type: 'ip',
-		id: ctx.state.user?.hashedToken ?? getClientId(ctx.req),
+		id: ctx.state.user?.hashedToken ?? getIdFromRequest(ctx.req),
 		rateLimiter: anonymousRateLimiter,
 	};
 };

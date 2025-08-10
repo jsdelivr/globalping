@@ -1,5 +1,5 @@
-import requestIp from 'request-ip';
 import type { Socket } from 'socket.io';
+import { getIpFromRequest } from './client-ip.js';
 
 const getProbeIp = (socket: Socket) => {
 	if (process.env['TEST_MODE'] === 'unit') {
@@ -35,14 +35,7 @@ const getProbeIp = (socket: Socket) => {
 		return samples[index];
 	}
 
-	const clientIp = requestIp.getClientIp(socket.request);
-
-	if (!clientIp) {
-		return null;
-	}
-
-	const hasEmptyIpv6Prefix = clientIp.startsWith('::ffff:');
-	return hasEmptyIpv6Prefix ? clientIp.slice(7) : clientIp;
+	return getIpFromRequest(socket.request);
 };
 
 export default getProbeIp;

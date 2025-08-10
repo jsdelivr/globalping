@@ -1,6 +1,5 @@
 import type { Server } from 'node:http';
 import request, { type Response } from 'supertest';
-import requestIp from 'request-ip';
 import { expect } from 'chai';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
@@ -10,7 +9,7 @@ import { client } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
 import { CREDITS_TABLE } from '../../../src/lib/credits.js';
 import { getPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
-import { getClientId } from '../../../src/lib/rate-limiter/get-client-id.js';
+import { getIdFromRequest } from '../../../src/lib/rate-limiter/get-id-from-request.js';
 
 describe('rate limiter', () => {
 	let app: Server;
@@ -23,10 +22,7 @@ describe('rate limiter', () => {
 		requestAgent = request(app);
 
 		const httpResponse = await requestAgent.post('/v1/').send() as Response & { req: any };
-		// Supertest renders request as ipv4
-		const clientIp = requestIp.getClientIp(httpResponse.req);
-		// Koa sees ipv6-ipv4 monster
-		clientId = getClientId(httpResponse.req, `::ffff:${clientIp ?? '127.0.0.1'}`);
+		clientId = getIdFromRequest(httpResponse.req) || '127.0.0.1';
 
 		nockGeoIpProviders();
 		nockGeoIpProviders();
