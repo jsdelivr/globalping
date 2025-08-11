@@ -1,9 +1,18 @@
-import requestIp from 'request-ip';
+import { IncomingMessage } from 'node:http';
+import proxyaddr from 'proxy-addr';
+import config from 'config';
 
 const ipv4MappedPattern = /^::ffff:/i;
 
-export const getIpFromRequest = (request: requestIp.Request) => {
-	const ip = requestIp.getClientIp(request);
+const trustedProxies = config.get<string[]>('server.trustedProxies');
+const trustPredicate = proxyaddr.compile([
+	...trustedProxies,
+	'loopback',
+	'linklocal',
+]);
+
+export const getIpFromRequest = (request: IncomingMessage) => {
+	const ip = proxyaddr(request, trustPredicate);
 
 	if (!ip) {
 		return ip;

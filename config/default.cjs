@@ -15,6 +15,7 @@ module.exports = {
 			cookieName: 'dash_session_token',
 			cookieSecret: '',
 		},
+		trustedProxies: [],
 	},
 	redis: {
 		standalonePersistent: {

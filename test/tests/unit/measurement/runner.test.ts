@@ -15,7 +15,7 @@ const getProbe = (id: number) => ({ client: id } as unknown as Probe);
 
 const req = {
 	headers: {
-		'x-client-ip': '1.1.1.1',
+		'X-Forwarded-For': '1.1.1.1',
 	},
 };
 
