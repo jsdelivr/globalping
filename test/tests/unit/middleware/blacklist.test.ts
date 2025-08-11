@@ -36,6 +36,20 @@ describe('blacklist middleware', () => {
 		expect(res.status).to.not.equal(403);
 	});
 
+	it('should pass (ok IPv4-mapped IPv6)', async () => {
+		const res = await requestAgent.get('/').set('X-Forwarded-For', '::ffff:127.0.0.1');
+		expect(res.status).to.not.equal(403);
+	});
+
+	it('should fail (blacklisted IPv4-mapped IPv6)', async () => {
+		const res = await requestAgent.get('/').set('X-Forwarded-For', '::ffff:100.33.75.218');
+
+		expect(res.status).to.equal(403);
+		expect(res.body?.error).to.exist;
+		expect(res.body.error.type).to.equal('access_forbidden');
+		expect(res.body.error.message).to.equal('Access from ::ffff:100.33.75.218 has been forbidden for security reasons.');
+	});
+
 	it('should fail (blacklisted ip)', async () => {
 		const res = await requestAgent.get('/').set('X-Forwarded-For', '100.33.75.218');
 
