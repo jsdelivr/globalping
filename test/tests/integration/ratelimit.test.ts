@@ -20,7 +20,7 @@ describe('rate limiter', () => {
 		app = await getTestServer();
 		requestAgent = request(app);
 
-		requestAgent.post('/v1/').send();
+		await requestAgent.post('/v1/').send();
 		clientId = '127.0.0.1';
 
 		nockGeoIpProviders();
