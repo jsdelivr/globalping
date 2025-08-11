@@ -45,7 +45,7 @@ const getRateLimiter = (ctx: ExtendedContext): {
 
 	return {
 		type: 'ip',
-		id: ctx.state.user?.hashedToken ?? getIdFromRequest(ctx.req),
+		id: ctx.state.user?.hashedToken ?? getIdFromRequest(ctx.request),
 		rateLimiter: anonymousRateLimiter,
 	};
 };

@@ -11,12 +11,12 @@ const trustPredicate = proxyaddr.compile([
 	'linklocal',
 ]);
 
-export const getIpFromRequest = (request: IncomingMessage) => {
-	const ip = proxyaddr(request, trustPredicate);
-
-	if (!ip) {
-		return ip;
-	}
+/**
+ * Returns the real client IP, taking into account the configured trusted proxies.
+ * Normalizes IPv4-mapped IPv6 address into IPv4.
+ */
+export const getIpFromRequest = (req: IncomingMessage) => {
+	const ip = proxyaddr(req, trustPredicate);
 
 	if (ipv4MappedPattern.test(ip)) {
 		return ip.slice(7);
