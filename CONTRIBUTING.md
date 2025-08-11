@@ -50,3 +50,4 @@ Most IDEs have plugins integrating the used linter (eslint), including support f
 - `SERVER_SESSION_COOKIE_SECRET={value}` used to read the shared session cookie
 - `DB_CONNECTION_HOST`, `DB_CONNECTION_USER`, `DB_CONNECTION_PASSWORD`, and `DB_CONNECTION_DATABASE` database connection details
 - `REDIS_STANDALONE_PERSISTENT_URL`, `REDIS_STANDALONE_NON_PERSISTENT_URL`, `REDIS_CLUSTER_MEASUREMENTS_NODES_0`, `REDIS_CLUSTER_MEASUREMENTS_NODES_1`, `REDIS_CLUSTER_MEASUREMENTS_NODES_2`, and `REDIS_SHARED_OPTIONS_PASSWORD` - redis connection details
+- `SERVER_TRUSTED_PROXIES=["...","..."]`
