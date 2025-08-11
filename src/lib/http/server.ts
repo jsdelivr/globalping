@@ -30,6 +30,7 @@ import { docsLink } from './middleware/docs-link.js';
 import type { CustomContext } from '../../types.js';
 import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternative-ip.js';
 import { registerLimitsRoute } from '../../limits/route/get-limits.js';
+import { blacklist } from './middleware/blacklist.js';
 
 apmAgent.addTransactionFilter(apmUtils.transactionFilter({
 	keepResponse: [ 'location' ],
@@ -122,6 +123,7 @@ app
 	.use(defaultJson())
 	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 	.use(errorHandlerMw)
+	.use(blacklist)
 	.use(corsHandler())
 	.use(rootRouter.routes())
 	.use(healthRouter.routes())
