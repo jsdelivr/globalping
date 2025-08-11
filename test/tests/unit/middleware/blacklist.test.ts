@@ -31,19 +31,13 @@ describe('blacklist middleware', () => {
 		nock.cleanAll();
 	});
 
-	const makeRequest = (xff: string) => {
-		const req = requestAgent.get('/');
-
-		return req.set('X-Forwarded-For', xff);
-	};
-
 	it('should pass (ok ip)', async () => {
-		const res = await makeRequest('127.0.0.1');
+		const res = await requestAgent.get('/').set('X-Forwarded-For', '127.0.0.1');
 		expect(res.status).to.not.equal(403);
 	});
 
 	it('should fail (blacklisted ip)', async () => {
-		const res = await makeRequest('100.33.75.218');
+		const res = await requestAgent.get('/').set('X-Forwarded-For', '100.33.75.218');
 
 		expect(res.status).to.equal(403);
 		expect(res.body?.error).to.exist;
