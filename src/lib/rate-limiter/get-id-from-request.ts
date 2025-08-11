@@ -1,8 +1,8 @@
+import type { Request } from 'koa';
 import { isIPv6 } from 'node:net';
 import ipaddr from 'ipaddr.js';
-import koa from 'koa';
 
-export const getIdFromRequest = (request: koa.Request) => {
+export const getIdFromRequest = (request: Request) => {
 	const clientIp = request.ip;
 
 	if (!clientIp) {
