@@ -194,6 +194,16 @@ export const getMetricsAgent = () => {
 	return agent;
 };
 
+export const captureSpan = <R>(name: string, fn: () => R): R => {
+	const span = apmAgent.startSpan(name);
+
+	try {
+		return fn();
+	} finally {
+		span?.end();
+	}
+};
+
 function median (values: number[]): number | undefined {
 	values.sort((a, b) => a - b);
 	const half = Math.floor(values.length / 2);
