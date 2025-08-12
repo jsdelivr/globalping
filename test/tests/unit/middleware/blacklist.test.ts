@@ -47,7 +47,7 @@ describe('blacklist middleware', () => {
 		expect(res.status).to.equal(403);
 		expect(res.body?.error).to.exist;
 		expect(res.body.error.type).to.equal('access_forbidden');
-		expect(res.body.error.message).to.equal('Access from ::ffff:100.33.75.218 has been forbidden for security reasons.');
+		expect(res.body.error.message).to.equal('Access from 100.33.75.218 has been forbidden for security reasons.');
 	});
 
 	it('should fail (blacklisted ip)', async () => {
