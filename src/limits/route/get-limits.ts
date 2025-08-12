@@ -1,5 +1,5 @@
 import type Router from '@koa/router';
-import { getRateLimitState } from '../../lib/rate-limiter/rate-limiter-post.js';
+import { getPostMeasurementRateLimitState } from '../../lib/rate-limiter/rate-limiter-post.js';
 import type { ExtendedContext } from '../../types.js';
 import { credits } from '../../lib/credits.js';
 import { authenticate } from '../../lib/http/middleware/authenticate.js';
@@ -7,7 +7,7 @@ import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 
 const handle = async (ctx: ExtendedContext): Promise<void> => {
 	const [ rateLimitState, remainingCredits ] = await Promise.all([
-		getRateLimitState(ctx),
+		getPostMeasurementRateLimitState(ctx),
 		ctx.state.user?.id && credits.getRemainingCredits(ctx.state.user.id),
 	]);
 

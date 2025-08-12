@@ -2,7 +2,7 @@ import config from 'config';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 import { getPersistentRedisClient } from '../redis/persistent-client.js';
 import createHttpError from 'http-errors';
-import type { ExtendedContext, UnknownNext } from '../../types.js';
+import type { ExtendedContext } from '../../types.js';
 import { getIdFromRequest } from './get-id-from-request.js';
 
 const redisClient = getPersistentRedisClient();
@@ -15,12 +15,12 @@ export const rateLimiter = new RateLimiterRedis({
 	blockDuration: 5,
 });
 
-export const getMeasurementRateLimit = async (ctx: ExtendedContext, next: UnknownNext) => {
+export const checkGetMeasurementRateLimit = async (ctx: ExtendedContext) => {
 	if (ctx['isAdmin']) {
-		return next();
+		return;
 	}
 
-	const clientId = getIdFromRequest(ctx.req);
+	const clientId = getIdFromRequest(ctx.request);
 	const measurementId = ctx.params['id'] ?? '';
 	const id = `${clientId}:${measurementId}`;
 
@@ -37,8 +37,6 @@ export const getMeasurementRateLimit = async (ctx: ExtendedContext, next: Unknow
 
 		throw createHttpError(500);
 	}
-
-	return next();
 };
 
 const setRateLimitHeaders = (ctx: ExtendedContext, error: RateLimiterRes) => {

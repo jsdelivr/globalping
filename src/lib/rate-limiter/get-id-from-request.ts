@@ -1,10 +1,9 @@
-import { IncomingMessage } from 'node:http';
+import type { Request } from 'koa';
 import { isIPv6 } from 'node:net';
 import ipaddr from 'ipaddr.js';
-import { getIpFromRequest } from '../client-ip.js';
 
-export const getIdFromRequest = (req: IncomingMessage) => {
-	const clientIp = getIpFromRequest(req);
+export const getIdFromRequest = (request: Request) => {
+	const clientIp = request.ip;
 
 	if (!clientIp) {
 		return '';

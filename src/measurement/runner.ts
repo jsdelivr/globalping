@@ -9,7 +9,7 @@ import { captureSpan, getMetricsAgent, type MetricsAgent } from '../lib/metrics.
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
 import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage, UserRequest, MeasurementRequestMessage } from './types.js';
-import { rateLimit } from '../lib/rate-limiter/rate-limiter-post.js';
+import { checkPostMeasurementRateLimit } from '../lib/rate-limiter/rate-limiter-post.js';
 import type { ExtendedContext } from '../types.js';
 
 export class MeasurementRunner {
@@ -17,7 +17,7 @@ export class MeasurementRunner {
 		private readonly io: Server,
 		private readonly store: MeasurementStore,
 		private readonly router: ProbeRouter,
-		private readonly checkRateLimit: typeof rateLimit,
+		private readonly checkRateLimit: typeof checkPostMeasurementRateLimit,
 		private readonly metrics: MetricsAgent,
 	) {}
 
@@ -85,7 +85,7 @@ let runner: MeasurementRunner;
 
 export const getMeasurementRunner = () => {
 	if (!runner) {
-		runner = new MeasurementRunner(getWsServer(), getMeasurementStore(), getProbeRouter(), rateLimit, getMetricsAgent());
+		runner = new MeasurementRunner(getWsServer(), getMeasurementStore(), getProbeRouter(), checkPostMeasurementRateLimit, getMetricsAgent());
 	}
 
 	return runner;

@@ -1,14 +1,12 @@
 import type { Server } from 'node:http';
-import request, { type Response } from 'supertest';
+import request from 'supertest';
 import { expect } from 'chai';
-import _ from 'lodash';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { anonymousRateLimiter, authenticatedRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-post.js';
 import { client } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
 import { CREDITS_TABLE } from '../../../src/lib/credits.js';
-import { getIdFromRequest } from '../../../src/lib/rate-limiter/get-id-from-request.js';
 
 describe('rate limiter', () => {
 	let app: Server;
@@ -19,9 +17,8 @@ describe('rate limiter', () => {
 		app = await getTestServer();
 		requestAgent = request(app);
 
-		const httpResponse = await requestAgent.post('/v1/').send() as Response & { req: any };
-		_.defaults(httpResponse.req, { headers: {} });
-		clientId = getIdFromRequest(httpResponse.req) || '127.0.0.1';
+		await requestAgent.post('/v1/').send();
+		clientId = '127.0.0.1';
 
 		nockGeoIpProviders();
 

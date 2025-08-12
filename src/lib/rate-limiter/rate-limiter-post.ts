@@ -45,12 +45,12 @@ const getRateLimiter = (ctx: ExtendedContext): {
 
 	return {
 		type: 'ip',
-		id: ctx.state.user?.hashedToken ?? getIdFromRequest(ctx.req),
+		id: ctx.state.user?.hashedToken ?? getIdFromRequest(ctx.request),
 		rateLimiter: anonymousRateLimiter,
 	};
 };
 
-export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) => {
+export const checkPostMeasurementRateLimit = async (ctx: ExtendedContext, numberOfProbes: number) => {
 	if (ctx['isAdmin']) {
 		return;
 	}
@@ -85,7 +85,7 @@ export const rateLimit = async (ctx: ExtendedContext, numberOfProbes: number) =>
 	}
 };
 
-export const getRateLimitState = async (ctx: ExtendedContext) => {
+export const getPostMeasurementRateLimitState = async (ctx: ExtendedContext) => {
 	const { rateLimiter, id, type } = getRateLimiter(ctx);
 	const rateLimiterRes = await rateLimiter.get(id);
 
