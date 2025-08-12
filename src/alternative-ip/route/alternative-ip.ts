@@ -6,12 +6,10 @@ import { bodyParser } from '../../lib/http/middleware/body-parser.js';
 import { validate } from '../../lib/http/middleware/validate.js';
 import { schema } from '../schema.js';
 import { getAltIpsClient } from '../../lib/alt-ips.js';
-import { getIpFromRequest } from '../../lib/client-ip.js';
 
 const handle = async (ctx: Context): Promise<void> => {
 	const request = ctx.request.body as AlternativeIpRequest;
-
-	const ip = getIpFromRequest(ctx.req);
+	const ip = ctx.request.ip;
 
 	if (!ip) {
 		throw createHttpError(400, 'Unable to get requester ip.', { type: 'no_ip' });

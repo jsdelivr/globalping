@@ -24,6 +24,7 @@ import { errorHandler } from './error-handler.js';
 import { defaultJson } from './middleware/default-json.js';
 import { errorHandlerMw } from './middleware/error-handler.js';
 import { corsHandler } from './middleware/cors.js';
+import { requestIp } from './middleware/request-ip.js';
 import { isAdminMw } from './middleware/is-admin.js';
 import { isSystemMw } from './middleware/is-system.js';
 import { docsLink } from './middleware/docs-link.js';
@@ -63,7 +64,7 @@ apmAgent.addSpanFilter((payload) => {
 	return false;
 });
 
-const app = new Koa({ proxy: true, maxIpsCount: 1 });
+const app = new Koa();
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
 const docsHost = config.get<string>('server.docsHost');
 
@@ -112,6 +113,7 @@ healthRouter.use(koaElasticUtils.middleware(apmAgent));
 registerHealthRoute(healthRouter);
 
 app
+	.use(requestIp())
 	.use(responseTime())
 	.use(koaFavicon(`${publicPath}/favicon.ico`))
 	.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }))

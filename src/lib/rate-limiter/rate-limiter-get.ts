@@ -20,7 +20,7 @@ export const getMeasurementRateLimit = async (ctx: ExtendedContext, next: Unknow
 		return next();
 	}
 
-	const clientId = getIdFromRequest(ctx.req);
+	const clientId = getIdFromRequest(ctx.request);
 	const measurementId = ctx.params['id'] ?? '';
 	const id = `${clientId}:${measurementId}`;
 
