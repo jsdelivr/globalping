@@ -131,10 +131,58 @@ describe('rate limiter', () => {
 			}).expect(202) as Response;
 
 			expect(response2.headers['x-ratelimit-limit']).to.equal('250');
-			expect(response.headers['x-ratelimit-consumed']).to.equal('1');
+			expect(response2.headers['x-ratelimit-consumed']).to.equal('1');
 			expect(response2.headers['x-ratelimit-remaining']).to.equal('248');
 			expect(response2.headers['x-ratelimit-reset']).to.equal('3600');
+			expect(response2.headers['x-request-cost']).to.equal('1');
+		});
+
+		it('should change values on multiple requests (POST, different IPv6 addresses, same /64 prefix)', async () => {
+			const response = await requestAgent.post('/v1/measurements').set('X-Forwarded-For', '1261:ee75:8af3:70c8::ffff').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+			}).expect(202) as Response;
+
+			expect(response.headers['x-ratelimit-limit']).to.equal('250');
+			expect(response.headers['x-ratelimit-consumed']).to.equal('1');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('249');
+			expect(response.headers['x-ratelimit-reset']).to.equal('3600');
 			expect(response.headers['x-request-cost']).to.equal('1');
+
+			const response2 = await requestAgent.post('/v1/measurements').set('X-Forwarded-For', '1261:ee75:8af3:70c8::eeee').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+			}).expect(202) as Response;
+
+			expect(response2.headers['x-ratelimit-limit']).to.equal('250');
+			expect(response2.headers['x-ratelimit-consumed']).to.equal('1');
+			expect(response2.headers['x-ratelimit-remaining']).to.equal('248');
+			expect(response2.headers['x-ratelimit-reset']).to.equal('3600');
+			expect(response2.headers['x-request-cost']).to.equal('1');
+		});
+
+		it('should not change values on multiple requests (POST, IPv4-mapped IPv6)', async () => {
+			const response = await requestAgent.post('/v1/measurements').set('X-Forwarded-For', '::ffff:192.0.2.128').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+			}).expect(202) as Response;
+
+			expect(response.headers['x-ratelimit-limit']).to.equal('250');
+			expect(response.headers['x-ratelimit-consumed']).to.equal('1');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('249');
+			expect(response.headers['x-ratelimit-reset']).to.equal('3600');
+			expect(response.headers['x-request-cost']).to.equal('1');
+
+			const response2 = await requestAgent.post('/v1/measurements').set('X-Forwarded-For', '::ffff:192.0.2.129').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+			}).expect(202) as Response;
+
+			expect(response2.headers['x-ratelimit-limit']).to.equal('250');
+			expect(response2.headers['x-ratelimit-consumed']).to.equal('1');
+			expect(response2.headers['x-ratelimit-remaining']).to.equal('249');
+			expect(response2.headers['x-ratelimit-reset']).to.equal('3600');
+			expect(response2.headers['x-request-cost']).to.equal('1');
 		});
 
 		it('should change values on multiple requests (authenticated POST)', async () => {
