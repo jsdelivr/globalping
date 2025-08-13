@@ -36,6 +36,7 @@ describe('AdoptedProbes', () => {
 		adoptionToken: null,
 		allowedCountries: '["IE"]',
 		customLocation: null,
+		originalLocation: null,
 		continent: 'EU',
 		continentName: 'Europe',
 		region: 'Northern Europe',
@@ -435,6 +436,13 @@ describe('AdoptedProbes', () => {
 					latitude: 53.33,
 					longitude: -6.25,
 				}),
+				originalLocation: JSON.stringify({
+					country: 'GB',
+					city: 'London',
+					latitude: 51.51,
+					longitude: -0.13,
+					state: null,
+				}),
 			},
 			{
 				...defaultAdoption,
@@ -444,6 +452,13 @@ describe('AdoptedProbes', () => {
 					state: null,
 					latitude: 53.33,
 					longitude: -6.25,
+				}),
+				originalLocation: JSON.stringify({
+					country: 'GB',
+					city: 'London',
+					latitude: 51.51,
+					longitude: -0.13,
+					state: null,
 				}),
 				id: 'p-9',
 				ip: '9.9.9.9',
@@ -669,6 +684,7 @@ describe('AdoptedProbes', () => {
 				city: 'Dublin',
 				latitude: 53.33,
 				longitude: -6.25,
+				originalLocation: '{"country":"IE","city":"Dublin","latitude":53.33,"longitude":-6.25,"state":null}',
 			},
 		]);
 
@@ -683,6 +699,7 @@ describe('AdoptedProbes', () => {
 				city: 'Dublin',
 				latitude: 53.33,
 				longitude: -6.25,
+				originalLocation: '{"country":"IE","city":"Dublin","latitude":53.33,"longitude":-6.25,"state":null}',
 			},
 		]);
 
@@ -752,6 +769,7 @@ describe('AdoptedProbes', () => {
 			latitude: 38.73,
 			longitude: -9.15,
 			allowedCountries: '["GB","PT"]',
+			originalLocation: '{"country":"GB","city":"London","latitude":51.51,"longitude":-0.13,"state":null}',
 		}]);
 
 		expect(sql.insert.callCount).to.equal(0);

@@ -66,6 +66,7 @@ describe('Adoption token', () => {
 					network: 'The Constant Company LLC',
 					adoptionToken: 'adoptionTokenValue',
 					customLocation: null,
+					originalLocation: null,
 					allowedCountries: [ 'US' ],
 				},
 				user: { id: 'userIdValue' },
