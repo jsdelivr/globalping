@@ -87,12 +87,12 @@ PORT=3002 HOSTNAME=3002 REDIS_URL=redis://default:$REDIS_PASSWORD@$REDIS_HOST:63
 
 ## Probe
 
-Runs `PROBES_COUNT` number of probe processes. They all get a random fake ip which is passed to the API. Value of the `FAKE_IP_FIRST_3_OCTETS` is the first octet of the fake ip. Each probe process requires ~40mb of RAM.
+Runs `PROBES_COUNT` number of probe processes. Each probe process requires ~40mb of RAM.
 
 ```bash
 # Update that variables before start
 API_HOST=<your_value>
-FAKE_IP_FIRST_3_OCTETS=131.255.7
+FAKE_IP_FIRST_OCTETS=131.255.7
 PROBES_COUNT=300
 
 # Install node
@@ -124,6 +124,6 @@ sudo dpkg --extract "/tmp/expect.deb" /
 # Auto start the probes
 sudo npm i -g pm2
 sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
-FAKE_IP_FIRST_3_OCTETS=$FAKE_IP_FIRST_3_OCTETS NODE_ENV=development PROBES_COUNT=$PROBES_COUNT API_HOST=ws://$API_HOST pm2 start dist/index.js
+FAKE_IP_FIRST_OCTETS=$FAKE_IP_FIRST_OCTETS NODE_ENV=development PROBES_COUNT=$PROBES_COUNT API_HOST=ws://$API_HOST pm2 start dist/index.js
 pm2 save
 ```
