@@ -83,6 +83,7 @@ describe('Adoption code', () => {
 					network: 'The Constant Company LLC',
 					adoptionToken: null,
 					customLocation: null,
+					originalLocation: null,
 					allowedCountries: [ 'US' ],
 					continent: 'NA',
 					continentName: 'North America',

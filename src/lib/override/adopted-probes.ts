@@ -51,6 +51,7 @@ type DProbe = {
 	defaultPrefix: string | null;
 	publicProbes: boolean;
 	adoptionToken: string | null;
+	allowedCountries: string[];
 	customLocation: {
 		country: string;
 		city: string;
@@ -58,22 +59,29 @@ type DProbe = {
 		longitude: number;
 		state: string | null;
 	} | null;
-	allowedCountries: string[];
+	originalLocation: {
+		country: string;
+		city: string;
+		latitude: number;
+		longitude: number;
+		state: string | null;
+	} | null;
 };
 
 export type Adoption = Omit<DProbe, 'userId'> & {
 	userId: string;
 };
 
-export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation'> & {
+export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation' | 'originalLocation'> & {
 	altIps: string;
 	tags: string;
 	systemTags: string;
 	isIPv4Supported: number;
 	isIPv6Supported: number;
 	publicProbes: number;
-	customLocation: string | null;
 	allowedCountries: string;
+	customLocation: string | null;
+	originalLocation: string | null;
 };
 
 type DProbeFieldDescription = {
@@ -178,6 +186,16 @@ export class AdoptedProbes {
 		},
 		allowedCountries: {
 			probeField: 'location.allowedCountries',
+		},
+		originalLocation: {
+			probeField: 'location',
+			format: (location: ProbeLocation, _probe: Probe, dProbe?: DProbe) => dProbe?.customLocation ? {
+				country: location.country,
+				city: location.city,
+				latitude: location.latitude,
+				longitude: location.longitude,
+				state: location.state,
+			} : null,
 		},
 	};
 
@@ -316,6 +334,7 @@ export class AdoptedProbes {
 			publicProbes: Boolean(row.publicProbes),
 			allowedCountries: JSON.parse(row.allowedCountries) as string[],
 			customLocation: row.customLocation ? JSON.parse(row.customLocation) as DProbe['customLocation'] : null,
+			originalLocation: row.originalLocation ? JSON.parse(row.originalLocation) as DProbe['originalLocation'] : null,
 		}));
 
 		this.dProbes = dProbes;
@@ -740,6 +759,7 @@ export class AdoptedProbes {
 			network: probe.location.network,
 			adoptionToken: probe.adoptionToken,
 			allowedCountries: probe.location.allowedCountries,
+			originalLocation: null,
 			customLocation: null,
 		};
 	}
