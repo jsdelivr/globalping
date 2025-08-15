@@ -714,7 +714,7 @@ describe('AdoptedProbes', () => {
 				country: 'PT',
 				city: 'Lisbon',
 				latitude: 38.73,
-				longitude: -9.15,
+				longitude: -9.1526,
 			}),
 		}]);
 
