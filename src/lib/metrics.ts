@@ -198,9 +198,11 @@ export const captureSpan = <R>(name: string, fn: () => R): R => {
 	const span = apmAgent.startSpan(name);
 	const result = fn();
 
-	void Promise.resolve(result).finally(() => {
-		span?.end();
-	});
+	void Promise.resolve(result)
+		.finally(() => {
+			span?.end();
+		})
+		.catch(() => {});
 
 	return result;
 };
