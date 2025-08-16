@@ -178,11 +178,13 @@ export class AdoptedProbes {
 		},
 		latitude: {
 			probeField: 'location.latitude',
-			getCustomValue: (dProbe: DProbe) => dProbe.customLocation?.latitude ?? null,
+			format: (latitude?: number | null) => latitude ? normalizeCoordinate(latitude) : null,
+			getCustomValue: (dProbe: DProbe) => dProbe.customLocation?.latitude ? normalizeCoordinate(dProbe.customLocation.latitude) : null,
 		},
 		longitude: {
 			probeField: 'location.longitude',
-			getCustomValue: (dProbe: DProbe) => dProbe.customLocation?.longitude ?? null,
+			format: (longitude?: number | null) => longitude ? normalizeCoordinate(longitude) : null,
+			getCustomValue: (dProbe: DProbe) => dProbe.customLocation?.longitude ? normalizeCoordinate(dProbe.customLocation.longitude) : null,
 		},
 		allowedCountries: {
 			probeField: 'location.allowedCountries',
