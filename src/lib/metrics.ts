@@ -196,15 +196,26 @@ export const getMetricsAgent = () => {
 
 export const captureSpan = <R>(name: string, fn: () => R): R => {
 	const span = apmAgent.startSpan(name);
-	const result = fn();
 
-	void Promise.resolve(result)
-		.finally(() => {
+	try {
+		const result = fn();
+		const isThenable = _.isObject(result) && 'then' in result;
+
+		if (isThenable) {
+			void Promise.resolve(result)
+				.finally(() => {
+					span?.end();
+				})
+				.catch(() => {});
+		} else {
 			span?.end();
-		})
-		.catch(() => {});
+		}
 
-	return result;
+		return result;
+	} catch (error) {
+		span?.end();
+		throw error;
+	}
 };
 
 function median (values: number[]): number | undefined {
