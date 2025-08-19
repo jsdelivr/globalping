@@ -207,11 +207,14 @@ export const captureSpan = <R>(name: string, fn: () => R): R => {
 					span?.end();
 				})
 				.catch(() => {});
+		} else {
+			span?.end();
 		}
 
 		return result;
-	} finally {
+	} catch (error) {
 		span?.end();
+		throw error;
 	}
 };
 
