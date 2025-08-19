@@ -2,6 +2,7 @@ import config from 'config';
 import _ from 'lodash';
 import type { Location } from '../lib/location/types.js';
 import type { Probe, ProbeLocation } from './types.js';
+import { captureSpan } from '../lib/metrics.js';
 
 /*
  * [ public key ]: internal key
@@ -89,7 +90,7 @@ export class ProbesLocationFilter {
 			if (key === 'tags') {
 				filteredProbes = probes.filter(probe => location.tags!.every(tag => ProbesLocationFilter.hasTag(probe, tag)));
 			} else if (key === 'magic') {
-				filteredProbes = ProbesLocationFilter.magicFilter(filteredProbes, location.magic!);
+				filteredProbes = captureSpan('magicFilter', () => ProbesLocationFilter.magicFilter(filteredProbes, location.magic!));
 			} else {
 				const probeKey = Object.hasOwn(locationKeyMap, key) ? locationKeyMap[key as keyof typeof locationKeyMap] : key;
 				// @ts-expect-error it's a string
@@ -101,14 +102,14 @@ export class ProbesLocationFilter {
 
 		const isMagicSorting = Object.keys(location).includes('magic');
 
-		return isMagicSorting ? this.magicSort(filteredProbes, location.magic!) : this.diversifiedShuffle(filteredProbes);
+		return captureSpan('shuffle', () => isMagicSorting ? this.magicSort(filteredProbes, location.magic!) : this.diversifiedShuffle(filteredProbes));
 	}
 
 	public filterByLocationAndWeight (probes: Probe[], distribution: Map<Location, number>, limit: number): Probe[] {
 		const groupedByLocation = new Map<Location, Probe[]>();
 
 		for (const [ location ] of distribution) {
-			const foundProbes = this.filterByLocation(probes, location);
+			const foundProbes = captureSpan('filterByLocation', () => this.filterByLocation(probes, location));
 
 			if (foundProbes.length > 0) {
 				groupedByLocation.set(location, foundProbes);

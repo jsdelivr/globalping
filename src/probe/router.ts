@@ -6,6 +6,7 @@ import { ProbesLocationFilter } from './probes-location-filter.js';
 import { getMeasurementStore, MeasurementStore } from '../measurement/store.js';
 import { normalizeFromPublicName, normalizeNetworkName } from '../lib/geoip/utils.js';
 import { fetchProbes as serverFetchProbes } from '../lib/ws/server.js';
+import { captureSpan } from '../lib/metrics.js';
 
 export class ProbeRouter {
 	private readonly probesFilter = new ProbesLocationFilter();
@@ -35,11 +36,11 @@ export class ProbeRouter {
 		let filtered: Probe[] = [];
 
 		if (locations.some(l => l.limit)) {
-			filtered = this.findWithLocationLimit(connectedProbesFilteredByIpVersion, locations);
+			filtered = captureSpan('findWithLocationLimit', () => this.findWithLocationLimit(connectedProbesFilteredByIpVersion, locations));
 		} else if (locations.length > 0) {
-			filtered = this.findWithGlobalLimit(connectedProbesFilteredByIpVersion, locations, globalLimit);
+			filtered = captureSpan('findWithGlobalLimit', () => this.findWithGlobalLimit(connectedProbesFilteredByIpVersion, locations, globalLimit));
 		} else {
-			filtered = this.findGloballyDistributed(connectedProbesFilteredByIpVersion, globalLimit);
+			filtered = captureSpan('findGloballyDistributed', () => this.findGloballyDistributed(connectedProbesFilteredByIpVersion, globalLimit));
 		}
 
 		if (filtered.length === 0 && locations.length === 1 && locations[0]?.magic) {
@@ -69,7 +70,7 @@ export class ProbeRouter {
 
 		for (const location of locations) {
 			const { limit, ...l } = location;
-			const found = this.probesFilter.filterByLocation(probes, l);
+			const found = captureSpan('filterByLocation', () => this.probesFilter.filterByLocation(probes, l));
 
 			if (found.length > 0) {
 				grouped.set(location, found);
