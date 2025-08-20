@@ -352,7 +352,7 @@ describe('Create measurement', () => {
 				.send({
 					type: 'ping',
 					target: 'example.com',
-					locations: [{ magic: 'Na' }],
+					locations: [{ magic: 'Us' }],
 				})
 				.expect(202)
 				.expect((response) => {

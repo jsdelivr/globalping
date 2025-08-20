@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events';
 import { Namespace, type RemoteSocket, Server, Socket } from 'socket.io';
 import { createShardedAdapter } from '@socket.io/redis-adapter';
 import type { Probe } from '../../probe/types.js';
@@ -30,6 +31,9 @@ export type WsServerNamespace = Namespace<DefaultEventsMap, DefaultEventsMap, De
 
 export const PROBES_NAMESPACE = '/probes';
 
+const ee = new EventEmitter();
+const E_PROBE_UPDATE = 'probe-update';
+
 let io: WsServer;
 let syncedProbeList: SyncedProbeList;
 
@@ -49,6 +53,7 @@ export const initWsServer = async () => {
 	}));
 
 	syncedProbeList = new SyncedProbeList(redis, subClient2, io.of(PROBES_NAMESPACE), probeOverride);
+	syncedProbeList.on(syncedProbeList.localUpdateEvent, () => ee.emit(E_PROBE_UPDATE));
 
 	await syncedProbeList.sync();
 	syncedProbeList.scheduleSync();
@@ -104,6 +109,10 @@ export const getProbeByIp = async (ip: string, { allowStale = true } = {}): Prom
 	}
 
 	return syncedProbeList.getProbeByIp(ip);
+};
+
+export const onProbesUpdate = (callback: (probes: Probe[]) => void) => {
+	ee.on(E_PROBE_UPDATE, () => callback(syncedProbeList.getProbes()));
 };
 
 export const adoptedProbes = new AdoptedProbes(client, getProbesWithAdminData);

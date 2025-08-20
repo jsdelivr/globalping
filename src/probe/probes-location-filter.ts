@@ -1,8 +1,14 @@
+import { countries } from 'countries-list';
 import config from 'config';
 import _ from 'lodash';
 import type { Location } from '../lib/location/types.js';
 import type { Probe, ProbeLocation } from './types.js';
 import { captureSpan } from '../lib/metrics.js';
+import { alpha, aliases as countryAliases } from '../lib/location/countries.js';
+import { continents } from '../lib/location/continents.js';
+import { states, statesIso } from '../lib/location/states.js';
+import { aliases as networkAliases } from '../lib/location/networks.js';
+import { regionNames, aliases as regionAliases } from '../lib/location/regions.js';
 
 /*
  * [ public key ]: internal key
@@ -14,32 +20,69 @@ const locationKeyMap = {
 };
 
 export class ProbesLocationFilter {
-	static magicFilter (probes: Probe[], magicLocation: string) {
+	private readonly globalIndex: Set<string>[];
+
+	constructor () {
+		this.globalIndex = [
+			/* 00 */ new Set(Object.keys(countries).map(c => c.toLowerCase())),
+			/* 01 */ new Set(Object.values(alpha).map(c => c.toLowerCase())),
+			/* 02 */ new Set(Object.values(countries).map(c => c.name.toLowerCase())),
+			/* 03 */ new Set(countryAliases.flat()),
+			/* 04 */ new Set(),
+			/* 05 */ new Set(Object.values(states).map(s => s.toLowerCase())),
+			/* 06 */ new Set(Object.values(statesIso).map(s => s.toLowerCase())),
+			/* 07 */ new Set(Object.keys(states).map(s => s.toLowerCase())),
+			/* 08 */ new Set(Object.keys(continents).map(c => c.toLowerCase())),
+			/* 09 */ new Set(Object.values(continents).map(c => c.toLowerCase())),
+			/* 10 */ new Set(regionNames.map(r => r.toLowerCase())),
+			/* 11 */ new Set(regionAliases.flat()),
+			/* 12 */ new Set(),
+			/* 13 */ new Set(),
+			/* 14 */ new Set(),
+			/* 15 */ new Set(networkAliases.flat()),
+		];
+	}
+
+	updateGlobalIndex (probes: Probe[]) {
+		this.globalIndex[4] = new Set(probes.map(p => p.index[4]).flat());
+		this.globalIndex[13] = new Set(probes.map(p => p.index[13]).flat());
+		this.globalIndex[14] = new Set(probes.map(p => p.index[14]).flat());
+	}
+
+	getExactGlobalIndexPosition (keyword: string) {
+		const i = this.globalIndex.findIndex((set, index) => {
+			// Instead of collecting all ASNs, match anything in the specific format.
+			if (index === 12) {
+				return /^as\d+$/.test(keyword);
+			}
+
+			return set.has(keyword);
+		});
+
+		return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+	}
+
+	magicFilter (probes: Probe[], magicLocation: string) {
 		let resultProbes = probes;
 		const keywords = magicLocation.toLowerCase().split('+').map(k => ({ system: k.replaceAll('-', ' ').trim(), userTag: k.trim() }));
 
-		for (const keyword of keywords) {
-			const closestExactMatchPosition = probes.reduce((smallestExactMatchPosition, probe) => {
-				const exactMatchPosition = ProbesLocationFilter.getExactIndexPosition(probe, keyword.system);
+		const keywordsWithPositions = keywords.map(keyword => ({
+			keyword,
+			position: this.getExactGlobalIndexPosition(keyword.system),
+		})).sort((a, b) => a.position - b.position);
 
-				if (exactMatchPosition === -1) {
-					return smallestExactMatchPosition;
-				}
-
-				return exactMatchPosition < smallestExactMatchPosition ? exactMatchPosition : smallestExactMatchPosition;
-			}, Number.POSITIVE_INFINITY);
-			const noExactMatches = closestExactMatchPosition === Number.POSITIVE_INFINITY;
-
+		for (const { keyword, position } of keywordsWithPositions) {
+			const noExactMatches = position === Number.MAX_SAFE_INTEGER;
 			let filteredProbes = [];
 
 			if (noExactMatches) {
-				filteredProbes = resultProbes.filter(probe => ProbesLocationFilter.getIndexPosition(probe, keyword.system) !== -1);
+				filteredProbes = resultProbes.filter(probe => this.getIndexPosition(probe, keyword.system) !== -1);
 			} else {
-				filteredProbes = resultProbes.filter(probe => ProbesLocationFilter.getExactIndexPosition(probe, keyword.system) === closestExactMatchPosition);
+				filteredProbes = resultProbes.filter(probe => this.checkExactIndexPosition(probe, keyword.system, position));
 			}
 
-			if (filteredProbes.length === 0) {
-				filteredProbes = resultProbes.filter(probe => ProbesLocationFilter.hasUserTag(probe, keyword.userTag));
+			if (filteredProbes.length === 0 && keyword.userTag.startsWith('u-')) {
+				filteredProbes = resultProbes.filter(probe => this.hasUserTag(probe, keyword.userTag));
 			}
 
 			resultProbes = filteredProbes;
@@ -48,19 +91,23 @@ export class ProbesLocationFilter {
 		return resultProbes;
 	}
 
-	static getExactIndexPosition (probe: Probe, filterValue: string) {
-		return probe.index.findIndex(category => category.some(index => index === filterValue));
+	checkExactIndexPosition (probe: Probe, filterValue: string, position: number) {
+		if (!probe.index[position]) {
+			return false;
+		}
+
+		return probe.index[position].some(index => index === filterValue);
 	}
 
-	static getIndexPosition (probe: Probe, filterValue: string) {
+	getIndexPosition (probe: Probe, filterValue: string) {
 		return probe.index.findIndex(category => category.some(index => index.includes(filterValue)));
 	}
 
-	static hasTag (probe: Probe, filterValue: string) {
+	hasTag (probe: Probe, filterValue: string) {
 		return probe.tags.some(({ value }) => value.toLowerCase() === filterValue.toLowerCase());
 	}
 
-	static hasUserTag (probe: Probe, filterValue: string) {
+	hasUserTag (probe: Probe, filterValue: string) {
 		return probe.tags.filter(({ type }) => type === 'user').some(({ value }) => value.toLowerCase() === filterValue);
 	}
 
@@ -88,9 +135,9 @@ export class ProbesLocationFilter {
 
 		Object.keys(location).forEach((key) => {
 			if (key === 'tags') {
-				filteredProbes = probes.filter(probe => location.tags!.every(tag => ProbesLocationFilter.hasTag(probe, tag)));
+				filteredProbes = probes.filter(probe => location.tags!.every(tag => this.hasTag(probe, tag)));
 			} else if (key === 'magic') {
-				filteredProbes = captureSpan('magicFilter', () => ProbesLocationFilter.magicFilter(filteredProbes, location.magic!));
+				filteredProbes = captureSpan('magicFilter', () => this.magicFilter(filteredProbes, location.magic!));
 			} else {
 				const probeKey = Object.hasOwn(locationKeyMap, key) ? locationKeyMap[key as keyof typeof locationKeyMap] : key;
 				// @ts-expect-error it's a string
@@ -148,7 +195,7 @@ export class ProbesLocationFilter {
 		const getClosestIndexPosition = (probe: Probe) => {
 			const keywords = magicString.split('+');
 			const closestIndexPosition = keywords.reduce((smallestIndex, keyword) => {
-				const indexPosition = ProbesLocationFilter.getIndexPosition(probe, keyword);
+				const indexPosition = this.getIndexPosition(probe, keyword);
 				return indexPosition < smallestIndex ? indexPosition : smallestIndex;
 			}, Number.POSITIVE_INFINITY);
 			return closestIndexPosition;

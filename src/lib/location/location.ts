@@ -9,7 +9,7 @@ import {
 } from './countries.js';
 import { aliases as networkAliases } from './networks.js';
 import { continents } from './continents.js';
-import type { ProbeLocation, Tag } from '../../probe/types.js';
+import type { ProbeIndex, ProbeLocation, Tag } from '../../probe/types.js';
 
 const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [ c, r ])));
 
@@ -148,6 +148,7 @@ export const getRegionAliases = (key: string): string[] => {
 
 export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
 	// Storing the index as string[][] so each category has its exact position in the index array across all probes.
+	// When adding/removing/moving categories, make sure to update ProbeIndex and all places where it's used.
 	const index = [
 		[ location.country ],
 		[ getCountryIso3ByIso2(location.country) ],
@@ -167,6 +168,6 @@ export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
 		getNetworkAliases(location.normalizedNetwork),
 	].map(category => category.map(s => s.toLowerCase().replaceAll('-', ' ')));
 
-	return index;
+	return index as ProbeIndex;
 };
 
