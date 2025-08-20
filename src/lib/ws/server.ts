@@ -111,8 +111,15 @@ export const getProbeByIp = async (ip: string, { allowStale = true } = {}): Prom
 	return syncedProbeList.getProbeByIp(ip);
 };
 
-export const onProbesUpdate = (callback: (probes: Probe[]) => void) => {
-	ee.on(E_PROBE_UPDATE, () => callback(syncedProbeList.getProbes()));
+export const onProbesUpdate = (callback: (probes: Probe[]) => void): (() => void) => {
+	const handler = () => callback(syncedProbeList.getProbes());
+	ee.on(E_PROBE_UPDATE, handler);
+
+	if (syncedProbeList) {
+		callback(syncedProbeList.getProbes());
+	}
+
+	return () => ee.off(E_PROBE_UPDATE, handler);
 };
 
 export const adoptedProbes = new AdoptedProbes(client, getProbesWithAdminData);

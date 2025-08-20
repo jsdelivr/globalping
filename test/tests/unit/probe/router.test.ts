@@ -29,7 +29,13 @@ const defaultLocation = {
 describe('probe router', () => {
 	const sandbox = sinon.createSandbox();
 	let fetchProbesMockHandler: (probes: Probe[]) => void;
-	const onProbesUpdateMock: (onUpdate: (probes: Probe[]) => void) => void = handler => fetchProbesMockHandler = handler;
+
+	const onServerProbesUpdateMock: (onUpdate: (probes: Probe[]) => void) => () => void = (handler) => {
+		fetchProbesMockHandler = handler;
+
+		return () => {};
+	};
+
 	const setProbes = (probes: Probe[]) => fetchProbesMockHandler(probes);
 	const geoLookupMock = sandbox.stub();
 	const getRegionMock = sandbox.stub();
@@ -37,7 +43,7 @@ describe('probe router', () => {
 		getMeasurementIps: sandbox.stub().resolves([]),
 		getMeasurement: sandbox.stub(),
 	};
-	const router = new ProbeRouter(onProbesUpdateMock, store as unknown as MeasurementStore);
+	const router = new ProbeRouter(onServerProbesUpdateMock, store as unknown as MeasurementStore);
 
 	let buildProbeInternal: (socket: RemoteProbeSocket) => Promise<Probe>;
 
