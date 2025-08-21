@@ -8,7 +8,9 @@ module.exports = {
 			trustedOrigins: [
 				'https://globalping.io',
 				'https://staging.globalping.io',
+				'https://dash.globalping.io',
 				'http://localhost:13000',
+				'http://localhost:13010',
 			],
 		},
 		session: {
