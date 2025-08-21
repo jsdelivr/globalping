@@ -5,16 +5,22 @@ import type { OfflineProbe, Probe } from './types.js';
 import { ProbesLocationFilter } from './probes-location-filter.js';
 import { getMeasurementStore, MeasurementStore } from '../measurement/store.js';
 import { normalizeFromPublicName, normalizeNetworkName } from '../lib/geoip/utils.js';
-import { fetchProbes as serverFetchProbes } from '../lib/ws/server.js';
+import { onProbesUpdate as onServerProbesUpdate } from '../lib/ws/server.js';
 import { captureSpan } from '../lib/metrics.js';
 
 export class ProbeRouter {
 	private readonly probesFilter = new ProbesLocationFilter();
+	private probes: Probe[] = [];
 
 	constructor (
-		private readonly fetchProbes: typeof serverFetchProbes,
+		private readonly onProbesUpdate: typeof onServerProbesUpdate,
 		private readonly store: MeasurementStore,
-	) {}
+	) {
+		this.onProbesUpdate((probes) => {
+			this.probes = probes;
+			this.probesFilter.updateGlobalIndex(probes);
+		});
+	}
 
 	public async findMatchingProbes (userRequest: UserRequest): Promise<{
 		onlineProbesMap: Map<number, Probe>;
@@ -23,8 +29,7 @@ export class ProbeRouter {
 	}> {
 		const locations = userRequest.locations ?? [];
 		const globalLimit = userRequest.limit ?? 1;
-
-		const connectedProbes = (await this.fetchProbes()).filter(probe => probe.status === 'ready');
+		const connectedProbes = this.probes.filter(probe => probe.status === 'ready');
 
 		if (typeof locations === 'string') { // the measurement id of existing measurement was provided by the user, the same probes are to be used
 			return this.findWithMeasurementId(connectedProbes, locations, userRequest);
@@ -188,7 +193,7 @@ let router: ProbeRouter;
 
 export const getProbeRouter = () => {
 	if (!router) {
-		router = new ProbeRouter(serverFetchProbes, getMeasurementStore());
+		router = new ProbeRouter(onServerProbesUpdate, getMeasurementStore());
 	}
 
 	return router;

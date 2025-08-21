@@ -35,6 +35,8 @@ export type Tag = {
 	value: string;
 };
 
+export type ProbeIndex = [ string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[] ];
+
 export type Probe = {
 	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'ping-test-failed' | 'sigterm';
 	isIPv4Supported: boolean;
@@ -50,7 +52,7 @@ export type Probe = {
 	altIpAddresses: string[];
 	host: string;
 	location: ProbeLocation;
-	index: string[][];
+	index: ProbeIndex;
 	resolvers: string[];
 	tags: Tag[];
 	stats: ProbeStats;

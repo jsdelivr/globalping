@@ -72,7 +72,7 @@ describe('AdoptedProbes', () => {
 			type: 'system',
 			value: 'datacenter-network',
 		}],
-		index: [],
+		index: [ [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [] ],
 		client: '',
 		host: '',
 		resolvers: [],
