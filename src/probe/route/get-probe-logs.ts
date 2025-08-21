@@ -5,6 +5,7 @@ import { getMeasurementRedisClient } from '../../lib/redis/measurement-client.js
 import { authenticate } from '../../lib/http/middleware/authenticate.js';
 import { getRedisProbeLogKey } from '../handler/logs.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
+import createHttpError from 'http-errors';
 
 const handle = async (ctx: ExtendedContext) => {
 	const { user } = ctx.state;
@@ -12,19 +13,28 @@ const handle = async (ctx: ExtendedContext) => {
 	const { since } = ctx.query;
 
 	if (!id) {
-		return ctx.throw(400, 'Probe ID missing');
+		throw createHttpError(400, `Probe ID missing.`);
 	}
 
 	const probe = adoptedProbes.getById(id);
 
 	if (!probe || (!user?.admin_access && probe.userId !== user?.id)) {
-		ctx.throw(404, 'Probe not found');
+		throw createHttpError(404, `Probe not found.`, { type: 'not_found' });
 	}
 
 	const redis = getMeasurementRedisClient();
 	const redisKey = getRedisProbeLogKey(id);
+	let start = '-';
 
-	const start = since && typeof since !== 'object' ? `${since}-0` : '-';
+	if (since) {
+		const parsedSince = Array.isArray(since) ? undefined : Number(since);
+
+		if (parsedSince === undefined || !Number.isFinite(parsedSince) || parsedSince < 0) {
+			throw createHttpError(400, 'Invalid "since" parameter', { type: 'validation_error' });
+		}
+
+		start = `${Math.floor(parsedSince)}-0`;
+	}
 
 	const logs = await redis.xRange(redisKey, start, '+');
 

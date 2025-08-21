@@ -17,3 +17,15 @@ export const statsSchema = Joi.object<ProbeStats>({
 		count: Joi.number().required(),
 	}).required(),
 }).required();
+
+const logEntrySchema = Joi.object({
+	message: Joi.string().required(),
+	timestamp: Joi.string().required(),
+	level: Joi.string().required(),
+	scope: Joi.string().required(),
+});
+
+export const logMessageSchema = Joi.object({
+	skipped: Joi.number().integer().min(0).required(),
+	logs: Joi.array().items(logEntrySchema).min(0).required(),
+}).required();

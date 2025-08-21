@@ -1,6 +1,7 @@
 import { Probe } from '../types.js';
 import { adoptedProbes } from '../../lib/ws/server.js';
 import { getMeasurementRedisClient } from '../../lib/redis/measurement-client.js';
+import { logMessageSchema } from '../schema/probe-response-schema.js';
 
 export type LogMessage = {
 	skipped: number;
@@ -8,7 +9,7 @@ export type LogMessage = {
 		message: string;
 		timestamp: string;
 		level: string;
-		type: string;
+		scope: string;
 	}[];
 };
 
@@ -20,7 +21,13 @@ export const handleNewLogs = (probe: Probe) => async (logMessage: LogMessage) =>
 	const probeId = adoptedProbes.getByIp(probe.ipAddress)?.id;
 
 	if (!probeId) {
-		return;
+		throw new Error('Probe not found');
+	}
+
+	const validation = logMessageSchema.validate(logMessage);
+
+	if (validation.error) {
+		throw validation.error;
 	}
 
 	const redisTransaction = getMeasurementRedisClient().multi();

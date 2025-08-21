@@ -35,7 +35,7 @@ describe('Get Probe Logs', () => {
 				message: 'log message 1',
 				timestamp: '2025-01-01T00:00:00.000Z',
 				level: 'info',
-				type: 'system',
+				scope: 'system',
 			},
 		},
 		{
@@ -44,7 +44,7 @@ describe('Get Probe Logs', () => {
 				message: 'log message 2',
 				timestamp: '2025-01-01T00:00:10.000Z',
 				level: 'warn',
-				type: 'system',
+				scope: 'system',
 			},
 		},
 	];
@@ -60,6 +60,8 @@ describe('Get Probe Logs', () => {
 
 		client = redis.getMeasurementRedisClient();
 		const redisKey = getRedisProbeLogKey(PROBE_ID);
+
+		await client.del(getRedisProbeLogKey(PROBE_ID));
 
 		for (const entry of redisLogs) {
 			await client.xAdd(redisKey, entry.id, entry.message);
@@ -129,6 +131,21 @@ describe('Get Probe Logs', () => {
 			.expect(200)
 			.expect((response) => {
 				expect(response.body).to.deep.equal([ redisLogs[1]!.message ]);
+			});
+	});
+
+	it('should reject invalid since query parameter', async () => {
+		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
+		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+
+		await requestAgent
+			.get(`/v1/probes/${PROBE_ID}/logs?since=foo`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(400)
+			.expect((res) => {
+				expect(res.body.error).to.exist;
+				expect(res.body.error.message).to.equal('Invalid "since" parameter');
 			});
 	});
 });

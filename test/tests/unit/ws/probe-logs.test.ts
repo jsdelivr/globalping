@@ -49,10 +49,30 @@ describe('probe logs', () => {
 		sandbox.restore();
 	});
 
-	it('does nothing when probe is not adopted (no probeId)', async () => {
+	it('should throw when probe is not adopted (no probeId)', async () => {
 		sandbox.stub(adoptedProbes, 'getByIp').returns(null);
 
-		await logHandler({ skipped: 0, logs: [] });
+		const result = await logHandler({ skipped: 0, logs: [] }).catch(err => err);
+
+		expect(result).to.be.instanceof(Error);
+		expect(multiStub.called).to.equal(false);
+		expect(transactionStub.xAdd.called).to.equal(false);
+		expect(transactionStub.pExpire.called).to.equal(false);
+		expect(transactionStub.exec.called).to.equal(false);
+	});
+
+	it('should throw on invalid inputs', async () => {
+		sandbox.stub(adoptedProbes, 'getByIp').returns(mockAdoption);
+
+		const result1 = await logHandler({ skipped: 0 } as LogMessage).catch(err => err);
+		const result2 = await logHandler({ logs: [] } as unknown as LogMessage).catch(err => err);
+		const result3 = await logHandler({ skipped: 1, logs: [{ invalid: true }] } as unknown as LogMessage).catch(err => err);
+		const result4 = await logHandler({ skipped: 1, logs: [], extra: true } as LogMessage).catch(err => err);
+
+		expect(result1).to.be.instanceof(Error);
+		expect(result2).to.be.instanceof(Error);
+		expect(result3).to.be.instanceof(Error);
+		expect(result4).to.be.instanceof(Error);
 
 		expect(multiStub.called).to.equal(false);
 		expect(transactionStub.xAdd.called).to.equal(false);
@@ -63,8 +83,8 @@ describe('probe logs', () => {
 	it('writes only provided logs when skipped = 0', async () => {
 		sandbox.stub(adoptedProbes, 'getByIp').returns(mockAdoption);
 		const logs = [
-			{ message: 'm1', timestamp: 't1', level: 'info', type: 'system' },
-			{ message: 'm2', timestamp: 't2', level: 'warn', type: 'system' },
+			{ message: 'm1', timestamp: 't1', level: 'info', scope: 'system' },
+			{ message: 'm2', timestamp: 't2', level: 'warn', scope: 'system' },
 		];
 
 		await logHandler({ skipped: 0, logs });
@@ -88,8 +108,8 @@ describe('probe logs', () => {
 	it('writes a "skipped" message first when skipped > 0, then logs', async () => {
 		sandbox.stub(adoptedProbes, 'getByIp').returns(mockAdoption);
 		const logs = [
-			{ message: 'a', timestamp: 't1', level: 'info', type: 'system' },
-			{ message: 'b', timestamp: 't2', level: 'error', type: 'system' },
+			{ message: 'a', timestamp: 't1', level: 'info', scope: 'system' },
+			{ message: 'b', timestamp: 't2', level: 'error', scope: 'system' },
 		];
 
 		await logHandler({ skipped: 5, logs });
