@@ -78,7 +78,7 @@ export class AdoptionToken {
 		const tokenValue = socket.handshake.query['adoptionToken'];
 		const token = !tokenValue ? null : String(tokenValue);
 		const probe = socket.data.probe;
-		const isAdopted = !!this.adoptedProbes.getByIp(probe.ipAddress);
+		const isAdopted = !!this.adoptedProbes.getByIp(probe.ipAddress)?.userId;
 
 		if (!token) {
 			!isAdopted && socket.emit('api:connect:adoption', { message: 'You can register this probe at https://dash.globalping.io to earn extra measurement credits.' });

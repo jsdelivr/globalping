@@ -288,7 +288,7 @@ describe('authenticate', () => {
 		it('should accept if valid cookie was passed', async () => {
 			const jwt = await new SignJWT({
 				id: 'cookie-user-id',
-				app_access: 1,
+				app_access: true,
 			}).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
 
 			const response = await requestAgent.post('/v1/measurements')

@@ -93,9 +93,9 @@ type DProbeFieldDescription = {
 
 export class AdoptedProbes {
 	private dProbes: DProbe[] = [];
-	private adoptions: Adoption[] = [];
-	private ipToAdoption: Map<string, Adoption> = new Map();
-	private uuidToAdoption: Map<string, Adoption> = new Map();
+	private idToDProbe: Map<string, DProbe> = new Map();
+	private ipToDProbe: Map<string, DProbe> = new Map();
+	private uuidToDProbe: Map<string, DProbe> = new Map();
 	private syncBackToDashboard = process.env['SHOULD_SYNC_ADOPTIONS'] === 'true';
 	static readonly dProbeFieldToProbeField = {
 		uuid: {
@@ -206,12 +206,16 @@ export class AdoptedProbes {
 		private readonly getProbesWithAdminData: typeof serverGetProbesWithAdminData,
 	) {}
 
+	getById (id: string) {
+		return this.idToDProbe.get(id) || null;
+	}
+
 	getByIp (ip: string) {
-		return this.ipToAdoption.get(ip) || null;
+		return this.ipToDProbe.get(ip) || null;
 	}
 
 	getByUuid (uuid: string) {
-		return this.uuidToAdoption.get(uuid) || null;
+		return this.uuidToDProbe.get(uuid) || null;
 	}
 
 	getUpdatedLocation (probe: Probe, adminLocation?: ProbeLocation | null): ExtendedProbeLocation | null {
@@ -257,7 +261,7 @@ export class AdoptedProbes {
 		return probes.map((probe) => {
 			const adoption = this.getByIp(probe.ipAddress);
 
-			if (!adoption) {
+			if (!adoption || !adoption.userId) {
 				return probe;
 			}
 
@@ -344,14 +348,15 @@ export class AdoptedProbes {
 		}));
 
 		this.dProbes = dProbes;
-		this.adoptions = dProbes.filter((dProbe): dProbe is Adoption => !!dProbe.userId);
 
-		this.ipToAdoption = new Map([
-			...this.adoptions.map(adoption => [ adoption.ip, adoption ] as const),
-			...this.adoptions.map(adoption => adoption.altIps.map(altIp => [ altIp, adoption ] as const)).flat(),
+		this.ipToDProbe = new Map([
+			...this.dProbes.map(adoption => [ adoption.ip, adoption ] as const),
+			...this.dProbes.map(adoption => adoption.altIps.map(altIp => [ altIp, adoption ] as const)).flat(),
 		]);
 
-		this.uuidToAdoption = new Map(this.adoptions.filter(({ uuid }) => !!uuid).map(adoption => [ adoption.uuid!, adoption ]));
+		this.uuidToDProbe = new Map(this.dProbes.filter(({ uuid }) => !!uuid).map(adoption => [ adoption.uuid!, adoption ]));
+
+		this.idToDProbe = new Map(this.dProbes.map(adoption => [ adoption.id, adoption ]));
 	}
 
 	/**
