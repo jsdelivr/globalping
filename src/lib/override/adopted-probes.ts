@@ -94,6 +94,7 @@ type DProbeFieldDescription = {
 export class AdoptedProbes {
 	private dProbes: DProbe[] = [];
 	private adoptions: Adoption[] = [];
+	private idToAdoption: Map<string, Adoption> = new Map();
 	private ipToAdoption: Map<string, Adoption> = new Map();
 	private uuidToAdoption: Map<string, Adoption> = new Map();
 	private syncBackToDashboard = process.env['SHOULD_SYNC_ADOPTIONS'] === 'true';
@@ -205,6 +206,10 @@ export class AdoptedProbes {
 		private readonly sql: Knex,
 		private readonly getProbesWithAdminData: typeof serverGetProbesWithAdminData,
 	) {}
+
+	getById (id: string) {
+		return this.idToAdoption.get(id) || null;
+	}
 
 	getByIp (ip: string) {
 		return this.ipToAdoption.get(ip) || null;
@@ -348,6 +353,8 @@ export class AdoptedProbes {
 		]);
 
 		this.uuidToAdoption = new Map(this.adoptions.filter(({ uuid }) => !!uuid).map(adoption => [ adoption.uuid!, adoption ]));
+
+		this.idToAdoption = new Map(this.adoptions.map(adoption => [ adoption.id, adoption ]));
 	}
 
 	/**

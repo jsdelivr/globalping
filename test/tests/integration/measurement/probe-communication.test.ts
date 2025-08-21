@@ -17,6 +17,7 @@ describe('Create measurement request', () => {
 
 	const sandbox = sinon.createSandbox();
 	const locationHandlerStub = sandbox.stub();
+	const logHandlerStub = sandbox.stub();
 	const adoptionHandlerStub = sandbox.stub();
 	const requestHandlerStub = sandbox.stub();
 	const cryptoRandomString = sandbox.stub().returns('measurementid');
@@ -35,6 +36,7 @@ describe('Create measurement request', () => {
 
 		probe = await addFakeProbe({
 			'api:connect:location': locationHandlerStub,
+			'api:logging:set': logHandlerStub,
 			'api:connect:adoption': adoptionHandlerStub,
 			'probe:measurement:request': requestHandlerStub,
 		});
@@ -83,6 +85,9 @@ describe('Create measurement request', () => {
 
 		expect(adoptionHandlerStub.callCount).to.equal(1);
 		expect(adoptionHandlerStub.firstCall.args).to.deep.equal([{ message: 'You can register this probe at https://dash.globalping.io to earn extra measurement credits.' }]);
+
+		expect(logHandlerStub.callCount).to.equal(1);
+		expect(logHandlerStub.firstCall.args).to.deep.equal([{ sendingEnabled: true }]);
 	});
 
 	it('should send and handle proper events during measurement request', async () => {
