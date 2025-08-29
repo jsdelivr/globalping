@@ -22,7 +22,7 @@ type DProbe = {
 	ip: string;
 	name: string | null;
 	altIps: string[];
-	uuid: string | null;
+	uuid: string;
 	lastSyncDate: Date;
 	tags: {
 		type: 'user';
@@ -32,25 +32,25 @@ type DProbe = {
 	status: string;
 	isIPv4Supported: boolean;
 	isIPv6Supported: boolean;
-	version: string | null;
-	nodeVersion: string | null;
+	version: string;
+	nodeVersion: string;
 	hardwareDevice: string | null;
 	hardwareDeviceFirmware: string | null;
-	country: string | null;
-	countryName: string | null;
-	city: string | null;
+	country: string;
+	countryName: string;
+	city: string;
 	state: string | null;
 	stateName: string | null;
-	continent: string | null;
-	continentName: string | null;
-	region: string | null;
-	latitude: number | null;
-	longitude: number | null;
-	asn: number | null;
-	network: string | null;
-	defaultPrefix: string | null;
+	continent: string;
+	continentName: string;
+	region: string;
+	latitude: number;
+	longitude: number;
+	asn: number;
+	network: string;
+	defaultPrefix: string;
 	publicProbes: boolean;
-	adoptionToken: string | null;
+	adoptionToken: string;
 	allowedCountries: string[];
 	customLocation: {
 		country: string;
@@ -72,6 +72,11 @@ export type Adoption = Omit<DProbe, 'userId'> & {
 	userId: string;
 };
 
+type AdoptionWithCustomLocation = Adoption & {
+	customLocation: NonNullable<DProbe['customLocation']>;
+	originalLocation: NonNullable<DProbe['originalLocation']>;
+};
+
 export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation' | 'originalLocation'> & {
 	altIps: string;
 	tags: string;
@@ -88,7 +93,7 @@ type DProbeFieldDescription = {
 	probeField: string;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	format?: (probeValue: any, probe: Probe, dProbe?: DProbe) => unknown;
-	getCustomValue?: (dProbe: DProbe) => unknown;
+	getCustomValue?: (dProbe: AdoptionWithCustomLocation) => unknown;
 };
 
 export class AdoptedProbes {
@@ -143,48 +148,48 @@ export class AdoptedProbes {
 		},
 		country: {
 			probeField: 'location.country',
-			getCustomValue: (dProbe: DProbe) => dProbe.customLocation?.country ?? null,
+			getCustomValue: (dProbe: AdoptionWithCustomLocation) => dProbe.customLocation.country,
 		},
 		countryName: {
 			probeField: 'location.country',
-			format: (country?: string | null) => getCountryByIso(country, true),
-			getCustomValue: (dProbe: DProbe) => getCountryByIso(dProbe.customLocation?.country, true),
+			format: (country: string) => getCountryByIso(country),
+			getCustomValue: (dProbe: AdoptionWithCustomLocation) => getCountryByIso(dProbe.customLocation.country),
 		},
 		city: {
 			probeField: 'location.city',
-			getCustomValue: (dProbe: DProbe) => dProbe.customLocation?.city ?? null,
+			getCustomValue: (dProbe: AdoptionWithCustomLocation) => dProbe.customLocation.city,
 		},
 		state: {
 			probeField: 'location.state',
-			getCustomValue: (dProbe: DProbe) => dProbe.customLocation?.state ?? null,
+			getCustomValue: (dProbe: AdoptionWithCustomLocation) => dProbe.customLocation.state,
 		},
 		stateName: {
 			probeField: 'location.state',
-			format: (state?: string | null) => getStateNameByIso(state, true),
-			getCustomValue: (dProbe: DProbe) => getStateNameByIso(dProbe.customLocation?.state, true),
+			format: (state: string | null) => state ? getStateNameByIso(state) : null,
+			getCustomValue: (dProbe: AdoptionWithCustomLocation) => dProbe.customLocation.state ? getStateNameByIso(dProbe.customLocation.state) : null,
 		},
 		continent: {
 			probeField: 'location.continent',
-			getCustomValue: (dProbe: DProbe) => getContinentByCountry(dProbe.customLocation?.country, true),
+			getCustomValue: (dProbe: AdoptionWithCustomLocation) => getContinentByCountry(dProbe.customLocation.country),
 		},
 		continentName: {
 			probeField: 'location.continent',
-			format: (continent?: string | null) => getContinentName(continent, true),
-			getCustomValue: (dProbe: DProbe) => getContinentName(getContinentByCountry(dProbe.customLocation?.country, true), true),
+			format: (continent: string) => getContinentName(continent),
+			getCustomValue: (dProbe: AdoptionWithCustomLocation) => getContinentName(getContinentByCountry(dProbe.customLocation.country)),
 		},
 		region: {
 			probeField: 'location.region',
-			getCustomValue: (dProbe: DProbe) => getRegionByCountry(dProbe.customLocation?.country, true),
+			getCustomValue: (dProbe: AdoptionWithCustomLocation) => getRegionByCountry(dProbe.customLocation.country),
 		},
 		latitude: {
 			probeField: 'location.latitude',
-			format: (latitude?: number | null) => latitude ? normalizeCoordinate(latitude) : null,
-			getCustomValue: (dProbe: DProbe) => dProbe.customLocation?.latitude ? normalizeCoordinate(dProbe.customLocation.latitude) : null,
+			format: (latitude: number) => normalizeCoordinate(latitude),
+			getCustomValue: (dProbe: AdoptionWithCustomLocation) => normalizeCoordinate(dProbe.customLocation.latitude),
 		},
 		longitude: {
 			probeField: 'location.longitude',
-			format: (longitude?: number | null) => longitude ? normalizeCoordinate(longitude) : null,
-			getCustomValue: (dProbe: DProbe) => dProbe.customLocation?.longitude ? normalizeCoordinate(dProbe.customLocation.longitude) : null,
+			format: (longitude: number) => normalizeCoordinate(longitude),
+			getCustomValue: (dProbe: AdoptionWithCustomLocation) => normalizeCoordinate(dProbe.customLocation.longitude),
 		},
 		allowedCountries: {
 			probeField: 'location.allowedCountries',
@@ -230,11 +235,11 @@ export class AdoptedProbes {
 			continent: getContinentByCountry(adoption.country),
 			region: getRegionByCountry(adoption.country),
 			country: adoption.country,
-			city: adoption.city!,
-			normalizedCity: normalizeFromPublicName(adoption.city!),
+			city: adoption.city,
+			normalizedCity: normalizeFromPublicName(adoption.city),
 			state: adoption.state,
-			latitude: adoption.latitude!,
-			longitude: adoption.longitude!,
+			latitude: adoption.latitude,
+			longitude: adoption.longitude,
 		};
 	}
 
@@ -350,7 +355,7 @@ export class AdoptedProbes {
 			...this.dProbes.map(adoption => adoption.altIps.map(altIp => [ altIp, adoption ] as const)).flat(),
 		]);
 
-		this.uuidToDProbe = new Map(this.dProbes.filter(({ uuid }) => !!uuid).map(adoption => [ adoption.uuid!, adoption ]));
+		this.uuidToDProbe = new Map(this.dProbes.filter(({ uuid }) => !!uuid).map(adoption => [ adoption.uuid, adoption ]));
 
 		this.idToDProbe = new Map(this.dProbes.map(adoption => [ adoption.id, adoption ]));
 	}
@@ -537,7 +542,7 @@ export class AdoptedProbes {
 				let targetValue = probeValue;
 
 				if (getCustomValue && dProbe.customLocation && probe.location.allowedCountries.includes(dProbe.customLocation.country)) {
-					targetValue = getCustomValue(dProbe);
+					targetValue = getCustomValue(dProbe as AdoptionWithCustomLocation);
 				}
 
 				if (!_.isEqual(dProbeValue, targetValue)) {
@@ -736,7 +741,7 @@ export class AdoptedProbes {
 		return `u-${defaultPrefix}`;
 	}
 
-	static formatProbeAsDProbe (probe: Probe): Omit<DProbe, 'id' | 'lastSyncDate' | 'defaultPrefix' | 'publicProbes'> {
+	static formatProbeAsDProbe (probe: Probe): Omit<DProbe, 'id' | 'lastSyncDate' | 'defaultPrefix' | 'publicProbes' | 'adoptionToken'> {
 		return {
 			userId: null,
 			ip: probe.ipAddress,
@@ -754,7 +759,7 @@ export class AdoptedProbes {
 			hardwareDeviceFirmware: probe.hardwareDeviceFirmware,
 			city: probe.location.city,
 			state: probe.location.state,
-			stateName: AdoptedProbes.dProbeFieldToProbeField.stateName.format(probe.location.state),
+			stateName: probe.location.state ? AdoptedProbes.dProbeFieldToProbeField.stateName.format(probe.location.state) : null,
 			country: probe.location.country,
 			countryName: AdoptedProbes.dProbeFieldToProbeField.countryName.format(probe.location.country),
 			continent: probe.location.continent,
@@ -764,7 +769,6 @@ export class AdoptedProbes {
 			longitude: probe.location.longitude,
 			asn: probe.location.asn,
 			network: probe.location.network,
-			adoptionToken: probe.adoptionToken,
 			allowedCountries: probe.location.allowedCountries,
 			originalLocation: null,
 			customLocation: null,

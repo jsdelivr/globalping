@@ -33,7 +33,7 @@ describe('AdoptedProbes', () => {
 		network: 'Amazon.com, Inc.',
 		defaultPrefix: 'jsdelivr',
 		publicProbes: 0,
-		adoptionToken: null,
+		adoptionToken: 'adoptionTokenValue',
 		allowedCountries: '["IE"]',
 		customLocation: null,
 		originalLocation: null,
@@ -715,6 +715,7 @@ describe('AdoptedProbes', () => {
 				city: 'Lisbon',
 				latitude: 38.73,
 				longitude: -9.1526,
+				state: null,
 			}),
 		}]);
 

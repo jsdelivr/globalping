@@ -13,15 +13,8 @@ import type { ProbeIndex, ProbeLocation, Tag } from '../../probe/types.js';
 
 const countryToRegionMap = new Map(_.flatMap(regions, (v, r) => v.map(c => [ c, r ])));
 
-export function getRegionByCountry (country: string): string;
-export function getRegionByCountry (country: string | null | undefined, soft: true): string | null;
-
-export function getRegionByCountry (country: string | null | undefined, soft?: true): string | null {
-	if (!country && soft) {
-		return null;
-	}
-
-	const region = countryToRegionMap.get(country!);
+export function getRegionByCountry (country: string): string {
+	const region = countryToRegionMap.get(country);
 
 	if (!region) {
 		throw new Error(`regions associated with a country "${country}" not found`);
@@ -30,14 +23,7 @@ export function getRegionByCountry (country: string | null | undefined, soft?: t
 	return region;
 }
 
-export function getContinentByCountry (country: string): string;
-export function getContinentByCountry (country: string | null | undefined, soft: true): string | null;
-
-export function getContinentByCountry (country: string | null | undefined, soft?: true): string | null {
-	if (!country && soft) {
-		return null;
-	}
-
+export function getContinentByCountry (country: string): string {
 	const countryInfo = countries[country as keyof typeof countries];
 
 	if (!countryInfo) {
@@ -57,15 +43,8 @@ export const getStateIsoByName = (state: string): string => {
 	return iso;
 };
 
-export function getStateNameByIso (state: string): string;
-export function getStateNameByIso (state: string | null | undefined, soft: true): string | null;
-
-export function getStateNameByIso (iso: string | null | undefined, soft?: true): string | null {
-	if (!iso && soft) {
-		return null;
-	}
-
-	const state = _.invert(states)[iso!];
+export function getStateNameByIso (iso: string): string {
+	const state = _.invert(states)[iso];
 
 	if (!state) {
 		throw new Error(`state not found ${iso}`);
@@ -84,14 +63,7 @@ export const getStateExtendedIsoByIso = (iso: string): string => {
 	return state;
 };
 
-export function getCountryByIso (iso: string): string;
-export function getCountryByIso (iso: string | null | undefined, soft: true): string | null;
-
-export function getCountryByIso (iso: string | null | undefined, soft?: true): string | null {
-	if (!iso && soft) {
-		return null;
-	}
-
+export function getCountryByIso (iso: string): string {
 	const country = countries[iso as keyof typeof countries];
 
 	if (!country) {
@@ -123,14 +95,7 @@ export const getNetworkAliases = (key: string): string[] => {
 	return array ?? [];
 };
 
-export function getContinentName (key: string): string;
-export function getContinentName (key: string | null | undefined, soft: true): string | null;
-
-export function getContinentName (key: string | null | undefined, soft?: true): string | null {
-	if (!key && soft) {
-		return null;
-	}
-
+export function getContinentName (key: string): string {
 	const continent = continents[key as keyof typeof continents];
 
 	if (!continent) {
