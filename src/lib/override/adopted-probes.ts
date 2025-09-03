@@ -48,9 +48,9 @@ type DProbe = {
 	longitude: number;
 	asn: number;
 	network: string;
-	defaultPrefix: string;
+	defaultPrefix: string | null;
 	publicProbes: boolean;
-	adoptionToken: string;
+	adoptionToken: string | null;
 	allowedCountries: string[];
 	customLocation: {
 		country: string;
