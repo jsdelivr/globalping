@@ -39,7 +39,7 @@ export const handleNewLogs = (probe: Probe) => async (logMessage: LogMessage) =>
 	};
 
 	if (skipped > 0) {
-		addMessage({ message: `<${skipped} messages skipped>` });
+		addMessage({ message: `...${skipped} messages skipped...` });
 	}
 
 	logs.forEach(addMessage);
