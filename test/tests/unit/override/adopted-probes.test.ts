@@ -1033,6 +1033,7 @@ describe('AdoptedProbes', () => {
 			network: 'Amazon.com, Inc.',
 			normalizedNetwork: 'amazon.com, inc.',
 			allowedCountries: [ 'IE', 'GL' ],
+			groupingKey: 'GL-null-nuuk-16509',
 		});
 	});
 
