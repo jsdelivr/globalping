@@ -10,14 +10,14 @@ import { captureSpan } from '../lib/metrics.js';
 
 export class ProbeRouter {
 	private readonly probesFilter = new ProbesLocationFilter();
-	private probes: Probe[] = [];
+	private readyProbes: Probe[] = [];
 
 	constructor (
 		private readonly onProbesUpdate: typeof onServerProbesUpdate,
 		private readonly store: MeasurementStore,
 	) {
 		this.onProbesUpdate((probes) => {
-			this.probes = probes;
+			this.readyProbes = probes.filter(probe => probe.status === 'ready');
 			this.probesFilter.updateGlobalIndex(probes);
 		});
 	}
@@ -29,14 +29,13 @@ export class ProbeRouter {
 	}> {
 		const locations = userRequest.locations ?? [];
 		const globalLimit = userRequest.limit ?? 1;
-		const connectedProbes = this.probes.filter(probe => probe.status === 'ready');
 
 		if (typeof locations === 'string') { // the measurement id of existing measurement was provided by the user, the same probes are to be used
-			return this.findWithMeasurementId(connectedProbes, locations, userRequest);
+			return this.findWithMeasurementId(this.readyProbes, locations, userRequest);
 		}
 
 		const preferredIpVersion = userRequest.measurementOptions?.ipVersion ?? 4;
-		const connectedProbesFilteredByIpVersion = this.probesFilter.filterByIpVersion(connectedProbes, preferredIpVersion);
+		const connectedProbesFilteredByIpVersion = this.probesFilter.filterByIpVersion(this.readyProbes, preferredIpVersion);
 
 		let filtered: Probe[] = [];
 
@@ -49,7 +48,7 @@ export class ProbeRouter {
 		}
 
 		if (filtered.length === 0 && locations.length === 1 && locations[0]?.magic) {
-			return this.findWithMeasurementId(connectedProbes, locations[0].magic, userRequest);
+			return this.findWithMeasurementId(this.readyProbes, locations[0].magic, userRequest);
 		}
 
 		return {
