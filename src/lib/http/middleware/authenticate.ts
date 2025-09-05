@@ -10,7 +10,7 @@ const sessionConfig = config.get<AuthenticateOptions['session']>('server.session
 type SessionCookiePayload = {
 	id?: string;
 	role?: string;
-	app_access?: number;
+	app_access?: boolean;
 	admin_access?: boolean;
 	github_username?: string;
 };
@@ -44,9 +44,11 @@ export const authenticate = (): ExtendedMiddleware => {
 		} else if (sessionCookie) {
 			try {
 				const result = await jwtVerify<SessionCookiePayload>(sessionCookie, sessionKey);
+				const adminAccess = typeof result.payload.admin_access === 'boolean' ? result.payload.admin_access : false;
+				const appAccess = typeof result.payload.app_access === 'boolean' ? result.payload.app_access : false;
 
-				if (result.payload.id && result.payload.app_access) {
-					ctx.state.user = { id: result.payload.id, username: result.payload.github_username || null, authMode: 'cookie', admin_access: !!result.payload.admin_access };
+				if (result.payload.id && appAccess) {
+					ctx.state.user = { id: result.payload.id, username: result.payload.github_username || null, authMode: 'cookie', adminAccess };
 					apmAgent.setUserContext({ id: result.payload.id, username: result.payload.github_username || `ID(${result.payload.id})` });
 				}
 			} catch {}
@@ -57,4 +59,4 @@ export const authenticate = (): ExtendedMiddleware => {
 };
 
 export type AuthenticateOptions = { session: { cookieName: string; cookieSecret: string } };
-export type AuthenticateState = { user?: { id: string | null; username: string | null; scopes?: string[]; hashedToken?: string; authMode: 'cookie' | 'token'; admin_access?: boolean } };
+export type AuthenticateState = { user?: { id: string | null; username: string | null; scopes?: string[]; hashedToken?: string; authMode: 'cookie' | 'token'; adminAccess?: boolean } };

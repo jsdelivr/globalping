@@ -18,7 +18,7 @@ const handle = async (ctx: ExtendedContext) => {
 
 	const probe = adoptedProbes.getById(id);
 
-	if (!probe || (!user?.admin_access && probe.userId !== user?.id)) {
+	if (!probe || (!user?.adminAccess && probe.userId !== user?.id)) {
 		throw createHttpError(404, `Probe not found.`, { type: 'not_found' });
 	}
 
