@@ -4,7 +4,7 @@ import type { Location } from '../lib/location/types.js';
 import type { OfflineProbe, Probe } from './types.js';
 import { ProbesLocationFilter } from './probes-location-filter.js';
 import { getMeasurementStore, MeasurementStore } from '../measurement/store.js';
-import { normalizeFromPublicName, normalizeNetworkName } from '../lib/geoip/utils.js';
+import { getGroupingKey, normalizeFromPublicName, normalizeNetworkName } from '../lib/geoip/utils.js';
 import { onProbesUpdate as onServerProbesUpdate } from '../lib/ws/server.js';
 import { captureSpan } from '../lib/metrics.js';
 
@@ -173,6 +173,7 @@ export class ProbeRouter {
 			network: test.probe.network,
 			normalizedNetwork: normalizeNetworkName(test.probe.network),
 			allowedCountries: [ test.probe.country ],
+			groupingKey: getGroupingKey(test.probe.country, test.probe.state, normalizeFromPublicName(test.probe.city), test.probe.asn),
 		},
 		index: [],
 		resolvers: test.probe.resolvers,

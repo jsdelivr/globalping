@@ -14,3 +14,5 @@ export const normalizeFromPublicName = (name: string): string => name.toLowerCas
 export const normalizeNetworkName = (name: string): string => name.toLowerCase();
 
 export const normalizeCoordinate = (coordinate: number) => Math.round(coordinate * 100) / 100;
+
+export const getGroupingKey = (country: string, state: string | null, normalizedCity: string, asn: number) => `${country}-${state}-${normalizedCity}-${asn}`;

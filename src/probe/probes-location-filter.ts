@@ -218,7 +218,7 @@ export class ProbesLocationFilter {
 		// Group by unique location + ASN, order by the ranking function.
 		let groupedProbes = _(probes)
 			.shuffle() // Ensure the initial order of groups and their content is random.
-			.groupBy(probe => `${probe.location.country}-${probe.location.state}-${probe.location.city}-${probe.location.asn}`)
+			.groupBy(probe => probe.location.groupingKey)
 			.map((probes, groupKey) => ({ probes, rank: groupRank(probes.length), cityKey: groupKey.split('-').slice(0, -1).join('-'), prevSameCity: 0 }))
 			.sort((a, b) => b.rank - a.rank)
 			.value();
