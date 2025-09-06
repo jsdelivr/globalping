@@ -20,5 +20,5 @@ const handle = async (ctx: Context): Promise<void> => {
 };
 
 export const registerSendCodeRoute = (router: Router): void => {
-	router.post('/adoption-code', '/adoption-code', bodyParser(), validate(schema), handle);
+	router.post('/adoption-code', '/adoption-code', bodyParser(), validate({ body: schema }), handle);
 };

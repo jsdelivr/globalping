@@ -25,6 +25,6 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 
 export const registerCreateMeasurementRoute = (router: Router): void => {
 	router
-		.post('/measurements', '/measurements', corsAuthHandler(), authenticate(), bodyParser(), validate(schema), handle)
+		.post('/measurements', '/measurements', corsAuthHandler(), authenticate(), bodyParser(), validate({ body: schema }), handle)
 		.options('/measurements', '/measurements', corsAuthHandler());
 };
