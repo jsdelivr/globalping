@@ -134,6 +134,20 @@ describe('Get Probe Logs', () => {
 			});
 	});
 
+	it('should return all logs if since is 0', async () => {
+		sandbox.stub(adoptedProbes, 'getByUuid').returns(mockAdoption);
+		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
+
+		await requestAgent
+			.get(`/v1/probes/${PROBE_UUID}/logs?since=0`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(200)
+			.expect((response) => {
+				expect(response.body).to.deep.equal(redisLogs.map(entry => entry.message));
+			});
+	});
+
 	it('should reject invalid since query parameter', async () => {
 		sandbox.stub(adoptedProbes, 'getByUuid').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
