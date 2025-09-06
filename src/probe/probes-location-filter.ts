@@ -65,6 +65,7 @@ export class ProbesLocationFilter {
 	magicFilter (probes: Probe[], magicLocation: string) {
 		let resultProbes = probes;
 		const keywords = magicLocation.toLowerCase().split('+').map(k => ({ system: k.replaceAll('-', ' ').trim(), userTag: k.trim() }));
+		const bestProbePositions: number[] = [];
 
 		const keywordsWithPositions = keywords.map(keyword => ({
 			keyword,
@@ -76,7 +77,18 @@ export class ProbesLocationFilter {
 			let filteredProbes = [];
 
 			if (noExactMatches) {
-				filteredProbes = resultProbes.filter(probe => this.getIndexPosition(probe, keyword.system) !== -1);
+				// Positions are only relevant for non-exact matches, as exact matches must all occur at the same level.
+				filteredProbes = resultProbes.filter((probe, index) => {
+					const pos = this.getIndexPosition(probe, keyword.system);
+
+					if (pos !== -1) {
+						if (!bestProbePositions[index] || bestProbePositions[index] > pos) {
+							bestProbePositions[index] = pos;
+						}
+					}
+
+					return pos !== -1;
+				});
 			} else {
 				filteredProbes = resultProbes.filter(probe => this.checkExactIndexPosition(probe, keyword.system, position));
 			}
@@ -88,7 +100,7 @@ export class ProbesLocationFilter {
 			resultProbes = filteredProbes;
 		}
 
-		return resultProbes;
+		return { filteredProbes: resultProbes, bestProbePositions };
 	}
 
 	checkExactIndexPosition (probe: Probe, filterValue: string, position: number) {
@@ -132,12 +144,13 @@ export class ProbesLocationFilter {
 		}
 
 		let filteredProbes = probes;
+		let bestProbePositions: number[];
 
 		Object.keys(location).forEach((key) => {
 			if (key === 'tags') {
 				filteredProbes = probes.filter(probe => location.tags!.every(tag => this.hasTag(probe, tag)));
 			} else if (key === 'magic') {
-				filteredProbes = captureSpan('magicFilter', () => this.magicFilter(filteredProbes, location.magic!));
+				({ filteredProbes, bestProbePositions } = captureSpan('magicFilter', () => this.magicFilter(filteredProbes, location.magic!)));
 			} else {
 				const probeKey = Object.hasOwn(locationKeyMap, key) ? locationKeyMap[key as keyof typeof locationKeyMap] : key;
 				// @ts-expect-error it's a string
@@ -149,7 +162,7 @@ export class ProbesLocationFilter {
 
 		const isMagicSorting = Object.keys(location).includes('magic');
 
-		return captureSpan('shuffle', () => isMagicSorting ? this.magicSort(filteredProbes, location.magic!) : this.diversifiedShuffle(filteredProbes));
+		return captureSpan('shuffle', () => isMagicSorting ? this.magicSort(filteredProbes, bestProbePositions) : this.diversifiedShuffle(filteredProbes));
 	}
 
 	public filterByLocationAndWeight (probes: Probe[], distribution: Map<Location, number>, limit: number): Probe[] {
@@ -191,19 +204,29 @@ export class ProbesLocationFilter {
 		return [ ...pickedProbes ];
 	}
 
-	private magicSort (probes: Probe[], magicString: string): Probe[] {
-		const getClosestIndexPosition = (probe: Probe) => {
-			const keywords = magicString.split('+');
-			const closestIndexPosition = keywords.reduce((smallestIndex, keyword) => {
-				const indexPosition = this.getIndexPosition(probe, keyword);
-				return indexPosition < smallestIndex ? indexPosition : smallestIndex;
-			}, Number.POSITIVE_INFINITY);
-			return closestIndexPosition;
-		};
+	private magicSort (probes: Probe[], bestProbePositions: number[]): Probe[] {
+		const probesGroupedByIndexPosition = probes.reduce<{ [k: string]: Probe[] }>((grouped, probe, probeIndex) => {
+			const groupIndex = bestProbePositions[probeIndex] ?? 0;
 
-		const probesGroupedByIndexPosition = _.groupBy(probes, getClosestIndexPosition);
-		const groupsSortedByIndexPosition = Object.values(probesGroupedByIndexPosition); // Object.values sorts values by key
-		const groupsWithShuffledItems = groupsSortedByIndexPosition.map(group => this.diversifiedShuffle(group));
+			if (!grouped[groupIndex]) {
+				grouped[groupIndex] = [];
+			}
+
+			grouped[groupIndex].push(probe);
+			return grouped;
+		}, {});
+
+		// Object.values sorts values by (numerical) keys
+		const groupsSortedByIndexPosition = Object.values(probesGroupedByIndexPosition).reduce(({ groups, count }, group) => {
+			if (count >= 500) {
+				return { groups, count };
+			}
+
+			groups.push(group);
+			return { groups, count: count + group.length };
+		}, { groups: [] as Probe[][], count: 0 }).groups;
+
+		const groupsWithShuffledItems = captureSpan('diversifiedShuffle', () => groupsSortedByIndexPosition.map((group, i) => i === 0 ? this.diversifiedShuffle(group) : group));
 		const resultProbes = groupsWithShuffledItems.flat();
 
 		return resultProbes;
