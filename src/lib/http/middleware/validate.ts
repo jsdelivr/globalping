@@ -17,7 +17,7 @@ export const validate = ({ body, params, query }: ValidateOptions): ExtendedMidd
 	].filter(validation => validation.schema);
 
 	validations.forEach(({ schema, name, target }) => {
-		const result = schema!.validate(target, { convert: true, context: ctx.state });
+		const result = schema!.validate(target, { convert: true, context: ctx.state, abortEarly: false });
 
 		if (!result.error) {
 			switch (name) {
