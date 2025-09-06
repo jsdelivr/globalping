@@ -19,6 +19,8 @@ const locationKeyMap = {
 	city: 'normalizedCity',
 };
 
+const MAX_MEASUREMENT_PROBES = config.get<number>('measurement.limits.authenticatedTestsPerMeasurement');
+
 export class ProbesLocationFilter {
 	private readonly globalIndex: Set<string>[];
 
@@ -218,7 +220,8 @@ export class ProbesLocationFilter {
 
 		// Object.values sorts values by (numerical) keys
 		const groupsSortedByIndexPosition = Object.values(probesGroupedByIndexPosition).reduce(({ groups, count }, group) => {
-			if (count >= 500) {
+			// Discard the remaining groups if we already have more than enough probes.
+			if (count >= MAX_MEASUREMENT_PROBES) {
 				return { groups, count };
 			}
 
