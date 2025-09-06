@@ -23,7 +23,7 @@ const handle = async (ctx: ExtendedContext) => {
 		throw createHttpError(404, `Probe not found.`, { type: 'not_found' });
 	}
 
-	const logs = await probeLogStorage.readLogs(uuid, since ? parseInt(since as string) : undefined);
+	const logs = await probeLogStorage.readLogs(uuid, since ? Number(since as string) : undefined);
 	ctx.body = logs.map(log => log.message);
 };
 
