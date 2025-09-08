@@ -4,20 +4,20 @@ import type { Location } from '../lib/location/types.js';
 import type { OfflineProbe, Probe } from './types.js';
 import { ProbesLocationFilter } from './probes-location-filter.js';
 import { getMeasurementStore, MeasurementStore } from '../measurement/store.js';
-import { normalizeFromPublicName, normalizeNetworkName } from '../lib/geoip/utils.js';
+import { getGroupingKey, normalizeFromPublicName, normalizeNetworkName } from '../lib/geoip/utils.js';
 import { onProbesUpdate as onServerProbesUpdate } from '../lib/ws/server.js';
 import { captureSpan } from '../lib/metrics.js';
 
 export class ProbeRouter {
 	private readonly probesFilter = new ProbesLocationFilter();
-	private probes: Probe[] = [];
+	private readyProbes: Probe[] = [];
 
 	constructor (
 		private readonly onProbesUpdate: typeof onServerProbesUpdate,
 		private readonly store: MeasurementStore,
 	) {
 		this.onProbesUpdate((probes) => {
-			this.probes = probes;
+			this.readyProbes = probes.filter(probe => probe.status === 'ready');
 			this.probesFilter.updateGlobalIndex(probes);
 		});
 	}
@@ -29,14 +29,13 @@ export class ProbeRouter {
 	}> {
 		const locations = userRequest.locations ?? [];
 		const globalLimit = userRequest.limit ?? 1;
-		const connectedProbes = this.probes.filter(probe => probe.status === 'ready');
 
 		if (typeof locations === 'string') { // the measurement id of existing measurement was provided by the user, the same probes are to be used
-			return this.findWithMeasurementId(connectedProbes, locations, userRequest);
+			return this.findWithMeasurementId(this.readyProbes, locations, userRequest);
 		}
 
 		const preferredIpVersion = userRequest.measurementOptions?.ipVersion ?? 4;
-		const connectedProbesFilteredByIpVersion = this.probesFilter.filterByIpVersion(connectedProbes, preferredIpVersion);
+		const connectedProbesFilteredByIpVersion = this.probesFilter.filterByIpVersion(this.readyProbes, preferredIpVersion);
 
 		let filtered: Probe[] = [];
 
@@ -49,7 +48,7 @@ export class ProbeRouter {
 		}
 
 		if (filtered.length === 0 && locations.length === 1 && locations[0]?.magic) {
-			return this.findWithMeasurementId(connectedProbes, locations[0].magic, userRequest);
+			return this.findWithMeasurementId(this.readyProbes, locations[0].magic, userRequest);
 		}
 
 		return {
@@ -173,6 +172,7 @@ export class ProbeRouter {
 			network: test.probe.network,
 			normalizedNetwork: normalizeNetworkName(test.probe.network),
 			allowedCountries: [ test.probe.country ],
+			groupingKey: getGroupingKey(test.probe.country, test.probe.state, normalizeFromPublicName(test.probe.city), test.probe.asn),
 		},
 		index: [],
 		resolvers: test.probe.resolvers,

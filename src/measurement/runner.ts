@@ -23,7 +23,7 @@ export class MeasurementRunner {
 
 	async run (ctx: ExtendedContext): Promise<{ measurementId: string; probesCount: number }> {
 		const userRequest = ctx.request.body as UserRequest;
-		const { onlineProbesMap, allProbes, request } = await captureSpan('findMatchingProbes', () => this.router.findMatchingProbes(userRequest));
+		const { onlineProbesMap, allProbes, request } = await this.router.findMatchingProbes(userRequest);
 		const ipVersion = userRequest.measurementOptions?.ipVersion;
 
 		if (allProbes.length === 0) {

@@ -7,9 +7,10 @@ import { ProbeError } from '../lib/probe-error.js';
 import { getGeoIpClient, LocationInfo } from '../lib/geoip/client.js';
 import getProbeIp from '../lib/get-probe-ip.js';
 import { getRegion } from '../lib/cloud-ip-ranges.js';
-import type { Probe, ProbeLocation, Tag } from './types.js';
+import type { ExtendedProbeLocation, Probe, Tag } from './types.js';
 import { probeIpLimit } from '../lib/ws/server.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
+import { getGroupingKey } from '../lib/geoip/utils.js';
 import { isIpBlocked } from '../lib/blocked-ip-ranges.js';
 
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
@@ -97,7 +98,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	};
 };
 
-const getLocation = (ipInfo: LocationInfo): ProbeLocation => ({
+const getLocation = (ipInfo: LocationInfo): ExtendedProbeLocation => ({
 	continent: ipInfo.continent,
 	region: ipInfo.region,
 	country: ipInfo.country,
@@ -110,6 +111,7 @@ const getLocation = (ipInfo: LocationInfo): ProbeLocation => ({
 	network: ipInfo.network,
 	normalizedNetwork: ipInfo.normalizedNetwork,
 	allowedCountries: ipInfo.allowedCountries,
+	groupingKey: getGroupingKey(ipInfo.country, ipInfo.state, ipInfo.normalizedCity, ipInfo.asn),
 });
 
 const getTags = (clientIp: string, ipInfo: LocationInfo) => {
