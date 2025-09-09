@@ -30,7 +30,7 @@ io
 		adoptionToken.validate(socket).catch(err => logger.warn('Error during adoption token validation:', err));
 		socket.emit('api:connect:alt-ips-token', { token: await getAltIpsClient().generateToken(socket), socketId: socket.id, ip: probe.ipAddress });
 		socket.emit('api:connect:location', location);
-		socket.emit('api:logging:set', { sendingEnabled: true });
+		socket.emit('api:logs-transport:set', { isActive: true });
 		logger.info(`WS client connected.`, { client: { id: socket.id, ip: probe.ipAddress }, location: { city: location.city, country: location.country, network: location.network } });
 
 		// Handlers
