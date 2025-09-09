@@ -88,6 +88,10 @@ export type OfflineProbe = Modify<Probe, {
 		type: 'offline';
 		value: string;
 	}[];
+	normalizedTags: {
+		type: 'offline';
+		value: string;
+	}[];
 	stats: {
 		cpu: {
 			load: [];

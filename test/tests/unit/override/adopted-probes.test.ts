@@ -73,6 +73,10 @@ describe('AdoptedProbes', () => {
 			type: 'system',
 			value: 'datacenter-network',
 		}],
+		normalizedTags: [{
+			type: 'system',
+			value: 'datacenter-network',
+		}],
 		index: [ [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [] ],
 		client: '',
 		host: '',
