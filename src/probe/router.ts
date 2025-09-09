@@ -177,6 +177,7 @@ export class ProbeRouter {
 		index: [],
 		resolvers: test.probe.resolvers,
 		tags: test.probe.tags.map(tag => ({ value: tag, type: 'offline' })),
+		normalizedTags: test.probe.tags.map(tag => ({ value: tag.toLowerCase(), type: 'offline' })),
 		stats: {
 			cpu: {
 				load: [],

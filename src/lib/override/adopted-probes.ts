@@ -5,7 +5,7 @@ import config from 'config';
 import { scopedLogger } from '../logger.js';
 import type { getProbesWithAdminData as serverGetProbesWithAdminData } from '../ws/server.js';
 import type { ExtendedProbeLocation, Probe, ProbeLocation, Tag } from '../../probe/types.js';
-import { getGroupingKey, normalizeCoordinate, normalizeFromPublicName } from '../geoip/utils.js';
+import { getGroupingKey, normalizeCoordinate, normalizeFromPublicName, normalizeTags } from '../geoip/utils.js';
 import { getContinentByCountry, getContinentName, getCountryByIso, getIndex, getRegionByCountry, getStateNameByIso } from '../location/location.js';
 import { countries } from 'countries-list';
 import { randomUUID } from 'crypto';
@@ -264,12 +264,14 @@ export class AdoptedProbes {
 			const newLocation = this.getUpdatedLocation(probe) || probe.location;
 
 			const newTags = this.getUpdatedTags(probe);
+			const newNormalizedTags = normalizeTags(newTags);
 
 			return {
 				...probe,
 				location: newLocation,
 				tags: newTags,
-				index: getIndex(newLocation, newTags),
+				normalizedTags: newNormalizedTags,
+				index: getIndex(newLocation, newNormalizedTags),
 				owner: { id: adoption.userId },
 			};
 		});

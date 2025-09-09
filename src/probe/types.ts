@@ -59,6 +59,7 @@ export type Probe = {
 	index: ProbeIndex;
 	resolvers: string[];
 	tags: Tag[];
+	normalizedTags: Tag[];
 	stats: ProbeStats;
 	hostInfo: HostInfo;
 	owner?: { id: string };
@@ -84,6 +85,10 @@ export type OfflineProbe = Modify<Probe, {
 	};
 	index: [];
 	tags: {
+		type: 'offline';
+		value: string;
+	}[];
+	normalizedTags: {
 		type: 'offline';
 		value: string;
 	}[];

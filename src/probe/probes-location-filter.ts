@@ -105,12 +105,12 @@ export class ProbesLocationFilter {
 		return probe.index.findIndex(category => category.some(index => index.includes(filterValue)));
 	}
 
-	hasTag (probe: Probe, filterValue: string) {
-		return probe.tags.some(({ value }) => value.toLowerCase() === filterValue.toLowerCase());
+	hasTag (probe: Probe, normalizedFilterValue: string) {
+		return probe.normalizedTags.some(({ value }) => value === normalizedFilterValue);
 	}
 
-	hasUserTag (probe: Probe, filterValue: string) {
-		return probe.tags.filter(({ type }) => type === 'user').some(({ value }) => value.toLowerCase() === filterValue);
+	hasUserTag (probe: Probe, normalizedFilterValue: string) {
+		return probe.normalizedTags.filter(({ type }) => type === 'user').some(({ value }) => value === normalizedFilterValue);
 	}
 
 	public filterGloballyDistributed (probes: Probe[], limit: number): Probe[] {
@@ -137,7 +137,8 @@ export class ProbesLocationFilter {
 
 		Object.keys(location).forEach((key) => {
 			if (key === 'tags') {
-				filteredProbes = probes.filter(probe => location.tags!.every(tag => this.hasTag(probe, tag)));
+				const normalizedRequestTags = location.tags!.map(tag => tag.toLowerCase());
+				filteredProbes = probes.filter(probe => normalizedRequestTags.every(tag => this.hasTag(probe, tag)));
 			} else if (key === 'magic') {
 				filteredProbes = captureSpan('magicFilter', () => this.magicFilter(filteredProbes, location.magic!));
 			} else {

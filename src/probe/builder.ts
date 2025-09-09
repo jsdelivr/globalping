@@ -10,7 +10,7 @@ import { getRegion } from '../lib/cloud-ip-ranges.js';
 import type { ExtendedProbeLocation, Probe, Tag } from './types.js';
 import { probeIpLimit } from '../lib/ws/server.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
-import { getGroupingKey } from '../lib/geoip/utils.js';
+import { getGroupingKey, normalizeTags } from '../lib/geoip/utils.js';
 import { isIpBlocked } from '../lib/blocked-ip-ranges.js';
 
 export const buildProbe = async (socket: Socket): Promise<Probe> => {
@@ -61,8 +61,9 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 	const location = getLocation(ipInfo);
 
 	const tags = getTags(ip, ipInfo);
+	const normalizedTags = normalizeTags(tags);
 
-	const index = getIndex(location, tags);
+	const index = getIndex(location, normalizedTags);
 
 	// Todo: add validation and handle missing or partial data
 	return {
@@ -80,6 +81,7 @@ export const buildProbe = async (socket: Socket): Promise<Probe> => {
 		index,
 		resolvers: [],
 		tags,
+		normalizedTags,
 		stats: {
 			cpu: {
 				load: [],
