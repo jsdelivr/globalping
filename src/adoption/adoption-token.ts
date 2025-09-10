@@ -75,17 +75,15 @@ export class AdoptionToken {
 	}
 
 	async validate (socket: ServerSocket) {
-		const tokenValue = socket.handshake.query['adoptionToken'];
-		const token = !tokenValue ? null : String(tokenValue);
 		const probe = socket.data.probe;
 		const isAdopted = !!this.adoptedProbes.getByIp(probe.ipAddress)?.userId;
 
-		if (!token) {
+		if (!probe.adoptionToken) {
 			!isAdopted && socket.emit('api:connect:adoption', { message: 'You can register this probe at https://dash.globalping.io to earn extra measurement credits.' });
 			return;
 		}
 
-		const { message, level } = await this.validateToken(token, probe);
+		const { message, level } = await this.validateToken(probe.adoptionToken, probe);
 
 		if (message) {
 			socket.emit('api:connect:adoption', { message, level });

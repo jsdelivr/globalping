@@ -81,7 +81,6 @@ describe('Adoption code', () => {
 					longitude: -96.81,
 					asn: 20004,
 					network: 'The Constant Company LLC',
-					adoptionToken: null,
 					customLocation: null,
 					originalLocation: null,
 					allowedCountries: [ 'US' ],
