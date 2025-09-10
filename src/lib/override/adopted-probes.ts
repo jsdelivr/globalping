@@ -241,7 +241,7 @@ export class AdoptedProbes {
 			state: adoption.state,
 			latitude: adoption.latitude,
 			longitude: adoption.longitude,
-			groupingKey: getGroupingKey(adoption.country, adoption.state, normalizeFromPublicName(adoption.city!), location.asn),
+			groupingKey: getGroupingKey(adoption.country, adoption.state, normalizeFromPublicName(adoption.city), location.asn),
 		};
 	}
 
