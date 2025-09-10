@@ -101,7 +101,7 @@ registerCreateMeasurementRoute(apiRouter);
 registerGetMeasurementRoute(apiRouter);
 // GET /probes
 registerGetProbesRoute(apiRouter);
-// GET /probes/:uuid/logs
+// GET /probes/:id/logs
 registerProbeLogsRoute(apiRouter);
 // POST /send-code
 registerSendCodeRoute(apiRouter);

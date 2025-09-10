@@ -19,11 +19,13 @@ describe('Get Probe Logs', () => {
 	let sandbox: sinon.SinonSandbox;
 	let client: RedisCluster;
 
+	const PROBE_ID = 'mock-probe-id';
 	const PROBE_UUID = 'mock-probe-uuid';
 	const PROBE_USER_ID = 'mock-u-1';
 	const REDIS_LOG_KEY = 'probe:mock-probe-uuid:logs';
 
 	const mockAdoption = {
+		id: PROBE_ID,
 		uuid: PROBE_UUID,
 		userId: PROBE_USER_ID,
 	} as Adoption;
@@ -81,86 +83,81 @@ describe('Get Probe Logs', () => {
 	});
 
 	it('should respond with 404 if user is not authorized', async () => {
-		sandbox.stub(adoptedProbes, 'getByUuid').returns(mockAdoption);
-		await requestAgent.get(`/v1/probes/${PROBE_UUID}/logs`).send().expect(404);
+		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).send().expect(404);
 	});
 
 	it('should respond with 404 if user is admin and probe does not exist', async () => {
-		sandbox.stub(adoptedProbes, 'getByUuid').returns(null);
+		sandbox.stub(adoptedProbes, 'getById').returns(null);
 		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
 
 		await requestAgent.get(`/v1/probes/nonexistent/logs`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(404);
 	});
 
 	it('should respond with 200 if user is admin and probe exists', async () => {
-		sandbox.stub(adoptedProbes, 'getByUuid').returns(mockAdoption);
+		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
 
-		await requestAgent.get(`/v1/probes/${PROBE_UUID}/logs`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(200);
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(200);
 	});
 
 	it('should respond with 200 if user is an owner of an existing probe', async () => {
-		sandbox.stub(adoptedProbes, 'getByUuid').returns(mockAdoption);
+		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
 
-		await requestAgent.get(`/v1/probes/${PROBE_UUID}/logs`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(200);
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(200);
 	});
 
 	it('should return logs in the expected format', async () => {
-		sandbox.stub(adoptedProbes, 'getByUuid').returns(mockAdoption);
+		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
 
 		await requestAgent
-			.get(`/v1/probes/${PROBE_UUID}/logs`)
+			.get(`/v1/probes/${PROBE_ID}/logs`)
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200)
 			.expect((response) => {
-				expect(response.body).to.deep.equal(redisLogs.map(entry => entry.message));
+				expect(response.body).to.deep.equal({ logs: redisLogs.map(entry => entry.message), lastId: redisLogs[1]!.id });
 			});
 	});
 
-	it('should respect the since query parameter', async () => {
-		sandbox.stub(adoptedProbes, 'getByUuid').returns(mockAdoption);
+	it('should respect the after query parameter', async () => {
+		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
 
 		await requestAgent
-			.get(`/v1/probes/${PROBE_UUID}/logs?since=1705917173120`)
+			.get(`/v1/probes/${PROBE_ID}/logs?after=1705917173120-0`)
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200)
 			.expect((response) => {
-				expect(response.body).to.deep.equal([ redisLogs[1]!.message ]);
+				expect(response.body.logs).to.deep.equal([ redisLogs[1]!.message ]);
 			});
 	});
 
-	it('should return all logs if since is 0', async () => {
-		sandbox.stub(adoptedProbes, 'getByUuid').returns(mockAdoption);
+	it('should return all logs if after is -', async () => {
+		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
 
 		await requestAgent
-			.get(`/v1/probes/${PROBE_UUID}/logs?since=0`)
+			.get(`/v1/probes/${PROBE_ID}/logs?after=-`)
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200)
 			.expect((response) => {
-				expect(response.body).to.deep.equal(redisLogs.map(entry => entry.message));
+				expect(response.body).to.deep.equal({ logs: redisLogs.map(entry => entry.message), lastId: redisLogs[1]!.id });
 			});
 	});
 
-	it('should reject invalid since query parameter', async () => {
-		sandbox.stub(adoptedProbes, 'getByUuid').returns(mockAdoption);
+	it('should reject invalid after query parameter', async () => {
+		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
 
 		await requestAgent
-			.get(`/v1/probes/${PROBE_UUID}/logs?since=foo`)
+			.get(`/v1/probes/${PROBE_ID}/logs?after=foo`)
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
-			.expect(400)
-			.expect((res) => {
-				expect(res.body.error).to.exist;
-				expect(res.body.error.message).to.equal('Parameter validation failed.');
-				expect(res.body.error.params).to.deep.equal({ since: '"since" must be a number' });
-			});
+			.expect(400);
 	});
 });
