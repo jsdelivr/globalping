@@ -19,6 +19,8 @@ const locationKeyMap = {
 	city: 'normalizedCity',
 };
 
+const MAX_MEASUREMENT_PROBES = config.get<number>('measurement.limits.authenticatedTestsPerMeasurement');
+
 export class ProbesLocationFilter {
 	private readonly globalIndex: Set<string>[];
 
@@ -103,12 +105,12 @@ export class ProbesLocationFilter {
 		return probe.index.findIndex(category => category.some(index => index.includes(filterValue)));
 	}
 
-	hasTag (probe: Probe, filterValue: string) {
-		return probe.tags.some(({ value }) => value.toLowerCase() === filterValue.toLowerCase());
+	hasTag (probe: Probe, normalizedFilterValue: string) {
+		return probe.normalizedTags.some(({ value }) => value === normalizedFilterValue);
 	}
 
-	hasUserTag (probe: Probe, filterValue: string) {
-		return probe.tags.filter(({ type }) => type === 'user').some(({ value }) => value.toLowerCase() === filterValue);
+	hasUserTag (probe: Probe, normalizedFilterValue: string) {
+		return probe.normalizedTags.filter(({ type }) => type === 'user').some(({ value }) => value === normalizedFilterValue);
 	}
 
 	public filterGloballyDistributed (probes: Probe[], limit: number): Probe[] {
@@ -135,7 +137,8 @@ export class ProbesLocationFilter {
 
 		Object.keys(location).forEach((key) => {
 			if (key === 'tags') {
-				filteredProbes = probes.filter(probe => location.tags!.every(tag => this.hasTag(probe, tag)));
+				const normalizedRequestTags = location.tags!.map(tag => tag.toLowerCase());
+				filteredProbes = probes.filter(probe => normalizedRequestTags.every(tag => this.hasTag(probe, tag)));
 			} else if (key === 'magic') {
 				filteredProbes = captureSpan('magicFilter', () => this.magicFilter(filteredProbes, location.magic!));
 			} else {
@@ -202,7 +205,16 @@ export class ProbesLocationFilter {
 		};
 
 		const probesGroupedByIndexPosition = _.groupBy(probes, getClosestIndexPosition);
-		const groupsSortedByIndexPosition = Object.values(probesGroupedByIndexPosition); // Object.values sorts values by key
+		const groupsSortedByIndexPosition = Object.values(probesGroupedByIndexPosition).reduce(({ groups, count }, group) => {
+			// Discard the remaining groups if we already have more than enough probes.
+			if (count >= MAX_MEASUREMENT_PROBES) {
+				return { groups, count };
+			}
+
+			groups.push(group);
+			return { groups, count: count + group.length };
+		}, { groups: [] as Probe[][], count: 0 }).groups;
+
 		const groupsWithShuffledItems = groupsSortedByIndexPosition.map(group => this.diversifiedShuffle(group));
 		const resultProbes = groupsWithShuffledItems.flat();
 
@@ -218,7 +230,7 @@ export class ProbesLocationFilter {
 		// Group by unique location + ASN, order by the ranking function.
 		let groupedProbes = _(probes)
 			.shuffle() // Ensure the initial order of groups and their content is random.
-			.groupBy(probe => `${probe.location.country}-${probe.location.state}-${probe.location.city}-${probe.location.asn}`)
+			.groupBy(probe => probe.location.groupingKey)
 			.map((probes, groupKey) => ({ probes, rank: groupRank(probes.length), cityKey: groupKey.split('-').slice(0, -1).join('-'), prevSameCity: 0 }))
 			.sort((a, b) => b.rank - a.rank)
 			.value();

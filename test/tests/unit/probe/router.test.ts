@@ -1056,9 +1056,15 @@ describe('probe router', () => {
 
 		it('should return match for user tag', async () => {
 			const probe = await buildProbe(String(Date.now()), location);
+
 			probe.tags = [
 				...probe.tags,
 				{ type: 'user', value: 'u-MartinKolarik:DashboardTag' },
+			];
+
+			probe.normalizedTags = [
+				...probe.normalizedTags,
+				{ type: 'user', value: 'u-martinkolarik:dashboardtag' },
 			];
 
 			const probes: DeepPartial<Probe[]> = [ probe ];

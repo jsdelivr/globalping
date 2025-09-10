@@ -32,7 +32,7 @@ import type { CustomContext } from '../../types.js';
 import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternative-ip.js';
 import { registerLimitsRoute } from '../../limits/route/get-limits.js';
 import { blacklist } from './middleware/blacklist.js';
-import { registerProbeLogsRoute } from '../../probe/route/get-probe-logs.js';
+import { registerGetProbeLogsRoute } from '../../probe/route/get-probe-logs.js';
 
 apmAgent.addTransactionFilter(apmUtils.transactionFilter({
 	keepResponse: [ 'location' ],
@@ -102,7 +102,7 @@ registerGetMeasurementRoute(apiRouter);
 // GET /probes
 registerGetProbesRoute(apiRouter);
 // GET /probes/:id/logs
-registerProbeLogsRoute(apiRouter);
+registerGetProbeLogsRoute(apiRouter);
 // POST /send-code
 registerSendCodeRoute(apiRouter);
 // POST /alternative-ip

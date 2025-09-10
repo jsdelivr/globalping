@@ -13,6 +13,10 @@ export type ProbeLocation = {
 	allowedCountries: string[];
 };
 
+export type ExtendedProbeLocation = ProbeLocation & {
+	groupingKey: string;
+};
+
 export type ProbeStats = {
 	cpu: {
 		load: Array<{
@@ -51,10 +55,11 @@ export type Probe = {
 	ipAddress: string;
 	altIpAddresses: string[];
 	host: string;
-	location: ProbeLocation;
+	location: ExtendedProbeLocation;
 	index: ProbeIndex;
 	resolvers: string[];
 	tags: Tag[];
+	normalizedTags: Tag[];
 	stats: ProbeStats;
 	hostInfo: HostInfo;
 	owner?: { id: string };
@@ -80,6 +85,10 @@ export type OfflineProbe = Modify<Probe, {
 	};
 	index: [];
 	tags: {
+		type: 'offline';
+		value: string;
+	}[];
+	normalizedTags: {
 		type: 'offline';
 		value: string;
 	}[];

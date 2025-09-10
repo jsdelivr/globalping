@@ -111,7 +111,7 @@ export const getRegionAliases = (key: string): string[] => {
 	return array ?? [];
 };
 
-export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
+export const getIndex = (location: ProbeLocation, normalizedTags: Tag[]) => {
 	// Storing the index as string[][] so each category has its exact position in the index array across all probes.
 	// When adding/removing/moving categories, make sure to update ProbeIndex and all places where it's used.
 	const index = [
@@ -128,7 +128,7 @@ export const getIndex = (location: ProbeLocation, tags: Tag[]) => {
 		[ location.region ],
 		getRegionAliases(location.region),
 		[ `as${location.asn}` ],
-		tags.filter(tag => tag.type === 'system').map(tag => tag.value),
+		normalizedTags.filter(tag => tag.type === 'system').map(tag => tag.value),
 		[ location.normalizedNetwork ],
 		getNetworkAliases(location.normalizedNetwork),
 	].map(category => category.map(s => s.toLowerCase().replaceAll('-', ' ')));

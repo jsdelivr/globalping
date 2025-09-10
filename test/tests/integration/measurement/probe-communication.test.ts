@@ -36,7 +36,7 @@ describe('Create measurement request', () => {
 
 		probe = await addFakeProbe({
 			'api:connect:location': locationHandlerStub,
-			'api:logging:set': logHandlerStub,
+			'api:logs-transport:set': logHandlerStub,
 			'api:connect:adoption': adoptionHandlerStub,
 			'probe:measurement:request': requestHandlerStub,
 		});
@@ -80,6 +80,7 @@ describe('Create measurement request', () => {
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
 				allowedCountries: [ 'US' ],
+				groupingKey: 'US-TX-dallas-20004',
 			},
 		]);
 
@@ -87,7 +88,7 @@ describe('Create measurement request', () => {
 		expect(adoptionHandlerStub.firstCall.args).to.deep.equal([{ message: 'You can register this probe at https://dash.globalping.io to earn extra measurement credits.' }]);
 
 		expect(logHandlerStub.callCount).to.equal(1);
-		expect(logHandlerStub.firstCall.args).to.deep.equal([{ sendingEnabled: true }]);
+		expect(logHandlerStub.firstCall.args).to.deep.equal([{ isActive: true }]);
 	});
 
 	it('should send and handle proper events during measurement request', async () => {

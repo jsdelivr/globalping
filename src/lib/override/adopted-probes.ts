@@ -4,8 +4,8 @@ import _ from 'lodash';
 import config from 'config';
 import { scopedLogger } from '../logger.js';
 import type { getProbesWithAdminData as serverGetProbesWithAdminData } from '../ws/server.js';
-import type { Probe, ProbeLocation, Tag } from '../../probe/types.js';
-import { normalizeCoordinate, normalizeFromPublicName } from '../geoip/utils.js';
+import type { ExtendedProbeLocation, Probe, ProbeLocation, Tag } from '../../probe/types.js';
+import { getGroupingKey, normalizeCoordinate, normalizeFromPublicName, normalizeTags } from '../geoip/utils.js';
 import { getContinentByCountry, getContinentName, getCountryByIso, getIndex, getRegionByCountry, getStateNameByIso } from '../location/location.js';
 import { countries } from 'countries-list';
 import { randomUUID } from 'crypto';
@@ -223,15 +223,16 @@ export class AdoptedProbes {
 		return this.uuidToDProbe.get(uuid) || null;
 	}
 
-	getUpdatedLocation (probe: Probe, adminLocation?: ProbeLocation | null): ProbeLocation | null {
+	getUpdatedLocation (probe: Probe, adminLocation?: ProbeLocation | null): ExtendedProbeLocation | null {
 		const adoption = this.getByIp(probe.ipAddress);
+		const location = adminLocation || probe.location;
 
 		if (!adoption || !adoption.customLocation || !adoption.country || !probe.location.allowedCountries.includes(adoption.country)) {
 			return null;
 		}
 
 		return {
-			...(adminLocation || probe.location),
+			...location,
 			continent: getContinentByCountry(adoption.country),
 			region: getRegionByCountry(adoption.country),
 			country: adoption.country,
@@ -240,6 +241,7 @@ export class AdoptedProbes {
 			state: adoption.state,
 			latitude: adoption.latitude,
 			longitude: adoption.longitude,
+			groupingKey: getGroupingKey(adoption.country, adoption.state, normalizeFromPublicName(adoption.city!), location.asn),
 		};
 	}
 
@@ -271,12 +273,14 @@ export class AdoptedProbes {
 			const newLocation = this.getUpdatedLocation(probe) || probe.location;
 
 			const newTags = this.getUpdatedTags(probe);
+			const newNormalizedTags = normalizeTags(newTags);
 
 			return {
 				...probe,
 				location: newLocation,
 				tags: newTags,
-				index: getIndex(newLocation, newTags),
+				normalizedTags: newNormalizedTags,
+				index: getIndex(newLocation, newNormalizedTags),
 				owner: { id: adoption.userId },
 			};
 		});

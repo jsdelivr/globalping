@@ -10,7 +10,6 @@ import { adoptedProbes } from '../../../../src/lib/ws/server.js';
 import { Adoption } from '../../../../src/lib/override/adopted-probes.js';
 import { expect } from 'chai';
 import { RedisCluster } from '../../../../src/lib/redis/shared.js';
-import { getRedisProbeLogKey } from '../../../../src/probe/handler/logs.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
 
@@ -20,11 +19,14 @@ describe('Get Probe Logs', () => {
 	let sandbox: sinon.SinonSandbox;
 	let client: RedisCluster;
 
-	const PROBE_ID = 'mock-probe';
+	const PROBE_ID = 'mock-probe-id';
+	const PROBE_UUID = 'mock-probe-uuid';
 	const PROBE_USER_ID = 'mock-u-1';
+	const REDIS_LOG_KEY = 'probe:mock-probe-uuid:logs';
 
 	const mockAdoption = {
 		id: PROBE_ID,
+		uuid: PROBE_UUID,
 		userId: PROBE_USER_ID,
 	} as Adoption;
 
@@ -59,9 +61,9 @@ describe('Get Probe Logs', () => {
 		requestAgent = request(app);
 
 		client = redis.getMeasurementRedisClient();
-		const redisKey = getRedisProbeLogKey(PROBE_ID);
+		const redisKey = REDIS_LOG_KEY;
 
-		await client.del(getRedisProbeLogKey(PROBE_ID));
+		await client.del(REDIS_LOG_KEY);
 
 		for (const entry of redisLogs) {
 			await client.xAdd(redisKey, entry.id, entry.message);
@@ -69,7 +71,7 @@ describe('Get Probe Logs', () => {
 	});
 
 	after(async () => {
-		await client.del(getRedisProbeLogKey(PROBE_ID));
+		await client.del(REDIS_LOG_KEY);
 	});
 
 	beforeEach(async () => {
@@ -116,36 +118,46 @@ describe('Get Probe Logs', () => {
 			.send()
 			.expect(200)
 			.expect((response) => {
-				expect(response.body).to.deep.equal(redisLogs.map(entry => entry.message));
+				expect(response.body).to.deep.equal({ logs: redisLogs.map(entry => entry.message), lastId: redisLogs[1]!.id });
 			});
 	});
 
-	it('should respect the since query parameter', async () => {
+	it('should respect the after query parameter', async () => {
 		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
 
 		await requestAgent
-			.get(`/v1/probes/${PROBE_ID}/logs?since=1705917173120`)
+			.get(`/v1/probes/${PROBE_ID}/logs?after=1705917173120-0`)
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200)
 			.expect((response) => {
-				expect(response.body).to.deep.equal([ redisLogs[1]!.message ]);
+				expect(response.body.logs).to.deep.equal([ redisLogs[1]!.message ]);
 			});
 	});
 
-	it('should reject invalid since query parameter', async () => {
+	it('should return all logs if after is -', async () => {
+		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
+		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
+
+		await requestAgent
+			.get(`/v1/probes/${PROBE_ID}/logs?after=-`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(200)
+			.expect((response) => {
+				expect(response.body).to.deep.equal({ logs: redisLogs.map(entry => entry.message), lastId: redisLogs[1]!.id });
+			});
+	});
+
+	it('should reject invalid after query parameter', async () => {
 		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
 
 		await requestAgent
-			.get(`/v1/probes/${PROBE_ID}/logs?since=foo`)
+			.get(`/v1/probes/${PROBE_ID}/logs?after=foo`)
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
-			.expect(400)
-			.expect((res) => {
-				expect(res.body.error).to.exist;
-				expect(res.body.error.message).to.equal('Invalid "since" parameter');
-			});
+			.expect(400);
 	});
 });
