@@ -34,7 +34,7 @@ const handle = async (ctx: ExtendedContext) => {
 	ctx.body = { logs: logs.map(log => log.message), lastId };
 };
 
-export const registerProbeLogsRoute = (router: Router): void => {
+export const registerGetProbeLogsRoute = (router: Router): void => {
 	router.get('/probes/:id/logs', '/probes/:id/logs', corsAuthHandler(), authenticate(), handle)
 		.options('/probes/:id/logs', '/probes/:id/logs', corsAuthHandler());
 };
