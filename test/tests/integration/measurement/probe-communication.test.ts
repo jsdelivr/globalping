@@ -80,6 +80,7 @@ describe('Create measurement request', () => {
 				network: 'The Constant Company LLC',
 				normalizedNetwork: 'the constant company llc',
 				allowedCountries: [ 'US' ],
+				groupingKey: 'US-TX-dallas-20004',
 			},
 		]);
 

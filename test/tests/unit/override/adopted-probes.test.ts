@@ -64,11 +64,16 @@ describe('AdoptedProbes', () => {
 			network: 'Amazon.com, Inc.',
 			normalizedNetwork: 'amazon.com, inc.',
 			allowedCountries: [ 'IE' ],
+			groupingKey: 'IE-null-dublin-16509',
 		},
 		isHardware: false,
 		hardwareDevice: null,
 		hardwareDeviceFirmware: null,
 		tags: [{
+			type: 'system',
+			value: 'datacenter-network',
+		}],
+		normalizedTags: [{
 			type: 'system',
 			value: 'datacenter-network',
 		}],
@@ -1032,6 +1037,7 @@ describe('AdoptedProbes', () => {
 			network: 'Amazon.com, Inc.',
 			normalizedNetwork: 'amazon.com, inc.',
 			allowedCountries: [ 'IE', 'GL' ],
+			groupingKey: 'GL-null-nuuk-16509',
 		});
 	});
 
