@@ -3,13 +3,13 @@ import { getMeasurementRedisClient, RedisCluster } from '../lib/redis/measuremen
 
 const REDIS_ID_REGEX = /^\d+-\d+$/;
 
-const getRedisProbeLogKey = (probeUuid: string) => `probe:${probeUuid}:logs`;
+const getRedisProbeLogsKey = (probeUuid: string) => `probe:${probeUuid}:logs`;
 
 class ProbeLogsStorage {
 	constructor (private readonly redisClient: RedisCluster) {}
 
 	async readLogs (probeUuid: string, after?: string) {
-		const redisKey = getRedisProbeLogKey(probeUuid);
+		const redisKey = getRedisProbeLogsKey(probeUuid);
 		const startId = after && REDIS_ID_REGEX.test(after) ? `(${after}` : '-';
 
 		return this.redisClient.xRange(redisKey, startId, '+');
@@ -17,11 +17,17 @@ class ProbeLogsStorage {
 
 	async writeLogs (probeUuid: string, logMessage: LogMessage) {
 		const redisTransaction = this.redisClient.multi();
-		const redisKey = getRedisProbeLogKey(probeUuid);
+		const redisKey = getRedisProbeLogsKey(probeUuid);
 		const { skipped, logs } = logMessage;
 
 		const addMessage = (message: Record<string, string>) => {
-			redisTransaction.xAdd(redisKey, '*', message, { TRIM: { strategy: 'MAXLEN', strategyModifier: '~', threshold: 1000 } });
+			redisTransaction.xAdd(redisKey, '*', message, {
+				TRIM: {
+					strategy: 'MAXLEN',
+					strategyModifier: '~',
+					threshold: 1000,
+				},
+			});
 		};
 
 		if (skipped > 0) {
