@@ -4,7 +4,7 @@ import { ExtendedContext } from '../../types.js';
 import { authenticate } from '../../lib/http/middleware/authenticate.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 import createHttpError from 'http-errors';
-import { getProbeLogStorage } from '../log-storage.js';
+import { getProbeLogStorage } from '../logs-storage.js';
 import { schema } from '../schema/get-probe-logs-schema.js';
 
 const probeLogStorage = getProbeLogStorage();

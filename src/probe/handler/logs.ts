@@ -1,6 +1,6 @@
 import { Probe } from '../types.js';
 import { logMessageSchema } from '../schema/probe-response-schema.js';
-import { getProbeLogStorage } from '../log-storage.js';
+import { getProbeLogStorage } from '../logs-storage.js';
 
 export type LogMessage = {
 	skipped: number;

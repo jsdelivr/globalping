@@ -5,7 +5,7 @@ const REDIS_ID_REGEX = /^\d+-\d+$/;
 
 const getRedisProbeLogKey = (probeUuid: string) => `probe:${probeUuid}:logs`;
 
-class ProbeLogStorage {
+class ProbeLogsStorage {
 	constructor (private readonly redisClient: RedisCluster) {}
 
 	async readLogs (probeUuid: string, after?: string) {
@@ -35,12 +35,12 @@ class ProbeLogStorage {
 	}
 }
 
-let probeLogStorage: ProbeLogStorage;
+let probeLogsStorage: ProbeLogsStorage;
 
 export const getProbeLogStorage = () => {
-	if (!probeLogStorage) {
-		probeLogStorage = new ProbeLogStorage(getMeasurementRedisClient());
+	if (!probeLogsStorage) {
+		probeLogsStorage = new ProbeLogsStorage(getMeasurementRedisClient());
 	}
 
-	return probeLogStorage;
+	return probeLogsStorage;
 };
