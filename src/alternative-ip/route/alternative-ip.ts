@@ -27,5 +27,5 @@ const handle = async (ctx: Context): Promise<void> => {
 };
 
 export const registerAlternativeIpRoute = (router: Router): void => {
-	router.post('/alternative-ip', '/alternative-ip', bodyParser(), validate({ body: schema }), handle);
+	router.post('/alternative-ip', '/alternative-ip', bodyParser(), validate(schema), handle);
 };

@@ -22,7 +22,7 @@ describe('Validate middleware', () => {
 		const ctx: any = { request: { body: { hello: 'world!' } }, getDocsLink };
 		const next = sandbox.stub();
 
-		await validate({ body: schema })(ctx, next);
+		await validate(schema)(ctx, next);
 
 		expect(next.calledOnce).to.be.true;
 		expect(ctx.status).to.not.exist;
@@ -31,7 +31,7 @@ describe('Validate middleware', () => {
 	it('should return validation error', async () => {
 		const ctx: any = { request: { body: { hello: 'no one' } }, getDocsLink };
 
-		await validate({ body: schema })(ctx, nextMock);
+		await validate(schema)(ctx, nextMock);
 
 		expect(nextMock.notCalled).to.be.true;
 
@@ -56,7 +56,7 @@ describe('Validate middleware', () => {
 			input: Joi.string().valid('TEXT').insensitive().required(),
 		});
 
-		await validate({ body: schema })(ctx, nextMock);
+		await validate(schema)(ctx, nextMock);
 
 		expect(ctx.request.body.input).to.equal('TEXT');
 	});
