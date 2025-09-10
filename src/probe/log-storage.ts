@@ -1,24 +1,18 @@
 import { LogMessage } from './handler/logs.js';
 import { getMeasurementRedisClient, RedisCluster } from '../lib/redis/measurement-client.js';
 
+const REDIS_ID_REGEX = /^\d+-\d+$/;
+
 const getRedisProbeLogKey = (probeUuid: string) => `probe:${probeUuid}:logs`;
 
 class ProbeLogStorage {
-	private redisClient: RedisCluster;
+	constructor (private readonly redisClient: RedisCluster) {}
 
-	constructor () {
-		this.redisClient = getMeasurementRedisClient();
-	}
-
-	async readLogs (probeUuid: string, since?: number) {
+	async readLogs (probeUuid: string, after?: string) {
 		const redisKey = getRedisProbeLogKey(probeUuid);
-		let start = '-';
+		const startId = after && REDIS_ID_REGEX.test(after) ? `(${after}` : '-';
 
-		if (since) {
-			start = `${Math.floor(since)}-0`;
-		}
-
-		return this.redisClient.xRange(redisKey, start, '+');
+		return this.redisClient.xRange(redisKey, startId, '+');
 	}
 
 	async writeLogs (probeUuid: string, logMessage: LogMessage) {
@@ -41,4 +35,12 @@ class ProbeLogStorage {
 	}
 }
 
-export const probeLogStorage = new ProbeLogStorage();
+let probeLogStorage: ProbeLogStorage;
+
+export const getProbeLogStorage = () => {
+	if (!probeLogStorage) {
+		probeLogStorage = new ProbeLogStorage(getMeasurementRedisClient());
+	}
+
+	return probeLogStorage;
+};

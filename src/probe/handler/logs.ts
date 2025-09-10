@@ -1,6 +1,6 @@
 import { Probe } from '../types.js';
 import { logMessageSchema } from '../schema/probe-response-schema.js';
-import { probeLogStorage } from '../log-storage.js';
+import { getProbeLogStorage } from '../log-storage.js';
 
 export type LogMessage = {
 	skipped: number;
@@ -11,6 +11,8 @@ export type LogMessage = {
 		scope: string;
 	}[];
 };
+
+const probeLogStorage = getProbeLogStorage();
 
 export const handleNewLogs = (probe: Probe) => async (logMessage: LogMessage, callback?: (arg: string) => void) => {
 	const validation = logMessageSchema.validate(logMessage);
