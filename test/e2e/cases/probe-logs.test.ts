@@ -2,6 +2,7 @@ import {
 	type GetProbeLogsResponse,
 	waitForLogSync,
 	waitProbeInCity,
+	waitProbeToConnect,
 	waitProbeToDisconnect,
 } from '../utils.js';
 import got from 'got';
@@ -77,6 +78,9 @@ describe('probe logs', () => {
 		this.timeout(80000);
 		await client('directus_users').delete();
 		await client('gp_probes').delete();
+
+		await docker.startProbeContainer();
+		await waitProbeToConnect();
 	});
 
 	it('should return logs in the expected format', async () => {
