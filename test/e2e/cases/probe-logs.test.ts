@@ -75,8 +75,8 @@ describe('probe logs', () => {
 
 	after(async function () {
 		this.timeout(80000);
-		await client('gp_probes').delete();
 		await client('directus_users').delete();
+		await client('gp_probes').delete();
 	});
 
 	it('should return logs in the expected format', async () => {
