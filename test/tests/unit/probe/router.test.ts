@@ -777,9 +777,9 @@ describe('probe router', () => {
 				limit: 100,
 			} as unknown as UserRequest);
 
-			expect(allProbes.length).to.equal(1);
-			expect(onlineProbesMap.size).to.equal(1);
-			expect(allProbes[0]!.location.normalizedCity).to.equal('poznan');
+			expect(allProbes.length).to.equal(2);
+			expect(onlineProbesMap.size).to.equal(2);
+			expect(allProbes.map(p => p.location.normalizedCity)).to.include.members([ 'warsaw', 'poznan' ]);
 		});
 
 		it('should ignore same-level partial matches if there is an exact match', async () => {
