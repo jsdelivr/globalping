@@ -10,6 +10,16 @@ const logger = scopedLogger('e2e-utils');
 const processes = config.get<number>('server.processes');
 logger.info(`There are ${processes} workers running.`);
 
+export type GetProbeLogsResponse = {
+	lastId: string | null;
+	logs: {
+		message: string;
+		timestamp?: string;
+		scope?: string;
+		level?: string;
+	}[];
+};
+
 export const waitProbeToDisconnect = async () => {
 	let responses;
 
@@ -88,6 +98,31 @@ export const waitRowInTable = async (table: string) => {
 
 		if (row) {
 			return row;
+		}
+
+		await setTimeout(100);
+	}
+};
+
+export const waitForLogSync = async (id: string, authCookie: string, after: string = '-', timeout: number = 25000) => {
+	const start = Date.now();
+
+	while (true) {
+		const response = await got<GetProbeLogsResponse>(
+			`http://localhost:80/v1/probes/${id}/logs?after=${after}`,
+			{
+				responseType: 'json',
+				throwHttpErrors: false,
+				headers: { Cookie: authCookie },
+			},
+		);
+
+		if (response.body.lastId) {
+			return response;
+		}
+
+		if (Date.now() - start > timeout) {
+			throw new Error('Log sync timed out.');
 		}
 
 		await setTimeout(100);
