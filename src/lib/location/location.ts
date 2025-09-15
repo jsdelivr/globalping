@@ -95,6 +95,13 @@ export const getNetworkAliases = (key: string): string[] => {
 	return array ?? [];
 };
 
+export const getNetworkPrefixes = (network: string): string[] => {
+	return network.split(' ').reduce((acc: string[], _, i, arr) => {
+		acc.push(arr.slice(0, arr.length - i).join(' '));
+		return acc;
+	}, []);
+};
+
 export function getContinentName (key: string): string {
 	const continent = continents[key as keyof typeof continents];
 
@@ -129,7 +136,7 @@ export const getIndex = (location: ProbeLocation, normalizedTags: Tag[]) => {
 		getRegionAliases(location.region),
 		[ `as${location.asn}` ],
 		normalizedTags.filter(tag => tag.type === 'system').map(tag => tag.value),
-		[ location.normalizedNetwork ],
+		getNetworkPrefixes(location.normalizedNetwork),
 		getNetworkAliases(location.normalizedNetwork),
 	].map(category => category.map(s => s.toLowerCase().replaceAll('-', ' ')));
 

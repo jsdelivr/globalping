@@ -379,6 +379,49 @@ describe('Create measurement', () => {
 				});
 		});
 
+		describe('network matching in magic mode', () => {
+			let probe2: Socket;
+
+			before(async () => {
+				nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).reply(400);
+				nock('https://api.ip2location.io').get(/.*/).reply(400);
+				nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(400);
+				nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(400);
+
+				// The default probe has "The Constant Company LLC" network, add another with just "The Constant"
+				nock('https://ipinfo.io').get(/.*/).reply(200, {
+					...geoIpMocks.ipinfo.argentina,
+					org: 'AS61004 The Constant',
+				});
+
+				probe2 = await addFakeProbe();
+				probe2.emit('probe:status:update', 'ready');
+				probe2.emit('probe:isIPv4Supported:update', true);
+				probe2.emit('probe:isIPv6Supported:update', true);
+				await waitForProbesUpdate();
+			});
+
+			after(() => {
+				deleteFakeProbes([ probe2 ]);
+			});
+
+			it('should match based on words in magic mode', async () => {
+				await requestAgent.post('/v1/measurements')
+					.send({
+						type: 'ping',
+						target: 'example.com',
+						locations: [{ magic: 'The Constant', limit: 2 }],
+					})
+					.expect(202)
+					.expect((response) => {
+						expect(response.body.id).to.exist;
+						expect(response.header['location']).to.exist;
+						expect(response.body.probesCount).to.equal(2);
+						expect(response).to.matchApiSchema();
+					});
+			});
+		});
+
 		it('should not create measurement with "magic: non-existing-tag" location', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
