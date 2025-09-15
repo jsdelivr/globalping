@@ -237,7 +237,7 @@
 			},
 			"traits": {
 				"autonomousSystemNumber": 20003,
-				"isp": "The Constant Company LLC"
+				"autonomousSystemOrganization": "The Constant Company LLC"
 			}
 		},
 		"argentina": {
@@ -258,7 +258,7 @@
 			},
 			"traits": {
 				"autonomousSystemNumber": 61003,
-				"isp": "InterBS S.R.L. (BAEHOST)"
+				"autonomousSystemOrganization": "InterBS S.R.L. (BAEHOST)"
 			}
 		},
 		"newYork": {
@@ -279,7 +279,7 @@
 			},
 			"traits": {
 				"autonomousSystemNumber": 80003,
-				"isp": "The Constant Company LLC"
+				"autonomousSystemOrganization": "The Constant Company LLC"
 			}
 		},
 		"empty": {
@@ -352,7 +352,7 @@
 			},
 			"traits": {
 				"autonomousSystemNumber": 0,
-				"isp": ""
+				"autonomousSystemOrganization": ""
 			}
 		}
 	},
