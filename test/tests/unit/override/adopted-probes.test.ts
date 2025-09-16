@@ -62,7 +62,7 @@ describe('AdoptedProbes', () => {
 			latitude: 53.33,
 			longitude: -6.25,
 			network: 'Amazon.com',
-			normalizedNetwork: 'Amazon.com',
+			normalizedNetwork: 'amazon.com',
 			allowedCountries: [ 'IE' ],
 			groupingKey: 'IE-null-dublin-16509',
 		},
@@ -1032,7 +1032,7 @@ describe('AdoptedProbes', () => {
 			latitude: 64.18,
 			longitude: -51.73,
 			network: 'Amazon.com',
-			normalizedNetwork: 'Amazon.com',
+			normalizedNetwork: 'amazon.com',
 			allowedCountries: [ 'IE', 'GL' ],
 			groupingKey: 'GL-null-nuuk-16509',
 		});
