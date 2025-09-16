@@ -34,11 +34,6 @@ type CsvLegalFormRow = {
 	reason: string;
 };
 
-export const populateLegalNames = async () => {
-	const { names, abbrs } = await collectLegalForms();
-	({ namesPattern, abbrsPattern } = buildPatterns(names, abbrs));
-};
-
 export const normalizeLegalName = (name: string) => {
 	if (!namesPattern || !abbrsPattern) {
 		throw new Error('Legal name normalization is not initialized.');
@@ -54,6 +49,11 @@ export const normalizeLegalName = (name: string) => {
 		.replace(/\s+/g, ' ')
 		// Remove trailing commas and spaces after suffix removal
 		.replace(/\s*,\s*$/, '');
+};
+
+export const populateLegalNames = async () => {
+	const { names, abbrs } = await collectLegalForms();
+	({ namesPattern, abbrsPattern } = buildPatterns(names, abbrs));
 };
 
 function buildPatterns (names: string[], abbrs: string[]) {
