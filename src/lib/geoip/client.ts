@@ -82,8 +82,8 @@ export default class GeoIpClient {
 			throw new ProbeError(`unresolvable geoip: ${addr}`);
 		}
 
-		const [ match, ranked ] = this.bestMatch(results);
-		const networkMatch = this.matchNetwork(match, ranked);
+		const [ match ] = this.bestMatch(results);
+		const networkMatch = this.matchNetwork(match, results);
 
 		if (!networkMatch) {
 			throw new ProbeError(`unresolvable geoip: ${addr}`);
@@ -123,26 +123,18 @@ export default class GeoIpClient {
 		};
 	}
 
-	private matchNetwork (best: ProviderLocationInfo, rankedSources: ProviderLocationInfo[]): NetworkInfo | undefined {
-		if (best.asn && best.network) {
-			return {
-				asn: best.asn,
-				network: best.network,
-				normalizedNetwork: best.normalizedNetwork,
-			};
+	private matchNetwork (best: ProviderLocationInfo, sources: ProviderLocationInfo[]): NetworkInfo | undefined {
+		const match = sources.find(source => source.normalizedCity === best.normalizedCity && source?.asn && source?.network);
+
+		if (!match) {
+			return match;
 		}
 
-		for (const source of rankedSources) {
-			if (source.normalizedCity === best.normalizedCity && source?.asn && source?.network) {
-				return {
-					asn: source.asn,
-					network: source.network,
-					normalizedNetwork: source.normalizedNetwork,
-				};
-			}
-		}
-
-		return undefined;
+		// Sometimes, different sources use different casing for the same network name,
+		// so returning `match` directly leads to inconsistencies. Instead, we go through
+		// the sources again and pick the first one that has the correct `asn` and `normalizedNetwork`.
+		// This reduces the inconsistencies as the sources are in stable order.
+		return sources.find(source => source.asn === match.asn && source.normalizedNetwork === match.normalizedNetwork);
 	}
 
 	private bestMatch (sources: ProviderLocationInfo[]): [ProviderLocationInfo, ProviderLocationInfo[]] {
