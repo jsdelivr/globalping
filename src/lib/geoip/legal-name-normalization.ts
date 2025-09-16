@@ -4,6 +4,8 @@ import csvParser from 'csv-parser';
 import is from '@sindresorhus/is';
 import _ from 'lodash';
 
+// See https://github.com/jsdelivr/globalping/issues/383
+// The CSV file is from https://www.gleif.org/en/lei-data/code-lists/iso-20275-entity-legal-forms-code-list
 const FILENAME = '2023-09-28-elf-code-list-v1.5.csv';
 
 const ADDITIONAL_SUFFIXES = [
