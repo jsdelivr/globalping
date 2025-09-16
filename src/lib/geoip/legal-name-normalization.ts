@@ -110,7 +110,7 @@ async function collectLegalForms () {
 	const legalFormsAbbr = new Set<string>();
 
 	legalFormsData.forEach((row) => {
-		const abbrLocal = row.abbreviationsLocal.trim();
+		const abbrLocal = row.abbreviationsLocal.trim().toLowerCase();
 
 		abbrLocal.split(';').forEach((abbr) => {
 			if (abbr.trim()) {
@@ -118,7 +118,7 @@ async function collectLegalForms () {
 			}
 		});
 
-		const abbrTransliterated = row.abbreviationsTransliterated.trim();
+		const abbrTransliterated = row.abbreviationsTransliterated.trim().toLowerCase();
 
 		abbrTransliterated.split(';').forEach((abbr) => {
 			if (abbr.trim()) {
@@ -126,7 +126,7 @@ async function collectLegalForms () {
 			}
 		});
 
-		const nameLocal = row.entityLegalFormNameLocal.trim();
+		const nameLocal = row.entityLegalFormNameLocal.trim().toLowerCase();
 
 		if (nameLocal) {
 			legalFormsLong.add(ascii(nameLocal));
@@ -137,7 +137,7 @@ async function collectLegalForms () {
 			}
 		}
 
-		const nameTransliterated = row.entityLegalFormNameTransliterated.trim();
+		const nameTransliterated = row.entityLegalFormNameTransliterated.trim().toLowerCase();
 
 		if (nameTransliterated) {
 			legalFormsLong.add(ascii(nameTransliterated.trim()));
@@ -145,8 +145,8 @@ async function collectLegalForms () {
 	});
 
 	ADDITIONAL_SUFFIXES.forEach(({ name, abbr }) => {
-		legalFormsLong.add(ascii(name));
-		abbr.forEach(a => legalFormsAbbr.add(ascii(a)));
+		legalFormsLong.add(ascii(name).toLowerCase());
+		abbr.forEach(a => legalFormsAbbr.add(ascii(a).toLowerCase()));
 	});
 
 	// Convert to array and sort by length (longest first) to avoid partial matches
@@ -165,7 +165,7 @@ const readLegalFormsFile = () => new Promise<CsvLegalFormRow[]>((resolve, reject
 		.pipe(csvParser({
 			headers: [ 'elfCode', 'countryOfFormation', 'countryCode', 'jurisdictionOfFormation', 'countrySubDivisionCode', 'entityLegalFormNameLocal', 'language', 'languageCode', 'entityLegalFormNameTransliterated', 'abbreviationsLocal', 'abbreviationsTransliterated', 'dateCreated', 'elfStatus', 'modification', 'modificationDate', 'reason' ],
 			separator: ',',
-			// skipLines: 1,
+			skipLines: 1,
 		}))
 		.on('data', (form: CsvLegalFormRow) => {
 			legalForms.push(form);
