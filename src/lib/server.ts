@@ -7,6 +7,7 @@ import { populateMemList as populateMemCloudIpRangesList } from './cloud-ip-rang
 import { populateMemList as populateMemBlockedIpRangesList } from './blocked-ip-ranges.js';
 import { populateMemList as populateIpWhiteList } from './geoip/whitelist.js';
 import { populateCitiesList } from './geoip/city-approximation.js';
+import { populateLegalNames } from './geoip/legal-name-normalization.js';
 import { reconnectProbes } from './ws/helper/reconnect-probes.js';
 import { initPersistentRedisClient } from './redis/persistent-client.js';
 import { initMeasurementRedisClient } from './redis/measurement-client.js';
@@ -30,6 +31,8 @@ export const createServer = async (): Promise<Server> => {
 	await populateIpWhiteList();
 	// Populate cities info
 	await populateCitiesList();
+	// Populate legal name normalization data.
+	await populateLegalNames();
 	// Populate Dashboard override data before using it during initWsServer()
 	await probeOverride.fetchDashboardData();
 	probeOverride.scheduleSync();

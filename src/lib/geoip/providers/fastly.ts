@@ -6,6 +6,7 @@ import {
 	normalizeCityName,
 	normalizeCityNamePublic,
 	normalizeNetworkName,
+	normalizeNetworkNamePublic,
 } from '../utils.js';
 
 type FastlyResponse = {
@@ -49,7 +50,7 @@ export const fastlyLookup = async (addr: string): Promise<ProviderLocationInfo> 
 		asn: result.as.number,
 		latitude: data.latitude,
 		longitude: data.longitude,
-		network: result.as.name,
+		network: normalizeNetworkNamePublic(result.as.name),
 		normalizedNetwork: normalizeNetworkName(result.as.name),
 		isProxy: null,
 		isHosting: null,

@@ -6,6 +6,7 @@ import {
 	normalizeCityName,
 	normalizeCityNamePublic,
 	normalizeNetworkName,
+	normalizeNetworkNamePublic,
 } from '../utils.js';
 import { getCity } from '../city-approximation.js';
 
@@ -47,7 +48,7 @@ export const ipinfoLookup = async (addr: string): Promise<ProviderLocationInfo> 
 		asn: Number(parsedAsn),
 		latitude: Number(lat),
 		longitude: Number(lon),
-		network,
+		network: normalizeNetworkNamePublic(network),
 		normalizedNetwork: normalizeNetworkName(network),
 		isProxy: null,
 		isHosting: result.privacy?.hosting ?? null,
