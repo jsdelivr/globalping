@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { populateLegalNames, normalizeLegalName } from '../../../../src/lib/geoip/legal-name-normalization.js';
 
-describe('legal-name-normalization', () => {
+describe.only('legal-name-normalization', () => {
 	before(async () => {
 		await populateLegalNames();
 	});
