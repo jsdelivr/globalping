@@ -20,6 +20,9 @@ describe('legal-name-normalization', () => {
 		{ original: 'FASTER CZ spol. s r.o.', expected: 'FASTER CZ' },
 		{ original: 'Orange Polska Spolka Akcyjna', expected: 'Orange Polska' },
 
+		// prefix and quotes
+		{ original: 'JSC "ER-Telecom Holding"', expected: 'ER-Telecom Holding' },
+
 		// "trading as"
 		{ original: 'Matteo Martelloni trading as DELUXHOST', expected: 'DELUXHOST' },
 
