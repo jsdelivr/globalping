@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import ascii from 'any-ascii';
 import csvParser from 'csv-parser';
+import { LRUCache } from 'lru-cache';
 import transliterate from '@sindresorhus/transliterate';
 import is from '@sindresorhus/is';
 import _ from 'lodash';
@@ -25,6 +26,10 @@ const CUSTOM_TRANSLITERATIONS = [ 'da', 'de', 'hu', 'nb', 'sr', 'sv', 'tr' ];
 // Countries that sometimes write the legal form as a prefix instead of a suffix.
 // We don't allow this for all countries to reduce false-positive matches.
 const PREFIX_USING_COUNTRIES = [ 'RO', 'LV', 'LT', 'EE', 'RU', 'UA', 'BY', 'MD', 'GE', 'AM', 'AZ', 'KZ', 'KG', 'UZ', 'TJ', 'TM', 'FI', 'FO', 'JP', 'KR', 'TW', 'VN', 'TH', 'ID', 'IR', 'AE', 'SA', 'QA', 'OM', 'KW', 'BH', 'JO', 'LB', 'IQ', 'EG', 'LY', 'TN', 'DZ', 'MA', 'MR', 'YE', 'SY', 'PS' ];
+
+const normalizedCache = new LRUCache<string, string>({
+	max: 10000,
+});
 
 let legalSuffixNamesPattern: RegExp;
 let legalSuffixAbbrsPattern: RegExp;
@@ -51,11 +56,15 @@ type CsvLegalFormRow = {
 };
 
 export const normalizeLegalName = (name: string) => {
+	if (normalizedCache.has(name)) {
+		return normalizedCache.get(name)!;
+	}
+
 	if (!legalSuffixNamesPattern || !legalSuffixAbbrsPattern || !legalPrefixNamesPattern || !legalPrefixAbbrsPattern) {
 		throw new Error('Legal name normalization is not initialized.');
 	}
 
-	return name.trim()
+	const normalized = name.trim()
 		// Normalize "trading as" names, e.g., "Matteo Martelloni trading as DELUXHOST" => "DELUXHOST"
 		.split(/\s+trading as\s+/i).at(-1)!
 		// Apply the main cleanup patterns.
@@ -69,6 +78,9 @@ export const normalizeLegalName = (name: string) => {
 		.replace(/^"(.*)"$/, '$1')
 		// Remove trailing commas and spaces after suffix removal.
 		.replace(/\s*,\s*$/, '');
+
+	normalizedCache.set(name, normalized);
+	return normalized;
 };
 
 export const populateLegalNames = async () => {
