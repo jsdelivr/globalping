@@ -13,12 +13,12 @@ describe('legal-name-normalization', () => {
 		{ original: 'KPN B.V.', expected: 'KPN' },
 		{ original: 'Vodafone Libertel B.V.', expected: 'Vodafone Libertel' },
 		{ original: 'SCALEWAY S.A.S.', expected: 'SCALEWAY' },
-		{ original: 'LEASEWEB SINGAPORE PTE. LTD.', expected: 'LEASEWEB SINGAPORE' },
+		{ original: 'LEASEWEB SINGAPORE PTE. LTD.', expected: 'LEASEWEB' },
 		{ original: 'Kuroit Limited', expected: 'Kuroit' },
-		{ original: 'O2 Czech Republic, a.s.', expected: 'O2 Czech Republic' },
-		{ original: 'Telefonica Germany GmbH & Co.OHG', expected: 'Telefonica Germany' },
+		{ original: 'O2 Czech Republic, a.s.', expected: 'O2' },
+		{ original: 'Telefonica Germany GmbH & Co.OHG', expected: 'Telefonica' },
 		{ original: 'FASTER CZ spol. s r.o.', expected: 'FASTER CZ' },
-		{ original: 'Orange Polska Spolka Akcyjna', expected: 'Orange Polska' },
+		{ original: 'Orange Polska Spolka Akcyjna', expected: 'Orange' },
 
 		// prefix and quotes
 		{ original: 'JSC "ER-Telecom Holding"', expected: 'ER-Telecom Holding' },
@@ -59,9 +59,11 @@ describe('legal-name-normalization', () => {
 		{ original: 'TELECOMUNICACOES ALARCAO E FERNANDES LTDA - ME', expected: 'TELECOMUNICACOES ALARCAO E FERNANDES' },
 		{ original: 'M & R NETWORK LTDA-ME', expected: 'M & R NETWORK' },
 		{ original: 'BEIJING CBD TELECOM CO .LTD', expected: 'BEIJING CBD TELECOM' },
-		{ original: 'CENTRALES ELECTRICAS DE NARIÑO S.A. E.S.P', expected: 'CENTRALES ELECTRICAS DE NARIÑO' },
+		{ original: 'CENTRALES ELECTRICAS DE NARIÑO S.A. E.S.P', expected: 'CENTRALES ELECTRICAS DE NARINO' },
 		{ original: 'Orange Bank LLC', expected: 'Orange Bank' },
 		{ original: 'ACS', expected: 'ACS' },
+
+		{ original: 'Bank of America', expected: 'Bank of America' },
 	];
 
 	for (const { original, expected } of cases) {

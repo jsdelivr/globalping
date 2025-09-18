@@ -3,10 +3,17 @@ import ascii from 'any-ascii';
 import csvParser from 'csv-parser';
 import transliterate from '@sindresorhus/transliterate';
 import is from '@sindresorhus/is';
+import _ from 'lodash';
 
 // See https://github.com/jsdelivr/globalping/issues/383
 // The CSV file is from https://www.gleif.org/en/lei-data/code-lists/iso-20275-entity-legal-forms-code-list
 const LEGAL_FORMS_FILENAME = '2023-09-28-elf-code-list-v1.5.csv';
+
+// See https://github.com/jsdelivr/globalping/issues/721
+// The possible suffixes were mostly AI-generated based on country names and real ASN names
+const NATIONAL_SUFFIXES_FILENAME = 'REGIONAL_SUFFIXES.txt';
+// Providers that operate in multiple countries using separate regional entities.
+const INTERNATIONAL_PROVIDERS_FILENAME = 'REGIONAL_SUFFIXES_ISPS_REMOVE.csv';
 
 const ADDITIONAL_LEGAL_FORMS = [
 	{ name: 'Joint Limited Liability Company', abbr: [ 'JLLC' ] }, // Belarus
@@ -29,6 +36,9 @@ const allNamesSet = new Set<string>();
 const allAbbrsSet = new Set<string>();
 const prefixNamesSet: Set<string> = new Set();
 const prefixAbbrsSet: Set<string> = new Set();
+
+let nationalSuffixesPattern: RegExp;
+let internationalProviders: Set<string>;
 
 type CsvLegalFormRow = {
 	elfCode: string;
@@ -54,7 +64,7 @@ export const normalizeLegalName = (name: string) => {
 		throw new Error('Legal name normalization is not initialized.');
 	}
 
-	const normalized = name.trim()
+	let normalized = name.trim()
 		// Normalize "trading as" names, e.g., "Matteo Martelloni trading as DELUXHOST" => "DELUXHOST"
 		.split(/\s+trading as\s+/i).at(-1)!
 		// Clean up any double spaces.
@@ -126,11 +136,20 @@ export const normalizeLegalName = (name: string) => {
 	stripPrefixWithSet(prefixNamesSet, false);
 	stripPrefixWithSet(prefixAbbrsSet);
 
-	return words.join(' ')
+	normalized = words.join(' ')
 		// Remove trailing commas and spaces after suffix removal.
 		.replace(/\s*,\s*$/, '')
 		// Remove wrapping quotes that are often used with prefixes.
 		.replace(/^"(.*)"$/, '$1');
+
+	const international = normalized.replace(nationalSuffixesPattern, '').trim();
+
+	// Use the result only if it's on our list of verified names.
+	if (international && internationalProviders.has(ascii(international.toLowerCase()))) {
+		normalized = international;
+	}
+
+	return normalized;
 };
 
 export const populateLegalNames = async () => {
@@ -141,6 +160,8 @@ export const populateLegalNames = async () => {
 	allAbbrs.forEach(abbr => allAbbrsSet.add(abbr));
 	prefixNames.forEach(name => prefixNamesSet.add(name));
 	prefixAbbrs.forEach(abbr => prefixAbbrsSet.add(abbr));
+	nationalSuffixesPattern = buildNationalSuffixesPattern(await readNationalSuffixesFile());
+	internationalProviders = await readInternationalProvidersFile();
 };
 
 function generatePossiblePartSplits (parts: string[]): string[][] {
@@ -166,6 +187,15 @@ function multiPartMatch (parts: string[], set: Set<string>): boolean {
 
 		return splits.some(split => split.every(part => set.has(part)));
 	});
+}
+
+function buildNationalSuffixesPattern (words: string[]) {
+	const preparedWords = words
+		.map(w => ascii(w))
+		.sort((a, b) => b.length - a.length)
+		.map(w => _.escapeRegExp(w));
+
+	return new RegExp(`\\s-?\\s*\\(?(?:${preparedWords.join('|')})\\)?$`, 'i');
 }
 
 async function collectLegalForms (legalFormsData: CsvLegalFormRow[], minSynthesizedAbbreviationLength: number = 2) {
@@ -248,5 +278,31 @@ const readLegalFormsFile = () => new Promise<{ allForms: CsvLegalFormRow[]; pref
 			allForms.push(form);
 		})
 		.on('end', () => resolve({ allForms, prefixForms }))
+		.on('error', err => reject(err));
+});
+
+const readNationalSuffixesFile = async () => {
+	const contents = await fs.promises.readFile(`data/${NATIONAL_SUFFIXES_FILENAME}`, 'utf8');
+	const suffixes = contents
+		.split('\n')
+		.flatMap(line => line.split(';'))
+		.map(s => s.trim().replace(/^\(\s*(.*?)\s*\)$/, '$1').toLowerCase())
+		.filter(is.truthy);
+
+	return Array.from(new Set(suffixes));
+};
+
+const readInternationalProvidersFile = () => new Promise<Set<string>>((resolve, reject) => {
+	const rows = new Set<string>();
+
+	fs.createReadStream(`data/${INTERNATIONAL_PROVIDERS_FILENAME}`)
+		.pipe(csvParser({
+			headers: [ 'original', 'normalized' ],
+			separator: ',',
+		}))
+		.on('data', (row: { original: string; normalized: string }) => {
+			rows.add(ascii(row.normalized.toLowerCase()));
+		})
+		.on('end', () => resolve(rows))
 		.on('error', err => reject(err));
 });
