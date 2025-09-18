@@ -6,6 +6,7 @@ import {
 	normalizeCityName,
 	normalizeCityNamePublic,
 	normalizeNetworkName,
+	normalizeNetworkNamePublic,
 } from '../utils.js';
 import { getCity } from '../city-approximation.js';
 import { getRegionByCountry } from '../../location/location.js';
@@ -52,7 +53,7 @@ export const maxmindLookup = async (addr: string): Promise<ProviderLocationInfo>
 		asn: data.traits?.autonomousSystemNumber ?? 0,
 		latitude: data.location?.latitude ?? 0,
 		longitude: data.location?.longitude ?? 0,
-		network: data.traits?.autonomousSystemOrganization ?? '',
+		network: normalizeNetworkNamePublic(data.traits?.autonomousSystemOrganization ?? ''),
 		normalizedNetwork: normalizeNetworkName(data.traits?.autonomousSystemOrganization ?? ''),
 		isProxy: null,
 		isHosting: null,

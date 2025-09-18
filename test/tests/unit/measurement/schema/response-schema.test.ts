@@ -26,7 +26,7 @@ const defaultPingResponseBody = {
 				asn: 24940,
 				longitude: 11.08,
 				latitude: 49.45,
-				network: 'Hetzner Online GmbH',
+				network: 'Hetzner Online',
 				tags: [
 					'datacenter-network',
 				],

@@ -288,7 +288,7 @@ describe('Create measurement', () => {
 				.send({
 					type: 'ping',
 					target: 'example.com',
-					locations: [{ network: 'The Constant Company LLC', limit: 2 }],
+					locations: [{ network: 'The Constant Company', limit: 2 }],
 				})
 				.expect(202)
 				.expect((response) => {
@@ -388,7 +388,7 @@ describe('Create measurement', () => {
 				nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(400);
 				nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(400);
 
-				// The default probe has "The Constant Company LLC" network, add another with just "The Constant"
+				// The default probe has "The Constant Company" network, add another with just "The Constant"
 				nock('https://ipinfo.io').get(/.*/).reply(200, {
 					...geoIpMocks.ipinfo.argentina,
 					org: 'AS61004 The Constant',

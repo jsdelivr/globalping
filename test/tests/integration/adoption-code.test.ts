@@ -80,7 +80,7 @@ describe('Adoption code', () => {
 					latitude: 32.78,
 					longitude: -96.81,
 					asn: 20004,
-					network: 'The Constant Company LLC',
+					network: 'The Constant Company',
 					customLocation: null,
 					originalLocation: null,
 					allowedCountries: [ 'US' ],
