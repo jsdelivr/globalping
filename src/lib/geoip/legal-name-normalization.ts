@@ -147,7 +147,7 @@ function buildPatterns (names: string[], abbrs: string[], builder: (patterns: st
 	};
 }
 
-async function collectLegalForms (legalFormsData: CsvLegalFormRow[], synthesizeAbbreviations: number = 2) {
+async function collectLegalForms (legalFormsData: CsvLegalFormRow[], minSynthesizedAbbreviationLength: number = 2) {
 	const legalFormsName = new Set<string>();
 	const legalFormsAbbr = new Set<string>();
 
@@ -180,7 +180,7 @@ async function collectLegalForms (legalFormsData: CsvLegalFormRow[], synthesizeA
 			if (!abbrLocal) {
 				const abbrParts = nameLocal.split(' ').filter(is.truthy);
 
-				if (abbrParts.length >= synthesizeAbbreviations) {
+				if (abbrParts.length >= minSynthesizedAbbreviationLength) {
 					legalFormsAbbr.add(toAscii(abbrParts.map(w => `${w[0]}.`).join('')));
 				}
 			}
