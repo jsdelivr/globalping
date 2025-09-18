@@ -93,16 +93,16 @@ export const populateLegalNames = async () => {
 
 function buildSuffixPatterns (names: string[], abbrs: string[]) {
 	return buildPatterns(names, abbrs, (patterns: string[]) => {
-		// Remove one or more patterns from the end, optionally wrapped in parentheses; multiple patterns are only removed if:
+		// Remove one or more patterns from the end, optionally followed by a dot and wrapped in parentheses; multiple patterns are only removed if:
 		//  - the first patterns ends with a dot or a closing parenthesis, optionally followed by a comma, or,
 		//  - the first pattern is followed by an ampersand or a hyphen.
-		return new RegExp(`\\s+(?:\\(?(?:${patterns.join('|')})\\)?(?:(?<=[.)]),?\\s*|\\s*[&-]\\s*|$))+$`, 'i');
+		return new RegExp(`\\s+(?:\\(?(?:${patterns.join('|')})\\.?\\)?(?:(?<=[.)]),?\\s*|\\s*[&-]\\s*|$))+$`, 'i');
 	});
 }
 
 function buildPrefixPatterns (names: string[], abbrs: string[]) {
 	return buildPatterns(names, abbrs, (patterns: string[]) => {
-		return new RegExp(`^(?:${patterns.join('|')}),?\\s+`, 'i');
+		return new RegExp(`^(?:${patterns.join('|')})[.,]?\\s+`, 'i');
 	});
 }
 
@@ -118,8 +118,8 @@ function buildPatterns (names: string[], abbrs: string[], builder: (patterns: st
 			.replace(/\.\s+/g, '.')
 			// Allow whitespace after dots, make all existing dots replaceable by whitespace.
 			.replace(/\\\.(?=.)/g, '[. ] *')
-			// Make the final dot optional.
-			.replace(/\.$/, '.?');
+			// Remove the final dot.
+			.replace(/\\\.$/, '');
 
 		preparedNames.push(namePattern);
 	}
@@ -134,8 +134,8 @@ function buildPatterns (names: string[], abbrs: string[], builder: (patterns: st
 			.replace(/\\\.(?=.)/g, '\\.? *')
 			// Allow optional dots or whitespace between any two word characters
 			.replace(/(?<=\w)(?=\w)/g, '[. ]*')
-			// Make the final dot optional.
-			.replace(/\.$/, '.?');
+			// Remove the final dot.
+			.replace(/\\\.$/, '');
 
 		preparedAbbrs.push(abbrPattern);
 	}
