@@ -1,0 +1,527 @@
+Andorra; Andorran; Principat d’Andorra; AD; AND; Principality of Andorra
+United Arab Emirates; UAE; U.A.E.; Emirati; Al-Imarat al-‘Arabiyah al-Muttaḥidah; AE; ARE; Abu Dhabi
+Afghanistan; Afghan; Afġānistān; Islamic Republic of Afghanistan; AF; AFG
+Antigua and Barbuda; Antiguan; Barbudan; AG; ATG
+Anguilla; Anguillan; AI; AIA
+Albania; Albanian; Shqipëri; Republika e Shqipërisë; AL; ALB
+Armenia; Armenian; Hayastan; Republic of Armenia; AM; ARM
+Angola; Angolan; República de Angola; AO; AGO
+Antarctica; AQ; ATA
+Argentina; Argentine; Argentinian; República Argentina; AR; ARG
+American Samoa; AS; ASM; Amerika Sāmoa; Am. Samoa
+Austria; Austrian; Österreich; Republik Österreich; AT; AUT
+Australia; Australian; AU; AUS; Commonwealth of Australia; Australasia; Australia & New Zealand
+Aruba; Aruban; AW; ABW
+Aland; Åland; Åland Islands; Ahvenanmaa; AX; ALA
+Azerbaijan; Azerbaijani; Azərbaycan; AZ; AZE; Republic of Azerbaijan
+Bosnia and Herzegovina; Bosnian; Herzegovinian; Bosna i Hercegovina; BA; BIH
+Barbados; Barbadian; Bajan; BB; BRB
+Bangladesh; Bangladeshi; বাংলাদেশ; BD; BGD; People’s Republic of Bangladesh
+Belgium; Belgian; Belgique; België; Belgien; BE; BEL; Kingdom of Belgium
+Burkina Faso; Burkinabé; BF; BFA; Burkina
+Bulgaria; Bulgarian; България; BG; BGR; Republic of Bulgaria
+Bahrain; Bahraini; البحرين; BH; BHR; Kingdom of Bahrain
+Burundi; Burundian; République du Burundi; BI; BDI
+Benin; Beninese; Bénin; BJ; BEN; Republic of Benin
+Saint Barthelemy; Saint-Barthélemy; St. Barts; BL; BLM
+Bermuda; Bermudian; BM; BMU
+Brunei; Bruneian; Brunei Darussalam; BN; BRN
+Bolivia; Bolivian; Estado Plurinacional de Bolivia; BO; BOL
+Bonaire; Caribbean Netherlands; Bonaire, Sint Eustatius and Saba; BQ; BES
+Brazil; Brazilian; Brasil; República Federativa do Brasil; BR; BRA; do Brasil
+Bahamas; Bahamian; The Bahamas; BS; BHS; Commonwealth of The Bahamas
+Bhutan; Bhutanese; Druk Yul; BT; BTN; Kingdom of Bhutan
+Bouvet Island; BV; BVT
+Botswana; Botswanan; Republic of Botswana; BW; BWA
+Belarus; Belarusian; Беларусь; BY; BLR; Republic of Belarus
+Belize; Belizean; BZ; BLZ
+Canada; Canadian; CA; CAN
+Cocos (Keeling) Islands; Cocos Islands; Keeling Islands; CC; CCK
+Democratic Republic of the Congo; DRC; Congo-Kinshasa; RD Congo; République démocratique du Congo; CD; COD
+Central African Republic; CAR; République centrafricaine; CF; CAF
+Republic of the Congo; Congo-Brazzaville; République du Congo; CG; COG
+Switzerland; Swiss; Schweiz; Suisse; Svizzera; Svizra; CH; CHE; Swiss Confederation; Confoederatio Helvetica; Switzerland & Liechtenstein
+Ivory Coast; Côte d’Ivoire; Ivorian; CI; CIV; République de Côte d’Ivoire; Cote d'Ivoire
+Cook Islands; CK; COK
+Chile; Chilean; República de Chile; CL; CHL
+Cameroon; Cameroonian; Cameroun; République du Cameroun; CM; CMR
+China; Chinese; PRC; People’s Republic of China; 中国; Zhōngguó; CN; CHN; Mainland China; P.R.China
+Colombia; Colombian; República de Colombia; CO; COL
+Costa Rica; Costa Rican; República de Costa Rica; CR; CRI; Tico
+Cuba; Cuban; República de Cuba; CU; CUB
+Cape Verde; Cabo Verde; Cape Verdean; CV; CPV; República de Cabo Verde
+Curacao; Curaçao; Country of Curaçao; CW; CUW
+Christmas Island; CX; CXR
+Cyprus; Cypriot; Kypros; Kıbrıs; Κυπριακή Δημοκρατία; Republic of Cyprus; CY; CYP
+Czech Republic; Czech; Czechia; Česká republika; Česko; CZ; CZE; Ceska republika; Cesko
+Germany; German; Deutschland; Bundesrepublik Deutschland; DE; DEU
+Djibouti; Djiboutian; جيبوتي; République de Djibouti; DJ; DJI
+Denmark; Danish; Danmark; Kingdom of Denmark; DK; DNK
+Dominica; Dominican (Dominica); Commonwealth of Dominica; DM; DMA
+Dominican Republic; Dominican (RD); República Dominicana; DO; DOM; Dominicana
+Algeria; Algerian; الجزائر; République algérienne; DZ; DZA; People’s Democratic Republic of Algeria; Algérie
+Ecuador; Ecuadorian; República del Ecuador; EC; ECU
+Estonia; Estonian; Eesti; Eesti Vabariik; EE; EST
+Egypt; Egyptian; مصر; Arab Republic of Egypt; EG; EGY
+Western Sahara; Sahrawi; الصحراء الغربية; EH; ESH; SADR; Sahrawi Arab Democratic Republic
+Eritrea; Eritrean; State of Eritrea; ኤርትራ; ER; ERI
+Spain; Spanish; España; Reino de España; ES; ESP; Espana; Espagne
+Ethiopia; Ethiopian; ኢትዮጵያ; Federal Democratic Republic of Ethiopia; ET; ETH
+Finland; Finnish; Suomi; Suomen tasavalta; FI; FIN
+Fiji; Fijian; Republic of Fiji; FJ; FJI
+Falkland Islands; Islas Malvinas; FK; FLK
+Micronesia; Federated States of Micronesia; FSM; FM
+Faroe Islands; Føroyar; Færøerne; FO; FRO
+France; French; République française; FR; FRA; Français; Française
+Gabon; Gabonese; République gabonaise; GA; GAB
+United Kingdom; UK; U.K.; Britain; Great Britain; GB; GBR; United Kingdom of Great Britain and Northern Ireland; British; England; Scotland; Wales; Northern Ireland; Jersey; Guernsey; Gibraltar; IOM; Isle of Man
+Grenada; Grenadian; GD; GRD
+Georgia; Georgian; საქართველო; Sakartvelo; GE; GEO
+French Guiana; Guyane; GF; GUF
+Guernsey; GG; GGY; Bailiwick of Guernsey; Guernésiais
+Ghana; Ghanaian; GH; GHA
+Gibraltar; GI; GIB
+Greenland; Kalaallit Nunaat; Grønland; GL; GRL
+Gambia; Gambian; The Gambia; GM; GMB
+Guinea; Guinean; République de Guinée; GN; GIN; Guinee
+Guadeloupe; GP; GLP
+Equatorial Guinea; Guinean (Equatorial); Guinea Ecuatorial; Guinée équatoriale; GQ; GNQ
+Greece; Greek; Ελλάδα; Hellas; Hellenic Republic; GR; GRC
+South Georgia and the South Sandwich Islands; GS; SGS
+Guatemala; Guatemalan; República de Guatemala; GT; GTM
+Guam; GU; GUM
+Guinea-Bissau; Bissau-Guinean; República da Guiné-Bissau; GW; GNB
+Guyana; Guyanese; GY; GUY; Co-operative Republic of Guyana; Guayana
+Hong Kong; Hong Kong SAR; HK; HKG; 香港; Xianggang; HKSAR; SAR; Hongkong
+Heard Island and McDonald Islands; HM; HMD
+Honduras; Honduran; República de Honduras; HN; HND
+Croatia; Croatian; Hrvatska; Republika Hrvatska; HR; HRV
+Haiti; Haitian; République d’Haïti; HT; HTI
+Hungary; Hungarian; Magyarország; HU; HUN
+Indonesia; Indonesian; Republik Indonesia; ID; IDN
+Ireland; Irish; Éire; Republic of Ireland; IE; IRL; Eire
+Israel; Israeli; ישראל; State of Israel; IL; ISR
+Isle of Man; IM; IMN; Mann; Ellan Vannin; Manx
+India; Indian; Bharat; Bhārat; Republic of India; IN; IND
+British Indian Ocean Territory; BIOT; IO; IOT; Chagos
+Iraq; Iraqi; العراق; Republic of Iraq; IQ; IRQ
+Iran; Iranian; IR Iran; Islamic Republic of Iran; ایران; IR; IRN
+Iceland; Icelandic; Ísland; IS; ISL
+Italy; Italian; Italia; Repubblica Italiana; IT; ITA; Italiane
+Jersey; JE; JEY; Bailiwick of Jersey; Jèrriais
+Jamaica; Jamaican; JM; JAM
+Jordan; Jordanian; الأردن; Hashemite Kingdom of Jordan; JO; JOR
+Japan; Japanese; 日本; Nippon; Nihon; JP; JPN
+Kenya; Kenyan; Republic of Kenya; KE; KEN
+Kyrgyzstan; Kyrgyz; Кыргыз Республикасы; KG; KGZ
+Cambodia; Cambodian; Kampuchea; Kingdom of Cambodia; កម្ពុជា; KH; KHM
+Kiribati; i-Kiribati; Republic of Kiribati; KI; KIR
+Comoros; Comorian; Union of the Comoros; جزر القمر; KM; COM
+Saint Kitts and Nevis; Kittitian; Nevisian; KN; KNA
+North Korea; DPRK; Democratic People’s Republic of Korea; 조선민주주의인민공화국; KP; PRK
+South Korea; Korea, Republic of; ROK; 대한민국; KR; KOR; Korea (Republic of); Korea; Republic of Korea
+Kuwait; Kuwaiti; دولة الكويت; KW; KWT; State of Kuwait
+Cayman Islands; KY; CYM
+Kazakhstan; Kazakh; Қазақстан; Qazaqstan; KZ; KAZ
+Laos; Lao; Lao PDR; Lao People’s Democratic Republic; ລາວ; LA
+Lebanon; Lebanese; لبنان; Lebanese Republic; LB; LBN
+Saint Lucia; Saint Lucian; LC; LCA
+Liechtenstein; Liechtensteiner; Fürstentum Liechtenstein; LI; LIE
+Sri Lanka; Sri Lankan; Ceylon; ශ්‍රී ලංකා; இலங்கை; LK; LKA; Democratic Socialist Republic of Sri Lanka
+Liberia; Liberian; Republic of Liberia; LR; LBR
+Lesotho; Basotho; Kingdom of Lesotho; LS; LSO
+Lithuania; Lithuanian; Lietuva; LT; LTU; Lietuvos
+Luxembourg; Luxembourgish; Lëtzebuerg; LU; LUX; Grand Duchy of Luxembourg; Luxembourgeois
+Latvia; Latvian; Latvija; LV; LVA; Latvijas
+Libya; Libyan; دولة ليبيا; State of Libya; LY; LBY
+Morocco; Moroccan; Maroc; المغرب; Kingdom of Morocco; MA; MAR
+Monaco; Monégasque; Principauté de Monaco; MC; MCO
+Moldova; Moldovan; Republic of Moldova; Republica Moldova; MD; MDA
+Montenegro; Montenegrin; Crna Gora; ME; MNE
+Saint Martin; Collectivité de Saint-Martin; MF; MAF; Saint-Martin (FR)
+Madagascar; Malagasy; République de Madagascar; MG; MDG
+Marshall Islands; Marshallese; Republic of the Marshall Islands; MH; MHL
+North Macedonia; Macedonian; Северна Македонија; MK; MKD; Macedonia
+Mali; Malian; République du Mali; ML; MLI
+Myanmar (Burma); Myanmar; Burmese; Burma; မြန်မာ; MM; MMR
+Mongolia; Mongolian; Монгол улс; MN; MNG
+Macao; Macau; Macao SAR; 澳門; MO; MAC
+Northern Mariana Islands; MP; MNP; CNMI
+Martinique; MQ; MTQ
+Mauritania; Mauritanian; الجمهورية الإسلامية الموريتانية; MR; MRT; Islamic Republic of Mauritania; Mauritanie
+Montserrat; MS; MSR
+Malta; Maltese; Malta Republic; MT; MLT
+Mauritius; Mauritian; République de Maurice; MU; MUS
+Maldives; Maldivian; Dhivehi Raajje; MV; MDV
+Malawi; Malawian; Republic of Malawi; MW; MWI
+Mexico; Mexican; México; Estados Unidos Mexicanos; MX; MEX
+Malaysia; Malaysian; MY; MYS
+Mozambique; Mozambican; Moçambique; República de Moçambique; MZ; MOZ; Mocambique
+Namibia; Namibian; Republic of Namibia; NA; NAM
+New Caledonia; Nouvelle-Calédonie; NC; NCL
+Niger; Nigerien; République du Niger; NE; NER
+Norfolk Island; NF; NFK
+Nigeria; Nigerian; Federal Republic of Nigeria; NG; NGA
+Nicaragua; Nicaraguan; República de Nicaragua; NI; NIC
+Netherlands; Dutch; Nederland; NL; NLD; Holland; Kingdom of the Netherlands; Nederlands
+Norway; Norwegian; Norge; Noreg; Kongeriket Norge; NO; NOR
+Nepal; Nepali; नेपाल; Federal Democratic Republic of Nepal; NP; NPL
+Nauru; Nauruan; Republic of Nauru; NR; NRU
+Niue; NU; NIU
+New Zealand; Kiwi; Aotearoa; NZ; NZL
+Oman; Omani; سلطنة عمان; Sultanate of Oman; OM; OMN
+Panama; Panamanian; República de Panamá; PA; PAN; Panamá
+Peru; Peruvian; Perú; República del Perú; PE; PER
+French Polynesia; Polynésie française; PF; PYF; Tahiti
+Papua New Guinea; Papua New Guinean; PNG; PG
+Philippines; Filipino; Pilipinas; Republic of the Philippines; PH; PHL
+Pakistan; Pakistani; Islamic Republic of Pakistan; پاکستان; PK; PAK
+Poland; Polish; Polska; Rzeczpospolita Polska; PL; POL
+Saint Pierre and Miquelon; Saint-Pierre-et-Miquelon; PM; SPM
+Pitcairn Islands; PN; PCN
+Puerto Rico; PR; PRI; Estado Libre Asociado de Puerto Rico; Puerto Rican
+Palestine; Palestinian; State of Palestine; فلسطين; PS; PSE; Palestinian Territories
+Portugal; Portuguese; República Portuguesa; PT; PRT
+Palau; Palauan; Beluu er a Belau; PW; PLW
+Paraguay; Paraguayan; República del Paraguay; PY; PRY
+Qatar; Qatari; دولة قطر; State of Qatar; QA; QAT
+Reunion; Réunion; La Réunion; RE; REU
+Romania; Romanian; România; RO; ROU
+Serbia; Serbian; Република Србија; RS; SRB; Srbija
+Russia; Russian; Russian Federation; Российская Федерация; Rossiya; RU; RUS
+Rwanda; Rwandan; République du Rwanda; RW; RWA
+Saudi Arabia; Saudi; KSA; Kingdom of Saudi Arabia; السعودية; SA; SAU
+Solomon Islands; SI; SLB
+Seychelles; Seychellois; République des Seychelles; SC; SYC
+Sudan; Sudanese; Republic of the Sudan; السودان; SD; SDN
+Sweden; Swedish; Sverige; Konungariket Sverige; SE; SWE
+Singapore; Singaporean; SG; SGP; Republic of Singapore; Singapura
+Saint Helena; Saint Helena, Ascension and Tristan da Cunha; SH; SHN
+Slovenia; Slovenian; Slovenija; Republika Slovenija; SI; SVN
+Svalbard and Jan Mayen; SJ; SJM
+Slovakia; Slovak; Slovensko; Slovenská republika; SK; SVK
+Sierra Leone; Sierra Leonean; Republic of Sierra Leone; SL; SLE
+San Marino; Sammarinese; Repubblica di San Marino; SM; SMR
+Senegal; Senegalese; République du Sénégal; SN; SEN
+Somalia; Somali; Soomaaliya; Somali Republic; SO; SOM; Federal Republic of Somalia
+Suriname; Surinamese; Republiek Suriname; SR; SUR
+South Sudan; South Sudanese; Republic of South Sudan; SS; SSD
+Sao Tome and Principe; São Tomé and Príncipe; Santomean; ST; STP
+El Salvador; Salvadoran; República de El Salvador; SV; SLV
+Sint Maarten; SX; SXM; Sint Maarten (Dutch)
+Syria; Syrian; Syrian Arab Republic; سورية; SY; SYR
+Eswatini; Swaziland; Swazi; Kingdom of Eswatini; SZ; SWZ
+Turks and Caicos Islands; TC; TCA
+Chad; Chadian; Tchad; République du Tchad; TD; TCD
+French Southern Territories; Terres australes et antarctiques françaises; TF; ATF; TAAF
+Togo; Togolese; République togolaise; TG; TGO
+Thailand; Thai; ประเทศไทย; Kingdom of Thailand; TH; THA
+Tajikistan; Tajik; Тоҷикистон; Republic of Tajikistan; TJ; TJK
+Tokelau; TK; TKL
+East Timor; Timor-Leste; Timorese; TL; TLS; Democratic Republic of Timor-Leste
+Turkmenistan; Turkmen; Türkmenistan; TM; TKM
+Tunisia; Tunisian; الجمهورية التونسية; République tunisienne; TN; TUN; Tunisie
+Tonga; Tongan; Kingdom of Tonga; TO; TON
+Turkey; Türkiye; Turkish; Republic of Türkiye; TR; TUR
+Trinidad and Tobago; Trinidadian; Tobagonian; TT; TTO
+Tuvalu; Tuvaluan; TV; TUV
+Taiwan; Taiwanese; Republic of China; ROC; 中華民國; TW; TWN
+Tanzania; Tanzanian; United Republic of Tanzania; TZ; TZA
+Ukraine; Ukrainian; Україна; UA; UKR
+Uganda; Ugandan; Republic of Uganda; UG; UGA
+U.S. Minor Outlying Islands; UM; UMI
+United States; USA; U.S.A.; US; U.S.; America; United States of America; American; USAmerica; USofA; EN-US; US-EN
+Uruguay; Uruguayan; República Oriental del Uruguay; UY; URY
+Uzbekistan; Uzbek; Oʻzbekiston; Ўзбекистон; UZ; UZB
+Vatican City; Holy See; Vatican; Città del Vaticano; Santa Sede; VA; VAT; Vatican City State
+Saint Vincent and the Grenadines; Vincentian; VC; VCT
+Venezuela; Venezuelan; República Bolivariana de Venezuela; VE; VEN
+British Virgin Islands; BVI; VG; VGB
+U.S. Virgin Islands; USVI; VI; VIR; Virgin Islands (U.S.)
+Vietnam; Viet Nam; Vietnamese; Việt Nam; Socialist Republic of Vietnam; VN; VNM
+Vanuatu; Ni-Vanuatu; Republic of Vanuatu; VU; VUT
+Wallis and Futuna; WF; WLF
+Samoa; Sāmoa; Samoan; Independent State of Samoa; WS; WSM; Western Samoa
+Kosovo; Kosova; Republic of Kosovo; XK; RKS
+Yemen; Yemeni; Republic of Yemen; اليمن; YE; YEM
+Mayotte; YT; MYT; Département de Mayotte
+South Africa; South African; RSA; ZA; ZAF; Republic of South Africa
+Zambia; Zambian; Republic of Zambia; ZM; ZMB
+Zimbabwe; Zimbabwean; Republic of Zimbabwe; ZW; ZWE
+
+Congo; Republic of the Congo
+São Tomé and Príncipe; Sao Tome and Principe
+Macau; Macao
+Myanmar; Burma
+Australia & New Zealand; AUNZ; ANZ
+Curaçao; Curacao
+EMEA; Asia Pacific; APAC; SEA; North America; Europe
+Beijing; Shanghai; Shenzhen; Guangdong; China169; CHINANET; CHINANET-BACKBONE; China Unicom China169 Backbone; China Unicom IP network China169 Guangdong province; China Unicom Beijing Province Network
+de España; de Espana; Española; del Perú; de Peru; de Chile; de Bolivia; de Colombia; de Ecuador; de Guatemala; de Honduras; de Nicaragua; de Panamá; de Mexico; de Argentina; de Venezuela
+do Brasil; de Portugal; dos; das
+de France; d’Haïti; de Suisse
+of India; of Ghana; of Kenya; of Tanzania; of South Africa; of Australia; of Canada; of New Zealand; of the Philippines; of the United States; of America
+(Nevada); Nevada; NSW; NSW.ACT
+Scotland
+Timor-Leste; Timor Leste; Timor
+Zanzibar
+Turks and Caicos
+Georgia;
+
+Alabama; AL; Ala.; Alabamian; State of Alabama
+Alaska; AK; Alas.; Alaskan; State of Alaska
+Arizona; AZ; Ariz.; Arizonan; State of Arizona
+Arkansas; AR; Ark.; Arkansan; State of Arkansas
+California; CA; Calif.; Californian; State of California
+Colorado; CO; Colo.; Coloradan; State of Colorado
+Connecticut; CT; Conn.; Connecticuter; Nutmegger; State of Connecticut
+Delaware; DE; Del.; Delawarean; State of Delaware
+Florida; FL; Fla.; Floridian; State of Florida
+Georgia; GA; Ga.; Georgian; State of Georgia
+Hawaii; HI; Haw.; Hawaiian; State of Hawaii
+Idaho; ID; Ida.; Idahoan; State of Idaho
+Illinois; IL; Ill.; Illinoisan; State of Illinois
+Indiana; IN; Ind.; Hoosier; State of Indiana
+Iowa; IA; Iowan; State of Iowa
+Kansas; KS; Kan.; Kans.; Kansan; State of Kansas
+Kentucky; KY; Ky.; Kentuckian; Commonwealth of Kentucky
+Louisiana; LA; La.; Louisianan; Louisianian; State of Louisiana
+Maine; ME; Mainer; Mainiac; State of Maine
+Maryland; MD; Md.; Marylander; State of Maryland
+Massachusetts; MA; Mass.; Massachusettsan; Massachusettser; Bay Stater; Commonwealth of Massachusetts
+Michigan; MI; Mich.; Michigander; Michiganian; State of Michigan
+Minnesota; MN; Minn.; Minnesotan; State of Minnesota
+Mississippi; MS; Miss.; Mississippian; State of Mississippi
+Missouri; MO; Mo.; Missourian; State of Missouri
+Montana; MT; Mont.; Montanan; State of Montana
+Nebraska; NE; Neb.; Nebraskan; State of Nebraska
+Nevada; NV; Nev.; Nevadan; State of Nevada
+New Hampshire; NH; N.H.; New Hampshirite; Granite Stater; State of New Hampshire
+New Jersey; NJ; N.J.; New Jerseyan; New Jerseyite; State of New Jersey
+New Mexico; NM; N.M.; New Mexican; State of New Mexico
+New York; NY; N.Y.; New Yorker; State of New York
+North Carolina; NC; N.C.; North Carolinian; State of North Carolina
+North Dakota; ND; N.D.; North Dakotan; State of North Dakota
+Ohio; OH; Ohioan; State of Ohio
+Oklahoma; OK; Okla.; Oklahoman; Sooner; State of Oklahoma
+Oregon; OR; Ore.; Oregonian; State of Oregon
+Pennsylvania; PA; Pa.; Penn.; Pennsylvanian; Commonwealth of Pennsylvania
+Rhode Island; RI; R.I.; Rhode Islander; State of Rhode Island
+South Carolina; SC; S.C.; South Carolinian; State of South Carolina
+South Dakota; SD; S.D.; South Dakotan; State of South Dakota
+Tennessee; TN; Tenn.; Tennessean; State of Tennessee
+Texas; TX; Tex.; Texan; State of Texas
+Utah; UT; Utahn; State of Utah
+Vermont; VT; Vt.; Vermonter; State of Vermont
+Virginia; VA; Va.; Virginian; Commonwealth of Virginia
+Washington; WA; Wash.; Washingtonian; State of Washington
+West Virginia; WV; W.Va.; West Virginian; State of West Virginia
+Wisconsin; WI; Wis.; Wisc.; Wisconsinite; State of Wisconsin
+Wyoming; WY; Wyo.; Wyomingite; State of Wyoming
+District of Columbia; DC; D.C.; Washington, D.C.; Washington DC; Washington; District; District of Columbia Government; Washingtonian
+
+United States; US; U.S.; USA; U.S.A.; America; (US); (USA); (United States)
+United Kingdom; UK; U.K.; Great Britain; GB; (UK); (GB); Britain; (Scotland); Scotland; (Jersey); Jersey; (Guernsey); Guernsey; (Gibraltar); Gibraltar; (IOM); Isle of Man
+Canada
+Australia; (AUS); (AUSTRALIA); Australasia; Australia & New Zealand; (AUSTRALIA & NEW ZEALAND)
+New Zealand; (NEW ZEALAND); NZ
+Netherlands; Nederland; Nederlands; (Netherlands)
+Germany; Deutschland; (Germany); (Deutschland); DE
+France; Français; Française
+Switzerland; (Schweiz); (Suisse); (Switzerland & Liechtenstein); Swiss; CH; Suisse; Schweiz
+Austria; Österreich; (Austria)
+Ireland; Éire; Eire; Irish
+Spain; España; Espana; (SPAIN); Espagne
+Portugal
+Italy; Italia; Italian; (Italy); Italiane
+Belgium; Belgique; België; (Belgium)
+Luxembourg; Luxembourgeois
+Liechtenstein
+Poland; Polska; (Poland); PL
+Czech Republic; Czechia; (Czech Republic); Česká republika; Ceska republika; Česko; Cesko; CZ
+Slovakia; Slovensko; (Slovakia)
+Slovenia; Slovenija; (Slovenia)
+Croatia; Hrvatska; (Croatia); (Hrvatska)
+Bosnia and Herzegovina; BiH; (Bosnia and Herzegovina)
+Serbia; Srbija; (Serbia)
+Montenegro; Crna Gora; (Montenegro)
+North Macedonia; Macedonia; (North Macedonia)
+Romania; România; ROMANIA; RO
+Bulgaria
+Hungary; Magyarország; (Hungary)
+Greece; Hellas; (Greece)
+Norway; Norge; Noreg; (Norway)
+Sweden; Sverige; (Sweden)
+Denmark; Danmark; (Denmark)
+Finland; Suomi; (Finland)
+Iceland; Ísland; (Iceland)
+Estonia; Eesti; (Estonia)
+Latvia; Latvija; (Latvia); Latvijas
+Lithuania; Lietuva; (Lithuania); Lietuvos
+Turkey; Türkiye; (Turkey)
+Cyprus
+Malta
+Russia; Russian Federation; (Russia)
+Ukraine; Ukrainian
+Belarus
+Moldova; Republica Moldova
+Georgia
+Armenia
+Azerbaijan
+Kazakhstan
+United Arab Emirates; UAE; Abu Dhabi
+Saudi Arabia; KSA; (Saudi Arabia)
+Qatar
+Kuwait
+Bahrain
+Oman
+Jordan
+Israel
+Lebanon
+Egypt
+Morocco; Maroc; (Morocco)
+Algeria; Algérie; (Algeria)
+Tunisia; Tunisie
+Libya
+South Africa; (South Africa)
+Kenya
+Tanzania
+Uganda
+Ghana
+Nigeria
+Ethiopia
+Sudan
+Zimbabwe
+Zambia
+Namibia
+Botswana
+Mozambique; Moçambique; (Mozambique); Mocambique
+Angola
+Madagascar
+Reunion; Réunion; (Reunion)
+Mauritius
+Seychelles
+Mayotte
+Comoros
+Côte d’Ivoire; Cote d'Ivoire; (Cote d'Ivoire)
+Cameroon; Cameroun; (Cameroon)
+Congo; Republic of the Congo
+Democratic Republic of the Congo; DRC
+Rwanda
+Burundi
+Benin
+Togo
+Senegal
+Guinea; Guinee
+Guinea-Bissau; (Guinea-Bissau)
+Equatorial Guinea; (Equatorial Guinea)
+Sierra Leone; (Sierra Leone)
+Liberia
+Gambia
+Cape Verde; Cabo Verde; (CABO VERDE)
+São Tomé and Príncipe; Sao Tome and Principe
+India
+Pakistan
+Bangladesh
+Sri Lanka; (Sri Lanka)
+Nepal
+Bhutan
+Maldives
+China; PRC; Mainland China; P.R.China
+Hong Kong; (HONG KONG); (HK); HK; HKSAR; SAR; Hongkong
+Macau; Macao
+Taiwan; (TW); TW
+Mongolia
+Japan
+South Korea; Korea (Republic of); (South Korea); Korea; Republic of Korea
+North Korea; DPRK; (North Korea)
+Singapore; (SG)
+Malaysia
+Indonesia
+Philippines
+Thailand
+Vietnam; Viet Nam; (Vietnam)
+Laos; Lao
+Cambodia
+Myanmar; Burma
+Papua New Guinea; PNG
+Australia & New Zealand; (AUSTRALIA & NEW ZEALAND); AUNZ; ANZ
+Fiji
+Samoa
+Vanuatu
+French Polynesia; Tahiti
+Guam
+American Samoa
+Puerto Rico; (Puerto Rico)
+U.S. Virgin Islands; (U.S. Virgin Islands)
+British Virgin Islands; (BVI)
+Mexico; México; (Mexico); MEXICO; MÉXICO
+Guatemala
+Belize
+Honduras
+El Salvador; (EL SALVADOR)
+Nicaragua
+Costa Rica; (COSTA RICA)
+Panama; Panamá; (Panama)
+Cuba
+Dominican Republic; Dominicana
+Haiti
+Colombia
+Venezuela
+Ecuador
+Peru; Perú; (Peru)
+Bolivia
+Paraguay
+Uruguay
+Argentina
+Brazil; Brasil; do Brasil; BR; BRASIL
+Chile
+Guyana; Guayana
+Suriname
+French Guiana; (French Guiana)
+Trinidad and Tobago; (Trinidad and Tobago)
+Barbados
+Jamaica
+Bahamas
+Cayman Islands; (Cayman Islands)
+Bermuda
+Aruba
+Curaçao; Curacao
+EMEA; Asia Pacific; (Asia Pacific); APAC; (SEA); SEA; (North America); North America; (Europe); Europe
+Beijing; Shanghai; Shenzhen; Guangdong; China169; CHINANET; CHINANET-BACKBONE; China Unicom China169 Backbone; China Unicom IP network China169 Guangdong province; China Unicom Beijing Province Network
+de España; de Espana; Española; del Perú; de Peru; de Chile; de Bolivia; de Colombia; de Ecuador; de Guatemala; de Honduras; de Nicaragua; de Panamá; de Mexico; de Argentina; de Venezuela
+do Brasil; de Portugal; dos; das
+de France; d’Haïti; de Suisse
+of India; of Ghana; of Kenya; of Tanzania; of South Africa; of Australia; of Canada; of New Zealand; of the Philippines; of the United States; of America
+(Nevada); (NSW); (NSW.ACT)
+Jersey
+Guernsey
+Kyrgyzstan
+Tajikistan
+Iran; IRAN; Iranian
+Malawi
+Guadeloupe
+Lesotho
+Burkina Faso; Burkina
+Nauru
+Niger
+Solomon Islands
+Somalia
+South Sudan
+Scotland
+Timor-Leste; Timor Leste; Timor
+Tokelau
+Tonga
+Zanzibar
+Turks and Caicos
+Tuvalu
+Vatican City; Vatican City State
+Monaco
+Kosovo
+Martinique
+New Caledonia
+Gibraltar
+Chad; Tchad
+Mauritania; Mauritanie
+Ivory Coast; Côte d’Ivoire; Cote d'Ivoire
+Georgia; Georgia

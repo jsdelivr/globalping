@@ -13,12 +13,12 @@ describe('legal-name-normalization', () => {
 		{ original: 'KPN B.V.', expected: 'KPN' },
 		{ original: 'Vodafone Libertel B.V.', expected: 'Vodafone Libertel' },
 		{ original: 'SCALEWAY S.A.S.', expected: 'SCALEWAY' },
-		{ original: 'LEASEWEB SINGAPORE PTE. LTD.', expected: 'LEASEWEB SINGAPORE' },
+		{ original: 'LEASEWEB SINGAPORE PTE. LTD.', expected: 'LEASEWEB' },
 		{ original: 'Kuroit Limited', expected: 'Kuroit' },
-		{ original: 'O2 Czech Republic, a.s.', expected: 'O2 Czech Republic' },
-		{ original: 'Telefonica Germany GmbH & Co.OHG', expected: 'Telefonica Germany' },
+		{ original: 'O2 Czech Republic, a.s.', expected: 'O2' },
+		{ original: 'Telefonica Germany GmbH & Co.OHG', expected: 'Telefonica' },
 		{ original: 'FASTER CZ spol. s r.o.', expected: 'FASTER CZ' },
-		{ original: 'Orange Polska Spolka Akcyjna', expected: 'Orange Polska' },
+		{ original: 'Orange Polska Spolka Akcyjna', expected: 'Orange' },
 
 		// prefix and quotes
 		{ original: 'JSC "ER-Telecom Holding"', expected: 'ER-Telecom Holding' },
