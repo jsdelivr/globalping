@@ -145,7 +145,7 @@ export const normalizeLegalName = (name: string) => {
 	const international = normalized.replace(nationalSuffixesPattern, '').trim();
 
 	// Use the result only if it's on our list of verified names.
-	if (international && internationalProviders.has(ascii(international.toLowerCase()))) {
+	if (international && internationalProviders.has(international.toLowerCase())) {
 		normalized = international;
 	}
 
