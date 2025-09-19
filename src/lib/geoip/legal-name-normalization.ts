@@ -259,7 +259,7 @@ const readNationalSuffixesFile = async () => {
 	const suffixes = contents
 		.split('\n')
 		.flatMap(line => line.split(';'))
-		.map(s => s.replace(/^\s*\(?\s*(.*?)\s*\)?\s*$/, '$1').toLowerCase())
+		.map(s => s.trim().replace(/^\(\s*(.*?)\s*\)$/, '$1').toLowerCase())
 		.filter(is.truthy);
 
 	return Array.from(new Set(suffixes));
