@@ -4,7 +4,6 @@ import csvParser from 'csv-parser';
 import { LRUCache } from 'lru-cache';
 import transliterate from '@sindresorhus/transliterate';
 import is from '@sindresorhus/is';
-import _ from 'lodash';
 
 // See https://github.com/jsdelivr/globalping/issues/383
 // The CSV file is from https://www.gleif.org/en/lei-data/code-lists/iso-20275-entity-legal-forms-code-list
@@ -18,6 +17,7 @@ const ADDITIONAL_LEGAL_FORMS = [
 	{ name: 'Joint Stock Company', abbr: [ 'JSC' ] }, // Russia
 	{ name: 'Public Company Limited', abbr: [ 'PCL' ] }, // Thailand
 	{ name: 'Liability Company', abbr: [ 'LC' ] }, // Vietnam
+	{ name: 'Spolecnost s Rucenim Omezenym', abbr: [ 'SRO' ] }, // Slovakia
 ];
 
 // Some languages have custom transliteration rules.
@@ -31,10 +31,10 @@ const normalizedCache = new LRUCache<string, string>({
 	max: 10000,
 });
 
-let legalSuffixNamesPattern: RegExp;
-let legalSuffixAbbrsPattern: RegExp;
-let legalPrefixNamesPattern: RegExp;
-let legalPrefixAbbrsPattern: RegExp;
+const allNamesSet = new Set<string>();
+const allAbbrsSet = new Set<string>();
+const prefixNamesSet: Set<string> = new Set();
+const prefixAbbrsSet: Set<string> = new Set();
 
 type CsvLegalFormRow = {
 	elfCode: string;
@@ -60,91 +60,82 @@ export const normalizeLegalName = (name: string) => {
 		return normalizedCache.get(name)!;
 	}
 
-	if (!legalSuffixNamesPattern || !legalSuffixAbbrsPattern || !legalPrefixNamesPattern || !legalPrefixAbbrsPattern) {
+	if (!allNamesSet.size || !allAbbrsSet.size || !prefixNamesSet.size || !prefixAbbrsSet.size) {
 		throw new Error('Legal name normalization is not initialized.');
 	}
 
 	const normalized = name.trim()
 		// Normalize "trading as" names, e.g., "Matteo Martelloni trading as DELUXHOST" => "DELUXHOST"
 		.split(/\s+trading as\s+/i).at(-1)!
-		// Apply the main cleanup patterns.
-		.replace(legalSuffixNamesPattern, '').trim()
-		.replace(legalSuffixAbbrsPattern, '').trim()
-		.replace(legalPrefixNamesPattern, '').trim()
-		.replace(legalPrefixAbbrsPattern, '').trim()
 		// Clean up any double spaces.
 		.replace(/\s+/g, ' ')
-		// Remove wrapping quotes that are often used with prefixes.
-		.replace(/^"(.*)"$/, '$1')
-		// Remove trailing commas and spaces after suffix removal.
-		.replace(/\s*,\s*$/, '');
+		// Add missing space after commas, e.g., "Hangzhou Alibaba Advertising Co.,Ltd." => "Hangzhou Alibaba Advertising"
+		.replace(/,(?=\S)/g, ', ');
 
-	normalizedCache.set(name, normalized);
-	return normalized;
+	const words = normalized.split(' ');
+
+	// Searching prefix.
+	const firstWord = words[0]!.toLowerCase().replace(/[.,()]/g, '');
+
+	if (prefixNamesSet.has(firstWord) || prefixAbbrsSet.has(firstWord)) {
+		words.splice(0, 1);
+	}
+
+	// Searching suffix. Starting from the 2nd word, try to remove the longest possible combination.
+	for (let i = 1; i < words.length; i++) {
+		const combination = words.slice(i).join('').toLowerCase()
+			// Suffixes Sets don't include dots, parentheses, commas and spaces, so we are removing them from the combination.
+			.replace(/[.,()]/g, '');
+
+		// Remove the last word if it's a hyphen or an ampersand and proceed with suffix search.
+		if (([ '-', '&' ].includes(words[i]!) && i === words.length - 1)) {
+			words.splice(i);
+			i = 0;
+			continue;
+		}
+
+		if (
+			allNamesSet.has(combination)
+			|| allAbbrsSet.has(combination)
+		) {
+			words.splice(i);
+
+			if (
+				// If prev word ends with one of the following, proceed with suffix search.
+				words[i - 1]!.endsWith('.')
+				|| words[i - 1]!.endsWith('.,')
+				|| words[i - 1]!.endsWith(')')
+				|| words[i - 1]!.endsWith('),')
+				// Move to the next iteration to remove hyphen or ampersand there.
+				|| [ '-', '&' ].includes(words[i - 1]!)
+			) {
+				i = 0;
+			} else {
+				break;
+			}
+		}
+	}
+
+	const result = words.join(' ')
+		// Remove trailing commas and spaces after suffix removal.
+		.replace(/\s*,\s*$/, '')
+		// Remove wrapping quotes that are often used with prefixes.
+		.replace(/^"(.*)"$/, '$1');
+
+	normalizedCache.set(name, result);
+
+	return result;
 };
 
 export const populateLegalNames = async () => {
 	const { allForms, prefixForms } = await readLegalFormsFile();
 	const { names: allNames, abbrs: allAbbrs } = await collectLegalForms(allForms);
 	const { names: prefixNames, abbrs: prefixAbbrs } = await collectLegalForms(prefixForms, 3);
-	({ namesPattern: legalSuffixNamesPattern, abbrsPattern: legalSuffixAbbrsPattern } = buildSuffixPatterns(allNames, allAbbrs));
-	({ namesPattern: legalPrefixNamesPattern, abbrsPattern: legalPrefixAbbrsPattern } = buildPrefixPatterns(prefixNames, prefixAbbrs));
+	allNames.forEach(name => allNamesSet.add(name));
+	allAbbrs.forEach(abbr => allAbbrsSet.add(abbr));
+	prefixNames.forEach(name => prefixNamesSet.add(name));
+	prefixAbbrs.forEach(abbr => prefixAbbrsSet.add(abbr));
 };
-
-function buildSuffixPatterns (names: string[], abbrs: string[]) {
-	return buildPatterns(names, abbrs, (patterns: string[]) => {
-		// Remove one or more patterns from the end, optionally followed by a dot and wrapped in parentheses; multiple patterns are only removed if:
-		//  - the first patterns ends with a dot or a closing parenthesis, optionally followed by a comma, or,
-		//  - the first pattern is followed by an ampersand or a hyphen.
-		return new RegExp(`\\s+(?:\\(?(?:${patterns.join('|')})\\.?\\)?(?:(?<=[.)]),?\\s*|\\s*[&-]\\s*|$))+$`, 'i');
-	});
-}
-
-function buildPrefixPatterns (names: string[], abbrs: string[]) {
-	return buildPatterns(names, abbrs, (patterns: string[]) => {
-		return new RegExp(`^(?:${patterns.join('|')})[.,]?\\s+`, 'i');
-	});
-}
-
-function buildPatterns (names: string[], abbrs: string[], builder: (patterns: string[]) => RegExp) {
-	const preparedNames: string[] = [];
-	const preparedAbbrs: string[] = [];
-
-	for (const name of names) {
-		const namePattern = _.escapeRegExp(name)
-			// Add a dot to the end of each word.
-			.replace(/([^.])(?:\s+|$)/g, '$1\\.')
-			// Remove whitespace after dots.
-			.replace(/\.\s+/g, '.')
-			// Allow whitespace after dots, make all existing dots replaceable by whitespace.
-			.replace(/\\\.(?=.)/g, '[. ] *')
-			// Remove the final dot.
-			.replace(/\\\.$/, '');
-
-		preparedNames.push(namePattern);
-	}
-
-	for (const abbr of abbrs) {
-		const abbrPattern = _.escapeRegExp(abbr)
-			// Add a dot to the end of each word.
-			.replace(/([^.])(?:\s+|$)/g, '$1\\.')
-			// Remove whitespace after dots.
-			.replace(/\.\s+/g, '.')
-			// Allow whitespace after dots, make all existing dots optional.
-			.replace(/\\\.(?=.)/g, '\\.? *')
-			// Allow optional dots or whitespace between any two word characters
-			.replace(/(?<=\w)(?=\w)/g, '[. ]*')
-			// Remove the final dot.
-			.replace(/\\\.$/, '');
-
-		preparedAbbrs.push(abbrPattern);
-	}
-
-	return {
-		namesPattern: builder(preparedNames),
-		abbrsPattern: builder(preparedAbbrs),
-	};
-}
 
 async function collectLegalForms (legalFormsData: CsvLegalFormRow[], minSynthesizedAbbreviationLength: number = 2) {
 	const legalFormsName = new Set<string>();
@@ -159,7 +150,7 @@ async function collectLegalForms (legalFormsData: CsvLegalFormRow[], minSynthesi
 
 		abbrLocal.split(';').forEach((abbr) => {
 			if (abbr.trim()) {
-				legalFormsAbbr.add(toAscii(abbr.trim()));
+				legalFormsAbbr.add(toAscii(abbr.trim()).replace(/[., ()]/g, ''));
 			}
 		});
 
@@ -167,20 +158,20 @@ async function collectLegalForms (legalFormsData: CsvLegalFormRow[], minSynthesi
 
 		abbrTransliterated.split(';').forEach((abbr) => {
 			if (abbr.trim()) {
-				legalFormsAbbr.add(toAscii(abbr.trim()));
+				legalFormsAbbr.add(toAscii(abbr.trim()).replace(/[., ()]/g, ''));
 			}
 		});
 
 		const nameLocal = row.entityLegalFormNameLocal.trim().toLowerCase();
 
 		if (nameLocal) {
-			legalFormsName.add(toAscii(nameLocal));
+			legalFormsName.add(toAscii(nameLocal).replace(/[., ()]/g, ''));
 
 			if (!abbrLocal) {
 				const abbrParts = nameLocal.split(' ').filter(is.truthy);
 
 				if (abbrParts.length >= minSynthesizedAbbreviationLength) {
-					legalFormsAbbr.add(toAscii(abbrParts.map(w => `${w[0]}.`).join('')));
+					legalFormsAbbr.add(toAscii(abbrParts.map(w => `${w[0]}`).join('')).replace(/[., ()]/g, ''));
 				}
 			}
 		}
@@ -188,22 +179,16 @@ async function collectLegalForms (legalFormsData: CsvLegalFormRow[], minSynthesi
 		const nameTransliterated = row.entityLegalFormNameTransliterated.trim().toLowerCase();
 
 		if (nameTransliterated) {
-			legalFormsName.add(toAscii(nameTransliterated.trim()));
+			legalFormsName.add(toAscii(nameTransliterated.trim()).replace(/[., ()]/g, ''));
 		}
 	});
 
 	ADDITIONAL_LEGAL_FORMS.forEach(({ name, abbr }) => {
-		legalFormsName.add(ascii(name).toLowerCase());
-		abbr.forEach(a => legalFormsAbbr.add(ascii(a).toLowerCase()));
+		legalFormsName.add(ascii(name).toLowerCase().replace(/[., ()]/g, ''));
+		abbr.forEach(a => legalFormsAbbr.add(ascii(a).toLowerCase().replace(/[., ()]/g, '')));
 	});
 
-	// Convert to array and sort by length (longest first) to avoid partial matches
-	return {
-		names: Array.from(legalFormsName)
-			.sort((a, b) => b.length - a.length),
-		abbrs: Array.from(legalFormsAbbr)
-			.sort((a, b) => b.length - a.length),
-	};
+	return { names: legalFormsName, abbrs: legalFormsAbbr };
 }
 
 const readLegalFormsFile = () => new Promise<{ allForms: CsvLegalFormRow[]; prefixForms: CsvLegalFormRow[] }>((resolve, reject) => {

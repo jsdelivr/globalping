@@ -22,12 +22,7 @@ export default function w (wallaby) {
 			'test/types.ts',
 			'package.json',
 			'knexfile.js',
-			'data/GCP_IP_RANGES.json',
-			'data/AWS_IP_RANGES.json',
-			'data/DOMAIN_BLACKLIST.json',
-			'data/IP_BLACKLIST.json',
-			'data/GEONAMES_CITIES.csv',
-			'data/LAST_API_COMMIT_HASH.txt',
+			'data/*',
 		],
 		tests: [
 			'test/tests/integration/**/*.test.ts',
