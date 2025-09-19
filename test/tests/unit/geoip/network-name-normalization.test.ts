@@ -1,7 +1,8 @@
 import { expect } from 'chai';
-import { populateLegalNames, normalizeLegalName } from '../../../../src/lib/geoip/legal-name-normalization.js';
+import { populateLegalNames } from '../../../../src/lib/geoip/legal-name-normalization.js';
+import { normalizeNetworkNamePublic } from '../../../../src/lib/geoip/utils.js';
 
-describe('legal-name-normalization', () => {
+describe('network-name-normalization', () => {
 	before(async () => {
 		await populateLegalNames();
 	});
@@ -25,6 +26,9 @@ describe('legal-name-normalization', () => {
 
 		// "trading as"
 		{ original: 'Matteo Martelloni trading as DELUXHOST', expected: 'DELUXHOST' },
+
+		// non-ascii
+		{ original: 'TELEFÔNICA BRASIL', expected: 'TELEFONICA' },
 
 		// Already normalized or no legal suffix
 		{ original: 'AkileCloud Network', expected: 'AkileCloud Network' },
@@ -68,7 +72,7 @@ describe('legal-name-normalization', () => {
 
 	for (const { original, expected } of cases) {
 		it(`normalizes "${original}" -> "${expected}"`, () => {
-			const result = normalizeLegalName(original);
+			const result = normalizeNetworkNamePublic(original);
 			expect(result).to.equal(expected);
 		});
 	}
