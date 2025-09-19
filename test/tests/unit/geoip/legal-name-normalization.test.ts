@@ -28,6 +28,9 @@ describe('legal-name-normalization', () => {
 
 		// Already normalized or no legal suffix
 		{ original: 'AkileCloud Network', expected: 'AkileCloud Network' },
+
+		// Shoud not be normalized
+		{ original: 'Bank of America', expected: 'Bank of America' },
 	];
 
 	for (const { original, expected } of cases) {
