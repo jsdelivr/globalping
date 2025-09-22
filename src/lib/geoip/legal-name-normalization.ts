@@ -150,12 +150,12 @@ function generatePossiblePartSplits (parts: string[]): string[][] {
 
 	const [ first, ...rest ] = parts;
 
-	return generatePossiblePartSplits(rest).flatMap((sub) => {
-		if (!sub.length) {
+	return generatePossiblePartSplits(rest).flatMap((rest) => {
+		if (!rest.length) {
 			return [ [ first! ] ];
 		}
 
-		return [ [ first!, ...sub ], [ first! + sub[0]!, ...sub.slice(1) ] ];
+		return [ [ first!, ...rest ], [ first! + rest[0]!, ...rest.slice(1) ] ];
 	});
 }
 
@@ -164,13 +164,7 @@ function multiPartMatch (parts: string[], set: Set<string>): boolean {
 		const parts = word.replace(/[,()]/g, '').split('.');
 		const splits = generatePossiblePartSplits(parts);
 
-		for (const split of splits) {
-			if (split.every(part => set.has(part))) {
-				return true;
-			}
-		}
-
-		return false;
+		return splits.some(split => split.every(part => set.has(part)));
 	});
 }
 
