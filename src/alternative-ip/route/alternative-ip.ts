@@ -1,7 +1,7 @@
 import type { Context } from 'koa';
 import type Router from '@koa/router';
 import createHttpError from 'http-errors';
-import { getAltIpsClient } from '../../lib/alt-ips.js';
+import { getAltIpsClient } from '../../lib/alt-ips-client.js';
 
 const handle = async (ctx: Context): Promise<void> => {
 	const ip = ctx.request.ip;

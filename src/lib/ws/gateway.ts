@@ -14,6 +14,7 @@ import { subscribeWithHandler } from './helper/subscribe-handler.js';
 import { handleIsIPv4SupportedUpdate, handleIsIPv6SupportedUpdate } from '../../probe/handler/ip-version.js';
 import { adoptionToken } from '../../adoption/adoption-token.js';
 import { handleNewLogs } from '../../probe/handler/logs.js';
+import { handleAltIps } from '../../probe/handler/alt-ips.js';
 
 const io = getWsServer();
 const logger = scopedLogger('gateway');
@@ -35,6 +36,7 @@ io
 		// Handlers
 		subscribeWithHandler(socket, 'probe:status:update', handleStatusUpdate(probe));
 		subscribeWithHandler(socket, 'probe:logs', handleNewLogs(probe));
+		subscribeWithHandler(socket, 'probe:alt-ips', handleAltIps(probe));
 		subscribeWithHandler(socket, 'probe:isIPv6Supported:update', handleIsIPv6SupportedUpdate(probe));
 		subscribeWithHandler(socket, 'probe:isIPv4Supported:update', handleIsIPv4SupportedUpdate(probe));
 		subscribeWithHandler(socket, 'probe:dns:update', handleDnsUpdate(probe));

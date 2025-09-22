@@ -1,7 +1,7 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
 import createHttpError from 'http-errors';
-import { ALT_IP_REQ_MESSAGE_TYPE, ALT_IP_RES_MESSAGE_TYPE, AltIps } from '../../../src/lib/alt-ips.js';
+import { ALT_IP_REQ_MESSAGE_TYPE, ALT_IP_RES_MESSAGE_TYPE, AltIps } from '../../../src/lib/alt-ips-client.js';
 import { type ServerSocket } from '../../../src/lib/ws/server.js';
 
 describe('AltIps', () => {

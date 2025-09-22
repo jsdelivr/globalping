@@ -1,12 +1,12 @@
 import { promisify } from 'node:util';
 import { randomBytes } from 'node:crypto';
-import { type ServerSocket } from './ws/server.js';
 import { scopedLogger } from './logger.js';
 import GeoIpClient, { getGeoIpClient } from './geoip/client.js';
 import { isIpPrivate } from './private-ip.js';
 import { ProbeError } from './probe-error.js';
 import { isIpBlocked } from './blocked-ip-ranges.js';
 import { getPersistentRedisClient, type RedisClient } from './redis/persistent-client.js';
+import { Probe } from '../probe/types.js';
 
 const getRandomBytes = promisify(randomBytes);
 const logger = scopedLogger('alt-ips');
@@ -31,7 +31,7 @@ export type AltIpResBody = {
 	reqMessageId: string;
 };
 
-export class AltIps {
+export class AltIpsClient {
 	ALT_IP_TOKEN_TTL = 30;
 
 	constructor (
@@ -50,9 +50,9 @@ export class AltIps {
 		return token;
 	}
 
-	async addAltIps (localSocket: ServerSocket, ipsToTokens: Record<string, string>) {
+	async addAltIps (probe: Probe, ipsToTokens: Record<string, string>) {
 		const validIps = await this.validateTokens(Object.entries(ipsToTokens));
-		const addedIps = (await Promise.all(validIps.map(ip => this.addAltIp(localSocket, ip)))).filter(Boolean);
+		const addedIps = (await Promise.all(validIps.map(ip => this.addAltIp(probe, ip)))).filter(Boolean);
 		const rejectedIps = Object.keys(ipsToTokens).filter(ip => !validIps.includes(ip));
 
 		return { addedIps, rejectedIps };
@@ -76,8 +76,8 @@ export class AltIps {
 	/**
 	 * @returns was alt IP added.
 	 */
-	private async addAltIp (localSocket: ServerSocket, altIp: string): Promise<boolean> {
-		const probeInfo = { probeIp: localSocket.data.probe.ipAddress, probeLocation: localSocket.data.probe.location };
+	private async addAltIp (probe: Probe, altIp: string): Promise<boolean> {
+		const probeInfo = { probeIp: probe.ipAddress, probeLocation: probe.location };
 
 		if (process.env['FAKE_PROBE_IP']) {
 			return false;
@@ -95,7 +95,7 @@ export class AltIps {
 		try {
 			const altIpInfo = await this.geoIpClient.lookup(altIp);
 
-			if (!localSocket.data.probe.location.allowedCountries.includes(altIpInfo.country)) {
+			if (!probe.location.allowedCountries.includes(altIpInfo.country)) {
 				logger.warn('Alt IP country doesn\'t match the probe country.', { altIp, altIpInfo, ...probeInfo });
 				return false;
 			}
@@ -114,20 +114,20 @@ export class AltIps {
 			return false;
 		}
 
-		if (localSocket.data.probe.ipAddress === altIp || localSocket.data.probe.altIpAddresses.includes(altIp)) {
+		if (probe.ipAddress === altIp || probe.altIpAddresses.includes(altIp)) {
 			return true;
 		}
 
-		localSocket.data.probe.altIpAddresses.push(altIp);
+		probe.altIpAddresses.push(altIp);
 		return true;
 	}
 }
 
-let altIpsClient: AltIps;
+let altIpsClient: AltIpsClient;
 
 export const getAltIpsClient = () => {
 	if (!altIpsClient) {
-		altIpsClient = new AltIps(getPersistentRedisClient(), getGeoIpClient());
+		altIpsClient = new AltIpsClient(getPersistentRedisClient(), getGeoIpClient());
 	}
 
 	return altIpsClient;
