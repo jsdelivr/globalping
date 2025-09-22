@@ -112,7 +112,7 @@ export const normalizeLegalName = (name: string) => {
 	const stripPrefixWithSet = (set: Set<string>, stripWhitespace: boolean = true) => {
 		for (let i = words.length - 1; i > 0; i--) {
 			const sequence = words.slice(0, i).join(stripWhitespace ? '' : ' ').toLowerCase()
-				// Suffixes Sets don't include dots, parentheses, commas and spaces, so we are removing them from the combination.
+				// Suffix sets don't include dots, parentheses, and commas, so we remove them from the sequence.
 				.replace(/[.,()]/g, '');
 
 			if (set.has(sequence)) {
