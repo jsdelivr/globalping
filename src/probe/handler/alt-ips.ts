@@ -2,7 +2,7 @@ import { getAltIpsClient } from '../../lib/alt-ips-client.js';
 import { altIpsSchema } from '../schema/probe-response-schema.js';
 import type { Probe } from '../types.js';
 
-export const handleAltIps = (probe: Probe) => (ipsToTokens: Record<string, string>): void => {
+export const handleAltIps = (probe: Probe) => async (ipsToTokens: Record<string, string>, callback: (addedAltIps: string[]) => void) => {
 	const validation = altIpsSchema.validate(ipsToTokens);
 
 	if (validation.error) {
@@ -10,5 +10,6 @@ export const handleAltIps = (probe: Probe) => (ipsToTokens: Record<string, strin
 	}
 
 	const altIpsClient = getAltIpsClient();
-	altIpsClient.addAltIps(probe, validation.value);
+	const addedAltIps = await altIpsClient.addAltIps(probe, validation.value);
+	callback(addedAltIps);
 };

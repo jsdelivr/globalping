@@ -52,10 +52,8 @@ export class AltIpsClient {
 
 	async addAltIps (probe: Probe, ipsToTokens: Record<string, string>) {
 		const validIps = await this.validateTokens(Object.entries(ipsToTokens));
-		const addedIps = (await Promise.all(validIps.map(ip => this.addAltIp(probe, ip)))).filter(Boolean);
-		const rejectedIps = Object.keys(ipsToTokens).filter(ip => !validIps.includes(ip));
-
-		return { addedIps, rejectedIps };
+		await Promise.all(validIps.map(ip => this.addAltIp(probe, ip)));
+		return probe.altIpAddresses;
 	}
 
 	private async validateTokens (ipsToTokens: [string, string][]) {
@@ -76,16 +74,16 @@ export class AltIpsClient {
 	/**
 	 * @returns was alt IP added.
 	 */
-	private async addAltIp (probe: Probe, altIp: string): Promise<boolean> {
+	private async addAltIp (probe: Probe, altIp: string): Promise<void> {
 		const probeInfo = { probeIp: probe.ipAddress, probeLocation: probe.location };
 
 		if (process.env['FAKE_PROBE_IP']) {
-			return false;
+			return;
 		}
 
 		if (isIpPrivate(altIp)) {
 			logger.warn('Alt IP is private.', { altIp, ...probeInfo });
-			return false;
+			return;
 		}
 
 		if (isIpBlocked(altIp)) {
@@ -97,12 +95,12 @@ export class AltIpsClient {
 
 			if (!probe.location.allowedCountries.includes(altIpInfo.country)) {
 				logger.warn('Alt IP country doesn\'t match the probe country.', { altIp, altIpInfo, ...probeInfo });
-				return false;
+				return;
 			}
 
 			if (altIpInfo.isAnycast) {
 				logger.warn('Alt IP is anycast.', { altIp, altIpInfo, ...probeInfo });
-				return false;
+				return;
 			}
 		} catch (e) {
 			if (e instanceof ProbeError) {
@@ -111,15 +109,14 @@ export class AltIpsClient {
 				logger.error('Failed to add an alt IP.', e, { altIp, ...probeInfo });
 			}
 
-			return false;
+			return;
 		}
 
 		if (probe.ipAddress === altIp || probe.altIpAddresses.includes(altIp)) {
-			return true;
+			return;
 		}
 
 		probe.altIpAddresses.push(altIp);
-		return true;
 	}
 }
 
