@@ -138,7 +138,7 @@ export class ProbesLocationFilter {
 		Object.keys(location).forEach((key) => {
 			if (key === 'tags') {
 				const normalizedRequestTags = location.tags!.map(tag => tag.toLowerCase());
-				filteredProbes = probes.filter(probe => normalizedRequestTags.every(tag => this.hasTag(probe, tag)));
+				filteredProbes = filteredProbes.filter(probe => normalizedRequestTags.every(tag => this.hasTag(probe, tag)));
 			} else if (key === 'magic') {
 				filteredProbes = captureSpan('magicFilter', () => this.magicFilter(filteredProbes, location.magic!));
 			} else {

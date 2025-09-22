@@ -1014,8 +1014,10 @@ describe('probe router', () => {
 			country: 'GB',
 			state: null,
 			city: 'london',
+			normalizedCity: 'london',
 			asn: 5089,
 			network: 'a-virgin media',
+			normalizedNetwork: 'a-virgin media',
 		};
 
 		it('should return match for existing tag', async () => {
@@ -1079,6 +1081,25 @@ describe('probe router', () => {
 			expect(allProbes.length).to.equal(1);
 			expect(onlineProbesMap.size).to.equal(1);
 			expect(allProbes[0]!.location.country).to.equal('GB');
+		});
+
+		it('should combine tags filter with other filters', async () => {
+			getRegionMock.returns('aws-eu-west-1');
+			const probes: DeepPartial<Probe[]> = [
+				await buildProbe(String(Date.now()), location),
+			];
+
+			const locations: Location[] = [{
+				city: 'paris',
+				tags: [ 'aws-eu-west-1' ],
+			}];
+
+			setProbes(probes as never);
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations, limit: 100 } as unknown as UserRequest);
+
+			expect(allProbes.length).to.equal(0);
+			expect(onlineProbesMap.size).to.equal(0);
 		});
 	});
 
