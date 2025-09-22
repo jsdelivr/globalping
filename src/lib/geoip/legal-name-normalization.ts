@@ -244,7 +244,7 @@ const readLegalFormsFile = () => new Promise<{ allForms: CsvLegalFormRow[]; pref
 		.on('data', (form: CsvLegalFormRow) => {
 			// Exclude some words that generate lots of false positives.
 			if (/\bbank\b/i.test(form.entityLegalFormNameLocal)) {
-				// return;
+				return;
 			}
 
 			if (PREFIX_USING_COUNTRIES.includes(form.countryCode)) {

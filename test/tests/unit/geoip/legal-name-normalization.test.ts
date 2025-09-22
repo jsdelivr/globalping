@@ -60,6 +60,7 @@ describe('legal-name-normalization', () => {
 		{ original: 'M & R NETWORK LTDA-ME', expected: 'M & R NETWORK' },
 		{ original: 'BEIJING CBD TELECOM CO .LTD', expected: 'BEIJING CBD TELECOM' },
 		{ original: 'CENTRALES ELECTRICAS DE NARIÑO S.A. E.S.P', expected: 'CENTRALES ELECTRICAS DE NARIÑO' },
+		{ original: 'Orange Bank LLC', expected: 'Orange Bank' },
 		{ original: 'ACS', expected: 'ACS' },
 	];
 
