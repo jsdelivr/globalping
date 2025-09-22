@@ -1,14 +1,12 @@
 import { promisify } from 'node:util';
 import { randomBytes } from 'node:crypto';
-import { getSyncedProbeList, type ServerSocket } from './ws/server.js';
-import type { PubSubMessage, SyncedProbeList } from './ws/synced-probe-list.js';
-import TTLCache from '@isaacs/ttlcache';
-import createHttpError from 'http-errors';
+import { type ServerSocket } from './ws/server.js';
 import { scopedLogger } from './logger.js';
 import GeoIpClient, { getGeoIpClient } from './geoip/client.js';
 import { isIpPrivate } from './private-ip.js';
 import { ProbeError } from './probe-error.js';
 import { isIpBlocked } from './blocked-ip-ranges.js';
+import { getPersistentRedisClient, type RedisClient } from './redis/persistent-client.js';
 
 const getRandomBytes = promisify(randomBytes);
 const logger = scopedLogger('alt-ips');
@@ -34,112 +32,46 @@ export type AltIpResBody = {
 };
 
 export class AltIps {
-	private readonly tokenToSocket: TTLCache<string, ServerSocket> = new TTLCache<string, ServerSocket>({ ttl: 5 * 60 * 1000 });
-	private readonly pendingRequests: Map<string, (value: AltIpResBody) => void> = new Map();
+	ALT_IP_TOKEN_TTL = 30;
 
 	constructor (
-		private readonly syncedProbeList: SyncedProbeList,
+		private readonly redis: RedisClient,
 		private readonly geoIpClient: GeoIpClient,
-	) {
-		this.subscribeToNodeMessages();
-	}
+	) {}
 
-	async generateToken (socket: ServerSocket) {
+	async generateToken (ip: string) {
 		const bytes = await getRandomBytes(24);
 		const token = bytes.toString('base64');
-		this.tokenToSocket.set(token, socket);
+		await Promise.all([
+			this.redis.hSet('gp:alt-ip-tokens', ip, token),
+			this.redis.hExpire('gp:alt-ip-tokens', ip, this.ALT_IP_TOKEN_TTL),
+		]);
+
 		return token;
 	}
 
-	async validateTokenFromHttp (request: AltIpReqBody) {
-		// Refresh the probes list.
-		await this.syncedProbeList.fetchProbes();
+	async addAltIps (localSocket: ServerSocket, ipsToTokens: Record<string, string>) {
+		const validIps = await this.validateTokens(Object.entries(ipsToTokens));
+		const addedIps = (await Promise.all(validIps.map(ip => this.addAltIp(localSocket, ip)))).filter(Boolean);
+		const rejectedIps = Object.keys(ipsToTokens).filter(ip => !validIps.includes(ip));
 
-		const nodeId = this.syncedProbeList.getNodeIdBySocketId(request.socketId);
+		return { addedIps, rejectedIps };
+	}
 
-		if (!nodeId) {
-			throw createHttpError(400, 'Unable to find a probe by specified socket id.', { type: 'probe_not_found' });
-		}
+	private async validateTokens (ipsToTokens: [string, string][]) {
+		const tokens = await this.redis.hmGet('gp:alt-ip-tokens', ipsToTokens.map(([ ip ]) => ip));
+		const ipsWithValidTokens: string[] = [];
 
-		const duplicateProbe = this.syncedProbeList.getProbeByIp(request.ip);
+		for (let i = 0; i < ipsToTokens.length; i++) {
+			const [ ip, token ] = ipsToTokens[i]!;
 
-		if (duplicateProbe && duplicateProbe.client !== request.socketId) {
-			logger.warn(`Probe with ip ${request.ip} is already connected. Ignoring an alternative ip ${request.ip} for the socket ${request.socketId}`);
-			throw createHttpError(400, 'Another probe with this ip is already connected.', { type: 'alt_ip_duplication' });
-		}
-
-		if (duplicateProbe && duplicateProbe.client === request.socketId) {
-			return;
-		}
-
-		// First case - the socket is directly on this node.
-		const localSocket = this.tokenToSocket.get(request.token);
-
-		if (localSocket) {
-			const isAdded = await this.addAltIp(localSocket, request.ip);
-
-			if (!isAdded) {
-				throw createHttpError(400, 'Alt IP is invalid.', { type: 'invalid_alt_ip' });
+			if (tokens[i] === token) {
+				ipsWithValidTokens.push(ip);
 			}
-
-			return;
 		}
 
-		if (nodeId === this.syncedProbeList.getNodeId()) {
-			throw createHttpError(400, 'Token value is wrong.', { type: 'wrong_token' });
-		}
-
-		// Second case - the socket is on a different node, need to perform a remote update.
-		const id = await this.syncedProbeList.publishToNode<AltIpReqBody>(nodeId, ALT_IP_REQ_MESSAGE_TYPE, request);
-		const response: AltIpResBody = await this.getResponsePromise(id, nodeId, request);
-
-		if (response.result === 'probe-not-found') {
-			throw createHttpError(400, 'Unable to find a probe on the remote node.', { type: 'probe_not_found_on_remote' });
-		} else if (response.result === 'invalid-alt-ip') {
-			throw createHttpError(400, 'Alt IP is invalid.', { type: 'invalid_alt_ip' });
-		}
+		return ipsWithValidTokens;
 	}
-
-	private getResponsePromise (messageId: string, nodeId: string, request: AltIpReqBody) {
-		const promise = new Promise<AltIpResBody>((resolve, reject) => {
-			this.pendingRequests.set(messageId, resolve);
-
-			setTimeout(() => {
-				this.pendingRequests.delete(messageId);
-				reject(createHttpError(504, 'Node owning the probe failed to handle alt ip in specified timeout.', { type: 'node_response_timeout' }));
-			}, 10_000);
-		}).catch((err) => {
-			logger.warn(`Node ${nodeId} failed to handle alt ip ${request.ip} for socket ${request.socketId} in specified timeout.`);
-			throw err;
-		});
-		return promise;
-	}
-
-	async validateTokenFromPubSub (reqMessage: PubSubMessage<AltIpReqBody>) {
-		const localSocket = this.tokenToSocket.get(reqMessage.body.token);
-
-		if (!localSocket) {
-			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'probe-not-found', reqMessageId: reqMessage.id });
-			return;
-		}
-
-		const isAdded = await this.addAltIp(localSocket, reqMessage.body.ip);
-
-		if (!isAdded) {
-			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'invalid-alt-ip', reqMessageId: reqMessage.id });
-		} else {
-			await this.syncedProbeList.publishToNode<AltIpResBody>(reqMessage.reqNodeId, ALT_IP_RES_MESSAGE_TYPE, { result: 'success', reqMessageId: reqMessage.id });
-		}
-	}
-
-	handleRes = (resMessage: PubSubMessage<AltIpResBody>) => {
-		const resolve = this.pendingRequests.get(resMessage.body.reqMessageId);
-		this.pendingRequests.delete(resMessage.body.reqMessageId);
-
-		if (resolve) {
-			resolve(resMessage.body);
-		}
-	};
 
 	/**
 	 * @returns was alt IP added.
@@ -158,7 +90,6 @@ export class AltIps {
 
 		if (isIpBlocked(altIp)) {
 			logger.warn('Alt IP is blocked.', { altIp, ...probeInfo });
-			return false;
 		}
 
 		try {
@@ -190,21 +121,13 @@ export class AltIps {
 		localSocket.data.probe.altIpAddresses.push(altIp);
 		return true;
 	}
-
-	private subscribeToNodeMessages () {
-		this.syncedProbeList.subscribeToNodeMessages<AltIpReqBody>(ALT_IP_REQ_MESSAGE_TYPE, (reqMessage: PubSubMessage<AltIpReqBody>) => {
-			this.validateTokenFromPubSub(reqMessage).catch(error => logger.error('Failed to validate token from pub/sub.', error));
-		});
-
-		this.syncedProbeList.subscribeToNodeMessages<AltIpResBody>(ALT_IP_RES_MESSAGE_TYPE, this.handleRes);
-	}
 }
 
 let altIpsClient: AltIps;
 
 export const getAltIpsClient = () => {
 	if (!altIpsClient) {
-		altIpsClient = new AltIps(getSyncedProbeList(), getGeoIpClient());
+		altIpsClient = new AltIps(getPersistentRedisClient(), getGeoIpClient());
 	}
 
 	return altIpsClient;
