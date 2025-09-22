@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import ascii from 'any-ascii';
 import csvParser from 'csv-parser';
-import { LRUCache } from 'lru-cache';
 import transliterate from '@sindresorhus/transliterate';
 import is from '@sindresorhus/is';
 
@@ -17,7 +16,6 @@ const ADDITIONAL_LEGAL_FORMS = [
 	{ name: 'Joint Stock Company', abbr: [ 'JSC' ] }, // Russia
 	{ name: 'Public Company Limited', abbr: [ 'PCL' ] }, // Thailand
 	{ name: 'Liability Company', abbr: [ 'LC' ] }, // Vietnam
-	{ name: 'Spolecnost s Rucenim Omezenym', abbr: [ 'SRO' ] }, // Slovakia
 ];
 
 // Some languages have custom transliteration rules.
@@ -26,10 +24,6 @@ const CUSTOM_TRANSLITERATIONS = [ 'da', 'de', 'hu', 'nb', 'sr', 'sv', 'tr' ];
 // Countries that sometimes write the legal form as a prefix instead of a suffix.
 // We don't allow this for all countries to reduce false-positive matches.
 const PREFIX_USING_COUNTRIES = [ 'RO', 'LV', 'LT', 'EE', 'RU', 'UA', 'BY', 'MD', 'GE', 'AM', 'AZ', 'KZ', 'KG', 'UZ', 'TJ', 'TM', 'FI', 'FO', 'JP', 'KR', 'TW', 'VN', 'TH', 'ID', 'IR', 'AE', 'SA', 'QA', 'OM', 'KW', 'BH', 'JO', 'LB', 'IQ', 'EG', 'LY', 'TN', 'DZ', 'MA', 'MR', 'YE', 'SY', 'PS' ];
-
-const normalizedCache = new LRUCache<string, string>({
-	max: 10000,
-});
 
 const allNamesSet = new Set<string>();
 const allAbbrsSet = new Set<string>();
@@ -56,10 +50,6 @@ type CsvLegalFormRow = {
 };
 
 export const normalizeLegalName = (name: string) => {
-	if (normalizedCache.has(name)) {
-		return normalizedCache.get(name)!;
-	}
-
 	if (!allNamesSet.size || !allAbbrsSet.size || !prefixNamesSet.size || !prefixAbbrsSet.size) {
 		throw new Error('Legal name normalization is not initialized.');
 	}
@@ -69,62 +59,78 @@ export const normalizeLegalName = (name: string) => {
 		.split(/\s+trading as\s+/i).at(-1)!
 		// Clean up any double spaces.
 		.replace(/\s+/g, ' ')
-		// Add missing space after commas, e.g., "Hangzhou Alibaba Advertising Co.,Ltd." => "Hangzhou Alibaba Advertising"
-		.replace(/,(?=\S)/g, ', ');
+		// Normalize whitespace after commas.
+		.replace(/,(?=\S)/g, ', ')
+		// Normalize whitespace within parentheses.
+		.replace(/\(\s+/g, '(')
+		.replace(/\s+\)+/g, ')')
+		// Normalize whitespace around dashes.
+		.replace(/\s*-\s*(me)$/gi, ' - $1')
+		.replace(/\s+-\s*|\s*-\s+/g, ' - ')
+		.replace(/(?<=\w)\.-\s*/g, '. - ');
 
 	const words = normalized.split(' ');
 
-	// Searching prefix.
-	const firstWord = words[0]!.toLowerCase().replace(/[.,()]/g, '');
+	const stripSuffixWithSet = (set: Set<string>, stripWhitespace: boolean = true) => {
+		// Starting from the 2nd word, try to remove the longest possible sequence.
+		let index = 1;
 
-	if (prefixNamesSet.has(firstWord) || prefixAbbrsSet.has(firstWord)) {
-		words.splice(0, 1);
-	}
+		while (index < words.length) {
+			// Remove the last word if it's a hyphen or an ampersand and restart the search.
+			if (([ '-', '&' ].includes(words[index]!) && index === words.length - 1)) {
+				words.splice(index);
+				index = 1;
+				continue;
+			}
 
-	// Searching suffix. Starting from the 2nd word, try to remove the longest possible combination.
-	for (let i = 1; i < words.length; i++) {
-		const combination = words.slice(i).join('').toLowerCase()
-			// Suffixes Sets don't include dots, parentheses, commas and spaces, so we are removing them from the combination.
-			.replace(/[.,()]/g, '');
+			const parts = words.slice(index);
+			const sequence = parts.join(stripWhitespace ? '' : ' ').toLowerCase()
+				// Suffix sets don't include dots, parentheses, and commas, so we remove them from the sequence.
+				.replace(/[.,()]/g, '');
 
-		// Remove the last word if it's a hyphen or an ampersand and proceed with suffix search.
-		if (([ '-', '&' ].includes(words[i]!) && i === words.length - 1)) {
-			words.splice(i);
-			i = 0;
-			continue;
+			if (set.has(sequence) || multiPartMatch(parts, set)) {
+				const suffixWords = words.splice(index);
+
+				// Restart the search if one of the conditions is met.
+				if (
+					words[index - 1]!.endsWith('.')
+					|| words[index - 1]!.endsWith('.,')
+					|| words[index - 1]!.endsWith(')')
+					|| words[index - 1]!.endsWith('),')
+					|| [ '-', '&' ].includes(words[index - 1]!)
+					|| suffixWords[0]!.startsWith('(')
+				) {
+					index = 1;
+					continue;
+				}
+			}
+
+			index++;
 		}
+	};
 
-		if (
-			allNamesSet.has(combination)
-			|| allAbbrsSet.has(combination)
-		) {
-			words.splice(i);
+	const stripPrefixWithSet = (set: Set<string>, stripWhitespace: boolean = true) => {
+		for (let i = words.length - 1; i > 0; i--) {
+			const sequence = words.slice(0, i).join(stripWhitespace ? '' : ' ').toLowerCase()
+				// Suffixes Sets don't include dots, parentheses, commas and spaces, so we are removing them from the combination.
+				.replace(/[.,()]/g, '');
 
-			if (
-				// If prev word ends with one of the following, proceed with suffix search.
-				words[i - 1]!.endsWith('.')
-				|| words[i - 1]!.endsWith('.,')
-				|| words[i - 1]!.endsWith(')')
-				|| words[i - 1]!.endsWith('),')
-				// Move to the next iteration to remove hyphen or ampersand there.
-				|| [ '-', '&' ].includes(words[i - 1]!)
-			) {
-				i = 0;
-			} else {
-				break;
+			if (set.has(sequence)) {
+				words.splice(0, i);
 			}
 		}
-	}
+	};
 
-	const result = words.join(' ')
+	stripSuffixWithSet(allNamesSet, false);
+	stripSuffixWithSet(allAbbrsSet);
+	stripPrefixWithSet(prefixNamesSet, false);
+	stripPrefixWithSet(prefixAbbrsSet);
+
+	return words.join(' ')
 		// Remove trailing commas and spaces after suffix removal.
 		.replace(/\s*,\s*$/, '')
 		// Remove wrapping quotes that are often used with prefixes.
 		.replace(/^"(.*)"$/, '$1');
-
-	normalizedCache.set(name, result);
-
-	return result;
 };
 
 export const populateLegalNames = async () => {
@@ -137,6 +143,37 @@ export const populateLegalNames = async () => {
 	prefixAbbrs.forEach(abbr => prefixAbbrsSet.add(abbr));
 };
 
+function generatePossiblePartSplits (parts: string[]): string[][] {
+	if (parts.length <= 1) {
+		return [ parts ];
+	}
+
+	const [ first, ...rest ] = parts;
+
+	return generatePossiblePartSplits(rest).flatMap((sub) => {
+		if (!sub.length) {
+			return [ [ first! ] ];
+		}
+
+		return [ [ first!, ...sub ], [ first! + sub[0]!, ...sub.slice(1) ] ];
+	});
+}
+
+function multiPartMatch (parts: string[], set: Set<string>): boolean {
+	return parts.join('').toLowerCase().split('-').every((word) => {
+		const parts = word.replace(/[,()]/g, '').split('.');
+		const splits = generatePossiblePartSplits(parts);
+
+		for (const split of splits) {
+			if (split.every(part => set.has(part))) {
+				return true;
+			}
+		}
+
+		return false;
+	});
+}
+
 async function collectLegalForms (legalFormsData: CsvLegalFormRow[], minSynthesizedAbbreviationLength: number = 2) {
 	const legalFormsName = new Set<string>();
 	const legalFormsAbbr = new Set<string>();
@@ -146,11 +183,14 @@ async function collectLegalForms (legalFormsData: CsvLegalFormRow[], minSynthesi
 			? (s: string) => transliterate(s, { locale: row.languageCode })
 			: ascii;
 
+		const toAbbreviation = (s: string) => toAscii(s).replace(/[., ()]/g, '');
+		const toName = (s: string) => toAscii(s).replace(/[.,()]/g, '');
+
 		const abbrLocal = row.abbreviationsLocal.trim().toLowerCase();
 
 		abbrLocal.split(';').forEach((abbr) => {
 			if (abbr.trim()) {
-				legalFormsAbbr.add(toAscii(abbr.trim()).replace(/[., ()]/g, ''));
+				legalFormsAbbr.add(toAbbreviation(abbr));
 			}
 		});
 
@@ -158,20 +198,20 @@ async function collectLegalForms (legalFormsData: CsvLegalFormRow[], minSynthesi
 
 		abbrTransliterated.split(';').forEach((abbr) => {
 			if (abbr.trim()) {
-				legalFormsAbbr.add(toAscii(abbr.trim()).replace(/[., ()]/g, ''));
+				legalFormsAbbr.add(toAbbreviation(abbr));
 			}
 		});
 
 		const nameLocal = row.entityLegalFormNameLocal.trim().toLowerCase();
 
 		if (nameLocal) {
-			legalFormsName.add(toAscii(nameLocal).replace(/[., ()]/g, ''));
+			legalFormsName.add(toName(nameLocal));
 
 			if (!abbrLocal) {
-				const abbrParts = nameLocal.split(' ').filter(is.truthy);
+				const abbrParts = toName(nameLocal).split(' ').filter(is.truthy);
 
 				if (abbrParts.length >= minSynthesizedAbbreviationLength) {
-					legalFormsAbbr.add(toAscii(abbrParts.map(w => `${w[0]}`).join('')).replace(/[., ()]/g, ''));
+					legalFormsAbbr.add(abbrParts.map(w => `${w[0]}`).join(''));
 				}
 			}
 		}
@@ -179,12 +219,12 @@ async function collectLegalForms (legalFormsData: CsvLegalFormRow[], minSynthesi
 		const nameTransliterated = row.entityLegalFormNameTransliterated.trim().toLowerCase();
 
 		if (nameTransliterated) {
-			legalFormsName.add(toAscii(nameTransliterated.trim()).replace(/[., ()]/g, ''));
+			legalFormsName.add(toName(nameTransliterated));
 		}
 	});
 
 	ADDITIONAL_LEGAL_FORMS.forEach(({ name, abbr }) => {
-		legalFormsName.add(ascii(name).toLowerCase().replace(/[., ()]/g, ''));
+		legalFormsName.add(ascii(name).toLowerCase().replace(/[.,()]/g, ''));
 		abbr.forEach(a => legalFormsAbbr.add(ascii(a).toLowerCase().replace(/[., ()]/g, '')));
 	});
 
@@ -202,6 +242,11 @@ const readLegalFormsFile = () => new Promise<{ allForms: CsvLegalFormRow[]; pref
 			skipLines: 1,
 		}))
 		.on('data', (form: CsvLegalFormRow) => {
+			// Exclude some words that generate lots of false positives.
+			if (/\bbank\b/i.test(form.entityLegalFormNameLocal)) {
+				// return;
+			}
+
 			if (PREFIX_USING_COUNTRIES.includes(form.countryCode)) {
 				prefixForms.push(form);
 			}

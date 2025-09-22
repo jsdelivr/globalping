@@ -29,6 +29,7 @@ describe('legal-name-normalization', () => {
 		// Already normalized or no legal suffix
 		{ original: 'AkileCloud Network', expected: 'AkileCloud Network' },
 
+		// Additional cases
 		{ original: 'Hangzhou Alibaba Advertising Co.,Ltd.', expected: 'Hangzhou Alibaba Advertising' },
 		{ original: 'Shanghai Mobile Communications Co.,Ltd.', expected: 'Shanghai Mobile Communications' },
 		{ original: 'Alibaba (US) Technology Co., Ltd.', expected: 'Alibaba (US) Technology' },
@@ -37,7 +38,7 @@ describe('legal-name-normalization', () => {
 		{ original: 'Rackzar  (Pty) Ltd', expected: 'Rackzar' },
 		{ original: 'Henan Mobile Communications Co. Ltd', expected: 'Henan Mobile Communications' },
 		{ original: 'Web Squad Connect (Pty) Ltd', expected: 'Web Squad Connect' },
-		{ original: 'Web Dadeh Paydar Co (Ltd)', expected: 'Web Dadeh Paydar Co' },
+		{ original: 'Web Dadeh Paydar Co (Ltd)', expected: 'Web Dadeh Paydar' },
 		{ original: 'Jinx Co. Limited', expected: 'Jinx' },
 
 		{ original: 'DA International Group Ltd.', expected: 'DA International Group' },
@@ -56,7 +57,10 @@ describe('legal-name-normalization', () => {
 		{ original: 'S.C. INFOTECH-GRUP S.R.L.', expected: 'S.C. INFOTECH-GRUP' },
 		{ original: 'S.SETEVAYA SVYAZ, OOO', expected: 'S.SETEVAYA SVYAZ' },
 		{ original: 'TELECOMUNICACOES ALARCAO E FERNANDES LTDA - ME', expected: 'TELECOMUNICACOES ALARCAO E FERNANDES' },
-		{ original: 'M & R NETWORK LTDA - ME', expected: 'M & R NETWORK' },
+		{ original: 'M & R NETWORK LTDA-ME', expected: 'M & R NETWORK' },
+		{ original: 'BEIJING CBD TELECOM CO .LTD', expected: 'BEIJING CBD TELECOM' },
+		{ original: 'CENTRALES ELECTRICAS DE NARIÑO S.A. E.S.P', expected: 'CENTRALES ELECTRICAS DE NARIÑO' },
+		{ original: 'ACS', expected: 'ACS' },
 	];
 
 	for (const { original, expected } of cases) {
