@@ -55,7 +55,7 @@ async function fetchDescriptions (): Promise<Set<string>> {
 				}
 			})
 			.on('end', () => resolve(result))
-			.on('error', (err: Error) => reject(err));
+			.on('error', reject);
 	});
 }
 
@@ -72,8 +72,8 @@ export const populateAsnData = async () => {
 					ASNS.set(normCasing.toLowerCase(), normCasing);
 				}
 			})
-			.on('end', () => resolve(ASNS))
-			.on('error', (err: Error) => reject(err));
+			.on('end', resolve)
+			.on('error', reject);
 	});
 };
 
