@@ -8,6 +8,11 @@ import { isIpBlocked } from './blocked-ip-ranges.js';
 import { getPersistentRedisClient, type RedisClient } from './redis/persistent-client.js';
 import { Probe } from '../probe/types.js';
 
+async function asyncFilter<T> (arr: T[], predicate: (item: T) => Promise<boolean>) {
+	const results = await Promise.all(arr.map(predicate));
+	return arr.filter((_, i) => results[i]);
+}
+
 const getRandomBytes = promisify(randomBytes);
 const logger = scopedLogger('alt-ips');
 
@@ -32,7 +37,7 @@ export type AltIpResBody = {
 };
 
 export class AltIpsClient {
-	ALT_IP_TOKEN_TTL = 30;
+	ALT_IP_TOKEN_TTL = 60;
 
 	constructor (
 		private readonly redis: RedisClient,
@@ -43,8 +48,8 @@ export class AltIpsClient {
 		const bytes = await getRandomBytes(24);
 		const token = bytes.toString('base64');
 		await Promise.all([
-			this.redis.hSet('gp:alt-ip-tokens', ip, token),
-			this.redis.hExpire('gp:alt-ip-tokens', ip, this.ALT_IP_TOKEN_TTL),
+			this.redis.hSet('gp:alt-ip-tokens', token, ip),
+			this.redis.hExpire('gp:alt-ip-tokens', token, this.ALT_IP_TOKEN_TTL),
 		]);
 
 		return token;
@@ -52,18 +57,22 @@ export class AltIpsClient {
 
 	async addAltIps (probe: Probe, ipsToTokens: Record<string, string>) {
 		const validIps = await this.validateTokens(Object.entries(ipsToTokens));
-		await Promise.all(validIps.map(ip => this.addAltIp(probe, ip)));
-		return probe.altIpAddresses;
+		const newAltIpAddresses = await asyncFilter(validIps, ip => this.validateAltIp(probe, ip));
+		probe.altIpAddresses = newAltIpAddresses;
+		return {
+			addedAltIps: probe.altIpAddresses,
+			rejectedAltIps: Object.keys(ipsToTokens).filter(ip => !probe.altIpAddresses.includes(ip)),
+		};
 	}
 
 	private async validateTokens (ipsToTokens: [string, string][]) {
-		const tokens = await this.redis.hmGet('gp:alt-ip-tokens', ipsToTokens.map(([ ip ]) => ip));
+		const ips = await this.redis.hmGet('gp:alt-ip-tokens', ipsToTokens.map(([ , token ]) => token));
 		const ipsWithValidTokens: string[] = [];
 
 		for (let i = 0; i < ipsToTokens.length; i++) {
-			const [ ip, token ] = ipsToTokens[i]!;
+			const [ ip ] = ipsToTokens[i]!;
 
-			if (tokens[i] === token) {
+			if (ips[i] === ip) {
 				ipsWithValidTokens.push(ip);
 			}
 		}
@@ -71,23 +80,21 @@ export class AltIpsClient {
 		return ipsWithValidTokens;
 	}
 
-	/**
-	 * @returns was alt IP added.
-	 */
-	private async addAltIp (probe: Probe, altIp: string): Promise<void> {
+	private async validateAltIp (probe: Probe, altIp: string): Promise<boolean> {
 		const probeInfo = { probeIp: probe.ipAddress, probeLocation: probe.location };
 
 		if (process.env['FAKE_PROBE_IP']) {
-			return;
+			return false;
 		}
 
 		if (isIpPrivate(altIp)) {
 			logger.warn('Alt IP is private.', { altIp, ...probeInfo });
-			return;
+			return false;
 		}
 
 		if (isIpBlocked(altIp)) {
 			logger.warn('Alt IP is blocked.', { altIp, ...probeInfo });
+			return false;
 		}
 
 		try {
@@ -95,12 +102,12 @@ export class AltIpsClient {
 
 			if (!probe.location.allowedCountries.includes(altIpInfo.country)) {
 				logger.warn('Alt IP country doesn\'t match the probe country.', { altIp, altIpInfo, ...probeInfo });
-				return;
+				return false;
 			}
 
 			if (altIpInfo.isAnycast) {
 				logger.warn('Alt IP is anycast.', { altIp, altIpInfo, ...probeInfo });
-				return;
+				return false;
 			}
 		} catch (e) {
 			if (e instanceof ProbeError) {
@@ -109,14 +116,14 @@ export class AltIpsClient {
 				logger.error('Failed to add an alt IP.', e, { altIp, ...probeInfo });
 			}
 
-			return;
+			return false;
 		}
 
-		if (probe.ipAddress === altIp || probe.altIpAddresses.includes(altIp)) {
-			return;
+		if (probe.ipAddress === altIp) {
+			return false;
 		}
 
-		probe.altIpAddresses.push(altIp);
+		return true;
 	}
 }
 
