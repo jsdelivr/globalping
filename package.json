@@ -145,7 +145,8 @@
 		"test:e2e:ipv4": "npm run test:e2e:docker && npm run test:e2e:run -- --grep IPv6 --invert",
 		"test:e2e:ipv6": "npm run test:e2e:docker && npm run test:e2e:run -- --grep IPv6",
 		"test:e2e:docker": "docker build -t globalping-api-e2e . && docker build -t globalping-probe-e2e https://github.com/jsdelivr/globalping-probe.git",
-		"test:e2e:run": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --config .mocharc.e2e.cjs"
+		"test:e2e:run": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --config .mocharc.e2e.cjs",
+		"update:asn-data": "tsx bin/fetch-asn-data.ts"
 	},
 	"lint-staged": {
 		"*.{cjs,js,json,ts}": "eslint --cache --fix"
