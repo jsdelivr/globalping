@@ -23,7 +23,9 @@ describe('Create measurement', () => {
 		({ getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } = await import('../../../utils/server.js'));
 		({ DASH_PROBES_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
 		({ probeOverride } = await import('../../../../src/lib/ws/server.js'));
+		console.time('getTestServer');
 		const app = await getTestServer();
+		console.timeEnd('getTestServer');
 		requestAgent = request(app);
 	});
 

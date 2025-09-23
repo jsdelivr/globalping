@@ -22,20 +22,34 @@ export const createServer = async (): Promise<Server> => {
 	await initMeasurementRedisClient();
 	await initSubscriptionRedisClient();
 
+	console.time('populateMemMalwareList');
 	// Populate memory malware list
 	await populateMemMalwareList();
+	console.timeEnd('populateMemMalwareList');
 	// Populate memory cloud regions list
+	console.time('populateMemCloudIpRangesList');
 	await populateMemCloudIpRangesList();
+	console.timeEnd('populateMemCloudIpRangesList');
 	// Populate memory blocked ip ranges list
+	console.time('populateMemBlockedIpRangesList');
 	await populateMemBlockedIpRangesList();
+	console.timeEnd('populateMemBlockedIpRangesList');
 	// Populate ip whitelist
+	console.time('populateIpWhiteList');
 	await populateIpWhiteList();
+	console.timeEnd('populateIpWhiteList');
 	// Populate cities info
+	console.time('populateCitiesList');
 	await populateCitiesList();
+	console.timeEnd('populateCitiesList');
 	// Populate legal name normalization data.
+	console.time('populateLegalNames');
 	await populateLegalNames();
+	console.timeEnd('populateLegalNames');
 	// Populate ASN normalization data.
+	console.time('populateAsnData');
 	await populateAsnData();
+	console.timeEnd('populateAsnData');
 	// Populate Dashboard override data before using it during initWsServer()
 	await probeOverride.fetchDashboardData();
 	probeOverride.scheduleSync();
