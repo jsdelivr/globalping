@@ -1,10 +1,12 @@
 import { expect } from 'chai';
 import { populateLegalNames } from '../../../../src/lib/geoip/legal-name-normalization.js';
 import { normalizeNetworkNamePublic } from '../../../../src/lib/geoip/utils.js';
+import { populateAsnData } from '../../../../src/lib/geoip/asns.js';
 
 describe('network-name-normalization', () => {
 	before(async () => {
 		await populateLegalNames();
+		await populateAsnData();
 	});
 
 	const cases: Array<{ original: string; expected: string }> = [
@@ -14,7 +16,7 @@ describe('network-name-normalization', () => {
 		{ original: 'KPN B.V.', expected: 'KPN' },
 		{ original: 'Vodafone Libertel B.V.', expected: 'Vodafone Libertel' },
 		{ original: 'SCALEWAY S.A.S.', expected: 'SCALEWAY' },
-		{ original: 'LEASEWEB SINGAPORE PTE. LTD.', expected: 'LEASEWEB' },
+		{ original: 'LEASEWEB SINGAPORE PTE. LTD.', expected: 'LeaseWeb' },
 		{ original: 'Kuroit Limited', expected: 'Kuroit' },
 		{ original: 'O2 Czech Republic, a.s.', expected: 'O2' },
 		{ original: 'Telefonica Germany GmbH & Co.OHG', expected: 'Telefonica' },
@@ -28,7 +30,7 @@ describe('network-name-normalization', () => {
 		{ original: 'Matteo Martelloni trading as DELUXHOST', expected: 'DELUXHOST' },
 
 		// non-ascii
-		{ original: 'TELEFÔNICA BRASIL', expected: 'TELEFONICA' },
+		{ original: 'TELEFÔNICA BRASIL', expected: 'Telefonica' },
 
 		// Already normalized or no legal suffix
 		{ original: 'AkileCloud Network', expected: 'AkileCloud Network' },
@@ -43,7 +45,7 @@ describe('network-name-normalization', () => {
 		{ original: 'Henan Mobile Communications Co. Ltd', expected: 'Henan Mobile Communications' },
 		{ original: 'Web Squad Connect (Pty) Ltd', expected: 'Web Squad Connect' },
 		{ original: 'Web Dadeh Paydar Co (Ltd)', expected: 'Web Dadeh Paydar' },
-		{ original: 'Jinx Co. Limited', expected: 'Jinx' },
+		{ original: 'JINX Co. Limited', expected: 'JINX' },
 
 		{ original: 'DA International Group Ltd.', expected: 'DA International Group' },
 		{ original: 'OKB PROGRESS LLC', expected: 'OKB PROGRESS' },

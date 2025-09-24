@@ -8,6 +8,7 @@ import { populateMemList as populateMemBlockedIpRangesList } from './blocked-ip-
 import { populateMemList as populateIpWhiteList } from './geoip/whitelist.js';
 import { populateCitiesList } from './geoip/city-approximation.js';
 import { populateLegalNames } from './geoip/legal-name-normalization.js';
+import { populateAsnData } from './geoip/asns.js';
 import { reconnectProbes } from './ws/helper/reconnect-probes.js';
 import { initPersistentRedisClient } from './redis/persistent-client.js';
 import { initMeasurementRedisClient } from './redis/measurement-client.js';
@@ -21,18 +22,17 @@ export const createServer = async (): Promise<Server> => {
 	await initMeasurementRedisClient();
 	await initSubscriptionRedisClient();
 
-	// Populate memory malware list
-	await populateMemMalwareList();
-	// Populate memory cloud regions list
-	await populateMemCloudIpRangesList();
-	// Populate memory blocked ip ranges list
-	await populateMemBlockedIpRangesList();
-	// Populate ip whitelist
-	await populateIpWhiteList();
-	// Populate cities info
-	await populateCitiesList();
-	// Populate legal name normalization data.
-	await populateLegalNames();
+	// Populate in-memory lists
+	await Promise.all([
+		populateMemMalwareList(),
+		populateMemCloudIpRangesList(),
+		populateMemBlockedIpRangesList(),
+		populateIpWhiteList(),
+		populateCitiesList(),
+		populateLegalNames(),
+		populateAsnData(),
+	]);
+
 	// Populate Dashboard override data before using it during initWsServer()
 	await probeOverride.fetchDashboardData();
 	probeOverride.scheduleSync();

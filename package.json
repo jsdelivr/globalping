@@ -57,7 +57,7 @@
 	"devDependencies": {
 		"@apideck/portman": "^1.31.1",
 		"@apidevtools/swagger-parser": "^10.1.1",
-		"@martin-kolarik/eslint-config": "^8.0.0",
+		"@martin-kolarik/eslint-config": "^8.0.4",
 		"@redocly/cli": "^1.34.3",
 		"@stoplight/spectral-cli": "^6.15.0",
 		"@tsconfig/strictest": "^2.0.5",
@@ -145,7 +145,8 @@
 		"test:e2e:ipv4": "npm run test:e2e:docker && npm run test:e2e:run -- --grep IPv6 --invert",
 		"test:e2e:ipv6": "npm run test:e2e:docker && npm run test:e2e:run -- --grep IPv6",
 		"test:e2e:docker": "docker build -t globalping-api-e2e . && docker build -t globalping-probe-e2e https://github.com/jsdelivr/globalping-probe.git",
-		"test:e2e:run": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --config .mocharc.e2e.cjs"
+		"test:e2e:run": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --config .mocharc.e2e.cjs",
+		"update:asn-data": "tsx bin/fetch-asn-data.ts"
 	},
 	"lint-staged": {
 		"*.{cjs,js,json,ts}": "eslint --cache --fix"

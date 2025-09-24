@@ -2,6 +2,7 @@ import anyAscii from 'any-ascii';
 import { cities } from './altnames.js';
 import { Tag } from '../../probe/types.js';
 import { normalizeLegalName } from './legal-name-normalization.js';
+import { getAsnName } from './asns.js';
 
 export const normalizeCityNamePublic = (name: string): string => {
 	// We don't add city to the regex as there are valid names like 'Mexico City' or 'Kansas City'
@@ -14,7 +15,7 @@ export const normalizeCityName = (name: string): string => normalizeCityNamePubl
 export const normalizeFromPublicName = (name: string): string => name.toLowerCase();
 
 export const normalizeNetworkNamePublic = (name: string): string => {
-	return normalizeLegalName(anyAscii(name));
+	return getAsnName(normalizeLegalName(anyAscii(name)));
 };
 
 export const normalizeNetworkName = (name: string): string => normalizeNetworkNamePublic(name).toLowerCase();

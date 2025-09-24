@@ -1,6 +1,6 @@
 {
 	"exit": true,
-	"timeout": 10000,
+	"timeout": 12000,
 	"check-leaks": true,
 	"file": [
 		"test/setup.ts"
