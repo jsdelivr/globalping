@@ -1,6 +1,7 @@
 import got from 'got';
 import csvParser from 'csv-parser';
 import { writeFile } from 'node:fs/promises';
+import { pipeline } from 'node:stream/promises';
 import { normalizeLegalName, populateLegalNames } from './legal-name-normalization.js';
 import anyAscii from 'any-ascii';
 import fs from 'fs';
@@ -39,42 +40,41 @@ function letterStats (s: string) {
 }
 
 async function fetchDescriptions (): Promise<Set<string>> {
-	return new Promise((resolve, reject) => {
-		const result = new Set<string>();
-		const stream = got.stream(SOURCE_URL);
+	const result = new Set<string>();
 
-		stream
-			.pipe(csvParser({
-				mapHeaders: ({ header }) => header.toLowerCase(),
-			}))
-			.on('data', (row: Record<string, string>) => {
+	return pipeline(
+		got.stream(SOURCE_URL),
+		csvParser({
+			mapHeaders: ({ header }) => header.toLowerCase(),
+		}),
+		async function *(source: AsyncIterable<Record<string, string>>) {
+			for await (const row of source) {
 				const desc = (row['description'] || '').trim();
 
 				if (desc) {
 					result.add(desc);
 				}
-			})
-			.on('end', () => resolve(result))
-			.on('error', reject);
-	});
+			}
+
+			return result;
+		},
+	).then(() => result);
 }
 
 export const populateAsnData = async () => {
-	return new Promise<Map<string, string>>((resolve, reject) => {
-		const stream = fs.createReadStream(`data/${FILENAME}`);
-
-		stream
-			.pipe(csvParser())
-			.on('data', (row: Record<string, string>) => {
+	return pipeline(
+		fs.createReadStream(`data/${FILENAME}`),
+		csvParser(),
+		async function *(source: AsyncIterable<Record<string, string>>) {
+			for await (const row of source) {
 				const normCasing = row['Normalized Casing'];
 
 				if (normCasing) {
 					ASNS.set(normCasing.toLowerCase(), normCasing);
 				}
-			})
-			.on('end', resolve)
-			.on('error', reject);
-	});
+			}
+		},
+	);
 };
 
 export const getAsnName = (name: string): string => {
