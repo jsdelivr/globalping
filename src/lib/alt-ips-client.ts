@@ -16,26 +16,6 @@ async function asyncFilter<T> (arr: T[], predicate: (item: T) => Promise<boolean
 const getRandomBytes = promisify(randomBytes);
 const logger = scopedLogger('alt-ips');
 
-export const ALT_IP_REQ_MESSAGE_TYPE = 'alt-ip:req';
-export const ALT_IP_RES_MESSAGE_TYPE = 'alt-ip:res';
-
-export type AltIpReqBody = {
-	socketId: string;
-	ip: string;
-	token: string;
-};
-
-export type AltIpResBody = {
-	result: 'success';
-	reqMessageId: string;
-} | {
-	result: 'probe-not-found';
-	reqMessageId: string;
-} | {
-	result: 'invalid-alt-ip';
-	reqMessageId: string;
-};
-
 export class AltIpsClient {
 	ALT_IP_TOKEN_TTL = 60;
 
