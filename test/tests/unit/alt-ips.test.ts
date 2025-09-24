@@ -1,391 +1,180 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
-import createHttpError from 'http-errors';
-import { ALT_IP_REQ_MESSAGE_TYPE, ALT_IP_RES_MESSAGE_TYPE, AltIps } from '../../../src/lib/alt-ips-client.js';
-import { type ServerSocket } from '../../../src/lib/ws/server.js';
+import { AltIpsClient } from '../../../src/lib/alt-ips-client.js';
+import type { Probe } from '../../../src/probe/types.js';
 
-describe('AltIps', () => {
+describe('AltIpsClient', () => {
 	const sandbox = sinon.createSandbox();
 
-	let socket: ServerSocket;
-	let syncedProbeList: any;
+	let probe: Probe;
+	let redis: any;
 	let geoIpClient: any;
-	let altIps: AltIps;
+	let altIps: AltIpsClient;
 
 	beforeEach(() => {
-		socket = {
-			id: 'socketId1',
-			data: {
-				probe: {
-					client: 'socketId1',
-					ipAddress: '1.1.1.1',
-					altIpAddresses: [],
-					location: {
-						country: 'IT',
-						allowedCountries: [ 'IT', 'FR' ],
-					},
-				},
+		probe = {
+			client: 'socketId1',
+			ipAddress: '1.1.1.1',
+			altIpAddresses: [],
+			location: {
+				country: 'IT',
+				allowedCountries: [ 'IT', 'FR' ],
 			},
-		} as unknown as ServerSocket;
+		} as unknown as Probe;
 
-		syncedProbeList = {
-			subscribeToNodeMessages: sandbox.stub(),
-			fetchProbes: sandbox.stub().resolves([ socket.data.probe ]),
-			getProbeByIp: sandbox.stub(),
-			getNodeId: sandbox.stub().returns('nodeId1'),
-			publishToNode: sandbox.stub().resolves('messageId1'),
-			getNodeIdBySocketId: sandbox.stub().callsFake((socketId: string) => {
-				return socketId === 'socketId1' ? 'nodeId1' : null;
-			}),
+
+		redis = {
+			hSet: sandbox.stub().resolves(),
+			hExpire: sandbox.stub().resolves(),
+			hmGet: sandbox.stub(),
 		};
 
 		geoIpClient = {
 			lookup: sandbox.stub().resolves({ country: 'IT', isAnycast: false }),
 		};
 
-		altIps = new AltIps(syncedProbeList, geoIpClient);
+		altIps = new AltIpsClient(redis, geoIpClient);
 	});
 
 	afterEach(async () => {
 		sandbox.reset();
 	});
 
-	it('should add alt ip for local probe', async () => {
-		const token = await altIps.generateToken(socket);
-		await altIps.validateTokenFromHttp({
-			socketId: 'socketId1',
-			ip: '2.2.2.2',
-			token,
-		});
+	it('should generate token and store it in redis', async () => {
+		const token = await altIps.generateToken('2.2.2.2');
 
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
+		expect(token).to.be.a('string');
+		expect(redis.hSet.calledOnce).to.be.true;
+		expect(redis.hExpire.calledOnce).to.be.true;
+		expect(redis.hSet.args[0]).to.deep.equal([ 'gp:alt-ip-tokens', token, '2.2.2.2' ]);
+		expect(redis.hExpire.args[0]).to.deep.equal([ 'gp:alt-ip-tokens', token, 60 ]);
 	});
 
-	it('should do nothing if alt ip is already added', async () => {
-		syncedProbeList.getProbeByIp.returns(socket.data.probe);
+	it('should add alt ip with valid token', async () => {
+		const token = 'validToken';
+		redis.hmGet.resolves([ '2.2.2.2' ]);
 
-		const token = await altIps.generateToken(socket);
-		await altIps.validateTokenFromHttp({
-			socketId: 'socketId1',
-			ip: '2.2.2.2',
-			token,
-		});
+		const result = await altIps.addAltIps(probe, { '2.2.2.2': token });
 
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
+		expect(probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
+		expect(redis.hmGet.args[0]).to.deep.equal([ 'gp:alt-ip-tokens', [ token ] ]);
+		expect(result.addedAltIps).to.deep.equal([ '2.2.2.2' ]);
+		expect(result.rejectedAltIps).to.deep.equal([]);
 	});
 
-	it('should keep only one alt ip if same are added in parallel', async () => {
-		const token = await altIps.generateToken(socket);
-		await Promise.all([
-			altIps.validateTokenFromHttp({
-				socketId: 'socketId1',
-				ip: '2.2.2.2',
-				token,
-			}),
-			altIps.validateTokenFromHttp({
-				socketId: 'socketId1',
-				ip: '2.2.2.2',
-				token,
-			}),
-			altIps.validateTokenFromHttp({
-				socketId: 'socketId1',
-				ip: '2.2.2.2',
-				token,
-			}),
-		]);
+	it('should reject alt ip with invalid token', async () => {
+		const token = 'invalidToken';
+		redis.hmGet.resolves([ null ]);
 
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
+		const result = await altIps.addAltIps(probe, { '2.2.2.2': token });
+
+		expect(probe.altIpAddresses).to.deep.equal([]);
+		expect(result.addedAltIps).to.deep.equal([]);
+		expect(result.rejectedAltIps).to.deep.equal([ '2.2.2.2' ]);
 	});
 
-	it('should throw for duplicated connected ip', async () => {
-		syncedProbeList.getNodeIdBySocketId.returns(null);
+	it('should reject alt ip with token for different ip', async () => {
+		const token = 'validToken';
+		redis.hmGet.resolves([ '2.2.2.2' ]);
 
-		const token = await altIps.generateToken(socket);
-		const err = await altIps.validateTokenFromHttp({
-			socketId: 'socketId1',
-			ip: '2.2.2.2',
-			token,
-		}).catch(err => err);
+		const result = await altIps.addAltIps(probe, { '3.3.3.3': token });
 
-		expect(err).to.deep.equal(createHttpError(400, 'Unable to find a probe by specified socket id.', { type: 'probe_not_found' }));
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
+		expect(probe.altIpAddresses).to.deep.equal([]);
+		expect(result.addedAltIps).to.deep.equal([]);
+		expect(result.rejectedAltIps).to.deep.equal([ '3.3.3.3' ]);
 	});
 
-	it('should throw if probe reconnected and have another socket id', async () => {
-		syncedProbeList.getProbeByIp.returns({});
+	it('should reject alt ip that matches probe ip', async () => {
+		const token = 'validToken';
+		redis.hmGet.resolves([ '1.1.1.1' ]);
 
-		const token = await altIps.generateToken(socket);
-		const err = await altIps.validateTokenFromHttp({
-			socketId: 'socketId1',
-			ip: '2.2.2.2',
-			token,
-		}).catch(err => err);
+		const result = await altIps.addAltIps(probe, { '1.1.1.1': token });
 
-		expect(syncedProbeList.getProbeByIp.args[0]).to.deep.equal([ '2.2.2.2' ]);
-		expect(err).to.deep.equal(createHttpError(400, 'Another probe with this ip is already connected.', { type: 'alt_ip_duplication' }));
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
+		expect(probe.altIpAddresses).to.deep.equal([]);
+		expect(result.addedAltIps).to.deep.equal([]);
+		expect(result.rejectedAltIps).to.deep.equal([ '1.1.1.1' ]);
 	});
 
-	it('should throw for invalid token for local probe', async () => {
-		const err = await altIps.validateTokenFromHttp({
-			socketId: 'socketId1',
-			ip: '2.2.2.2',
-			token: 'invalidToken',
-		}).catch(err => err);
+	it('should reject private alt ip', async () => {
+		const token = 'validToken';
+		redis.hmGet.resolves([ '192.168.1.1' ]);
 
-		expect(err).to.deep.equal(createHttpError(400, 'Token value is wrong.', { type: 'wrong_token' }));
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
+		const result = await altIps.addAltIps(probe, { '192.168.1.1': token });
+
+		expect(probe.altIpAddresses).to.deep.equal([]);
+		expect(result.addedAltIps).to.deep.equal([]);
+		expect(result.rejectedAltIps).to.deep.equal([ '192.168.1.1' ]);
 	});
 
-	it('should throw for not found probe', async () => {
-		const err = await altIps.validateTokenFromHttp({
-			socketId: 'socketId2',
-			ip: '2.2.2.2',
-			token: 'token2',
-		}).catch(err => err);
+	it('should reject blocked alt ip', async () => {
+		const token = 'validToken';
+		redis.hmGet.resolves([ '172.224.226.1' ]);
 
-		expect(err).to.deep.equal(createHttpError(400, 'Unable to find a probe by specified socket id.', { type: 'probe_not_found' }));
+		const result = await altIps.addAltIps(probe, { '172.224.226.1': token });
+
+		expect(probe.altIpAddresses).to.deep.equal([]);
+		expect(result.addedAltIps).to.deep.equal([]);
+		expect(result.rejectedAltIps).to.deep.equal([ '172.224.226.1' ]);
 	});
 
-	it('should add alt ip for external probe', async () => {
-		syncedProbeList.getNodeIdBySocketId.returns('nodeId2');
-
-		setTimeout(() => {
-			altIps.handleRes({
-				id: 'messageId2',
-				reqNodeId: 'nodeId1',
-				type: ALT_IP_RES_MESSAGE_TYPE,
-				body: {
-					result: 'success',
-					reqMessageId: 'messageId1',
-				},
-			});
-		});
-
-		await altIps.validateTokenFromHttp({
-			socketId: 'socketId2',
-			ip: '2.2.2.2',
-			token: 'token2',
-		});
-
-		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
-			'nodeId2',
-			'alt-ip:req',
-			{ socketId: 'socketId2', ip: '2.2.2.2', token: 'token2' },
-		]);
-	});
-
-	it('should throw for not found remote probe', async () => {
-		syncedProbeList.getNodeIdBySocketId.returns('nodeId2');
-
-		setTimeout(() => {
-			altIps.handleRes({
-				id: 'messageId2',
-				reqNodeId: 'nodeId1',
-				type: ALT_IP_RES_MESSAGE_TYPE,
-				body: {
-					result: 'probe-not-found',
-					reqMessageId: 'messageId1',
-				},
-			});
-		});
-
-		const err = await altIps.validateTokenFromHttp({
-			socketId: 'socketId2',
-			ip: '2.2.2.2',
-			token: 'token2',
-		}).catch(err => err);
-
-		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
-			'nodeId2',
-			'alt-ip:req',
-			{ socketId: 'socketId2', ip: '2.2.2.2', token: 'token2' },
-		]);
-
-		expect(err).to.deep.equal(createHttpError(400, 'Unable to find a probe on the remote node.', { type: 'probe_not_found_on_remote' }));
-	});
-
-	it('should throw if no answer from remote node', async () => {
-		syncedProbeList.getNodeIdBySocketId.returns('nodeId2');
-
-		setTimeout(async () => {
-			clock.tickAsync(25000);
-		});
-
-		const err = await altIps.validateTokenFromHttp({
-			socketId: 'socketId2',
-			ip: '2.2.2.2',
-			token: 'token2',
-		}).catch(err => err);
-
-		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
-			'nodeId2',
-			'alt-ip:req',
-			{ socketId: 'socketId2', ip: '2.2.2.2', token: 'token2' },
-		]);
-
-		expect(err).to.deep.equal(createHttpError(504, 'Node owning the probe failed to handle alt ip in specified timeout.', { type: 'node_response_timeout' }));
-	});
-
-	it('should add alt ip from pub/sub', async () => {
-		const token = await altIps.generateToken(socket);
-		geoIpClient.lookup.resolves({ country: 'IT', isAnycast: false });
-
-		await altIps.validateTokenFromPubSub({
-			id: 'message1',
-			reqNodeId: 'node1',
-			type: ALT_IP_REQ_MESSAGE_TYPE,
-			body: {
-				socketId: 'socketId2',
-				ip: '2.2.2.2',
-				token,
-			},
-		});
-
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
-
-		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
-			'node1',
-			'alt-ip:res',
-			{ result: 'success', reqMessageId: 'message1' },
-		]);
-	});
-
-	it('should add alt ip if it is in the allowed countries list', async () => {
-		const token = await altIps.generateToken(socket);
-		geoIpClient.lookup.resolves({ country: 'FR', isAnycast: false });
-
-		await altIps.validateTokenFromPubSub({
-			id: 'message1',
-			reqNodeId: 'node1',
-			type: ALT_IP_REQ_MESSAGE_TYPE,
-			body: {
-				socketId: 'socketId2',
-				ip: '2.2.2.2',
-				token,
-			},
-		});
-
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
-
-		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
-			'node1',
-			'alt-ip:res',
-			{ result: 'success', reqMessageId: 'message1' },
-		]);
-	});
-
-	it('should throw if local probe not found after pub/sub message', async () => {
-		await altIps.validateTokenFromPubSub({
-			id: 'message1',
-			reqNodeId: 'node1',
-			type: ALT_IP_REQ_MESSAGE_TYPE,
-			body: {
-				socketId: 'socketId2',
-				ip: '2.2.2.2',
-				token: 'token2',
-			},
-		});
-
-		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
-			'node1',
-			'alt-ip:res',
-			{ result: 'probe-not-found', reqMessageId: 'message1' },
-		]);
-	});
-
-	it('should throw if alt ip is anycast', async () => {
-		const token = await altIps.generateToken(socket);
-		geoIpClient.lookup.resolves({ country: 'IT', isAnycast: true });
-
-		await altIps.validateTokenFromPubSub({
-			id: 'message1',
-			reqNodeId: 'node1',
-			type: ALT_IP_REQ_MESSAGE_TYPE,
-			body: {
-				socketId: 'socketId2',
-				ip: '2.2.2.2',
-				token,
-			},
-		});
-
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
-
-		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
-			'node1',
-			'alt-ip:res',
-			{ result: 'invalid-alt-ip', reqMessageId: 'message1' },
-		]);
-	});
-
-	it('should throw if alt ip is blocked', async () => {
-		const token = await altIps.generateToken(socket);
-
-		await altIps.validateTokenFromPubSub({
-			id: 'message1',
-			reqNodeId: 'node1',
-			type: ALT_IP_REQ_MESSAGE_TYPE,
-			body: {
-				socketId: 'socketId2',
-				ip: '172.224.226.1',
-				token,
-			},
-		});
-
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
-
-		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
-			'node1',
-			'alt-ip:res',
-			{ result: 'invalid-alt-ip', reqMessageId: 'message1' },
-		]);
-	});
-
-	it('should throw if alt ip is not in the allowed countries list', async () => {
-		const token = await altIps.generateToken(socket);
+	it('should reject alt ip from different country', async () => {
+		const token = 'validToken';
+		redis.hmGet.resolves([ '2.2.2.2' ]);
 		geoIpClient.lookup.resolves({ country: 'DE', isAnycast: false });
 
-		await altIps.validateTokenFromPubSub({
-			id: 'message1',
-			reqNodeId: 'node1',
-			type: ALT_IP_REQ_MESSAGE_TYPE,
-			body: {
-				socketId: 'socketId2',
-				ip: '2.2.2.2',
-				token,
-			},
-		});
+		const result = await altIps.addAltIps(probe, { '2.2.2.2': token });
 
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
-
-		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
-			'node1',
-			'alt-ip:res',
-			{ result: 'invalid-alt-ip', reqMessageId: 'message1' },
-		]);
+		expect(probe.altIpAddresses).to.deep.equal([]);
+		expect(result.addedAltIps).to.deep.equal([]);
+		expect(result.rejectedAltIps).to.deep.equal([ '2.2.2.2' ]);
 	});
 
-	it('should send response message if geoip throws', async () => {
-		const token = await altIps.generateToken(socket);
+	it('should accept alt ip from allowed country', async () => {
+		const token = 'validToken';
+		redis.hmGet.resolves([ '2.2.2.2' ]);
+		geoIpClient.lookup.resolves({ country: 'FR', isAnycast: false });
+
+		const result = await altIps.addAltIps(probe, { '2.2.2.2': token });
+
+		expect(probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
+		expect(result.addedAltIps).to.deep.equal([ '2.2.2.2' ]);
+		expect(result.rejectedAltIps).to.deep.equal([]);
+	});
+
+	it('should reject anycast alt ip', async () => {
+		const token = 'validToken';
+		redis.hmGet.resolves([ '2.2.2.2' ]);
+		geoIpClient.lookup.resolves({ country: 'IT', isAnycast: true });
+
+		const result = await altIps.addAltIps(probe, { '2.2.2.2': token });
+
+		expect(probe.altIpAddresses).to.deep.equal([]);
+		expect(result.addedAltIps).to.deep.equal([]);
+		expect(result.rejectedAltIps).to.deep.equal([ '2.2.2.2' ]);
+	});
+
+	it('should handle geoip lookup error', async () => {
+		const token = 'validToken';
+		redis.hmGet.resolves([ '2.2.2.2' ]);
 		geoIpClient.lookup.rejects(new Error('geoip error'));
 
-		await altIps.validateTokenFromPubSub({
-			id: 'message1',
-			reqNodeId: 'node1',
-			type: ALT_IP_REQ_MESSAGE_TYPE,
-			body: {
-				socketId: 'socketId2',
-				ip: '2.2.2.2',
-				token,
-			},
-		});
+		const result = await altIps.addAltIps(probe, { '2.2.2.2': token });
 
-		expect(socket.data.probe.altIpAddresses).to.deep.equal([]);
+		expect(probe.altIpAddresses).to.deep.equal([]);
+		expect(result.addedAltIps).to.deep.equal([]);
+		expect(result.rejectedAltIps).to.deep.equal([ '2.2.2.2' ]);
+	});
 
-		expect(syncedProbeList.publishToNode.args[0]).to.deep.equal([
-			'node1',
-			'alt-ip:res',
-			{ result: 'invalid-alt-ip', reqMessageId: 'message1' },
-		]);
+	it('should handle multiple alt ips with mixed validity', async () => {
+		const tokens = { '2.2.2.2': 'validToken1', '3.3.3.3': 'validToken2', '4.4.4.4': 'invalidToken' };
+		redis.hmGet.resolves([ '2.2.2.2', '3.3.3.3', null ]);
+		geoIpClient.lookup.onCall(0).resolves({ country: 'IT', isAnycast: false });
+		geoIpClient.lookup.onCall(1).resolves({ country: 'DE', isAnycast: false });
+
+		const result = await altIps.addAltIps(probe, tokens);
+
+		expect(probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
+		expect(result.addedAltIps).to.deep.equal([ '2.2.2.2' ]);
+		expect(result.rejectedAltIps).to.deep.equal([ '3.3.3.3', '4.4.4.4' ]);
 	});
 });
