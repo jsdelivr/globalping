@@ -46,6 +46,10 @@ export class AltIpsClient {
 	}
 
 	private async validateTokens (ipsToTokens: [string, string][]) {
+		if (ipsToTokens.length === 0) {
+			return [];
+		}
+
 		const ips = await this.redis.hmGet('gp:alt-ip-tokens', ipsToTokens.map(([ , token ]) => token));
 		const ipsWithValidTokens: string[] = [];
 

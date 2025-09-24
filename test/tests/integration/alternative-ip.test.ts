@@ -11,6 +11,7 @@ describe('Alternative IPs', () => {
 	let requestAgent: Agent;
 
 	const sandbox = sinon.createSandbox();
+	const ack = sandbox.stub();
 
 	before(async () => {
 		app = await getTestServer();
@@ -20,6 +21,7 @@ describe('Alternative IPs', () => {
 	beforeEach(async () => {
 		sandbox.resetHistory();
 		await deleteFakeProbes();
+		ack.reset();
 	});
 
 	after(async () => {
@@ -40,10 +42,9 @@ describe('Alternative IPs', () => {
 
 		nockGeoIpProviders();
 
-		const cb = sandbox.stub();
 		probe.emit('probe:alt-ips', {
 			[ip]: token,
-		}, cb);
+		}, ack);
 
 		await waitForProbesUpdate();
 
@@ -54,11 +55,11 @@ describe('Alternative IPs', () => {
 				expect(response.body[0].altIpAddresses.length).to.equal(1);
 			});
 
-		expect(cb.callCount).to.equal(1);
-		expect(cb.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedAltIps: [] });
+		expect(ack.callCount).to.equal(1);
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedAltIps: [] });
 	});
 
-	it('should not add duplicate alternative ips to the probe', async () => {
+	it('should be able to remove alt ips from the probe', async () => {
 		nockGeoIpProviders();
 		const probe = await addFakeProbe();
 
@@ -71,17 +72,9 @@ describe('Alternative IPs', () => {
 
 		nockGeoIpProviders();
 
-		const cb1 = sandbox.stub();
 		probe.emit('probe:alt-ips', {
 			[ip]: token,
-		}, cb1);
-
-		nockGeoIpProviders();
-
-		const cb2 = sandbox.stub();
-		probe.emit('probe:alt-ips', {
-			[ip]: token,
-		}, cb2);
+		}, ack);
 
 		await waitForProbesUpdate();
 
@@ -92,22 +85,7 @@ describe('Alternative IPs', () => {
 				expect(response.body[0].altIpAddresses.length).to.equal(1);
 			});
 
-		expect(cb1.callCount).to.equal(1);
-		expect(cb1.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedAltIps: [] });
-		expect(cb2.callCount).to.equal(1);
-		expect(cb2.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedAltIps: [] });
-	});
-
-	it('should reject alt ip with invalid token', async () => {
-		nockGeoIpProviders();
-		const probe = await addFakeProbe();
-
-		probe.emit('probe:status:update', 'ready');
-
-		const cb = sandbox.stub();
-		probe.emit('probe:alt-ips', {
-			'89.64.80.78': 'invalid-token-123456789012345678',
-		}, cb);
+		probe.emit('probe:alt-ips', {}, ack);
 
 		await waitForProbesUpdate();
 
@@ -118,8 +96,32 @@ describe('Alternative IPs', () => {
 				expect(response.body[0].altIpAddresses.length).to.equal(0);
 			});
 
-		expect(cb.callCount).to.equal(1);
-		expect(cb.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedAltIps: [ '89.64.80.78' ] });
+		expect(ack.callCount).to.equal(2);
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedAltIps: [] });
+		expect(ack.args[1]![0]).to.deep.equal({ addedAltIps: [], rejectedAltIps: [] });
+	});
+
+	it('should reject alt ip with invalid token', async () => {
+		nockGeoIpProviders();
+		const probe = await addFakeProbe();
+
+		probe.emit('probe:status:update', 'ready');
+
+		probe.emit('probe:alt-ips', {
+			'89.64.80.78': 'invalid-token-123456789012345678',
+		}, ack);
+
+		await waitForProbesUpdate();
+
+		await requestAgent.get('/v1/probes?adminkey=admin')
+			.send()
+			.expect(200)
+			.expect((response) => {
+				expect(response.body[0].altIpAddresses.length).to.equal(0);
+			});
+
+		expect(ack.callCount).to.equal(1);
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedAltIps: [ '89.64.80.78' ] });
 	});
 
 	it('should reject alt ip with token for different ip', async () => {
@@ -135,10 +137,9 @@ describe('Alternative IPs', () => {
 
 		nockGeoIpProviders();
 
-		const cb = sandbox.stub();
 		probe.emit('probe:alt-ips', {
 			'1.2.3.4': token,
-		}, cb);
+		}, ack);
 
 		await waitForProbesUpdate();
 
@@ -149,7 +150,7 @@ describe('Alternative IPs', () => {
 				expect(response.body[0].altIpAddresses.length).to.equal(0);
 			});
 
-		expect(cb.callCount).to.equal(1);
-		expect(cb.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedAltIps: [ '1.2.3.4' ] });
+		expect(ack.callCount).to.equal(1);
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedAltIps: [ '1.2.3.4' ] });
 	});
 });
