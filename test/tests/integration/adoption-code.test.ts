@@ -26,14 +26,11 @@ describe('Adoption code', () => {
 
 		// Add alt IP to the probe.
 		nockGeoIpProviders();
-		// const { token, socketId } = altIpTokenStub.args[0]![0];
 		const { body: { ip, token } } = await requestAgent.post('/v1/alternative-ip')
 			.set('X-Forwarded-For', '97.247.234.249')
 			.send();
 
-		probe.emit('probe:alt-ips', {
-			[ip]: token,
-		});
+		probe.emit('probe:alt-ips', [ [ ip, token ] ]);
 
 		// Wait until alt IP is synced in synced-probe-list.ts.
 		await getProbeByIp('97.247.234.249', { allowStale: false });

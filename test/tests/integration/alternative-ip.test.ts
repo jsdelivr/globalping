@@ -42,9 +42,7 @@ describe('Alternative IPs', () => {
 
 		nockGeoIpProviders();
 
-		probe.emit('probe:alt-ips', {
-			[ip]: token,
-		}, ack);
+		probe.emit('probe:alt-ips', [ [ ip, token ] ], ack);
 
 		await waitForProbesUpdate();
 
@@ -56,7 +54,7 @@ describe('Alternative IPs', () => {
 			});
 
 		expect(ack.callCount).to.equal(1);
-		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedAltIps: [] });
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedIpsToResons: {} });
 	});
 
 	it('should be able to remove alt ips from the probe', async () => {
@@ -72,9 +70,7 @@ describe('Alternative IPs', () => {
 
 		nockGeoIpProviders();
 
-		probe.emit('probe:alt-ips', {
-			[ip]: token,
-		}, ack);
+		probe.emit('probe:alt-ips', [ [ ip, token ] ], ack);
 
 		await waitForProbesUpdate();
 
@@ -85,7 +81,7 @@ describe('Alternative IPs', () => {
 				expect(response.body[0].altIpAddresses.length).to.equal(1);
 			});
 
-		probe.emit('probe:alt-ips', {}, ack);
+		probe.emit('probe:alt-ips', [], ack);
 
 		await waitForProbesUpdate();
 
@@ -97,8 +93,8 @@ describe('Alternative IPs', () => {
 			});
 
 		expect(ack.callCount).to.equal(2);
-		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedAltIps: [] });
-		expect(ack.args[1]![0]).to.deep.equal({ addedAltIps: [], rejectedAltIps: [] });
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedIpsToResons: {} });
+		expect(ack.args[1]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToResons: {} });
 	});
 
 	it('should reject alt ip with invalid token', async () => {
@@ -107,9 +103,7 @@ describe('Alternative IPs', () => {
 
 		probe.emit('probe:status:update', 'ready');
 
-		probe.emit('probe:alt-ips', {
-			'89.64.80.78': 'invalid-token-123456789012345678',
-		}, ack);
+		probe.emit('probe:alt-ips', [ [ '89.64.80.78', 'invalid-token-123456789012345678' ] ], ack);
 
 		await waitForProbesUpdate();
 
@@ -121,7 +115,7 @@ describe('Alternative IPs', () => {
 			});
 
 		expect(ack.callCount).to.equal(1);
-		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedAltIps: [ '89.64.80.78' ] });
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToResons: { '89.64.80.78': 'Invalid alt IP token.' } });
 	});
 
 	it('should reject alt ip with token for different ip', async () => {
@@ -137,9 +131,7 @@ describe('Alternative IPs', () => {
 
 		nockGeoIpProviders();
 
-		probe.emit('probe:alt-ips', {
-			'1.2.3.4': token,
-		}, ack);
+		probe.emit('probe:alt-ips', [ [ '1.2.3.4', token ] ], ack);
 
 		await waitForProbesUpdate();
 
@@ -151,6 +143,6 @@ describe('Alternative IPs', () => {
 			});
 
 		expect(ack.callCount).to.equal(1);
-		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedAltIps: [ '1.2.3.4' ] });
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToResons: { '1.2.3.4': 'Invalid alt IP token.' } });
 	});
 });

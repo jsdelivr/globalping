@@ -57,7 +57,7 @@ export class AltIpsClient {
 			} else {
 				tokenErrors[ip] = 'Invalid alt IP token.';
 				const probeInfo = { probeIp: probe.ipAddress, probeLocation: probe.location };
-				logger.warn('Invalid alt IP token was found.', { ipToToken: ipsToTokens[i]!, ...probeInfo });
+				logger.warn('Invalid alt IP token.', { ipToToken: ipsToTokens[i]!, ...probeInfo });
 			}
 		}
 

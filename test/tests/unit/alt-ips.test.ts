@@ -54,67 +54,67 @@ describe('AltIpsClient', () => {
 		const token = 'validToken';
 		redis.hmGet.resolves([ '2.2.2.2' ]);
 
-		const result = await altIps.addAltIps(probe, { '2.2.2.2': token });
+		const result = await altIps.addAltIps(probe, [ [ '2.2.2.2', token ] ]);
 
 		expect(probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
 		expect(redis.hmGet.args[0]).to.deep.equal([ 'gp:alt-ip-tokens', [ token ] ]);
 		expect(result.addedAltIps).to.deep.equal([ '2.2.2.2' ]);
-		expect(result.rejectedAltIps).to.deep.equal([]);
+		expect(result.rejectedIpsToResons).to.deep.equal({});
 	});
 
 	it('should reject alt ip with invalid token', async () => {
 		const token = 'invalidToken';
 		redis.hmGet.resolves([ null ]);
 
-		const result = await altIps.addAltIps(probe, { '2.2.2.2': token });
+		const result = await altIps.addAltIps(probe, [ [ '2.2.2.2', token ] ]);
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedAltIps).to.deep.equal([ '2.2.2.2' ]);
+		expect(result.rejectedIpsToResons).to.deep.equal({ '2.2.2.2': 'Invalid alt IP token.' });
 	});
 
 	it('should reject alt ip with token for different ip', async () => {
 		const token = 'validToken';
 		redis.hmGet.resolves([ '2.2.2.2' ]);
 
-		const result = await altIps.addAltIps(probe, { '3.3.3.3': token });
+		const result = await altIps.addAltIps(probe, [ [ '3.3.3.3', token ] ]);
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedAltIps).to.deep.equal([ '3.3.3.3' ]);
+		expect(result.rejectedIpsToResons).to.deep.equal({ '3.3.3.3': 'Invalid alt IP token.' });
 	});
 
 	it('should reject alt ip that matches probe ip', async () => {
 		const token = 'validToken';
 		redis.hmGet.resolves([ '1.1.1.1' ]);
 
-		const result = await altIps.addAltIps(probe, { '1.1.1.1': token });
+		const result = await altIps.addAltIps(probe, [ [ '1.1.1.1', token ] ]);
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedAltIps).to.deep.equal([ '1.1.1.1' ]);
+		expect(result.rejectedIpsToResons).to.deep.equal({ '1.1.1.1': 'Alt IP is the same as the probe IP.' });
 	});
 
 	it('should reject private alt ip', async () => {
 		const token = 'validToken';
 		redis.hmGet.resolves([ '192.168.1.1' ]);
 
-		const result = await altIps.addAltIps(probe, { '192.168.1.1': token });
+		const result = await altIps.addAltIps(probe, [ [ '192.168.1.1', token ] ]);
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedAltIps).to.deep.equal([ '192.168.1.1' ]);
+		expect(result.rejectedIpsToResons).to.deep.equal({ '192.168.1.1': 'Alt IP is private.' });
 	});
 
 	it('should reject blocked alt ip', async () => {
 		const token = 'validToken';
 		redis.hmGet.resolves([ '172.224.226.1' ]);
 
-		const result = await altIps.addAltIps(probe, { '172.224.226.1': token });
+		const result = await altIps.addAltIps(probe, [ [ '172.224.226.1', token ] ]);
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedAltIps).to.deep.equal([ '172.224.226.1' ]);
+		expect(result.rejectedIpsToResons).to.deep.equal({ '172.224.226.1': 'Alt IP is blocked.' });
 	});
 
 	it('should reject alt ip from different country', async () => {
@@ -122,11 +122,11 @@ describe('AltIpsClient', () => {
 		redis.hmGet.resolves([ '2.2.2.2' ]);
 		geoIpClient.lookup.resolves({ country: 'DE', isAnycast: false });
 
-		const result = await altIps.addAltIps(probe, { '2.2.2.2': token });
+		const result = await altIps.addAltIps(probe, [ [ '2.2.2.2', token ] ]);
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedAltIps).to.deep.equal([ '2.2.2.2' ]);
+		expect(result.rejectedIpsToResons).to.deep.equal({ '2.2.2.2': 'Alt IP country doesn\'t match the probe country.' });
 	});
 
 	it('should accept alt ip from allowed country', async () => {
@@ -134,11 +134,11 @@ describe('AltIpsClient', () => {
 		redis.hmGet.resolves([ '2.2.2.2' ]);
 		geoIpClient.lookup.resolves({ country: 'FR', isAnycast: false });
 
-		const result = await altIps.addAltIps(probe, { '2.2.2.2': token });
+		const result = await altIps.addAltIps(probe, [ [ '2.2.2.2', token ] ]);
 
 		expect(probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
 		expect(result.addedAltIps).to.deep.equal([ '2.2.2.2' ]);
-		expect(result.rejectedAltIps).to.deep.equal([]);
+		expect(result.rejectedIpsToResons).to.deep.equal({});
 	});
 
 	it('should reject anycast alt ip', async () => {
@@ -146,11 +146,11 @@ describe('AltIpsClient', () => {
 		redis.hmGet.resolves([ '2.2.2.2' ]);
 		geoIpClient.lookup.resolves({ country: 'IT', isAnycast: true });
 
-		const result = await altIps.addAltIps(probe, { '2.2.2.2': token });
+		const result = await altIps.addAltIps(probe, [ [ '2.2.2.2', token ] ]);
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedAltIps).to.deep.equal([ '2.2.2.2' ]);
+		expect(result.rejectedIpsToResons).to.deep.equal({ '2.2.2.2': 'Alt IP is anycast.' });
 	});
 
 	it('should handle geoip lookup error', async () => {
@@ -158,15 +158,15 @@ describe('AltIpsClient', () => {
 		redis.hmGet.resolves([ '2.2.2.2' ]);
 		geoIpClient.lookup.rejects(new Error('geoip error'));
 
-		const result = await altIps.addAltIps(probe, { '2.2.2.2': token });
+		const result = await altIps.addAltIps(probe, [ [ '2.2.2.2', token ] ]);
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedAltIps).to.deep.equal([ '2.2.2.2' ]);
+		expect(result.rejectedIpsToResons).to.deep.equal({ '2.2.2.2': 'Failed to add an alt IP.' });
 	});
 
 	it('should handle multiple alt ips with mixed validity', async () => {
-		const tokens = { '2.2.2.2': 'validToken1', '3.3.3.3': 'validToken2', '4.4.4.4': 'invalidToken' };
+		const tokens: [string, string][] = [ [ '2.2.2.2', 'validToken1' ], [ '3.3.3.3', 'validToken2' ], [ '4.4.4.4', 'invalidToken' ] ];
 		redis.hmGet.resolves([ '2.2.2.2', '3.3.3.3', null ]);
 		geoIpClient.lookup.onCall(0).resolves({ country: 'IT', isAnycast: false });
 		geoIpClient.lookup.onCall(1).resolves({ country: 'DE', isAnycast: false });
@@ -175,6 +175,10 @@ describe('AltIpsClient', () => {
 
 		expect(probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
 		expect(result.addedAltIps).to.deep.equal([ '2.2.2.2' ]);
-		expect(result.rejectedAltIps).to.deep.equal([ '3.3.3.3', '4.4.4.4' ]);
+
+		expect(result.rejectedIpsToResons).to.deep.equal({
+			'4.4.4.4': 'Invalid alt IP token.',
+			'3.3.3.3': 'Alt IP country doesn\'t match the probe country.',
+		});
 	});
 });
