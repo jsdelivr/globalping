@@ -3,7 +3,6 @@ import createHttpError from 'http-errors';
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible';
 import { getAltIpsClient } from '../../lib/alt-ips-client.js';
 import type { ExtendedContext } from '../../types.js';
-import { getIdFromRequest } from '../../lib/rate-limiter/get-id-from-request.js';
 
 export const rateLimiter = new RateLimiterMemory({
 	points: 100,
@@ -11,10 +10,10 @@ export const rateLimiter = new RateLimiterMemory({
 });
 
 export const checkRateLimit = async (ctx: ExtendedContext) => {
-	const clientId = getIdFromRequest(ctx.request);
+	const ip = ctx.request.ip;
 
 	try {
-		await rateLimiter.consume(clientId);
+		await rateLimiter.consume(ip);
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
 			throw createHttpError(429, `Too many requests.`, { type: 'too_many_requests' });
