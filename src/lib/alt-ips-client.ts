@@ -36,30 +36,35 @@ export class AltIpsClient {
 	}
 
 	async addAltIps (probe: Probe, ipsToTokens: Record<string, string>) {
-		const validIps = await this.validateTokens(Object.entries(ipsToTokens));
-		const newAltIpAddresses = await asyncFilter(validIps, ip => this.validateAltIp(probe, ip));
-		probe.altIpAddresses = newAltIpAddresses;
+		const ipsWithValidTokens = await this.validateTokens(Object.entries(ipsToTokens), probe);
+		const altIpAddresses = await asyncFilter(ipsWithValidTokens, ip => this.validateAltIp(probe, ip));
+		probe.altIpAddresses = altIpAddresses;
 		return {
 			addedAltIps: probe.altIpAddresses,
 			rejectedAltIps: Object.keys(ipsToTokens).filter(ip => !probe.altIpAddresses.includes(ip)),
 		};
 	}
 
-	private async validateTokens (ipsToTokens: [string, string][]) {
+	private async validateTokens (ipsToTokens: [string, string][], probe: Probe) {
 		if (ipsToTokens.length === 0) {
 			return [];
 		}
 
 		const ips = await this.redis.hmGet('gp:alt-ip-tokens', ipsToTokens.map(([ , token ]) => token));
 		const ipsWithValidTokens: string[] = [];
+		const invalidIpsToTokens: [string, string][] = [];
 
 		for (let i = 0; i < ipsToTokens.length; i++) {
 			const [ ip ] = ipsToTokens[i]!;
 
 			if (ips[i] === ip) {
 				ipsWithValidTokens.push(ip);
+			} else {
+				invalidIpsToTokens.push(ipsToTokens[i]!);
 			}
 		}
+
+		invalidIpsToTokens.length && logger.warn('Invalid alt IP tokens were found.', { probe, invalidIpsToTokens });
 
 		return ipsWithValidTokens;
 	}
