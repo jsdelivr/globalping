@@ -166,8 +166,8 @@ describe('AltIpsClient', () => {
 	});
 
 	it('should handle multiple alt ips with mixed validity', async () => {
-		const tokens: [string, string][] = [ [ '2.2.2.2', 'validToken1' ], [ '3.3.3.3', 'validToken2' ], [ '4.4.4.4', 'invalidToken' ] ];
-		redis.hmGet.resolves([ '2.2.2.2', '3.3.3.3', null ]);
+		const tokens: [string, string][] = [ [ '2.2.2.2', 'validToken1' ], [ '2.2.2.2', 'validToken2' ], [ '3.3.3.3', 'validToken3' ], [ '4.4.4.4', 'invalidToken' ] ];
+		redis.hmGet.resolves([ '2.2.2.2', '2.2.2.2', '3.3.3.3', null ]);
 		geoIpClient.lookup.onCall(0).resolves({ country: 'IT', isAnycast: false });
 		geoIpClient.lookup.onCall(1).resolves({ country: 'DE', isAnycast: false });
 

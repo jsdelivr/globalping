@@ -1,5 +1,6 @@
 import { promisify } from 'node:util';
 import { randomBytes } from 'node:crypto';
+import _ from 'lodash';
 import { scopedLogger } from './logger.js';
 import GeoIpClient, { getGeoIpClient } from './geoip/client.js';
 import { isIpPrivate } from './private-ip.js';
@@ -61,7 +62,7 @@ export class AltIpsClient {
 			}
 		}
 
-		return { ipsWithValidTokens, tokenErrors };
+		return { ipsWithValidTokens: _.uniq(ipsWithValidTokens), tokenErrors };
 	}
 
 	private async validateIps (ips: string[], probe: Probe) {
