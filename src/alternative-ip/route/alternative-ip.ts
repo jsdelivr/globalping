@@ -5,7 +5,7 @@ import { getAltIpsClient } from '../../lib/alt-ips-client.js';
 import type { ExtendedContext } from '../../types.js';
 
 export const rateLimiter = new RateLimiterMemory({
-	points: 100,
+	points: 20,
 	duration: 60,
 });
 
