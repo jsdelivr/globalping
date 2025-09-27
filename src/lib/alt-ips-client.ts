@@ -23,6 +23,7 @@ export class AltIpsClient {
 	async generateToken (ip: string) {
 		const bytes = await getRandomBytes(24);
 		const token = bytes.toString('base64');
+
 		await Promise.all([
 			this.redis.hSet('gp:alt-ip-tokens', token, ip),
 			this.redis.hExpire('gp:alt-ip-tokens', token, this.ALT_IP_TOKEN_TTL),
@@ -69,6 +70,7 @@ export class AltIpsClient {
 		const altIpAddresses: string[] = [];
 		const ipErrors: Record<string, string> = {};
 		const results = await Promise.all(ips.map(ip => this.validateAltIp(probe, ip)));
+
 		results.forEach((result, i) => {
 			if (result.isValid) {
 				altIpAddresses.push(ips[i]!);
