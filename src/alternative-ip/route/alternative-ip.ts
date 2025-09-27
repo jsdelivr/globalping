@@ -27,7 +27,7 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 	const ip = ctx.request.ip;
 
 	if (!ip) {
-		throw createHttpError(400, 'Unable to get requester ip.', { type: 'no_ip' });
+		throw createHttpError(400, 'Unable to get the requester IP.', { type: 'no_ip' });
 	}
 
 	await checkRateLimit(ctx);

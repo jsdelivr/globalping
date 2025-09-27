@@ -59,7 +59,7 @@ describe('AltIpsClient', () => {
 		expect(probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
 		expect(redis.hmGet.args[0]).to.deep.equal([ 'gp:alt-ip-tokens', [ token ] ]);
 		expect(result.addedAltIps).to.deep.equal([ '2.2.2.2' ]);
-		expect(result.rejectedIpsToResons).to.deep.equal({});
+		expect(result.rejectedIpsToReasons).to.deep.equal({});
 	});
 
 	it('should reject alt ip with invalid token', async () => {
@@ -70,7 +70,7 @@ describe('AltIpsClient', () => {
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedIpsToResons).to.deep.equal({ '2.2.2.2': 'Invalid alt IP token.' });
+		expect(result.rejectedIpsToReasons).to.deep.equal({ '2.2.2.2': 'Invalid alt IP token.' });
 	});
 
 	it('should reject alt ip with token for different ip', async () => {
@@ -81,7 +81,7 @@ describe('AltIpsClient', () => {
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedIpsToResons).to.deep.equal({ '3.3.3.3': 'Invalid alt IP token.' });
+		expect(result.rejectedIpsToReasons).to.deep.equal({ '3.3.3.3': 'Invalid alt IP token.' });
 	});
 
 	it('should reject alt ip that matches probe ip', async () => {
@@ -92,7 +92,7 @@ describe('AltIpsClient', () => {
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedIpsToResons).to.deep.equal({ '1.1.1.1': 'Alt IP is the same as the probe IP.' });
+		expect(result.rejectedIpsToReasons).to.deep.equal({ '1.1.1.1': 'Alt IP is the same as the probe IP.' });
 	});
 
 	it('should reject private alt ip', async () => {
@@ -103,7 +103,7 @@ describe('AltIpsClient', () => {
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedIpsToResons).to.deep.equal({ '192.168.1.1': 'Alt IP is private.' });
+		expect(result.rejectedIpsToReasons).to.deep.equal({ '192.168.1.1': 'Alt IP is private.' });
 	});
 
 	it('should reject blocked alt ip', async () => {
@@ -114,7 +114,7 @@ describe('AltIpsClient', () => {
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedIpsToResons).to.deep.equal({ '172.224.226.1': 'Alt IP is blocked.' });
+		expect(result.rejectedIpsToReasons).to.deep.equal({ '172.224.226.1': 'Alt IP is blocked.' });
 	});
 
 	it('should reject alt ip from different country', async () => {
@@ -126,7 +126,7 @@ describe('AltIpsClient', () => {
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedIpsToResons).to.deep.equal({ '2.2.2.2': 'Alt IP country doesn\'t match the probe country.' });
+		expect(result.rejectedIpsToReasons).to.deep.equal({ '2.2.2.2': 'Alt IP country doesn\'t match the probe country.' });
 	});
 
 	it('should accept alt ip from allowed country', async () => {
@@ -138,7 +138,7 @@ describe('AltIpsClient', () => {
 
 		expect(probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
 		expect(result.addedAltIps).to.deep.equal([ '2.2.2.2' ]);
-		expect(result.rejectedIpsToResons).to.deep.equal({});
+		expect(result.rejectedIpsToReasons).to.deep.equal({});
 	});
 
 	it('should reject anycast alt ip', async () => {
@@ -150,7 +150,7 @@ describe('AltIpsClient', () => {
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedIpsToResons).to.deep.equal({ '2.2.2.2': 'Alt IP is anycast.' });
+		expect(result.rejectedIpsToReasons).to.deep.equal({ '2.2.2.2': 'Alt IP is anycast.' });
 	});
 
 	it('should handle geoip lookup error', async () => {
@@ -162,7 +162,7 @@ describe('AltIpsClient', () => {
 
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
-		expect(result.rejectedIpsToResons).to.deep.equal({ '2.2.2.2': 'Failed to add an alt IP.' });
+		expect(result.rejectedIpsToReasons).to.deep.equal({ '2.2.2.2': 'Failed to add an alt IP.' });
 	});
 
 	it('should handle multiple alt ips with mixed validity', async () => {
@@ -176,7 +176,7 @@ describe('AltIpsClient', () => {
 		expect(probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
 		expect(result.addedAltIps).to.deep.equal([ '2.2.2.2' ]);
 
-		expect(result.rejectedIpsToResons).to.deep.equal({
+		expect(result.rejectedIpsToReasons).to.deep.equal({
 			'4.4.4.4': 'Invalid alt IP token.',
 			'3.3.3.3': 'Alt IP country doesn\'t match the probe country.',
 		});

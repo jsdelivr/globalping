@@ -54,7 +54,7 @@ describe('Alternative IPs', () => {
 			});
 
 		expect(ack.callCount).to.equal(1);
-		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedIpsToResons: {} });
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedIpsToReasons: {} });
 	});
 
 	it('should be able to remove alt ips from the probe', async () => {
@@ -93,8 +93,8 @@ describe('Alternative IPs', () => {
 			});
 
 		expect(ack.callCount).to.equal(2);
-		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedIpsToResons: {} });
-		expect(ack.args[1]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToResons: {} });
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedIpsToReasons: {} });
+		expect(ack.args[1]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToReasons: {} });
 	});
 
 	it('should reject alt ip with invalid token', async () => {
@@ -115,7 +115,7 @@ describe('Alternative IPs', () => {
 			});
 
 		expect(ack.callCount).to.equal(1);
-		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToResons: { '89.64.80.78': 'Invalid alt IP token.' } });
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToReasons: { '89.64.80.78': 'Invalid alt IP token.' } });
 	});
 
 	it('should reject alt ip with token for different ip', async () => {
@@ -143,6 +143,6 @@ describe('Alternative IPs', () => {
 			});
 
 		expect(ack.callCount).to.equal(1);
-		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToResons: { '1.2.3.4': 'Invalid alt IP token.' } });
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToReasons: { '1.2.3.4': 'Invalid alt IP token.' } });
 	});
 });

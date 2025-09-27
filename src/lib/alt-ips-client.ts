@@ -37,7 +37,7 @@ export class AltIpsClient {
 		probe.altIpAddresses = altIpAddresses;
 		return {
 			addedAltIps: probe.altIpAddresses,
-			rejectedIpsToResons: { ...tokenErrors, ...ipErrors },
+			rejectedIpsToReasons: { ...tokenErrors, ...ipErrors },
 		};
 	}
 
