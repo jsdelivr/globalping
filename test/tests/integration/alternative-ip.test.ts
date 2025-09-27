@@ -11,15 +11,17 @@ describe('Alternative IPs', () => {
 	let requestAgent: Agent;
 
 	const sandbox = sinon.createSandbox();
+	const ack = sandbox.stub();
 
 	before(async () => {
 		app = await getTestServer();
 		requestAgent = request(app);
 	});
 
-	afterEach(async () => {
+	beforeEach(async () => {
 		sandbox.resetHistory();
 		await deleteFakeProbes();
+		ack.reset();
 	});
 
 	after(async () => {
@@ -29,25 +31,18 @@ describe('Alternative IPs', () => {
 
 	it('should add alternative ip to the probe', async () => {
 		nockGeoIpProviders();
+		const probe = await addFakeProbe();
 
-		let token: string | undefined;
-		let socketId: string | undefined;
-
-		const probe = await addFakeProbe({
-			'api:connect:alt-ips-token': (data: { token: string; socketId: string }) => {
-				token = data.token;
-				socketId = data.socketId;
-			},
-		});
+		const { body: { ip, token } } = await requestAgent.post('/v1/alternative-ip')
+			.send()
+			.set('X-Forwarded-For', '89.64.80.78')
+			.expect(200);
 
 		probe.emit('probe:status:update', 'ready');
 
 		nockGeoIpProviders();
 
-		await requestAgent.post('/v1/alternative-ip')
-			.send({ socketId, token })
-			.set('X-Forwarded-For', '89.64.80.78')
-			.expect(200);
+		probe.emit('probe:alt-ips', [ [ ip, token ] ], ack);
 
 		await waitForProbesUpdate();
 
@@ -57,34 +52,25 @@ describe('Alternative IPs', () => {
 			.expect((response) => {
 				expect(response.body[0].altIpAddresses.length).to.equal(1);
 			});
+
+		expect(ack.callCount).to.equal(1);
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedIpsToReasons: {} });
 	});
 
-	it('should not add duplicate alternative ips to the probe', async () => {
+	it('should be able to remove alt ips from the probe', async () => {
 		nockGeoIpProviders();
+		const probe = await addFakeProbe();
 
-		let token: string | undefined;
-		let socketId: string | undefined;
-
-		const probe = await addFakeProbe({
-			'api:connect:alt-ips-token': (data: { token: string; socketId: string }) => {
-				token = data.token;
-				socketId = data.socketId;
-			},
-		});
+		const { body: { ip, token } } = await requestAgent.post('/v1/alternative-ip')
+			.send()
+			.set('X-Forwarded-For', '89.64.80.78')
+			.expect(200);
 
 		probe.emit('probe:status:update', 'ready');
 
 		nockGeoIpProviders();
 
-		await requestAgent.post('/v1/alternative-ip')
-			.send({ socketId, token })
-			.set('X-Forwarded-For', '89.64.80.78')
-			.expect(200);
-
-		await requestAgent.post('/v1/alternative-ip')
-			.send({ socketId, token })
-			.set('X-Forwarded-For', '89.64.80.78')
-			.expect(200);
+		probe.emit('probe:alt-ips', [ [ ip, token ] ], ack);
 
 		await waitForProbesUpdate();
 
@@ -94,46 +80,69 @@ describe('Alternative IPs', () => {
 			.expect((response) => {
 				expect(response.body[0].altIpAddresses.length).to.equal(1);
 			});
-	});
 
-	it('should send 400 if token is invalid', async () => {
-		nockGeoIpProviders();
+		probe.emit('probe:alt-ips', [], ack);
 
-		let socketId: string | undefined;
+		await waitForProbesUpdate();
 
-		await addFakeProbe({
-			'api:connect:alt-ips-token': (data: { token: string; socketId: string }) => {
-				socketId = data.socketId;
-			},
-		});
-
-		await requestAgent.post('/v1/alternative-ip')
-			.send({ socketId, token: 'fake-token-012345678901234567890' })
-			.expect(400)
+		await requestAgent.get('/v1/probes?adminkey=admin')
+			.send()
+			.expect(200)
 			.expect((response) => {
-				expect(response.body.error.type).to.equal('wrong_token');
+				expect(response.body[0].altIpAddresses.length).to.equal(0);
 			});
+
+		expect(ack.callCount).to.equal(2);
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [ ip ], rejectedIpsToReasons: {} });
+		expect(ack.args[1]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToReasons: {} });
 	});
 
-	it('should send 400 if socket not found', async () => {
+	it('should reject alt ip with invalid token', async () => {
 		nockGeoIpProviders();
+		const probe = await addFakeProbe();
 
-		let token: string | undefined;
-		let socketId: string | undefined;
+		probe.emit('probe:status:update', 'ready');
 
-		await addFakeProbe({
-			'api:connect:alt-ips-token': () => {
-				token = 'fake-token-012345678901234567890';
-				socketId = 'fake-socket-12345678';
-			},
-		});
+		probe.emit('probe:alt-ips', [ [ '89.64.80.78', 'invalid-token-123456789012345678' ] ], ack);
 
-		await requestAgent.post('/v1/alternative-ip')
-			.send({ socketId, token })
+		await waitForProbesUpdate();
+
+		await requestAgent.get('/v1/probes?adminkey=admin')
+			.send()
+			.expect(200)
+			.expect((response) => {
+				expect(response.body[0].altIpAddresses.length).to.equal(0);
+			});
+
+		expect(ack.callCount).to.equal(1);
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToReasons: { '89.64.80.78': 'Invalid alt IP token.' } });
+	});
+
+	it('should reject alt ip with token for different ip', async () => {
+		nockGeoIpProviders();
+		const probe = await addFakeProbe();
+
+		const { body: { token } } = await requestAgent.post('/v1/alternative-ip')
+			.send()
 			.set('X-Forwarded-For', '89.64.80.78')
-			.expect(400)
+			.expect(200);
+
+		probe.emit('probe:status:update', 'ready');
+
+		nockGeoIpProviders();
+
+		probe.emit('probe:alt-ips', [ [ '1.2.3.4', token ] ], ack);
+
+		await waitForProbesUpdate();
+
+		await requestAgent.get('/v1/probes?adminkey=admin')
+			.send()
+			.expect(200)
 			.expect((response) => {
-				expect(response.body.error.type).to.equal('probe_not_found');
+				expect(response.body[0].altIpAddresses.length).to.equal(0);
 			});
+
+		expect(ack.callCount).to.equal(1);
+		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToReasons: { '1.2.3.4': 'Invalid alt IP token.' } });
 	});
 });

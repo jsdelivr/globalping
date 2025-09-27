@@ -821,7 +821,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
-	it('class should delete/update adoptions correctly in case of multiple duplications', async () => {
+	it('class should delete/update adoptions correctly in case of multiple duplicates', async () => {
 		sql.select.resolves([
 			{ ...defaultAdoption, altIps: JSON.stringify([ '2.2.2.2' ]) },
 			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: JSON.stringify([ '1.1.1.1' ]) },

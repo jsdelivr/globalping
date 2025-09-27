@@ -305,7 +305,7 @@ export class AdoptedProbes {
 		// 'probe' - usual API probe. 'dProbe' - dashboard probe data stored in sql.
 		const { dProbesWithProbe, dProbesWithoutProbe, probesWithoutDProbe } = this.matchDProbesAndProbes(probes);
 		const { updatedDProbes, dProbeDataUpdates } = this.generateUpdatedDProbes(dProbesWithProbe, dProbesWithoutProbe);
-		const { dProbesToDelete, dProbeAltIpUpdates } = this.findDuplications(updatedDProbes);
+		const { dProbesToDelete, dProbeAltIpUpdates } = this.findDuplicates(updatedDProbes);
 
 		const dProbeUpdates = this.mergeUpdates(dProbeDataUpdates, dProbeAltIpUpdates, dProbesToDelete);
 
@@ -578,7 +578,7 @@ export class AdoptedProbes {
 		return { dProbeDataUpdates, updatedDProbes };
 	}
 
-	private findDuplications (updatedDProbes: DProbe[]) {
+	private findDuplicates (updatedDProbes: DProbe[]) {
 		const dProbesToDelete: DProbe[] = [];
 		const dProbeAltIpUpdates: { dProbe: DProbe; update: { altIps: string[] } }[] = [];
 		const uniqIps = new Map<string, DProbe>();
