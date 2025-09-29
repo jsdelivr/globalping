@@ -1,5 +1,6 @@
 import Joi from 'joi';
 import { Probe, ProbeStats } from '../types.js';
+import { globalIpOptions } from '../../measurement/schema/utils.js';
 
 export const statusSchema = Joi.string<Probe['status']>().valid('initializing', 'ready', 'unbuffer-missing', 'ping-test-failed', 'sigterm').required();
 
@@ -29,3 +30,5 @@ export const logMessageSchema = Joi.object({
 	skipped: Joi.number().integer().min(0).required(),
 	logs: Joi.array().items(logEntrySchema).min(0).required(),
 }).required();
+
+export const altIpsSchema = Joi.array().max(2048).items(Joi.array<[string, string]>().ordered(Joi.string().ip(globalIpOptions).required(), Joi.string().length(32).required()));

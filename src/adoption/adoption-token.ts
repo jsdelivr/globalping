@@ -111,7 +111,7 @@ export class AdoptionToken {
 		let dProbe: DProbe | null = this.adoptedProbes.getByIp(probe.ipAddress) || this.adoptedProbes.getByUuid(probe.uuid);
 
 		if (!dProbe || dProbe.userId !== user.id) {
-			dProbe = await this.fetchProbe(probe);
+			dProbe = await this.fetchDProbe(probe);
 		}
 
 		if (dProbe && dProbe.userId === user.id) {
@@ -123,14 +123,14 @@ export class AdoptionToken {
 		return { message: 'Probe successfully adopted by token.' };
 	}
 
-	private async fetchProbe (probe: Probe) {
+	private async fetchDProbe (probe: Probe) {
 		const dProbe = await this.sql(PROBES_TABLE)
 			.where({ uuid: probe.uuid })
 			.orWhere({ ip: probe.ipAddress })
 			.orWhereRaw('JSON_CONTAINS(altIps, ?)', [ probe.ipAddress ])
-			.first<DProbe>();
+			.first<DProbe | undefined>();
 
-		return dProbe;
+		return dProbe || null;
 	}
 
 	private async adoptProbe (probe: Probe, user: User) {
