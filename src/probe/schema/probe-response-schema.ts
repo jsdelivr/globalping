@@ -31,4 +31,4 @@ export const logMessageSchema = Joi.object({
 	logs: Joi.array().items(logEntrySchema).min(0).required(),
 }).required();
 
-export const altIpsSchema = Joi.array<[string, string][]>().max(2048).items(Joi.array().ordered(Joi.string().ip(globalIpOptions).required(), Joi.string().length(32).required()));
+export const altIpsSchema = Joi.array().max(2048).items(Joi.array<[string, string]>().ordered(Joi.string().ip(globalIpOptions).required(), Joi.string().length(32).required()));

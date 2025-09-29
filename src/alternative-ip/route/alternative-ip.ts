@@ -4,12 +4,12 @@ import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible';
 import { getAltIpsClient } from '../../lib/alt-ips-client.js';
 import type { ExtendedContext } from '../../types.js';
 
-export const rateLimiter = new RateLimiterMemory({
+const rateLimiter = new RateLimiterMemory({
 	points: 20,
 	duration: 60,
 });
 
-export const checkRateLimit = async (ctx: ExtendedContext) => {
+const checkRateLimit = async (ctx: ExtendedContext) => {
 	const ip = ctx.request.ip;
 
 	try {
