@@ -102,7 +102,7 @@ export class AltIpsClient {
 		try {
 			const altIpInfo = await this.geoIpClient.lookup(altIp);
 
-			if (!probe.location.allowedCountries.includes(altIpInfo.country)) {
+			if (!altIpInfo.allowedCountries.includes(probe.location.country)) {
 				logger.warn('Alt IP country doesn\'t match the probe country.', { altIp, altIpInfo, ...probeInfo });
 				return { isValid: false, reason: 'Alt IP country doesn\'t match the probe country.' };
 			}
