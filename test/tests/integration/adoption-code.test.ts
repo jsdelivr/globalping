@@ -33,7 +33,7 @@ describe('Adoption code', () => {
 		probe.emit('probe:alt-ips', [ [ ip, token ] ]);
 
 		// Wait until alt IP is synced in synced-probe-list.ts.
-		await getProbeByIp('97.247.234.249', { allowStale: false });
+		while (!await getProbeByIp('97.247.234.249', { allowStale: false })) { /* wait */ }
 	});
 
 	afterEach(async () => {
