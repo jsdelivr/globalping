@@ -18,7 +18,7 @@ describe('AltIpsClient', () => {
 			altIpAddresses: [],
 			location: {
 				country: 'IT',
-				allowedCountries: [ 'IT', 'FR' ],
+				allowedCountries: [ 'IT' ],
 			},
 		} as unknown as Probe;
 
@@ -30,7 +30,7 @@ describe('AltIpsClient', () => {
 		};
 
 		geoIpClient = {
-			lookup: sandbox.stub().resolves({ country: 'IT', isAnycast: false }),
+			lookup: sandbox.stub().resolves({ country: 'IT', isAnycast: false, allowedCountries: [ 'IT' ] }),
 		};
 
 		altIps = new AltIpsClient(redis, geoIpClient);
@@ -120,7 +120,7 @@ describe('AltIpsClient', () => {
 	it('should reject alt ip from different country', async () => {
 		const token = 'validToken';
 		redis.hmGet.resolves([ '2.2.2.2' ]);
-		geoIpClient.lookup.resolves({ country: 'DE', isAnycast: false });
+		geoIpClient.lookup.resolves({ country: 'DE', isAnycast: false, allowedCountries: [ 'DE' ] });
 
 		const result = await altIps.addAltIps(probe, [ [ '2.2.2.2', token ] ]);
 
@@ -132,7 +132,7 @@ describe('AltIpsClient', () => {
 	it('should accept alt ip from allowed country', async () => {
 		const token = 'validToken';
 		redis.hmGet.resolves([ '2.2.2.2' ]);
-		geoIpClient.lookup.resolves({ country: 'FR', isAnycast: false });
+		geoIpClient.lookup.resolves({ country: 'FR', isAnycast: false, allowedCountries: [ 'FR', 'IT' ] });
 
 		const result = await altIps.addAltIps(probe, [ [ '2.2.2.2', token ] ]);
 
@@ -144,7 +144,7 @@ describe('AltIpsClient', () => {
 	it('should reject anycast alt ip', async () => {
 		const token = 'validToken';
 		redis.hmGet.resolves([ '2.2.2.2' ]);
-		geoIpClient.lookup.resolves({ country: 'IT', isAnycast: true });
+		geoIpClient.lookup.resolves({ country: 'IT', isAnycast: true, allowedCountries: [ 'IT' ] });
 
 		const result = await altIps.addAltIps(probe, [ [ '2.2.2.2', token ] ]);
 
@@ -168,8 +168,8 @@ describe('AltIpsClient', () => {
 	it('should handle multiple alt ips with mixed validity', async () => {
 		const tokens: [string, string][] = [ [ '2.2.2.2', 'validToken1' ], [ '2.2.2.2', 'validToken2' ], [ '3.3.3.3', 'validToken3' ], [ '4.4.4.4', 'invalidToken' ] ];
 		redis.hmGet.resolves([ '2.2.2.2', '2.2.2.2', '3.3.3.3', null ]);
-		geoIpClient.lookup.onCall(0).resolves({ country: 'IT', isAnycast: false });
-		geoIpClient.lookup.onCall(1).resolves({ country: 'DE', isAnycast: false });
+		geoIpClient.lookup.onCall(0).resolves({ country: 'IT', isAnycast: false, allowedCountries: [ 'IT' ] });
+		geoIpClient.lookup.onCall(1).resolves({ country: 'DE', isAnycast: false, allowedCountries: [ 'DE' ] });
 
 		const result = await altIps.addAltIps(probe, tokens);
 
