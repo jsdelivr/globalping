@@ -587,7 +587,7 @@ describe('probe router', () => {
 
 		it('should find probe by normalizedCity value', async () => {
 			const probes: DeepPartial<ServerProbe[]> = [
-				await buildProbe(String(Date.now), location),
+				await buildProbe(String(Date.now()), location),
 			];
 
 			const locations: Location[] = [
