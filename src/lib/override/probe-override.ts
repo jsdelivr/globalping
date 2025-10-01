@@ -1,4 +1,4 @@
-import type { Probe } from '../../probe/types.js';
+import type { ExtendedProbeLocationWithOverrides, SocketProbe } from '../../probe/types.js';
 import type { AdoptedProbes } from './adopted-probes.js';
 import type { AdminData } from './admin-data.js';
 
@@ -20,17 +20,17 @@ export class ProbeOverride {
 		this.adminData.scheduleSync();
 	}
 
-	getUpdatedLocation (probe: Probe) {
+	getUpdatedLocation (probe: SocketProbe): ExtendedProbeLocationWithOverrides {
 		const adminLocation = this.adminData.getUpdatedLocation(probe);
 		const adoptedLocation = this.adoptedProbes.getUpdatedLocation(probe, adminLocation);
-		return { ...probe.location, ...adminLocation, ...adoptedLocation };
+		return { ...probe.location, ...adminLocation, ...adoptedLocation, hasOverridesApplied: true };
 	}
 
-	addAdminData (probes: Probe[]) {
+	addAdminData (probes: SocketProbe[]) {
 		return this.adminData.getUpdatedProbes(probes);
 	}
 
-	addAdoptedData (probes: Probe[]) {
+	addAdoptedData (probes: SocketProbe[]) {
 		return this.adoptedProbes.getUpdatedProbes(probes);
 	}
 }

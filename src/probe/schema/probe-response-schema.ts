@@ -1,8 +1,8 @@
 import Joi from 'joi';
-import { Probe, ProbeStats } from '../types.js';
+import { ServerProbe, ProbeStats } from '../types.js';
 import { globalIpOptions } from '../../measurement/schema/utils.js';
 
-export const statusSchema = Joi.string<Probe['status']>().valid('initializing', 'ready', 'unbuffer-missing', 'ping-test-failed', 'sigterm').required();
+export const statusSchema = Joi.string<ServerProbe['status']>().valid('initializing', 'ready', 'unbuffer-missing', 'ping-test-failed', 'sigterm').required();
 
 export const ipVersionSchema = Joi.boolean().required();
 

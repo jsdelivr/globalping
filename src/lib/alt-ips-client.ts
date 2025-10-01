@@ -7,7 +7,8 @@ import { isIpPrivate } from './private-ip.js';
 import { ProbeError } from './probe-error.js';
 import { isIpBlocked } from './blocked-ip-ranges.js';
 import { getPersistentRedisClient, type RedisClient } from './redis/persistent-client.js';
-import { Probe } from '../probe/types.js';
+import { ServerProbe, SocketProbe } from '../probe/types.js';
+import { probeOverride } from './ws/server.js';
 
 const getRandomBytes = promisify(randomBytes);
 const logger = scopedLogger('alt-ips');
@@ -32,17 +33,19 @@ export class AltIpsClient {
 		return token;
 	}
 
-	async addAltIps (probe: Probe, ipsToTokens: [string, string][]) {
-		const { ipsWithValidTokens, tokenErrors } = await this.validateTokens(ipsToTokens, probe);
-		const { altIpAddresses, ipErrors } = await this.validateIps(ipsWithValidTokens, probe);
+	async addAltIps (probe: SocketProbe, ipsToTokens: [string, string][]) {
+		const serverProbe = { ...probe, location: probeOverride.getUpdatedLocation(probe) };
+		const { ipsWithValidTokens, tokenErrors } = await this.validateTokens(ipsToTokens, serverProbe);
+		const { altIpAddresses, ipErrors } = await this.validateIps(ipsWithValidTokens, serverProbe);
 		probe.altIpAddresses = altIpAddresses;
+
 		return {
 			addedAltIps: probe.altIpAddresses,
 			rejectedIpsToReasons: { ...tokenErrors, ...ipErrors },
 		};
 	}
 
-	private async validateTokens (ipsToTokens: [string, string][], probe: Probe) {
+	private async validateTokens (ipsToTokens: [string, string][], probe: ServerProbe) {
 		if (ipsToTokens.length === 0) {
 			return { ipsWithValidTokens: [], tokenErrors: {} };
 		}
@@ -66,7 +69,7 @@ export class AltIpsClient {
 		return { ipsWithValidTokens: _.uniq(ipsWithValidTokens), tokenErrors };
 	}
 
-	private async validateIps (ips: string[], probe: Probe) {
+	private async validateIps (ips: string[], probe: ServerProbe) {
 		const altIpAddresses: string[] = [];
 		const ipErrors: Record<string, string> = {};
 		const results = await Promise.all(ips.map(ip => this.validateAltIp(probe, ip)));
@@ -82,7 +85,7 @@ export class AltIpsClient {
 		return { altIpAddresses, ipErrors };
 	}
 
-	private async validateAltIp (probe: Probe, altIp: string): Promise<{ isValid: true } | { isValid: false; reason: string }> {
+	private async validateAltIp (probe: ServerProbe, altIp: string): Promise<{ isValid: true } | { isValid: false; reason: string }> {
 		const probeInfo = { probeIp: probe.ipAddress, probeLocation: probe.location };
 
 		if (process.env['FAKE_PROBE_IP']) {

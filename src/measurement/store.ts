@@ -3,7 +3,7 @@ import Bluebird from 'bluebird';
 import config from 'config';
 import _ from 'lodash';
 import cryptoRandomString from 'crypto-random-string';
-import type { OfflineProbe, Probe } from '../probe/types.js';
+import type { OfflineProbe, ServerProbe } from '../probe/types.js';
 import { scopedLogger } from '../lib/logger.js';
 import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType, MeasurementResultMessage } from './types.js';
 import { getDefaults } from './schema/utils.js';
@@ -60,7 +60,7 @@ export class MeasurementStore {
 		return ips || [];
 	}
 
-	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, Probe>, allProbes: (Probe | OfflineProbe)[]): Promise<string> {
+	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[]): Promise<string> {
 		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 		const key = getMeasurementKey(id);
 		const startTime = new Date();
@@ -191,7 +191,7 @@ export class MeasurementStore {
 		return subtractObjects(measurement, defaults) as Partial<MeasurementRecord>;
 	}
 
-	probesToResults (probes: (Probe | OfflineProbe)[], type: RequestType) {
+	probesToResults (probes: (ServerProbe | OfflineProbe)[], type: RequestType) {
 		const results = probes.map(probe => ({
 			probe: {
 				continent: probe.location.continent,
@@ -212,7 +212,7 @@ export class MeasurementStore {
 		return results;
 	}
 
-	getInitialResult (type: RequestType, status: Probe['status'] | OfflineProbe['status']) {
+	getInitialResult (type: RequestType, status: ServerProbe['status'] | OfflineProbe['status']) {
 		if (status === 'offline') {
 			return {
 				status: 'offline',

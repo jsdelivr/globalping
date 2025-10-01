@@ -1,8 +1,8 @@
 import { getAltIpsClient } from '../../lib/alt-ips-client.js';
 import { altIpsSchema } from '../schema/probe-response-schema.js';
-import type { Probe } from '../types.js';
+import type { SocketProbe } from '../types.js';
 
-export const handleAltIps = (probe: Probe) => async (ipsToTokens: [string, string][], callback: (result: { addedAltIps: string[]; rejectedIpsToReasons: Record<string, string> }) => void) => {
+export const handleAltIps = (probe: SocketProbe) => async (ipsToTokens: [string, string][], callback: (result: { addedAltIps: string[]; rejectedIpsToReasons: Record<string, string> }) => void) => {
 	const validation = altIpsSchema.validate(ipsToTokens);
 
 	if (validation.error) {

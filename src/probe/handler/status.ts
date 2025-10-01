@@ -1,7 +1,7 @@
 import { statusSchema } from '../schema/probe-response-schema.js';
-import type { Probe } from '../types.js';
+import type { SocketProbe } from '../types.js';
 
-export const handleStatusUpdate = (probe: Probe) => (status: Probe['status']) => {
+export const handleStatusUpdate = (probe: SocketProbe) => (status: SocketProbe['status']) => {
 	const validation = statusSchema.validate(status);
 
 	if (validation.error) {

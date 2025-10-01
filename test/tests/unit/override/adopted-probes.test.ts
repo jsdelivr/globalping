@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import relativeDayUtc from 'relative-day-utc';
 import { AdoptedProbes, Row } from '../../../../src/lib/override/adopted-probes.js';
-import type { Probe } from '../../../../src/probe/types.js';
+import type { ServerProbe, SocketProbe } from '../../../../src/probe/types.js';
 
 describe('AdoptedProbes', () => {
 	const defaultAdoption: Row = {
@@ -42,7 +42,7 @@ describe('AdoptedProbes', () => {
 		region: 'Northern Europe',
 	};
 
-	const defaultConnectedProbe: Probe = {
+	const defaultConnectedProbe: SocketProbe = {
 		ipAddress: '1.1.1.1',
 		altIpAddresses: [],
 		uuid: '1-1-1-1-1',
@@ -394,7 +394,7 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company',
 					allowedCountries: [ 'GB' ],
 				},
-			} as Probe,
+			} as ServerProbe,
 		]);
 
 		await adoptedProbes.syncDashboardData();
@@ -498,7 +498,7 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company',
 					allowedCountries: [ 'GB' ],
 				},
-			} as Probe,
+			} as ServerProbe,
 			{
 				ipAddress: '9.9.9.9',
 				altIpAddresses: [] as string[],
@@ -526,7 +526,7 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company',
 					allowedCountries: [ 'GB' ],
 				},
-			} as Probe,
+			} as ServerProbe,
 		]);
 
 		await adoptedProbes.syncDashboardData();
@@ -622,7 +622,7 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company',
 					allowedCountries: [ 'IE' ],
 				},
-			} as Probe,
+			} as ServerProbe,
 			{
 				ipAddress: '9.9.9.9',
 				altIpAddresses: [] as string[],
@@ -650,7 +650,7 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company',
 					allowedCountries: [ 'IE' ],
 				},
-			} as Probe,
+			} as ServerProbe,
 		]);
 
 		await adoptedProbes.syncDashboardData();
@@ -748,7 +748,7 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company',
 					allowedCountries: [ 'GB', 'PT' ],
 				},
-			} as Probe,
+			} as ServerProbe,
 		]);
 
 		await adoptedProbes.syncDashboardData();
@@ -1035,6 +1035,7 @@ describe('AdoptedProbes', () => {
 			normalizedNetwork: 'amazon.com',
 			allowedCountries: [ 'IE', 'GL' ],
 			groupingKey: 'GL-null-nuuk-16509',
+			hasOverridesApplied: true,
 		});
 	});
 

@@ -17,6 +17,10 @@ export type ExtendedProbeLocation = ProbeLocation & {
 	groupingKey: string;
 };
 
+export type ExtendedProbeLocationWithOverrides = ExtendedProbeLocation & {
+	hasOverridesApplied: true;
+};
+
 export type ProbeStats = {
 	cpu: {
 		load: Array<{
@@ -41,7 +45,7 @@ export type Tag = {
 
 export type ProbeIndex = [ string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[] ];
 
-export type Probe = {
+type Probe = {
 	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'ping-test-failed' | 'sigterm';
 	isIPv4Supported: boolean;
 	isIPv6Supported: boolean;
@@ -55,20 +59,28 @@ export type Probe = {
 	ipAddress: string;
 	altIpAddresses: string[];
 	host: string;
-	location: ExtendedProbeLocation;
+	location: ProbeLocation;
 	index: ProbeIndex;
 	resolvers: string[];
 	tags: Tag[];
 	normalizedTags: Tag[];
 	stats: ProbeStats;
 	hostInfo: HostInfo;
-	owner?: { id: string };
 	adoptionToken: string | null;
 };
 
 type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;
 
-export type OfflineProbe = Modify<Probe, {
+export type SocketProbe = Modify<Probe, {
+	location: ExtendedProbeLocation;
+}>;
+
+export type ServerProbe = Readonly<Modify<Probe, {
+	location: ExtendedProbeLocationWithOverrides;
+	owner?: { id: string };
+}>>;
+
+export type OfflineProbe = Modify<SocketProbe, {
 	status: 'offline';
 	client: null;
 	version: null;

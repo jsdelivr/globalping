@@ -3,7 +3,7 @@ import { expect } from 'chai';
 
 import { type WsServerNamespace } from '../../../../src/lib/ws/server.js';
 import { SyncedProbeList } from '../../../../src/lib/ws/synced-probe-list.js';
-import type { Probe } from '../../../../src/probe/types.js';
+import type { ServerProbe, SocketProbe } from '../../../../src/probe/types.js';
 import { getRegionByCountry } from '../../../../src/lib/location/location.js';
 import { getRedisClient, RedisClient } from '../../../../src/lib/redis/client.js';
 import { ProbeOverride } from '../../../../src/lib/override/probe-override.js';
@@ -43,7 +43,7 @@ describe('SyncedProbeList', () => {
 			normalizedNetwork: 'abc',
 		},
 		stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } },
-	} as unknown as Probe);
+	} as unknown as ServerProbe);
 
 	const ioNamespace = {
 		local: {
@@ -114,9 +114,9 @@ describe('SyncedProbeList', () => {
 
 	it('emits stats in the message on change', async () => {
 		const sockets = [
-			{ data: { probe: getProbe('A') } },
-			{ data: { probe: getProbe('B') } },
-			{ data: { probe: getProbe('C') } },
+			{ data: { probe: getProbe('A') as SocketProbe } },
+			{ data: { probe: getProbe('B') as SocketProbe } },
+			{ data: { probe: getProbe('C') as SocketProbe } },
 		];
 
 		localFetchSocketsStub.resolves(sockets);
@@ -211,7 +211,7 @@ describe('SyncedProbeList', () => {
 			A: getProbe('A'),
 			B: getProbe('B'),
 			C: getProbe('C'),
-		} as unknown as Record<string, Probe>;
+		} as unknown as Record<string, ServerProbe>;
 
 		redisXRange.resolves([
 			{ id: '1-1', message: { n: 'remote', r: '1' } },
@@ -273,7 +273,7 @@ describe('SyncedProbeList', () => {
 		const probes = {
 			A: getProbe('A'),
 			B: getProbe('B'),
-		} as unknown as Record<string, Probe>;
+		} as unknown as Record<string, ServerProbe>;
 
 		redisXRange.resolves([
 			{ id: '1-1', message: { n: 'remote', r: '1' } },
@@ -301,9 +301,9 @@ describe('SyncedProbeList', () => {
 		const probe2 = getProbe('B');
 		const sockets = [{ data: { probe: probe1 } }, { data: { probe: probe2 } }];
 
-		const tags = [{ type: 'user', value: 'u-name:tag1' }] as Probe['tags'];
+		const tags = [{ type: 'user', value: 'u-name:tag1' }] as ServerProbe['tags'];
 
-		const adoptedData = { tags } as Probe;
+		const adoptedData = { tags } as ServerProbe;
 
 		localFetchSocketsStub.resolves(sockets);
 		probeOverride.addAdoptedData.reset();
@@ -337,7 +337,7 @@ describe('SyncedProbeList', () => {
 		const probe2 = getProbe('B');
 		const sockets = [{ data: { probe: probe1 } }, { data: { probe: probe2 } }];
 
-		const updatedProbe1 = { ...probe1, location: { ...probe1.location, city: 'Miami' } } as unknown as Probe;
+		const updatedProbe1 = { ...probe1, location: { ...probe1.location, city: 'Miami' } } as unknown as ServerProbe;
 
 		localFetchSocketsStub.resolves(sockets);
 		probeOverride.addAdminData.reset();

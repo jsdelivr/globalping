@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { handleNewLogs, LogMessage } from '../../../../src/probe/handler/logs.js';
 import { getMeasurementRedisClient } from '../../../../src/lib/redis/measurement-client.js';
-import type { Probe } from '../../../../src/probe/types.js';
+import type { ServerProbe } from '../../../../src/probe/types.js';
 
 describe('probe logs', () => {
 	let sandbox: sinon.SinonSandbox;
@@ -22,7 +22,7 @@ describe('probe logs', () => {
 	const mockProbe = {
 		uuid: PROBE_UUID,
 		ipAddress: '1.1.1.1',
-	} as Probe;
+	} as ServerProbe;
 
 	beforeEach(() => {
 		logHandler = handleNewLogs(mockProbe);

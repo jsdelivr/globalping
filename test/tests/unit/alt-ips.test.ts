@@ -1,12 +1,12 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
 import { AltIpsClient } from '../../../src/lib/alt-ips-client.js';
-import type { Probe } from '../../../src/probe/types.js';
+import type { ServerProbe } from '../../../src/probe/types.js';
 
 describe('AltIpsClient', () => {
 	const sandbox = sinon.createSandbox();
 
-	let probe: Probe;
+	let probe: ServerProbe;
 	let redis: any;
 	let geoIpClient: any;
 	let altIps: AltIpsClient;
@@ -20,7 +20,7 @@ describe('AltIpsClient', () => {
 				country: 'IT',
 				allowedCountries: [ 'IT' ],
 			},
-		} as unknown as Probe;
+		} as unknown as ServerProbe;
 
 
 		redis = {

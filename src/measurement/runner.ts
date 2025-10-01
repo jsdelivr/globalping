@@ -4,7 +4,7 @@ import createHttpError from 'http-errors';
 import apmAgent from 'elastic-apm-node';
 import { getWsServer, PROBES_NAMESPACE } from '../lib/ws/server.js';
 import { getProbeRouter, type ProbeRouter } from '../probe/router.js';
-import type { Probe } from '../probe/types.js';
+import type { ServerProbe } from '../probe/types.js';
 import { captureSpan, getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
@@ -59,7 +59,7 @@ export class MeasurementRunner {
 		}
 	}
 
-	private sendToProbes (measurementId: string, onlineProbesMap: Map<number, Probe>, request: MeasurementRequest) {
+	private sendToProbes (measurementId: string, onlineProbesMap: Map<number, ServerProbe>, request: MeasurementRequest) {
 		let inProgressTests = 0;
 		const maxInProgressTests = config.get<number>('measurement.maxInProgressTests');
 		onlineProbesMap.forEach((probe, index) => {

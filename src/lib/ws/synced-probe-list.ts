@@ -5,7 +5,7 @@ import { EventEmitter } from 'node:events';
 import TTLCache from '@isaacs/ttlcache';
 import { scopedLoggerWithPrefix } from '../logger.js';
 import type { WsServerNamespace } from './server.js';
-import type { Probe, ProbeStats } from '../../probe/types.js';
+import type { ServerProbe, ProbeStats, SocketProbe } from '../../probe/types.js';
 import type { ProbeOverride } from '../override/probe-override.js';
 import type { RedisClient } from '../redis/shared.js';
 
@@ -13,7 +13,7 @@ type NodeData = {
 	nodeId: string;
 	changeTimestamp: number;
 	revalidateTimestamp: number;
-	probesById: Record<string, Probe>;
+	probesById: Record<string, SocketProbe>;
 };
 
 type NodeChanges = {
@@ -53,9 +53,9 @@ export class SyncedProbeList extends EventEmitter {
 	readonly localUpdateEvent = 'spl:local-update';
 	readonly remoteEventsStream = 'gp:spl:events';
 
-	private rawProbes: Probe[];
-	private probesWithAdminData: Probe[];
-	private probes: Probe[];
+	private rawProbes: SocketProbe[];
+	private probesWithAdminData: SocketProbe[];
+	private probes: ServerProbe[];
 	private oldest: number;
 	private pushTimer: NodeJS.Timeout | undefined;
 	private pullTimer: NodeJS.Timeout | undefined;
@@ -64,7 +64,7 @@ export class SyncedProbeList extends EventEmitter {
 	private readonly nodeId: string;
 	private readonly nodeData: TTLCache<string, NodeData>;
 
-	private ipToProbe: Record<string, Probe>;
+	private ipToProbe: Record<string, ServerProbe>;
 	private socketIdToNodeId: Record<string, string>;
 	private readonly registeredCallbacks: Record<string, Callback[]>;
 
@@ -99,19 +99,19 @@ export class SyncedProbeList extends EventEmitter {
 		this.subscribeNode();
 	}
 
-	getRawProbes (): Probe[] {
+	getRawProbes (): SocketProbe[] {
 		return this.rawProbes.slice();
 	}
 
-	getProbesWithAdminData (): Probe[] {
+	getProbesWithAdminData (): SocketProbe[] {
 		return this.probesWithAdminData.slice();
 	}
 
-	getProbes (): Probe[] {
+	getProbes (): ServerProbe[] {
 		return this.probes.slice();
 	}
 
-	async fetchProbes (): Promise<Probe[]> {
+	async fetchProbes (): Promise<ServerProbe[]> {
 		const start = Date.now();
 
 		return new Promise((resolve) => {
@@ -165,8 +165,8 @@ export class SyncedProbeList extends EventEmitter {
 	}
 
 	private updateProbes () {
-		const probes: Probe[] = [];
-		const ipToProbe: Record<string, Probe> = {};
+		const probes: SocketProbe[] = [];
+		const ipToProbe: Record<string, ServerProbe> = {};
 		const socketIdToNodeId: Record<string, string> = {};
 		let oldest = Infinity;
 
@@ -463,7 +463,7 @@ export class SyncedProbeList extends EventEmitter {
 
 			if (changes.updateProbes.size) {
 				const paths = Array.from(changes.updateProbes).map(probeId => `$.probesById['${probeId}']`);
-				const newProbesByPath = await this.getRemoteNodeDataAtPaths<Probe>(changes.nodeId, paths);
+				const newProbesByPath = await this.getRemoteNodeDataAtPaths<ServerProbe>(changes.nodeId, paths);
 
 				if (newProbesByPath) {
 					newProbesByPath.forEach((probe) => {
