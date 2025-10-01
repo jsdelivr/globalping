@@ -28,7 +28,7 @@ export const subscribeWithHandler = (socket: ServerSocket, event: string, method
 				metadata['details'] = error;
 			}
 
-			logger.warn(`Event "${event}" failed to handle`, metadata);
+			logger.trace(`Event "${event}" failed to handle`, metadata);
 		}
 	});
 };
