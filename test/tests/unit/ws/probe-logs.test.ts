@@ -49,7 +49,7 @@ describe('probe logs', () => {
 		const result4 = await logHandler({ skipped: 1, logs: [], extra: true } as LogMessage).catch(err => err);
 		const result5 = await logHandler({
 			skipped: 1,
-			logs: [{ message: Array(8193).fill('1').join(''), timestamp: 'ok', level: 'ok', scope: 'ok' }],
+			logs: [{ message: '1'.repeat(8193), timestamp: 'ok', level: 'ok', scope: 'ok' }],
 		}).catch(err => err);
 
 		expect(result1).to.be.instanceof(Error);
@@ -66,8 +66,8 @@ describe('probe logs', () => {
 
 	it('writes only provided logs when skipped = 0', async () => {
 		const logs = [
-			{ message: 'm1', timestamp: 't1', level: 'info', scope: 'system' },
-			{ message: 'm2', timestamp: 't2', level: 'warn', scope: 'system' },
+			{ message: '1', timestamp: 't1', level: 'info', scope: 'system' },
+			{ message: '2'.repeat(8192), timestamp: 't2', level: 'warn', scope: 'system' },
 		];
 
 		await logHandler({ skipped: 0, logs });
