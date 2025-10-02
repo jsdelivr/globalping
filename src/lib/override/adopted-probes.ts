@@ -4,7 +4,7 @@ import _ from 'lodash';
 import config from 'config';
 import { scopedLogger } from '../logger.js';
 import type { getProbesWithAdminData as serverGetProbesWithAdminData } from '../ws/server.js';
-import type { ExtendedProbeLocation, Probe, ProbeLocation, Tag } from '../../probe/types.js';
+import type { ExtendedProbeLocationWithOverrides, ServerProbe, SocketProbe, ProbeLocation, Tag } from '../../probe/types.js';
 import { getGroupingKey, normalizeCoordinate, normalizeFromPublicName, normalizeTags } from '../geoip/utils.js';
 import { getContinentByCountry, getContinentName, getCountryByIso, getIndex, getRegionByCountry, getStateNameByIso } from '../location/location.js';
 import { countries } from 'countries-list';
@@ -92,7 +92,7 @@ export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Support
 type DProbeFieldDescription = {
 	probeField: string;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	format?: (probeValue: any, probe: Probe, dProbe?: DProbe) => unknown;
+	format?: (probeValue: any, probe: SocketProbe, dProbe?: DProbe) => unknown;
 	getCustomValue?: (dProbe: AdoptionWithCustomLocation) => unknown;
 };
 
@@ -135,7 +135,7 @@ export class AdoptedProbes {
 		},
 		systemTags: {
 			probeField: 'tags',
-			format: (probeTags: Tag[], _probe?: Probe, dProbe?: DProbe) => [
+			format: (probeTags: Tag[], _probe?: SocketProbe, dProbe?: DProbe) => [
 				...(dProbe && dProbe.publicProbes && dProbe.defaultPrefix ? [ AdoptedProbes.getGlobalUserTag(dProbe.defaultPrefix) ] : []),
 				...probeTags.filter(({ type }) => type === 'system').map(({ value }) => value),
 			],
@@ -196,7 +196,7 @@ export class AdoptedProbes {
 		},
 		originalLocation: {
 			probeField: 'location',
-			format: (location: ProbeLocation, _probe: Probe, dProbe?: DProbe) => dProbe?.customLocation ? {
+			format: (location: ProbeLocation, _probe: SocketProbe, dProbe?: DProbe) => dProbe?.customLocation ? {
 				country: location.country,
 				city: location.city,
 				latitude: location.latitude,
@@ -223,7 +223,7 @@ export class AdoptedProbes {
 		return this.uuidToDProbe.get(uuid) || null;
 	}
 
-	getUpdatedLocation (probe: Probe, adminLocation?: ProbeLocation | null): ExtendedProbeLocation | null {
+	getUpdatedLocation (probe: SocketProbe, adminLocation?: ProbeLocation | null): ExtendedProbeLocationWithOverrides | null {
 		const adoption = this.getByIp(probe.ipAddress);
 		const location = adminLocation || probe.location;
 
@@ -242,10 +242,11 @@ export class AdoptedProbes {
 			latitude: adoption.latitude,
 			longitude: adoption.longitude,
 			groupingKey: getGroupingKey(adoption.country, adoption.state, normalizeFromPublicName(adoption.city), location.asn),
+			hasOverridesApplied: true,
 		};
 	}
 
-	getUpdatedTags (probe: Probe): Tag[] {
+	getUpdatedTags (probe: SocketProbe): Tag[] {
 		const adoption = this.getByIp(probe.ipAddress);
 
 		if (!adoption || (!adoption.tags.length && !adoption.publicProbes)) {
@@ -262,15 +263,15 @@ export class AdoptedProbes {
 		];
 	}
 
-	getUpdatedProbes (probes: Probe[]) {
+	getUpdatedProbes (probes: SocketProbe[]): ServerProbe[] {
 		return probes.map((probe) => {
 			const adoption = this.getByIp(probe.ipAddress);
 
 			if (!adoption || !adoption.userId) {
-				return probe;
+				return { ...probe, location: { ...probe.location, hasOverridesApplied: true } };
 			}
 
-			const newLocation = this.getUpdatedLocation(probe) || probe.location;
+			const newLocation = this.getUpdatedLocation(probe) || { ...probe.location, hasOverridesApplied: true };
 
 			const newTags = this.getUpdatedTags(probe);
 			const newNormalizedTags = normalizeTags(newTags);
@@ -372,11 +373,11 @@ export class AdoptedProbes {
 	 *
 	 * This ensures that adopted probes take precedence over non-adopted ones when matching by IP or alt IP.
 	 */
-	private matchDProbesAndProbes (probes: Probe[]) {
+	private matchDProbesAndProbes (probes: SocketProbe[]) {
 		const uuidToProbe = new Map(probes.map(probe => [ probe.uuid, probe ]));
 		const ipToProbe = new Map(probes.map(probe => [ probe.ipAddress, probe ]));
 		const altIpToProbe = new Map(probes.map(probe => probe.altIpAddresses.map(altIp => [ altIp, probe ] as const)).flat());
-		const dProbesWithProbe: { dProbe: DProbe; probe: Probe }[] = [];
+		const dProbesWithProbe: { dProbe: DProbe; probe: SocketProbe }[] = [];
 
 		// Searching probe for the dProbe by: UUID.
 		let dProbesWithoutProbe: DProbe[] = [];
@@ -525,7 +526,7 @@ export class AdoptedProbes {
 		return { dProbesWithProbe, dProbesWithoutProbe, probesWithoutDProbe };
 	}
 
-	private generateUpdatedDProbes (dProbesWithProbe: { dProbe: DProbe; probe: Probe }[], dProbesWithoutProbe: DProbe[]) {
+	private generateUpdatedDProbes (dProbesWithProbe: { dProbe: DProbe; probe: SocketProbe }[], dProbesWithoutProbe: DProbe[]) {
 		const dProbeDataUpdates: { dProbe: DProbe; update: Partial<DProbe> }[] = [];
 		const updatedDProbes: DProbe[] = [];
 
@@ -680,7 +681,7 @@ export class AdoptedProbes {
 		}
 	}
 
-	private async createDProbe (probe: Probe) {
+	private async createDProbe (probe: SocketProbe) {
 		const dProbe: Record<string, unknown> = {
 			id: randomUUID(),
 			date_created: new Date(),
@@ -743,7 +744,7 @@ export class AdoptedProbes {
 		return `u-${defaultPrefix}`;
 	}
 
-	static formatProbeAsDProbe (probe: Probe): Omit<DProbe, 'id' | 'lastSyncDate' | 'defaultPrefix' | 'publicProbes' | 'adoptionToken'> {
+	static formatProbeAsDProbe (probe: SocketProbe): Omit<DProbe, 'id' | 'lastSyncDate' | 'defaultPrefix' | 'publicProbes' | 'adoptionToken'> {
 		return {
 			userId: null,
 			ip: probe.ipAddress,

@@ -30,7 +30,9 @@ describe('Adoption code', () => {
 			.set('X-Forwarded-For', '97.247.234.249')
 			.send();
 
-		probe.emit('probe:alt-ips', [ [ ip, token ] ]);
+		probe.emit('probe:alt-ips', [ [ ip, token ] ], (result: { addedAltIps: string[]; rejectedIpsToReasons: Record<string, string> }) => {
+			expect(result).to.deep.equal({ addedAltIps: [ ip ], rejectedIpsToReasons: {} });
+		});
 
 		// Wait until alt IP is synced in synced-probe-list.ts.
 		while (!await getProbeByIp('97.247.234.249', { allowStale: false })) { /* wait */ }

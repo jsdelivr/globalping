@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import type { LocationWithLimit, MeasurementRequest, MeasurementResult, UserRequest } from '../measurement/types.js';
 import type { Location } from '../lib/location/types.js';
-import type { OfflineProbe, Probe } from './types.js';
+import type { OfflineProbe, ServerProbe } from './types.js';
 import { ProbesLocationFilter } from './probes-location-filter.js';
 import { getMeasurementStore, MeasurementStore } from '../measurement/store.js';
 import { getGroupingKey, normalizeFromPublicName, normalizeNetworkName } from '../lib/geoip/utils.js';
@@ -10,7 +10,7 @@ import { captureSpan } from '../lib/metrics.js';
 
 export class ProbeRouter {
 	private readonly probesFilter = new ProbesLocationFilter();
-	private readyProbes: Probe[] = [];
+	private readyProbes: ServerProbe[] = [];
 
 	constructor (
 		private readonly onProbesUpdate: typeof onServerProbesUpdate,
@@ -23,8 +23,8 @@ export class ProbeRouter {
 	}
 
 	public async findMatchingProbes (userRequest: UserRequest): Promise<{
-		onlineProbesMap: Map<number, Probe>;
-		allProbes: (Probe | OfflineProbe)[];
+		onlineProbesMap: Map<number, ServerProbe>;
+		allProbes: (ServerProbe | OfflineProbe)[];
 		request: MeasurementRequest;
 	}> {
 		const locations = userRequest.locations ?? [];
@@ -37,7 +37,7 @@ export class ProbeRouter {
 		const preferredIpVersion = userRequest.measurementOptions?.ipVersion ?? 4;
 		const connectedProbesFilteredByIpVersion = this.probesFilter.filterByIpVersion(this.readyProbes, preferredIpVersion);
 
-		let filtered: Probe[] = [];
+		let filtered: ServerProbe[] = [];
 
 		if (locations.some(l => l.limit)) {
 			filtered = captureSpan('findWithLocationLimit', () => this.findWithLocationLimit(connectedProbesFilteredByIpVersion, locations));
@@ -58,19 +58,19 @@ export class ProbeRouter {
 		};
 	}
 
-	private findGloballyDistributed (probes: Probe[], limit: number): Probe[] {
+	private findGloballyDistributed (probes: ServerProbe[], limit: number): ServerProbe[] {
 		return this.probesFilter.filterGloballyDistributed(probes, limit);
 	}
 
-	private findWithGlobalLimit (probes: Probe[], locations: Location[], limit: number): Probe[] {
+	private findWithGlobalLimit (probes: ServerProbe[], locations: Location[], limit: number): ServerProbe[] {
 		const weight = 100 / locations.length;
 		const distribution = new Map(locations.map(l => [ l, weight ]));
 
 		return this.probesFilter.filterByLocationAndWeight(probes, distribution, limit);
 	}
 
-	private findWithLocationLimit (probes: Probe[], locations: LocationWithLimit[]): Probe[] {
-		const grouped = new Map<LocationWithLimit, Probe[]>();
+	private findWithLocationLimit (probes: ServerProbe[], locations: LocationWithLimit[]): ServerProbe[] {
+		const grouped = new Map<LocationWithLimit, ServerProbe[]>();
 
 		for (const location of locations) {
 			const { limit, ...l } = location;
@@ -81,7 +81,7 @@ export class ProbeRouter {
 			}
 		}
 
-		const picked = new Set<Probe>();
+		const picked = new Set<ServerProbe>();
 
 		for (const [ loc, soc ] of grouped) {
 			for (const s of _.take(soc, loc.limit)) {
@@ -92,9 +92,9 @@ export class ProbeRouter {
 		return [ ...picked ];
 	}
 
-	private async findWithMeasurementId (connectedProbes: Probe[], measurementId: string, userRequest: UserRequest): Promise<{
-		onlineProbesMap: Map<number, Probe>;
-		allProbes: (Probe | OfflineProbe)[];
+	private async findWithMeasurementId (connectedProbes: ServerProbe[], measurementId: string, userRequest: UserRequest): Promise<{
+		onlineProbesMap: Map<number, ServerProbe>;
+		allProbes: (ServerProbe | OfflineProbe)[];
 		request: MeasurementRequest;
 	}> {
 		const ipToConnectedProbe = new Map(connectedProbes.map(probe => [
@@ -105,8 +105,8 @@ export class ProbeRouter {
 		const prevMeasurement = await this.store.getMeasurement(measurementId);
 
 		const emptyResult = { onlineProbesMap: new Map(), allProbes: [], request: userRequest } as {
-			onlineProbesMap: Map<number, Probe>;
-			allProbes: (Probe | OfflineProbe)[];
+			onlineProbesMap: Map<number, ServerProbe>;
+			allProbes: (ServerProbe | OfflineProbe)[];
 			request: MeasurementRequest;
 		};
 
@@ -115,8 +115,8 @@ export class ProbeRouter {
 		}
 
 		const request: MeasurementRequest = { ...userRequest, limit: prevMeasurement.limit, locations: prevMeasurement.locations };
-		const onlineProbesMap: Map<number, Probe> = new Map();
-		const allProbes: (Probe | OfflineProbe)[] = [];
+		const onlineProbesMap: Map<number, ServerProbe> = new Map();
+		const allProbes: (ServerProbe | OfflineProbe)[] = [];
 
 		for (let i = 0; i < prevIps.length; i++) {
 			const ip = prevIps[i]!;

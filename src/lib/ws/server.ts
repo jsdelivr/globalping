@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { Namespace, type RemoteSocket, Server, Socket } from 'socket.io';
 import { createShardedAdapter } from '@socket.io/redis-adapter';
-import type { Probe } from '../../probe/types.js';
+import type { ServerProbe, SocketProbe } from '../../probe/types.js';
 import { getRedisClient } from '../redis/client.js';
 import { SyncedProbeList } from './synced-probe-list.js';
 import { client } from '../sql/client.js';
@@ -18,7 +18,7 @@ export interface DefaultEventsMap {
 }
 
 export type SocketData = {
-	probe: Probe;
+	probe: SocketProbe;
 };
 
 export type RemoteProbeSocket = RemoteSocket<DefaultEventsMap, SocketData>;
@@ -83,7 +83,7 @@ export const fetchRawSockets = async () => {
 	return io.of(PROBES_NAMESPACE).fetchSockets();
 };
 
-export const getProbesWithAdminData = (): Probe[] => {
+export const getProbesWithAdminData = (): SocketProbe[] => {
 	if (!syncedProbeList) {
 		throw new Error('WS server not initialized yet');
 	}
@@ -91,7 +91,7 @@ export const getProbesWithAdminData = (): Probe[] => {
 	return syncedProbeList.getProbesWithAdminData();
 };
 
-export const fetchProbes = async ({ allowStale = true } = {}): Promise<Probe[]> => {
+export const fetchProbes = async ({ allowStale = true } = {}): Promise<ServerProbe[]> => {
 	if (!syncedProbeList) {
 		throw new Error('WS server not initialized yet');
 	}
@@ -99,7 +99,7 @@ export const fetchProbes = async ({ allowStale = true } = {}): Promise<Probe[]> 
 	return allowStale ? syncedProbeList.getProbes() : syncedProbeList.fetchProbes();
 };
 
-export const getProbeByIp = async (ip: string, { allowStale = true } = {}): Promise<Probe | null> => {
+export const getProbeByIp = async (ip: string, { allowStale = true } = {}): Promise<ServerProbe | null> => {
 	if (!syncedProbeList) {
 		throw new Error('WS server not initialized yet');
 	}
@@ -111,7 +111,7 @@ export const getProbeByIp = async (ip: string, { allowStale = true } = {}): Prom
 	return syncedProbeList.getProbeByIp(ip);
 };
 
-export const onProbesUpdate = (callback: (probes: Probe[]) => void): (() => void) => {
+export const onProbesUpdate = (callback: (probes: ServerProbe[]) => void): (() => void) => {
 	const handler = () => callback(syncedProbeList.getProbes());
 	ee.on(E_PROBE_UPDATE, handler);
 

@@ -2,7 +2,7 @@
 import ipaddr from 'ipaddr.js';
 import type { Knex } from 'knex';
 import config from 'config';
-import type { Probe, ProbeLocation } from '../../probe/types.js';
+import type { ProbeLocation, SocketProbe } from '../../probe/types.js';
 import { normalizeFromPublicName } from '../geoip/utils.js';
 import { getContinentByCountry, getRegionByCountry } from '../location/location.js';
 import { scopedLogger } from '../logger.js';
@@ -88,7 +88,7 @@ export class AdminData {
 		}
 	}
 
-	getUpdatedProbes (probes: Probe[]) {
+	getUpdatedProbes (probes: SocketProbe[]) {
 		return probes.map((probe) => {
 			const updatedFields = this.getUpdatedFields(probe);
 
@@ -106,7 +106,7 @@ export class AdminData {
 		});
 	}
 
-	getUpdatedLocation (probe: Probe): ProbeLocation | null {
+	getUpdatedLocation (probe: SocketProbe): ProbeLocation | null {
 		const updatedFields = this.getUpdatedFields(probe);
 
 		if (!updatedFields) {
@@ -119,7 +119,7 @@ export class AdminData {
 		};
 	}
 
-	private getUpdatedFields (probe: Probe): UpdatedFields | null {
+	private getUpdatedFields (probe: SocketProbe): UpdatedFields | null {
 		const ips = [ probe.ipAddress, ...probe.altIpAddresses ];
 
 		if (ips.some(ip => this.ipsToUpdatedFieldsCache.get(ip) === undefined)) {
@@ -131,7 +131,7 @@ export class AdminData {
 		return this.ipsToUpdatedFieldsCache.get(probe.ipAddress)!;
 	}
 
-	findUpdatedFields (probe: Probe): UpdatedFields | null {
+	findUpdatedFields (probe: SocketProbe): UpdatedFields | null {
 		const parsedIps = [ probe.ipAddress, ...probe.altIpAddresses ].map(this.parseIp);
 
 		for (const [ range, updatedFields ] of this.rangesToUpdatedFields) {

@@ -1,6 +1,6 @@
 import type { DefaultContext, DefaultState, ParameterizedContext } from 'koa';
 import type Router from '@koa/router';
-import type { Probe } from '../types.js';
+import type { ServerProbe } from '../types.js';
 import { fetchProbes } from '../../lib/ws/server.js';
 
 const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
@@ -11,7 +11,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		probes = probes.filter(probe => probe.status === 'ready');
 	}
 
-	ctx.body = probes.map((probe: Probe) => ({
+	ctx.body = probes.map((probe: ServerProbe) => ({
 		status: isAdmin ? probe.status : undefined,
 		version: probe.version,
 		isIPv4Supported: isAdmin ? probe.isIPv4Supported : undefined,

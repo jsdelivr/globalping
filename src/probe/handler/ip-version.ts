@@ -1,7 +1,7 @@
-import type { Probe } from '../types.js';
+import type { SocketProbe } from '../types.js';
 import { ipVersionSchema } from '../schema/probe-response-schema.js';
 
-export const handleIsIPv4SupportedUpdate = (probe: Probe) => (isIPv4Supported: boolean): void => {
+export const handleIsIPv4SupportedUpdate = (probe: SocketProbe) => (isIPv4Supported: boolean): void => {
 	const validation = ipVersionSchema.validate(isIPv4Supported);
 
 	if (validation.error) {
@@ -11,7 +11,7 @@ export const handleIsIPv4SupportedUpdate = (probe: Probe) => (isIPv4Supported: b
 	probe.isIPv4Supported = validation.value;
 };
 
-export const handleIsIPv6SupportedUpdate = (probe: Probe) => (isIPv6Supported: boolean): void => {
+export const handleIsIPv6SupportedUpdate = (probe: SocketProbe) => (isIPv6Supported: boolean): void => {
 	const validation = ipVersionSchema.validate(isIPv6Supported);
 
 	if (validation.error) {

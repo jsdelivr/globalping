@@ -81,6 +81,7 @@ describe('Create measurement request', () => {
 				normalizedNetwork: 'the constant company',
 				allowedCountries: [ 'US' ],
 				groupingKey: 'US-TX-dallas-20004',
+				hasOverridesApplied: true,
 			},
 		]);
 

@@ -5,13 +5,13 @@ import * as td from 'testdouble';
 import { MeasurementStore } from '../../../../src/measurement/store.js';
 import { ProbeRouter } from '../../../../src/probe/router.js';
 import { MetricsAgent } from '../../../../src/lib/metrics.js';
-import type { Probe } from '../../../../src/probe/types.js';
+import type { ServerProbe } from '../../../../src/probe/types.js';
 import type { MeasurementRunner } from '../../../../src/measurement/runner.js';
 import type { MeasurementRecord, MeasurementResultMessage } from '../../../../src/measurement/types.js';
 import createHttpError from 'http-errors';
 import type { ExtendedContext } from '../../../../src/types.js';
 
-const getProbe = (id: number) => ({ client: id } as unknown as Probe);
+const getProbe = (id: number) => ({ client: id } as unknown as ServerProbe);
 
 const req = {
 	headers: {

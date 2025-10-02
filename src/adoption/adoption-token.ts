@@ -1,7 +1,7 @@
 import type { Knex } from 'knex';
 import { scopedLogger } from '../lib/logger.js';
 import { client } from '../lib/sql/client.js';
-import { Probe } from '../probe/types.js';
+import { SocketProbe } from '../probe/types.js';
 import { ServerSocket, adoptedProbes } from '../lib/ws/server.js';
 import { AdoptedProbes } from '../lib/override/adopted-probes.js';
 import got from 'got';
@@ -100,7 +100,7 @@ export class AdoptionToken {
 		return user;
 	}
 
-	async validateToken (token: string, probe: Probe): Promise<{ message: string | null; level?: 'info' | 'warn' }> {
+	async validateToken (token: string, probe: SocketProbe): Promise<{ message: string | null; level?: 'info' | 'warn' }> {
 		const user = await this.getUserByToken(token);
 
 		if (!user) {
@@ -123,7 +123,7 @@ export class AdoptionToken {
 		return { message: 'Probe successfully adopted by token.' };
 	}
 
-	private async fetchDProbe (probe: Probe) {
+	private async fetchDProbe (probe: SocketProbe) {
 		const dProbe = await this.sql(PROBES_TABLE)
 			.where({ uuid: probe.uuid })
 			.orWhere({ ip: probe.ipAddress })
@@ -133,7 +133,7 @@ export class AdoptionToken {
 		return dProbe || null;
 	}
 
-	private async adoptProbe (probe: Probe, user: User) {
+	private async adoptProbe (probe: SocketProbe, user: User) {
 		await got.put(`${directusUrl}/adoption-code/adopt-by-token`, {
 			json: {
 				probe: AdoptedProbes.formatProbeAsDProbe(probe),

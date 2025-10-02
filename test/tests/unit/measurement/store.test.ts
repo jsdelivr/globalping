@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import relativeDayUtc from 'relative-day-utc';
 import type { MeasurementStore } from '../../../../src/measurement/store.js';
-import type { OfflineProbe, Probe } from '../../../../src/probe/types.js';
+import type { OfflineProbe, ServerProbe } from '../../../../src/probe/types.js';
 import type { PingResult } from '../../../../src/measurement/types.js';
 
 const getProbe = (id: string, ip: string) => ({
@@ -24,7 +24,7 @@ const getProbe = (id: string, ip: string) => ({
 	},
 	tags: [],
 	resolvers: [],
-} as unknown as Probe);
+} as unknown as ServerProbe);
 
 const getOfflineProbe = (id: string, ip: string) => ({
 	...getProbe(id, ip),

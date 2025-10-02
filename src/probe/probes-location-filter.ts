@@ -2,7 +2,7 @@ import { countries } from 'countries-list';
 import config from 'config';
 import _ from 'lodash';
 import type { Location } from '../lib/location/types.js';
-import type { Probe, ProbeLocation } from './types.js';
+import type { ServerProbe, ProbeLocation } from './types.js';
 import { captureSpan } from '../lib/metrics.js';
 import { alpha, aliases as countryAliases } from '../lib/location/countries.js';
 import { continents } from '../lib/location/continents.js';
@@ -45,7 +45,7 @@ export class ProbesLocationFilter {
 		];
 	}
 
-	updateGlobalIndex (probes: Probe[]) {
+	updateGlobalIndex (probes: ServerProbe[]) {
 		this.globalIndex[4] = new Set(probes.map(p => p.index[4]).flat());
 		this.globalIndex[13] = new Set(probes.map(p => p.index[13]).flat());
 		this.globalIndex[14] = new Set(probes.map(p => p.index[14]).flat());
@@ -64,7 +64,7 @@ export class ProbesLocationFilter {
 		return i === -1 ? Number.MAX_SAFE_INTEGER : i;
 	}
 
-	magicFilter (probes: Probe[], magicLocation: string) {
+	magicFilter (probes: ServerProbe[], magicLocation: string) {
 		let resultProbes = probes;
 		const keywords = magicLocation.toLowerCase().split('+').map(k => ({ system: k.replaceAll('-', ' ').trim(), userTag: k.trim() }));
 
@@ -93,7 +93,7 @@ export class ProbesLocationFilter {
 		return resultProbes;
 	}
 
-	checkExactIndexPosition (probe: Probe, filterValue: string, position: number) {
+	checkExactIndexPosition (probe: ServerProbe, filterValue: string, position: number) {
 		if (!probe.index[position]) {
 			return false;
 		}
@@ -101,24 +101,24 @@ export class ProbesLocationFilter {
 		return probe.index[position].some(index => index === filterValue);
 	}
 
-	getIndexPosition (probe: Probe, filterValue: string) {
+	getIndexPosition (probe: ServerProbe, filterValue: string) {
 		return probe.index.findIndex(category => category.some(index => index.includes(filterValue)));
 	}
 
-	hasTag (probe: Probe, normalizedFilterValue: string) {
+	hasTag (probe: ServerProbe, normalizedFilterValue: string) {
 		return probe.normalizedTags.some(({ value }) => value === normalizedFilterValue);
 	}
 
-	hasUserTag (probe: Probe, normalizedFilterValue: string) {
+	hasUserTag (probe: ServerProbe, normalizedFilterValue: string) {
 		return probe.normalizedTags.filter(({ type }) => type === 'user').some(({ value }) => value === normalizedFilterValue);
 	}
 
-	public filterGloballyDistributed (probes: Probe[], limit: number): Probe[] {
+	public filterGloballyDistributed (probes: ServerProbe[], limit: number): ServerProbe[] {
 		const distribution = this.getDistributionConfig();
 		return this.filterByLocationAndWeight(probes, distribution, limit);
 	}
 
-	public filterByIpVersion (probes: Probe[], ipVersion: 4 | 6): Probe[] {
+	public filterByIpVersion (probes: ServerProbe[], ipVersion: 4 | 6): ServerProbe[] {
 		if (ipVersion === 4) {
 			return probes.filter(probe => probe.isIPv4Supported);
 		} else if (ipVersion === 6) {
@@ -128,7 +128,7 @@ export class ProbesLocationFilter {
 		return probes;
 	}
 
-	public filterByLocation (probes: Probe[], location: Location): Probe[] {
+	public filterByLocation (probes: ServerProbe[], location: Location): ServerProbe[] {
 		if (location.magic?.toLowerCase() === 'world') {
 			return this.diversifiedShuffle(this.filterGloballyDistributed(probes, probes.length));
 		}
@@ -155,8 +155,8 @@ export class ProbesLocationFilter {
 		return captureSpan('shuffle', () => isMagicSorting ? this.magicSort(filteredProbes, location.magic!) : this.diversifiedShuffle(filteredProbes));
 	}
 
-	public filterByLocationAndWeight (probes: Probe[], distribution: Map<Location, number>, limit: number): Probe[] {
-		const groupedByLocation = new Map<Location, Probe[]>();
+	public filterByLocationAndWeight (probes: ServerProbe[], distribution: Map<Location, number>, limit: number): ServerProbe[] {
+		const groupedByLocation = new Map<Location, ServerProbe[]>();
 
 		for (const [ location ] of distribution) {
 			const foundProbes = captureSpan('filterByLocation', () => this.filterByLocation(probes, location));
@@ -166,7 +166,7 @@ export class ProbesLocationFilter {
 			}
 		}
 
-		const pickedProbes = new Set<Probe>();
+		const pickedProbes = new Set<ServerProbe>();
 
 		while (groupedByLocation.size > 0 && pickedProbes.size < limit) {
 			const selectedCount = pickedProbes.size;
@@ -194,8 +194,8 @@ export class ProbesLocationFilter {
 		return [ ...pickedProbes ];
 	}
 
-	private magicSort (probes: Probe[], magicString: string): Probe[] {
-		const getClosestIndexPosition = (probe: Probe) => {
+	private magicSort (probes: ServerProbe[], magicString: string): ServerProbe[] {
+		const getClosestIndexPosition = (probe: ServerProbe) => {
 			const keywords = magicString.split('+');
 			const closestIndexPosition = keywords.reduce((smallestIndex, keyword) => {
 				const indexPosition = this.getIndexPosition(probe, keyword);
@@ -213,7 +213,7 @@ export class ProbesLocationFilter {
 
 			groups.push(group);
 			return { groups, count: count + group.length };
-		}, { groups: [] as Probe[][], count: 0 }).groups;
+		}, { groups: [] as ServerProbe[][], count: 0 }).groups;
 
 		const groupsWithShuffledItems = groupsSortedByIndexPosition.map(group => this.diversifiedShuffle(group));
 		const resultProbes = groupsWithShuffledItems.flat();
@@ -223,7 +223,7 @@ export class ProbesLocationFilter {
 
 	// Returns the probes in randomized order while prioritizing unique locations.
 	// See https://github.com/jsdelivr/globalping/issues/636#issuecomment-2748843542
-	private diversifiedShuffle (probes: Probe[]): Probe[] {
+	private diversifiedShuffle (probes: ServerProbe[]): ServerProbe[] {
 		// Prioritize groups with more probes but preserve a bit of randomness by reducing the number of unique values.
 		const groupRank = (count: number) => count < 8 ? Math.floor(count / 2) : Math.ceil(Math.log2(count));
 
@@ -237,7 +237,7 @@ export class ProbesLocationFilter {
 
 		// For each group, compute the frequency of the same city in earlier groups.
 		const counts: { [k: string]: number } = {};
-		const shuffledProbes: Probe[] = [];
+		const shuffledProbes: ServerProbe[] = [];
 
 		for (const group of groupedProbes) {
 			group.prevSameCity = counts[group.cityKey] ?? (counts[group.cityKey] = 0);

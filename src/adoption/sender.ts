@@ -1,7 +1,7 @@
 import createHttpError from 'http-errors';
 import { getProbeByIp as serverGetProbeByIp, getWsServer, PROBES_NAMESPACE, type WsServer } from '../lib/ws/server.js';
 import type { AdoptionCodeRequest } from './types.js';
-import type { Probe } from '../probe/types.js';
+import type { ServerProbe } from '../probe/types.js';
 
 export class CodeSender {
 	constructor (
@@ -21,7 +21,7 @@ export class CodeSender {
 		return probe;
 	}
 
-	private sendToProbe (probe: Probe, code: string) {
+	private sendToProbe (probe: ServerProbe, code: string) {
 		this.io.of(PROBES_NAMESPACE).to(probe.client).emit('probe:adoption:code', {
 			code,
 		});
