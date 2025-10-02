@@ -3,7 +3,6 @@ import apmAgent from 'elastic-apm-node';
 import createHttpError from 'http-errors';
 import { getMeasurementStore } from '../store.js';
 import { checkGetMeasurementRateLimit } from '../../lib/rate-limiter/rate-limiter-get.js';
-import { captureSpan } from '../../lib/metrics.js';
 import type { ExtendedContext } from '../../types.js';
 
 const store = getMeasurementStore();
@@ -16,7 +15,7 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 		return;
 	}
 
-	await captureSpan('checkRateLimit', () => checkGetMeasurementRateLimit(ctx));
+	await checkGetMeasurementRateLimit(ctx);
 
 	const result = await store.getMeasurementString(id);
 	apmAgent.addLabels({ gpMeasurementId: id });

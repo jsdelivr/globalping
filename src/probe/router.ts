@@ -74,7 +74,7 @@ export class ProbeRouter {
 
 		for (const location of locations) {
 			const { limit, ...l } = location;
-			const found = captureSpan('filterByLocation', () => this.probesFilter.filterByLocation(probes, l));
+			const found = this.probesFilter.filterByLocation(probes, l);
 
 			if (found.length > 0) {
 				grouped.set(location, found);

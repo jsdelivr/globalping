@@ -5,7 +5,7 @@ import apmAgent from 'elastic-apm-node';
 import { getWsServer, PROBES_NAMESPACE } from '../lib/ws/server.js';
 import { getProbeRouter, type ProbeRouter } from '../probe/router.js';
 import type { ServerProbe } from '../probe/types.js';
-import { captureSpan, getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
+import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
 import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage, UserRequest, MeasurementRequestMessage } from './types.js';
@@ -30,7 +30,7 @@ export class MeasurementRunner {
 			throw createHttpError(422, `No matching IPv${ipVersion} probes available.`, { type: 'no_probes_found' });
 		}
 
-		await captureSpan('checkRateLimit', () => this.checkRateLimit(ctx, onlineProbesMap.size));
+		await this.checkRateLimit(ctx, onlineProbesMap.size);
 
 		const measurementId = await this.store.createMeasurement(request, onlineProbesMap, allProbes);
 		apmAgent.addLabels({ gpMeasurementId: measurementId, gpMeasurementType: request.type, gpMeasurementTarget: request.target, gpMeasurementProbes: onlineProbesMap.size }, false);

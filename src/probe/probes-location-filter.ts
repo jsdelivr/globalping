@@ -159,7 +159,7 @@ export class ProbesLocationFilter {
 		const groupedByLocation = new Map<Location, ServerProbe[]>();
 
 		for (const [ location ] of distribution) {
-			const foundProbes = captureSpan('filterByLocation', () => this.filterByLocation(probes, location));
+			const foundProbes = this.filterByLocation(probes, location);
 
 			if (foundProbes.length > 0) {
 				groupedByLocation.set(location, foundProbes);
