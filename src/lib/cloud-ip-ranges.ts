@@ -12,8 +12,11 @@ type Source = {
 	file: string;
 };
 
-const ipV4Ranges = new Map<ParsedIpRange, string>();
-const ipV6Ranges = new Map<ParsedIpRange, string>();
+// Cluster ranges by the first octet (IPv4) and the first hextet/segment (IPv6)
+// IPv4 buckets: 0-255; IPv6 buckets: 0-65535 (created on demand)
+// Assumes all IPv4 ranges are at least /8 and all IPv6 ranges are at least /16
+const ipV4Ranges = new Map<number, Map<ParsedIpRange, string>>();
+const ipV6Ranges = new Map<number, Map<ParsedIpRange, string>>();
 
 export const sources: Record<'gcp' | 'aws' | 'azure' | 'oci', Source> = {
 	gcp: {
@@ -42,6 +45,28 @@ const query = async (url: string): Promise<string> => {
 	return result;
 };
 
+const addIpv4Range = (cidr: string, region: string) => {
+	const parsed = ipaddr.parseCIDR(cidr);
+	const firstOctet = (parsed[0] as ipaddr.IPv4).octets[0]!;
+
+	if (!ipV4Ranges.has(firstOctet)) {
+		ipV4Ranges.set(firstOctet, new Map());
+	}
+
+	ipV4Ranges.get(firstOctet)!.set(parsed, region);
+};
+
+const addIpv6Range = (cidr: string, region: string) => {
+	const parsed = ipaddr.parseCIDR(cidr);
+	const firstSeg = (parsed[0] as ipaddr.IPv6).parts[0]!;
+
+	if (!ipV6Ranges.has(firstSeg)) {
+		ipV6Ranges.set(firstSeg, new Map());
+	}
+
+	ipV6Ranges.get(firstSeg)!.set(parsed, region);
+};
+
 const populateGcpList = async () => {
 	const gcpSource = sources.gcp;
 	const filePath = path.join(path.resolve(), gcpSource.file);
@@ -59,13 +84,13 @@ const populateGcpList = async () => {
 
 	for (const [ region, entries ] of Object.entries(byRegionV4)) {
 		for (const cidr of mergeCidr(entries.map(entry => entry.ipv4Prefix))) {
-			ipV4Ranges.set(ipaddr.parseCIDR(cidr), `gcp-${region}`);
+			addIpv4Range(cidr, `gcp-${region}`);
 		}
 	}
 
 	for (const [ region, entries ] of Object.entries(byRegionV6)) {
 		for (const cidr of mergeCidr(entries.map(entry => entry.ipv6Prefix))) {
-			ipV6Ranges.set(ipaddr.parseCIDR(cidr), `gcp-${region}`);
+			addIpv6Range(cidr, `gcp-${region}`);
 		}
 	}
 };
@@ -90,13 +115,13 @@ const populateAwsList = async () => {
 
 	for (const [ region, entries ] of Object.entries(byRegionV4)) {
 		for (const cidr of mergeCidr(entries.map(entry => entry.ip_prefix))) {
-			ipV4Ranges.set(ipaddr.parseCIDR(cidr), `aws-${region}`);
+			addIpv4Range(cidr, `aws-${region}`);
 		}
 	}
 
 	for (const [ region, entries ] of Object.entries(byRegionV6)) {
 		for (const cidr of mergeCidr(entries.map(entry => entry.ipv6_prefix))) {
-			ipV6Ranges.set(ipaddr.parseCIDR(cidr), `aws-${region}`);
+			addIpv6Range(cidr, `aws-${region}`);
 		}
 	}
 };
@@ -131,11 +156,11 @@ export async function populateAzureList () {
 		}
 
 		for (const prefix of mergeCidr(v4)) {
-			ipV4Ranges.set(ipaddr.parseCIDR(prefix), `azure-${region}`);
+			addIpv4Range(prefix, `azure-${region}`);
 		}
 
 		for (const prefix of mergeCidr(v6)) {
-			ipV6Ranges.set(ipaddr.parseCIDR(prefix), `azure-${region}`);
+			addIpv6Range(prefix, `azure-${region}`);
 		}
 	}
 }
@@ -166,11 +191,11 @@ export async function populateOracleList () {
 		}
 
 		for (const prefix of mergeCidr(v4)) {
-			ipV4Ranges.set(ipaddr.parseCIDR(prefix), `oci-${region}`);
+			addIpv4Range(prefix, `oci-${region}`);
 		}
 
 		for (const prefix of mergeCidr(v6)) {
-			ipV6Ranges.set(ipaddr.parseCIDR(prefix), `oci-${region}`);
+			addIpv6Range(prefix, `oci-${region}`);
 		}
 	}
 }
@@ -196,15 +221,25 @@ export const getRegion = (ip: string) => {
 	const parsedIp = ipaddr.process(ip);
 
 	if (parsedIp.kind() === 'ipv4') {
-		for (const [ ipRange, region ] of ipV4Ranges) {
-			if (parsedIp.match(ipRange)) {
-				return region;
+		const firstOctet = (parsedIp as ipaddr.IPv4).octets[0]!;
+		const bucket = ipV4Ranges.get(firstOctet);
+
+		if (bucket) {
+			for (const [ ipRange, region ] of bucket) {
+				if (parsedIp.match(ipRange)) {
+					return region;
+				}
 			}
 		}
 	} else if (parsedIp.kind() === 'ipv6') {
-		for (const [ ipRange, region ] of ipV6Ranges) {
-			if (parsedIp.match(ipRange)) {
-				return region;
+		const firstSeg = (parsedIp as ipaddr.IPv6).parts[0]!;
+		const bucket = ipV6Ranges.get(firstSeg);
+
+		if (bucket) {
+			for (const [ ipRange, region ] of bucket) {
+				if (parsedIp.match(ipRange)) {
+					return region;
+				}
 			}
 		}
 	}
