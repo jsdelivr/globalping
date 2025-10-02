@@ -12,6 +12,7 @@ data/IP_BLACKLIST.json
 data/AWS_IP_RANGES.json
 data/GCP_IP_RANGES.json
 data/AZURE_IP_RANGES.json
+data/OCI_IP_RANGES.json
 data/GEONAMES_CITIES.csv
 data/LAST_API_COMMIT_HASH.txt
 data/APPLE_RELAY_IP_RANGES.csv

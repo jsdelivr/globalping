@@ -1,0 +1,15 @@
+{
+	"regions": [
+		{
+			"region": "us-ashburn-1",
+			"cidrs": [
+				{
+					"cidr": "129.80.0.0/16",
+					"tags": [
+						"OCI"
+					]
+				}
+			]
+		}
+	]
+}

@@ -8,15 +8,18 @@ const mockDataPath = path.join(path.resolve(), 'test/mocks/cloud-ip-ranges');
 const gcpMockRanges = await readFile(path.join(mockDataPath, 'nock-gcp.json'), 'utf8');
 const awsMockRanges = await readFile(path.join(mockDataPath, 'nock-aws.json'), 'utf8');
 const azureMockRanges = await readFile(path.join(mockDataPath, 'nock-azure.json'), 'utf8');
+const ociMockRanges = await readFile(path.join(mockDataPath, 'nock-oci.json'), 'utf8');
 const gcpUrl = new URL(sources.gcp.url);
 const awsUrl = new URL(sources.aws.url);
 const azureUrl = new URL(sources.azure.url);
+const ociUrl = new URL(sources.oci.url);
 
 describe('cloud ip ranges', () => {
 	before(() => {
 		nock(gcpUrl.origin).get(gcpUrl.pathname).reply(200, gcpMockRanges);
 		nock(awsUrl.origin).get(awsUrl.pathname).reply(200, awsMockRanges);
 		nock(azureUrl.origin).get(azureUrl.pathname).reply(200, azureMockRanges);
+		nock(ociUrl.origin).get(ociUrl.pathname).reply(200, ociMockRanges);
 	});
 
 	after(() => {
@@ -61,6 +64,11 @@ describe('cloud ip ranges', () => {
 		it('should return azure region', () => {
 			const region = getRegion('20.215.0.64');
 			expect(region).to.equal('azure-polandcentral');
+		});
+
+		it('should return oci region', () => {
+			const region = getRegion('129.80.0.0');
+			expect(region).to.equal('oci-us-ashburn-1');
 		});
 
 		it('should return region for gcp IPv6 ips', () => {
