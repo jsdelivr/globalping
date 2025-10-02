@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import relativeDayUtc from 'relative-day-utc';
 import { AdoptedProbes, Row } from '../../../../src/lib/override/adopted-probes.js';
-import type { ServerProbe, SocketProbe } from '../../../../src/probe/types.js';
+import type { SocketProbe } from '../../../../src/probe/types.js';
 
 describe('AdoptedProbes', () => {
 	const defaultAdoption: Row = {
@@ -394,7 +394,7 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company',
 					allowedCountries: [ 'GB' ],
 				},
-			} as ServerProbe,
+			},
 		]);
 
 		await adoptedProbes.syncDashboardData();
@@ -498,7 +498,7 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company',
 					allowedCountries: [ 'GB' ],
 				},
-			} as ServerProbe,
+			},
 			{
 				ipAddress: '9.9.9.9',
 				altIpAddresses: [] as string[],
@@ -526,7 +526,7 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company',
 					allowedCountries: [ 'GB' ],
 				},
-			} as ServerProbe,
+			},
 		]);
 
 		await adoptedProbes.syncDashboardData();
@@ -622,7 +622,7 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company',
 					allowedCountries: [ 'IE' ],
 				},
-			} as ServerProbe,
+			},
 			{
 				ipAddress: '9.9.9.9',
 				altIpAddresses: [] as string[],
@@ -650,7 +650,7 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company',
 					allowedCountries: [ 'IE' ],
 				},
-			} as ServerProbe,
+			},
 		]);
 
 		await adoptedProbes.syncDashboardData();
@@ -748,7 +748,7 @@ describe('AdoptedProbes', () => {
 					network: 'The Constant Company',
 					allowedCountries: [ 'GB', 'PT' ],
 				},
-			} as ServerProbe,
+			},
 		]);
 
 		await adoptedProbes.syncDashboardData();
