@@ -18,6 +18,7 @@
 		"any-ascii": "^0.3.3",
 		"bluebird": "^3.7.2",
 		"bufferutil": "^4.0.9",
+		"cidr-tools": "^11.0.3",
 		"config": "^4.1.1",
 		"config-mapper-env": "^3.0.1",
 		"countries-list": "^3.1.1",
