@@ -1,5 +1,5 @@
 export const aliases = [
-	[ 'aws', 'amazon.com, inc.', 'amazon technologies inc.' ],
-	[ 'vultr', 'choopa, llc' ],
-	[ 'netia', 'internetia sp.z o.o.' ],
+	[ 'amazon.com', 'amazon technologies' ],
+	[ 'vultr', 'choopa' ],
+	[ 'netia', 'internetia' ],
 ];
