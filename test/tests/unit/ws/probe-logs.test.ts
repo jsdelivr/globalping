@@ -47,11 +47,16 @@ describe('probe logs', () => {
 		const result2 = await logHandler({ logs: [] } as unknown as LogMessage).catch(err => err);
 		const result3 = await logHandler({ skipped: 1, logs: [{ invalid: true }] } as unknown as LogMessage).catch(err => err);
 		const result4 = await logHandler({ skipped: 1, logs: [], extra: true } as LogMessage).catch(err => err);
+		const result5 = await logHandler({
+			skipped: 1,
+			logs: [{ message: Array(8193).fill('1').join(''), timestamp: 'ok', level: 'ok', scope: 'ok' }],
+		}).catch(err => err);
 
 		expect(result1).to.be.instanceof(Error);
 		expect(result2).to.be.instanceof(Error);
 		expect(result3).to.be.instanceof(Error);
 		expect(result4).to.be.instanceof(Error);
+		expect(result5).to.be.instanceof(Error);
 
 		expect(multiStub.called).to.equal(false);
 		expect(transactionStub.xAdd.called).to.equal(false);
