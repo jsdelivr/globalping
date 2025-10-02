@@ -8,6 +8,7 @@ import { ProbeError } from './probe-error.js';
 import { isIpBlocked } from './blocked-ip-ranges.js';
 import { getPersistentRedisClient, type RedisClient } from './redis/persistent-client.js';
 import { ServerProbe, SocketProbe } from '../probe/types.js';
+import { updateProbe } from '../probe/builder.js';
 import { probeOverride } from './ws/server.js';
 
 const getRandomBytes = promisify(randomBytes);
@@ -37,7 +38,8 @@ export class AltIpsClient {
 		const serverProbe = { ...probe, location: probeOverride.getUpdatedLocation(probe) };
 		const { ipsWithValidTokens, tokenErrors } = await this.validateTokens(ipsToTokens, serverProbe);
 		const { altIpAddresses, ipErrors } = await this.validateIps(ipsWithValidTokens, serverProbe);
-		probe.altIpAddresses = altIpAddresses;
+
+		updateProbe(probe, probe.ipAddress, altIpAddresses);
 
 		return {
 			addedAltIps: probe.altIpAddresses,

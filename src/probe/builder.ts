@@ -100,6 +100,28 @@ export const buildProbe = async (socket: Socket): Promise<SocketProbe> => {
 	};
 };
 
+export const updateProbe = (probe: SocketProbe, ip: string, altIps: string[]): void => {
+	probe.ipAddress = ip;
+	probe.altIpAddresses = altIps;
+
+	if (!getRegion(ip)) {
+		for (const altIp of altIps) {
+			const region = getRegion(altIp);
+
+			if (region) {
+				probe.tags.unshift({
+					type: 'system',
+					value: region,
+				});
+
+				probe.normalizedTags = normalizeTags(probe.tags);
+				probe.index = getIndex(probe.location, probe.normalizedTags);
+				break;
+			}
+		}
+	}
+};
+
 const getLocation = (ipInfo: LocationInfo): ExtendedProbeLocation => ({
 	continent: ipInfo.continent,
 	region: ipInfo.region,
