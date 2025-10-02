@@ -15,7 +15,7 @@ type Source = {
 const ipV4Ranges = new Map<ParsedIpRange, string>();
 const ipV6Ranges = new Map<ParsedIpRange, string>();
 
-export const sources: Record<'gcp' | 'aws', Source> = {
+export const sources: Record<'gcp' | 'aws' | 'azure', Source> = {
 	gcp: {
 		url: 'https://www.gstatic.com/ipranges/cloud.json',
 		file: 'data/GCP_IP_RANGES.json',
@@ -23,6 +23,10 @@ export const sources: Record<'gcp' | 'aws', Source> = {
 	aws: {
 		url: 'https://ip-ranges.amazonaws.com/ip-ranges.json',
 		file: 'data/AWS_IP_RANGES.json',
+	},
+	azure: {
+		url: 'https://download.microsoft.com/download/7/1/D/71D86715-5596-4529-9B13-DA13A5DE5B63/ServiceTags_Public_Latest.json',
+		file: 'data/AZURE_IP_RANGES.json',
 	},
 };
 
@@ -46,8 +50,8 @@ const populateGcpList = async () => {
 		}>;
 	};
 
-	const byRegionV4 = _.groupBy(data.prefixes.filter(prefix => prefix.ipv4Prefix), 'scope');
-	const byRegionV6 = _.groupBy(data.prefixes.filter(prefix => prefix.ipv6Prefix), 'scope');
+	const byRegionV4 = _.groupBy(data.prefixes.filter(prefix => prefix.scope && prefix.ipv4Prefix), 'scope');
+	const byRegionV6 = _.groupBy(data.prefixes.filter(prefix => prefix.scope && prefix.ipv6Prefix), 'scope');
 
 	for (const [ region, entries ] of Object.entries(byRegionV4)) {
 		for (const cidr of mergeCidr(entries.map(entry => entry.ipv4Prefix))) {
@@ -77,8 +81,8 @@ const populateAwsList = async () => {
 		}>;
 	};
 
-	const byRegionV4 = _.groupBy(data.prefixes.filter(prefix => prefix.ip_prefix), 'region');
-	const byRegionV6 = _.groupBy(data.ipv6_prefixes.filter(prefix => prefix.ipv6_prefix), 'region');
+	const byRegionV4 = _.groupBy(data.prefixes.filter(prefix => prefix.region && prefix.ip_prefix), 'region');
+	const byRegionV6 = _.groupBy(data.ipv6_prefixes.filter(prefix => prefix.region && prefix.ipv6_prefix), 'region');
 
 	for (const [ region, entries ] of Object.entries(byRegionV4)) {
 		for (const cidr of mergeCidr(entries.map(entry => entry.ip_prefix))) {
@@ -93,10 +97,50 @@ const populateAwsList = async () => {
 	}
 };
 
+export async function populateAzureList () {
+	const azureSource = sources.azure;
+	const filePath = path.join(path.resolve(), azureSource.file);
+	const json = await readFile(filePath, 'utf8');
+	const data = JSON.parse(json) as {
+		values: Array<{
+			properties: {
+				region: string;
+				addressPrefixes: string[];
+			};
+		}>;
+	};
+
+	const byRegion = _.groupBy(data.values.filter(entry => entry.properties.region), 'properties.region');
+
+	for (const [ region, entries ] of Object.entries(byRegion)) {
+		const v4: string[] = [];
+		const v6: string[] = [];
+
+		for (const entry of entries) {
+			for (const addressPrefix of entry.properties.addressPrefixes) {
+				if (ipaddr.parseCIDR(addressPrefix)[0].kind() === 'ipv4') {
+					v4.push(addressPrefix);
+				} else if (ipaddr.parseCIDR(addressPrefix)[0].kind() === 'ipv6') {
+					v6.push(addressPrefix);
+				}
+			}
+		}
+
+		for (const prefix of mergeCidr(v4)) {
+			ipV4Ranges.set(ipaddr.parseCIDR(prefix), `azure-${region}`);
+		}
+
+		for (const prefix of mergeCidr(v6)) {
+			ipV6Ranges.set(ipaddr.parseCIDR(prefix), `azure-${region}`);
+		}
+	}
+}
+
 export const populateMemList = async (): Promise<void> => {
 	await Promise.all([
 		populateGcpList(),
 		populateAwsList(),
+		populateAzureList(),
 	]);
 };
 

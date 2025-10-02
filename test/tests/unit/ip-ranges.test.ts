@@ -7,13 +7,16 @@ import { updateIpRangeFiles, sources, populateMemList, getRegion } from '../../.
 const mockDataPath = path.join(path.resolve(), 'test/mocks/cloud-ip-ranges');
 const gcpMockRanges = await readFile(path.join(mockDataPath, 'nock-gcp.json'), 'utf8');
 const awsMockRanges = await readFile(path.join(mockDataPath, 'nock-aws.json'), 'utf8');
+const azureMockRanges = await readFile(path.join(mockDataPath, 'nock-azure.json'), 'utf8');
 const gcpUrl = new URL(sources.gcp.url);
 const awsUrl = new URL(sources.aws.url);
+const azureUrl = new URL(sources.azure.url);
 
 describe('cloud ip ranges', () => {
 	before(() => {
 		nock(gcpUrl.origin).get(gcpUrl.pathname).reply(200, gcpMockRanges);
 		nock(awsUrl.origin).get(awsUrl.pathname).reply(200, awsMockRanges);
+		nock(azureUrl.origin).get(azureUrl.pathname).reply(200, azureMockRanges);
 	});
 
 	after(() => {
@@ -55,6 +58,11 @@ describe('cloud ip ranges', () => {
 			expect(region).to.equal('aws-af-south-1');
 		});
 
+		it('should return azure region', () => {
+			const region = getRegion('20.215.0.64');
+			expect(region).to.equal('azure-polandcentral');
+		});
+
 		it('should return region for gcp IPv6 ips', () => {
 			const region = getRegion('2600:1900:4180::0001');
 			expect(region).to.equal('gcp-us-west4');
@@ -63,6 +71,11 @@ describe('cloud ip ranges', () => {
 		it('should return region for aws IPv6 ips', () => {
 			const region = getRegion('2600:1ff2:4000::0001');
 			expect(region).to.equal('aws-us-west-2');
+		});
+
+		it('should return region for azure IPv6 ips', () => {
+			const region = getRegion('2603:1020:1302::40');
+			expect(region).to.equal('azure-polandcentral');
 		});
 	});
 });
