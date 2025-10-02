@@ -15,7 +15,7 @@ type Source = {
 const ipV4Ranges = new Map<ParsedIpRange, string>();
 const ipV6Ranges = new Map<ParsedIpRange, string>();
 
-export const sources: Record<'gcp' | 'aws' | 'azure', Source> = {
+export const sources: Record<'gcp' | 'aws' | 'azure' | 'oci', Source> = {
 	gcp: {
 		url: 'https://www.gstatic.com/ipranges/cloud.json',
 		file: 'data/GCP_IP_RANGES.json',
@@ -27,6 +27,10 @@ export const sources: Record<'gcp' | 'aws' | 'azure', Source> = {
 	azure: {
 		url: 'https://download.microsoft.com/download/7/1/D/71D86715-5596-4529-9B13-DA13A5DE5B63/ServiceTags_Public_Latest.json',
 		file: 'data/AZURE_IP_RANGES.json',
+	},
+	oci: {
+		url: 'https://docs.oracle.com/en-us/iaas/tools/public_ip_ranges.json',
+		file: 'data/OCI_IP_RANGES.json',
 	},
 };
 
@@ -136,11 +140,47 @@ export async function populateAzureList () {
 	}
 }
 
+export async function populateOracleList () {
+	const ociSource = sources.oci;
+	const filePath = path.join(path.resolve(), ociSource.file);
+	const json = await readFile(filePath, 'utf8');
+	const data = JSON.parse(json) as {
+		regions: Array<{
+			region: string;
+			cidrs: Array<{
+				cidr: string;
+			}>;
+		}>;
+	};
+
+	for (const { region, cidrs } of Object.values(data.regions)) {
+		const v4: string[] = [];
+		const v6: string[] = [];
+
+		for (const { cidr } of cidrs) {
+			if (ipaddr.parseCIDR(cidr)[0].kind() === 'ipv4') {
+				v4.push(cidr);
+			} else if (ipaddr.parseCIDR(cidr)[0].kind() === 'ipv6') {
+				v6.push(cidr);
+			}
+		}
+
+		for (const prefix of mergeCidr(v4)) {
+			ipV4Ranges.set(ipaddr.parseCIDR(prefix), `oci-${region}`);
+		}
+
+		for (const prefix of mergeCidr(v6)) {
+			ipV6Ranges.set(ipaddr.parseCIDR(prefix), `oci-${region}`);
+		}
+	}
+}
+
 export const populateMemList = async (): Promise<void> => {
 	await Promise.all([
 		populateGcpList(),
 		populateAwsList(),
 		populateAzureList(),
+		populateOracleList(),
 	]);
 };
 
