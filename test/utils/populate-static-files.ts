@@ -30,6 +30,7 @@ const ipMockResult = await readFile(path.join(mockDataPath, 'malware/nock-ip.txt
 const domainMockResult = await readFile(path.join(mockDataPath, 'malware/nock-domain.txt'), 'utf8');
 const gcpMockRanges = await readFile(path.join(mockDataPath, 'cloud-ip-ranges/nock-gcp.json'), 'utf8');
 const awsMockRanges = await readFile(path.join(mockDataPath, 'cloud-ip-ranges/nock-aws.json'), 'utf8');
+const azureMockRanges = await readFile(path.join(mockDataPath, 'cloud-ip-ranges/nock-azure.json'), 'utf8');
 const appleRelayMockRanges = await readFile(path.join(mockDataPath, 'blocked-ip-ranges/nock-apple-relay.csv'), 'utf8');
 
 export const populateIpList = async (): Promise<void> => {
@@ -61,8 +62,10 @@ export const populateDomainList = async (): Promise<void> => {
 export const populateCloudIpRangesList = async (): Promise<void> => {
 	const gcpUrl = new URL(cloudIpRangesSources.gcp.url);
 	const awsUrl = new URL(cloudIpRangesSources.aws.url);
+	const azureUrl = new URL(cloudIpRangesSources.azure.url);
 	nock(gcpUrl.origin).get(gcpUrl.pathname).reply(200, gcpMockRanges);
 	nock(awsUrl.origin).get(awsUrl.pathname).reply(200, awsMockRanges);
+	nock(azureUrl.origin).get(azureUrl.pathname).reply(200, azureMockRanges);
 	await updateIpRangeFiles();
 	await populateMemCloudIpRangesList();
 };
