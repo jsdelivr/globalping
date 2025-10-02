@@ -1,7 +1,9 @@
 import { writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import got from 'got';
+import _ from 'lodash';
 import ipaddr from 'ipaddr.js';
+import { mergeCidr } from 'cidr-tools';
 
 type ParsedIpRange = [ipaddr.IPv4 | ipaddr.IPv6, number];
 
@@ -44,11 +46,18 @@ const populateGcpList = async () => {
 		}>;
 	};
 
-	for (const { ipv4Prefix, ipv6Prefix, scope } of data.prefixes) {
-		if (ipv4Prefix) {
-			ipV4Ranges.set(ipaddr.parseCIDR(ipv4Prefix), `gcp-${scope}`);
-		} else if (ipv6Prefix) {
-			ipV6Ranges.set(ipaddr.parseCIDR(ipv6Prefix), `gcp-${scope}`);
+	const byRegionV4 = _.groupBy(data.prefixes.filter(prefix => prefix.ipv4Prefix), 'scope');
+	const byRegionV6 = _.groupBy(data.prefixes.filter(prefix => prefix.ipv6Prefix), 'scope');
+
+	for (const [ region, entries ] of Object.entries(byRegionV4)) {
+		for (const cidr of mergeCidr(entries.map(entry => entry.ipv4Prefix))) {
+			ipV4Ranges.set(ipaddr.parseCIDR(cidr), `gcp-${region}`);
+		}
+	}
+
+	for (const [ region, entries ] of Object.entries(byRegionV6)) {
+		for (const cidr of mergeCidr(entries.map(entry => entry.ipv6Prefix))) {
+			ipV6Ranges.set(ipaddr.parseCIDR(cidr), `gcp-${region}`);
 		}
 	}
 };
@@ -68,12 +77,19 @@ const populateAwsList = async () => {
 		}>;
 	};
 
-	for (const { ip_prefix, region } of data.prefixes) {
-		ipV4Ranges.set(ipaddr.parseCIDR(ip_prefix), `aws-${region}`);
+	const byRegionV4 = _.groupBy(data.prefixes.filter(prefix => prefix.ip_prefix), 'region');
+	const byRegionV6 = _.groupBy(data.ipv6_prefixes.filter(prefix => prefix.ipv6_prefix), 'region');
+
+	for (const [ region, entries ] of Object.entries(byRegionV4)) {
+		for (const cidr of mergeCidr(entries.map(entry => entry.ip_prefix))) {
+			ipV4Ranges.set(ipaddr.parseCIDR(cidr), `aws-${region}`);
+		}
 	}
 
-	for (const { ipv6_prefix, region } of data.ipv6_prefixes) {
-		ipV6Ranges.set(ipaddr.parseCIDR(ipv6_prefix), `aws-${region}`);
+	for (const [ region, entries ] of Object.entries(byRegionV6)) {
+		for (const cidr of mergeCidr(entries.map(entry => entry.ipv6_prefix))) {
+			ipV6Ranges.set(ipaddr.parseCIDR(cidr), `aws-${region}`);
+		}
 	}
 };
 
