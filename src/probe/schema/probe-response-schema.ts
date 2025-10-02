@@ -20,7 +20,7 @@ export const statsSchema = Joi.object<ProbeStats>({
 }).required();
 
 const logEntrySchema = Joi.object({
-	message: Joi.string().max(1024).required(),
+	message: Joi.string().max(8192).required(),
 	timestamp: Joi.string().max(32).required(),
 	level: Joi.string().max(8).required(),
 	scope: Joi.string().max(64).required(),
