@@ -6,7 +6,7 @@ import { getIndex } from '../lib/location/location.js';
 import { ProbeError } from '../lib/probe-error.js';
 import { getGeoIpClient, LocationInfo } from '../lib/geoip/client.js';
 import getProbeIp from '../lib/get-probe-ip.js';
-import { getRegion } from '../lib/cloud-ip-ranges.js';
+import { getCloudTags } from '../lib/cloud-ip-ranges.js';
 import type { ExtendedProbeLocation, SocketProbe, Tag } from './types.js';
 import { probeIpLimit } from '../lib/ws/server.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
@@ -104,16 +104,12 @@ export const updateProbe = (probe: SocketProbe, ip: string, altIps: string[]): v
 	probe.ipAddress = ip;
 	probe.altIpAddresses = altIps;
 
-	if (!getRegion(ip)) {
+	if (!getCloudTags(ip).length) {
 		for (const altIp of altIps) {
-			const region = getRegion(altIp);
+			const cloudTags = getCloudTags(altIp);
 
-			if (region) {
-				probe.tags.unshift({
-					type: 'system',
-					value: region,
-				});
-
+			if (cloudTags.length) {
+				probe.tags.unshift(...cloudTags.map(value => ({ type: 'system' as const, value })));
 				probe.normalizedTags = normalizeTags(probe.tags);
 				probe.index = getIndex(probe.location, probe.normalizedTags);
 				break;
@@ -140,14 +136,9 @@ const getLocation = (ipInfo: LocationInfo): ExtendedProbeLocation => ({
 
 const getTags = (clientIp: string, ipInfo: LocationInfo) => {
 	const tags: Tag[] = [];
-	const cloudRegion = getRegion(clientIp);
+	const cloudTags = getCloudTags(clientIp);
 
-	if (cloudRegion) {
-		tags.push({
-			type: 'system',
-			value: cloudRegion,
-		});
-	}
+	tags.push(...cloudTags.map(value => ({ type: 'system' as const, value })));
 
 	if (ipInfo.isHosting === true) {
 		tags.push({

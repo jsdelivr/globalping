@@ -38,7 +38,7 @@ describe('probe router', () => {
 
 	const setProbes = (probes: ServerProbe[]) => fetchProbesMockHandler(probes);
 	const geoLookupMock = sandbox.stub();
-	const getRegionMock = sandbox.stub();
+	const getCloudTagsMock = sandbox.stub();
 	const store = {
 		getMeasurementIps: sandbox.stub().resolves([]),
 		getMeasurement: sandbox.stub(),
@@ -76,12 +76,13 @@ describe('probe router', () => {
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/geoip/client.ts', { getGeoIpClient: () => ({ lookup: geoLookupMock }) });
-		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getRegion: getRegionMock });
+		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getCloudTags: getCloudTagsMock });
 		buildProbeInternal = (await import('../../../../src/probe/builder.js')).buildProbe as unknown as (socket: RemoteProbeSocket) => Promise<ServerProbe>;
 	});
 
 	beforeEach(() => {
 		sandbox.reset();
+		getCloudTagsMock.returns([]);
 		store.getMeasurementIps.resolves([]);
 	});
 
@@ -986,7 +987,7 @@ describe('probe router', () => {
 		describe('Location type - tag', () => {
 			for (const testCase of [ 'aws-eu', 'west 1' ]) {
 				it(`should match tag - ${testCase}`, async () => {
-					getRegionMock.returns('aws-eu-west-1');
+					getCloudTagsMock.returns([ 'aws-eu-west-1', 'aws' ]);
 					const probes: DeepPartial<ServerProbe[]> = [
 						await buildProbe(String(Date.now()), location),
 					];
@@ -1021,7 +1022,7 @@ describe('probe router', () => {
 		};
 
 		it('should return match for existing tag', async () => {
-			getRegionMock.returns('aws-eu-west-1');
+			getCloudTagsMock.returns([ 'aws-eu-west-1', 'aws' ]);
 			const probes: DeepPartial<ServerProbe[]> = [
 				await buildProbe(String(Date.now()), location),
 			];
@@ -1040,7 +1041,7 @@ describe('probe router', () => {
 		});
 
 		it('should return 0 matches for partial tag value', async () => {
-			getRegionMock.returns('aws-eu-west-1');
+			getCloudTagsMock.returns([ 'aws-eu-west-1', 'aws' ]);
 			const probes: DeepPartial<ServerProbe[]> = [
 				await buildProbe(String(Date.now()), location),
 			];
@@ -1077,7 +1078,7 @@ describe('probe router', () => {
 		});
 
 		it('should combine tags filter with other filters', async () => {
-			getRegionMock.returns('aws-eu-west-1');
+			getCloudTagsMock.returns([ 'aws-eu-west-1', 'aws' ]);
 			const probes: DeepPartial<ServerProbe[]> = [
 				await buildProbe(String(Date.now()), location),
 			];

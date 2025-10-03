@@ -24,7 +24,7 @@ describe('Create measurement request', () => {
 
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
-		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getRegion: () => 'gcp-us-west4', populateMemList: () => Promise.resolve() });
+		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getCloudTags: () => [ 'gcp-us-west4', 'gcp' ], populateMemList: () => Promise.resolve() });
 		({ getTestServer, waitForProbesUpdate, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
@@ -145,7 +145,7 @@ describe('Create measurement request', () => {
 								longitude: -96.81,
 								latitude: 32.78,
 								network: 'The Constant Company',
-								tags: [ 'gcp-us-west4', 'datacenter-network' ],
+								tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 								resolvers: [],
 							},
 							result: {
@@ -193,7 +193,7 @@ describe('Create measurement request', () => {
 								longitude: -96.81,
 								latitude: 32.78,
 								network: 'The Constant Company',
-								tags: [ 'gcp-us-west4', 'datacenter-network' ],
+								tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 								resolvers: [],
 							},
 							result: { status: 'in-progress', rawOutput: 'abc' },
@@ -236,7 +236,7 @@ describe('Create measurement request', () => {
 								longitude: -96.81,
 								latitude: 32.78,
 								network: 'The Constant Company',
-								tags: [ 'gcp-us-west4', 'datacenter-network' ],
+								tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 								resolvers: [],
 							},
 							result: { status: 'in-progress', rawOutput: 'abcdef' },
@@ -290,7 +290,7 @@ describe('Create measurement request', () => {
 								longitude: -96.81,
 								latitude: 32.78,
 								network: 'The Constant Company',
-								tags: [ 'gcp-us-west4', 'datacenter-network' ],
+								tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 								resolvers: [],
 							},
 							result: {
@@ -442,7 +442,7 @@ describe('Create measurement request', () => {
 						longitude: -96.81,
 						network: 'The Constant Company',
 					},
-					tags: [ 'gcp-us-west4', 'datacenter-network' ],
+					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
 					host: '',
 					stats: {
@@ -491,7 +491,7 @@ describe('Create measurement request', () => {
 						longitude: -96.81,
 						network: 'The Constant Company',
 					},
-					tags: [ 'gcp-us-west4', 'datacenter-network' ],
+					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
 					host: '',
 					stats: {
@@ -534,7 +534,7 @@ describe('Create measurement request', () => {
 						longitude: -96.81,
 						network: 'The Constant Company',
 					},
-					tags: [ 'gcp-us-west4', 'datacenter-network' ],
+					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
 					host: '',
 					stats: {
@@ -577,7 +577,7 @@ describe('Create measurement request', () => {
 						longitude: -96.81,
 						network: 'The Constant Company',
 					},
-					tags: [ 'gcp-us-west4', 'datacenter-network' ],
+					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
 					host: '',
 					stats: {
@@ -620,7 +620,7 @@ describe('Create measurement request', () => {
 						longitude: -96.81,
 						network: 'The Constant Company',
 					},
-					tags: [ 'gcp-us-west4', 'datacenter-network' ],
+					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
 					host: '',
 					stats: {

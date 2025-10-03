@@ -15,8 +15,8 @@ type Source = {
 // Cluster ranges by the first octet (IPv4) and the first hextet/segment (IPv6)
 // IPv4 buckets: 0-255; IPv6 buckets: 0-65535 (created on demand)
 // Assumes all IPv4 ranges are at least /8 and all IPv6 ranges are at least /16
-const ipV4Ranges = new Map<number, Map<ParsedIpRange, string>>();
-const ipV6Ranges = new Map<number, Map<ParsedIpRange, string>>();
+const ipV4Ranges = new Map<number, Map<ParsedIpRange, string[]>>();
+const ipV6Ranges = new Map<number, Map<ParsedIpRange, string[]>>();
 
 export const sources: Record<'gcp' | 'aws' | 'azure' | 'oci', Source> = {
 	gcp: {
@@ -45,7 +45,7 @@ const query = async (url: string): Promise<string> => {
 	return result;
 };
 
-const addIpv4Range = (cidr: string, region: string) => {
+const addIpv4Range = (cidr: string, tags: string[]) => {
 	const parsed = ipaddr.parseCIDR(cidr);
 	const firstOctet = (parsed[0] as ipaddr.IPv4).octets[0]!;
 
@@ -53,10 +53,10 @@ const addIpv4Range = (cidr: string, region: string) => {
 		ipV4Ranges.set(firstOctet, new Map());
 	}
 
-	ipV4Ranges.get(firstOctet)!.set(parsed, region);
+	ipV4Ranges.get(firstOctet)!.set(parsed, tags);
 };
 
-const addIpv6Range = (cidr: string, region: string) => {
+const addIpv6Range = (cidr: string, tags: string[]) => {
 	const parsed = ipaddr.parseCIDR(cidr);
 	const firstSeg = (parsed[0] as ipaddr.IPv6).parts[0]!;
 
@@ -64,7 +64,7 @@ const addIpv6Range = (cidr: string, region: string) => {
 		ipV6Ranges.set(firstSeg, new Map());
 	}
 
-	ipV6Ranges.get(firstSeg)!.set(parsed, region);
+	ipV6Ranges.get(firstSeg)!.set(parsed, tags);
 };
 
 const populateGcpList = async () => {
@@ -84,13 +84,13 @@ const populateGcpList = async () => {
 
 	for (const [ region, entries ] of Object.entries(byRegionV4)) {
 		for (const cidr of mergeCidr(entries.map(entry => entry.ipv4Prefix))) {
-			addIpv4Range(cidr, `gcp-${region}`);
+			addIpv4Range(cidr, [ `gcp-${region}`, `gcp` ]);
 		}
 	}
 
 	for (const [ region, entries ] of Object.entries(byRegionV6)) {
 		for (const cidr of mergeCidr(entries.map(entry => entry.ipv6Prefix))) {
-			addIpv6Range(cidr, `gcp-${region}`);
+			addIpv6Range(cidr, [ `gcp-${region}`, `gcp` ]);
 		}
 	}
 };
@@ -115,13 +115,13 @@ const populateAwsList = async () => {
 
 	for (const [ region, entries ] of Object.entries(byRegionV4)) {
 		for (const cidr of mergeCidr(entries.map(entry => entry.ip_prefix))) {
-			addIpv4Range(cidr, `aws-${region}`);
+			addIpv4Range(cidr, [ `aws-${region}`, `aws` ]);
 		}
 	}
 
 	for (const [ region, entries ] of Object.entries(byRegionV6)) {
 		for (const cidr of mergeCidr(entries.map(entry => entry.ipv6_prefix))) {
-			addIpv6Range(cidr, `aws-${region}`);
+			addIpv6Range(cidr, [ `aws-${region}`, `aws` ]);
 		}
 	}
 };
@@ -156,11 +156,11 @@ export async function populateAzureList () {
 		}
 
 		for (const prefix of mergeCidr(v4)) {
-			addIpv4Range(prefix, `azure-${region}`);
+			addIpv4Range(prefix, [ `azure-${region}`, `azure` ]);
 		}
 
 		for (const prefix of mergeCidr(v6)) {
-			addIpv6Range(prefix, `azure-${region}`);
+			addIpv6Range(prefix, [ `azure-${region}`, `azure` ]);
 		}
 	}
 }
@@ -191,11 +191,11 @@ export async function populateOracleList () {
 		}
 
 		for (const prefix of mergeCidr(v4)) {
-			addIpv4Range(prefix, `oci-${region}`);
+			addIpv4Range(prefix, [ `oci-${region}`, `oci` ]);
 		}
 
 		for (const prefix of mergeCidr(v6)) {
-			addIpv6Range(prefix, `oci-${region}`);
+			addIpv6Range(prefix, [ `oci-${region}`, `oci` ]);
 		}
 	}
 }
@@ -217,7 +217,7 @@ export const updateIpRangeFiles = async (): Promise<void> => {
 	}));
 };
 
-export const getRegion = (ip: string) => {
+export const getCloudTags = (ip: string) => {
 	const parsedIp = ipaddr.process(ip);
 
 	if (parsedIp.kind() === 'ipv4') {
@@ -244,5 +244,5 @@ export const getRegion = (ip: string) => {
 		}
 	}
 
-	return null;
+	return [];
 };
