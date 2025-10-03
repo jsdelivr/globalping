@@ -2,11 +2,12 @@ import * as process from 'node:process';
 import type { Socket } from 'socket.io';
 import { isIpPrivate } from '../lib/private-ip.js';
 import semver from 'semver';
+import _ from 'lodash';
 import { getIndex } from '../lib/location/location.js';
 import { ProbeError } from '../lib/probe-error.js';
 import { getGeoIpClient, LocationInfo } from '../lib/geoip/client.js';
 import getProbeIp from '../lib/get-probe-ip.js';
-import { getRegion } from '../lib/cloud-ip-ranges.js';
+import { getCloudTags } from '../lib/cloud-ip-ranges.js';
 import type { ExtendedProbeLocation, SocketProbe, Tag } from './types.js';
 import { probeIpLimit } from '../lib/ws/server.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
@@ -100,25 +101,23 @@ export const buildProbe = async (socket: Socket): Promise<SocketProbe> => {
 	};
 };
 
-export const updateProbe = (probe: SocketProbe, ip: string, altIps: string[]): void => {
-	probe.ipAddress = ip;
+export const updateProbeAltIps = (probe: SocketProbe, altIps: string[]): void => {
 	probe.altIpAddresses = altIps;
+	const newTags = probe.tags.filter(tag => tag.subtype !== 'cloud');
 
-	if (!getRegion(ip)) {
-		for (const altIp of altIps) {
-			const region = getRegion(altIp);
+	for (const ip of [ probe.ipAddress, ...altIps ]) {
+		const cloudTags = getCloudTags(ip);
 
-			if (region) {
-				probe.tags.unshift({
-					type: 'system',
-					value: region,
-				});
-
-				probe.normalizedTags = normalizeTags(probe.tags);
-				probe.index = getIndex(probe.location, probe.normalizedTags);
-				break;
-			}
+		if (cloudTags.length) {
+			newTags.unshift(...cloudTags.map(value => ({ type: 'system', subtype: 'cloud', value } as const)));
+			break;
 		}
+	}
+
+	if (!_.isEqual(newTags, probe.tags)) {
+		probe.tags = newTags;
+		probe.normalizedTags = normalizeTags(probe.tags);
+		probe.index = getIndex(probe.location, probe.normalizedTags);
 	}
 };
 
@@ -140,14 +139,9 @@ const getLocation = (ipInfo: LocationInfo): ExtendedProbeLocation => ({
 
 const getTags = (clientIp: string, ipInfo: LocationInfo) => {
 	const tags: Tag[] = [];
-	const cloudRegion = getRegion(clientIp);
+	const cloudTags = getCloudTags(clientIp);
 
-	if (cloudRegion) {
-		tags.push({
-			type: 'system',
-			value: cloudRegion,
-		});
-	}
+	tags.push(...cloudTags.map(value => ({ type: 'system', subtype: 'cloud', value } as const)));
 
 	if (ipInfo.isHosting === true) {
 		tags.push({

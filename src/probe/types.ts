@@ -40,6 +40,7 @@ export type HostInfo = {
 
 export type Tag = {
 	type: 'system' | 'admin' | 'user';
+	subtype?: 'cloud';
 	value: string;
 };
 
