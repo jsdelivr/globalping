@@ -225,9 +225,9 @@ export const getCloudTags = (ip: string) => {
 		const bucket = ipV4Ranges.get(firstOctet);
 
 		if (bucket) {
-			for (const [ ipRange, region ] of bucket) {
+			for (const [ ipRange, tags ] of bucket) {
 				if (parsedIp.match(ipRange)) {
-					return region;
+					return tags;
 				}
 			}
 		}
@@ -236,9 +236,9 @@ export const getCloudTags = (ip: string) => {
 		const bucket = ipV6Ranges.get(firstSeg);
 
 		if (bucket) {
-			for (const [ ipRange, region ] of bucket) {
+			for (const [ ipRange, tags ] of bucket) {
 				if (parsedIp.match(ipRange)) {
-					return region;
+					return tags;
 				}
 			}
 		}
