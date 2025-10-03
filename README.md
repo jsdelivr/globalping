@@ -141,7 +141,7 @@ Example commands to try:
 >[!Important]
 > To make the app post test results in Slack Threads, mention it using `@globalping`. For example,  `@globalping ping google.com`
 
-Learn more about the Slack app [on our blog](https://www.jsdelivr.com/blog/network-troubleshooting-in-slack-made-easy-with-globalping/).
+Learn more about the Slack app [on our blog](https://blog.globalping.io/network-troubleshooting-in-slack-made-easy-with-globalping/).
 
 ### GitHub Bot
 Automatically post network test results into any **public** GitHub issue with our GitHub bot. Mention it with `@globalping`, followed by the command you want to run. Otherwise, you can follow the same test command structure as with our other tools and integrations.
@@ -190,7 +190,7 @@ This is the best way to interact with Globalping, as it maintains a consistent a
 So, for example, when you run a test from "Germany" using the CLI, Slack app, or any other official integration, our API's magic parser processes the location.
 
 > [!Note]
-> Developers who want stricter and more predictable control over the selected probes and user input can use the individual location parameters [when making an API call](https://www.jsdelivr.com/docs/api.globalping.io#post-/v1/measurements), which expect you to provide each city, country, and tag in a standardized way.
+> Developers who want stricter and more predictable control over the selected probes and user input can use the individual location parameters [when making an API call](https://globalping.io/docs/api.globalping.io#post-/v1/measurements), which expect you to provide each city, country, and tag in a standardized way.
 
 The magic field supports a wide range of parameters and location combinations, including countries, continents, cities, US states, regions (Western Europe), ASNs, ISP names, eyeball or data center tags, and cloud region names (us-east-2).
 
