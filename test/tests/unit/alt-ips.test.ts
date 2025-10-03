@@ -20,6 +20,7 @@ describe('AltIpsClient', () => {
 				country: 'IT',
 				allowedCountries: [ 'IT' ],
 			},
+			tags: [],
 		} as unknown as ServerProbe;
 
 

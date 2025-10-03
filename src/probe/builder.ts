@@ -2,6 +2,7 @@ import * as process from 'node:process';
 import type { Socket } from 'socket.io';
 import { isIpPrivate } from '../lib/private-ip.js';
 import semver from 'semver';
+import _ from 'lodash';
 import { getIndex } from '../lib/location/location.js';
 import { ProbeError } from '../lib/probe-error.js';
 import { getGeoIpClient, LocationInfo } from '../lib/geoip/client.js';
@@ -102,18 +103,21 @@ export const buildProbe = async (socket: Socket): Promise<SocketProbe> => {
 
 export const updateProbeAltIps = (probe: SocketProbe, altIps: string[]): void => {
 	probe.altIpAddresses = altIps;
+	const newTags = probe.tags.filter(tag => tag.subtype !== 'cloud');
 
-	if (!getCloudTags(probe.ipAddress).length) {
-		for (const altIp of altIps) {
-			const cloudTags = getCloudTags(altIp);
+	for (const ip of [ probe.ipAddress, ...altIps ]) {
+		const cloudTags = getCloudTags(ip);
 
-			if (cloudTags.length) {
-				probe.tags.unshift(...cloudTags.map(value => ({ type: 'system' as const, value })));
-				probe.normalizedTags = normalizeTags(probe.tags);
-				probe.index = getIndex(probe.location, probe.normalizedTags);
-				break;
-			}
+		if (cloudTags.length) {
+			newTags.unshift(...cloudTags.map(value => ({ type: 'system', subtype: 'cloud', value } as const)));
+			break;
 		}
+	}
+
+	if (!_.isEqual(newTags, probe.tags)) {
+		probe.tags = newTags;
+		probe.normalizedTags = normalizeTags(probe.tags);
+		probe.index = getIndex(probe.location, probe.normalizedTags);
 	}
 };
 
@@ -137,7 +141,7 @@ const getTags = (clientIp: string, ipInfo: LocationInfo) => {
 	const tags: Tag[] = [];
 	const cloudTags = getCloudTags(clientIp);
 
-	tags.push(...cloudTags.map(value => ({ type: 'system' as const, value })));
+	tags.push(...cloudTags.map(value => ({ type: 'system', subtype: 'cloud', value } as const)));
 
 	if (ipInfo.isHosting === true) {
 		tags.push({
