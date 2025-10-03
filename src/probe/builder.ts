@@ -100,11 +100,10 @@ export const buildProbe = async (socket: Socket): Promise<SocketProbe> => {
 	};
 };
 
-export const updateProbe = (probe: SocketProbe, ip: string, altIps: string[]): void => {
-	probe.ipAddress = ip;
+export const updateProbeAltIps = (probe: SocketProbe, altIps: string[]): void => {
 	probe.altIpAddresses = altIps;
 
-	if (!getCloudTags(ip).length) {
+	if (!getCloudTags(probe.ipAddress).length) {
 		for (const altIp of altIps) {
 			const cloudTags = getCloudTags(altIp);
 
