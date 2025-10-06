@@ -102,7 +102,7 @@ export const buildProbe = async (socket: Socket): Promise<SocketProbe> => {
 };
 
 export const updateProbeAltIps = (probe: SocketProbe, altIps: string[]): void => {
-	probe.altIpAddresses = altIps;
+	probe.altIpAddresses = altIps.toSorted((a, b) => a.localeCompare(b));
 	const newTags = probe.tags.filter(tag => tag.subtype !== 'cloud');
 
 	for (const ip of [ probe.ipAddress, ...altIps ]) {
