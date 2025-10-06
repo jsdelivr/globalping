@@ -312,6 +312,7 @@ export class AdoptedProbes {
 
 		await this.resolveIfError(this.deleteDProbes(dProbesToDelete));
 		await Bluebird.map(dProbeUpdates, ({ dProbe, update }) => this.resolveIfError(this.updateDProbe(dProbe, update)), { concurrency: 8 });
+		probesWithoutDProbe.length && logger.info('probesWithoutDProbe:', { probes: probesWithoutDProbe });
 		await Bluebird.map(probesWithoutDProbe, probe => this.resolveIfError(this.createDProbe(probe)), { concurrency: 8 });
 	}
 
@@ -703,6 +704,7 @@ export class AdoptedProbes {
 			dProbe[dProbeField] = probeValue;
 		});
 
+		logger.info('inserting dProbe:', { probe: dProbe });
 		await this.sql(DASH_PROBES_TABLE).insert(dProbe);
 	}
 
