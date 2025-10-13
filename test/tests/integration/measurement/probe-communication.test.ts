@@ -20,10 +20,10 @@ describe('Create measurement request', () => {
 	const logHandlerStub = sandbox.stub();
 	const adoptionHandlerStub = sandbox.stub();
 	const requestHandlerStub = sandbox.stub();
-	const cryptoRandomString = sandbox.stub().returns('measurementid');
+	const generateMeasurementId = sandbox.stub().returns('measurementid');
 
 	before(async () => {
-		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
+		await td.replaceEsm('../../../../src/measurement/id.ts', { generateMeasurementId }, {});
 		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getCloudTags: () => [ 'gcp-us-west4', 'gcp' ], populateMemList: () => Promise.resolve() });
 		({ getTestServer, waitForProbesUpdate, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
 		const app = await getTestServer();

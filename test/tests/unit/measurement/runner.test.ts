@@ -81,6 +81,7 @@ describe('MeasurementRunner', () => {
 			request: {
 				body: request,
 			},
+			state: {},
 		} as unknown as ExtendedContext);
 
 
@@ -99,6 +100,7 @@ describe('MeasurementRunner', () => {
 			},
 			new Map([ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ].entries()),
 			[ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ],
+			undefined,
 		]);
 
 		expect(to.callCount).to.equal(4);
@@ -198,6 +200,7 @@ describe('MeasurementRunner', () => {
 			request: {
 				body: request,
 			},
+			state: {},
 		} as unknown as ExtendedContext);
 
 
@@ -216,6 +219,7 @@ describe('MeasurementRunner', () => {
 			},
 			new Map([ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ].entries()),
 			[ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ],
+			undefined,
 		]);
 
 		expect(to.callCount).to.equal(4);
@@ -329,6 +333,7 @@ describe('MeasurementRunner', () => {
 			request: {
 				body: request,
 			},
+			state: {},
 		} as unknown as ExtendedContext;
 
 		await runner.run(ctx);
@@ -396,6 +401,7 @@ describe('MeasurementRunner', () => {
 			request: {
 				body: request,
 			},
+			state: {},
 		} as unknown as ExtendedContext);
 
 		expect(store.markFinished.callCount).to.equal(1);

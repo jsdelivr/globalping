@@ -11,6 +11,7 @@
 		"@maxmind/geoip2-node": "^6.1.0",
 		"@redocly/openapi-core": "^2.2.1",
 		"@scure/base": "^2.0.0",
+		"@sindresorhus/base62": "^1.0.0",
 		"@sindresorhus/is": "^7.1.0",
 		"@sindresorhus/transliterate": "^2.0.0",
 		"@socket.io/redis-adapter": "^8.3.0",

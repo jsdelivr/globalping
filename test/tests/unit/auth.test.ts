@@ -36,6 +36,7 @@ describe('Auth', () => {
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
 			user_github_username: 'gh_user1',
+			user_user_type: 'member',
 		}]);
 
 		selectStub.onCall(2).resolves([]);
@@ -47,6 +48,7 @@ describe('Auth', () => {
 		expect(user1).to.deep.equal({
 			userId: 'user1',
 			username: 'gh_user1',
+			userType: 'member',
 			scopes: [],
 			hashedToken: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 		});
@@ -59,6 +61,7 @@ describe('Auth', () => {
 			value: '8YZ2pZoGQxfOeEGvUUkagX1yizZckq3weL+IN0chvU0=',
 			user_created: 'user2',
 			user_github_username: null,
+			user_user_type: 'member',
 		}]);
 
 		selectStub.onCall(4).resolves([]);
@@ -71,6 +74,7 @@ describe('Auth', () => {
 		expect(user2afterSync).to.deep.equal({
 			userId: 'user2',
 			username: null,
+			userType: 'member',
 			scopes: [],
 			hashedToken: '8YZ2pZoGQxfOeEGvUUkagX1yizZckq3weL+IN0chvU0=',
 		});
@@ -85,6 +89,7 @@ describe('Auth', () => {
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
 			user_github_username: 'gh_user1',
+			user_user_type: 'member',
 		}]);
 
 		await auth.syncTokens();
@@ -97,6 +102,7 @@ describe('Auth', () => {
 		expect(user).to.deep.equal({
 			userId: 'user1',
 			username: 'gh_user1',
+			userType: 'member',
 			scopes: [],
 			hashedToken: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 		});
@@ -111,6 +117,7 @@ describe('Auth', () => {
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
 			user_github_username: 'gh_user1',
+			user_user_type: 'member',
 		}]);
 
 		const user = await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
@@ -121,6 +128,7 @@ describe('Auth', () => {
 		expect(user).to.deep.equal({
 			userId: 'user1',
 			username: 'gh_user1',
+			userType: 'member',
 			scopes: [],
 			hashedToken: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 		});
@@ -136,6 +144,7 @@ describe('Auth', () => {
 			user_created: 'user1',
 			user_github_username: 'gh_user1',
 			date_last_used: new Date(),
+			user_user_type: 'member',
 		}]);
 
 		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
@@ -153,6 +162,7 @@ describe('Auth', () => {
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
 			user_github_username: 'gh_user1',
+			user_user_type: 'member',
 		}]);
 
 		await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');

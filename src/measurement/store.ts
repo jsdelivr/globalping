@@ -2,13 +2,15 @@ import is from '@sindresorhus/is';
 import Bluebird from 'bluebird';
 import config from 'config';
 import _ from 'lodash';
-import cryptoRandomString from 'crypto-random-string';
+
 import type { OfflineProbe, ServerProbe } from '../probe/types.js';
 import { scopedLogger } from '../lib/logger.js';
-import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType, MeasurementResultMessage } from './types.js';
+import type { MeasurementProgressMessage, MeasurementRecord, MeasurementRequest, MeasurementResult, MeasurementResultMessage, RequestType } from './types.js';
 import { getDefaults } from './schema/utils.js';
 import { getMeasurementRedisClient, type RedisCluster } from '../lib/redis/measurement-client.js';
 import { getPersistentRedisClient, type RedisClient } from '../lib/redis/persistent-client.js';
+import { AuthenticateStateUser } from '../lib/http/middleware/authenticate.js';
+import { generateMeasurementId } from './id.js';
 
 const logger = scopedLogger('store');
 
@@ -60,11 +62,11 @@ export class MeasurementStore {
 		return ips || [];
 	}
 
-	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[]): Promise<string> {
-		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
-		const key = getMeasurementKey(id);
+	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[], userType?: AuthenticateStateUser['userType']): Promise<string> {
 		const startTime = new Date();
 		const results = this.probesToResults(allProbes, request.type);
+		const id = generateMeasurementId(startTime, userType);
+		const key = getMeasurementKey(id);
 
 		const measurement: Partial<MeasurementRecord> = {
 			id,
