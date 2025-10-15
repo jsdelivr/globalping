@@ -1,6 +1,6 @@
 import type { Knex } from 'knex';
 import { scopedLogger } from '../lib/logger.js';
-import { client } from '../lib/sql/client.js';
+import { dashboardClient } from '../lib/sql/client.js';
 import { SocketProbe } from '../probe/types.js';
 import { ServerSocket, adoptedProbes } from '../lib/ws/server.js';
 import { AdoptedProbes } from '../lib/override/adopted-probes.js';
@@ -154,4 +154,4 @@ export class AdoptionToken {
 	}
 }
 
-export const adoptionToken = new AdoptionToken(client, adoptedProbes);
+export const adoptionToken = new AdoptionToken(dashboardClient, adoptedProbes);

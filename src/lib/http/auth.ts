@@ -3,7 +3,7 @@ import type { Knex } from 'knex';
 import TTLCache from '@isaacs/ttlcache';
 import { base32 } from '@scure/base';
 import { scopedLogger } from '../logger.js';
-import { client } from '../sql/client.js';
+import { dashboardClient } from '../sql/client.js';
 
 export const GP_TOKENS_TABLE = 'gp_tokens';
 export const USERS_TABLE = 'directus_users';
@@ -158,4 +158,4 @@ export class Auth {
 	}
 }
 
-export const auth = new Auth(client);
+export const auth = new Auth(dashboardClient);

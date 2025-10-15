@@ -28,15 +28,15 @@ import { initRedisClient } from '../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../src/lib/redis/persistent-client.js';
 import { initMeasurementRedisClient } from '../src/lib/redis/measurement-client.js';
 import { initSubscriptionRedisClient } from '../src/lib/redis/subscription-client.js';
-import { client as sql } from '../src/lib/sql/client.js';
+import { dashboardClient as sql } from '../src/lib/sql/client.js';
 import { extendSinonClock } from './utils/clock.js';
 
 global.clock = extendSinonClock(clock);
 
-const dbConfig = config.get<{ connection: { database: string; host: string } }>('db');
+const dashboardDbConfig = config.get<{ connection: { database: string; host: string } }>('dashboardDb');
 
-if (!dbConfig.connection.database.endsWith('-test') && dbConfig.connection.host !== 'localhost') {
-	throw new Error(`Database name for test env needs to end with "-test" or the host must be "localhost". Got "${dbConfig.connection.database}"@"${dbConfig.connection.host}".`);
+if (!dashboardDbConfig.connection.database.endsWith('-test') && dashboardDbConfig.connection.host !== 'localhost') {
+	throw new Error(`Database name for test env needs to end with "-test" or the host must be "localhost". Got "${dashboardDbConfig.connection.database}"@"${dashboardDbConfig.connection.host}".`);
 }
 
 before(async () => {

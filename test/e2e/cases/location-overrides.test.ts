@@ -1,6 +1,6 @@
 import got from 'got';
 import { expect } from 'chai';
-import { client } from '../../../src/lib/sql/client.js';
+import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { waitProbeInCity } from '../utils.js';
 
 const LOCATION_OVERRIDES_TABLE = 'gp_location_overrides';
@@ -9,7 +9,7 @@ describe('location overrides', () => {
 	before(async function () {
 		this.timeout(80000);
 
-		await client(LOCATION_OVERRIDES_TABLE).insert({
+		await dashboardClient(LOCATION_OVERRIDES_TABLE).insert({
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			date_created: new Date(),
 			user_updated: null,
@@ -27,7 +27,7 @@ describe('location overrides', () => {
 
 	after(async function () {
 		this.timeout(80000);
-		await client(LOCATION_OVERRIDES_TABLE).where({ city: 'Miami' }).delete();
+		await dashboardClient(LOCATION_OVERRIDES_TABLE).where({ city: 'Miami' }).delete();
 		await waitProbeInCity('Buenos Aires');
 	});
 

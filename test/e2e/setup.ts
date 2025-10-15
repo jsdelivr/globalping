@@ -7,7 +7,7 @@ import * as chai from 'chai';
 import { waitProbeToConnect } from './utils.js';
 import chaiOas from '../plugins/oas/index.js';
 import { docker } from './docker.js';
-import { client as sql } from '../../src/lib/sql/client.js';
+import { dashboardClient as sql } from '../../src/lib/sql/client.js';
 import { initRedisClient } from '../../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../../src/lib/redis/persistent-client.js';
 import { initMeasurementRedisClient } from '../../src/lib/redis/measurement-client.js';

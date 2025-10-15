@@ -1,6 +1,6 @@
 import got from 'got';
 import { expect } from 'chai';
-import { client } from '../../../src/lib/sql/client.js';
+import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { waitProbeInCity } from '../utils.js';
 import { randomUUID } from 'crypto';
 
@@ -10,9 +10,9 @@ describe('adopted probes', () => {
 	before(async function () {
 		this.timeout(80000);
 
-		await client('directus_users').delete();
+		await dashboardClient('directus_users').delete();
 
-		await client('directus_users').insert({
+		await dashboardClient('directus_users').insert({
 			id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			adoption_token: 'adoptionTokenValue',
 			github_username: 'jimaek',
@@ -21,9 +21,9 @@ describe('adopted probes', () => {
 			public_probes: true,
 		});
 
-		await client(PROBES_TABLE).delete();
+		await dashboardClient(PROBES_TABLE).delete();
 
-		await client(PROBES_TABLE).insert({
+		await dashboardClient(PROBES_TABLE).insert({
 			id: randomUUID(),
 			userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			lastSyncDate: new Date(),
@@ -60,7 +60,7 @@ describe('adopted probes', () => {
 
 	after(async function () {
 		this.timeout(80000);
-		await client(PROBES_TABLE).delete();
+		await dashboardClient(PROBES_TABLE).delete();
 		await waitProbeInCity('Buenos Aires');
 	});
 

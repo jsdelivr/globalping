@@ -1,12 +1,12 @@
 import { expect } from 'chai';
-import { client } from '../../../src/lib/sql/client.js';
+import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { waitRowInTable } from '../utils.js';
 
 const ADOPTIONS_TABLE = 'gp_probes';
 
 describe('probes sync', () => {
 	it('should insert new probe row to sql table', async () => {
-		await client(ADOPTIONS_TABLE).delete();
+		await dashboardClient(ADOPTIONS_TABLE).delete();
 		const row = await waitRowInTable(ADOPTIONS_TABLE);
 		expect(row).to.include({
 			date_updated: null,

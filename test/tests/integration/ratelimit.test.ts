@@ -5,7 +5,7 @@ import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } fr
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { anonymousRateLimiter as anonymousPostRateLimiter, authenticatedRateLimiter as authenticatedPostRateLimiter, failedCreditsAttempts } from '../../../src/lib/rate-limiter/rate-limiter-post.js';
 import { rateLimiter as getRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-get.js';
-import { client } from '../../../src/lib/sql/client.js';
+import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
 import { CREDITS_TABLE } from '../../../src/lib/credits.js';
 import { getPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
@@ -36,7 +36,7 @@ describe('rate limiter', () => {
 
 		await waitForProbesUpdate();
 
-		await client(GP_TOKENS_TABLE).insert([{
+		await dashboardClient(GP_TOKENS_TABLE).insert([{
 			name: 'test token',
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			value: 'Xj6kuKFEQ6zI60mr+ckHG7yQcIFGMJFzvtK9PBQ69y8=', // token: qz5kdukfcr3vggv3xbujvjwvirkpkkpx
@@ -61,7 +61,7 @@ describe('rate limiter', () => {
 
 	after(async () => {
 		await deleteFakeProbes();
-		await client(GP_TOKENS_TABLE).where({ value: 'Xj6kuKFEQ6zI60mr+ckHG7yQcIFGMJFzvtK9PBQ69y8=' }).delete();
+		await dashboardClient(GP_TOKENS_TABLE).where({ value: 'Xj6kuKFEQ6zI60mr+ckHG7yQcIFGMJFzvtK9PBQ69y8=' }).delete();
 	});
 
 	describe('headers', () => {
@@ -344,7 +344,7 @@ describe('rate limiter', () => {
 
 	describe('access with credits', () => {
 		beforeEach(async () => {
-			await client(CREDITS_TABLE).insert({
+			await dashboardClient(CREDITS_TABLE).insert({
 				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				amount: 10,
 			}).onConflict().merge({
@@ -368,7 +368,7 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.not.exist;
 			expect(response.headers['x-credits-remaining']).to.not.exist;
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(10);
 		});
 
@@ -388,7 +388,7 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('2');
 			expect(response.headers['x-credits-remaining']).to.equal('8');
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(8);
 		});
 
@@ -408,14 +408,14 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('1');
 			expect(response.headers['x-credits-remaining']).to.equal('9');
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(9);
 		});
 
 		it('should not consume paid credits if there are not enough to satisfy the request', async () => {
 			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0);
 
-			await client(CREDITS_TABLE).update({
+			await dashboardClient(CREDITS_TABLE).update({
 				amount: 1,
 			}).where({
 				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
@@ -434,7 +434,7 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('0');
 			expect(response.headers['x-credits-remaining']).to.equal('1');
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(1);
 		});
 
@@ -454,14 +454,14 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('2');
 			expect(response.headers['x-credits-remaining']).to.equal('8');
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(8);
 		});
 
 		it('should not consume free credits if there are not enough to satisfy the request', async () => {
 			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 499, 0);
 
-			await client(CREDITS_TABLE).update({
+			await dashboardClient(CREDITS_TABLE).update({
 				amount: 0,
 			}).where({
 				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
@@ -480,14 +480,14 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('0');
 			expect(response.headers['x-credits-remaining']).to.equal('0');
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(amount).to.equal(0);
 		});
 
 		it('should work fine if there is no credits row for that user', async () => {
 			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0);
 
-			await client(CREDITS_TABLE).where({
+			await dashboardClient(CREDITS_TABLE).where({
 				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			}).delete();
 
@@ -504,7 +504,7 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('0');
 			expect(response.headers['x-credits-remaining']).to.equal('0');
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const credits = await client(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const credits = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(credits).to.deep.equal([]);
 		});
 	});

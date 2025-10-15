@@ -6,7 +6,7 @@ import { SignJWT } from 'jose';
 import request, { type Agent } from 'supertest';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { addFakeProbe, deleteFakeProbes, getTestServer, waitForProbesUpdate } from '../../../utils/server.js';
-import { client } from '../../../../src/lib/sql/client.js';
+import { dashboardClient } from '../../../../src/lib/sql/client.js';
 import { auth, GP_TOKENS_TABLE, Token } from '../../../../src/lib/http/auth.js';
 import type { AuthenticateOptions } from '../../../../src/lib/http/middleware/authenticate.js';
 
@@ -27,7 +27,7 @@ describe('authenticate', () => {
 	});
 
 	beforeEach(async () => {
-		await client(GP_TOKENS_TABLE).where({ value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=' }).delete();
+		await dashboardClient(GP_TOKENS_TABLE).where({ value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=' }).delete();
 		await auth.syncTokens();
 	});
 
@@ -47,7 +47,7 @@ describe('authenticate', () => {
 		});
 
 		it('should accept if valid token was passed', async () => {
-			await client(GP_TOKENS_TABLE).insert({
+			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
@@ -65,7 +65,7 @@ describe('authenticate', () => {
 		});
 
 		it('should accept if origin is correct', async () => {
-			await client(GP_TOKENS_TABLE).insert({
+			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
@@ -85,7 +85,7 @@ describe('authenticate', () => {
 		});
 
 		it('should update "date_last_used" field', async () => {
-			await client(GP_TOKENS_TABLE).insert({
+			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
@@ -101,7 +101,7 @@ describe('authenticate', () => {
 				})
 				.expect(202);
 
-			const tokens = await client(GP_TOKENS_TABLE).select<Token[]>([ 'date_last_used' ]).where({
+			const tokens = await dashboardClient(GP_TOKENS_TABLE).select<Token[]>([ 'date_last_used' ]).where({
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			});
 
@@ -111,7 +111,7 @@ describe('authenticate', () => {
 		});
 
 		it('should get token from db if it is not synced yet', async () => {
-			await client(GP_TOKENS_TABLE).insert({
+			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
@@ -127,7 +127,7 @@ describe('authenticate', () => {
 		});
 
 		it('should use authenticatedTestsPerMeasurement limit for authenticated requests', async () => {
-			await client(GP_TOKENS_TABLE).insert({
+			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
@@ -182,7 +182,7 @@ describe('authenticate', () => {
 		});
 
 		it('should use anonymousTestsPerMeasurement limit for anonymous tokens', async () => {
-			await client(GP_TOKENS_TABLE).insert({
+			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
 				user_created: null,
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
@@ -227,7 +227,7 @@ describe('authenticate', () => {
 		});
 
 		it('should reject if token is expired', async () => {
-			await client(GP_TOKENS_TABLE).insert({
+			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
@@ -246,7 +246,7 @@ describe('authenticate', () => {
 		});
 
 		it('should reject if previously not synced token is expired', async () => {
-			await client(GP_TOKENS_TABLE).insert({
+			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
@@ -263,7 +263,7 @@ describe('authenticate', () => {
 		});
 
 		it('should reject if origin is wrong', async () => {
-			await client(GP_TOKENS_TABLE).insert({
+			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
 				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',

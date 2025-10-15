@@ -42,7 +42,7 @@ module.exports = {
 			},
 		},
 	},
-	db: {
+	dashboardDb: {
 		type: 'mysql',
 		connection: {
 			host: 'localhost',
@@ -50,6 +50,16 @@ module.exports = {
 			password: 'password',
 			database: 'dashboard-globalping',
 			port: 3306,
+		},
+	},
+	measurementStoreDb: {
+		type: 'pg',
+		connection: {
+			host: 'localhost',
+			user: 'globalping-api',
+			password: 'password',
+			database: 'globalping-measurement-store-1',
+			port: 5432,
 		},
 	},
 	data: {
