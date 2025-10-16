@@ -23,7 +23,7 @@ type RecordResultScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
 	transformArguments (measurementId: string, testId: string, data: MeasurementResultMessage['result']): string[];
-	transformReply (reply: string): MeasurementRecord | null;
+	transformReply (reply: boolean): boolean;
 } & {
 	SHA1: string;
 };
@@ -32,7 +32,7 @@ type MarkFinishedScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
 	transformArguments (measurementId: string): string[];
-	transformReply (): null;
+	transformReply (reply: string): MeasurementRecord | null;
 } & {
 	SHA1: string;
 };
@@ -166,10 +166,10 @@ const recordResult: RecordResultScript = defineScript({
 	redis.call('JSON.SET', keyMeasurementResults, '$.updatedAt', date)
 
 	if probesAwaiting ~= 0 then
-		return
+		return false
 	end
 
-	return redis.call('JSON.GET', keyMeasurementResults)
+	return true
 	`,
 	transformArguments (measurementId, testId, data) {
 		return [
@@ -183,7 +183,8 @@ const recordResult: RecordResultScript = defineScript({
 		];
 	},
 	transformReply (reply) {
-		return JSON.parse(reply) as MeasurementRecord | null;
+		console.log('recordResult', reply);
+		return reply;
 	},
 });
 
@@ -196,6 +197,8 @@ const markFinished: MarkFinishedScript = defineScript({
 
 	redis.call('DEL', keyMeasurementAwaiting)
 	redis.call('JSON.SET', keyMeasurementResults, '$.status', '"finished"')
+
+	return redis.call('JSON.GET', keyMeasurementResults)
 	`,
 	transformArguments (measurementId) {
 		return [
@@ -204,8 +207,8 @@ const markFinished: MarkFinishedScript = defineScript({
 			`gp:m:{${measurementId}}:probes_awaiting`,
 		];
 	},
-	transformReply () {
-		return null;
+	transformReply (reply) {
+		return JSON.parse(reply) as MeasurementRecord | null;
 	},
 });
 

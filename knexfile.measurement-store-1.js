@@ -26,6 +26,7 @@ export default _.merge({}, ...[ 'development', 'production', 'staging', 'test' ]
 				directory: path.join(__dirname, `./seeds/measurement-store-1/${environment}`),
 			},
 			migrations: {
+				stub: './migrations/measurement-store-1/migration.stub',
 				directory: path.join(__dirname, `./migrations/measurement-store-1`),
 			},
 		},

@@ -81,8 +81,7 @@ services:
   measurement-store-1:
     image: timescale/timescaledb:2.22.1-pg17
     environment:
-      - POSTGRES_DB=globalping-measurement-store-1
-      - POSTGRES_USER=directus
+      - POSTGRES_USER=globalping-api
       - POSTGRES_PASSWORD=password
     ports:
       - "15432:5432"

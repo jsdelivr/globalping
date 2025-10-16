@@ -8,6 +8,7 @@
 		"@elastic/elasticsearch": "^9.1.1",
 		"@isaacs/ttlcache": "^1.4.1",
 		"@koa/router": "^13.1.1",
+		"@martin-kolarik/batch-queue": "^1.1.1",
 		"@maxmind/geoip2-node": "^6.1.0",
 		"@redocly/openapi-core": "^2.2.1",
 		"@scure/base": "^2.0.0",
@@ -19,6 +20,7 @@
 		"any-ascii": "^0.3.3",
 		"bluebird": "^3.7.2",
 		"bufferutil": "^4.0.9",
+		"bullmq": "^5.12.0",
 		"cidr-tools": "^11.0.3",
 		"config": "^4.1.1",
 		"config-mapper-env": "^3.0.1",
@@ -56,6 +58,7 @@
 		"redis": "^4.7.1",
 		"semver": "^7.7.2",
 		"socket.io": "^4.8.1",
+		"type-fest": "^5.1.0",
 		"validator": "^13.15.15"
 	},
 	"devDependencies": {
@@ -127,6 +130,8 @@
 		"start": "ELASTIC_APM_CONFIG_FILE=elastic-apm-node.cjs node --max_old_space_size=3584 --max-semi-space-size=128 --experimental-loader elastic-apm-node/loader.mjs -r elastic-apm-node/start.js dist/src/index.js",
 		"start:dev": "NODE_ENV=development FAKE_PROBE_IP=1 tsx src/index.ts",
 		"start:test": "NODE_ENV=test knex --knexfile knexfile.dashboard.js migrate:latest && NODE_ENV=test tsx src/index.ts",
+		"knex:dashboard": "knex --knexfile knexfile.dashboard.js",
+		"knex:measurement-store-1": "knex --knexfile knexfile.measurement-store-1.js",
 		"lint": "npm run lint:js && npm run lint:types && npm run lint:docs",
 		"lint:fix": "npm run lint:js:fix && npm run lint:types && npm run lint:docs",
 		"lint:docs": "spectral lint public/**/spec.yaml",
