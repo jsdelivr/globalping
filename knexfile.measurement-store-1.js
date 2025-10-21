@@ -21,11 +21,12 @@ export default _.merge({}, ...[ 'development', 'production', 'staging', 'test' ]
 				max: 10,
 				propagateCreateError: false,
 			},
-			acquireConnectionTimeout: 10000,
+			acquireConnectionTimeout: 5000,
 			seeds: {
 				directory: path.join(__dirname, `./seeds/measurement-store-1/${environment}`),
 			},
 			migrations: {
+				stub: './migrations/measurement-store-1/migration.stub',
 				directory: path.join(__dirname, `./migrations/measurement-store-1`),
 			},
 		},

@@ -23,6 +23,9 @@ module.exports = {
 		standalonePersistent: {
 			url: 'redis://localhost:7001',
 		},
+		standalonePersistentNoEviction: {
+			url: 'redis://localhost:7003',
+		},
 		standaloneNonPersistent: {
 			url: 'redis://localhost:7002',
 		},
