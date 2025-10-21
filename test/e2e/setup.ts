@@ -1,5 +1,4 @@
 import Bluebird from 'bluebird';
-import type { Knex } from 'knex';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as chai from 'chai';
@@ -7,10 +6,13 @@ import * as chai from 'chai';
 import { waitProbeToConnect } from './utils.js';
 import chaiOas from '../plugins/oas/index.js';
 import { docker } from './docker.js';
-import { dashboardClient as sql } from '../../src/lib/sql/client.js';
+import { dashboardClient, measurementStoreClient } from '../../src/lib/sql/client.js';
 import { initRedisClient } from '../../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../../src/lib/redis/persistent-client.js';
 import { initMeasurementRedisClient } from '../../src/lib/redis/measurement-client.js';
+import { resetDbs } from '../utils/db.js';
+
+const dbClients = [ dashboardClient, measurementStoreClient ];
 
 before(async () => {
 	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../../public/v1/spec.yaml') }));
@@ -19,10 +21,7 @@ before(async () => {
 	await docker.removeApiContainer();
 
 	await flushRedis();
-
-	await dropAllTables(sql);
-	await sql.migrate.latest();
-	await sql.seed.run();
+	await resetDbs(dbClients);
 
 	await docker.createApiContainer();
 	await docker.createProbeContainer();
@@ -34,14 +33,6 @@ after(async () => {
 	await docker.removeProbeContainer();
 	await docker.removeApiContainer();
 });
-
-const dropAllTables = async (sql: Knex) => {
-	const allTables = (await sql('information_schema.tables')
-		.whereRaw(`table_schema = database()`)
-		.select(`table_name as table`)
-	).map(({ table }: { table: string }) => table);
-	await Bluebird.map(allTables, table => sql.schema.raw(`drop table \`${table}\``));
-};
 
 const flushRedis = async () => {
 	const [ client1, client2, cluster1 ] = await Promise.all([
