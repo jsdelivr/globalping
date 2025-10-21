@@ -32,6 +32,8 @@ describe('MeasurementRunner', () => {
 	let runner: MeasurementRunner;
 	let testId: number;
 
+	const mockedMeasurementId = '2000E2SZgEwA6W6HvzlT1z9VK';
+
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', null, () => testId++);
 		const { MeasurementRunner } = await import('../../../../src/measurement/runner.js');
@@ -42,7 +44,7 @@ describe('MeasurementRunner', () => {
 		sandbox.resetHistory();
 		to.returns({ emit });
 		io.of.withArgs('/probes').returns({ to } as any);
-		store.createMeasurement.resolves('measurementid');
+		store.createMeasurement.resolves(mockedMeasurementId);
 		testId = 0;
 	});
 
@@ -117,7 +119,7 @@ describe('MeasurementRunner', () => {
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			testId: '0',
 		}]);
 
@@ -133,7 +135,7 @@ describe('MeasurementRunner', () => {
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			testId: '1',
 		}]);
 
@@ -149,7 +151,7 @@ describe('MeasurementRunner', () => {
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			testId: '2',
 		}]);
 
@@ -165,7 +167,7 @@ describe('MeasurementRunner', () => {
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			testId: '3',
 		}]);
 
@@ -235,7 +237,7 @@ describe('MeasurementRunner', () => {
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			testId: '0',
 		}]);
 
@@ -249,7 +251,7 @@ describe('MeasurementRunner', () => {
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			testId: '1',
 		}]);
 
@@ -263,7 +265,7 @@ describe('MeasurementRunner', () => {
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			testId: '2',
 		}]);
 
@@ -277,7 +279,7 @@ describe('MeasurementRunner', () => {
 				target: 'jsdelivr.com',
 				type: 'ping',
 			},
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			testId: '3',
 		}]);
 
@@ -294,14 +296,14 @@ describe('MeasurementRunner', () => {
 			.onThirdCall().resolves(null);
 
 		await clock.tickAsync(25_000);
-		await runner.recordResult({ measurementId: 'measurementid', testId: 'testid1', result: {} as MeasurementResultMessage['result'] });
-		await runner.recordResult({ measurementId: 'measurementid', testId: 'testid2', result: {} as MeasurementResultMessage['result'] });
-		await runner.recordResult({ measurementId: 'measurementid', testId: 'testid3', result: {} as MeasurementResultMessage['result'] });
+		await runner.recordResult({ measurementId: mockedMeasurementId, testId: 'testid1', result: {} as MeasurementResultMessage['result'] });
+		await runner.recordResult({ measurementId: mockedMeasurementId, testId: 'testid2', result: {} as MeasurementResultMessage['result'] });
+		await runner.recordResult({ measurementId: mockedMeasurementId, testId: 'testid3', result: {} as MeasurementResultMessage['result'] });
 
 		expect(store.storeMeasurementResult.callCount).to.equal(3);
-		expect(store.storeMeasurementResult.args[0]).to.deep.equal([{ measurementId: 'measurementid', testId: 'testid1', result: {} }]);
-		expect(store.storeMeasurementResult.args[1]).to.deep.equal([{ measurementId: 'measurementid', testId: 'testid2', result: {} }]);
-		expect(store.storeMeasurementResult.args[2]).to.deep.equal([{ measurementId: 'measurementid', testId: 'testid3', result: {} }]);
+		expect(store.storeMeasurementResult.args[0]).to.deep.equal([{ measurementId: mockedMeasurementId, testId: 'testid1', result: {} }]);
+		expect(store.storeMeasurementResult.args[1]).to.deep.equal([{ measurementId: mockedMeasurementId, testId: 'testid2', result: {} }]);
+		expect(store.storeMeasurementResult.args[2]).to.deep.equal([{ measurementId: mockedMeasurementId, testId: 'testid3', result: {} }]);
 		expect(metrics.recordMeasurementTime.callCount).to.equal(1);
 		expect(metrics.recordMeasurementTime.args[0]).to.deep.equal([ 'ping', 25000 ]);
 	});
@@ -405,6 +407,6 @@ describe('MeasurementRunner', () => {
 		} as unknown as ExtendedContext);
 
 		expect(store.markFinished.callCount).to.equal(1);
-		expect(store.markFinished.args[0]).to.deep.equal([ 'measurementid' ]);
+		expect(store.markFinished.args[0]).to.deep.equal([ mockedMeasurementId ]);
 	});
 });
