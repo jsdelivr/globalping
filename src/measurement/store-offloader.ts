@@ -136,9 +136,7 @@ export class MeasurementStoreOffloader {
 	private async insertBatchToDbByIds (tier: UserTier, ids: string[]) {
 		const table = `measurement_${tier}`;
 		const records = (await this.primaryMeasurementStore.getMeasurements(ids)).filter(is.truthy);
-		const rows = records
-			.map(r => r && { id: r.id, createdAt: new Date(r.createdAt), data: r as unknown })
-			.filter(Boolean) as { id: string; createdAt: Date; data: unknown }[];
+		const rows = records.map(r => ({ id: r.id, createdAt: new Date(r.createdAt), data: r }));
 
 		if (rows.length === 0) {
 			return;
