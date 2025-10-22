@@ -20,7 +20,7 @@ export class MeasurementStoreOffloader {
 		private readonly measurementStoreDb: Knex,
 		private readonly primaryMeasurementStore: MeasurementStore,
 	) {
-		this.fallbackQueue = new BullQueue(this.fallbackQueueName, {
+		this.fallbackQueue = new BullQueue<{ tier: UserTier; ids: string[] }>(this.fallbackQueueName, {
 			connection: this.getBullConnectionOptions(),
 			defaultJobOptions: {
 				attempts: 28,
