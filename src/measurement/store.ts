@@ -151,7 +151,7 @@ export class MeasurementStore {
 		for (const measurement of measurements) {
 			measurement.status = 'finished';
 			measurement.updatedAt = new Date().toISOString();
-			const inProgressResults = Object.values(measurement.results).filter(resultObject => resultObject.result.status === 'in-progress');
+			const inProgressResults = measurement.results.filter(resultObject => resultObject.result.status === 'in-progress');
 
 			for (const resultObject of inProgressResults) {
 				resultObject.result.status = 'failed';
