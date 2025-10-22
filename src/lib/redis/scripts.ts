@@ -166,10 +166,10 @@ const recordResult: RecordResultScript = defineScript({
 	redis.call('JSON.SET', keyMeasurementResults, '$.updatedAt', date)
 
 	if probesAwaiting ~= 0 then
-		return false
+		return 0
 	end
 
-	return true
+	return 1
 	`,
 	transformArguments (measurementId, testId, data) {
 		return [
