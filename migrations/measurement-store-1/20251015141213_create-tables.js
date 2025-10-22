@@ -7,9 +7,10 @@ export const up = async (db) => {
 	];
 
 	await db.schema.createTable('export', (table) => {
-		table.text('id');
-		table.timestamp('createdAt');
-		table.json('data');
+		table.text('id').notNullable();
+		table.timestamp('createdAt').notNullable();
+		table.json('data').notNullable();
+		table.unique([ 'id', 'createdAt' ]);
 	});
 
 	await db.raw(`SELECT create_hypertable('export', by_range('createdAt', INTERVAL '1 minute'))`);
