@@ -6,6 +6,14 @@ export const up = async (db) => {
 		'anonymous',
 	];
 
+	await db.schema.createTable('export', (table) => {
+		table.text('id');
+		table.timestamp('createdAt');
+		table.json('data');
+	});
+
+	await db.raw(`SELECT create_hypertable('export', by_range('createdAt', INTERVAL '1 minute'))`);
+
 	for (const userTier of userTiers) {
 		const tableName = `measurement_${userTier}`;
 
@@ -38,14 +46,6 @@ export const up = async (db) => {
 			EXECUTE FUNCTION export_measurement();
 		`);
 	}
-
-	await db.schema.createTable('export', (table) => {
-		table.text('id');
-		table.timestamp('createdAt');
-		table.json('data');
-	});
-
-	await db.raw(`SELECT create_hypertable('export', by_range('createdAt', INTERVAL '1 minute'))`);
 };
 
 export const down = () => {};
