@@ -37,12 +37,12 @@ type ParsedMeasurementId = {
 	random: string;
 };
 
-export const generateMeasurementId = (startTime: Date, userType?: AuthenticateStateUser['userType']) => {
+export const generateMeasurementId = (createdAt: Date, userType?: AuthenticateStateUser['userType']) => {
 	const idVersion = 2;
 	const storageStrategy = STORAGE_STRATEGY.combined;
 	const storageLocation = STORAGE_LOCATION.postgresV1;
 	const userTier = userType ? USER_TIER[userType] : USER_TIER.anonymous;
-	const minutesSinceEpoch = Math.floor(startTime.valueOf() / 60000);
+	const minutesSinceEpoch = toIdTimestamp(createdAt);
 	const random = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 
 	return `${base62.encodeInteger(idVersion)}${base62.encodeInteger(storageStrategy)}${base62.encodeInteger(storageLocation)}${base62.encodeInteger(userTier)}${random}${base62.encodeInteger(minutesSinceEpoch)}`;
@@ -93,3 +93,13 @@ function parseMeasurementIdV2 (id: string): ParsedMeasurementId {
 		random,
 	};
 }
+
+export const roundIdTime = (createdAt: Date) => {
+	createdAt.setUTCSeconds(0);
+	createdAt.setUTCMilliseconds(0);
+	return createdAt;
+};
+
+export const toIdTimestamp = (createdAt: Date) => {
+	return Math.floor(createdAt.valueOf() / 60000);
+};

@@ -5,7 +5,7 @@ import is from '@sindresorhus/is';
 
 import { scopedLogger } from '../lib/logger.js';
 import type { Knex } from 'knex';
-import { parseMeasurementId, USER_TIER_INVERTED, UserTier } from './id.js';
+import { parseMeasurementId, roundIdTime, USER_TIER_INVERTED, UserTier } from './id.js';
 import type { MeasurementRecord } from './types.js';
 import { MeasurementStore } from './store.js';
 
@@ -114,7 +114,7 @@ export class MeasurementStoreOffloader {
 		const rows = measurements.map((r) => {
 			return {
 				id: r.id,
-				createdAt: new Date(r.createdAt),
+				createdAt: roundIdTime(new Date(r.createdAt)),
 				data: r,
 			};
 		});
@@ -136,7 +136,7 @@ export class MeasurementStoreOffloader {
 	private async insertBatchToDbByIds (tier: UserTier, ids: string[]) {
 		const table = `measurement_${tier}`;
 		const records = (await this.primaryMeasurementStore.getMeasurements(ids)).filter(is.truthy);
-		const rows = records.map(r => ({ id: r.id, createdAt: new Date(r.createdAt), data: r }));
+		const rows = records.map(r => ({ id: r.id, createdAt: roundIdTime(new Date(r.createdAt)), data: r }));
 
 		if (rows.length === 0) {
 			return;
