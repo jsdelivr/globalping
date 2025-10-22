@@ -15,6 +15,17 @@ export const up = async (db) => {
 
 	await db.raw(`SELECT create_hypertable('export', by_range('createdAt', INTERVAL '1 minute'))`);
 
+	await db.raw(`
+		CREATE OR REPLACE FUNCTION export_measurement()
+		RETURNS trigger AS $$
+		BEGIN
+			INSERT INTO export (id, "createdAt", data)
+			SELECT id, "createdAt", data FROM inserted_rows;
+			RETURN NULL;
+		END;
+		$$ LANGUAGE plpgsql;
+	`);
+
 	for (const userTier of userTiers) {
 		const tableName = `measurement_${userTier}`;
 
@@ -27,17 +38,6 @@ export const up = async (db) => {
 
 		await db.raw(`SELECT create_hypertable('${tableName}', by_range('createdAt', INTERVAL '7 days'))`);
 		await db.raw(`SELECT add_retention_policy('${tableName}', INTERVAL '180 days')`);
-
-		await db.raw(`
-			CREATE OR REPLACE FUNCTION export_measurement()
-			RETURNS trigger AS $$
-			BEGIN
-				INSERT INTO export (id, "createdAt", data)
-				SELECT id, "createdAt", data FROM inserted_rows;
-				RETURN NULL;
-			END;
-			$$ LANGUAGE plpgsql;
-		`);
 
 		await db.raw(`
 			CREATE TRIGGER ${tableName}_export
