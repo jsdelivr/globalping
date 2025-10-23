@@ -2,7 +2,7 @@ import config from 'config';
 import got, { type RequestError } from 'got';
 import _ from 'lodash';
 import { setTimeout } from 'timers/promises';
-import { client } from '../../src/lib/sql/client.js';
+import { dashboardClient } from '../../src/lib/sql/client.js';
 import { scopedLogger } from '../../src/lib/logger.js';
 
 const logger = scopedLogger('e2e-utils');
@@ -94,7 +94,7 @@ export const waitMeasurementFinish = async (id: string) => {
 
 export const waitRowInTable = async (table: string) => {
 	for (;;) {
-		const row = await client(table).first();
+		const row = await dashboardClient(table).first();
 
 		if (row) {
 			return row;

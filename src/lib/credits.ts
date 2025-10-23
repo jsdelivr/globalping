@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import { client } from './sql/client.js';
+import { dashboardClient } from './sql/client.js';
 
 export const CREDITS_TABLE = 'gp_credits';
 const ER_CONSTRAINT_FAILED_CODE = 4025;
@@ -35,4 +35,4 @@ export class Credits {
 	}
 }
 
-export const credits = new Credits(client);
+export const credits = new Credits(dashboardClient);

@@ -4,7 +4,7 @@ import { setTimeout } from 'node:timers/promises';
 import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { expect } from 'chai';
-import { client } from '../../../src/lib/sql/client.js';
+import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { adoptionToken } from '../../../src/adoption/adoption-token.js';
 import { randomUUID } from 'crypto';
 
@@ -15,21 +15,21 @@ describe('Adoption token', () => {
 
 	before(async () => {
 		await getTestServer();
-		await client('directus_users').insert({ id: 'userIdValue', adoption_token: 'adoptionTokenValue', default_prefix: 'defaultPrefixValue' });
+		await dashboardClient('directus_users').insert({ id: 'userIdValue', adoption_token: 'adoptionTokenValue', default_prefix: 'defaultPrefixValue' });
 		await adoptionToken.syncTokens();
 	});
 
 	afterEach(async () => {
 		sandbox.resetHistory();
 		await deleteFakeProbes();
-		await client('gp_probes').delete();
-		await client('directus_notifications').delete();
+		await dashboardClient('gp_probes').delete();
+		await dashboardClient('directus_notifications').delete();
 	});
 
 	after(async () => {
 		nock.cleanAll();
 		await deleteFakeProbes();
-		await client('directus_users').delete();
+		await dashboardClient('directus_users').delete();
 	});
 
 	it('should adopt probe by token', async () => {
@@ -82,7 +82,7 @@ describe('Adoption token', () => {
 	});
 
 	it('should do nothing if it is the same user', async () => {
-		await client('gp_probes').insert({
+		await dashboardClient('gp_probes').insert({
 			id: randomUUID(),
 			uuid: '1-1-1-1-1',
 			ip: '1.2.3.4',

@@ -23,11 +23,17 @@ module.exports = {
 			},
 		},
 	},
-	db: {
+	dashboardDb: {
 		connection: {
 			port: 13306,
 			database: 'dashboard-globalping-test',
 			multipleStatements: true,
+		},
+	},
+	measurementStoreDb: {
+		connection: {
+			port: 15432,
+			database: 'globalping-measurement-store-1-test',
 		},
 	},
 	admin: {

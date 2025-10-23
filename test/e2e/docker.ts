@@ -15,7 +15,7 @@ class DockerManager {
 	}
 
 	public async createApiContainer () {
-		const dbConnectionHost = config.get<string>('db.connection.host').replace('localhost', 'host.docker.internal');
+		const dbConnectionHost = config.get<string>('dashboardDb.connection.host').replace('localhost', 'host.docker.internal');
 		const processes = config.get<string>('server.processes');
 
 		const redisUrls = [
@@ -42,7 +42,7 @@ class DockerManager {
 				`REDIS_SHARED_OPTIONS_PASSWORD=${config.get<string>('redis.sharedOptions.password')}`,
 				'DATA_DOMAIN_BLACKLIST_PATH=data/DOMAIN_BLACKLIST_E2E.json',
 				'DATA_IP_BLACKLIST_PATH=data/IP_BLACKLIST_E2E.json',
-				`DB_CONNECTION_HOST=${dbConnectionHost}`,
+				`DASHBOARD_DB_CONNECTION_HOST=${dbConnectionHost}`,
 				`SERVER_PROCESSES=${processes}`,
 				`MEASUREMENT_TIMEOUT=5`,
 				`ADOPTED_PROBES_SYNC_INTERVAL=2000`,

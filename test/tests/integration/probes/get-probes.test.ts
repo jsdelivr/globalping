@@ -6,7 +6,7 @@ import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } fr
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { DASH_PROBES_TABLE } from '../../../../src/lib/override/adopted-probes.js';
 import { probeOverride } from '../../../../src/lib/ws/server.js';
-import { client } from '../../../../src/lib/sql/client.js';
+import { dashboardClient } from '../../../../src/lib/sql/client.js';
 
 describe('Get Probes', () => {
 	let requestAgent: Agent;
@@ -247,7 +247,7 @@ describe('Get Probes', () => {
 
 		describe('adopted probes', () => {
 			before(async () => {
-				await client(DASH_PROBES_TABLE).insert({
+				await dashboardClient(DASH_PROBES_TABLE).insert({
 					id: randomUUID(),
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					lastSyncDate: new Date(),
@@ -283,7 +283,7 @@ describe('Get Probes', () => {
 			});
 
 			after(async () => {
-				await client(DASH_PROBES_TABLE).where({ city: 'Cordoba' }).delete();
+				await dashboardClient(DASH_PROBES_TABLE).where({ city: 'Cordoba' }).delete();
 			});
 
 			it('should update probes data', async () => {

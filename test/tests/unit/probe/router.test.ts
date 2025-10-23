@@ -44,6 +44,7 @@ describe('probe router', () => {
 		getMeasurement: sandbox.stub(),
 	};
 	const router = new ProbeRouter(onServerProbesUpdateMock, store as unknown as MeasurementStore);
+	const mockedMeasurementId = '2E2SZgEwA6W6HvzlT0001z9VK';
 
 	let buildProbeInternal: (socket: RemoteProbeSocket) => Promise<ServerProbe>;
 
@@ -1117,11 +1118,11 @@ describe('probe router', () => {
 				}],
 			});
 
-			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: 'measurementid' } as UserRequest);
+			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: mockedMeasurementId } as UserRequest);
 
 			expect(request).to.deep.equal({ limit: undefined, locations: undefined });
-			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
-			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ mockedMeasurementId ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ mockedMeasurementId ]);
 			expect(allProbes[0]!.location.country).to.equal('PL');
 			expect(allProbes[0]!.status).to.equal('ready');
 			expect(onlineProbesMap.get(0)?.location.country).to.equal('PL');
@@ -1146,11 +1147,11 @@ describe('probe router', () => {
 				}],
 			});
 
-			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: [{ magic: 'measurementid' }] } as UserRequest);
+			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: [{ magic: mockedMeasurementId }] } as UserRequest);
 
 			expect(request).to.deep.equal({ limit: undefined, locations: undefined });
-			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
-			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ mockedMeasurementId ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ mockedMeasurementId ]);
 			expect(allProbes[0]!.location.country).to.equal('PL');
 			expect(allProbes[0]!.status).to.equal('ready');
 			expect(onlineProbesMap.get(0)?.location.country).to.equal('PL');
@@ -1175,11 +1176,11 @@ describe('probe router', () => {
 				}],
 			});
 
-			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: 'measurementid' } as UserRequest);
+			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: mockedMeasurementId } as UserRequest);
 
 			expect(request).to.deep.equal({ limit: undefined, locations: undefined });
-			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
-			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ mockedMeasurementId ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ mockedMeasurementId ]);
 			expect(allProbes[0]!.location.country).to.equal('PL');
 			expect(allProbes[0]!.status).to.equal('ready');
 			expect(onlineProbesMap.get(0)?.location.country).to.equal('PL');
@@ -1191,11 +1192,11 @@ describe('probe router', () => {
 			];
 			setProbes(probes as never);
 
-			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: [{ magic: 'measurementid' }] } as UserRequest);
+			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: [{ magic: mockedMeasurementId }] } as UserRequest);
 
-			expect(request).to.deep.equal({ locations: [{ magic: 'measurementid' }] });
-			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
-			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(request).to.deep.equal({ locations: [{ magic: mockedMeasurementId }] });
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ mockedMeasurementId ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ mockedMeasurementId ]);
 			expect(allProbes.length).to.equal(0);
 			expect(onlineProbesMap.size).to.equal(0);
 		});
@@ -1231,7 +1232,7 @@ describe('probe router', () => {
 				}],
 			});
 
-			const { request } = await router.findMatchingProbes({ locations: [{ magic: 'measurementid' }] } as UserRequest);
+			const { request } = await router.findMatchingProbes({ locations: [{ magic: mockedMeasurementId }] } as UserRequest);
 
 			expect(request).to.deep.equal({ locations: [{ continent: 'EU' }], limit: 2 });
 		});
@@ -1255,11 +1256,11 @@ describe('probe router', () => {
 				}],
 			});
 
-			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: 'measurementid' } as UserRequest);
+			const { onlineProbesMap, allProbes, request } = await router.findMatchingProbes({ locations: mockedMeasurementId } as UserRequest);
 
 			expect(request).to.deep.equal({ locations: undefined, limit: undefined });
-			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
-			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ mockedMeasurementId ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ mockedMeasurementId ]);
 			expect(allProbes.length).to.equal(1);
 			expect(allProbes[0]!.location.country).to.equal('PL');
 			expect(allProbes[0]!.status).to.equal('offline');
@@ -1285,9 +1286,9 @@ describe('probe router', () => {
 				}],
 			});
 
-			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: 'measurementid' } as UserRequest);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: mockedMeasurementId } as UserRequest);
 
-			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ mockedMeasurementId ]);
 			expect(allProbes.length).to.equal(0);
 			expect(onlineProbesMap.size).to.equal(0);
 		});
@@ -1301,10 +1302,10 @@ describe('probe router', () => {
 
 			store.getMeasurement.resolves(null);
 
-			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: 'measurementid' } as UserRequest);
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({ locations: mockedMeasurementId } as UserRequest);
 
-			expect(store.getMeasurementIps.args[0]).to.deep.equal([ 'measurementid' ]);
-			expect(store.getMeasurement.args[0]).to.deep.equal([ 'measurementid' ]);
+			expect(store.getMeasurementIps.args[0]).to.deep.equal([ mockedMeasurementId ]);
+			expect(store.getMeasurement.args[0]).to.deep.equal([ mockedMeasurementId ]);
 			expect(allProbes.length).to.equal(0);
 			expect(onlineProbesMap.size).to.equal(0);
 		});
@@ -1328,8 +1329,8 @@ describe('probe router', () => {
 				}],
 			});
 
-			const locationsResult = await router.findMatchingProbes({ locations: 'measurementid', measurementOptions: { ipVersion: 6 } } as UserRequest);
-			const magicResult = await router.findMatchingProbes({ locations: [{ magic: 'measurementid' }], measurementOptions: { ipVersion: 6 } } as UserRequest);
+			const locationsResult = await router.findMatchingProbes({ locations: mockedMeasurementId, measurementOptions: { ipVersion: 6 } } as UserRequest);
+			const magicResult = await router.findMatchingProbes({ locations: [{ magic: mockedMeasurementId }], measurementOptions: { ipVersion: 6 } } as UserRequest);
 
 			expect(locationsResult.allProbes[0]!.location.country).to.equal('PL');
 			expect(locationsResult.allProbes[0]!.status).to.equal('ready');

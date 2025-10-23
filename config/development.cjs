@@ -4,9 +4,14 @@ module.exports = {
 			cookieSecret: 'xxx',
 		},
 	},
-	db: {
+	dashboardDb: {
 		connection: {
 			port: 13306,
+		},
+	},
+	measurementStoreDb: {
+		connection: {
+			port: 15432,
 		},
 	},
 	dashboard: {

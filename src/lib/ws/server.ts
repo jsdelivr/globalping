@@ -4,7 +4,7 @@ import { createShardedAdapter } from '@socket.io/redis-adapter';
 import type { ServerProbe, SocketProbe } from '../../probe/types.js';
 import { getRedisClient } from '../redis/client.js';
 import { SyncedProbeList } from './synced-probe-list.js';
-import { client } from '../sql/client.js';
+import { dashboardClient } from '../sql/client.js';
 import { ProbeOverride } from '../override/probe-override.js';
 import { ProbeIpLimit } from './helper/probe-ip-limit.js';
 import { AdoptedProbes } from '../override/adopted-probes.js';
@@ -122,9 +122,9 @@ export const onProbesUpdate = (callback: (probes: ServerProbe[]) => void): (() =
 	return () => ee.off(E_PROBE_UPDATE, handler);
 };
 
-export const adoptedProbes = new AdoptedProbes(client, getProbesWithAdminData);
+export const adoptedProbes = new AdoptedProbes(dashboardClient, getProbesWithAdminData);
 
-export const adminData = new AdminData(client);
+export const adminData = new AdminData(dashboardClient);
 
 export const probeOverride = new ProbeOverride(adoptedProbes, adminData);
 

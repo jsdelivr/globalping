@@ -2,13 +2,17 @@ import is from '@sindresorhus/is';
 import Bluebird from 'bluebird';
 import config from 'config';
 import _ from 'lodash';
-import cryptoRandomString from 'crypto-random-string';
+
 import type { OfflineProbe, ServerProbe } from '../probe/types.js';
 import { scopedLogger } from '../lib/logger.js';
-import type { MeasurementRecord, MeasurementResult, MeasurementRequest, MeasurementProgressMessage, RequestType, MeasurementResultMessage } from './types.js';
+import type { MeasurementProgressMessage, MeasurementRecord, MeasurementRequest, MeasurementResult, MeasurementResultMessage, RequestType } from './types.js';
 import { getDefaults } from './schema/utils.js';
 import { getMeasurementRedisClient, type RedisCluster } from '../lib/redis/measurement-client.js';
 import { getPersistentRedisClient, type RedisClient } from '../lib/redis/persistent-client.js';
+import { AuthenticateStateUser } from '../lib/http/middleware/authenticate.js';
+import { generateMeasurementId } from './id.js';
+import { MeasurementStoreOffloader } from './store-offloader.js';
+import { measurementStoreClient } from '../lib/sql/client.js';
 
 const logger = scopedLogger('store');
 
@@ -41,10 +45,14 @@ const subtractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unk
 const getDateScore = () => Date.now() * 1000 + Math.floor(Math.random() * 1000);
 
 export class MeasurementStore {
+	private offloader: MeasurementStoreOffloader;
+
 	constructor (
 		private readonly redis: RedisCluster,
 		private readonly persistentRedis: RedisClient,
-	) {}
+	) {
+		this.offloader = new MeasurementStoreOffloader(measurementStoreClient, this);
+	}
 
 	async getMeasurementString (id: string): Promise<string> {
 		const key = getMeasurementKey(id);
@@ -55,16 +63,20 @@ export class MeasurementStore {
 		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord | null;
 	}
 
+	async getMeasurements (ids: string[]): Promise<(MeasurementRecord | null)[]> {
+		return Bluebird.map(ids, id => this.redis.json.get(getMeasurementKey(id)) as Promise<MeasurementRecord | null>, { concurrency: 8 });
+	}
+
 	async getMeasurementIps (id: string): Promise<string[]> {
 		const ips = await this.redis.json.get(getMeasurementKey(id, 'ips')) as string[] | null;
 		return ips || [];
 	}
 
-	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[]): Promise<string> {
-		const id = cryptoRandomString({ length: 16, type: 'alphanumeric' });
-		const key = getMeasurementKey(id);
+	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[], userType?: AuthenticateStateUser['userType']): Promise<string> {
 		const startTime = new Date();
 		const results = this.probesToResults(allProbes, request.type);
+		const id = generateMeasurementId(startTime, userType);
+		const key = getMeasurementKey(id);
 
 		const measurement: Partial<MeasurementRecord> = {
 			id,
@@ -104,22 +116,28 @@ export class MeasurementStore {
 		}
 	}
 
-	async storeMeasurementResult (data: MeasurementResultMessage) {
-		const record = await this.redis.recordResult(data.measurementId, data.testId, data.result);
+	async storeMeasurementResult (data: MeasurementResultMessage): Promise<MeasurementRecord | null> {
+		const isFinished = await this.redis.recordResult(data.measurementId, data.testId, data.result);
 
-		if (record) {
-			await this.markFinished(data.measurementId);
+		if (isFinished) {
+			return this.markFinished(data.measurementId);
 		}
 
-		return record;
+		return null;
 	}
 
-	async markFinished (id: string) {
-		await Promise.all([
+	async markFinished (id: string): Promise<MeasurementRecord | null> {
+		const [ record ] = await Promise.all([
 			this.redis.markFinished(id),
 			this.redis.hDel('gp:in-progress', id),
 			this.persistentRedis.zAdd('gp:measurement-keys-by-date', [{ score: getDateScore(), value: getMeasurementKey(id) }]),
 		]);
+
+		if (record) {
+			this.offloader.enqueueForOffload(record);
+		}
+
+		return record;
 	}
 
 	async markFinishedByTimeout (ids: string[]): Promise<void> {
@@ -133,7 +151,7 @@ export class MeasurementStore {
 		for (const measurement of measurements) {
 			measurement.status = 'finished';
 			measurement.updatedAt = new Date().toISOString();
-			const inProgressResults = Object.values(measurement.results).filter(resultObject => resultObject.result.status === 'in-progress');
+			const inProgressResults = measurement.results.filter(resultObject => resultObject.result.status === 'in-progress');
 
 			for (const resultObject of inProgressResults) {
 				resultObject.result.status = 'failed';
@@ -150,6 +168,10 @@ export class MeasurementStore {
 			updateMeasurements,
 			this.persistentRedis.zAdd('gp:measurement-keys-by-date', ids.map(id => ({ score: getDateScore(), value: getMeasurementKey(id) }))),
 		]);
+
+		for (const measurement of measurements) {
+			this.offloader.enqueueForOffload(measurement);
+		}
 	}
 
 	async cleanup () {
@@ -178,6 +200,10 @@ export class MeasurementStore {
 				.finally(() => this.scheduleCleanup())
 				.catch(error => logger.error('Error in MeasurementStore.cleanup()', error));
 		}, intervalTime).unref();
+	}
+
+	startOffloadWorker () {
+		this.offloader.startRetryWorker();
 	}
 
 	removeDefaults (measurement: Partial<MeasurementRecord>, request: MeasurementRequest): Partial<MeasurementRecord> {
@@ -242,6 +268,7 @@ export const getMeasurementStore = () => {
 	if (!store) {
 		store = new MeasurementStore(getMeasurementRedisClient(), getPersistentRedisClient());
 		store.scheduleCleanup();
+		store.startOffloadWorker();
 	}
 
 	return store;

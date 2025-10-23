@@ -6,6 +6,7 @@ import type { Socket } from 'socket.io-client';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
+import * as id from '../../../../src/measurement/id.js';
 
 describe('Create measurement request', () => {
 	let probe: Socket;
@@ -20,10 +21,11 @@ describe('Create measurement request', () => {
 	const logHandlerStub = sandbox.stub();
 	const adoptionHandlerStub = sandbox.stub();
 	const requestHandlerStub = sandbox.stub();
-	const cryptoRandomString = sandbox.stub().returns('measurementid');
+	const mockedMeasurementId = '2E2SZgEwA6W6HvzlT0001z9VK';
+	const generateMeasurementId = sandbox.stub().returns(mockedMeasurementId);
 
 	before(async () => {
-		await td.replaceEsm('crypto-random-string', {}, cryptoRandomString);
+		await td.replaceEsm('../../../../src/measurement/id.ts', { ...id, generateMeasurementId }, {});
 		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getCloudTags: () => [ 'gcp-us-west4', 'gcp' ], populateMemList: () => Promise.resolve() });
 		({ getTestServer, waitForProbesUpdate, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
 		const app = await getTestServer();
@@ -116,17 +118,17 @@ describe('Create measurement request', () => {
 		expect(requestHandlerStub.callCount).to.equal(1);
 
 		expect(requestHandlerStub.firstCall.args[0]).to.deep.equal({
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			testId: '0',
 			measurement: { packets: 4, port: 80, protocol: 'ICMP', ipVersion: 4, type: 'ping', target: 'jsdelivr.com', inProgressUpdates: false },
 		});
 
-		await requestAgent.get(`/v1/measurements/measurementid`).send()
+		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send()
 			.expect(200).expect((response) => {
 				expect(response.headers['content-type']).to.equal('application/json; charset=utf-8');
 
 				expect(response.body).to.deep.include({
-					id: 'measurementid',
+					id: mockedMeasurementId,
 					type: 'ping',
 					status: 'in-progress',
 					target: 'jsdelivr.com',
@@ -163,7 +165,7 @@ describe('Create measurement request', () => {
 
 		probe.emit('probe:measurement:progress', {
 			testId: '0',
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			result: {
 				rawOutput: 'abc',
 			},
@@ -171,10 +173,10 @@ describe('Create measurement request', () => {
 
 		await setTimeout(100); // We need to wait until all redis writes are finished
 
-		await requestAgent.get(`/v1/measurements/measurementid`).send()
+		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send()
 			.expect(200).expect((response) => {
 				expect(response.body).to.deep.include({
-					id: 'measurementid',
+					id: mockedMeasurementId,
 					type: 'ping',
 					status: 'in-progress',
 					target: 'jsdelivr.com',
@@ -206,7 +208,7 @@ describe('Create measurement request', () => {
 
 		probe.emit('probe:measurement:progress', {
 			testId: '0',
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			result: {
 				rawOutput: 'def',
 			},
@@ -214,10 +216,10 @@ describe('Create measurement request', () => {
 
 		await setTimeout(100);
 
-		await requestAgent.get(`/v1/measurements/measurementid`).send()
+		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send()
 			.expect(200).expect((response) => {
 				expect(response.body).to.deep.include({
-					id: 'measurementid',
+					id: mockedMeasurementId,
 					type: 'ping',
 					status: 'in-progress',
 					target: 'jsdelivr.com',
@@ -247,7 +249,7 @@ describe('Create measurement request', () => {
 
 		probe.emit('probe:measurement:result', {
 			testId: '0',
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			result: {
 				status: 'finished',
 				rawOutput: 'abcdefhij',
@@ -268,10 +270,10 @@ describe('Create measurement request', () => {
 
 		await setTimeout(100);
 
-		await requestAgent.get(`/v1/measurements/measurementid`).send()
+		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send()
 			.expect(200).expect((response) => {
 				expect(response.body).to.deep.include({
-					id: 'measurementid',
+					id: mockedMeasurementId,
 					type: 'ping',
 					status: 'finished',
 					target: 'jsdelivr.com',
@@ -334,7 +336,7 @@ describe('Create measurement request', () => {
 
 		await setTimeout(20);
 
-		await requestAgent.get(`/v1/measurements/measurementid`).send().expect(200).expect((response) => {
+		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send().expect(200).expect((response) => {
 			expect(response.body.results[0].result).to.deep.include({
 				status: 'in-progress',
 				rawOutput: '',
@@ -345,13 +347,13 @@ describe('Create measurement request', () => {
 
 		probe.emit('probe:measurement:progress', {
 			testId: '0',
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			result: {
 				invalidField: 'Invalid field value',
 			},
 		});
 
-		await requestAgent.get(`/v1/measurements/measurementid`).send().expect(200).expect((response) => {
+		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send().expect(200).expect((response) => {
 			expect(response.body.results[0].result).to.deep.include({
 				status: 'in-progress',
 				rawOutput: '',
@@ -360,13 +362,13 @@ describe('Create measurement request', () => {
 
 		probe.emit('probe:measurement:progress', {
 			testId: '0',
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			result: {
 				rawOutput: 'Valid progress value',
 			},
 		});
 
-		await requestAgent.get(`/v1/measurements/measurementid`).send().expect(200).expect((response) => {
+		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send().expect(200).expect((response) => {
 			expect(response.body.results[0].result).to.deep.include({
 				status: 'in-progress',
 				rawOutput: 'Valid progress value',
@@ -375,7 +377,7 @@ describe('Create measurement request', () => {
 
 		probe.emit('probe:measurement:result', {
 			testId: '0',
-			measurementId: 'measurementid',
+			measurementId: mockedMeasurementId,
 			result: {
 				status: 'invalid-status',
 				rawOutput: 'Result with invalid status value',
@@ -396,7 +398,7 @@ describe('Create measurement request', () => {
 
 		await setTimeout(100);
 
-		await requestAgent.get(`/v1/measurements/measurementid`).send()
+		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send()
 			.expect(200).expect((response) => {
 				expect(response.body.results[0].result).to.deep.equal({
 					status: 'failed',

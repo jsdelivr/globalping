@@ -6,7 +6,7 @@ import {
 	waitProbeToDisconnect,
 } from '../utils.js';
 import got from 'got';
-import { client } from '../../../src/lib/sql/client.js';
+import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { expect } from 'chai';
 import config from 'config';
 import { AuthenticateOptions } from '../../../src/lib/http/middleware/authenticate.js';
@@ -27,10 +27,10 @@ describe('probe logs', () => {
 
 	before(async () => {
 		sessionKey = Buffer.from(sessionConfig.cookieSecret);
-		await client('directus_users').delete();
-		await client('gp_probes').delete();
+		await dashboardClient('directus_users').delete();
+		await dashboardClient('gp_probes').delete();
 
-		await client('directus_users').insert({
+		await dashboardClient('directus_users').insert({
 			id: USER_ID,
 			adoption_token: 'adoptionTokenValue',
 			github_username: 'jimaek',
@@ -39,7 +39,7 @@ describe('probe logs', () => {
 			public_probes: true,
 		});
 
-		await client('gp_probes').insert({
+		await dashboardClient('gp_probes').insert({
 			id: PROBE_ID,
 			userId: USER_ID,
 			lastSyncDate: new Date(),
@@ -76,8 +76,8 @@ describe('probe logs', () => {
 
 	after(async function () {
 		this.timeout(80000);
-		await client('directus_users').delete();
-		await client('gp_probes').delete();
+		await dashboardClient('directus_users').delete();
+		await dashboardClient('gp_probes').delete();
 
 		await docker.startProbeContainer();
 		await waitProbeToConnect();

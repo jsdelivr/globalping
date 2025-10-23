@@ -9,3 +9,7 @@ export type CustomContext = Koa.DefaultContext & Router.RouterParamContext & Doc
 export type UnknownNext = () => Promise<unknown>;
 export type ExtendedContext = Router.RouterContext<CustomState, CustomContext>;
 export type ExtendedMiddleware = (context: ParameterizedContext<CustomState, CustomContext>, next: UnknownNext) => Promise<unknown>;
+
+type Inverted<T extends Record<PropertyKey, PropertyKey>> = {
+	[P in keyof T as T[P]]: P
+};

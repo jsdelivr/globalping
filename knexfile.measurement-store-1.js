@@ -5,7 +5,7 @@ import config from 'config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const dbConfig = config.get('db');
+const dbConfig = config.get('measurementStoreDb');
 
 /**
  * @typedef {import('knex').Knex.Config} KnexConfig
@@ -21,12 +21,13 @@ export default _.merge({}, ...[ 'development', 'production', 'staging', 'test' ]
 				max: 10,
 				propagateCreateError: false,
 			},
-			acquireConnectionTimeout: 10000,
+			acquireConnectionTimeout: 5000,
 			seeds: {
-				directory: path.join(__dirname, `./seeds/${environment}`),
+				directory: path.join(__dirname, `./seeds/measurement-store-1/${environment}`),
 			},
 			migrations: {
-				directory: path.join(__dirname, `./migrations`),
+				stub: './migrations/measurement-store-1/migration.stub',
+				directory: path.join(__dirname, `./migrations/measurement-store-1`),
 			},
 		},
 	};

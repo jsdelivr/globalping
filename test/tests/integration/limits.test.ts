@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { anonymousRateLimiter, authenticatedRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-post.js';
-import { client } from '../../../src/lib/sql/client.js';
+import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
 import { CREDITS_TABLE } from '../../../src/lib/credits.js';
 
@@ -29,7 +29,7 @@ describe('rate limiter', () => {
 
 		await waitForProbesUpdate();
 
-		await client(GP_TOKENS_TABLE).insert({
+		await dashboardClient(GP_TOKENS_TABLE).insert({
 			name: 'test token',
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			value: 'Xj6kuKFEQ6zI60mr+ckHG7yQcIFGMJFzvtK9PBQ69y8=', // token: qz5kdukfcr3vggv3xbujvjwvirkpkkpx
@@ -40,12 +40,12 @@ describe('rate limiter', () => {
 	afterEach(async () => {
 		await anonymousRateLimiter.delete(clientId);
 		await authenticatedRateLimiter.delete('89da69bd-a236-4ab7-9c5d-b5f52ce09959');
-		await client(CREDITS_TABLE).where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' }).delete();
+		await dashboardClient(CREDITS_TABLE).where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' }).delete();
 	});
 
 	after(async () => {
 		await deleteFakeProbes();
-		await client(GP_TOKENS_TABLE).where({ value: 'Xj6kuKFEQ6zI60mr+ckHG7yQcIFGMJFzvtK9PBQ69y8=' }).delete();
+		await dashboardClient(GP_TOKENS_TABLE).where({ value: 'Xj6kuKFEQ6zI60mr+ckHG7yQcIFGMJFzvtK9PBQ69y8=' }).delete();
 	});
 
 	describe('/limits', () => {
@@ -135,7 +135,7 @@ describe('rate limiter', () => {
 			});
 
 			it('should return current amount of user credits', async () => {
-				await client(CREDITS_TABLE).insert({
+				await dashboardClient(CREDITS_TABLE).insert({
 					user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					amount: 10,
 				}).onConflict().merge({

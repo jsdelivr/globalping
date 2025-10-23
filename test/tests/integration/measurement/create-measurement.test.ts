@@ -5,7 +5,7 @@ import * as td from 'testdouble';
 import nock from 'nock';
 import type { Socket } from 'socket.io-client';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
-import { client } from '../../../../src/lib/sql/client.js';
+import { dashboardClient } from '../../../../src/lib/sql/client.js';
 import type { ProbeOverride } from '../../../../src/lib/override/probe-override.js';
 import geoIpMocks from '../../../mocks/nock-geoip.json' with { type: 'json' };
 
@@ -719,7 +719,7 @@ describe('Create measurement', () => {
 
 		describe('adopted probes', () => {
 			before(async () => {
-				await client(DASH_PROBES_TABLE).insert({
+				await dashboardClient(DASH_PROBES_TABLE).insert({
 					id: randomUUID(),
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					lastSyncDate: new Date(),
@@ -757,7 +757,7 @@ describe('Create measurement', () => {
 			});
 
 			after(async () => {
-				await client(DASH_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
+				await dashboardClient(DASH_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
 			});
 
 			it('should create measurement with adopted "city: Oklahoma City" location', async () => {
@@ -901,7 +901,7 @@ describe('Create measurement', () => {
 
 		describe('adopted probes + admin overrides', () => {
 			before(async () => {
-				await client(DASH_PROBES_TABLE).insert({
+				await dashboardClient(DASH_PROBES_TABLE).insert({
 					id: randomUUID(),
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					lastSyncDate: new Date(),
@@ -934,7 +934,7 @@ describe('Create measurement', () => {
 					}),
 				});
 
-				await client('gp_location_overrides').insert({
+				await dashboardClient('gp_location_overrides').insert({
 					id: 5,
 					ip_range: '1.2.3.4/24',
 					city: 'Paris',
@@ -948,8 +948,8 @@ describe('Create measurement', () => {
 			});
 
 			after(async () => {
-				await client(DASH_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
-				await client('gp_location_overrides').where({ city: 'Paris' }).delete();
+				await dashboardClient(DASH_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
+				await dashboardClient('gp_location_overrides').where({ city: 'Paris' }).delete();
 			});
 
 			it('should ignore adopted custom city if admin data says it is another country', async () => {

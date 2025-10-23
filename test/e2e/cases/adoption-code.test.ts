@@ -1,10 +1,10 @@
 import got from 'got';
 import { expect } from 'chai';
-import { client } from '../../../src/lib/sql/client.js';
+import { dashboardClient } from '../../../src/lib/sql/client.js';
 
 describe('/adoption-code endpoint', () => {
 	after(async () => {
-		await client('gp_probes').delete();
+		await dashboardClient('gp_probes').delete();
 	});
 
 	it('should send code to the probe', async () => {

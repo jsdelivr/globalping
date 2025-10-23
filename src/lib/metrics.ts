@@ -7,7 +7,7 @@ import { scopedLogger } from './logger.js';
 import { fetchProbes, getWsServer, PROBES_NAMESPACE } from './ws/server.js';
 import { getMeasurementRedisClient, type RedisCluster } from './redis/measurement-client.js';
 import { USERS_TABLE } from './http/auth.js';
-import { client } from './sql/client.js';
+import { dashboardClient } from './sql/client.js';
 
 const logger = scopedLogger('metrics');
 
@@ -188,7 +188,7 @@ let agent: MetricsAgent;
 
 export const getMetricsAgent = () => {
 	if (!agent) {
-		agent = new MetricsAgent(getWsServer(), getMeasurementRedisClient(), client);
+		agent = new MetricsAgent(getWsServer(), getMeasurementRedisClient(), dashboardClient);
 	}
 
 	return agent;

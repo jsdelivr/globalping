@@ -17,6 +17,15 @@ services:
       - ./data/redis/7002:/data
     env_file:
       - ./config/redis/.env.redis
+  redis-standalone-3:
+    image: redis/redis-stack-server:7.4.0-v1
+    ports:
+      - "7003:7003"
+    volumes:
+      - ./config/redis/standalone-3.conf:/redis-stack.conf
+      - ./data/redis/7003:/data
+    env_file:
+      - ./config/redis/.env.redis
   redis-node-01:
     image: redis/redis-stack-server:7.4.0-v1
     command: [ "bash", "/home/runner/mounted/node.sh", "7101" ]
@@ -76,4 +85,14 @@ services:
       - "13306:3306"
     volumes:
       - ./config/create-dbs.sql:/docker-entrypoint-initdb.d/01-create-dbs.sql
-      - ./migrations/create-tables.js.sql:/docker-entrypoint-initdb.d/02-create-tables.sql
+      - ./migrations/dashboard/create-tables.js.sql:/docker-entrypoint-initdb.d/02-create-tables.sql
+
+  measurement-store-1:
+    image: timescale/timescaledb:2.22.1-pg17
+    environment:
+      - POSTGRES_USER=globalping-api
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "15432:5432"
+    volumes:
+      - ./config/measurement-store-1/create-dbs.sql:/docker-entrypoint-initdb.d/01-create-dbs.sql

@@ -3,7 +3,7 @@ import type { Knex } from 'knex';
 import TTLCache from '@isaacs/ttlcache';
 import { base32 } from '@scure/base';
 import { scopedLogger } from '../logger.js';
-import { client } from '../sql/client.js';
+import { dashboardClient } from '../sql/client.js';
 
 export const GP_TOKENS_TABLE = 'gp_tokens';
 export const USERS_TABLE = 'directus_users';
@@ -15,6 +15,7 @@ const TOKEN_TTL = 2 * 60 * 1000;
 export type Token = {
 	user_created: string | null;
 	user_github_username: string | null;
+	user_user_type: 'member' | 'sponsor' | 'special';
 	value: string;
 	expire: Date | null;
 	scopes: string[];
@@ -89,7 +90,7 @@ export class Auth {
 		const rows = await this.sql(GP_TOKENS_TABLE)
 			.leftJoin(USERS_TABLE, 'user_created', `${USERS_TABLE}.id`)
 			.where(filter)
-			.select<Row[]>([ 'user_created', 'value', 'expire', 'origins', 'date_last_used', 'scopes', 'github_username as user_github_username' ]);
+			.select<Row[]>([ 'user_created', 'value', 'expire', 'origins', 'date_last_used', 'scopes', 'github_username as user_github_username', 'user_type as user_user_type' ]);
 
 		const tokens: Token[] = rows.map(row => ({
 			...row,
@@ -130,7 +131,7 @@ export class Auth {
 		}
 
 		await this.updateLastUsedDate(token);
-		return { userId: token.user_created, username: token.user_github_username, scopes: token.scopes, hashedToken: token.value };
+		return { userId: token.user_created, username: token.user_github_username, userType: token.user_user_type, scopes: token.scopes, hashedToken: token.value };
 	}
 
 	private async updateLastUsedDate (token: Token) {
@@ -157,4 +158,4 @@ export class Auth {
 	}
 }
 
-export const auth = new Auth(client);
+export const auth = new Auth(dashboardClient);
