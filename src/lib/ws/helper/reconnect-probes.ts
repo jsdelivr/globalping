@@ -7,11 +7,11 @@ const reconnectProbesDelay = config.get<number>('reconnectProbesDelay');
 
 const TIME_UNTIL_VM_BECOMES_HEALTHY = 8000;
 
-const disconnectProbes = async () => {
+export const disconnectProbes = async (delay = reconnectProbesDelay) => {
 	const sockets = await fetchRawSockets();
 
 	for (const socket of sockets) {
-		setTimeout(() => socket.disconnect(), Math.random() * reconnectProbesDelay);
+		setTimeout(() => socket.disconnect(), Math.random() * delay);
 	}
 };
 
