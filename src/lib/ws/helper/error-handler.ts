@@ -25,7 +25,7 @@ export const errorHandler = (next: NextArgument) => (socket: ServerSocket, mwNex
 		const clientIp = getProbeIp(socket) ?? '';
 		const reason = isError(error) ? error.message : 'unknown';
 
-		logger.info(`Disconnecting client for (${reason})`, { client: { id: socket.id, ip: clientIp } });
+		logger.info(`Disconnecting client for (${reason})`, { client: { id: socket.id, ip: clientIp }, handshake: socket.handshake?.query });
 		logger.debug('Details:', error);
 
 		if (mwNext) {
