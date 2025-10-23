@@ -59,9 +59,9 @@ describe('measurement store', () => {
 		zRemRangeByScore: sandbox.stub(),
 	};
 
-	const mockedMeasurementId1 = '2000E2SZgEwA6W6HvzlT1z9VK';
-	const mockedMeasurementId2 = '2000F2SZgEwA6W6HvzlT1z9VK';
-	const mockedMeasurementId3 = '2000G2SZgEwA6W6HvzlT1z9VK';
+	const mockedMeasurementId1 = '2E2SZgEwA6W6HvzlT0001z9VK';
+	const mockedMeasurementId2 = '2F2SZgEwA6W6HvzlT0001z9VK';
+	const mockedMeasurementId3 = '2G2SZgEwA6W6HvzlT0001z9VK';
 
 	sandbox.stub(Math, 'random').returns(0.8);
 

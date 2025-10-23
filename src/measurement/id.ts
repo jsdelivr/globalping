@@ -45,7 +45,7 @@ export const generateMeasurementId = (createdAt: Date, userType?: AuthenticateSt
 	const minutesSinceEpoch = toIdTimestamp(createdAt);
 	const random = cryptoRandomString({ length: 16, type: 'alphanumeric' });
 
-	return `${base62.encodeInteger(idVersion)}${base62.encodeInteger(storageStrategy)}${base62.encodeInteger(storageLocation)}${base62.encodeInteger(userTier)}${random}${base62.encodeInteger(minutesSinceEpoch)}`;
+	return `${base62.encodeInteger(idVersion)}${random}${base62.encodeInteger(storageStrategy)}${base62.encodeInteger(storageLocation)}${base62.encodeInteger(userTier)}${base62.encodeInteger(minutesSinceEpoch)}`;
 };
 
 export const parseMeasurementId = (id: string): ParsedMeasurementId => {
@@ -63,26 +63,26 @@ function parseMeasurementIdV2 (id: string): ParsedMeasurementId {
 		throw new Error(`Measurement ID must be at least 24 characters long: ${id}`);
 	}
 
-	const storageStrategy = base62.decodeInteger(id[1]!) as ParsedMeasurementId['storageStrategy'];
+	const storageStrategy = base62.decodeInteger(id[17]!) as ParsedMeasurementId['storageStrategy'];
 
 	if (!STORAGE_STRATEGY_INVERTED[storageStrategy]) {
 		throw new Error(`Unknown storage strategy: ${id}`);
 	}
 
-	const storageLocation = base62.decodeInteger(id[2]!) as ParsedMeasurementId['storageLocation'];
+	const storageLocation = base62.decodeInteger(id[18]!) as ParsedMeasurementId['storageLocation'];
 
 	if (!STORAGE_LOCATION_INVERTED[storageLocation]) {
 		throw new Error(`Unknown storage location: ${id}`);
 	}
 
-	const userTier = base62.decodeInteger(id[3]!) as ParsedMeasurementId['userTier'];
+	const userTier = base62.decodeInteger(id[19]!) as ParsedMeasurementId['userTier'];
 
 	if (!USER_TIER_INVERTED[userTier]) {
 		throw new Error(`Unknown user tier: ${id}`);
 	}
 
 	const minutesSinceEpoch = base62.decodeInteger(id.slice(20));
-	const random = id.slice(4, 20);
+	const random = id.slice(1, 17);
 
 	return {
 		version: 2,

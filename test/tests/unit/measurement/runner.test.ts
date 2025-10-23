@@ -32,7 +32,7 @@ describe('MeasurementRunner', () => {
 	let runner: MeasurementRunner;
 	let testId: number;
 
-	const mockedMeasurementId = '2000E2SZgEwA6W6HvzlT1z9VK';
+	const mockedMeasurementId = '2E2SZgEwA6W6HvzlT0001z9VK';
 
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', null, () => testId++);

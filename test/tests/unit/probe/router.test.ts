@@ -44,7 +44,7 @@ describe('probe router', () => {
 		getMeasurement: sandbox.stub(),
 	};
 	const router = new ProbeRouter(onServerProbesUpdateMock, store as unknown as MeasurementStore);
-	const mockedMeasurementId = '2000E2SZgEwA6W6HvzlT1z9VK';
+	const mockedMeasurementId = '2E2SZgEwA6W6HvzlT0001z9VK';
 
 	let buildProbeInternal: (socket: RemoteProbeSocket) => Promise<ServerProbe>;
 

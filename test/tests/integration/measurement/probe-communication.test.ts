@@ -21,7 +21,7 @@ describe('Create measurement request', () => {
 	const logHandlerStub = sandbox.stub();
 	const adoptionHandlerStub = sandbox.stub();
 	const requestHandlerStub = sandbox.stub();
-	const mockedMeasurementId = '2000E2SZgEwA6W6HvzlT1z9VK';
+	const mockedMeasurementId = '2E2SZgEwA6W6HvzlT0001z9VK';
 	const generateMeasurementId = sandbox.stub().returns(mockedMeasurementId);
 
 	before(async () => {
