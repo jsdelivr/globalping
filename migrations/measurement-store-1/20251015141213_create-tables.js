@@ -9,7 +9,7 @@ export const up = async (db) => {
 	await db.schema.createTable('export', (table) => {
 		table.text('id').notNullable();
 		table.timestamp('createdAt').notNullable();
-		table.json('data').notNullable();
+		table.binary('data').notNullable();
 		table.unique([ 'id', 'createdAt' ]);
 	});
 
@@ -32,7 +32,7 @@ export const up = async (db) => {
 		await db.schema.createTable(tableName, (table) => {
 			table.text('id').notNullable();
 			table.timestamp('createdAt').notNullable();
-			table.json('data').notNullable();
+			table.binary('data').notNullable();
 			table.unique([ 'id', 'createdAt' ]);
 		});
 
