@@ -8,6 +8,7 @@ import { handleDnsUpdate } from '../../probe/handler/dns.js';
 import { handleStatsReport } from '../../probe/handler/stats.js';
 import { scopedLogger } from '../logger.js';
 import { probeOverride, getWsServer, PROBES_NAMESPACE, ServerSocket } from './server.js';
+import { health } from './middleware/health.js';
 import { probeMetadata } from './middleware/probe-metadata.js';
 import { errorHandler } from './helper/error-handler.js';
 import { subscribeWithHandler } from './helper/subscribe-handler.js';
@@ -22,6 +23,7 @@ const metricsAgent = getMetricsAgent();
 
 io
 	.of(PROBES_NAMESPACE)
+	.use(health)
 	.use(probeMetadata)
 	.on('connect', errorHandler(async (socket: ServerSocket) => {
 		const probe = socket.data.probe;

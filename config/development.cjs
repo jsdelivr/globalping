@@ -30,4 +30,5 @@ module.exports = {
 		syncInterval: 5000,
 	},
 	reconnectProbesDelay: 0,
+	sigtermDelay: 0,
 };

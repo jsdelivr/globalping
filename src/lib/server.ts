@@ -9,10 +9,11 @@ import { populateMemList as populateIpWhiteList } from './geoip/whitelist.js';
 import { populateCitiesList } from './geoip/city-approximation.js';
 import { populateLegalNames } from './geoip/legal-name-normalization.js';
 import { populateAsnData } from './geoip/asns.js';
-import { reconnectProbes } from './ws/helper/reconnect-probes.js';
+import { disconnectProbes, reconnectProbes } from './ws/helper/reconnect-probes.js';
 import { initPersistentRedisClient } from './redis/persistent-client.js';
 import { initMeasurementRedisClient } from './redis/measurement-client.js';
 import { initSubscriptionRedisClient } from './redis/subscription-client.js';
+import termListener from './term-listener.js';
 import { auth } from './http/auth.js';
 import { adoptionToken } from '../adoption/adoption-token.js';
 
@@ -47,6 +48,8 @@ export const createServer = async (): Promise<Server> => {
 	probeIpLimit.scheduleSync();
 
 	reconnectProbes();
+	// Disconnect probes shortly before shutdown to prevent data loss.
+	termListener.on('terminating', ({ delay }) => setTimeout(() => void disconnectProbes(0), delay - 10000));
 
 	const { getWsServer } = await import('./ws/server.js');
 	const { getHttpServer } = await import('./http/server.js');
