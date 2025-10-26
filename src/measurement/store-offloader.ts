@@ -1,7 +1,10 @@
-import config from 'config';
+import { promisify } from 'node:util';
+import { brotliCompress as brotliCompressCallback, constants as zlibConstants } from 'node:zlib';
 import { Queue as BullQueue, Worker } from 'bullmq';
 import BatchQueue from '@martin-kolarik/batch-queue';
+import Bluebird from 'bluebird';
 import is from '@sindresorhus/is';
+import config from 'config';
 
 import { scopedLogger } from '../lib/logger.js';
 import type { Knex } from 'knex';
@@ -10,6 +13,11 @@ import type { MeasurementRecord } from './types.js';
 import { MeasurementStore } from './store.js';
 
 const logger = scopedLogger('db-store');
+const brotliCompress = promisify(brotliCompressCallback);
+
+const compressRecord = (record: MeasurementRecord): Promise<Buffer> => {
+	return brotliCompress(JSON.stringify(record), { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 5 } });
+};
 
 export class MeasurementStoreOffloader {
 	private readonly fallbackQueue: BullQueue;
@@ -110,18 +118,18 @@ export class MeasurementStoreOffloader {
 	}
 
 	private async insertBatchToDb (tier: UserTier, measurements: MeasurementRecord[]) {
+		if (measurements.length === 0) {
+			return;
+		}
+
 		const table = `measurement_${tier}`;
-		const rows = measurements.map((r) => {
+		const rows = await Bluebird.map(measurements, async (r) => {
 			return {
 				id: r.id,
 				createdAt: roundIdTime(new Date(r.createdAt)),
-				data: r,
+				data: await compressRecord(r),
 			};
-		});
-
-		if (rows.length === 0) {
-			return;
-		}
+		}, { concurrency: 4 });
 
 		await this.measurementStoreDb(table)
 			.insert(rows)
@@ -134,17 +142,7 @@ export class MeasurementStoreOffloader {
 	}
 
 	private async insertBatchToDbByIds (tier: UserTier, ids: string[]) {
-		const table = `measurement_${tier}`;
-		const records = (await this.primaryMeasurementStore.getMeasurements(ids)).filter(is.truthy);
-		const rows = records.map(r => ({ id: r.id, createdAt: roundIdTime(new Date(r.createdAt)), data: r }));
-
-		if (rows.length === 0) {
-			return;
-		}
-
-		await this.measurementStoreDb(table)
-			.insert(rows)
-			.onConflict([ 'id', 'createdAt' ])
-			.ignore();
+		const records = await this.primaryMeasurementStore.getMeasurements(ids);
+		return this.insertBatchToDb(tier, records.filter(is.truthy));
 	}
 }
