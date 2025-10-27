@@ -1,7 +1,6 @@
 FROM node:24-bookworm-slim AS builder
 RUN apt-get update -y && apt-get install util-linux curl git -y
 
-ENV ELASTIC_APM_CONFIG_FILE=elastic-apm-node.cjs
 ENV NODE_ENV=production
 
 COPY package.json package-lock.json /app/
@@ -13,6 +12,7 @@ RUN npm run build
 FROM node:24-bookworm-slim
 RUN apt-get update -y && apt-get install tini util-linux curl -y
 
+ENV ELASTIC_APM_CONFIG_FILE=elastic-apm-node.cjs
 ENV NODE_ENV=production
 
 COPY package.json package-lock.json /app/
