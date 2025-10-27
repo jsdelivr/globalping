@@ -1,6 +1,7 @@
 FROM node:24-bookworm-slim AS builder
 RUN apt-get update -y && apt-get install util-linux curl git -y
 
+ENV ELASTIC_APM_CONFIG_FILE=elastic-apm-node.cjs
 ENV NODE_ENV=production
 
 COPY package.json package-lock.json /app/
@@ -24,4 +25,4 @@ COPY --from=builder /app/data /app/data
 ENV PORT=80
 EXPOSE 80
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD [ "npm", "start" ]
+CMD [ "node", "--max_old_space_size=3584", "--max-semi-space-size=128", "--experimental-loader", "elastic-apm-node/loader.mjs", "-r", "elastic-apm-node/start.js", "dist/src/index.js" ]

@@ -127,7 +127,6 @@
 		"download:files": "tsx src/lib/download-files.ts",
 		"prepare": "npm run download:files; husky || echo 'Failed to install husky'",
 		"stats": "tsx probes-stats/known.ts",
-		"start": "ELASTIC_APM_CONFIG_FILE=elastic-apm-node.cjs node --max_old_space_size=3584 --max-semi-space-size=128 --experimental-loader elastic-apm-node/loader.mjs -r elastic-apm-node/start.js dist/src/index.js",
 		"start:dev": "NODE_ENV=development FAKE_PROBE_IP=1 tsx src/index.ts",
 		"start:test": "NODE_ENV=test knex --knexfile knexfile.dashboard.js migrate:latest && NODE_ENV=test tsx src/index.ts",
 		"knex:dashboard": "knex --knexfile knexfile.dashboard.js",
