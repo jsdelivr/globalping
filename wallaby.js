@@ -21,7 +21,8 @@ export default function w (wallaby) {
 			'test/setup.ts',
 			'test/types.ts',
 			'package.json',
-			'knexfile.js',
+			'knexfile.dashboard.js',
+			'knexfile.measurement-store-1.js',
 			'data/*',
 		],
 		tests: [

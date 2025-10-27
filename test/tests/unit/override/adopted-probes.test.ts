@@ -8,7 +8,7 @@ describe('AdoptedProbes', () => {
 	const defaultAdoption: Row = {
 		id: 'p-1',
 		name: 'probe-1',
-		userId: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
+		userId: 'userId',
 		ip: '1.1.1.1',
 		altIps: '[]',
 		uuid: '1-1-1-1-1',
@@ -189,7 +189,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
-	it('class should match dProbe to probe by: adoption IP -> probe IP', async () => {
+	it('class should match dProbe to probe by: dProbe IP -> probe IP', async () => {
 		sql.select.resolves([
 			{ ...defaultAdoption, uuid: 'unsyncedUuid' },
 			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
@@ -214,7 +214,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
-	it('class should match dProbe to probe by: adoption IP -> probe alt IP', async () => {
+	it('class should match dProbe to probe by: dProbe IP -> probe alt IP', async () => {
 		sql.select.resolves([
 			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', altIps: '[]' },
 			{ ...defaultAdoption, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
@@ -236,7 +236,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
-	it('class should match dProbe to probe by: adoption alt IP -> probe IP', async () => {
+	it('class should match dProbe to probe by: dProbe alt IP -> probe IP', async () => {
 		sql.select.resolves([
 			{ ...defaultAdoption, ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["1.1.1.1"]' },
 		]);
@@ -254,7 +254,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
-	it('class should match dProbe to probe by: adoption alt IP -> probe alt IP', async () => {
+	it('class should match dProbe to probe by: dProbe alt IP -> probe alt IP', async () => {
 		sql.select.resolves([
 			{ ...defaultAdoption, ip: '3.3.3.3', uuid: '3-3-3-3-3', altIps: '["2.2.2.2"]' },
 		]);
@@ -269,6 +269,26 @@ describe('AdoptedProbes', () => {
 		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[0]).to.deep.equal([{ uuid: '1-1-1-1-1', ip: '1.1.1.1' }]);
 		expect(sql.delete.callCount).to.equal(0);
+		expect(sql.insert.callCount).to.equal(0);
+	});
+
+	it('class should prioritize adopted dProbe match over non-adopted', async () => {
+		sql.select.resolves([
+			{ ...defaultAdoption, id: 'p-1', uuid: '1-1-1-1-1', ip: '1.1.1.1', userId: 'userId', status: 'offline' },
+			{ ...defaultAdoption, id: 'p-2', uuid: '2-2-2-2-2', ip: '2.2.2.2', userId: null, status: 'offline' },
+		]);
+
+		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '2-2-2-2-2', ip: '1.1.1.1' }]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.delete.callCount).to.equal(1);
+		expect(sql.whereIn.args[0]).to.deep.equal([ 'id', [ 'p-2' ] ]);
+		expect(sql.where.callCount).to.equal(1);
+		expect(sql.update.callCount).to.equal(1);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ uuid: '2-2-2-2-2', status: 'ready' }]);
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
@@ -534,13 +554,13 @@ describe('AdoptedProbes', () => {
 		expect(sql.raw.callCount).to.equal(2);
 
 		expect(sql.raw.args[0]![1]).to.deep.equal({
-			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
+			recipient: 'userId',
 			subject: 'Your probe\'s location has changed',
 			message: 'Globalping detected that your probe [**probe-1**](/probes/p-1) with IP address **1.1.1.1** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).',
 		});
 
 		expect(sql.raw.args[1]![1]).to.deep.equal({
-			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
+			recipient: 'userId',
 			subject: 'Your probe\'s location has changed',
 			message: 'Globalping detected that your probe [**probe-2**](/probes/p-9) with IP address **9.9.9.9** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).',
 		});
@@ -658,13 +678,13 @@ describe('AdoptedProbes', () => {
 		expect(sql.raw.callCount).to.equal(4);
 
 		expect(sql.raw.args[2]![1]).to.deep.equal({
-			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
+			recipient: 'userId',
 			subject: 'Your probe\'s location has changed back',
 			message: 'Globalping detected that your probe [**probe-1**](/probes/p-1) with IP address **1.1.1.1** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 
 		expect(sql.raw.args[3]![1]).to.deep.equal({
-			recipient: '3cff97ae-4a0a-4f34-9f1a-155e6def0a45',
+			recipient: 'userId',
 			subject: `Your probe's location has changed back`,
 			message: 'Globalping detected that your probe [**probe-2**](/probes/p-9) with IP address **9.9.9.9** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
