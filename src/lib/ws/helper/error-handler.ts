@@ -1,4 +1,5 @@
 import type { Socket } from 'socket.io';
+import _ from 'lodash';
 import type { ServerSocket } from '../server.js';
 
 import getProbeIp from '../../get-probe-ip.js';
@@ -25,7 +26,7 @@ export const errorHandler = (next: NextArgument) => (socket: ServerSocket, mwNex
 		const clientIp = getProbeIp(socket) ?? '';
 		const reason = isError(error) ? error.message : 'unknown';
 
-		logger.info(`Disconnecting client for (${reason})`, { client: { id: socket.id, ip: clientIp }, handshake: socket.handshake?.query });
+		logger.info(`Disconnecting client for (${reason})`, { client: { id: socket.id, ip: clientIp, ..._.pick(socket.handshake?.query, [ 'version', 'nodeVersion', 'uuid', 'isHardware', 'hardwareDevice', 'hardwareDeviceFirmware', 'adoptionToken' ]) } });
 		logger.debug('Details:', error);
 
 		if (mwNext) {
