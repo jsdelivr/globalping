@@ -110,7 +110,7 @@ class DockerManager {
 			return;
 		}
 
-		await container.stop();
+		await container.kill();
 	}
 
 	public async startProbeContainer () {
