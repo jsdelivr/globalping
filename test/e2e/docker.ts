@@ -15,11 +15,13 @@ class DockerManager {
 	}
 
 	public async createApiContainer () {
-		const dbConnectionHost = config.get<string>('dashboardDb.connection.host').replace('localhost', 'host.docker.internal');
+		const dashboardDbConnectionHost = config.get<string>('dashboardDb.connection.host').replace('localhost', 'host.docker.internal');
+		const measurementStoreDbConnectionHost = config.get<string>('measurementStoreDb.connection.host').replace('localhost', 'host.docker.internal');
 		const processes = config.get<string>('server.processes');
 
 		const redisUrls = [
 			'redis.standalonePersistent.url',
+			'redis.standalonePersistentNoEviction.url',
 			'redis.standaloneNonPersistent.url',
 			'redis.clusterMeasurements.nodes.0',
 			'redis.clusterMeasurements.nodes.1',
@@ -35,14 +37,16 @@ class DockerManager {
 				'TEST_MODE=e2e',
 				'NEW_RELIC_ENABLED=false',
 				`REDIS_STANDALONE_PERSISTENT_URL=${redisUrls[0]}`,
-				`REDIS_STANDALONE_NON_PERSISTENT_URL=${redisUrls[1]}`,
-				`REDIS_CLUSTER_MEASUREMENTS_NODES_0=${redisUrls[2]}`,
-				`REDIS_CLUSTER_MEASUREMENTS_NODES_1=${redisUrls[3]}`,
-				`REDIS_CLUSTER_MEASUREMENTS_NODES_2=${redisUrls[4]}`,
+				`REDIS_STANDALONE_PERSISTENT_NO_EVICTION_URL=${redisUrls[1]}`,
+				`REDIS_STANDALONE_NON_PERSISTENT_URL=${redisUrls[2]}`,
+				`REDIS_CLUSTER_MEASUREMENTS_NODES_0=${redisUrls[3]}`,
+				`REDIS_CLUSTER_MEASUREMENTS_NODES_1=${redisUrls[4]}`,
+				`REDIS_CLUSTER_MEASUREMENTS_NODES_2=${redisUrls[5]}`,
 				`REDIS_SHARED_OPTIONS_PASSWORD=${config.get<string>('redis.sharedOptions.password')}`,
 				'DATA_DOMAIN_BLACKLIST_PATH=data/DOMAIN_BLACKLIST_E2E.json',
 				'DATA_IP_BLACKLIST_PATH=data/IP_BLACKLIST_E2E.json',
-				`DASHBOARD_DB_CONNECTION_HOST=${dbConnectionHost}`,
+				`DASHBOARD_DB_CONNECTION_HOST=${dashboardDbConnectionHost}`,
+				`MEASUREMENT_STORE_DB_CONNECTION_HOST=${measurementStoreDbConnectionHost}`,
 				`SERVER_PROCESSES=${processes}`,
 				`MEASUREMENT_TIMEOUT=5`,
 				`ADOPTED_PROBES_SYNC_INTERVAL=2000`,
@@ -106,7 +110,7 @@ class DockerManager {
 			return;
 		}
 
-		await container.stop();
+		await container.kill();
 	}
 
 	public async startProbeContainer () {
