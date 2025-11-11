@@ -1,5 +1,5 @@
 import { promisify } from 'node:util';
-import { brotliCompress as brotliCompressCallback, constants as zlibConstants } from 'node:zlib';
+import { brotliCompress as brotliCompressCallback, brotliDecompress as brotliDecompressCallback, constants as zlibConstants } from 'node:zlib';
 import { Queue as BullQueue, Worker } from 'bullmq';
 import BatchQueue from '@martin-kolarik/batch-queue';
 import Bluebird from 'bluebird';
@@ -14,9 +14,14 @@ import { MeasurementStore } from './store.js';
 
 const logger = scopedLogger('db-store');
 const brotliCompress = promisify(brotliCompressCallback);
+const brotliDecompress = promisify(brotliDecompressCallback);
 
-const compressRecord = (record: MeasurementRecord): Promise<Buffer> => {
+const compressRecord = (record: string): Promise<Buffer> => {
 	return brotliCompress(JSON.stringify(record), { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 5 } });
+};
+
+const decompressRecord = async (buffer: Buffer): Promise<string> => {
+	return (await brotliDecompress(buffer)).toString();
 };
 
 export class MeasurementStoreOffloader {
@@ -51,6 +56,23 @@ export class MeasurementStoreOffloader {
 	enqueueForOffload (measurement: MeasurementRecord) {
 		const tier = this.getTierFromMeasurementId(measurement.id);
 		this.offloadQueues[tier].push(measurement);
+	}
+
+	async getMeasurementString (id: string, userTierNum: keyof typeof USER_TIER_INVERTED, createdAtRounded: number): Promise<string | null> {
+		const tier = USER_TIER_INVERTED[userTierNum];
+		const table = `measurement_${tier}`;
+		const createdAt = new Date(createdAtRounded);
+
+		const row = await this.measurementStoreDb(table)
+			.where({ id, createdAt })
+			.select<{ data: Buffer }[]>('data')
+			.first();
+
+		if (!row) {
+			return null;
+		}
+
+		return decompressRecord(row.data);
 	}
 
 	startRetryWorker () {
@@ -127,7 +149,7 @@ export class MeasurementStoreOffloader {
 			return {
 				id: r.id,
 				createdAt: roundIdTime(new Date(r.createdAt)),
-				data: await compressRecord(r),
+				data: await compressRecord(JSON.stringify(r)),
 			};
 		}, { concurrency: 4 });
 
@@ -135,6 +157,9 @@ export class MeasurementStoreOffloader {
 			.insert(rows)
 			.onConflict([ 'id', 'createdAt' ])
 			.ignore();
+
+		await this.primaryMeasurementStore.updateLatestOffloadedTimestamp(rows[0]!.createdAt);
+		await this.primaryMeasurementStore.setOffloadedExpiration(measurements.map(m => m.id));
 	}
 
 	private async enqueueFallbackJob (tier: UserTier, ids: string[]) {
