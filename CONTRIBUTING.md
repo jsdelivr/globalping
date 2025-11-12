@@ -10,16 +10,23 @@ Hi! We're really excited that you're interested in contributing! Before submitti
 
 ## Project setup
 
-In order to run the Globalping API locally you will need Node.js v24 and Redis with [RedisJSON](https://oss.redis.com/redisjson/) module and MariaDB. All of them are included in docker-compose.dev.yml file. You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
+To run the Globalping API locally, you will need:
 
-The API uses 3000 port by default. This can be overridden by `PORT` environment variable.
+- Node.js v22/v24
+- Redis with the [RedisJSON](https://oss.redis.com/redisjson/) module
+- MariaDB (for the dashboard DB)
+- TimescaleDB (PostgreSQL) for the measurement store
+
+All the databases are included in `docker-compose.dev.yml`. You will also need to run a development instance of the [Globalping Probe](https://github.com/jsdelivr/globalping-probe) at the same time when testing.
+
+The API uses port 3000 by default. This can be overridden by `PORT` environment variable.
 
 You can run the project by following these steps:
 
 1. Clone this repository.
 2. [Enable host networking in Docker Desktop](https://docs.docker.com/engine/network/drivers/host/#docker-desktop) if you haven't already.
-3. `docker compose -f docker-compose.dev.yml up -d` - Run Redis and MariaDB
-4. `npm install && npm run download:files`
+3. `npm install && npm run download:files`
+4. `docker compose -f docker-compose.dev.yml up -d` – Start Redis, MariaDB, and TimescaleDB.
 5. Run `npm run start:dev`
 
 Once the API is live, you can spin up a probe instance by running as described at https://github.com/jsdelivr/globalping-probe/blob/master/CONTRIBUTING.md.

@@ -96,3 +96,21 @@ services:
       - "15432:5432"
     volumes:
       - ./config/measurement-store-1/create-dbs.sql:/docker-entrypoint-initdb.d/01-create-dbs.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d postgres -h 127.0.0.1"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  measurement-store-1-migrator:
+    image: node:22-alpine
+    working_dir: /app
+    depends_on:
+      measurement-store-1:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
+      - NODE_CONFIG={"measurementStoreDb":{"connection":{"host":"measurement-store-1","port":5432}}}
+    volumes:
+      - ./:/app
+    command: sh -c "npm run knex:measurement-store-1 migrate:latest"

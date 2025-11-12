@@ -1,3 +1,13 @@
 This folder contains Knex migrations for the `measurement-store-1` database.
 
-At the moment there are no schema migrations required. Add new migration files here when the measurement store schema evolves.
+Migrations are applied automatically during development during `docker compose up` but may be also run manually when needed:
+
+```
+npm run knex:measurement-store-1 migrate:latest
+```
+
+To create a new migration:
+
+```
+npm run knex:measurement-store-1 migrate:make <migration_name>
+```

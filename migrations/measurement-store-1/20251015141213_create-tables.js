@@ -8,19 +8,19 @@ export const up = async (db) => {
 
 	await db.schema.createTable('export', (table) => {
 		table.text('id').notNullable();
-		table.timestamp('createdAt').notNullable();
+		table.timestamp('exportedAt', { precision: 0 }).notNullable().defaultTo(db.fn.now());
 		table.binary('data').notNullable();
-		table.unique([ 'id', 'createdAt' ]);
+		table.unique([ 'id', 'exportedAt' ]);
 	});
 
-	await db.raw(`SELECT create_hypertable('export', by_range('createdAt', INTERVAL '1 minute'))`);
+	await db.raw(`SELECT create_hypertable('export', by_range('exportedAt', INTERVAL '1 minute'))`);
 
 	await db.raw(`
 		CREATE OR REPLACE FUNCTION export_measurement()
 		RETURNS trigger AS $$
 		BEGIN
-			INSERT INTO export (id, "createdAt", data)
-			SELECT id, "createdAt", data FROM inserted_rows;
+			INSERT INTO export (id, data)
+			SELECT id, data FROM inserted_rows;
 			RETURN NULL;
 		END;
 		$$ LANGUAGE plpgsql;
@@ -31,7 +31,7 @@ export const up = async (db) => {
 
 		await db.schema.createTable(tableName, (table) => {
 			table.text('id').notNullable();
-			table.timestamp('createdAt').notNullable();
+			table.timestamp('createdAt', { precision: 0 }).notNullable();
 			table.binary('data').notNullable();
 			table.unique([ 'id', 'createdAt' ]);
 		});
