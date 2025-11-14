@@ -158,7 +158,6 @@ export class MeasurementStoreOffloader {
 			.onConflict([ 'id', 'createdAt' ])
 			.ignore();
 
-		await this.primaryMeasurementStore.updateLatestOffloadedTimestamp(rows[0]!.createdAt);
 		await this.primaryMeasurementStore.setOffloadedExpiration(measurements.map(m => m.id));
 	}
 

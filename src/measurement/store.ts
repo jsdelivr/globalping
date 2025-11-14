@@ -52,9 +52,7 @@ const subtractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unk
 const getDateScore = () => Date.now() * 1000 + Math.floor(Math.random() * 1000);
 
 export class MeasurementStore {
-	private readonly latestExportedTimestampKey = 'gp:latest-exported-timestamp';
 	private offloader: MeasurementStoreOffloader;
-	private latestOffloadedTimestamp?: number;
 
 	constructor (
 		private readonly redis: RedisCluster,
@@ -68,14 +66,13 @@ export class MeasurementStore {
 			const { minutesSinceEpoch, userTier } = parseMeasurementId(id);
 			const createdAtMs = minutesSinceEpoch * 60_000;
 			const isOlderThan30m = Date.now() - createdAtMs > 30 * 60_000;
-			const isLikelyOffloaded = this.latestOffloadedTimestamp !== undefined && (this.latestOffloadedTimestamp - createdAtMs) > 10 * 60_000;
 
-			if (isOlderThan30m && isLikelyOffloaded) {
+			if (isOlderThan30m) {
 				try {
-					const fromDb = await this.offloader.getMeasurementString(id, userTier, createdAtMs);
+					const offloaded = await this.offloader.getMeasurementString(id, userTier, createdAtMs);
 
-					if (fromDb) {
-						return fromDb;
+					if (offloaded) {
+						return offloaded;
 					}
 				} catch {
 					// Fall back to Redis.
@@ -242,10 +239,6 @@ export class MeasurementStore {
 		}
 
 		await Bluebird.map(ids, id => this.redis.expire(getMeasurementKey(id), 60 * 60), { concurrency: 8 });
-	}
-
-	async updateLatestOffloadedTimestamp (timestamp: Date): Promise<void> {
-		this.latestOffloadedTimestamp = await this.redis.setGt(this.latestExportedTimestampKey, timestamp.getTime());
 	}
 
 	removeDefaults (measurement: Partial<MeasurementRecord>, request: MeasurementRequest): Partial<MeasurementRecord> {

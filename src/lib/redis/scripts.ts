@@ -37,21 +37,11 @@ type MarkFinishedScript = {
 	SHA1: string;
 };
 
-type SetGtScript = {
-	NUMBER_OF_KEYS: number;
-	SCRIPT: string;
-	transformArguments (key: string, value: number): string[];
-	transformReply (reply: number): number;
-} & {
-	SHA1: string;
-};
-
 export type RedisScripts = {
 	recordProgress: RecordProgressScript;
 	recordProgressAppend: RecordProgressAppendScript;
 	recordResult: RecordResultScript;
 	markFinished: MarkFinishedScript;
-	setGt: SetGtScript;
 };
 
 const recordProgress: RecordProgressScript = defineScript({
@@ -221,34 +211,4 @@ const markFinished: MarkFinishedScript = defineScript({
 	},
 });
 
-
-const setGt = defineScript({
-	FIRST_KEY_INDEX: 0,
-	NUMBER_OF_KEYS: 1,
-	SCRIPT: `
-	local key = KEYS[1]
-	local value = tonumber(ARGV[1])
-
-	local currentValue = redis.call('GET', key)
-	if not currentValue then
-		redis.call('SET', key, value)
-		return value
-	end
-
-	currentValue = tonumber(currentValue)
-	if value > currentValue then
-		redis.call('SET', key, value)
-		return value
-	end
-
-	return currentValue
-	`,
-	transformArguments (key: string, value: number) {
-		return [ key, value.toString() ];
-	},
-	transformReply (reply: number) {
-		return reply;
-	},
-});
-
-export const scripts: RedisScripts = { recordProgress, recordProgressAppend, recordResult, markFinished, setGt };
+export const scripts: RedisScripts = { recordProgress, recordProgressAppend, recordResult, markFinished };

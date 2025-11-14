@@ -45,7 +45,6 @@ describe('measurement store', () => {
 		expire: sandbox.stub(),
 		del: sandbox.stub(),
 		sendCommand: sandbox.stub(),
-		setGt: sandbox.stub(),
 		json: {
 			get: sandbox.stub(),
 			set: sandbox.stub(),
@@ -699,9 +698,6 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		redisMock.setGt.resolves(nowMs);
-		await store.updateLatestOffloadedTimestamp(new Date(nowMs));
-
 		offloaderGetMeasurementStringStub.resolves('{"from":"db"}');
 		redisMock.sendCommand.resolves(null);
 
@@ -719,9 +715,6 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		redisMock.setGt.resolves(nowMs);
-		await store.updateLatestOffloadedTimestamp(new Date(nowMs));
-
 		offloaderGetMeasurementStringStub.resolves(null);
 		const redisValue = '{"from":"redis"}';
 		redisMock.sendCommand.resolves(redisValue);
@@ -740,9 +733,6 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		redisMock.setGt.resolves(nowMs);
-		await store.updateLatestOffloadedTimestamp(new Date(nowMs));
-
 		offloaderGetMeasurementStringStub.rejects(new Error('DB error'));
 		const redisValue = '{"from":"redis"}';
 		redisMock.sendCommand.resolves(redisValue);
@@ -754,16 +744,13 @@ describe('measurement store', () => {
 		expect(redisMock.sendCommand.callCount).to.equal(1);
 	});
 
-	it('should use Redis when measurement is recent regardless of offload timestamp', async () => {
+	it('should use Redis when measurement is recent', async () => {
 		const store = getMeasurementStore();
 		const nowMs = Date.now();
 		const minutesOld = 5;
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		redisMock.setGt.resolves(nowMs);
-		await store.updateLatestOffloadedTimestamp(new Date(nowMs));
-
 		offloaderGetMeasurementStringStub.resolves('{"from":"db"}');
 
 		const redisValue = '{"from":"redis"}';
