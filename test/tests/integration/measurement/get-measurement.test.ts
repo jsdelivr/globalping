@@ -1,5 +1,5 @@
 import type { Server } from 'node:http';
-import { brotliCompress as brotliCompressCallback, default as zlib } from 'node:zlib';
+import { brotliCompress as brotliCompressCallback, constants as zlibConstants } from 'node:zlib';
 import { promisify } from 'node:util';
 import request, { Agent } from 'supertest';
 import Bluebird from 'bluebird';
@@ -121,7 +121,7 @@ describe('Get measurement', () => {
 			// Seed Postgres offload table for anonymous tier
 			const table = 'measurement_anonymous';
 			const record = buildMeasurementRecord(id, createdAt);
-			const compressed = await brotliCompress(JSON.stringify(record), { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 1 } });
+			const compressed = await brotliCompress(JSON.stringify(record), { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 1 } });
 			await measurementStoreClient(table).insert({ id, createdAt: new Date(roundedCreatedAt), data: compressed });
 			dbRowsToCleanup.push({ table, id, createdAt: new Date(roundedCreatedAt) });
 
