@@ -17,7 +17,7 @@ const brotliCompress = promisify(brotliCompressCallback);
 const brotliDecompress = promisify(brotliDecompressCallback);
 
 const compressRecord = (record: string): Promise<Buffer> => {
-	return brotliCompress(JSON.stringify(record), { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 5 } });
+	return brotliCompress(record, { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 5 } });
 };
 
 const decompressRecord = async (buffer: Buffer): Promise<string> => {
