@@ -62,24 +62,28 @@ export class MeasurementStore {
 	}
 
 	async getMeasurementString (id: string): Promise<string | null> {
+		let userTier;
+		let minutesSinceEpoch;
+
 		try {
-			const { minutesSinceEpoch, userTier } = parseMeasurementId(id);
-			const createdAtMs = minutesSinceEpoch * 60_000;
-			const isOlderThan30m = Date.now() - createdAtMs > 30 * 60_000;
-
-			if (isOlderThan30m) {
-				try {
-					const offloaded = await this.offloader.getMeasurementString(id, userTier, createdAtMs);
-
-					if (offloaded) {
-						return offloaded;
-					}
-				} catch {
-					// Fall back to Redis.
-				}
-			}
+			({ minutesSinceEpoch, userTier } = parseMeasurementId(id));
 		} catch {
 			return null;
+		}
+
+		const createdAtMs = minutesSinceEpoch * 60_000;
+		const isOlderThan30m = Date.now() - createdAtMs > 30 * 60_000;
+
+		if (isOlderThan30m) {
+			try {
+				const offloaded = await this.offloader.getMeasurementString(id, userTier, createdAtMs);
+
+				if (offloaded) {
+					return offloaded;
+				}
+			} catch {
+				// Fall back to Redis.
+			}
 		}
 
 		const key = getMeasurementKey(id);
