@@ -15,7 +15,6 @@ import type {
 } from './types.js';
 import { getDefaults } from './schema/utils.js';
 import { getMeasurementRedisClient, type RedisCluster } from '../lib/redis/measurement-client.js';
-import { getPersistentRedisClient, type RedisClient } from '../lib/redis/persistent-client.js';
 import { AuthenticateStateUser } from '../lib/http/middleware/authenticate.js';
 import { generateMeasurementId, parseMeasurementId } from './id.js';
 import { MeasurementStoreOffloader } from './store-offloader.js';
@@ -48,16 +47,11 @@ const subtractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unk
 	return result;
 };
 
-// Adding a random suffix to minimize the chance of duplicate.
-const getDateScore = () => Date.now() * 1000 + Math.floor(Math.random() * 1000);
 
 export class MeasurementStore {
 	private offloader: MeasurementStoreOffloader;
 
-	constructor (
-		private readonly redis: RedisCluster,
-		private readonly persistentRedis: RedisClient,
-	) {
+	constructor (private readonly redis: RedisCluster) {
 		this.offloader = new MeasurementStoreOffloader(measurementStoreClient, this);
 	}
 
@@ -161,7 +155,6 @@ export class MeasurementStore {
 		const [ record ] = await Promise.all([
 			this.redis.markFinished(id),
 			this.redis.hDel('gp:in-progress', id),
-			this.persistentRedis.zAdd('gp:measurement-keys-by-date', [{ score: getDateScore(), value: getMeasurementKey(id) }]),
 		]);
 
 		if (record) {
@@ -197,7 +190,6 @@ export class MeasurementStore {
 			this.redis.hDel('gp:in-progress', ids),
 			deleteAwaitingKeys,
 			updateMeasurements,
-			this.persistentRedis.zAdd('gp:measurement-keys-by-date', ids.map(id => ({ score: getDateScore(), value: getMeasurementKey(id) }))),
 		]);
 
 		for (const measurement of measurements) {
@@ -219,7 +211,6 @@ export class MeasurementStore {
 			.map(({ field: id }) => id);
 
 		await this.markFinishedByTimeout(timedOutIds);
-		await this.persistentRedis.zRemRangeByScore('gp:measurement-keys-by-date', '-inf', getDateScore() - config.get<number>('measurement.resultTTL') * 1000 * 1000);
 	}
 
 	scheduleCleanup () {
@@ -305,7 +296,7 @@ let store: MeasurementStore;
 
 export const getMeasurementStore = () => {
 	if (!store) {
-		store = new MeasurementStore(getMeasurementRedisClient(), getPersistentRedisClient());
+		store = new MeasurementStore(getMeasurementRedisClient());
 		store.scheduleCleanup();
 		store.startOffloadWorker();
 	}
