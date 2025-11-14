@@ -5,12 +5,19 @@ import _ from 'lodash';
 
 import type { OfflineProbe, ServerProbe } from '../probe/types.js';
 import { scopedLogger } from '../lib/logger.js';
-import type { MeasurementProgressMessage, MeasurementRecord, MeasurementRequest, MeasurementResult, MeasurementResultMessage, RequestType } from './types.js';
+import type {
+	MeasurementProgressMessage,
+	MeasurementRecord,
+	MeasurementRequest,
+	MeasurementResult,
+	MeasurementResultMessage,
+	RequestType,
+} from './types.js';
 import { getDefaults } from './schema/utils.js';
 import { getMeasurementRedisClient, type RedisCluster } from '../lib/redis/measurement-client.js';
 import { getPersistentRedisClient, type RedisClient } from '../lib/redis/persistent-client.js';
 import { AuthenticateStateUser } from '../lib/http/middleware/authenticate.js';
-import { generateMeasurementId } from './id.js';
+import { generateMeasurementId, parseMeasurementId } from './id.js';
 import { MeasurementStoreOffloader } from './store-offloader.js';
 import { measurementStoreClient } from '../lib/sql/client.js';
 
@@ -54,7 +61,31 @@ export class MeasurementStore {
 		this.offloader = new MeasurementStoreOffloader(measurementStoreClient, this);
 	}
 
-	async getMeasurementString (id: string): Promise<string> {
+	async getMeasurementString (id: string): Promise<string | null> {
+		let userTier;
+		let minutesSinceEpoch;
+
+		try {
+			({ minutesSinceEpoch, userTier } = parseMeasurementId(id));
+		} catch {
+			return null;
+		}
+
+		const createdAtMs = minutesSinceEpoch * 60_000;
+		const isOlderThan30m = Date.now() - createdAtMs > 30 * 60_000;
+
+		if (isOlderThan30m) {
+			try {
+				const offloaded = await this.offloader.getMeasurementString(id, userTier, createdAtMs);
+
+				if (offloaded) {
+					return offloaded;
+				}
+			} catch {
+				// Fall back to Redis.
+			}
+		}
+
 		const key = getMeasurementKey(id);
 		return this.redis.sendCommand(key, true, [ 'JSON.GET', key ]);
 	}
@@ -204,6 +235,14 @@ export class MeasurementStore {
 
 	startOffloadWorker () {
 		this.offloader.startRetryWorker();
+	}
+
+	async setOffloadedExpiration (ids: string[]): Promise<void> {
+		if (ids.length === 0) {
+			return;
+		}
+
+		await Bluebird.map(ids, id => this.redis.expire(getMeasurementKey(id), 60 * 60), { concurrency: 8 });
 	}
 
 	removeDefaults (measurement: Partial<MeasurementRecord>, request: MeasurementRequest): Partial<MeasurementRecord> {
