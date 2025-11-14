@@ -158,7 +158,7 @@ export class MeasurementStoreOffloader {
 			.onConflict([ 'id', 'createdAt' ])
 			.ignore();
 
-		await this.primaryMeasurementStore.setOffloadedExpiration(measurements.map(m => m.id));
+		this.primaryMeasurementStore.setOffloadedExpiration(measurements.map(m => m.id)).catch(() => {});
 	}
 
 	private async enqueueFallbackJob (tier: UserTier, ids: string[]) {
