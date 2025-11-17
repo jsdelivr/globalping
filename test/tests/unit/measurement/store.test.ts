@@ -1,4 +1,3 @@
-import config from 'config';
 import * as td from 'testdouble';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
@@ -55,11 +54,6 @@ describe('measurement store', () => {
 		markFinished: sandbox.stub(),
 	};
 
-	const persistentRedisMock = {
-		zAdd: sandbox.stub(),
-		zRemRangeByScore: sandbox.stub(),
-	};
-
 	const mockedMeasurementId1 = '2E2SZgEwA6W6HvzlT0001z9VK';
 	const mockedMeasurementId2 = '2F2SZgEwA6W6HvzlT0001z9VK';
 	const mockedMeasurementId3 = '2G2SZgEwA6W6HvzlT0001z9VK';
@@ -77,7 +71,6 @@ describe('measurement store', () => {
 		}, {});
 
 		await td.replaceEsm('../../../../src/lib/redis/measurement-client.ts', { getMeasurementRedisClient: () => redisMock });
-		await td.replaceEsm('../../../../src/lib/redis/persistent-client.ts', { getPersistentRedisClient: () => persistentRedisMock });
 
 		class OffloaderMock {
 			startRetryWorker () { /* no-op */ }
@@ -146,8 +139,6 @@ describe('measurement store', () => {
 		expect(redisMock.json.get.secondCall.args).to.deep.equal([ `gp:m:{${mockedMeasurementId2}}:results` ]);
 		expect(redisMock.hDel.callCount).to.equal(1);
 		expect(redisMock.hDel.firstCall.args).to.deep.equal([ 'gp:in-progress', [ mockedMeasurementId1, mockedMeasurementId2 ] ]);
-		expect(persistentRedisMock.zRemRangeByScore.callCount).to.equal(1);
-		expect(persistentRedisMock.zRemRangeByScore.firstCall.args[2]).to.be.within((now - config.get<number>('measurement.resultTTL') * 1000) * 1000, Date.now() * 1000);
 		expect(redisMock.del.callCount).to.equal(2);
 		expect(redisMock.del.firstCall.args).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:probes_awaiting` ]);
 		expect(redisMock.del.secondCall.args).to.deep.equal([ `gp:m:{${mockedMeasurementId2}}:probes_awaiting` ]);
@@ -638,7 +629,6 @@ describe('measurement store', () => {
 	});
 
 	it('should mark measurement as finished if storeMeasurementResult returned record', async () => {
-		const now = clock.pause().now;
 		redisMock.recordResult.resolves({});
 
 		const store = getMeasurementStore();
@@ -663,10 +653,6 @@ describe('measurement store', () => {
 		expect(redisMock.markFinished.args[0]).to.deep.equal([ mockedMeasurementId1 ]);
 		expect(redisMock.hDel.callCount).to.equal(1);
 		expect(redisMock.hDel.args[0]).to.deep.equal([ 'gp:in-progress', mockedMeasurementId1 ]);
-		expect(persistentRedisMock.zAdd.callCount).to.equal(1);
-		expect(persistentRedisMock.zAdd.args[0]?.[0]).to.equal('gp:measurement-keys-by-date');
-		expect(persistentRedisMock.zAdd.args[0]?.[1][0].value).to.equal(`gp:m:{${mockedMeasurementId1}}:results`);
-		expect(persistentRedisMock.zAdd.args[0]?.[1][0].score).to.be.within(now, Date.now() * 1000 + 800);
 	});
 
 	it('should not mark measurement as finished if storeMeasurementResult didn\'t return record', async () => {
