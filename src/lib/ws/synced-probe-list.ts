@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { Logger } from 'h-logger2';
 import { randomBytes } from 'node:crypto';
 import { EventEmitter } from 'node:events';
-import TTLCache from '@isaacs/ttlcache';
+import { TTLCache } from '@isaacs/ttlcache';
 import { scopedLoggerWithPrefix } from '../logger.js';
 import type { WsServerNamespace } from './server.js';
 import type { ServerProbe, ProbeStats, SocketProbe } from '../../probe/types.js';

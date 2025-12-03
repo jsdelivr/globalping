@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { Knex } from 'knex';
-import TTLCache from '@isaacs/ttlcache';
+import { TTLCache } from '@isaacs/ttlcache';
 import { base32 } from '@scure/base';
 import { scopedLogger } from '../logger.js';
 import { dashboardClient } from '../sql/client.js';
