@@ -1,5 +1,5 @@
 import config from 'config';
-import TTLCache from '@isaacs/ttlcache';
+import { TTLCache } from '@isaacs/ttlcache';
 import { type RedisCluster, getMeasurementRedisClient } from './redis/measurement-client.js';
 
 export class ProbeValidator {

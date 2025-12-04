@@ -1,5 +1,5 @@
 import config from 'config';
-import TTLCache from '@isaacs/ttlcache';
+import { TTLCache } from '@isaacs/ttlcache';
 import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 import { getPersistentRedisClient } from '../redis/persistent-client.js';
 import createHttpError from 'http-errors';
