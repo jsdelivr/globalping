@@ -65,6 +65,16 @@ module.exports = {
 			port: 5432,
 		},
 	},
+	timeSeriesDb: {
+		type: 'pg',
+		connection: {
+			host: 'localhost',
+			user: 'globalping-api',
+			password: 'password',
+			database: 'globalping-time-series-1',
+			port: 5432,
+		},
+	},
 	data: {
 		domainBlacklistPath: 'data/DOMAIN_BLACKLIST.json',
 		ipBlacklistPath: 'data/IP_BLACKLIST.json',

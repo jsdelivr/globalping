@@ -131,6 +131,7 @@
 		"start:test": "NODE_ENV=test knex --knexfile knexfile.dashboard.js migrate:latest && NODE_ENV=test tsx src/index.ts",
 		"knex:dashboard": "knex --knexfile knexfile.dashboard.js",
 		"knex:measurement-store-1": "knex --knexfile knexfile.measurement-store-1.js",
+		"knex:time-series-1": "knex --knexfile knexfile.time-series-1.js",
 		"lint": "npm run lint:js && npm run lint:types && npm run lint:docs",
 		"lint:fix": "npm run lint:js:fix && npm run lint:types && npm run lint:docs",
 		"lint:docs": "spectral lint public/**/spec.yaml",
