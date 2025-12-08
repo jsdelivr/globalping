@@ -88,7 +88,7 @@ services:
       - ./migrations/dashboard/create-tables.js.sql:/docker-entrypoint-initdb.d/02-create-tables.sql
 
   measurement-store-1:
-    image: timescale/timescaledb:2.22.1-pg17
+    image: timescale/timescaledb:2.24.0-pg18
     environment:
       - POSTGRES_USER=globalping-api
       - POSTGRES_PASSWORD=password
@@ -116,7 +116,7 @@ services:
     command: sh -c "npm run knex:measurement-store-1 migrate:latest"
 
   time-series-1:
-    image: timescale/timescaledb:2.22.1-pg17
+    image: timescale/timescaledb:2.24.0-pg18
     environment:
       - POSTGRES_USER=globalping-api
       - POSTGRES_PASSWORD=password
