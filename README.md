@@ -279,6 +279,50 @@ Many probes are going to be tagged by our system. At the moment, this includes:
 - **Google Cloud and AWS cloud region names**. For example, `aws-eu-west-1` and `gcp-us-south1`. These tags follow the respective provider's naming scheme and are prefixed with their name.
 - **Eyeball and data center network tags**. `eyeball` and `datacenter`. `eyeball` probes are hosted with ISPs that provide internet access to regular people and small businesses. As the name suggests, `datacenter` tags are intended for probes hosted in a data center.
 
+### High-volume tests
+If you need to execute thousands of tests frequently, you may run into the limit of 500 probes per measurement.
+
+In such cases, we recommend splitting your testing logic into multiple measurements. For example, 10 measurements with a limit of 500 probes each will result in 5000 executed tests.
+
+An easy way to ensure probes don't repeat across measurements is to set a different location for each measurement instead of targeting `world`. For example: `ping from Europe --limit 500` + `ping from North America --limit 500` + `ping from South America --limit 500`...
+
+In such a high-volume testing it's best to use our [API's static location selection](https://globalping.io/docs/api.globalping.io#post-/v1/measurements) instead of the default `magic` field, and essentially create your custom weights system per measurement.
+
+```json5
+// measurement 1
+{
+  "type": "ping",
+  "target": "cdn.jsdelivr.net",
+  "locations": [
+    {
+      "country": "DE",
+      "limit": 50
+    },
+    {
+      "country": "PL",
+      "limit": 20
+    }
+  ]
+}
+```
+```json5
+// measurement 2
+{
+  "type": "ping",
+  "target": "cdn.jsdelivr.net",
+  "locations": [
+    {
+      "country": "US",
+      "limit": 400
+    },
+    {
+      "country": "CA",
+      "limit": 100
+    }
+  ]
+}
+```
+
 ### Things to keep in mind
 
 #### Probes share no UUIDs
