@@ -288,7 +288,7 @@ An easy way to ensure probes don't repeat across measurements is to set a differ
 
 In such a high-volume testing it's best to use our [API's static location selection](https://globalping.io/docs/api.globalping.io#post-/v1/measurements) instead of the default `magic` field, and essentially create your custom weights system per measurement.
 
-```
+```json5
 // measurement 1
 {
   "type": "ping",
@@ -304,7 +304,8 @@ In such a high-volume testing it's best to use our [API's static location select
     }
   ]
 }
-
+```
+```json5
 // measurement 2
 {
   "type": "ping",
