@@ -1,10 +1,10 @@
-import { countries } from 'countries-list';
+import { countries, getCountryDataList } from 'countries-list';
 import config from 'config';
 import _ from 'lodash';
 import type { Location } from '../lib/location/types.js';
 import type { ServerProbe, ProbeLocation } from './types.js';
 import { captureSpan } from '../lib/metrics.js';
-import { alpha, aliases as countryAliases } from '../lib/location/countries.js';
+import { aliases as countryAliases } from '../lib/location/countries.js';
 import { continents } from '../lib/location/continents.js';
 import { states, statesIso } from '../lib/location/states.js';
 import { aliases as networkAliases } from '../lib/location/networks.js';
@@ -27,7 +27,7 @@ export class ProbesLocationFilter {
 	constructor () {
 		this.globalIndex = [
 			/* 00 */ new Set(Object.keys(countries).map(c => c.toLowerCase())),
-			/* 01 */ new Set(Object.values(alpha).map(c => c.toLowerCase())),
+			/* 01 */ new Set(getCountryDataList().map(c => c.iso3.toLowerCase())),
 			/* 02 */ new Set(Object.values(countries).map(c => c.name.toLowerCase())),
 			/* 03 */ new Set(countryAliases.flat()),
 			/* 04 */ new Set(),

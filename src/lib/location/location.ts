@@ -1,12 +1,9 @@
 import _ from 'lodash';
-import { countries } from 'countries-list';
+import { countries, getCountryData, TCountryCode } from 'countries-list';
 import { regions, aliases as regionAliases } from './regions.js';
 import { states } from './states.js';
 import { statesIso } from './states.js';
-import {
-	alpha as countryAlpha,
-	aliases as countryAliases,
-} from './countries.js';
+import { aliases as countryAliases } from './countries.js';
 import { aliases as networkAliases } from './networks.js';
 import { continents } from './continents.js';
 import type { ProbeIndex, ProbeLocation, Tag } from '../../probe/types.js';
@@ -74,7 +71,7 @@ export function getCountryByIso (iso: string): string {
 }
 
 export const getCountryIso3ByIso2 = (iso: string): string => {
-	const iso3 = countryAlpha[iso as keyof typeof countryAlpha];
+	const iso3 = getCountryData(iso as TCountryCode).iso3;
 
 	if (!iso3) {
 		throw new Error(`iso3 not found ${iso}`);
