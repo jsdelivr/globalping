@@ -63,5 +63,8 @@ jobs:
           npm ci
           npm run build
       - name: Test E2E
+        env:
+          CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
+          echo "Current branch: $CURRENT_BRANCH."
           npm run test:e2e
