@@ -16,7 +16,7 @@ info:
     | Operation | Unauthenticated user | Authenticated user |
     |---|---|---|
     | **Measurements** |||
-    | Create a measurement | 250 tests/hour | 500 tests/hour* |
+    | Create a measurement | 250 tests/hour<br/>50 probes/measurement | 500 tests/hour*<br/>500 probes/measurement |
     | Get a measurement by ID | 2 requests/second/measurement | 2 requests/second/measurement |
     | **Probes** |||
     | List probes currently online | no limit | no limit |

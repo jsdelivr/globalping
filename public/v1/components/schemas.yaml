@@ -119,6 +119,7 @@ components:
         The maximum number of probes that should run the measurement.
         The result count might be lower if there aren't enough probes available in the specified locations.
         Mutually exclusive with the `limit` property that can be set for individual locations.
+        Non-authenticated requests are limited to a maximum of 50 probes.
       minimum: 1
       maximum: 500
       default: 1
@@ -159,6 +160,7 @@ components:
           type: integer
           description: |
             The maximum number of probes that should run the measurement in this location.
+            Non-authenticated requests are limited to a maximum of 50 probes.
             The result count might be lower if there aren't enough probes available in this location.
             Mutually exclusive with the global `limit` property.
           minimum: 1

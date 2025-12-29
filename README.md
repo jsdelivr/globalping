@@ -379,6 +379,7 @@ Anyone can connect to and use our API without credentials.
 For users without authentication, we limit the number of tests an IP address can run:
 
 - 250 tests per hour
+- 50 probes per measurement
 
 >[!note]
 > A test is defined as a successful measurement the platform runs from one probe. For example, a limit of 10 tests means that users can either run 10 measurements with the probe limit set to 1 per measurement or a single measurement with the probe limit set to 10.
@@ -387,6 +388,7 @@ For users without authentication, we limit the number of tests an IP address can
 All registered users get an API key for authentication, granting them higher limits - register on our [Dashboard](https://dash.globalping.io/):
 
 - 500 tests per hour
+- 500 probes per measurement
 
 Additionally, users hosting probes receive 150 credits per day for each probe.
 
