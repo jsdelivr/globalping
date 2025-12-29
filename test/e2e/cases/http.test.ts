@@ -121,24 +121,6 @@ describe('http measurement', () => {
 		expect(response).to.matchApiSchema();
 	});
 
-	it('should handle HTTP2 request to HTTP/1.1 only server', async () => {
-		const { id } = await got.post('http://localhost:80/v1/measurements', {
-			json: {
-				target: 'httpforever.com',
-				type: 'http',
-				measurementOptions: {
-					protocol: 'HTTP2',
-				},
-			},
-		}).json<any>();
-
-		const response = await waitMeasurementFinish(id);
-
-		expect(response.body.status).to.equal('finished');
-		expect(response.body.results[0].result.status).to.equal('failed');
-		expect(response).to.matchApiSchema();
-	});
-
 	it('should finish successfully with 404 response', async () => {
 		const { id } = await got.post('http://localhost:80/v1/measurements', {
 			json: {
@@ -279,6 +261,24 @@ describe('http measurement', () => {
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('failed');
 		expect(response.body.results[0].result.rawOutput).to.include('ENOTFOUND');
+		expect(response).to.matchApiSchema();
+	});
+
+	it('should fail HTTP2 request to HTTP/1.1 only server', async () => {
+		const { id } = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				target: 'httpforever.com',
+				type: 'http',
+				measurementOptions: {
+					protocol: 'HTTP2',
+				},
+			},
+		}).json<any>();
+
+		const response = await waitMeasurementFinish(id);
+
+		expect(response.body.status).to.equal('finished');
+		expect(response.body.results[0].result.status).to.equal('failed');
 		expect(response).to.matchApiSchema();
 	});
 });
