@@ -143,16 +143,15 @@ Example commands to try:
 
 Learn more about the Slack app [on our blog](https://blog.globalping.io/network-troubleshooting-in-slack-made-easy-with-globalping/).
 
-### GitHub Bot
-Automatically post network test results into any **public** GitHub issue with our GitHub bot. Mention it with `@globalping`, followed by the command you want to run. Otherwise, you can follow the same test command structure as with our other tools and integrations.
+### More integrations
 
-Example commands to try:
-```
-@globalping ping 8.8.8.8 from Germany
-@globalping traceroute jsdelivr.com from South America --limit 2
-```
+Globalping supports a wide range of official and community-built integrations. 
 
-Learn more about the GitHub bot [on our blog](https://dev.to/globalping/supercharge-your-gitops-workflows-with-the-globalping-github-bot-341a).
+These range from SDKs and various clients, such as MCP and Zapier, to uptime monitoring tools and IDE extensions.
+
+[Explore all integrations](https://globalping.io/integrations)
+
+If we're missing something, please consider opening an issue to describe your use case.
 
 ## Globalping command structure
 We make sure that all integrations and tools provide a consistent experience, so writing tests looks almost identical whether you're using the CLI tool, the Slack app, or another official integration.
