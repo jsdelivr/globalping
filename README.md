@@ -26,7 +26,6 @@ Many users will likely prefer alternative ways to use the platform rather than w
 - [CLI tool](#globalping-cli) for people who feel at home in their terminal
 - [Web tools](#web-based-tools---globalping-website) for on-the-go testing and visual presentations
 - [Slack app](#slack-app) for bringing network testing capabilities into your Slack workspace
-- [GitHub bot](#github-bot) for adding network test results to public GitHub issues
 - [Find more integrations on our website](https://globalping.io/integrations)
 
 Learn more about Globalping on [globalping.io](https://globalping.io)
@@ -145,7 +144,7 @@ Learn more about the Slack app [on our blog](https://blog.globalping.io/network-
 
 ### More integrations
 
-Globalping supports a wide range of official and community-built integrations. 
+Globalping has a wide range of official and community-built integrations.
 
 These range from SDKs and various clients, such as MCP and Zapier, to uptime monitoring tools and IDE extensions.
 
