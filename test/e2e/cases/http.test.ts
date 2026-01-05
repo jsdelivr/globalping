@@ -101,6 +101,26 @@ describe('http measurement', () => {
 		expect(response).to.matchApiSchema();
 	});
 
+	it('should have null tls and dns timings for HTTP request to IP', async () => {
+		const { id } = await got.post('http://localhost:80/v1/measurements', {
+			json: {
+				target: '2606:4700:3037::ac43:d071',
+				type: 'http',
+				measurementOptions: {
+					protocol: 'HTTP',
+				},
+			},
+		}).json<any>();
+
+		const response = await waitMeasurementFinish(id);
+
+		expect(response.body.status).to.equal('finished');
+		expect(response.body.results[0].result.status).to.equal('finished');
+		expect(response.body.results[0].result.timings.tls).to.equal(null);
+		expect(response.body.results[0].result.timings.dns).to.equal(null);
+		expect(response).to.matchApiSchema();
+	});
+
 	it('should finish successfully with HTTP2 protocol', async () => {
 		const { id } = await got.post('http://localhost:80/v1/measurements', {
 			json: {
