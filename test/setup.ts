@@ -26,6 +26,8 @@ import { initPersistentRedisClient } from '../src/lib/redis/persistent-client.js
 import { initMeasurementRedisClient } from '../src/lib/redis/measurement-client.js';
 import { initSubscriptionRedisClient } from '../src/lib/redis/subscription-client.js';
 import { dashboardClient, measurementStoreClient } from '../src/lib/sql/client.js';
+import { populateLegalNames } from '../src/lib/geoip/legal-name-normalization.js';
+import { populateAsnData } from '../src/lib/geoip/asns.js';
 import { extendSinonClock } from './utils/clock.js';
 import { resetDbs } from './utils/db.js';
 
@@ -55,4 +57,6 @@ before(async () => {
 	await populateBlockedIpRangesList();
 	await populateMemList();
 	await populateNockCitiesList();
+	await populateLegalNames();
+	await populateAsnData();
 });

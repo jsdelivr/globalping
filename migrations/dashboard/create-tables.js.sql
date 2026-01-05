@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS directus_notifications (
 	message TEXT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `gp_tokens` (
+CREATE TABLE IF NOT EXISTS `gp_tokens` (
 	`date_created` timestamp NULL DEFAULT NULL,
 	`date_last_used` date DEFAULT NULL,
 	`date_updated` timestamp NULL DEFAULT NULL,
