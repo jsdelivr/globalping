@@ -3,7 +3,6 @@ import config from 'config';
 import _ from 'lodash';
 import type { Location } from '../lib/location/types.js';
 import type { ServerProbe, ProbeLocation } from './types.js';
-import { captureSpan } from '../lib/metrics.js';
 import { aliases as countryAliases } from '../lib/location/countries.js';
 import { continents } from '../lib/location/continents.js';
 import { states, statesIso } from '../lib/location/states.js';
@@ -140,7 +139,7 @@ export class ProbesLocationFilter {
 				const normalizedRequestTags = location.tags!.map(tag => tag.toLowerCase());
 				filteredProbes = filteredProbes.filter(probe => normalizedRequestTags.every(tag => this.hasTag(probe, tag)));
 			} else if (key === 'magic') {
-				filteredProbes = captureSpan('magicFilter', () => this.magicFilter(filteredProbes, location.magic!));
+				filteredProbes = this.magicFilter(filteredProbes, location.magic!);
 			} else {
 				const probeKey = Object.hasOwn(locationKeyMap, key) ? locationKeyMap[key as keyof typeof locationKeyMap] : key;
 				// @ts-expect-error it's a string
@@ -151,8 +150,7 @@ export class ProbesLocationFilter {
 		});
 
 		const isMagicSorting = Object.keys(location).includes('magic');
-
-		return captureSpan('shuffle', () => isMagicSorting ? this.magicSort(filteredProbes, location.magic!) : this.diversifiedShuffle(filteredProbes));
+		return isMagicSorting ? this.magicSort(filteredProbes, location.magic!) : this.diversifiedShuffle(filteredProbes);
 	}
 
 	public filterByLocationAndWeight (probes: ServerProbe[], distribution: Map<Location, number>, limit: number): ServerProbe[] {
