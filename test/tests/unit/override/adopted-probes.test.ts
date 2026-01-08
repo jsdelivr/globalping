@@ -79,6 +79,7 @@ describe('AdoptedProbes', () => {
 		}],
 		index: [ [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [] ],
 		client: '',
+		isProxy: false,
 		host: '',
 		resolvers: [],
 		stats: {

@@ -153,6 +153,7 @@ export class ProbeRouter {
 		hardwareDeviceFirmware: null,
 		ipAddress: ip,
 		altIpAddresses: [],
+		isProxy: null,
 		host: null,
 		hostInfo: {
 			totalMemory: null,

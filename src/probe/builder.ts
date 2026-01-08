@@ -98,6 +98,7 @@ export const buildProbe = async (socket: Socket): Promise<SocketProbe> => {
 		isIPv4Supported: false,
 		isIPv6Supported: false,
 		adoptionToken,
+		isProxy: ipInfo.isProxy,
 	};
 };
 
