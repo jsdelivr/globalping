@@ -25,4 +25,4 @@ COPY --from=builder /app/data /app/data
 ENV PORT=80
 EXPOSE 80
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD [ "node", "--max_old_space_size=3584", "--max-semi-space-size=128", "--experimental-loader", "elastic-apm-node/loader.mjs", "-r", "elastic-apm-node/start.js", "dist/src/index.js" ]
+CMD [ "node", "--heapsnapshot-signal=SIGUSR2", "--max_old_space_size=3584", "--max-semi-space-size=128", "--experimental-loader", "elastic-apm-node/loader.mjs", "-r", "elastic-apm-node/start.js", "dist/src/index.js" ]
