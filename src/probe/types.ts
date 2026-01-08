@@ -68,6 +68,7 @@ type Probe = {
 	stats: ProbeStats;
 	hostInfo: HostInfo;
 	adoptionToken: string | null;
+	isProxy: boolean | null;
 };
 
 type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;
