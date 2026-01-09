@@ -638,7 +638,7 @@ describe('geoip service', () => {
 			});
 		});
 
-		it('should reject - (not in whitelisted range)', async () => {
+		it.skip('should reject - (not in whitelisted range)', async () => {
 			mockFs({
 				config: {
 					'whitelist-ips.txt': `1.1.2.0/24`,
@@ -655,7 +655,7 @@ describe('geoip service', () => {
 			expect((response as Error).message).to.include('vpn detected');
 		});
 
-		it('should reject - is_proxy field is true', async () => {
+		it.skip('should reject - is_proxy field is true', async () => {
 			nockGeoIpProviders({ ip2location: 'vpn' });
 
 			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);

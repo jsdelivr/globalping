@@ -197,6 +197,7 @@ describe('Get Probes', () => {
 						hardwareDeviceFirmware: null,
 						uuid: '1-1-1-1-1',
 						nodeVersion: 'v18.17.0',
+						isProxy: false,
 						location: {
 							continent: 'SA',
 							region: 'South America',
