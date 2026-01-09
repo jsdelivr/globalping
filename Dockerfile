@@ -1,4 +1,4 @@
-FROM node:24.11-bookworm-slim AS builder
+FROM node:24.11.0-bookworm-slim AS builder
 RUN apt-get update -y && apt-get install util-linux curl git python3 make g++ -y
 
 ENV NODE_ENV=production
@@ -9,7 +9,7 @@ RUN npm ci --include=dev
 COPY . /app
 RUN npm run build
 
-FROM node:24.11-bookworm-slim
+FROM node:24.11.0-bookworm-slim
 RUN apt-get update -y && apt-get install tini util-linux curl python3 make g++ -y
 
 ENV ELASTIC_APM_CONFIG_FILE=elastic-apm-node.cjs
