@@ -24,7 +24,7 @@ export async function flushRedisCache () {
 	}
 
 	if (!currentLastCommitHash || lastCommitHashInRedis !== currentLastCommitHash) {
-		logger.info('Latest commit hash changed. Clearing redis cache.');
+		logger.info('Latest commit hash changed. Clearing redis cache.', { lastCommitHashInRedis, currentLastCommitHash });
 		await redis.flushDb();
 		await persistentRedis.set(`LAST_API_COMMIT_HASH_${hostname}`, currentLastCommitHash);
 	}
