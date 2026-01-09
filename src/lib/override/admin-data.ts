@@ -4,7 +4,7 @@ import type { Knex } from 'knex';
 import config from 'config';
 import type { ProbeLocation, SocketProbe } from '../../probe/types.js';
 import { normalizeFromPublicName } from '../geoip/utils.js';
-import { getContinentByCountry, getRegionByCountry } from '../location/location.js';
+import { getContinentByCountry, getIndex, getRegionByCountry } from '../location/location.js';
 import { scopedLogger } from '../logger.js';
 import _ from 'lodash';
 
@@ -96,12 +96,15 @@ export class AdminData {
 				return probe;
 			}
 
+			const newLocation = {
+				...probe.location,
+				...updatedFields,
+			};
+
 			return {
 				...probe,
-				location: {
-					...probe.location,
-					...updatedFields,
-				},
+				location: newLocation,
+				index: getIndex(newLocation, probe.normalizedTags),
 			};
 		});
 	}
