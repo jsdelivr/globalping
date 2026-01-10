@@ -2,6 +2,6 @@ const physicalCpuCount = require('physical-cpu-count');
 
 module.exports = {
 	server: {
-		processes: physicalCpuCount,
+		processes: Math.min(physicalCpuCount, 8),
 	},
 };
