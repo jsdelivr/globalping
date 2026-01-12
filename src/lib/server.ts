@@ -1,4 +1,5 @@
 import type { Server } from 'node:http';
+import v8 from 'node:v8';
 import { initRedisClient } from './redis/client.js';
 import { probeOverride, probeIpLimit, initWsServer } from './ws/server.js';
 import { getMetricsAgent } from './metrics.js';
@@ -16,6 +17,21 @@ import { initSubscriptionRedisClient } from './redis/subscription-client.js';
 import termListener from './term-listener.js';
 import { auth } from './http/auth.js';
 import { adoptionToken } from '../adoption/adoption-token.js';
+import { scopedLogger } from './logger.js';
+
+const logger = scopedLogger('server');
+
+process.on('SIGUSR2', () => {
+	const stats = v8.getHeapStatistics();
+	const mem = process.memoryUsage();
+	const res = process.resourceUsage();
+	const mb = (bytes: number) => (bytes / 1024 / 1024).toFixed(2);
+	logger.info(`memory data:`, {
+		getHeapStatistics: Object.fromEntries(Object.entries(stats).map(([ k, v ]) => [ k, typeof v === 'number' ? mb(v) : v ])),
+		memoryUsage: Object.fromEntries(Object.entries(mem).map(([ k, v ]) => [ k, typeof v === 'number' ? mb(v) : v ])),
+		resourceUsage: Object.fromEntries(Object.entries(res).map(([ k, v ]) => [ k, typeof v === 'number' ? mb(v) : v ])),
+	});
+});
 
 export const createServer = async (): Promise<Server> => {
 	await initRedisClient();
