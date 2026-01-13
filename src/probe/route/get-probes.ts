@@ -36,6 +36,7 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 		hardwareDevice: isAdmin ? probe.hardwareDevice : undefined,
 		hardwareDeviceFirmware: isAdmin ? probe.hardwareDeviceFirmware : undefined,
 		resolvers: probe.resolvers,
+		isProxy: isAdmin ? probe.isProxy : undefined,
 		host: isAdmin ? probe.host : undefined,
 		stats: isAdmin ? probe.stats : undefined,
 		hostInfo: isAdmin ? probe.hostInfo : undefined,
