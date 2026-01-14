@@ -1,42 +1,62 @@
 import _ from 'lodash';
 import config from 'config';
+import cluster from 'node:cluster';
 import process from 'node:process';
 import { EventEmitter } from 'node:events';
 import { scopedLogger } from './logger.js';
+import is from '@sindresorhus/is';
 
 const logger = scopedLogger('sigterm-listener');
 
-class TermListener extends EventEmitter<{ terminating: [{ signal: string; delay: number }] }> {
-	private isTerminating: boolean;
+export class MasterTermListener {
+	private readonly delay = config.get<number>('sigtermDelay');
 
 	constructor () {
-		super();
-		this.isTerminating = false;
-		const sigtermDelay = config.get<number>('sigtermDelay');
-		sigtermDelay && this.attachListener(sigtermDelay);
+		this.delay && this.attachListener();
 	}
 
-	public getIsTerminating () {
-		return this.isTerminating;
-	}
-
-	private attachListener (delay: number) {
+	private attachListener () {
 		const listener = _.once((signal: string) => {
-			logger.info(`Process ${process.pid} received a ${signal} signal: ${delay}ms delay before exit`);
-			this.isTerminating = true;
+			logger.info(`Process ${process.pid} received a ${signal} signal: ${this.delay}ms delay before exit`);
+
+			if (cluster.workers) {
+				Object.values(cluster.workers).forEach(worker => worker?.send({ type: 'terminating', signal, delay: this.delay }));
+			}
 
 			setTimeout(() => {
 				logger.info('Exiting');
 				process.exit(0);
-			}, delay);
-
-			this.emit('terminating', { signal, delay });
+			}, this.delay);
 		});
 
 		[ 'SIGINT', 'SIGTERM' ].forEach(signal => process.on(signal, listener));
 	}
 }
 
-const termListener = new TermListener();
+export class WorkerTermListener extends EventEmitter<{ terminating: [{ signal: string; delay: number }] }> {
+	private isTerminating: boolean = false;
+
+	constructor () {
+		super();
+		this.attachListener();
+	}
+
+	public getIsTerminating () {
+		return this.isTerminating;
+	}
+
+	private attachListener () {
+		process.on('message', (message) => {
+			if (is.plainObject(message) && message['type'] === 'terminating') {
+				const { signal, delay } = message as { type: string; signal: string; delay: number };
+				logger.info(`Worker ${process.pid} received ${signal} signal from master.`);
+				this.isTerminating = true;
+				this.emit('terminating', { signal, delay });
+			}
+		});
+	}
+}
+
+const termListener = (cluster.isWorker ? new WorkerTermListener() : null)!;
 
 export default termListener;
