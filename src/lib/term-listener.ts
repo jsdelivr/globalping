@@ -61,6 +61,4 @@ const emptyListener = { on: () => {}, getIsTerminating: () => false };
 
 const termListener = cluster.isWorker ? new WorkerTermListener() : emptyListener;
 
-export const getTermListener = () => termListener;
-
-export default getTermListener;
+export default termListener;
