@@ -26,8 +26,6 @@ describe('term-listener', () => {
 		};
 
 		before(async () => {
-			configStub.get.withArgs('sigtermDelay').returns(5000);
-
 			await td.replaceEsm('node:process', { default: processStub });
 			await td.replaceEsm('node:cluster', { default: clusterStub });
 			await td.replaceEsm('config', { default: configStub });
@@ -38,6 +36,7 @@ describe('term-listener', () => {
 
 		beforeEach(() => {
 			sandbox.reset();
+			configStub.get.withArgs('sigtermDelay').returns(5000);
 		});
 
 		after(() => {
@@ -46,8 +45,6 @@ describe('term-listener', () => {
 		});
 
 		it('should attach signal listeners on SIGTERM and SIGINT', () => {
-			configStub.get.withArgs('sigtermDelay').returns(5000);
-
 			new MasterTermListener();
 
 			expect(processStub.on.calledWith('SIGTERM', sinon.match.func)).to.be.true;
@@ -55,8 +52,6 @@ describe('term-listener', () => {
 		});
 
 		it('should send terminating message to all workers when receiving signal', () => {
-			configStub.get.withArgs('sigtermDelay').returns(5000);
-
 			new MasterTermListener();
 
 			const sigtermCall = processStub.on.getCalls().find((call: any) => call.args[0] === 'SIGTERM');
@@ -69,8 +64,6 @@ describe('term-listener', () => {
 		});
 
 		it('should exit process after delay', async () => {
-			configStub.get.withArgs('sigtermDelay').returns(5000);
-
 			new MasterTermListener();
 
 			const sigtermCall = processStub.on.getCalls().find((call: any) => call.args[0] === 'SIGTERM');
@@ -107,6 +100,18 @@ describe('term-listener', () => {
 
 			expect(worker1.send.callCount).to.equal(1);
 			expect(worker2.send.callCount).to.equal(1);
+		});
+
+		it('should continue sending to other workers if one throws an error', () => {
+			worker1.send.throws(new Error('IPC channel closed'));
+
+			new MasterTermListener();
+
+			const sigtermCall = processStub.on.getCalls().find((call: any) => call.args[0] === 'SIGTERM');
+			const sigtermHandler = sigtermCall?.args[1];
+
+			expect(() => sigtermHandler('SIGTERM')).to.not.throw();
+			expect(worker2.send.calledWith({ type: 'terminating', signal: 'SIGTERM', delay: 5000 })).to.be.true;
 		});
 	});
 

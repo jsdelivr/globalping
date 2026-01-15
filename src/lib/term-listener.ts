@@ -20,7 +20,11 @@ export class MasterTermListener {
 			logger.info(`Process ${process.pid} received a ${signal} signal: ${this.delay}ms delay before exit`);
 
 			if (cluster.workers) {
-				Object.values(cluster.workers).forEach(worker => worker?.send({ type: 'terminating', signal, delay: this.delay }));
+				Object.values(cluster.workers).forEach((worker) => {
+					try {
+						worker?.send({ type: 'terminating', signal, delay: this.delay });
+					} catch {}
+				});
 			}
 
 			setTimeout(() => {
