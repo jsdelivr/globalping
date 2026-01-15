@@ -18,6 +18,7 @@ import termListener from './term-listener.js';
 import { auth } from './http/auth.js';
 import { adoptionToken } from '../adoption/adoption-token.js';
 import { scopedLogger } from './logger.js';
+import { logIfTooLong } from './log-if-too-long.js';
 
 const logger = scopedLogger('server');
 
@@ -41,24 +42,24 @@ export const createServer = async (): Promise<Server> => {
 
 	// Populate in-memory lists
 	await Promise.all([
-		populateMemMalwareList(),
-		populateMemCloudIpRangesList(),
-		populateMemBlockedIpRangesList(),
-		populateIpWhiteList(),
-		populateCitiesList(),
-		populateLegalNames(),
-		populateAsnData(),
+		logIfTooLong(populateMemMalwareList(), 'populateMemMalwareList'),
+		logIfTooLong(populateMemCloudIpRangesList(), 'populateMemCloudIpRangesList'),
+		logIfTooLong(populateMemBlockedIpRangesList(), 'populateMemBlockedIpRangesList'),
+		logIfTooLong(populateIpWhiteList(), 'populateIpWhiteList'),
+		logIfTooLong(populateCitiesList(), 'populateCitiesList'),
+		logIfTooLong(populateLegalNames(), 'populateLegalNames'),
+		logIfTooLong(populateAsnData(), 'populateAsnData'),
 	]);
 
 	// Populate Dashboard override data before using it during initWsServer()
-	await probeOverride.fetchDashboardData();
+	await logIfTooLong(probeOverride.fetchDashboardData(), 'probeOverride.fetchDashboardData');
 	probeOverride.scheduleSync();
 
 	adoptionToken.scheduleSync();
 
-	await initWsServer();
+	await logIfTooLong(initWsServer(), 'initWsServer');
 
-	await auth.syncTokens();
+	await logIfTooLong(auth.syncTokens(), 'auth.syncTokens');
 	auth.scheduleSync();
 
 	probeIpLimit.scheduleSync();
