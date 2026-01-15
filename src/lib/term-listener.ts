@@ -12,10 +12,10 @@ export class MasterTermListener {
 	private readonly delay = config.get<number>('sigtermDelay');
 
 	constructor () {
-		this.delay && this.attachListener();
+		this.delay && this.attachSignalListener();
 	}
 
-	private attachListener () {
+	private attachSignalListener () {
 		const listener = _.once((signal: string) => {
 			logger.info(`Process ${process.pid} received a ${signal} signal: ${this.delay}ms delay before exit`);
 
@@ -38,14 +38,14 @@ export class WorkerTermListener extends EventEmitter<{ terminating: [{ signal: s
 
 	constructor () {
 		super();
-		this.attachListener();
+		this.attachMasterListener();
 	}
 
 	public getIsTerminating () {
 		return this.isTerminating;
 	}
 
-	private attachListener () {
+	private attachMasterListener () {
 		process.on('message', (message) => {
 			if (is.plainObject(message) && message['type'] === 'terminating') {
 				const { signal, delay } = message as { type: string; signal: string; delay: number };
@@ -57,6 +57,10 @@ export class WorkerTermListener extends EventEmitter<{ terminating: [{ signal: s
 	}
 }
 
-const termListener = (cluster.isWorker ? new WorkerTermListener() : null)!;
+const emptyListener = { on: () => {}, getIsTerminating: () => false };
 
-export default termListener;
+const termListener = cluster.isWorker ? new WorkerTermListener() : emptyListener;
+
+export const getTermListener = () => termListener;
+
+export default getTermListener;

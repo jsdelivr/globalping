@@ -14,7 +14,7 @@ import { disconnectProbes, reconnectProbes } from './ws/helper/reconnect-probes.
 import { initPersistentRedisClient } from './redis/persistent-client.js';
 import { initMeasurementRedisClient } from './redis/measurement-client.js';
 import { initSubscriptionRedisClient } from './redis/subscription-client.js';
-import termListener from './term-listener.js';
+import getTermListener from './term-listener.js';
 import { auth } from './http/auth.js';
 import { adoptionToken } from '../adoption/adoption-token.js';
 import { scopedLogger } from './logger.js';
@@ -65,7 +65,7 @@ export const createServer = async (): Promise<Server> => {
 
 	reconnectProbes();
 	// Disconnect probes shortly before shutdown to prevent data loss.
-	termListener.on('terminating', ({ delay }) => setTimeout(() => void disconnectProbes(0), delay - 10000));
+	getTermListener().on('terminating', ({ delay }) => setTimeout(() => void disconnectProbes(0), delay - 10000));
 
 	const { getWsServer } = await import('./ws/server.js');
 	const { getHttpServer } = await import('./http/server.js');
