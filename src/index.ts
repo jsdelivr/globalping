@@ -6,6 +6,7 @@ import { createServer } from './lib/server.js';
 import { initRedisClient } from './lib/redis/client.js';
 import { initPersistentRedisClient } from './lib/redis/persistent-client.js';
 import { flushRedisCache } from './lib/flush-redis-cache.js';
+import { MasterTermListener } from './lib/term-listener.js';
 
 const logger = scopedLogger('index');
 const port = process.env['PORT'] ?? config.get<number>('server.port');
@@ -21,6 +22,7 @@ const workerFn = async () => {
 
 if (cluster.isPrimary) {
 	logger.info(`Master ${process.pid} is running with ${workerCount} workers.`);
+	new MasterTermListener();
 	const redis = await initRedisClient();
 	const persistentRedis = await initPersistentRedisClient();
 	await flushRedisCache();
