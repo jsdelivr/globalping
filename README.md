@@ -321,6 +321,13 @@ In such a high-volume testing it's best to use our [API's static location select
 }
 ```
 
+### Uptime monitoring use cases
+If you use Globalping to monitor an endpoint's uptime via an integration like Upptime, selecting the correct location is essential for accurate results.
+Here are some tips:
+- **Default to world:** The default world location is sufficient for most users and provides a broad global perspective.
+- **Filter for datacenters:** When targeting specific regions or countries (e.g., Germany or South America), append the `+datacenter-network` filter (e.g., `Germany+datacenter-network`) to ensure probes are running from stable infrastructure.
+- **Avoid regional blocking:** Be mindful that some countries implement strict IP and domain filtering. If you encounter regional connectivity issues, use specific location filters to bypass or isolate those areas.
+
 ### Things to keep in mind
 
 #### Probes share no UUIDs
