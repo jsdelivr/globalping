@@ -4,8 +4,8 @@ import zlib from 'node:zlib';
 import { pipeline } from 'node:stream/promises';
 import { createClient, type RedisClientType } from 'redis';
 
-const REDIS_URL = '';
-const REDIS_PASSWORD = '';
+const REDIS_URL = process.env['REDIS_URL'] || '';
+const REDIS_PASSWORD = process.env['REDIS_PASSWORD'] || '';
 
 if (!REDIS_URL || !REDIS_PASSWORD) {
 	throw new Error('REDIS_URL and REDIS_PASSWORD must be specified');
