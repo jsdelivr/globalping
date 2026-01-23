@@ -6,7 +6,7 @@ import { normalizeLegalName, populateLegalNames } from './legal-name-normalizati
 import anyAscii from 'any-ascii';
 import fs from 'fs';
 
-const SOURCE_URL = 'https://cdn.jsdelivr.net/gh/ipverse/asn-info@master/as.csv';
+const SOURCE_URL = 'https://download.jsdelivr.com/ASN_INFO.csv';
 const FILENAME = 'ASN_INFO.csv';
 const ASNS = new Map<string, string>();
 

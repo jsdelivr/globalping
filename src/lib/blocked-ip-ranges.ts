@@ -16,7 +16,7 @@ let ipsCache = new Map<string, boolean>();
 
 export const sources: Record<'appleRelay', Source> = {
 	appleRelay: {
-		url: 'https://mask-api.icloud.com/egress-ip-ranges.csv',
+		url: 'https://download.jsdelivr.com/APPLE_RELAY_IP_RANGES.csv',
 		file: 'data/APPLE_RELAY_IP_RANGES.csv',
 	},
 };

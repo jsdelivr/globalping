@@ -20,19 +20,19 @@ const ipV6Ranges = new Map<number, Map<ParsedIpRange, string[]>>();
 
 export const sources: Record<'gcp' | 'aws' | 'azure' | 'oci', Source> = {
 	gcp: {
-		url: 'https://www.gstatic.com/ipranges/cloud.json',
+		url: 'https://download.jsdelivr.com/GCP_IP_RANGES.json',
 		file: 'data/GCP_IP_RANGES.json',
 	},
 	aws: {
-		url: 'https://ip-ranges.amazonaws.com/ip-ranges.json',
+		url: 'https://download.jsdelivr.com/AWS_IP_RANGES.json',
 		file: 'data/AWS_IP_RANGES.json',
 	},
 	azure: {
-		url: 'https://download.microsoft.com/download/7/1/D/71D86715-5596-4529-9B13-DA13A5DE5B63/ServiceTags_Public_Latest.json',
+		url: 'https://download.jsdelivr.com/AZURE_IP_RANGES.json',
 		file: 'data/AZURE_IP_RANGES.json',
 	},
 	oci: {
-		url: 'https://docs.oracle.com/en-us/iaas/tools/public_ip_ranges.json',
+		url: 'https://download.jsdelivr.com/OCI_IP_RANGES.json',
 		file: 'data/OCI_IP_RANGES.json',
 	},
 };
