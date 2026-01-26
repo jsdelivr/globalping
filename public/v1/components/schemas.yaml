@@ -422,7 +422,7 @@ components:
             type:
               $ref: 'schemas.yaml#/components/schemas/DnsQueryType'
         resolver:
-          $ref: 'schemas.yaml#/components/schemas/MeasurementResolver'
+          $ref: 'schemas.yaml#/components/schemas/DnsMeasurementResolver'
         protocol:
           $ref: 'schemas.yaml#/components/schemas/DnsProtocol'
         port:
@@ -489,7 +489,7 @@ components:
               additionalProperties:
                 type: string
         resolver:
-          $ref: 'schemas.yaml#/components/schemas/MeasurementResolver'
+          $ref: 'schemas.yaml#/components/schemas/HttpMeasurementResolver'
         protocol:
           $ref: 'schemas.yaml#/components/schemas/HttpProtocol'
         port:
@@ -505,7 +505,7 @@ components:
       description: |
         The actual number of probes that performed the measurement tests.
         Smaller or equal to `limit`, depending on probe availability.
-    MeasurementResolver:
+    DnsMeasurementResolver:
       description: A DNS resolver to use for the query. Defaults to the probe system resolver.
       anyOf:
         - type: string
@@ -518,6 +518,16 @@ components:
         - type: string
           format: hostname
           description: The Fully Qualified Domain Name (FQDN) of the resolver.
+    HttpMeasurementResolver:
+      description: A DNS resolver to use for the query. Defaults to the probe system resolver.
+      anyOf:
+        - type: string
+          format: ipv4
+          description: The IPv4 address of the resolver.
+        - type: string
+          format: ipv6
+          description: |
+            EXPERIMENTAL: The IPv6 address of the resolver.
     MeasurementResultItem:
       type: object
       required:
