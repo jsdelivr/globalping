@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import apmAgent from 'elastic-apm-node';
+import { monitorEventLoopDelay } from 'node:perf_hooks';
 import type { Server as SocketServer } from 'socket.io';
 import type { Knex } from 'knex';
 
@@ -10,6 +11,7 @@ import { USERS_TABLE } from './http/auth.js';
 import { dashboardClient } from './sql/client.js';
 
 const logger = scopedLogger('metrics');
+const eventLoopMonitorResolution = 10;
 
 export class MetricsAgent {
 	private readonly counters: Record<string, number> = {};
@@ -26,6 +28,33 @@ export class MetricsAgent {
 	) {}
 
 	run (): void {
+		const loopMonitorP95 = monitorEventLoopDelay({ resolution: eventLoopMonitorResolution });
+		const loopMonitorP99 = monitorEventLoopDelay({ resolution: eventLoopMonitorResolution });
+		const loopMonitorMax = monitorEventLoopDelay({ resolution: eventLoopMonitorResolution });
+		loopMonitorP95.enable();
+		loopMonitorP99.enable();
+		loopMonitorMax.enable();
+
+		const toMs = (value: number) => Math.max(0, Number(value) / 1e6 - eventLoopMonitorResolution);
+
+		registerGuardedMetric('nodejs.eventloop.delay.p95.ms', () => {
+			const loopDelay = toMs(loopMonitorP95.percentile(95));
+			loopMonitorP95.reset();
+			return loopDelay;
+		});
+
+		registerGuardedMetric('nodejs.eventloop.delay.p99.ms', () => {
+			const loopDelay = toMs(loopMonitorP99.percentile(99));
+			loopMonitorP99.reset();
+			return loopDelay;
+		});
+
+		registerGuardedMetric('nodejs.eventloop.delay.max.ms', () => {
+			const loopDelay = toMs(loopMonitorMax.max);
+			loopMonitorMax.reset();
+			return loopDelay;
+		});
+
 		this.registerAsyncCollector(`gp.measurement.stored.count`, async () => {
 			const [ dbSize, awaitingSize ] = await Promise.all([
 				this.redis.reduceMasters<number>(async (accumulator, client) => accumulator + await client.dbSize(), 0),
