@@ -1,10 +1,10 @@
-import type { Context, Next } from 'koa';
+import type { Middleware } from 'koa';
 import config from 'config';
 
 const corsConfig = config.get<CorsOptions>('server.cors');
 const trustedOrigins = corsConfig.trustedOrigins || [];
 
-export const corsHandler = () => async (ctx: Context, next: Next) => {
+export const corsHandler = (): Middleware => async (ctx, next) => {
 	ctx.set('Access-Control-Allow-Origin', '*');
 	ctx.set('Access-Control-Allow-Headers', '*');
 	ctx.set('Access-Control-Expose-Headers', '*');
@@ -16,7 +16,7 @@ export const corsHandler = () => async (ctx: Context, next: Next) => {
 	await next();
 };
 
-export const corsAuthHandler = () => {
+export const corsAuthHandler = (): Middleware => {
 	const exposeHeaders = [
 		'ETag',
 		'Link',
@@ -34,7 +34,7 @@ export const corsAuthHandler = () => {
 		'Sunset',
 	].join(', ');
 
-	return async (ctx: Context, next: Next) => {
+	return async (ctx, next) => {
 		const origin = ctx.get('Origin');
 
 		// Allow credentials only if the request is coming from a trusted origin.

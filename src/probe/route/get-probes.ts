@@ -1,9 +1,8 @@
-import type { DefaultContext, DefaultState, ParameterizedContext } from 'koa';
-import type Router from '@koa/router';
 import type { ServerProbe } from '../types.js';
+import type { ExtendedContext, ExtendedRouter } from '../../types.js';
 import { fetchProbes } from '../../lib/ws/server.js';
 
-const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): Promise<void> => {
+const handle = async (ctx: ExtendedContext): Promise<void> => {
 	const { isAdmin } = ctx;
 	let probes = await fetchProbes();
 
@@ -43,6 +42,6 @@ const handle = async (ctx: ParameterizedContext<DefaultState, DefaultContext & R
 	}));
 };
 
-export const registerGetProbesRoute = (router: Router): void => {
+export const registerGetProbesRoute = (router: ExtendedRouter): void => {
 	router.get('/probes', '/probes', handle);
 };

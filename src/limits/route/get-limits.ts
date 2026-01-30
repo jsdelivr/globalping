@@ -1,6 +1,5 @@
-import type Router from '@koa/router';
 import { getPostMeasurementRateLimitState } from '../../lib/rate-limiter/rate-limiter-post.js';
-import type { ExtendedContext } from '../../types.js';
+import type { ExtendedContext, ExtendedRouter } from '../../types.js';
 import { credits } from '../../lib/credits.js';
 import { authenticate } from '../../lib/http/middleware/authenticate.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
@@ -25,6 +24,6 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 	};
 };
 
-export const registerLimitsRoute = (router: Router): void => {
+export const registerLimitsRoute = (router: ExtendedRouter): void => {
 	router.get('/limits', '/limits', corsAuthHandler(), authenticate(), handle);
 };

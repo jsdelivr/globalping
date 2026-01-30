@@ -1,7 +1,7 @@
-import type { Context, Next } from 'koa';
+import type { Middleware } from 'koa';
 import { getIpFromRequest } from '../../client-ip.js';
 
-export const requestIp = () => async (ctx: Context, next: Next) => {
+export const requestIp = (): Middleware => async (ctx, next) => {
 	ctx.request.ip = getIpFromRequest(ctx.req);
 	await next();
 };

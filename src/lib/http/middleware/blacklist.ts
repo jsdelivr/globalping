@@ -1,8 +1,8 @@
-import type { Context, Next } from 'koa';
+import type { Middleware } from 'koa';
 import { validate as validateIP } from '../../malware/ip.js';
 import createHttpError from 'http-errors';
 
-export const blacklist = async (ctx: Context, next: Next) => {
+export const blacklist: Middleware = async (ctx, next) => {
 	const ip = ctx.request.ip;
 
 	if (!validateIP(ip)) {

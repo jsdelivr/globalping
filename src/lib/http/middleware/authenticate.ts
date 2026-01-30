@@ -76,6 +76,6 @@ export const authenticate = (): ExtendedMiddleware => {
 			} catch {}
 		}
 
-		return next();
+		await next();
 	};
 };

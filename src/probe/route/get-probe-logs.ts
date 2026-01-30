@@ -1,6 +1,5 @@
-import type Router from '@koa/router';
 import { adoptedProbes } from '../../lib/ws/server.js';
-import { ExtendedContext } from '../../types.js';
+import { ExtendedContext, ExtendedRouter } from '../../types.js';
 import { authenticate } from '../../lib/http/middleware/authenticate.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 import createHttpError from 'http-errors';
@@ -34,7 +33,7 @@ const handle = async (ctx: ExtendedContext) => {
 	ctx.body = { logs: logs.map(log => log.message), lastId };
 };
 
-export const registerGetProbeLogsRoute = (router: Router): void => {
+export const registerGetProbeLogsRoute = (router: ExtendedRouter): void => {
 	router.get('/probes/:id/logs', '/probes/:id/logs', corsAuthHandler(), authenticate(), handle)
 		.options('/probes/:id/logs', '/probes/:id/logs', corsAuthHandler());
 };
