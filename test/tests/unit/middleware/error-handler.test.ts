@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events';
 import createHttpError from 'http-errors';
 import { expect } from 'chai';
 import { errorHandlerMw } from '../../../../src/lib/http/middleware/error-handler.js';
@@ -5,10 +6,10 @@ import { errorHandlerMw } from '../../../../src/lib/http/middleware/error-handle
 describe('Error handler middleware', () => {
 	const documentation = 'link://';
 	const getDocsLink = () => documentation;
+	const ctx: any = { app: new EventEmitter(), getDocsLink };
+	ctx.app.on('error', () => {});
 
 	it('should handle http errors', async () => {
-		const ctx: any = { getDocsLink };
-
 		await errorHandlerMw(ctx, () => {
 			throw createHttpError(400, 'bad request');
 		});
@@ -18,7 +19,6 @@ describe('Error handler middleware', () => {
 	});
 
 	it('should handle http errors with expose=false', async () => {
-		const ctx: any = { getDocsLink };
 		await errorHandlerMw(ctx, () => {
 			throw createHttpError(400, 'custom error message', { expose: false });
 		});
@@ -28,7 +28,6 @@ describe('Error handler middleware', () => {
 	});
 
 	it('should handle custom errors', async () => {
-		const ctx: any = { getDocsLink };
 		await errorHandlerMw(ctx, () => {
 			throw new Error('custom error message');
 		});
