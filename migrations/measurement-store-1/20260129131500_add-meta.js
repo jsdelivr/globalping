@@ -27,7 +27,7 @@ export const up = async (db) => {
 			tier := replace(TG_TABLE_NAME, 'measurement_', '');
 
 			INSERT INTO export (id, data, meta)
-			SELECT id, data, jsonb_merge_patch(COALESCE(meta, '{}'::jsonb), jsonb_build_object('userTier', tier))
+			SELECT id, data, COALESCE(meta, '{}'::jsonb) || jsonb_build_object('userTier', tier)
 			FROM inserted_rows;
 
 			RETURN NULL;
