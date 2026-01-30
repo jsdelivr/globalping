@@ -187,7 +187,7 @@ describe('measurement store', () => {
 		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', mockedMeasurementId1, now ]);
 		expect(redisMock.set.callCount).to.equal(1);
 		expect(redisMock.set.args[0]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:probes_awaiting`, 4, { EX: 60 }]);
-		expect(redisMock.json.set.callCount).to.equal(2);
+		expect(redisMock.json.set.callCount).to.equal(3);
 
 		expect(redisMock.json.set.args[0]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:results`, '$', {
 			id: mockedMeasurementId1,
@@ -266,9 +266,13 @@ describe('measurement store', () => {
 
 		expect(redisMock.expire.args[0]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:results`, 604800 ]);
 
-		expect(redisMock.json.set.args[1]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:ips`, '$', [ '1.1.1.1', '2.2.2.2', '3.3.3.3', '4.4.4.4' ] ]);
+		expect(redisMock.json.set.args).to.deep.include([ `gp:m:{${mockedMeasurementId1}}:meta`, '$', { userAgent: null, origin: null }]);
 
-		expect(redisMock.expire.args[1]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:ips`, 604800 ]);
+		expect(redisMock.json.set.args).to.deep.include([ `gp:m:{${mockedMeasurementId1}}:ips`, '$', [ '1.1.1.1', '2.2.2.2', '3.3.3.3', '4.4.4.4' ] ]);
+
+		expect(redisMock.expire.args).to.deep.include([ `gp:m:{${mockedMeasurementId1}}:meta`, 604800 ]);
+
+		expect(redisMock.expire.args).to.deep.include([ `gp:m:{${mockedMeasurementId1}}:ips`, 604800 ]);
 
 		expect(redisMock.hSet.args[1]).to.deep.equal([ 'gp:test-to-probe', {
 			[`${mockedMeasurementId1}_0`]: 'z-z-z-z-z',
