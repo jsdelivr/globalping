@@ -19,6 +19,7 @@ import { AuthenticateStateUser } from '../lib/http/middleware/authenticate.js';
 import { generateMeasurementId, parseMeasurementId } from './id.js';
 import { MeasurementStoreOffloader } from './store-offloader.js';
 import { measurementStoreClient } from '../lib/sql/client.js';
+import type { ExportMeta } from './types.js';
 
 const logger = scopedLogger('store');
 
@@ -97,11 +98,19 @@ export class MeasurementStore {
 		return ips || [];
 	}
 
-	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[], userType?: AuthenticateStateUser['userType']): Promise<string> {
+	async getMeasurementMetas (ids: string[]): Promise<Array<ExportMeta | null>> {
+		return Bluebird.map(ids, id => this.redis.json.get(getMeasurementKey(id, 'meta')) as Promise<ExportMeta | null>, { concurrency: 8 });
+	}
+
+	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[], userType?: AuthenticateStateUser['userType'], exportMeta?: ExportMeta): Promise<string> {
 		const startTime = new Date();
 		const results = this.probesToResults(allProbes, request.type);
 		const id = generateMeasurementId(startTime, userType);
 		const key = getMeasurementKey(id);
+		const meta: ExportMeta = {
+			origin: exportMeta?.origin ?? null,
+			userAgent: exportMeta?.userAgent ?? null,
+		};
 
 		const measurement: Partial<MeasurementRecord> = {
 			id,
@@ -124,8 +133,10 @@ export class MeasurementStore {
 			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: config.get<number>('measurement.timeout') + 30 }),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
 			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', allProbes.map(probe => probe.ipAddress)),
+			this.redis.json.set(getMeasurementKey(id, 'meta'), '$', meta),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
 			this.redis.expire(getMeasurementKey(id, 'ips'), config.get<number>('measurement.resultTTL')),
+			this.redis.expire(getMeasurementKey(id, 'meta'), config.get<number>('measurement.resultTTL')),
 			!_.isEmpty(testsToProbes) && this.redis.hSet('gp:test-to-probe', testsToProbes),
 			!_.isEmpty(testsToProbes) && this.redis.hExpire('gp:test-to-probe', Object.keys(testsToProbes), config.get<number>('measurement.timeout') + 120),
 		]);

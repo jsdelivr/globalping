@@ -186,6 +186,12 @@ export type RequestType = 'ping' | 'traceroute' | 'dns' | 'http' | 'mtr';
 export type MeasurementOptions = PingTest | TracerouteTest | MtrTest | DnsTest | HttpTest;
 export type LocationWithLimit = Location & { limit?: number };
 
+export type ExportMeta = {
+	userAgent: string | null;
+	origin: string | null;
+	userTier?: 'member' | 'sponsor' | 'special' | 'anonymous';
+};
+
 /**
  * Measurement Objects
  */

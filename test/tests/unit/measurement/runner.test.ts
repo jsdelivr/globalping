@@ -33,6 +33,7 @@ describe('MeasurementRunner', () => {
 	let testId: number;
 
 	const mockedMeasurementId = '2E2SZgEwA6W6HvzlT0001z9VK';
+	const get = sandbox.stub();
 
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', null, () => testId++);
@@ -42,6 +43,7 @@ describe('MeasurementRunner', () => {
 
 	beforeEach(() => {
 		sandbox.resetHistory();
+		get.resetHistory();
 		to.returns({ emit });
 		io.of.withArgs('/probes').returns({ to } as any);
 		store.createMeasurement.resolves(mockedMeasurementId);
@@ -79,6 +81,7 @@ describe('MeasurementRunner', () => {
 
 		await runner.run({
 			set,
+			get,
 			req,
 			request: {
 				body: request,
@@ -103,6 +106,7 @@ describe('MeasurementRunner', () => {
 			new Map([ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ].entries()),
 			[ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ],
 			undefined,
+			{ origin: null, userAgent: null },
 		]);
 
 		expect(to.callCount).to.equal(4);
@@ -198,6 +202,7 @@ describe('MeasurementRunner', () => {
 
 		await runner.run({
 			set,
+			get,
 			req,
 			request: {
 				body: request,
@@ -222,6 +227,7 @@ describe('MeasurementRunner', () => {
 			new Map([ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ].entries()),
 			[ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ],
 			undefined,
+			{ origin: null, userAgent: null },
 		]);
 
 		expect(to.callCount).to.equal(4);
@@ -331,6 +337,7 @@ describe('MeasurementRunner', () => {
 
 		const ctx = {
 			set,
+			get,
 			req,
 			request: {
 				body: request,
@@ -367,6 +374,7 @@ describe('MeasurementRunner', () => {
 
 		const err = await runner.run({
 			set,
+			get,
 			req,
 			request: {
 				body: request,
@@ -399,6 +407,7 @@ describe('MeasurementRunner', () => {
 
 		await runner.run({
 			set,
+			get,
 			req,
 			request: {
 				body: request,

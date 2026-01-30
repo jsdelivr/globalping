@@ -32,7 +32,9 @@ export class MeasurementRunner {
 
 		await this.checkRateLimit(ctx, onlineProbesMap.size);
 
-		const measurementId = await this.store.createMeasurement(request, onlineProbesMap, allProbes, ctx.state.user?.userType);
+		const origin = this.toOrigin(ctx.get('Origin') || ctx.get('Referrer') || null);
+		const userAgent = ctx.get('User-Agent') || null;
+		const measurementId = await this.store.createMeasurement(request, onlineProbesMap, allProbes, ctx.state.user?.userType, { userAgent, origin });
 		apmAgent.addLabels({ gpMeasurementId: measurementId, gpMeasurementType: request.type, gpMeasurementTarget: request.target, gpMeasurementProbes: onlineProbesMap.size }, false);
 
 		if (onlineProbesMap.size) {
@@ -76,6 +78,19 @@ export class MeasurementRunner {
 			};
 			this.io.of(PROBES_NAMESPACE).to(probe.client).emit('probe:measurement:request', requestMessage);
 		});
+	}
+
+	private toOrigin (value: string | null): string | null {
+		if (!value) {
+			return null;
+		}
+
+		try {
+			const parsed = new URL(value);
+			return `${parsed.protocol}//${parsed.host}`;
+		} catch {
+			return null;
+		}
 	}
 }
 
