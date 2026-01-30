@@ -14,9 +14,15 @@ export const up = async (db) => {
 	await db.raw(`
 		CREATE OR REPLACE FUNCTION export_measurement()
 		RETURNS trigger AS $$
+		DECLARE
+			tier text;
 		BEGIN
-			INSERT INTO export (id, data, "scheduleId", "configurationId")
-			SELECT id, data, "scheduleId", "configurationId" FROM inserted_rows;
+			tier := replace(TG_TABLE_NAME, 'measurement_', '');
+
+			INSERT INTO export (id, data, meta, "scheduleId", "configurationId")
+			SELECT id, data, COALESCE(meta, '{}'::jsonb) || jsonb_build_object('userTier', tier), "scheduleId", "configurationId"
+			FROM inserted_rows;
+
 			RETURN NULL;
 		END;
 		$$ LANGUAGE plpgsql;
