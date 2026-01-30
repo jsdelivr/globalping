@@ -28,7 +28,7 @@ import { requestIp } from './middleware/request-ip.js';
 import { isAdminMw } from './middleware/is-admin.js';
 import { isSystemMw } from './middleware/is-system.js';
 import { docsLink } from './middleware/docs-link.js';
-import type { CustomContext } from '../../types.js';
+import { CustomContext, CustomState } from '../../types.js';
 import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternative-ip.js';
 import { registerLimitsRoute } from '../../limits/route/get-limits.js';
 import { blacklist } from './middleware/blacklist.js';
@@ -86,7 +86,7 @@ rootRouter.get<object, CustomContext>('/', '/', (ctx) => {
 	};
 });
 
-const apiRouter = new Router({ strict: true, sensitive: true });
+const apiRouter = new Router<CustomState, CustomContext>({ strict: true, sensitive: true });
 
 apiRouter.prefix('/v1')
 	.use(koaElasticUtils.middleware(apmAgent, { prefix: '/v1' }))

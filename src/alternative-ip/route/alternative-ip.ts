@@ -1,4 +1,3 @@
-import type Router from '@koa/router';
 import apmAgent from 'elastic-apm-node';
 import createHttpError from 'http-errors';
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible';
@@ -6,7 +5,7 @@ import { getAltIpsClient } from '../../lib/alt-ips-client.js';
 import { bodyParser } from '../../lib/http/middleware/body-parser.js';
 import { validate } from '../../lib/http/middleware/validate.js';
 import { schema } from '../schema.js';
-import type { ExtendedContext } from '../../types.js';
+import type { ExtendedContext, ExtendedRouter } from '../../types.js';
 
 const rateLimiter = new RateLimiterMemory({
 	points: 20,
@@ -46,6 +45,6 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 	ctx.body = { ip, token };
 };
 
-export const registerAlternativeIpRoute = (router: Router): void => {
+export const registerAlternativeIpRoute = (router: ExtendedRouter): void => {
 	router.post('/alternative-ip', '/alternative-ip', bodyParser(), validate(schema), handle);
 };

@@ -1,13 +1,13 @@
 import { IncomingMessage } from 'node:http';
+import type { Middleware } from 'koa';
 import koaBodyParser from 'koa-bodyparser';
 import createHttpError from 'http-errors';
-import { ExtendedMiddleware } from '../../../types.js';
 
 interface RequestWithBody extends IncomingMessage {
 	body?: unknown;
 }
 
-export const bodyParser = (): ExtendedMiddleware => {
+export const bodyParser = (): Middleware => {
 	const parser = koaBodyParser({
 		enableTypes: [ 'json' ],
 		jsonLimit: '100kb',

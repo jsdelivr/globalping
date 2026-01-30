@@ -1,8 +1,8 @@
-import type { Context } from 'koa';
-import type Router from '@koa/router';
+import type { ParameterizedContext } from 'koa';
 
 import _ from 'lodash';
 import * as openApiCore from '@redocly/openapi-core';
+import { ExtendedRouter } from '../../types.js';
 
 const getYaml = async (): Promise<string> => {
 	const bundled = await openApiCore.bundle({
@@ -17,10 +17,10 @@ const getYaml = async (): Promise<string> => {
 
 const getYamlMemoized = _.memoize(getYaml);
 
-const handle = async (ctx: Context): Promise<void> => {
+const handle = async (ctx: ParameterizedContext): Promise<void> => {
 	ctx.body = await (ctx.app.env === 'production' ? getYamlMemoized : getYaml)();
 };
 
-export const registerSpecRoute = (router: Router): void => {
+export const registerSpecRoute = (router: ExtendedRouter): void => {
 	router.get('/spec.yaml', handle);
 };

@@ -25,4 +25,4 @@ const getDocsPath = (router: Router<Koa.DefaultState, DocsLinkContext>, routeNam
 
 export type DocsLinkOptions = { docsHost: string };
 export type DocsLinkContext = { getDocsLink(routeName?: string, method?: string): string };
-export type DocsLinkMiddleware = Router.Middleware<Koa.DefaultState, Koa.DefaultContext & DocsLinkContext>;
+export type DocsLinkMiddleware = Router.Middleware<Koa.DefaultState, DocsLinkContext>;

@@ -1,9 +1,8 @@
-import type Router from '@koa/router';
 import apmAgent from 'elastic-apm-node';
 import createHttpError from 'http-errors';
 import { getMeasurementStore } from '../store.js';
 import { checkGetMeasurementRateLimit } from '../../lib/rate-limiter/rate-limiter-get.js';
-import type { ExtendedContext } from '../../types.js';
+import type { ExtendedContext, ExtendedRouter } from '../../types.js';
 
 const store = getMeasurementStore();
 
@@ -28,6 +27,6 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 	ctx.body = result;
 };
 
-export const registerGetMeasurementRoute = (router: Router): void => {
+export const registerGetMeasurementRoute = (router: ExtendedRouter): void => {
 	router.get('/measurements/:id', '/measurements/:id([a-zA-Z0-9]+)', handle);
 };
