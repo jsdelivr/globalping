@@ -68,6 +68,7 @@ type Probe = {
 	stats: ProbeStats;
 	hostInfo: HostInfo;
 	adoptionToken: string | null;
+	nodeId?: string;
 	isProxy: boolean | null;
 };
 
