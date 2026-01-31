@@ -56,6 +56,7 @@ export class SyncedProbeList extends EventEmitter {
 	private rawProbes: SocketProbe[];
 	private probesWithAdminData: SocketProbe[];
 	private probes: ServerProbe[];
+	private localProbes: ServerProbe[];
 	private oldest: number;
 	private pushTimer: NodeJS.Timeout | undefined;
 	private pullTimer: NodeJS.Timeout | undefined;
@@ -80,6 +81,7 @@ export class SyncedProbeList extends EventEmitter {
 		this.rawProbes = [];
 		this.probesWithAdminData = [];
 		this.probes = [];
+		this.localProbes = [];
 		this.oldest = Infinity;
 		this.lastReadEventId = Date.now().toString();
 		this.logger = scopedLoggerWithPrefix('synced-probe-list', `[${this.nodeId}]`);
@@ -105,6 +107,10 @@ export class SyncedProbeList extends EventEmitter {
 
 	getProbesWithAdminData (): SocketProbe[] {
 		return this.probesWithAdminData.slice();
+	}
+
+	getLocalProbes (): ServerProbe[] {
+		return this.localProbes.slice();
 	}
 
 	getProbes (): ServerProbe[] {
@@ -172,7 +178,7 @@ export class SyncedProbeList extends EventEmitter {
 
 		for (const nodeData of this.nodeData.values()) {
 			Object.entries(nodeData.probesById).forEach(([ socketId, probe ]) => {
-				probes.push(probe);
+				probes.push({ ...probe, nodeId: nodeData.nodeId });
 				socketIdToNodeId[socketId] = nodeData.nodeId;
 			});
 
@@ -184,6 +190,7 @@ export class SyncedProbeList extends EventEmitter {
 		this.rawProbes = probes;
 		this.probesWithAdminData = this.probeOverride.addAdminData(probes);
 		this.probes = this.probeOverride.addAdoptedData(this.probesWithAdminData);
+		this.localProbes = this.probes.filter(probe => probe.nodeId === this.nodeId);
 
 		this.probes.forEach((probe) => {
 			ipToProbe[probe.ipAddress] = probe;

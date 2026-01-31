@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 
@@ -52,6 +53,7 @@ describe('SyncedProbeList', () => {
 	} as unknown as WsServerNamespace;
 
 	const probeOverride = sandbox.createStubInstance(ProbeOverride);
+	const omitNode = (probes: ServerProbe[]) => probes.map(p => _.omit(p, 'nodeId'));
 
 	let syncedProbeList: SyncedProbeList;
 
@@ -83,7 +85,7 @@ describe('SyncedProbeList', () => {
 		await syncedProbeList.sync();
 
 		expect(localFetchSocketsStub.callCount).to.equal(1);
-		expect(syncedProbeList.getProbes()).to.deep.equal(sockets.map(s => s.data.probe));
+		expect(syncedProbeList.getProbes()).to.deep.equal(sockets.map(s => ({ ...s.data.probe, nodeId: syncedProbeList.getNodeId() })));
 
 		expect(redisXAdd.callCount).to.equal(1);
 		expect(redisXAdd.firstCall.args[2]).to.deep.include({ r: '1' });
@@ -93,7 +95,7 @@ describe('SyncedProbeList', () => {
 		await syncedProbeList.sync();
 
 		expect(localFetchSocketsStub.callCount).to.equal(2);
-		expect(syncedProbeList.getProbes()).to.deep.equal(sockets.slice(1).map(s => s.data.probe));
+		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal(sockets.slice(1).map(s => s.data.probe));
 
 		expect(redisXAdd.callCount).to.equal(2);
 		expect(redisXAdd.secondCall.args[2]).to.deep.include({ '-': 'A' });
@@ -104,7 +106,7 @@ describe('SyncedProbeList', () => {
 		await syncedProbeList.sync();
 
 		expect(localFetchSocketsStub.callCount).to.equal(3);
-		expect(syncedProbeList.getProbes()).to.deep.equal(sockets.map(s => s.data.probe));
+		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal(sockets.map(s => s.data.probe));
 
 		expect(redisXAdd.callCount).to.equal(3);
 		expect(redisXAdd.thirdCall.args[2]).to.deep.include({ '+': 'A' });
@@ -123,7 +125,7 @@ describe('SyncedProbeList', () => {
 		await syncedProbeList.sync();
 
 		expect(localFetchSocketsStub.callCount).to.equal(1);
-		expect(syncedProbeList.getProbes()).to.deep.equal(sockets.map(s => s.data.probe));
+		expect(syncedProbeList.getProbes()).to.deep.equal(sockets.map(s => ({ ...s.data.probe, nodeId: syncedProbeList.getNodeId() })));
 
 		expect(redisXAdd.callCount).to.equal(1);
 
@@ -132,7 +134,7 @@ describe('SyncedProbeList', () => {
 		await syncedProbeList.sync();
 
 		expect(localFetchSocketsStub.callCount).to.equal(2);
-		expect(syncedProbeList.getProbes()).to.deep.equal(sockets.map(s => s.data.probe));
+		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal(sockets.map(s => s.data.probe));
 
 		expect(redisXAdd.callCount).to.equal(2);
 
@@ -150,7 +152,7 @@ describe('SyncedProbeList', () => {
 		await syncedProbeList.sync();
 
 		expect(localFetchSocketsStub.callCount).to.equal(3);
-		expect(syncedProbeList.getProbes()).to.deep.equal(sockets.map(s => s.data.probe));
+		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal(sockets.map(s => s.data.probe));
 
 		expect(redisXAdd.callCount).to.equal(3);
 		expect(redisXAdd.thirdCall.args[2]).to.not.have.property('s');
@@ -164,7 +166,7 @@ describe('SyncedProbeList', () => {
 		await syncedProbeList.sync();
 
 		expect(localFetchSocketsStub.callCount).to.equal(4);
-		expect(syncedProbeList.getProbes()).to.deep.equal(sockets.map(s => s.data.probe));
+		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal(sockets.map(s => s.data.probe));
 
 		expect(redisXAdd.callCount).to.equal(4);
 
@@ -225,7 +227,7 @@ describe('SyncedProbeList', () => {
 		});
 
 		await syncedProbeList.sync();
-		expect(syncedProbeList.getProbes()).to.deep.equal(Object.values(probes));
+		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal(Object.values(probes));
 
 		redisXRange.resolves([
 			{ id: '1-1', message: {} },
@@ -287,10 +289,10 @@ describe('SyncedProbeList', () => {
 		});
 
 		await syncedProbeList.sync();
-		expect(syncedProbeList.getProbes()).to.deep.equal(Object.values(probes));
+		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal(Object.values(probes));
 
 		await syncedProbeList.sync();
-		expect(syncedProbeList.getProbes()).to.deep.equal(Object.values(probes));
+		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal(Object.values(probes));
 
 		await clock.tickAsync(syncedProbeList.syncTimeout + 100);
 		expect(syncedProbeList.getProbes()).to.be.empty;
