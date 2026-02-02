@@ -4,6 +4,7 @@ import { expect } from 'chai';
 import * as td from 'testdouble';
 
 import { ProbeRouter } from '../../../../src/probe/router.js';
+import { ProbesLocationFilter } from '../../../../src/probe/probes-location-filter.js';
 import { getRegionByCountry } from '../../../../src/lib/location/location.js';
 import type { RemoteProbeSocket } from '../../../../src/lib/ws/server.js';
 import type { DeepPartial } from '../../../types.js';
@@ -28,10 +29,14 @@ const defaultLocation = {
 
 describe('probe router', () => {
 	const sandbox = sinon.createSandbox();
+	const probesLocationFilter = new ProbesLocationFilter();
 	let fetchProbesMockHandler: (probes: ServerProbe[]) => void;
 
 	const onServerProbesUpdateMock: (onUpdate: (probes: ServerProbe[]) => void) => () => void = (handler) => {
-		fetchProbesMockHandler = handler;
+		fetchProbesMockHandler = (probes) => {
+			probesLocationFilter.updateGlobalIndex(probes);
+			return handler(probes);
+		};
 
 		return () => {};
 	};
@@ -43,7 +48,7 @@ describe('probe router', () => {
 		getMeasurementIps: sandbox.stub().resolves([]),
 		getMeasurement: sandbox.stub(),
 	};
-	const router = new ProbeRouter(onServerProbesUpdateMock, store as unknown as MeasurementStore);
+	const router = new ProbeRouter(onServerProbesUpdateMock, probesLocationFilter, store as unknown as MeasurementStore);
 	const mockedMeasurementId = '2E2SZgEwA6W6HvzlT0001z9VK';
 
 	let buildProbeInternal: (socket: RemoteProbeSocket) => Promise<ServerProbe>;
