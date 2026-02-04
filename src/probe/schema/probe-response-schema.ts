@@ -32,3 +32,9 @@ export const logMessageSchema = Joi.object({
 }).required();
 
 export const altIpsSchema = Joi.array().max(2048).items(Joi.array<[string, string]>().ordered(Joi.string().ip(globalIpOptions).required(), Joi.string().length(32).required()));
+
+export const localAdoptionServerSchema = Joi.object({
+	expiresAt: Joi.string().isoDate().required(),
+	token: Joi.string().hex().length(64).required(),
+	ips: Joi.array().items(Joi.string().ip()).max(32).required(),
+}).required();

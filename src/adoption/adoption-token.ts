@@ -79,14 +79,14 @@ export class AdoptionToken {
 		const isAdopted = !!this.adoptedProbes.getByIp(probe.ipAddress)?.userId;
 
 		if (!probe.adoptionToken) {
-			!isAdopted && socket.emit('api:connect:adoption', { message: 'You can register this probe at https://dash.globalping.io to earn extra measurement credits.' });
+			!isAdopted && socket.emit('api:connect:adoption', { message: 'You can register this probe at https://dash.globalping.io to earn extra measurement credits.', adopted: false });
 			return;
 		}
 
 		const { message, level } = await this.validateToken(probe.adoptionToken, probe);
 
 		if (message) {
-			socket.emit('api:connect:adoption', { message, level });
+			socket.emit('api:connect:adoption', { message, level, adopted: true });
 		}
 	}
 

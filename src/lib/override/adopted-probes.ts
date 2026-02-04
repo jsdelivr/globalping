@@ -66,6 +66,11 @@ type DProbe = {
 		longitude: number;
 		state: string | null;
 	} | null;
+	localAdoptionServer: {
+		token: string;
+		expiresAt: string;
+		ips: string[];
+	} | null;
 };
 
 export type Adoption = Omit<DProbe, 'userId'> & {
@@ -77,7 +82,7 @@ type AdoptionWithCustomLocation = Adoption & {
 	originalLocation: NonNullable<DProbe['originalLocation']>;
 };
 
-export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation' | 'originalLocation'> & {
+export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation' | 'originalLocation' | 'localAdoptionServer'> & {
 	altIps: string;
 	tags: string;
 	systemTags: string;
@@ -87,6 +92,7 @@ export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Support
 	allowedCountries: string;
 	customLocation: string | null;
 	originalLocation: string | null;
+	localAdoptionServer: string | null;
 };
 
 type DProbeFieldDescription = {
@@ -203,6 +209,18 @@ export class AdoptedProbes {
 				longitude: location.longitude,
 				state: location.state,
 			} : null,
+		},
+		localAdoptionServer: {
+			probeField: 'localAdoptionServer',
+			format: (value: DProbe['localAdoptionServer'], _probe: SocketProbe, dProbe?: DProbe) => {
+				const parsedDate = value?.expiresAt && Date.parse(value.expiresAt);
+
+				if (!value || dProbe?.userId || (parsedDate && parsedDate <= Date.now())) {
+					return null;
+				}
+
+				return value;
+			},
 		},
 	};
 
@@ -350,6 +368,7 @@ export class AdoptedProbes {
 			allowedCountries: JSON.parse(row.allowedCountries) as string[],
 			customLocation: row.customLocation ? JSON.parse(row.customLocation) as DProbe['customLocation'] : null,
 			originalLocation: row.originalLocation ? JSON.parse(row.originalLocation) as DProbe['originalLocation'] : null,
+			localAdoptionServer: row.localAdoptionServer ? JSON.parse(row.localAdoptionServer) as DProbe['localAdoptionServer'] : null,
 		}));
 
 		this.dProbes = dProbes;
@@ -797,6 +816,7 @@ export class AdoptedProbes {
 			allowedCountries: probe.location.allowedCountries,
 			originalLocation: null,
 			customLocation: null,
+			localAdoptionServer: probe.localAdoptionServer || null,
 		};
 	}
 }

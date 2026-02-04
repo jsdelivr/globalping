@@ -69,6 +69,7 @@ type Probe = {
 	hostInfo: HostInfo;
 	adoptionToken: string | null;
 	isProxy: boolean | null;
+	localAdoptionServer?: LocalAdoptionServer | null;
 };
 
 type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;
@@ -115,3 +116,9 @@ export type OfflineProbe = Modify<SocketProbe, {
 		};
 	};
 }>;
+
+export type LocalAdoptionServer = {
+	expiresAt: string;
+	token: string;
+	ips: string[];
+};
