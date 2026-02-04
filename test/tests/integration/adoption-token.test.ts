@@ -67,6 +67,7 @@ describe('Adoption token', () => {
 					customLocation: null,
 					originalLocation: null,
 					allowedCountries: [ 'US' ],
+					localAdoptionServer: null,
 				},
 				user: { id: 'userIdValue' },
 			});
@@ -78,7 +79,7 @@ describe('Adoption token', () => {
 
 		await setTimeout(100);
 		expect(adoptionStatusStub.callCount).to.equal(1);
-		expect(adoptionStatusStub.args[0]).to.deep.equal([{ message: 'Probe successfully adopted by token.' }]);
+		expect(adoptionStatusStub.args[0]).to.deep.equal([{ message: 'Probe successfully adopted by token.', adopted: true }]);
 	});
 
 	it('should do nothing if it is the same user', async () => {
