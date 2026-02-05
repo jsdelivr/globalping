@@ -148,16 +148,15 @@ export class MeasurementStoreOffloader {
 		const table = `measurement_${tier}`;
 		const storedMeta = await this.primaryMeasurementStore.getMeasurementMetas(measurements.map(measurement => measurement.id));
 		const rows = await Bluebird.map(measurements, async (r, i) => {
-			const meta: ExportMeta = storedMeta[i] ?? {
-				origin: null,
-				userAgent: null,
-			};
+			const { timeSeriesEnabled, ...meta }: ExportMeta = storedMeta[i] ?? {};
 
 			return {
 				id: r.id,
 				createdAt: roundIdTime(new Date(r.createdAt)),
 				data: await compressRecord(JSON.stringify(r)),
 				meta,
+				scheduleId: r.scheduleId ?? null,
+				configurationId: r.configurationId ?? null,
 			};
 		}, { concurrency: 4 });
 

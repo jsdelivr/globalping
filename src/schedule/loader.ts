@@ -7,6 +7,7 @@ import { scopedLogger } from '../lib/logger.js';
 import { dashboardClient } from '../lib/sql/client.js';
 import type { ConfigurationRow, Schedule, ScheduleRow } from './types.js';
 import { MeasurementOptions } from '../measurement/types.js';
+import { Location } from '../lib/location/types.js';
 
 const logger = scopedLogger('schedule-loader');
 
@@ -45,18 +46,15 @@ export class ScheduleLoader extends EventEmitter {
 			newUpdatedAt.set(row.id, updatedAt);
 
 			newSchedules.set(row.id, {
-				id: row.id,
-				name: row.name,
-				mode: row.mode,
-				interval: row.interval,
-				locations: row.locations,
-				time_series_enabled: row.time_series_enabled,
+				...row,
+				locations: JSON.parse(row.locations) as Location[],
 				configurations: (configsBySchedule[row.id] || []).map(c => ({
 					id: c.id,
 					name: c.name,
 					measurement_type: c.measurement_type,
 					measurement_target: c.measurement_target,
 					measurement_options: JSON.parse(c.measurement_options) as MeasurementOptions,
+					enabled: c.enabled,
 				})),
 			});
 		}

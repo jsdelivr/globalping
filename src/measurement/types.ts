@@ -194,9 +194,10 @@ export type MeasurementOptions = PingTest | TracerouteTest | MtrTest | DnsTest |
 export type LocationWithLimit = Location & { limit?: number };
 
 export type ExportMeta = {
-	userAgent: string | null;
-	origin: string | null;
+	origin?: string;
+	userAgent?: string;
 	userTier?: 'member' | 'sponsor' | 'special' | 'anonymous';
+	timeSeriesEnabled?: boolean;
 };
 
 /**
@@ -215,6 +216,8 @@ export type MeasurementRequest = {
 	locations: LocationWithLimit[] | undefined;
 	limit: number | undefined;
 	inProgressUpdates: boolean;
+	scheduleId?: string;
+	configurationId?: string;
 };
 
 export type MeasurementResult = {
@@ -246,6 +249,8 @@ export type MeasurementRecord = {
 	locations?: LocationWithLimit[];
 	measurementOptions?: MeasurementOptions;
 	results: MeasurementResult[];
+	scheduleId?: string;
+	configurationId?: string;
 };
 
 /**
