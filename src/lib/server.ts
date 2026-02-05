@@ -17,6 +17,8 @@ import termListener from './term-listener.js';
 import { auth } from './http/auth.js';
 import { adoptionToken } from '../adoption/adoption-token.js';
 import { logIfTooLong } from './log-if-too-long.js';
+import { initStreamScheduleLoader } from '../schedule/loader.js';
+import { getStreamScheduleExecutor } from '../schedule/executor.js';
 
 export const createServer = async (): Promise<Server> => {
 	await initRedisClient();
@@ -45,6 +47,9 @@ export const createServer = async (): Promise<Server> => {
 
 	await logIfTooLong(auth.syncTokens(), 'auth.syncTokens');
 	auth.scheduleSync();
+
+	initStreamScheduleLoader();
+	getStreamScheduleExecutor().start();
 
 	probeIpLimit.scheduleSync();
 

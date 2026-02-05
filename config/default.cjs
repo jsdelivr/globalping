@@ -110,6 +110,9 @@ module.exports = {
 	adminData: {
 		syncInterval: 60000,
 	},
+	scheduleData: {
+		syncInterval: 60000,
+	},
 	measurement: {
 		maxInProgressTests: 5,
 		// Timeout after which measurement will be marked as finished even if not all probes respond
