@@ -194,8 +194,8 @@ export type MeasurementOptions = PingTest | TracerouteTest | MtrTest | DnsTest |
 export type LocationWithLimit = Location & { limit?: number };
 
 export type ExportMeta = {
-	origin?: string;
-	userAgent?: string;
+	origin?: string | null;
+	userAgent?: string | null;
 	userTier?: 'member' | 'sponsor' | 'special' | 'anonymous';
 	timeSeriesEnabled?: boolean;
 };
