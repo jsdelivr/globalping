@@ -98,3 +98,50 @@ CREATE TABLE IF NOT EXISTS gp_location_overrides (
 	latitude FLOAT(10, 5),
 	longitude FLOAT(10, 5)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS gp_schedule (
+	id CHAR(36) PRIMARY KEY,
+	user_created CHAR(36) NOT NULL,
+	user_updated CHAR(36) DEFAULT NULL,
+	date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	date_updated TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+
+	name VARCHAR(255) NOT NULL,
+	mode VARCHAR(16) NOT NULL CHECK (mode IN ('batch', 'stream') ),
+	`interval` INT UNSIGNED NOT NULL,
+	probe_limit INT UNSIGNED NULL,
+	locations LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]'
+		CHECK (json_valid(locations)),
+	enabled BOOLEAN NOT NULL DEFAULT 1,
+	time_series_enabled BOOLEAN NOT NULL DEFAULT 0,
+	notes TEXT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE IF NOT EXISTS gp_schedule_configuration (
+	id CHAR(36) PRIMARY KEY,
+	user_created CHAR(36) NOT NULL,
+	user_updated CHAR(36) DEFAULT NULL,
+	date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	date_updated TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+	schedule_id CHAR(36) NOT NULL,
+
+	name VARCHAR(255) NOT NULL,
+	measurement_type VARCHAR(32) NOT NULL,
+	measurement_target VARCHAR(255) NOT NULL,
+	measurement_options LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '{}'
+		CHECK (json_valid(`measurement_options`)),
+	enabled BOOLEAN NOT NULL DEFAULT 1,
+	notes TEXT NULL,
+
+	CONSTRAINT gp_schedule_configuration_type_check CHECK (`measurement_type` IN ('http','dns','ping','traceroute','mtr')),
+
+	CONSTRAINT gp_schedule_configuration_schedule_fk
+		FOREIGN KEY (schedule_id) REFERENCES gp_schedule(id)
+			ON DELETE CASCADE ON UPDATE RESTRICT,
+
+	CONSTRAINT gp_schedule_configuration_unique_name UNIQUE (schedule_id, name),
+
+	KEY gp_schedule_configuration_schedule_idx (schedule_id),
+	KEY gp_schedule_configuration_type_idx (measurement_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
