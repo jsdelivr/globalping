@@ -1,5 +1,4 @@
-import type { SocketProbe } from '../types.js';
-import type { LocalAdoptionServer } from '../types.js';
+import type { SocketProbe, LocalAdoptionServer } from '../types.js';
 import { localAdoptionServerSchema } from '../schema/probe-response-schema.js';
 
 export const handleAdoptionServerStart = (probe: SocketProbe) => async (data: LocalAdoptionServer, callback?: (arg: string) => void) => {
@@ -10,5 +9,5 @@ export const handleAdoptionServerStart = (probe: SocketProbe) => async (data: Lo
 		throw validation.error;
 	}
 
-	probe.localAdoptionServer = data;
+	probe.localAdoptionServer = validation.value;
 };
