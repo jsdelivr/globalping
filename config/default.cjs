@@ -119,6 +119,10 @@ module.exports = {
 		timeout: 30, // 30 seconds
 		// measurement result TTL in redis
 		resultTTL: 7 * 24 * 60 * 60, // 7 days
+		timeSeries: {
+			httpTimeout: 3000,
+			dnsTimeout: 1000,
+		},
 		rateLimit: {
 			post: {
 				anonymousLimit: 250,
