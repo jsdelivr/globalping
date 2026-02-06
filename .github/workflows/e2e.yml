@@ -47,7 +47,7 @@ jobs:
       postgresTimeSeries:
         image: timescale/timescaledb:2.24.0-pg18
         ports:
-          - 15432:5432
+          - 15442:5432
         env:
           POSTGRES_DB: globalping-time-series-1-test
           POSTGRES_USER: globalping-api
