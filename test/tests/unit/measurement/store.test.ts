@@ -266,7 +266,7 @@ describe('measurement store', () => {
 
 		expect(redisMock.expire.args[0]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:results`, 604800 ]);
 
-		expect(redisMock.json.set.args).to.deep.include([ `gp:m:{${mockedMeasurementId1}}:meta`, '$', { userAgent: null, origin: null }]);
+		expect(redisMock.json.set.args).to.deep.include([ `gp:m:{${mockedMeasurementId1}}:meta`, '$', {}]);
 
 		expect(redisMock.json.set.args).to.deep.include([ `gp:m:{${mockedMeasurementId1}}:ips`, '$', [ '1.1.1.1', '2.2.2.2', '3.3.3.3', '4.4.4.4' ] ]);
 
