@@ -31,7 +31,7 @@ jobs:
           --health-retries 5
 
       postgresMeasurementStore:
-        image: timescale/timescaledb:2.22.1-pg17
+        image: timescale/timescaledb:2.24.0-pg18
         ports:
           - 15432:5432
         env:
@@ -45,7 +45,7 @@ jobs:
           --health-retries 5
 
       postgresTimeSeries:
-        image: timescale/timescaledb:2.22.1-pg17
+        image: timescale/timescaledb:2.24.0-pg18
         ports:
           - 15432:5432
         env:
