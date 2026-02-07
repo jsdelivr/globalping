@@ -19,6 +19,10 @@ module.exports = {
 		},
 		trustedProxies: [],
 	},
+	websocketServer: {
+		pingInterval: 3000,
+		pingTimeout: 3000,
+	},
 	redis: {
 		standalonePersistent: {
 			url: 'redis://localhost:7001',

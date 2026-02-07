@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { Namespace, type RemoteSocket, Server, Socket } from 'socket.io';
 import { createShardedAdapter } from '@socket.io/redis-adapter';
+import config from 'config';
 import type { ServerProbe, SocketProbe } from '../../probe/types.js';
 import { getRedisClient } from '../redis/client.js';
 import { SyncedProbeList } from './synced-probe-list.js';
@@ -44,8 +45,8 @@ export const initWsServer = async () => {
 	io = new Server({
 		transports: [ 'websocket' ],
 		serveClient: false,
-		pingInterval: 3000,
-		pingTimeout: 3000,
+		pingInterval: config.get<number>('websocketServer.pingInterval'),
+		pingTimeout: config.get<number>('websocketServer.pingTimeout'),
 	});
 
 	io.adapter(createShardedAdapter(redis, subClient1, {
