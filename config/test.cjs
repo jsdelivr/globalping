@@ -4,6 +4,10 @@ module.exports = {
 			cookieSecret: 'xxx',
 		},
 	},
+	websocketServer: {
+		pingInterval: 2 ** 20,
+		pingTimeout: 2 ** 20,
+	},
 	redis: {
 		clusterMeasurements: {
 			options: {
