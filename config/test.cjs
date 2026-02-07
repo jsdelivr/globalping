@@ -59,5 +59,6 @@ module.exports = {
 			},
 		},
 	},
+	reconnectProbesDelay: 0,
 	sigtermDelay: 0,
 };
