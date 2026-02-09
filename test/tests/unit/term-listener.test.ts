@@ -71,10 +71,10 @@ describe('term-listener', () => {
 
 			sigtermHandler('SIGTERM');
 
-			await clock.tickAsync(4999);
+			await clock.tickAsyncStepped(4999);
 			expect(processStub.exit.called).to.be.false;
 
-			await clock.tickAsync(1);
+			await clock.tickAsyncStepped(1);
 			expect(processStub.exit.calledWith(0)).to.be.true;
 		});
 

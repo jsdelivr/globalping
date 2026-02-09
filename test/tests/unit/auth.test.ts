@@ -42,7 +42,7 @@ describe('Auth', () => {
 		selectStub.onCall(2).resolves([]);
 
 		auth.scheduleSync();
-		await clock.tickAsync(60_000);
+		await clock.tickAsyncStepped(60_000);
 
 		const user1 = await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 		expect(user1).to.deep.equal({
@@ -66,7 +66,7 @@ describe('Auth', () => {
 
 		selectStub.onCall(4).resolves([]);
 
-		await clock.tickAsync(60_000);
+		await clock.tickAsyncStepped(60_000);
 
 		const user1afterSync = await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 		expect(user1afterSync).to.equal(null);

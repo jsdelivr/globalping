@@ -130,7 +130,7 @@ describe('measurement store', () => {
 
 		getMeasurementStore();
 
-		await clock.tickAsync(16_000);
+		await clock.tickAsyncStepped(16_000);
 
 		expect(redisMock.hScan.callCount).to.equal(1);
 		expect(redisMock.hScan.firstCall.args).to.deep.equal([ 'gp:in-progress', 0, { COUNT: 5000 }]);
