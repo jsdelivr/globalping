@@ -31,7 +31,7 @@ describe('reconnectProbes', () => {
 		expect(fetchRawSockets.callCount).to.equal(0);
 		expect(disconnect.callCount).to.equal(0);
 
-		await clock.tickAsync(8000 + 2 * 60_000 + 1000);
+		await clock.tickAsyncStepped(8000 + 2 * 60_000 + 1000);
 
 		expect(fetchRawSockets.callCount).to.equal(1);
 		expect(disconnect.callCount).to.equal(2);

@@ -19,7 +19,6 @@ export const getTestServer = async (): Promise<Server> => {
 		const { port } = app.address() as AddressInfo;
 		url = `http://127.0.0.1:${port}/probes`;
 		getSyncedProbeList().syncInterval = 40;
-		getSyncedProbeList().syncTimeout = 200;
 		getSyncedProbeList().logger.writers = [ new ConsoleWriter(Logger.levels.warn) ];
 	}
 
@@ -87,7 +86,7 @@ export const deleteFakeProbes = async (socketsToDelete?: Socket[]): Promise<void
 
 		const checker = () => {
 			if (syncedProbeList.getProbes().length === 0) {
-				setTimeout(resolve, syncedProbeList.syncTimeout);
+				setTimeout(resolve, syncedProbeList.syncInterval);
 				syncedProbeList.off(syncedProbeList.localUpdateEvent, checker);
 			}
 		};
