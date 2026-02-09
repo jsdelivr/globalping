@@ -199,11 +199,11 @@ describe('SyncedProbeList', () => {
 
 		// Simulate running for the duration of syncedProbeList.remoteDataTtl.
 		while ((elapsed += syncedProbeList.syncInterval) < syncedProbeList.remoteDataTtl / 2) {
-			await clock.tickAsync(syncedProbeList.syncInterval);
+			await clock.tickAsyncStepped(syncedProbeList.syncInterval);
 			await syncedProbeList.sync();
 		}
 
-		await clock.tickAsync(2 * syncedProbeList.syncInterval);
+		await clock.tickAsyncStepped(2 * syncedProbeList.syncInterval);
 		await syncedProbeList.sync();
 		expect(redisPExpire.callCount).to.equal(2);
 	});
@@ -294,7 +294,7 @@ describe('SyncedProbeList', () => {
 		await syncedProbeList.sync();
 		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal(Object.values(probes));
 
-		await clock.tickAsync(syncedProbeList.syncTimeout + 100);
+		await clock.tickAsyncStepped(syncedProbeList.syncTimeout + 100);
 		expect(syncedProbeList.getProbes()).to.be.empty;
 	});
 
@@ -377,7 +377,7 @@ describe('SyncedProbeList', () => {
 		await syncedProbeList.sync();
 		expect(resolved).to.be.undefined;
 
-		await clock.tickAsync(syncedProbeList.syncInterval);
+		await clock.tickAsyncStepped(syncedProbeList.syncInterval);
 		expect(resolved).to.be.undefined;
 
 		await syncedProbeList.sync();

@@ -301,7 +301,7 @@ describe('MeasurementRunner', () => {
 			.onSecondCall().resolves({ type: 'ping', createdAt: new Date(start).toISOString() } as MeasurementRecord)
 			.onThirdCall().resolves(null);
 
-		await clock.tickAsync(25_000);
+		await clock.tickAsyncStepped(25_000);
 		await runner.recordResult({ measurementId: mockedMeasurementId, testId: 'testid1', result: {} as MeasurementResultMessage['result'] });
 		await runner.recordResult({ measurementId: mockedMeasurementId, testId: 'testid2', result: {} as MeasurementResultMessage['result'] });
 		await runner.recordResult({ measurementId: mockedMeasurementId, testId: 'testid3', result: {} as MeasurementResultMessage['result'] });
