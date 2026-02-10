@@ -40,6 +40,7 @@ describe('AdoptedProbes', () => {
 		continent: 'EU',
 		continentName: 'Europe',
 		region: 'Northern Europe',
+		localAdoptionServer: null,
 	};
 
 	const defaultConnectedProbe: SocketProbe = {

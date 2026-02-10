@@ -85,6 +85,7 @@ describe('Adoption code', () => {
 					continent: 'NA',
 					continentName: 'North America',
 					region: 'Northern America',
+					localAdoptionServer: null,
 				});
 			});
 
