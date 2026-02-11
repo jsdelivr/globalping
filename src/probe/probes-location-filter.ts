@@ -8,7 +8,6 @@ import { continents } from '../lib/location/continents.js';
 import { states, statesIso } from '../lib/location/states.js';
 import { aliases as networkAliases } from '../lib/location/networks.js';
 import { regionNames, aliases as regionAliases } from '../lib/location/regions.js';
-import { onProbesUpdate } from '../lib/ws/server.js';
 
 /*
  * [ public key ]: internal key
@@ -271,13 +270,8 @@ export class ProbesLocationFilter {
 	}
 }
 
-let sharedFilter: ProbesLocationFilter | undefined;
-
-export const getProbesLocationFilter = () => {
-	if (!sharedFilter) {
-		sharedFilter = new ProbesLocationFilter();
-		onProbesUpdate(probes => sharedFilter?.updateGlobalIndex(probes));
-	}
-
-	return sharedFilter;
+export const initProbesLocationFilter = (onProbesUpdate: (callback: (probes: ServerProbe[]) => void) => (() => void)) => {
+	const filter = new ProbesLocationFilter();
+	onProbesUpdate(probes => filter.updateGlobalIndex(probes));
+	return filter;
 };

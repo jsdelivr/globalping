@@ -9,12 +9,12 @@ import { getGeoIpClient, LocationInfo } from '../lib/geoip/client.js';
 import getProbeIp from '../lib/get-probe-ip.js';
 import { getCloudTags } from '../lib/cloud-ip-ranges.js';
 import type { ExtendedProbeLocation, SocketProbe, Tag } from './types.js';
-import { probeIpLimit } from '../lib/ws/server.js';
+import type { ProbeIpLimit } from '../lib/ws/helper/probe-ip-limit.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
 import { getGroupingKey, normalizeTags } from '../lib/geoip/utils.js';
 import { isIpBlocked } from '../lib/blocked-ip-ranges.js';
 
-export const buildProbe = async (socket: Socket): Promise<SocketProbe> => {
+export const buildProbe = async (socket: Socket, probeIpLimit: ProbeIpLimit): Promise<SocketProbe> => {
 	const version = String(socket.handshake.query['version']);
 	const nodeVersion = String(socket.handshake.query['nodeVersion']);
 	const totalMemory = Number(socket.handshake.query['totalMemory']);

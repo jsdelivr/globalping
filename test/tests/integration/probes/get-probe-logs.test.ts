@@ -1,12 +1,11 @@
 import { type Agent } from 'supertest';
-import { getTestServer } from '../../../utils/server.js';
+import { getTestServer, getIoContext } from '../../../utils/server.js';
 import request from 'supertest';
 import config from 'config';
 import type { AuthenticateOptions } from '../../../../src/lib/http/middleware/authenticate.js';
 import { JWTPayload, SignJWT } from 'jose';
 import * as redis from '../../../../src/lib/redis/measurement-client.js';
 import * as sinon from 'sinon';
-import { adoptedProbes } from '../../../../src/lib/ws/server.js';
 import { Adoption } from '../../../../src/lib/override/adopted-probes.js';
 import { expect } from 'chai';
 import { RedisCluster } from '../../../../src/lib/redis/shared.js';
@@ -83,33 +82,33 @@ describe('Get Probe Logs', () => {
 	});
 
 	it('should respond with 404 if user is not authorized', async () => {
-		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).send().expect(404);
 	});
 
 	it('should respond with 404 if user is admin and probe does not exist', async () => {
-		sandbox.stub(adoptedProbes, 'getById').returns(null);
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(null);
 		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
 
 		await requestAgent.get(`/v1/probes/nonexistent/logs`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(404);
 	});
 
 	it('should respond with 200 if user is admin and probe exists', async () => {
-		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(200);
 	});
 
 	it('should respond with 200 if user is an owner of an existing probe', async () => {
-		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(200);
 	});
 
 	it('should return logs in the expected format', async () => {
-		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
 
 		await requestAgent
@@ -123,7 +122,7 @@ describe('Get Probe Logs', () => {
 	});
 
 	it('should respect the after query parameter', async () => {
-		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
 
 		await requestAgent
@@ -137,7 +136,7 @@ describe('Get Probe Logs', () => {
 	});
 
 	it('should return all logs if after is -', async () => {
-		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
 
 		await requestAgent
@@ -151,7 +150,7 @@ describe('Get Probe Logs', () => {
 	});
 
 	it('should reject invalid after query parameter', async () => {
-		sandbox.stub(adoptedProbes, 'getById').returns(mockAdoption);
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
 
 		await requestAgent

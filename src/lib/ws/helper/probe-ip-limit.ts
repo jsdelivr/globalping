@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import config from 'config';
-import type { fetchProbes as serverFetchProbes, fetchRawSockets as serverFetchRawSockets, getProbeByIp as serverGetProbeByIp } from '../server.js';
 import { scopedLogger } from '../../logger.js';
 import { ProbeError } from '../../probe-error.js';
+import type { IoContext } from '../../server.js';
 
 const numberOfProcesses = config.get<number>('server.processes');
 
@@ -12,9 +12,9 @@ export class ProbeIpLimit {
 	private timer: NodeJS.Timeout | undefined;
 
 	constructor (
-		private readonly fetchProbes: typeof serverFetchProbes,
-		private readonly fetchRawSockets: typeof serverFetchRawSockets,
-		private readonly getProbeByIp: typeof serverGetProbeByIp,
+		private readonly fetchProbes: IoContext['fetchProbes'],
+		private readonly fetchRawSockets: IoContext['fetchRawSockets'],
+		private readonly getProbeByIp: IoContext['getProbeByIp'],
 	) {}
 
 	scheduleSync () {

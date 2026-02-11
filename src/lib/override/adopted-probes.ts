@@ -3,7 +3,6 @@ import Bluebird from 'bluebird';
 import _ from 'lodash';
 import config from 'config';
 import { scopedLogger } from '../logger.js';
-import type { getProbesWithAdminData as serverGetProbesWithAdminData } from '../ws/server.js';
 import type { ExtendedProbeLocationWithOverrides, ServerProbe, SocketProbe, ProbeLocation, Tag } from '../../probe/types.js';
 import { getGroupingKey, normalizeCoordinate, normalizeFromPublicName, normalizeTags } from '../geoip/utils.js';
 import { getContinentByCountry, getContinentName, getCountryByIso, getIndex, getRegionByCountry, getStateNameByIso } from '../location/location.js';
@@ -208,7 +207,7 @@ export class AdoptedProbes {
 
 	constructor (
 		private readonly sql: Knex,
-		private readonly getProbesWithAdminData: typeof serverGetProbesWithAdminData,
+		private readonly getProbesWithAdminData: () => SocketProbe[],
 	) {}
 
 	getById (id: string) {

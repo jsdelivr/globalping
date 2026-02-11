@@ -51,7 +51,8 @@ describe('probe router', () => {
 	const router = new ProbeRouter(onServerProbesUpdateMock, probesLocationFilter, store as unknown as MeasurementStore);
 	const mockedMeasurementId = '2E2SZgEwA6W6HvzlT0001z9VK';
 
-	let buildProbeInternal: (socket: RemoteProbeSocket) => Promise<ServerProbe>;
+	let buildProbeInternal: (socket: RemoteProbeSocket, probeIpLimit: any) => Promise<ServerProbe>;
+	const mockProbeIpLimit = { verifyIpLimit: sandbox.stub().resolves() };
 
 	const buildProbe = async (
 		id: string,
@@ -70,7 +71,7 @@ describe('probe router', () => {
 		geoLookupMock.resolves({ ...defaultLocation, ...location });
 
 		socket.data!.probe = {
-			...await buildProbeInternal(socket as RemoteProbeSocket),
+			...await buildProbeInternal(socket as RemoteProbeSocket, mockProbeIpLimit),
 			status: 'ready',
 			isIPv4Supported: true,
 			isIPv6Supported: false,

@@ -33,6 +33,7 @@ import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternati
 import { registerLimitsRoute } from '../../limits/route/get-limits.js';
 import { blacklist } from './middleware/blacklist.js';
 import { registerGetProbeLogsRoute } from '../../probe/route/get-probe-logs.js';
+import type { IoContext } from '../server.js';
 
 apmAgent.addTransactionFilter(apmUtils.transactionFilter({
 	keepResponse: [ 'location' ],
@@ -86,36 +87,6 @@ rootRouter.get<object, CustomContext>('/', '/', (ctx) => {
 	};
 });
 
-const apiRouter = new Router<CustomState, CustomContext>({ strict: true, sensitive: true });
-
-apiRouter.prefix('/v1')
-	.use(koaElasticUtils.middleware(apmAgent, { prefix: '/v1' }))
-	.use(isAdminMw)
-	.use(isSystemMw);
-
-// GET /spec.yaml
-registerSpecRoute(apiRouter);
-// POST /measurements
-registerCreateMeasurementRoute(apiRouter);
-// GET /measurements/:id
-registerGetMeasurementRoute(apiRouter);
-// GET /probes
-registerGetProbesRoute(apiRouter);
-// GET /probes/:id/logs
-registerGetProbeLogsRoute(apiRouter);
-// POST /send-code
-registerSendCodeRoute(apiRouter);
-// POST /alternative-ip
-registerAlternativeIpRoute(apiRouter);
-// GET /limits
-registerLimitsRoute(apiRouter);
-
-const healthRouter = new Router({ strict: true, sensitive: true });
-healthRouter.use(koaElasticUtils.middleware(apmAgent));
-
-// GET /health
-registerHealthRoute(healthRouter);
-
 app
 	.use(requestIp())
 	.use(responseTime())
@@ -129,17 +100,51 @@ app
 	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 	.use(errorHandlerMw)
 	.use(corsHandler())
-	.use(blacklist)
-	.use(rootRouter.routes())
-	.use(healthRouter.routes())
-	.use(apiRouter.routes())
-	.use(apiRouter.allowedMethods())
-	.use(koaElasticUtils.middleware(apmAgent))
-	.use(koaStatic(publicPath, { format: false }));
+	.use(blacklist);
 
 app.on('error', errorHandler);
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 const server = createServer(app.callback());
 
-export const getHttpServer = () => server;
+export const getHttpServer = (ioContext: IoContext) => {
+	const apiRouter = new Router<CustomState, CustomContext>({ strict: true, sensitive: true });
+
+	apiRouter.prefix('/v1')
+		.use(koaElasticUtils.middleware(apmAgent, { prefix: '/v1' }))
+		.use(isAdminMw)
+		.use(isSystemMw);
+
+	// GET /spec.yaml
+	registerSpecRoute(apiRouter);
+	// POST /measurements
+	registerCreateMeasurementRoute(apiRouter, ioContext);
+	// GET /measurements/:id
+	registerGetMeasurementRoute(apiRouter);
+	// GET /probes
+	registerGetProbesRoute(apiRouter, ioContext);
+	// GET /probes/:id/logs
+	registerGetProbeLogsRoute(apiRouter, ioContext);
+	// POST /send-code
+	registerSendCodeRoute(apiRouter, ioContext);
+	// POST /alternative-ip
+	registerAlternativeIpRoute(apiRouter, ioContext);
+	// GET /limits
+	registerLimitsRoute(apiRouter);
+
+	const healthRouter = new Router({ strict: true, sensitive: true });
+	healthRouter.use(koaElasticUtils.middleware(apmAgent));
+
+	// GET /health
+	registerHealthRoute(healthRouter);
+
+	app
+		.use(rootRouter.routes())
+		.use(healthRouter.routes())
+		.use(apiRouter.routes())
+		.use(apiRouter.allowedMethods())
+		.use(koaElasticUtils.middleware(apmAgent))
+		.use(koaStatic(publicPath, { format: false }));
+
+	return server;
+};

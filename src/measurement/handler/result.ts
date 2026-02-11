@@ -1,18 +1,16 @@
 import type { SocketProbe } from '../../probe/types.js';
 import type { MeasurementResultMessage } from '../types.js';
-import { getMeasurementRunner } from '../runner.js';
+import type { MeasurementRunner } from '../runner.js';
 import { getProbeValidator } from '../../lib/probe-validator.js';
 import { resultSchema } from '../schema/probe-response-schema.js';
 
-const runner = getMeasurementRunner();
-
-export const handleMeasurementResult = (probe: SocketProbe) => async (data: MeasurementResultMessage): Promise<void> => {
+export const handleMeasurementResult = (probe: SocketProbe, measurementRunner: MeasurementRunner) => async (data: MeasurementResultMessage): Promise<void> => {
 	await getProbeValidator().validateProbe(data.measurementId, data.testId, probe.uuid);
 
 	const validation = resultSchema.validate(data);
 
 	if (validation.error) {
-		(data.measurementId && data.testId) && await runner.recordResult({
+		(data.measurementId && data.testId) && await measurementRunner.recordResult({
 			measurementId: data.measurementId,
 			testId: data.testId,
 			result: {
@@ -24,5 +22,5 @@ export const handleMeasurementResult = (probe: SocketProbe) => async (data: Meas
 		throw validation.error;
 	}
 
-	await runner.recordResult(validation.value);
+	await measurementRunner.recordResult(validation.value);
 };
