@@ -67,47 +67,28 @@ apmAgent.addSpanFilter((payload) => {
 	return false;
 });
 
-const app = new Koa();
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
 const docsHost = config.get<string>('server.docsHost');
 
-const rootRouter = new Router({ strict: true, sensitive: true });
-
-rootRouter.prefix('/')
-	.use(koaElasticUtils.middleware(apmAgent));
-
-// GET /
-rootRouter.get<object, CustomContext>('/', '/', (ctx) => {
-	ctx.status = 404;
-
-	ctx.body = {
-		links: {
-			documentation: ctx.getDocsLink(),
-		},
-	};
-});
-
-app
-	.use(requestIp())
-	.use(responseTime())
-	.use(koaFavicon(`${publicPath}/favicon.ico`))
-	.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }))
-	.use(conditionalGet())
-	.use(etag({ weak: true }))
-	.use(json({ pretty: true, spaces: 2 }))
-	.use(docsLink({ docsHost }))
-	.use(defaultJson())
-	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
-	.use(errorHandlerMw)
-	.use(corsHandler())
-	.use(blacklist);
-
-app.on('error', errorHandler);
-
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-const server = createServer(app.callback());
-
 export const getHttpServer = (ioContext: IoContext) => {
+	const app = new Koa();
+
+	const rootRouter = new Router({ strict: true, sensitive: true });
+
+	rootRouter.prefix('/')
+		.use(koaElasticUtils.middleware(apmAgent));
+
+	// GET /
+	rootRouter.get<object, CustomContext>('/', '/', (ctx) => {
+		ctx.status = 404;
+
+		ctx.body = {
+			links: {
+				documentation: ctx.getDocsLink(),
+			},
+		};
+	});
+
 	const apiRouter = new Router<CustomState, CustomContext>({ strict: true, sensitive: true });
 
 	apiRouter.prefix('/v1')
@@ -139,6 +120,19 @@ export const getHttpServer = (ioContext: IoContext) => {
 	registerHealthRoute(healthRouter);
 
 	app
+		.use(requestIp())
+		.use(responseTime())
+		.use(koaFavicon(`${publicPath}/favicon.ico`))
+		.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }))
+		.use(conditionalGet())
+		.use(etag({ weak: true }))
+		.use(json({ pretty: true, spaces: 2 }))
+		.use(docsLink({ docsHost }))
+		.use(defaultJson())
+		// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
+		.use(errorHandlerMw)
+		.use(corsHandler())
+		.use(blacklist)
 		.use(rootRouter.routes())
 		.use(healthRouter.routes())
 		.use(apiRouter.routes())
@@ -146,5 +140,8 @@ export const getHttpServer = (ioContext: IoContext) => {
 		.use(koaElasticUtils.middleware(apmAgent))
 		.use(koaStatic(publicPath, { format: false }));
 
-	return server;
+	app.on('error', errorHandler);
+
+	// eslint-disable-next-line @typescript-eslint/no-misused-promises
+	return createServer(app.callback());
 };
