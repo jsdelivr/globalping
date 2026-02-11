@@ -1,32 +1,18 @@
 import * as sinon from 'sinon';
-import * as td from 'testdouble';
 import { expect } from 'chai';
+import { reconnectProbes } from '../../../../src/lib/ws/helper/reconnect-probes.js';
 
 const sandbox = sinon.createSandbox();
 const disconnect = sandbox.stub();
 const fetchRawSockets = sandbox.stub().resolves([{ disconnect }, {	disconnect }]);
 
 describe('reconnectProbes', () => {
-	let reconnectProbes: (delay: number) => void;
-
-	before(async () => {
-		await td.replaceEsm('../../../../src/lib/ws/server.ts', {
-			fetchRawSockets,
-		});
-
-		({ reconnectProbes } = await import('../../../../src/lib/ws/helper/reconnect-probes.js'));
-	});
-
 	afterEach(() => {
 		sandbox.restore();
 	});
 
-	after(() => {
-		td.reset();
-	});
-
 	it('should disconnect every probe in configured time', async () => {
-		reconnectProbes(2 * 60 * 1000);
+		reconnectProbes(fetchRawSockets as any, 2 * 60 * 1000);
 
 		expect(fetchRawSockets.callCount).to.equal(0);
 		expect(disconnect.callCount).to.equal(0);

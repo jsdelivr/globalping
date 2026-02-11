@@ -9,7 +9,7 @@ import { isIpBlocked } from './blocked-ip-ranges.js';
 import { getPersistentRedisClient, type RedisClient } from './redis/persistent-client.js';
 import { ServerProbe, SocketProbe } from '../probe/types.js';
 import { updateProbeAltIps } from '../probe/builder.js';
-import { probeOverride } from './ws/server.js';
+import type { ProbeOverride } from './override/probe-override.js';
 
 const getRandomBytes = promisify(randomBytes);
 const logger = scopedLogger('alt-ips');
@@ -20,6 +20,7 @@ export class AltIpsClient {
 	constructor (
 		private readonly redis: RedisClient,
 		private readonly geoIpClient: GeoIpClient,
+		private readonly probeOverride: ProbeOverride,
 	) {}
 
 	async generateToken (ip: string) {
@@ -35,7 +36,7 @@ export class AltIpsClient {
 	}
 
 	async addAltIps (probe: SocketProbe, ipsToTokens: [string, string][]) {
-		const serverProbe = { ...probe, location: probeOverride.getUpdatedLocation(probe) };
+		const serverProbe = { ...probe, location: this.probeOverride.getUpdatedLocation(probe) };
 		const { ipsWithValidTokens, tokenErrors } = await this.validateTokens(ipsToTokens, serverProbe);
 		const { altIpAddresses, ipErrors } = await this.validateIps(ipsWithValidTokens, serverProbe);
 
@@ -134,12 +135,6 @@ export class AltIpsClient {
 	}
 }
 
-let altIpsClient: AltIpsClient;
-
-export const getAltIpsClient = () => {
-	if (!altIpsClient) {
-		altIpsClient = new AltIpsClient(getPersistentRedisClient(), getGeoIpClient());
-	}
-
-	return altIpsClient;
+export const initAltIpsClient = (probeOverride: ProbeOverride): AltIpsClient => {
+	return new AltIpsClient(getPersistentRedisClient(), getGeoIpClient(), probeOverride);
 };

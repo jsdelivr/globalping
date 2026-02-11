@@ -1,10 +1,10 @@
 import crypto from 'node:crypto';
 import config from 'config';
 import _ from 'lodash';
-import { getSyncedProbeList, getWsServer, PROBES_NAMESPACE } from '../lib/ws/server.js';
+import { PROBES_NAMESPACE } from '../lib/ws/server.js';
 import { scopedLogger } from '../lib/logger.js';
 import type { ServerProbe } from '../probe/types.js';
-import { getProbesLocationFilter, type ProbesLocationFilter } from '../probe/probes-location-filter.js';
+import type { ProbesLocationFilter } from '../probe/probes-location-filter.js';
 import type { MeasurementRequest } from '../measurement/types.js';
 import type { Schedule } from './types.js';
 import type { WsServer } from '../lib/ws/server.js';
@@ -188,18 +188,16 @@ export class StreamScheduleExecutor {
 	}
 }
 
-let executor: StreamScheduleExecutor | undefined;
-
-export const getStreamScheduleExecutor = () => {
-	if (!executor) {
-		executor = new StreamScheduleExecutor(
-			getWsServer(),
-			getSyncedProbeList(),
-			getStreamScheduleLoader(),
-			getProbesLocationFilter(),
-			getMeasurementStore(),
-		);
-	}
-
-	return executor;
+export const initStreamScheduleExecutor = (
+	io: WsServer,
+	syncedProbeList: SyncedProbeList,
+	locationFilter: ProbesLocationFilter,
+) => {
+	return new StreamScheduleExecutor(
+		io,
+		syncedProbeList,
+		getStreamScheduleLoader(),
+		locationFilter,
+		getMeasurementStore(),
+	);
 };
