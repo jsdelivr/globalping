@@ -12,6 +12,7 @@ import type { ServerProbe, ProbeLocation } from '../../../../src/probe/types.js'
 import type { Location } from '../../../../src/lib/location/types.js';
 import type { MeasurementStore } from '../../../../src/measurement/store.js';
 import type { UserRequest } from '../../../../src/measurement/types.js';
+import type { ProbeIpLimit } from '../../../../src/lib/ws/helper/probe-ip-limit.js';
 
 const defaultLocation = {
 	continent: '',
@@ -84,7 +85,7 @@ describe('probe router', () => {
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/geoip/client.ts', { getGeoIpClient: () => ({ lookup: geoLookupMock }) });
 		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getCloudTags: getCloudTagsMock });
-		buildProbeInternal = (await import('../../../../src/probe/builder.js')).buildProbe as unknown as (socket: RemoteProbeSocket) => Promise<ServerProbe>;
+		buildProbeInternal = (await import('../../../../src/probe/builder.js')).buildProbe as unknown as (socket: RemoteProbeSocket, probeIpLimit: ProbeIpLimit) => Promise<ServerProbe>;
 	});
 
 	beforeEach(() => {
