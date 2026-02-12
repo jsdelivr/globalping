@@ -12,10 +12,6 @@ module.exports = {
 	'file': [
 		'test/setup.ts',
 	],
-	'spec': [
-		'test/tests/integration/**/*.test.ts',
-		'test/tests/unit/**/*.test.ts',
-	],
 	'node-option': [
 		'enable-source-maps',
 		'experimental-specifier-resolution=node',
