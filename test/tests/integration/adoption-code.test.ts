@@ -4,9 +4,8 @@ import nock from 'nock';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import request, { type Agent } from 'supertest';
-import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../utils/server.js';
+import { getTestServer, addFakeProbe, deleteFakeProbes, getIoContext } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
-import { getProbeByIp } from '../../../src/lib/ws/server.js';
 
 describe('Adoption code', () => {
 	let app: Server;
@@ -35,7 +34,7 @@ describe('Adoption code', () => {
 		});
 
 		// Wait until alt IP is synced in synced-probe-list.ts.
-		while (!await getProbeByIp('97.247.234.249', { allowStale: false })) { /* wait */ }
+		while (!await getIoContext().getProbeByIp('97.247.234.249', { allowStale: false })) { /* wait */ }
 	});
 
 	afterEach(async () => {

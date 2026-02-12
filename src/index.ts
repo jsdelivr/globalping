@@ -13,9 +13,9 @@ const port = process.env['PORT'] ?? config.get<number>('server.port');
 const workerCount = config.get<number>('server.processes');
 
 const workerFn = async () => {
-	const server = await createServer();
+	const { httpServer } = await createServer();
 
-	server.listen(port, () => {
+	httpServer.listen(port, () => {
 		logger.info(`Application started at http://localhost:${port}`);
 	});
 };

@@ -2,10 +2,10 @@ import config from 'config';
 import type { Server } from 'socket.io';
 import createHttpError from 'http-errors';
 import apmAgent from 'elastic-apm-node';
-import { getWsServer, PROBES_NAMESPACE } from '../lib/ws/server.js';
-import { getProbeRouter, type ProbeRouter } from '../probe/router.js';
+import { PROBES_NAMESPACE } from '../lib/ws/server.js';
+import type { ProbeRouter } from '../probe/router.js';
 import type { ServerProbe } from '../probe/types.js';
-import { getMetricsAgent, type MetricsAgent } from '../lib/metrics.js';
+import type { MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
 import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage, UserRequest, MeasurementRequestMessage } from './types.js';
@@ -94,14 +94,6 @@ export class MeasurementRunner {
 	}
 }
 
-// Factory
-
-let runner: MeasurementRunner;
-
-export const getMeasurementRunner = () => {
-	if (!runner) {
-		runner = new MeasurementRunner(getWsServer(), getMeasurementStore(), getProbeRouter(), checkPostMeasurementRateLimit, getMetricsAgent());
-	}
-
-	return runner;
+export const initMeasurementRunner = (io: Server, router: ProbeRouter, metricsAgent: MetricsAgent) => {
+	return new MeasurementRunner(io, getMeasurementStore(), router, checkPostMeasurementRateLimit, metricsAgent);
 };

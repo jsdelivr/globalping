@@ -1,7 +1,6 @@
-import type { Server } from 'node:http';
 import { initRedisClient } from './redis/client.js';
-import { probeOverride, probeIpLimit, initWsServer } from './ws/server.js';
-import { getMetricsAgent } from './metrics.js';
+import { initWsServer, type WsServer } from './ws/server.js';
+import { initMetricsAgent, type MetricsAgent } from './metrics.js';
 import { populateMemList as populateMemMalwareList } from './malware/client.js';
 import { populateMemList as populateMemCloudIpRangesList } from './cloud-ip-ranges.js';
 import { populateMemList as populateMemBlockedIpRangesList } from './blocked-ip-ranges.js';
@@ -15,10 +14,43 @@ import { initMeasurementRedisClient } from './redis/measurement-client.js';
 import { initSubscriptionRedisClient } from './redis/subscription-client.js';
 import termListener from './term-listener.js';
 import { auth } from './http/auth.js';
-import { adoptionToken } from '../adoption/adoption-token.js';
+import { initAdoptionToken, type AdoptionToken } from '../adoption/adoption-token.js';
 import { logIfTooLong } from './log-if-too-long.js';
+import { ProbeIpLimit } from './ws/helper/probe-ip-limit.js';
+import { AdoptedProbes } from './override/adopted-probes.js';
+import { AdminData } from './override/admin-data.js';
+import { ProbeOverride } from './override/probe-override.js';
+import { dashboardClient } from './sql/client.js';
+import { initMeasurementRunner, type MeasurementRunner } from '../measurement/runner.js';
+import { initCodeSender, type CodeSender } from '../adoption/sender.js';
+import { initProbeRouter, type ProbeRouter } from '../probe/router.js';
+import { initProbesLocationFilter } from '../probe/probes-location-filter.js';
+import type { SyncedProbeList } from './ws/synced-probe-list.js';
+import type { SocketProbe } from '../probe/types.js';
+import { initAltIpsClient, type AltIpsClient } from './alt-ips-client.js';
 
-export const createServer = async (): Promise<Server> => {
+type WsServerExports = Awaited<ReturnType<typeof initWsServer>>;
+
+export type IoContext = {
+	io: WsServer;
+	syncedProbeList: SyncedProbeList;
+	adoptedProbes: AdoptedProbes;
+	adminData: AdminData;
+	probeOverride: ProbeOverride;
+	probeIpLimit: ProbeIpLimit;
+	metricsAgent: MetricsAgent;
+	measurementRunner: MeasurementRunner;
+	codeSender: CodeSender;
+	probeRouter: ProbeRouter;
+	adoptionToken: AdoptionToken;
+	altIpsClient: AltIpsClient;
+	fetchProbes: WsServerExports['fetchProbes'];
+	getProbeByIp: WsServerExports['getProbeByIp'];
+	fetchRawSockets: WsServerExports['fetchRawSockets'];
+	onProbesUpdate: WsServerExports['onProbesUpdate'];
+};
+
+export const createServer = async () => {
 	await initRedisClient();
 	await initPersistentRedisClient();
 	await initMeasurementRedisClient();
@@ -35,35 +67,63 @@ export const createServer = async (): Promise<Server> => {
 		logIfTooLong(populateAsnData(), 'populateAsnData'),
 	]);
 
+	const getProbesWithAdminData = (): SocketProbe[] => syncedProbeList.getProbesWithAdminData();
+	const adoptedProbes = new AdoptedProbes(dashboardClient, getProbesWithAdminData);
+	const adminData = new AdminData(dashboardClient);
+	const probeOverride = new ProbeOverride(adoptedProbes, adminData);
+
 	// Populate Dashboard override data before using it during initWsServer()
 	await logIfTooLong(probeOverride.fetchDashboardData(), 'probeOverride.fetchDashboardData');
 	probeOverride.scheduleSync();
 
+	const { io, syncedProbeList, fetchRawSockets, fetchProbes, getProbeByIp, onProbesUpdate } = await logIfTooLong(initWsServer(probeOverride), 'initWsServer');
+
+	const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets, getProbeByIp);
+	const adoptionToken = initAdoptionToken(adoptedProbes);
+	const metricsAgent = initMetricsAgent(io, fetchProbes);
+	const altIpsClient = initAltIpsClient(probeOverride);
+	const probesLocationFilter = initProbesLocationFilter(onProbesUpdate);
+	const probeRouter = initProbeRouter(onProbesUpdate, probesLocationFilter);
+	const measurementRunner = initMeasurementRunner(io, probeRouter, metricsAgent);
+	const codeSender = initCodeSender(io, getProbeByIp);
+
 	adoptionToken.scheduleSync();
-
-	await logIfTooLong(initWsServer(), 'initWsServer');
-
 	await logIfTooLong(auth.syncTokens(), 'auth.syncTokens');
 	auth.scheduleSync();
 
 	probeIpLimit.scheduleSync();
 
-	reconnectProbes();
+	reconnectProbes(fetchRawSockets);
 	// Disconnect probes shortly before shutdown to prevent data loss.
-	termListener.on('terminating', ({ delay }) => setTimeout(() => void disconnectProbes(0), delay - 10000));
+	termListener.on('terminating', ({ delay }) => setTimeout(() => void disconnectProbes(fetchRawSockets, 0), delay - 10000));
 
-	const { getWsServer } = await import('./ws/server.js');
+	const ioContext: IoContext = {
+		io,
+		syncedProbeList,
+		adoptedProbes,
+		adminData,
+		probeOverride,
+		probeIpLimit,
+		metricsAgent,
+		measurementRunner,
+		codeSender,
+		probeRouter,
+		adoptionToken,
+		altIpsClient,
+		fetchProbes,
+		getProbeByIp,
+		fetchRawSockets,
+		onProbesUpdate,
+	};
+
 	const { getHttpServer } = await import('./http/server.js');
+	const httpServer = getHttpServer(ioContext);
+	io.attach(httpServer);
 
-	const httpServer = getHttpServer();
-	const wsServer = getWsServer();
+	const { initGateway } = await import('./ws/gateway.js');
+	initGateway(ioContext);
 
-	wsServer.attach(httpServer);
-
-	await import('./ws/gateway.js');
-
-	const metricsAgent = getMetricsAgent();
 	metricsAgent.run();
 
-	return httpServer;
+	return { httpServer, ioContext };
 };
