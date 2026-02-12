@@ -122,7 +122,7 @@
 	"scripts": {
 		"build": "tsc && npm run download:files && npm run commit:hash && cp -r public dist",
 		"commit:hash": "git rev-parse HEAD > data/LAST_API_COMMIT_HASH.txt",
-		"coverage": "npm run clean && c8 mocha",
+		"coverage": "npm run clean && c8 mocha 'test/tests/integration/**/*.test.ts' 'test/tests/unit/**/*.test.ts'",
 		"clean": "rimraf coverage",
 		"download:files": "tsx src/lib/download-files.ts",
 		"prepare": "npm run download:files; husky || echo 'Failed to install husky'",
