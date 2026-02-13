@@ -84,6 +84,7 @@ components:
       enum:
         - 4
         - 6
+      default: 4
     MtrProtocol:
       type: string
       description: The transport protocol to use.
