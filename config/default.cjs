@@ -69,6 +69,16 @@ module.exports = {
 			port: 5432,
 		},
 	},
+	timeSeriesDb: {
+		type: 'pg',
+		connection: {
+			host: 'localhost',
+			user: 'globalping-api',
+			password: 'password',
+			database: 'globalping-time-series-1',
+			port: 5432,
+		},
+	},
 	data: {
 		domainBlacklistPath: 'data/DOMAIN_BLACKLIST.json',
 		ipBlacklistPath: 'data/IP_BLACKLIST.json',
@@ -104,12 +114,19 @@ module.exports = {
 	adminData: {
 		syncInterval: 60000,
 	},
+	scheduleData: {
+		syncInterval: 60000,
+	},
 	measurement: {
 		maxInProgressTests: 5,
 		// Timeout after which measurement will be marked as finished even if not all probes respond
 		timeout: 30, // 30 seconds
 		// measurement result TTL in redis
 		resultTTL: 7 * 24 * 60 * 60, // 7 days
+		timeSeries: {
+			httpTimeout: 3000,
+			dnsTimeout: 1000,
+		},
 		rateLimit: {
 			post: {
 				anonymousLimit: 250,
