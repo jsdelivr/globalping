@@ -2,7 +2,7 @@ import Joi from 'joi';
 import { SocketProbe, ProbeStats } from '../types.js';
 import { globalIpOptions } from '../../measurement/schema/utils.js';
 
-export const statusSchema = Joi.string<SocketProbe['status']>().valid('initializing', 'ready', 'unbuffer-missing', 'ping-test-failed', 'sigterm').required();
+export const statusSchema = Joi.string<SocketProbe['status']>().valid('initializing', 'getting-alt-ips', 'ready', 'unbuffer-missing', 'ping-test-failed', 'sigterm').required();
 
 export const ipVersionSchema = Joi.boolean().required();
 
