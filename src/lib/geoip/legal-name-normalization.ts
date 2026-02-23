@@ -140,7 +140,7 @@ export const normalizeLegalName = (name: string) => {
 		// Remove trailing commas and spaces after suffix removal.
 		.replace(/\s*,\s*$/, '')
 		// Remove wrapping quotes that are often used with prefixes.
-		.replace(/^"(.*)"$/, '$1');
+		.replace(/^(["'])(.*)\1$/, '$2');
 
 	const international = normalized.replace(nationalSuffixesPattern, '').trim();
 

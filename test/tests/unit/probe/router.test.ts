@@ -4,6 +4,7 @@ import { expect } from 'chai';
 import * as td from 'testdouble';
 
 import { ProbeRouter } from '../../../../src/probe/router.js';
+import { ProbesLocationFilter } from '../../../../src/probe/probes-location-filter.js';
 import { getRegionByCountry } from '../../../../src/lib/location/location.js';
 import type { RemoteProbeSocket } from '../../../../src/lib/ws/server.js';
 import type { DeepPartial } from '../../../types.js';
@@ -11,6 +12,7 @@ import type { ServerProbe, ProbeLocation } from '../../../../src/probe/types.js'
 import type { Location } from '../../../../src/lib/location/types.js';
 import type { MeasurementStore } from '../../../../src/measurement/store.js';
 import type { UserRequest } from '../../../../src/measurement/types.js';
+import type { ProbeIpLimit } from '../../../../src/lib/ws/helper/probe-ip-limit.js';
 
 const defaultLocation = {
 	continent: '',
@@ -28,10 +30,14 @@ const defaultLocation = {
 
 describe('probe router', () => {
 	const sandbox = sinon.createSandbox();
+	const probesLocationFilter = new ProbesLocationFilter();
 	let fetchProbesMockHandler: (probes: ServerProbe[]) => void;
 
 	const onServerProbesUpdateMock: (onUpdate: (probes: ServerProbe[]) => void) => () => void = (handler) => {
-		fetchProbesMockHandler = handler;
+		fetchProbesMockHandler = (probes) => {
+			probesLocationFilter.updateGlobalIndex(probes);
+			return handler(probes);
+		};
 
 		return () => {};
 	};
@@ -43,10 +49,11 @@ describe('probe router', () => {
 		getMeasurementIps: sandbox.stub().resolves([]),
 		getMeasurement: sandbox.stub(),
 	};
-	const router = new ProbeRouter(onServerProbesUpdateMock, store as unknown as MeasurementStore);
+	const router = new ProbeRouter(onServerProbesUpdateMock, probesLocationFilter, store as unknown as MeasurementStore);
 	const mockedMeasurementId = '2E2SZgEwA6W6HvzlT0001z9VK';
 
-	let buildProbeInternal: (socket: RemoteProbeSocket) => Promise<ServerProbe>;
+	let buildProbeInternal: (socket: RemoteProbeSocket, probeIpLimit: any) => Promise<ServerProbe>;
+	const mockProbeIpLimit = { verifyIpLimit: sandbox.stub().resolves() };
 
 	const buildProbe = async (
 		id: string,
@@ -65,7 +72,7 @@ describe('probe router', () => {
 		geoLookupMock.resolves({ ...defaultLocation, ...location });
 
 		socket.data!.probe = {
-			...await buildProbeInternal(socket as RemoteProbeSocket),
+			...await buildProbeInternal(socket as RemoteProbeSocket, mockProbeIpLimit),
 			status: 'ready',
 			isIPv4Supported: true,
 			isIPv6Supported: false,
@@ -78,7 +85,7 @@ describe('probe router', () => {
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/geoip/client.ts', { getGeoIpClient: () => ({ lookup: geoLookupMock }) });
 		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getCloudTags: getCloudTagsMock });
-		buildProbeInternal = (await import('../../../../src/probe/builder.js')).buildProbe as unknown as (socket: RemoteProbeSocket) => Promise<ServerProbe>;
+		buildProbeInternal = (await import('../../../../src/probe/builder.js')).buildProbe as unknown as (socket: RemoteProbeSocket, probeIpLimit: ProbeIpLimit) => Promise<ServerProbe>;
 	});
 
 	beforeEach(() => {

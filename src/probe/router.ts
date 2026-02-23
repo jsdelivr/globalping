@@ -2,23 +2,21 @@ import _ from 'lodash';
 import type { LocationWithLimit, MeasurementRequest, MeasurementResult, UserRequest } from '../measurement/types.js';
 import type { Location } from '../lib/location/types.js';
 import type { OfflineProbe, ServerProbe } from './types.js';
-import { ProbesLocationFilter } from './probes-location-filter.js';
+import type { ProbesLocationFilter } from './probes-location-filter.js';
 import { getMeasurementStore, MeasurementStore } from '../measurement/store.js';
 import { getGroupingKey, normalizeFromPublicName, normalizeNetworkName } from '../lib/geoip/utils.js';
-import { onProbesUpdate as onServerProbesUpdate } from '../lib/ws/server.js';
 import { captureSpan } from '../lib/metrics.js';
 
 export class ProbeRouter {
-	private readonly probesFilter = new ProbesLocationFilter();
 	private readyProbes: ServerProbe[] = [];
 
 	constructor (
-		private readonly onProbesUpdate: typeof onServerProbesUpdate,
+		private readonly onProbesUpdate: (callback: (probes: ServerProbe[]) => void) => (() => void),
+		private readonly probesFilter: ProbesLocationFilter,
 		private readonly store: MeasurementStore,
 	) {
 		this.onProbesUpdate((probes) => {
 			this.readyProbes = probes.filter(probe => probe.status === 'ready');
-			this.probesFilter.updateGlobalIndex(probes);
 		});
 	}
 
@@ -189,14 +187,9 @@ export class ProbeRouter {
 	});
 }
 
-// Factory
-
-let router: ProbeRouter;
-
-export const getProbeRouter = () => {
-	if (!router) {
-		router = new ProbeRouter(onServerProbesUpdate, getMeasurementStore());
-	}
-
-	return router;
+export const initProbeRouter = (
+	onProbesUpdate: (callback: (probes: ServerProbe[]) => void) => (() => void),
+	probesFilter: ProbesLocationFilter,
+) => {
+	return new ProbeRouter(onProbesUpdate, probesFilter, getMeasurementStore());
 };

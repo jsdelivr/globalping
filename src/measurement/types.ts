@@ -159,7 +159,14 @@ export type HttpResult = TestResult & {
 	truncated?: boolean;
 	statusCode?: number | null;
 	statusCodeName?: string | null;
-	timings?: Record<string, number | null>;
+	timings?: {
+		total?: number | null;
+		download?: number | null;
+		firstByte?: number | null;
+		dns?: number | null;
+		tls?: number | null;
+		tcp?: number | null;
+	};
 	tls?: {
 		authorized: boolean;
 		protocol: string;

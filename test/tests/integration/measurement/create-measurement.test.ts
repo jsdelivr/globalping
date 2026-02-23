@@ -6,23 +6,21 @@ import nock from 'nock';
 import type { Socket } from 'socket.io-client';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { dashboardClient } from '../../../../src/lib/sql/client.js';
-import type { ProbeOverride } from '../../../../src/lib/override/probe-override.js';
 import geoIpMocks from '../../../mocks/nock-geoip.json' with { type: 'json' };
 
 describe('Create measurement', () => {
 	let addFakeProbe: () => Promise<Socket>;
 	let deleteFakeProbes: (probes?: Socket[]) => Promise<void>;
 	let waitForProbesUpdate: () => Promise<void>;
-	let getTestServer;
+	let getTestServer: any;
+	let getIoContext: any;
 	let requestAgent: Agent;
-	let probeOverride: ProbeOverride;
 	let DASH_PROBES_TABLE: string;
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getCloudTags: () => [ 'gcp-us-west4', 'gcp' ], populateMemList: () => Promise.resolve() });
-		({ getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } = await import('../../../utils/server.js'));
+		({ getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate, getIoContext } = await import('../../../utils/server.js'));
 		({ DASH_PROBES_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
-		({ probeOverride } = await import('../../../../src/lib/ws/server.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
 	});
@@ -752,7 +750,7 @@ describe('Create measurement', () => {
 					}),
 				});
 
-				await probeOverride.fetchDashboardData();
+				await getIoContext().probeOverride.fetchDashboardData();
 				await waitForProbesUpdate();
 			});
 
@@ -943,7 +941,7 @@ describe('Create measurement', () => {
 					longitude: 2.35,
 				});
 
-				await probeOverride.fetchDashboardData();
+				await getIoContext().probeOverride.fetchDashboardData();
 				await waitForProbesUpdate();
 			});
 

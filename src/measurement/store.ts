@@ -57,6 +57,22 @@ export class MeasurementStore {
 	}
 
 	async getMeasurementString (id: string): Promise<string | null> {
+		return this.getFromRedisOrOffloader(id, key => this.redis.sendCommand(key, true, [ 'JSON.GET', key ]));
+	}
+
+	async getMeasurement (id: string): Promise<MeasurementRecord | null> {
+		return this.getFromRedisOrOffloader(
+			id,
+			key => this.redis.json.get(key) as Promise<MeasurementRecord | null>,
+			s => JSON.parse(s) as MeasurementRecord,
+		);
+	}
+
+	private async getFromRedisOrOffloader<T extends string | MeasurementRecord> (
+		id: string,
+		fromRedis: (key: string) => Promise<T | null>,
+		parseOffloaded?: (s: string) => T,
+	): Promise<T | null> {
 		let userTier;
 		let minutesSinceEpoch;
 
@@ -74,19 +90,14 @@ export class MeasurementStore {
 				const offloaded = await this.offloader.getMeasurementString(id, userTier, createdAtMs);
 
 				if (offloaded) {
-					return offloaded;
+					return parseOffloaded ? parseOffloaded(offloaded) : offloaded as T;
 				}
 			} catch {
 				// Fall back to Redis.
 			}
 		}
 
-		const key = getMeasurementKey(id);
-		return this.redis.sendCommand(key, true, [ 'JSON.GET', key ]);
-	}
-
-	async getMeasurement (id: string) {
-		return await this.redis.json.get(getMeasurementKey(id)) as MeasurementRecord | null;
+		return fromRedis(getMeasurementKey(id));
 	}
 
 	async getMeasurements (ids: string[]): Promise<(MeasurementRecord | null)[]> {

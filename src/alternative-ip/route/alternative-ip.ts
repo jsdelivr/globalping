@@ -1,7 +1,7 @@
 import apmAgent from 'elastic-apm-node';
 import createHttpError from 'http-errors';
 import { RateLimiterMemory, RateLimiterRes } from 'rate-limiter-flexible';
-import { getAltIpsClient } from '../../lib/alt-ips-client.js';
+import type { IoContext } from '../../lib/server.js';
 import { bodyParser } from '../../lib/http/middleware/body-parser.js';
 import { validate } from '../../lib/http/middleware/validate.js';
 import { schema } from '../schema.js';
@@ -26,25 +26,25 @@ const checkRateLimit = async (ctx: ExtendedContext) => {
 	}
 };
 
-const handle = async (ctx: ExtendedContext): Promise<void> => {
-	const ip = ctx.request.ip;
-	const body = ctx.request.body as { localAddress?: string };
-	const localAddress = typeof body?.localAddress === 'string' ? body.localAddress : undefined;
+export const registerAlternativeIpRoute = (router: ExtendedRouter, ioContext: IoContext): void => {
+	const handle = async (ctx: ExtendedContext): Promise<void> => {
+		const ip = ctx.request.ip;
+		const body = ctx.request.body as { localAddress?: string };
+		const localAddress = typeof body?.localAddress === 'string' ? body.localAddress : undefined;
 
-	if (localAddress) {
-		apmAgent.addLabels({ gpProbeLocalAddress: localAddress });
-	}
+		if (localAddress) {
+			apmAgent.addLabels({ gpProbeLocalAddress: localAddress });
+		}
 
-	if (!ip) {
-		throw createHttpError(400, 'Unable to get the requester IP.', { type: 'no_ip' });
-	}
+		if (!ip) {
+			throw createHttpError(400, 'Unable to get the requester IP.', { type: 'no_ip' });
+		}
 
-	await checkRateLimit(ctx);
+		await checkRateLimit(ctx);
 
-	const token = await getAltIpsClient().generateToken(ip);
-	ctx.body = { ip, token };
-};
+		const token = await ioContext.altIpsClient.generateToken(ip);
+		ctx.body = { ip, token };
+	};
 
-export const registerAlternativeIpRoute = (router: ExtendedRouter): void => {
 	router.post('/alternative-ip', '/alternative-ip', bodyParser(), validate(schema), handle);
 };

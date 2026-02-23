@@ -5,10 +5,11 @@ import type { Server as SocketServer } from 'socket.io';
 import type { Knex } from 'knex';
 
 import { scopedLogger } from './logger.js';
-import { fetchProbes, getWsServer, PROBES_NAMESPACE } from './ws/server.js';
+import { PROBES_NAMESPACE } from './ws/server.js';
 import { getMeasurementRedisClient, type RedisCluster } from './redis/measurement-client.js';
 import { USERS_TABLE } from './http/auth.js';
 import { dashboardClient } from './sql/client.js';
+import type { IoContext } from './server.js';
 
 const logger = scopedLogger('metrics');
 const eventLoopMonitorResolution = 10;
@@ -25,6 +26,7 @@ export class MetricsAgent {
 		private readonly io: SocketServer,
 		private readonly redis: RedisCluster,
 		private readonly sql: Knex,
+		private readonly fetchProbes: IoContext['fetchProbes'],
 	) {}
 
 	run (): void {
@@ -72,7 +74,7 @@ export class MetricsAgent {
 		}, 10 * 1000);
 
 		this.registerAsyncGroupCollector('global probe stats', async () => {
-			const probes = await fetchProbes();
+			const probes = await this.fetchProbes();
 			const byContinent = _.groupBy(probes, probe => probe.location.continent);
 
 			const countByContinent = _(byContinent)
@@ -213,14 +215,8 @@ export class MetricsAgent {
 	}
 }
 
-let agent: MetricsAgent;
-
-export const getMetricsAgent = () => {
-	if (!agent) {
-		agent = new MetricsAgent(getWsServer(), getMeasurementRedisClient(), dashboardClient);
-	}
-
-	return agent;
+export const initMetricsAgent = (io: SocketServer, fetchProbes: IoContext['fetchProbes']) => {
+	return new MetricsAgent(io, getMeasurementRedisClient(), dashboardClient, fetchProbes);
 };
 
 export const captureSpan = <R>(name: string, fn: () => R): R => {

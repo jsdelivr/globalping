@@ -3,7 +3,7 @@ import * as td from 'testdouble';
 import { expect } from 'chai';
 
 describe('ws server', () => {
-	let initWsServer: () => any, getWsServer: () => any;
+	let initWsServer: (probeOverride: any) => Promise<{ io: any; syncedProbeList: any }>;
 
 	const sandbox = sinon.createSandbox();
 	const redisClient = {
@@ -37,7 +37,7 @@ describe('ws server', () => {
 	});
 
 	beforeEach(async () => {
-		({ initWsServer, getWsServer } = await import('../../../../src/lib/ws/server.js'));
+		({ initWsServer } = await import('../../../../src/lib/ws/server.js'));
 		fetchSocketsSocketIo.reset();
 
 		fetchSocketsSocketIo.resolves([
@@ -46,12 +46,16 @@ describe('ws server', () => {
 		]);
 	});
 
-	it('getWsServer should return the same instance every time', async () => {
-		await initWsServer();
-		const wsServer1 = getWsServer();
-		const wsServer2 = getWsServer();
-		const wsServer3 = getWsServer();
-		expect(wsServer1).to.equal(wsServer2);
-		expect(wsServer1).to.equal(wsServer3);
+	it('initWsServer should return io and syncedProbeList', async () => {
+		const probeOverride = {
+			getUpdatedLocation: sandbox.stub(),
+			addAdminData: sandbox.stub().returnsArg(0),
+			addAdoptedData: sandbox.stub().returnsArg(0),
+		};
+
+		const result = await initWsServer(probeOverride);
+		expect(result).to.have.property('io');
+		expect(result).to.have.property('syncedProbeList');
+		expect(result.io).to.equal(io);
 	});
 });
