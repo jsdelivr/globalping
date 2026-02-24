@@ -3,6 +3,7 @@ import type { SinonFakeTimers } from 'sinon';
 export type ExtendedFakeTimers = SinonFakeTimers & {
 	pause(): ExtendedFakeTimers;
 	unpause(): ExtendedFakeTimers;
+	tickAsyncStepped(time: number, step?: number): Promise<void>;
 };
 
 export const extendSinonClock = (clock: SinonFakeTimers): ExtendedFakeTimers => {
@@ -27,8 +28,16 @@ export const extendSinonClock = (clock: SinonFakeTimers): ExtendedFakeTimers => 
 		return clock;
 	};
 
+	const tickAsyncStepped = async (time: number, step = 20) => {
+		while (time > 0) {
+			await clock.tickAsync(Math.min(step, time));
+			time -= step;
+		}
+	};
+
 	return Object.assign(clock, {
 		pause,
 		unpause,
+		tickAsyncStepped,
 	}) as ExtendedFakeTimers;
 };

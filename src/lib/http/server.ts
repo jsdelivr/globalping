@@ -33,6 +33,7 @@ import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternati
 import { registerLimitsRoute } from '../../limits/route/get-limits.js';
 import { blacklist } from './middleware/blacklist.js';
 import { registerGetProbeLogsRoute } from '../../probe/route/get-probe-logs.js';
+import type { IoContext } from '../server.js';
 
 apmAgent.addTransactionFilter(apmUtils.transactionFilter({
 	keepResponse: [ 'location' ],
@@ -66,80 +67,81 @@ apmAgent.addSpanFilter((payload) => {
 	return false;
 });
 
-const app = new Koa();
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
 const docsHost = config.get<string>('server.docsHost');
 
-const rootRouter = new Router({ strict: true, sensitive: true });
+export const getHttpServer = (ioContext: IoContext) => {
+	const app = new Koa();
 
-rootRouter.prefix('/')
-	.use(koaElasticUtils.middleware(apmAgent));
+	const rootRouter = new Router({ strict: true, sensitive: true });
 
-// GET /
-rootRouter.get<object, CustomContext>('/', '/', (ctx) => {
-	ctx.status = 404;
+	rootRouter.prefix('/')
+		.use(koaElasticUtils.middleware(apmAgent));
 
-	ctx.body = {
-		links: {
-			documentation: ctx.getDocsLink(),
-		},
-	};
-});
+	// GET /
+	rootRouter.get<object, CustomContext>('/', '/', (ctx) => {
+		ctx.status = 404;
 
-const apiRouter = new Router<CustomState, CustomContext>({ strict: true, sensitive: true });
+		ctx.body = {
+			links: {
+				documentation: ctx.getDocsLink(),
+			},
+		};
+	});
 
-apiRouter.prefix('/v1')
-	.use(koaElasticUtils.middleware(apmAgent, { prefix: '/v1' }))
-	.use(isAdminMw)
-	.use(isSystemMw);
+	const apiRouter = new Router<CustomState, CustomContext>({ strict: true, sensitive: true });
 
-// GET /spec.yaml
-registerSpecRoute(apiRouter);
-// POST /measurements
-registerCreateMeasurementRoute(apiRouter);
-// GET /measurements/:id
-registerGetMeasurementRoute(apiRouter);
-// GET /probes
-registerGetProbesRoute(apiRouter);
-// GET /probes/:id/logs
-registerGetProbeLogsRoute(apiRouter);
-// POST /send-code
-registerSendCodeRoute(apiRouter);
-// POST /alternative-ip
-registerAlternativeIpRoute(apiRouter);
-// GET /limits
-registerLimitsRoute(apiRouter);
+	apiRouter.prefix('/v1')
+		.use(koaElasticUtils.middleware(apmAgent, { prefix: '/v1' }))
+		.use(isAdminMw)
+		.use(isSystemMw);
 
-const healthRouter = new Router({ strict: true, sensitive: true });
-healthRouter.use(koaElasticUtils.middleware(apmAgent));
+	// GET /spec.yaml
+	registerSpecRoute(apiRouter);
+	// POST /measurements
+	registerCreateMeasurementRoute(apiRouter, ioContext);
+	// GET /measurements/:id
+	registerGetMeasurementRoute(apiRouter);
+	// GET /probes
+	registerGetProbesRoute(apiRouter, ioContext);
+	// GET /probes/:id/logs
+	registerGetProbeLogsRoute(apiRouter, ioContext);
+	// POST /send-code
+	registerSendCodeRoute(apiRouter, ioContext);
+	// POST /alternative-ip
+	registerAlternativeIpRoute(apiRouter, ioContext);
+	// GET /limits
+	registerLimitsRoute(apiRouter);
 
-// GET /health
-registerHealthRoute(healthRouter);
+	const healthRouter = new Router({ strict: true, sensitive: true });
+	healthRouter.use(koaElasticUtils.middleware(apmAgent));
 
-app
-	.use(requestIp())
-	.use(responseTime())
-	.use(koaFavicon(`${publicPath}/favicon.ico`))
-	.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }))
-	.use(conditionalGet())
-	.use(etag({ weak: true }))
-	.use(json({ pretty: true, spaces: 2 }))
-	.use(docsLink({ docsHost }))
-	.use(defaultJson())
-	// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
-	.use(errorHandlerMw)
-	.use(corsHandler())
-	.use(blacklist)
-	.use(rootRouter.routes())
-	.use(healthRouter.routes())
-	.use(apiRouter.routes())
-	.use(apiRouter.allowedMethods())
-	.use(koaElasticUtils.middleware(apmAgent))
-	.use(koaStatic(publicPath, { format: false }));
+	// GET /health
+	registerHealthRoute(healthRouter);
 
-app.on('error', errorHandler);
+	app
+		.use(requestIp())
+		.use(responseTime())
+		.use(koaFavicon(`${publicPath}/favicon.ico`))
+		.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }))
+		.use(conditionalGet())
+		.use(etag({ weak: true }))
+		.use(json({ pretty: true, spaces: 2 }))
+		.use(docsLink({ docsHost }))
+		.use(defaultJson())
+		// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
+		.use(errorHandlerMw)
+		.use(corsHandler())
+		.use(blacklist)
+		.use(rootRouter.routes())
+		.use(healthRouter.routes())
+		.use(apiRouter.routes())
+		.use(apiRouter.allowedMethods())
+		.use(koaElasticUtils.middleware(apmAgent))
+		.use(koaStatic(publicPath, { format: false }));
 
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-const server = createServer(app.callback());
+	app.on('error', errorHandler);
 
-export const getHttpServer = () => server;
+	// eslint-disable-next-line @typescript-eslint/no-misused-promises
+	return createServer(app.callback());
+};

@@ -1,11 +1,10 @@
 import nock from 'nock';
 import * as sinon from 'sinon';
 import { setTimeout } from 'node:timers/promises';
-import { getTestServer, addFakeProbe, deleteFakeProbes } from '../../utils/server.js';
+import { getTestServer, addFakeProbe, deleteFakeProbes, getIoContext } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { expect } from 'chai';
 import { dashboardClient } from '../../../src/lib/sql/client.js';
-import { adoptionToken } from '../../../src/adoption/adoption-token.js';
 import { randomUUID } from 'crypto';
 
 describe('Adoption token', () => {
@@ -16,7 +15,7 @@ describe('Adoption token', () => {
 	before(async () => {
 		await getTestServer();
 		await dashboardClient('directus_users').insert({ id: 'userIdValue', adoption_token: 'adoptionTokenValue', default_prefix: 'defaultPrefixValue' });
-		await adoptionToken.syncTokens();
+		await getIoContext().adoptionToken.syncTokens();
 	});
 
 	afterEach(async () => {

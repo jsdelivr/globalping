@@ -9,6 +9,7 @@ describe('AltIpsClient', () => {
 	let probe: ServerProbe;
 	let redis: any;
 	let geoIpClient: any;
+	let probeOverride: any;
 	let altIps: AltIpsClient;
 
 	beforeEach(() => {
@@ -34,7 +35,11 @@ describe('AltIpsClient', () => {
 			lookup: sandbox.stub().resolves({ country: 'IT', isAnycast: false, allowedCountries: [ 'IT' ] }),
 		};
 
-		altIps = new AltIpsClient(redis, geoIpClient);
+		probeOverride = {
+			getUpdatedLocation: sandbox.stub().callsFake((p: ServerProbe) => p.location),
+		};
+
+		altIps = new AltIpsClient(redis, geoIpClient, probeOverride);
 	});
 
 	afterEach(async () => {

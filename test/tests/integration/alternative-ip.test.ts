@@ -5,6 +5,7 @@ import request, { type Agent } from 'supertest';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
 import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { expect } from 'chai';
+import { waitFor } from '../../utils/wait.js';
 
 describe('Alternative IPs', () => {
 	let app: Server;
@@ -44,6 +45,7 @@ describe('Alternative IPs', () => {
 
 		probe.emit('probe:alt-ips', [ [ ip, token ] ], ack);
 
+		await waitFor(() => ack.callCount);
 		await waitForProbesUpdate();
 
 		await requestAgent.get('/v1/probes?adminkey=admin')
@@ -72,6 +74,7 @@ describe('Alternative IPs', () => {
 
 		probe.emit('probe:alt-ips', [ [ ip, token ] ], ack);
 
+		await waitFor(() => ack.callCount);
 		await waitForProbesUpdate();
 
 		await requestAgent.get('/v1/probes?adminkey=admin')
@@ -83,6 +86,7 @@ describe('Alternative IPs', () => {
 
 		probe.emit('probe:alt-ips', [], ack);
 
+		await waitFor(() => ack.callCount === 2);
 		await waitForProbesUpdate();
 
 		await requestAgent.get('/v1/probes?adminkey=admin')
@@ -105,6 +109,7 @@ describe('Alternative IPs', () => {
 
 		probe.emit('probe:alt-ips', [ [ '89.64.80.78', 'invalid-token-123456789012345678' ] ], ack);
 
+		await waitFor(() => ack.callCount);
 		await waitForProbesUpdate();
 
 		await requestAgent.get('/v1/probes?adminkey=admin')
@@ -133,6 +138,7 @@ describe('Alternative IPs', () => {
 
 		probe.emit('probe:alt-ips', [ [ '1.2.3.4', token ] ], ack);
 
+		await waitFor(() => ack.callCount);
 		await waitForProbesUpdate();
 
 		await requestAgent.get('/v1/probes?adminkey=admin')

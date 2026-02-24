@@ -269,3 +269,9 @@ export class ProbesLocationFilter {
 			.map(([ value, weight ]) => [{ continent: value }, weight ]));
 	}
 }
+
+export const initProbesLocationFilter = (onProbesUpdate: (callback: (probes: ServerProbe[]) => void) => (() => void)) => {
+	const filter = new ProbesLocationFilter();
+	onProbesUpdate(probes => filter.updateGlobalIndex(probes));
+	return filter;
+};

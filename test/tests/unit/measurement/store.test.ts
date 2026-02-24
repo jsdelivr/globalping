@@ -130,7 +130,7 @@ describe('measurement store', () => {
 
 		getMeasurementStore();
 
-		await clock.tickAsync(16_000);
+		await clock.tickAsyncStepped(16_000);
 
 		expect(redisMock.hScan.callCount).to.equal(1);
 		expect(redisMock.hScan.firstCall.args).to.deep.equal([ 'gp:in-progress', 0, { COUNT: 5000 }]);
@@ -750,6 +750,76 @@ describe('measurement store', () => {
 		expect(result).to.equal(redisValue);
 		expect(offloaderGetMeasurementStringStub.callCount).to.equal(0);
 		expect(redisMock.sendCommand.callCount).to.equal(1);
+	});
+
+	it('getMeasurement should prefer the offload DB for likely offloaded measurements', async () => {
+		const store = getMeasurementStore();
+		const nowMs = Date.now();
+		const minutesOld = 45;
+		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
+
+		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
+		offloaderGetMeasurementStringStub.resolves('{"from":"db"}');
+		redisMock.json.get.reset();
+
+		const result = await store.getMeasurement('SOME_ID');
+		expect(result).to.deep.equal({ from: 'db' });
+
+		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
+		expect(redisMock.json.get.callCount).to.equal(0);
+	});
+
+	it('getMeasurement should fallback to Redis if the offload DB returns null', async () => {
+		const store = getMeasurementStore();
+		const nowMs = Date.now();
+		const minutesOld = 45;
+		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
+
+		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
+		offloaderGetMeasurementStringStub.resolves(null);
+		redisMock.json.get.reset();
+		redisMock.json.get.resolves({ from: 'redis' });
+
+		const result = await store.getMeasurement('SOME_ID');
+		expect(result).to.deep.equal({ from: 'redis' });
+
+		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
+		expect(redisMock.json.get.callCount).to.equal(1);
+	});
+
+	it('getMeasurement should fallback to Redis if DB throws', async () => {
+		const store = getMeasurementStore();
+		const nowMs = Date.now();
+		const minutesOld = 45;
+		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
+
+		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
+		offloaderGetMeasurementStringStub.rejects(new Error('DB error'));
+		redisMock.json.get.reset();
+		redisMock.json.get.resolves({ from: 'redis' });
+
+		const result = await store.getMeasurement('SOME_ID');
+		expect(result).to.deep.equal({ from: 'redis' });
+
+		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
+		expect(redisMock.json.get.callCount).to.equal(1);
+	});
+
+	it('getMeasurement should use Redis when measurement is recent', async () => {
+		const store = getMeasurementStore();
+		const nowMs = Date.now();
+		const minutesOld = 5;
+		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
+
+		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
+		redisMock.json.get.reset();
+		redisMock.json.get.resolves({ from: 'redis' });
+
+		const result = await store.getMeasurement('SOME_ID');
+		expect(result).to.deep.equal({ from: 'redis' });
+
+		expect(offloaderGetMeasurementStringStub.callCount).to.equal(0);
+		expect(redisMock.json.get.callCount).to.equal(1);
 	});
 
 	it('setOffloadedExpiration should set 60m TTL on results keys', async () => {

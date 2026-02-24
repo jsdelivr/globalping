@@ -1,12 +1,13 @@
 import createHttpError from 'http-errors';
-import { getProbeByIp as serverGetProbeByIp, getWsServer, PROBES_NAMESPACE, type WsServer } from '../lib/ws/server.js';
+import { PROBES_NAMESPACE, type WsServer } from '../lib/ws/server.js';
 import type { AdoptionCodeRequest } from './types.js';
+import type { IoContext } from '../lib/server.js';
 import type { ServerProbe } from '../probe/types.js';
 
 export class CodeSender {
 	constructor (
 		private readonly io: WsServer,
-		private readonly getProbeByIp: typeof serverGetProbeByIp,
+		private readonly getProbeByIp: IoContext['getProbeByIp'],
 	) {}
 
 	async sendCode (request: AdoptionCodeRequest) {
@@ -28,4 +29,6 @@ export class CodeSender {
 	}
 }
 
-export const codeSender = new CodeSender(getWsServer(), serverGetProbeByIp);
+export const initCodeSender = (io: WsServer, getProbeByIp: IoContext['getProbeByIp']) => {
+	return new CodeSender(io, getProbeByIp);
+};

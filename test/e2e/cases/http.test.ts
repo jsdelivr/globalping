@@ -101,7 +101,7 @@ describe('http measurement', () => {
 		expect(response).to.matchApiSchema();
 	});
 
-	it('should have null tls and dns timings for HTTP request to IP', async () => {
+	it('should have null tls and dns timings for HTTP request to IP (IPv6)', async () => {
 		const { id } = await got.post('http://localhost:80/v1/measurements', {
 			json: {
 				target: '2606:4700:3037::ac43:d071',

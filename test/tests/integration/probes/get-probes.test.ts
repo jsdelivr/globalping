@@ -2,10 +2,9 @@ import { randomUUID } from 'node:crypto';
 import nock from 'nock';
 import { expect } from 'chai';
 import request, { type Agent } from 'supertest';
-import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../../utils/server.js';
+import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate, getIoContext } from '../../../utils/server.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { DASH_PROBES_TABLE } from '../../../../src/lib/override/adopted-probes.js';
-import { probeOverride } from '../../../../src/lib/ws/server.js';
 import { dashboardClient } from '../../../../src/lib/sql/client.js';
 
 describe('Get Probes', () => {
@@ -280,7 +279,7 @@ describe('Get Probes', () => {
 					}),
 				});
 
-				await probeOverride.fetchDashboardData();
+				await getIoContext().probeOverride.fetchDashboardData();
 			});
 
 			after(async () => {
