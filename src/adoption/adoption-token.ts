@@ -83,10 +83,10 @@ export class AdoptionToken {
 			return;
 		}
 
-		const { message, level } = await this.validateToken(probe.adoptionToken, probe);
+		const validationResult = await this.validateToken(probe.adoptionToken, probe);
 
-		if (message) {
-			socket.emit('api:connect:adoption', { message, level, adopted: true });
+		if (validationResult.message) {
+			socket.emit('api:connect:adoption', validationResult);
 		}
 	}
 
@@ -100,12 +100,12 @@ export class AdoptionToken {
 		return user;
 	}
 
-	async validateToken (token: string, probe: SocketProbe): Promise<{ message: string | null; level?: 'info' | 'warn' }> {
+	async validateToken (token: string, probe: SocketProbe): Promise<{ message: string | null; level?: 'info' | 'warn'; adopted: boolean }> {
 		const user = await this.getUserByToken(token);
 
 		if (!user) {
 			logger.info('User not found for the provided adoption token.', { token });
-			return { message: `User not found for the provided adoption token: ${token}.`, level: 'warn' };
+			return { message: `User not found for the provided adoption token: ${token}.`, level: 'warn', adopted: false };
 		}
 
 		let dProbe: DProbe | null = this.adoptedProbes.getByIp(probe.ipAddress) || this.adoptedProbes.getByUuid(probe.uuid);
@@ -115,12 +115,12 @@ export class AdoptionToken {
 		}
 
 		if (dProbe && dProbe.userId === user.id) {
-			return { message: null };
+			return { message: null, adopted: true };
 		}
 
 		await this.adoptProbe(probe, user);
 
-		return { message: 'Probe successfully adopted by token.' };
+		return { message: 'Probe successfully adopted by token.', adopted: true };
 	}
 
 	private async fetchDProbe (probe: SocketProbe) {
