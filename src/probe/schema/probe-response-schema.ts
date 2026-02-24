@@ -36,5 +36,5 @@ export const altIpsSchema = Joi.array().max(2048).items(Joi.array<[string, strin
 export const localAdoptionServerSchema = Joi.object<LocalAdoptionServer>({
 	expiresAt: Joi.string().isoDate().required(),
 	token: Joi.string().hex().length(64).required(),
-	ips: Joi.array().items(Joi.string().ip()).max(32).required(),
+	ips: Joi.array().items(Joi.string().ip(globalIpOptions)).max(32).required(),
 }).required();
