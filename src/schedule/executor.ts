@@ -74,7 +74,7 @@ export class StreamScheduleExecutor {
 	}
 
 	private createTimer (scheduleId: string, intervalSeconds: number) {
-		const sec = _.random(0, 59);
+		const sec = _.random(0, Math.min(intervalSeconds, 59));
 		const intervalMs = intervalSeconds * 1000;
 
 		logger.debug(`Creating schedule timer for ${scheduleId} at ${sec}s interval.`);
@@ -84,7 +84,7 @@ export class StreamScheduleExecutor {
 		const next = new Date(now);
 		next.setSeconds(sec, 0);
 
-		if (next <= now) {
+		while (next <= now) {
 			next.setTime(next.getTime() + intervalMs);
 		}
 

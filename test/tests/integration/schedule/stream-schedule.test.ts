@@ -92,7 +92,7 @@ describe('Stream schedule execution', () => {
 			id: schedule.id,
 			user_created: '1',
 			user_updated: null,
-			date_created: dashboardClient.fn.now(),
+			date_created: new Date(),
 			date_updated: null,
 			name: schedule.name,
 			mode: schedule.mode,
@@ -108,7 +108,7 @@ describe('Stream schedule execution', () => {
 			id: config.id,
 			user_created: '1',
 			user_updated: null,
-			date_created: dashboardClient.fn.now(),
+			date_created: new Date(),
 			date_updated: null,
 			schedule_id: schedule.id,
 			name: config.name,
@@ -136,7 +136,7 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule());
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(2000);
 
 		expect(requestHandlerStub.callCount).to.be.greaterThan(0);
 
@@ -167,7 +167,7 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule({ locations: [{ country: 'PL' }] }));
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(2000);
 
 		expect(requestHandlerStub.callCount).to.equal(0);
 	});
@@ -185,7 +185,7 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule({ enabled: 0 }));
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(2000);
 
 		expect(requestHandlerStub.callCount).to.equal(0);
 	});
@@ -219,7 +219,7 @@ describe('Stream schedule execution', () => {
 			],
 		}));
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(2000);
 
 		expect(requestHandlerStub.callCount).to.equal(0);
 	});
@@ -237,7 +237,7 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule({ mode: 'batch' }));
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(2000);
 
 		expect(requestHandlerStub.callCount).to.equal(0);
 	});
@@ -283,7 +283,7 @@ describe('Stream schedule execution', () => {
 			],
 		}));
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(2000);
 
 		const pingCalls = requestHandlerStub.getCalls().filter((c: sinon.SinonSpyCall) => c.args[0].measurement.type === 'ping');
 		const tracerouteCalls = requestHandlerStub.getCalls().filter((c: sinon.SinonSpyCall) => c.args[0].measurement.type === 'traceroute');
@@ -358,7 +358,7 @@ describe('Stream schedule execution', () => {
 			],
 		}));
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(2000);
 
 		expect(requestHandlerStub.callCount).to.be.greaterThan(0);
 
@@ -390,7 +390,7 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule());
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(2000);
 
 		expect(requestHandlerStub1.callCount).to.be.greaterThan(0);
 		expect(requestHandlerStub2.callCount).to.be.greaterThan(0);
@@ -409,16 +409,16 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule());
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(2000);
 
 		expect(requestHandlerStub.callCount).to.be.greaterThan(0);
 
-		await dashboardClient('gp_schedule').where({ id: 'schedule-1' }).update({ enabled: 0, date_updated: dashboardClient.fn.now() });
+		await dashboardClient('gp_schedule').where({ id: 'schedule-1' }).update({ enabled: 0, date_updated: new Date() });
 		await getStreamScheduleLoader().sync();
 
 		requestHandlerStub.resetHistory();
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(2000);
 
 		expect(requestHandlerStub.callCount).to.equal(0);
 	});
@@ -434,13 +434,13 @@ describe('Stream schedule execution', () => {
 		probe.emit('probe:isIPv4Supported:update', true);
 		await waitForProbesUpdate();
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(2000);
 
 		expect(requestHandlerStub.callCount).to.equal(0);
 
 		await insertSchedule(buildSchedule());
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(2000);
 
 		expect(requestHandlerStub.callCount).to.be.greaterThan(0);
 	});
@@ -458,21 +458,21 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule({ interval: 1 }));
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(5000);
 
 		const initialCalls = requestHandlerStub.callCount;
 		expect(initialCalls).to.be.greaterThan(0);
 
 		await dashboardClient('gp_schedule')
 			.where({ id: 'schedule-1' })
-			.update({ interval: 10, date_updated: dashboardClient.fn.now() });
+			.update({ interval: 3, date_updated: new Date() });
 
 		await getStreamScheduleLoader().sync();
 
 		requestHandlerStub.resetHistory();
 
-		await clock.tickAsyncStepped(60_000);
+		await clock.tickAsyncStepped(5000);
 
-		expect(requestHandlerStub.callCount).to.be.lessThan(initialCalls);
+		expect(requestHandlerStub.callCount).to.be.lessThanOrEqual(2);
 	});
 });
