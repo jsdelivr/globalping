@@ -446,4 +446,35 @@ describe('Stream schedule execution', () => {
 
 		expect(requestHandlerStub.callCount).to.be.greaterThan(0);
 	});
+
+	it('updates timer when schedule interval changes', async () => {
+		const requestHandlerStub = sandbox.stub();
+
+		const probe = await addFakeProbe({
+			'probe:measurement:request': requestHandlerStub,
+		});
+
+		probe.emit('probe:status:update', 'ready');
+		probe.emit('probe:isIPv4Supported:update', true);
+		await waitForProbesUpdate();
+
+		await insertSchedule(buildSchedule({ interval: 1 }));
+
+		await clock.tickAsyncStepped(60_000);
+
+		const initialCalls = requestHandlerStub.callCount;
+		expect(initialCalls).to.be.greaterThan(0);
+
+		await dashboardClient('gp_schedule')
+			.where({ id: 'schedule-1' })
+			.update({ interval: 10, date_updated: dashboardClient.fn.now() });
+
+		await getStreamScheduleLoader().sync();
+
+		requestHandlerStub.resetHistory();
+
+		await clock.tickAsyncStepped(60_000);
+
+		expect(requestHandlerStub.callCount).to.be.lessThan(initialCalls);
+	});
 });

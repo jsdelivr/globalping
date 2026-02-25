@@ -15,7 +15,7 @@ import { getStreamScheduleLoader, type ScheduleLoader } from './loader.js';
 const logger = scopedLogger('schedule-executor');
 
 export class StreamScheduleExecutor {
-	private readonly timers = new Map<string, NodeJS.Timeout>();
+	private readonly timers = new Map<string, { id: NodeJS.Timeout; interval: number }>();
 	private readonly onUpdate = () => this.syncTimers();
 
 	constructor (
@@ -35,7 +35,7 @@ export class StreamScheduleExecutor {
 		this.loader.off('update', this.onUpdate);
 
 		for (const timer of this.timers.values()) {
-			clearInterval(timer);
+			clearInterval(timer.id);
 		}
 
 		this.timers.clear();
@@ -52,6 +52,13 @@ export class StreamScheduleExecutor {
 
 			desiredIds.add(schedule.id);
 
+			const timer = this.timers.get(schedule.id);
+
+			if (timer && timer.interval !== schedule.interval) {
+				clearInterval(timer.id);
+				this.timers.delete(schedule.id);
+			}
+
 			if (!this.timers.has(schedule.id)) {
 				this.createTimer(schedule.id, schedule.interval);
 			}
@@ -61,7 +68,7 @@ export class StreamScheduleExecutor {
 			if (!desiredIds.has(id)) {
 				const timer = this.timers.get(id);
 				this.timers.delete(id);
-				clearInterval(timer);
+				clearInterval(timer?.id);
 			}
 		}
 	}
@@ -84,16 +91,20 @@ export class StreamScheduleExecutor {
 		const delay = next.getTime() - now.getTime();
 		const onError = (error: unknown) => logger.error('Stream schedule execution error', error);
 
+		const setTimer = (id: NodeJS.Timeout) => {
+			this.timers.set(scheduleId, { interval: intervalSeconds, id });
+		};
+
 		const first = setTimeout(() => {
 			const interval = setInterval(() => {
 				this.fireSchedule(scheduleId).catch(onError);
 			}, intervalMs).unref();
 
 			this.fireSchedule(scheduleId).catch(onError);
-			this.timers.set(scheduleId, interval);
+			setTimer(interval);
 		}, delay).unref();
 
-		this.timers.set(scheduleId, first);
+		setTimer(first);
 	}
 
 	private async fireSchedule (scheduleId: string) {
