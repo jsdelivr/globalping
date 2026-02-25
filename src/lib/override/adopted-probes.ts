@@ -211,7 +211,7 @@ export class AdoptedProbes {
 		},
 		localAdoptionServer: {
 			probeField: 'localAdoptionServer',
-			format: (value: DProbe['localAdoptionServer'], _probe: SocketProbe, dProbe?: DProbe) => {
+			format: (value: SocketProbe['localAdoptionServer'], _probe: SocketProbe, dProbe?: DProbe) => {
 				const parsedDate = value?.expiresAt && Date.parse(value.expiresAt);
 
 				if (!value || dProbe?.userId || (parsedDate && parsedDate <= Date.now())) {
