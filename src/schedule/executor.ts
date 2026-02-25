@@ -128,10 +128,10 @@ export class StreamScheduleExecutor {
 				target: configuration.measurement_target,
 				measurementOptions: configuration.measurement_options,
 				locations: schedule.locations,
-				limit: schedule.probe_limit ?? undefined,
 				scheduleId: schedule.id,
 				configurationId: configuration.id,
 				inProgressUpdates: false,
+				limit: undefined,
 			};
 
 			for (const probesChunk of probesChunks) {
