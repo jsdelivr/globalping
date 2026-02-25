@@ -1,4 +1,3 @@
-import crypto from 'node:crypto';
 import config from 'config';
 import _ from 'lodash';
 import { PROBES_NAMESPACE } from '../lib/ws/server.js';
@@ -14,11 +13,6 @@ import { getMeasurementStore } from '../measurement/store.js';
 import { getStreamScheduleLoader, type ScheduleLoader } from './loader.js';
 
 const logger = scopedLogger('schedule-executor');
-
-const stableSecond = (scheduleId: string, intervalSeconds: number) => {
-	const hash = crypto.createHash('sha1').update(scheduleId).digest();
-	return hash.readUInt32BE(0) % intervalSeconds;
-};
 
 export class StreamScheduleExecutor {
 	private readonly timers = new Map<string, NodeJS.Timeout>();
@@ -73,12 +67,12 @@ export class StreamScheduleExecutor {
 	}
 
 	private createTimer (scheduleId: string, intervalSeconds: number) {
-		const sec = stableSecond(scheduleId, intervalSeconds);
+		const sec = _.random(0, 59);
 		const intervalMs = intervalSeconds * 1000;
 
 		logger.debug(`Creating schedule timer for ${scheduleId} at ${sec}s interval.`);
 
-		// Align to stable second in the current minute
+		// Align to the chosen second in the current minute
 		const now = new Date();
 		const next = new Date(now);
 		next.setSeconds(sec, 0);
