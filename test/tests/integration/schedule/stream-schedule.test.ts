@@ -85,8 +85,6 @@ describe('Stream schedule execution', () => {
 	});
 
 	const insertSchedule = async (schedule: ScheduleEntry) => {
-		console.log(`Inserting schedule ${schedule.id}`);
-
 		scheduleIds.add(schedule.id);
 		schedule.configurations.forEach(config => configurationIds.add(config.id));
 
@@ -126,7 +124,6 @@ describe('Stream schedule execution', () => {
 	};
 
 	it('emits scheduled measurements to matching probes', async () => {
-		console.log('starting test emits scheduled measurements to matching probes');
 		const requestHandlerStub = sandbox.stub();
 
 		const probe = await addFakeProbe({
