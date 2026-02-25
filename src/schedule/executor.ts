@@ -77,7 +77,7 @@ export class StreamScheduleExecutor {
 		const sec = _.random(0, Math.min(intervalSeconds, 59));
 		const intervalMs = intervalSeconds * 1000;
 
-		logger.debug(`Creating schedule timer for ${scheduleId} at ${sec}s interval.`);
+		logger.debug(`Creating schedule timer for ${scheduleId} at ${sec}s with ${intervalSeconds}s interval.`);
 
 		// Align to the chosen second in the current minute
 		const now = new Date();
