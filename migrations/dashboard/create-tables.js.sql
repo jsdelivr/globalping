@@ -117,7 +117,6 @@ CREATE TABLE IF NOT EXISTS gp_schedule (
 	notes TEXT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-
 CREATE TABLE IF NOT EXISTS gp_schedule_configuration (
 	id CHAR(36) PRIMARY KEY,
 	user_created CHAR(36) NOT NULL,
