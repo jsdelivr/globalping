@@ -997,6 +997,99 @@ describe('AdoptedProbes', () => {
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
+	it('class should update localAdoptionServer if probe is not adopted', async () => {
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+
+		const validLocalAdoptionServer = {
+			token: 'valid-token',
+			expiresAt: new Date(Date.now() + 1000 * 60 * 60).toISOString(),
+			ips: [ '1.1.1.1' ],
+		};
+
+		sql.select.resolves([{
+			...defaultAdoption,
+			userId: null,
+			localAdoptionServer: null,
+		}]);
+
+		getProbesWithAdminData.returns([{
+			...defaultConnectedProbe,
+			localAdoptionServer: validLocalAdoptionServer,
+		}]);
+
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.where.callCount).to.equal(1);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.callCount).to.equal(1);
+
+		expect(sql.update.args[0][0]).to.deep.include({
+			localAdoptionServer: JSON.stringify(validLocalAdoptionServer),
+		});
+	});
+
+	it('class should clear localAdoptionServer if adoption token is expired', async () => {
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+
+		const expiredLocalAdoptionServer = {
+			token: 'expired-token',
+			expiresAt: new Date(Date.now() - 1).toISOString(),
+			ips: [ '1.1.1.1' ],
+		};
+
+		sql.select.resolves([{
+			...defaultAdoption,
+			userId: null,
+			localAdoptionServer: JSON.stringify(expiredLocalAdoptionServer),
+		}]);
+
+		getProbesWithAdminData.returns([{
+			...defaultConnectedProbe,
+			localAdoptionServer: expiredLocalAdoptionServer,
+		}]);
+
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.where.callCount).to.equal(1);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.callCount).to.equal(1);
+
+		expect(sql.update.args[0][0]).to.deep.include({
+			localAdoptionServer: null,
+		});
+	});
+
+	it('class should clear localAdoptionServer if probe is adopted', async () => {
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+
+		const validLocalAdoptionServer = {
+			token: 'valid-token',
+			expiresAt: new Date(Date.now() + 1000 * 60).toISOString(),
+			ips: [ '1.1.1.1' ],
+		};
+
+		sql.select.resolves([{
+			...defaultAdoption,
+			userId: 'user-id',
+			localAdoptionServer: JSON.stringify(validLocalAdoptionServer),
+		}]);
+
+		getProbesWithAdminData.returns([{
+			...defaultConnectedProbe,
+			localAdoptionServer: validLocalAdoptionServer,
+		}]);
+
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.where.callCount).to.equal(1);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.callCount).to.equal(1);
+
+		expect(sql.update.args[0][0]).to.deep.include({
+			localAdoptionServer: null,
+		});
+	});
+
 	it('getByIp method should return adopted probe data', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 
