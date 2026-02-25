@@ -53,6 +53,7 @@ describe('Stream schedule execution', () => {
 		}
 
 		await deleteFakeProbes();
+		await getStreamScheduleLoader().sync();
 		nock.cleanAll();
 	});
 
