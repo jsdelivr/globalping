@@ -638,4 +638,36 @@ describe('Create measurement request', () => {
 				expect(response).to.matchApiSchema();
 			});
 	});
+
+	it('should handle adoption server start event from probe', async () => {
+		const adoptionServerParams = {
+			expiresAt: new Date().toISOString(),
+			token: new Array(64).fill('a').join(''),
+			ips: [ '1.1.1.1' ],
+		};
+
+		probe.emit('probe:status:update', 'ready');
+		await waitForProbesUpdate();
+
+		await requestAgent.get('/v1/probes?adminkey=admin').send()
+			.expect(200).expect((response) => {
+				expect(response.body[0]).to.not.deep.include({
+					localAdoptionServer: adoptionServerParams,
+				});
+
+				expect(response).to.matchApiSchema();
+			});
+
+		probe.emit('probe:adoption:ready', adoptionServerParams);
+		await waitForProbesUpdate();
+
+		await requestAgent.get('/v1/probes?adminkey=admin').send()
+			.expect(200).expect((response) => {
+				expect(response.body[0]).to.deep.include({
+					localAdoptionServer: adoptionServerParams,
+				});
+
+				expect(response).to.matchApiSchema();
+			});
+	});
 });
