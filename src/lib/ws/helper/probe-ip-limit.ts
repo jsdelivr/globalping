@@ -13,7 +13,7 @@ export class ProbeIpLimit {
 
 	constructor (
 		private readonly fetchProbes: IoContext['fetchProbes'],
-		private readonly fetchRawSockets: IoContext['fetchRawSockets'],
+		private readonly disconnectBySocketId: IoContext['disconnectBySocketId'],
 		private readonly getProbeByIp: IoContext['getProbeByIp'],
 	) {}
 
@@ -53,10 +53,7 @@ export class ProbeIpLimit {
 		}
 
 		if (socketIdsToDisconnect.size > 0) {
-			const sockets = await this.fetchRawSockets();
-			sockets
-				.filter(socket => socketIdsToDisconnect.has(socket.id))
-				.forEach(socket => socket.disconnect());
+			Array.from(socketIdsToDisconnect).map(socketId => this.disconnectBySocketId(socketId));
 		}
 	}
 

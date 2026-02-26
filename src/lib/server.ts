@@ -47,6 +47,7 @@ export type IoContext = {
 	fetchProbes: WsServerExports['fetchProbes'];
 	getProbeByIp: WsServerExports['getProbeByIp'];
 	fetchRawSockets: WsServerExports['fetchRawSockets'];
+	disconnectBySocketId: WsServerExports['disconnectBySocketId'];
 	onProbesUpdate: WsServerExports['onProbesUpdate'];
 };
 
@@ -76,12 +77,12 @@ export const createServer = async () => {
 	await logIfTooLong(probeOverride.fetchDashboardData(), 'probeOverride.fetchDashboardData');
 	probeOverride.scheduleSync();
 
-	const { io, syncedProbeList, fetchRawSockets, fetchProbes, getProbeByIp, onProbesUpdate } = await logIfTooLong(initWsServer(probeOverride), 'initWsServer');
+	const { io, syncedProbeList, fetchRawSockets, disconnectBySocketId, fetchProbes, getProbeByIp, onProbesUpdate } = await logIfTooLong(initWsServer(probeOverride), 'initWsServer');
 
-	const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets, getProbeByIp);
+	const probeIpLimit = new ProbeIpLimit(fetchProbes, disconnectBySocketId, getProbeByIp);
 	const adoptionToken = initAdoptionToken(adoptedProbes);
 	const metricsAgent = initMetricsAgent(io, fetchProbes);
-	const altIpsClient = initAltIpsClient(probeOverride);
+	const altIpsClient = initAltIpsClient(probeOverride, getProbeByIp, disconnectBySocketId);
 	const probesLocationFilter = initProbesLocationFilter(onProbesUpdate);
 	const probeRouter = initProbeRouter(onProbesUpdate, probesLocationFilter);
 	const measurementRunner = initMeasurementRunner(io, probeRouter, metricsAgent);
@@ -113,6 +114,7 @@ export const createServer = async () => {
 		fetchProbes,
 		getProbeByIp,
 		fetchRawSockets,
+		disconnectBySocketId,
 		onProbesUpdate,
 	};
 

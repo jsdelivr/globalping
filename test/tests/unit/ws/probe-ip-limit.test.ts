@@ -6,8 +6,12 @@ import { ProbeIpLimit } from '../../../../src/lib/ws/helper/probe-ip-limit.js';
 describe('ProbeIpLimit', () => {
 	const sandbox = sinon.createSandbox();
 	const fetchProbes = sandbox.stub();
-	const fetchRawSockets = sandbox.stub();
+	const disconnectBySocketId = sandbox.stub();
 	const getProbeByIp = sandbox.stub();
+
+	afterEach(() => {
+		sandbox.resetHistory();
+	});
 
 	const getSocket = (id: string, ip: string, altIpAddresses: string[] = []) => ({
 		id,
@@ -26,18 +30,10 @@ describe('ProbeIpLimit', () => {
 			duplicate.data.probe,
 		]);
 
-		fetchRawSockets.resolves([
-			socket1,
-			socket2,
-			duplicate,
-		]);
-
-		const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets, getProbeByIp);
+		const probeIpLimit = new ProbeIpLimit(fetchProbes, disconnectBySocketId, getProbeByIp);
 		await probeIpLimit.syncIpLimit();
 
-		expect(socket1.disconnect.callCount).to.equal(0);
-		expect(socket2.disconnect.callCount).to.equal(0);
-		expect(duplicate.disconnect.callCount).to.equal(1);
+		expect(disconnectBySocketId.calledOnceWithExactly('c')).to.equal(true);
 	});
 
 	it('syncIpLimit should disconnect duplicates with alt ip', async () => {
@@ -51,18 +47,10 @@ describe('ProbeIpLimit', () => {
 			duplicate.data.probe,
 		]);
 
-		fetchRawSockets.resolves([
-			socket1,
-			socket2,
-			duplicate,
-		]);
-
-		const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets, getProbeByIp);
+		const probeIpLimit = new ProbeIpLimit(fetchProbes, disconnectBySocketId, getProbeByIp);
 		await probeIpLimit.syncIpLimit();
 
-		expect(socket1.disconnect.callCount).to.equal(0);
-		expect(socket2.disconnect.callCount).to.equal(0);
-		expect(duplicate.disconnect.callCount).to.equal(1);
+		expect(disconnectBySocketId.calledOnceWithExactly('c')).to.equal(true);
 	});
 
 	it('syncIpLimit should disconnect duplicates across alt ips', async () => {
@@ -76,18 +64,10 @@ describe('ProbeIpLimit', () => {
 			duplicate.data.probe,
 		]);
 
-		fetchRawSockets.resolves([
-			socket1,
-			socket2,
-			duplicate,
-		]);
-
-		const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets, getProbeByIp);
+		const probeIpLimit = new ProbeIpLimit(fetchProbes, disconnectBySocketId, getProbeByIp);
 		await probeIpLimit.syncIpLimit();
 
-		expect(socket1.disconnect.callCount).to.equal(0);
-		expect(socket2.disconnect.callCount).to.equal(0);
-		expect(duplicate.disconnect.callCount).to.equal(1);
+		expect(disconnectBySocketId.calledOnceWithExactly('c')).to.equal(true);
 	});
 
 	it('syncIpLimit should preserve socket with the earliest id', async () => {
@@ -103,19 +83,11 @@ describe('ProbeIpLimit', () => {
 			duplicate2.data.probe,
 		]);
 
-		fetchRawSockets.resolves([
-			socket1,
-			duplicate1,
-			socket2,
-			duplicate2,
-		]);
-
-		const probeIpLimit = new ProbeIpLimit(fetchProbes, fetchRawSockets, getProbeByIp);
+		const probeIpLimit = new ProbeIpLimit(fetchProbes, disconnectBySocketId, getProbeByIp);
 		await probeIpLimit.syncIpLimit();
 
-		expect(socket1.disconnect.callCount).to.equal(0);
-		expect(socket2.disconnect.callCount).to.equal(0);
-		expect(duplicate1.disconnect.callCount).to.equal(1);
-		expect(duplicate2.disconnect.callCount).to.equal(1);
+		expect(disconnectBySocketId.calledTwice).to.equal(true);
+		expect(disconnectBySocketId.firstCall.args[0]).to.equal('c');
+		expect(disconnectBySocketId.secondCall.args[0]).to.equal('d');
 	});
 });

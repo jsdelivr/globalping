@@ -52,6 +52,8 @@ export const initWsServer = async (probeOverride: ProbeOverride) => {
 
 	const fetchRawSockets = async () => io.of(PROBES_NAMESPACE).fetchSockets();
 
+	const disconnectBySocketId = (socketId: string) => io.of(PROBES_NAMESPACE).in(socketId).disconnectSockets();
+
 	const fetchProbes = async ({ allowStale = true } = {}): Promise<ServerProbe[]> => (allowStale ? syncedProbeList.getProbes() : syncedProbeList.fetchProbes());
 
 	const getProbeByIp = async (ip: string, { allowStale = true } = {}): Promise<ServerProbe | null> => {
@@ -82,6 +84,7 @@ export const initWsServer = async (probeOverride: ProbeOverride) => {
 		io,
 		syncedProbeList,
 		fetchRawSockets,
+		disconnectBySocketId,
 		fetchProbes,
 		getProbeByIp,
 		onProbesUpdate,

@@ -10,6 +10,8 @@ describe('AltIpsClient', () => {
 	let redis: any;
 	let geoIpClient: any;
 	let probeOverride: any;
+	let getProbeByIp: any;
+	let disconnectBySocketId: any;
 	let altIps: AltIpsClient;
 
 	beforeEach(() => {
@@ -39,7 +41,9 @@ describe('AltIpsClient', () => {
 			getUpdatedLocation: sandbox.stub().callsFake((p: ServerProbe) => p.location),
 		};
 
-		altIps = new AltIpsClient(redis, geoIpClient, probeOverride);
+		getProbeByIp = sandbox.stub().resolves(null);
+		disconnectBySocketId = sandbox.stub();
+		altIps = new AltIpsClient(redis, geoIpClient, probeOverride, getProbeByIp, disconnectBySocketId);
 	});
 
 	afterEach(async () => {
@@ -99,6 +103,31 @@ describe('AltIpsClient', () => {
 		expect(probe.altIpAddresses).to.deep.equal([]);
 		expect(result.addedAltIps).to.deep.equal([]);
 		expect(result.rejectedIpsToReasons).to.deep.equal({ '1.1.1.1': 'Alt IP is the same as the probe IP.' });
+	});
+
+	it('should accept alt ip and disconnect probe with matching primary ip', async () => {
+		const token = 'validToken';
+		redis.hmGet.resolves([ '2.2.2.2' ]);
+		getProbeByIp.resolves({ client: 'socketId2', ipAddress: '2.2.2.2' });
+
+		const result = await altIps.addAltIps(probe, [ [ '2.2.2.2', token ] ]);
+
+		expect(probe.altIpAddresses).to.deep.equal([ '2.2.2.2' ]);
+		expect(result.addedAltIps).to.deep.equal([ '2.2.2.2' ]);
+		expect(result.rejectedIpsToReasons).to.deep.equal({});
+		expect(disconnectBySocketId.calledOnceWithExactly('socketId2')).to.be.true;
+	});
+
+	it('should reject alt ip used as another probe alt ip', async () => {
+		const token = 'validToken';
+		redis.hmGet.resolves([ '2.2.2.2' ]);
+		getProbeByIp.resolves({ client: 'socketId2', ipAddress: '3.3.3.3', altIpAddresses: [ '2.2.2.2' ] });
+
+		const result = await altIps.addAltIps(probe, [ [ '2.2.2.2', token ] ]);
+
+		expect(probe.altIpAddresses).to.deep.equal([]);
+		expect(result.addedAltIps).to.deep.equal([]);
+		expect(result.rejectedIpsToReasons).to.deep.equal({ '2.2.2.2': 'Alt IP is used by another probe.' });
 	});
 
 	it('should reject private alt ip', async () => {

@@ -10,6 +10,7 @@ import { getPersistentRedisClient, type RedisClient } from './redis/persistent-c
 import { ServerProbe, SocketProbe } from '../probe/types.js';
 import { updateProbeAltIps } from '../probe/builder.js';
 import type { ProbeOverride } from './override/probe-override.js';
+import type { IoContext } from './server.js';
 
 const getRandomBytes = promisify(randomBytes);
 const logger = scopedLogger('alt-ips');
@@ -21,6 +22,8 @@ export class AltIpsClient {
 		private readonly redis: RedisClient,
 		private readonly geoIpClient: GeoIpClient,
 		private readonly probeOverride: ProbeOverride,
+		private readonly getProbeByIp: IoContext['getProbeByIp'],
+		private readonly disconnectBySocketId: IoContext['disconnectBySocketId'],
 	) {}
 
 	async generateToken (ip: string) {
@@ -95,6 +98,10 @@ export class AltIpsClient {
 			return { isValid: false, reason: 'FAKE_PROBE_IP is set.' };
 		}
 
+		if (probe.ipAddress === altIp) {
+			return { isValid: false, reason: 'Alt IP is the same as the probe IP.' };
+		}
+
 		if (isIpPrivate(altIp)) {
 			logger.warn('Alt IP is private.', { altIp, ...probeInfo });
 			return { isValid: false, reason: 'Alt IP is private.' };
@@ -106,6 +113,17 @@ export class AltIpsClient {
 		}
 
 		try {
+			const existingProbe = await this.getProbeByIp(altIp, { allowStale: false });
+
+			if (existingProbe && existingProbe.client !== probe.client) {
+				if (existingProbe.ipAddress === altIp) {
+					this.disconnectBySocketId(existingProbe.client);
+					return { isValid: true };
+				}
+
+				return { isValid: false, reason: 'Alt IP is used by another probe.' };
+			}
+
 			const altIpInfo = await this.geoIpClient.lookup(altIp);
 
 			if (!altIpInfo.allowedCountries.includes(probe.location.country)) {
@@ -127,14 +145,10 @@ export class AltIpsClient {
 			return { isValid: false, reason: 'Failed to add an alt IP.' };
 		}
 
-		if (probe.ipAddress === altIp) {
-			return { isValid: false, reason: 'Alt IP is the same as the probe IP.' };
-		}
-
 		return { isValid: true };
 	}
 }
 
-export const initAltIpsClient = (probeOverride: ProbeOverride): AltIpsClient => {
-	return new AltIpsClient(getPersistentRedisClient(), getGeoIpClient(), probeOverride);
+export const initAltIpsClient = (probeOverride: ProbeOverride, getProbeByIp: IoContext['getProbeByIp'], disconnectBySocketId: IoContext['disconnectBySocketId']): AltIpsClient => {
+	return new AltIpsClient(getPersistentRedisClient(), getGeoIpClient(), probeOverride, getProbeByIp, disconnectBySocketId);
 };
