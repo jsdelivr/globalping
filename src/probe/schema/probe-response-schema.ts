@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { SocketProbe, ProbeStats } from '../types.js';
+import { SocketProbe, ProbeStats, LocalAdoptionServer } from '../types.js';
 import { globalIpOptions } from '../../measurement/schema/utils.js';
 
 export const statusSchema = Joi.string<SocketProbe['status']>().valid('initializing', 'ready', 'unbuffer-missing', 'ping-test-failed', 'sigterm').required();
@@ -32,3 +32,9 @@ export const logMessageSchema = Joi.object({
 }).required();
 
 export const altIpsSchema = Joi.array().max(2048).items(Joi.array<[string, string]>().ordered(Joi.string().ip(globalIpOptions).required(), Joi.string().length(32).required()));
+
+export const localAdoptionServerSchema = Joi.object<LocalAdoptionServer>({
+	expiresAt: Joi.string().isoDate().required(),
+	token: Joi.string().hex().length(64).required(),
+	ips: Joi.array().items(Joi.string().ip(globalIpOptions)).max(32).required(),
+}).required();
