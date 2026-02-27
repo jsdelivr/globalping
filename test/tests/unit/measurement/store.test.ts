@@ -31,6 +31,20 @@ const getOfflineProbe = (id: string, ip: string) => ({
 	status: 'offline',
 } as unknown as OfflineProbe);
 
+const buildMinimalMeasurement = (measurementId: string, additionalProps = {}) => ({
+	id: measurementId,
+	type: 'ping' as const,
+	status: 'finished' as const,
+	createdAt: '2024-01-01T00:00:00.000Z',
+	updatedAt: '2024-01-01T00:00:00.000Z',
+	target: 'example.com',
+	probesCount: 0,
+	results: [],
+	...additionalProps,
+});
+
+const buildMinimalMeasurementString = (measurementId: string, additionalProps = {}) => JSON.stringify(buildMinimalMeasurement(measurementId, additionalProps));
+
 describe('measurement store', () => {
 	let getMeasurementStore: () => MeasurementStore;
 
@@ -266,7 +280,7 @@ describe('measurement store', () => {
 
 		expect(redisMock.expire.args[0]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:results`, 604800 ]);
 
-		expect(redisMock.json.set.args).to.deep.include([ `gp:m:{${mockedMeasurementId1}}:meta`, '$', { userAgent: null, origin: null }]);
+		expect(redisMock.json.set.args).to.deep.include([ `gp:m:{${mockedMeasurementId1}}:meta`, '$', {}]);
 
 		expect(redisMock.json.set.args).to.deep.include([ `gp:m:{${mockedMeasurementId1}}:ips`, '$', [ '1.1.1.1', '2.2.2.2', '3.3.3.3', '4.4.4.4' ] ]);
 
@@ -741,9 +755,9 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementStringStub.resolves('{"from":"db"}');
+		offloaderGetMeasurementStringStub.resolves(buildMinimalMeasurementString('SOME_ID', { from: 'db' }));
 
-		const redisValue = '{"from":"redis"}';
+		const redisValue = buildMinimalMeasurementString('SOME_ID', { from: 'redis' });
 		redisMock.sendCommand.resolves(redisValue);
 
 		const result = await store.getMeasurementString('SOME_ID');
@@ -759,11 +773,11 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementStringStub.resolves('{"from":"db"}');
+		offloaderGetMeasurementStringStub.resolves(buildMinimalMeasurementString('SOME_ID', { from: 'db' }));
 		redisMock.json.get.reset();
 
 		const result = await store.getMeasurement('SOME_ID');
-		expect(result).to.deep.equal({ from: 'db' });
+		expect(result).to.deep.equal(buildMinimalMeasurement('SOME_ID', { from: 'db' }));
 
 		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
 		expect(redisMock.json.get.callCount).to.equal(0);
@@ -778,10 +792,10 @@ describe('measurement store', () => {
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
 		offloaderGetMeasurementStringStub.resolves(null);
 		redisMock.json.get.reset();
-		redisMock.json.get.resolves({ from: 'redis' });
+		redisMock.json.get.resolves(buildMinimalMeasurement('SOME_ID', { from: 'redis' }));
 
 		const result = await store.getMeasurement('SOME_ID');
-		expect(result).to.deep.equal({ from: 'redis' });
+		expect(result).to.deep.equal(buildMinimalMeasurement('SOME_ID', { from: 'redis' }));
 
 		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
 		expect(redisMock.json.get.callCount).to.equal(1);
@@ -796,10 +810,10 @@ describe('measurement store', () => {
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
 		offloaderGetMeasurementStringStub.rejects(new Error('DB error'));
 		redisMock.json.get.reset();
-		redisMock.json.get.resolves({ from: 'redis' });
+		redisMock.json.get.resolves(buildMinimalMeasurement('SOME_ID', { from: 'redis' }));
 
 		const result = await store.getMeasurement('SOME_ID');
-		expect(result).to.deep.equal({ from: 'redis' });
+		expect(result).to.deep.equal(buildMinimalMeasurement('SOME_ID', { from: 'redis' }));
 
 		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
 		expect(redisMock.json.get.callCount).to.equal(1);
@@ -813,10 +827,10 @@ describe('measurement store', () => {
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
 		redisMock.json.get.reset();
-		redisMock.json.get.resolves({ from: 'redis' });
+		redisMock.json.get.resolves(buildMinimalMeasurement('SOME_ID', { from: 'redis' }));
 
 		const result = await store.getMeasurement('SOME_ID');
-		expect(result).to.deep.equal({ from: 'redis' });
+		expect(result).to.deep.equal(buildMinimalMeasurement('SOME_ID', { from: 'redis' }));
 
 		expect(offloaderGetMeasurementStringStub.callCount).to.equal(0);
 		expect(redisMock.json.get.callCount).to.equal(1);

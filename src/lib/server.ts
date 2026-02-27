@@ -16,6 +16,8 @@ import termListener from './term-listener.js';
 import { auth } from './http/auth.js';
 import { initAdoptionToken, type AdoptionToken } from '../adoption/adoption-token.js';
 import { logIfTooLong } from './log-if-too-long.js';
+import { initStreamScheduleLoader } from '../schedule/loader.js';
+import { initStreamScheduleExecutor, type StreamScheduleExecutor } from '../schedule/executor.js';
 import { ProbeIpLimit } from './ws/helper/probe-ip-limit.js';
 import { AdoptedProbes } from './override/adopted-probes.js';
 import { AdminData } from './override/admin-data.js';
@@ -41,6 +43,7 @@ export type IoContext = {
 	metricsAgent: MetricsAgent;
 	measurementRunner: MeasurementRunner;
 	codeSender: CodeSender;
+	scheduleExecutor: StreamScheduleExecutor;
 	probeRouter: ProbeRouter;
 	adoptionToken: AdoptionToken;
 	altIpsClient: AltIpsClient;
@@ -87,10 +90,14 @@ export const createServer = async () => {
 	const measurementRunner = initMeasurementRunner(io, probeRouter, metricsAgent);
 	const codeSender = initCodeSender(io, getProbeByIp);
 
+	initStreamScheduleLoader();
+	const scheduleExecutor = initStreamScheduleExecutor(io, syncedProbeList, probesLocationFilter);
+
 	adoptionToken.scheduleSync();
 	await logIfTooLong(auth.syncTokens(), 'auth.syncTokens');
 	auth.scheduleSync();
 
+	scheduleExecutor.start();
 	probeIpLimit.scheduleSync();
 
 	reconnectProbes(fetchRawSockets);
@@ -107,6 +114,7 @@ export const createServer = async () => {
 		metricsAgent,
 		measurementRunner,
 		codeSender,
+		scheduleExecutor,
 		probeRouter,
 		adoptionToken,
 		altIpsClient,

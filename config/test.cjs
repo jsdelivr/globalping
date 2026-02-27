@@ -40,6 +40,12 @@ module.exports = {
 			database: 'globalping-measurement-store-1-test',
 		},
 	},
+	timeSeriesDb: {
+		connection: {
+			port: 15442,
+			database: 'globalping-time-series-1-test',
+		},
+	},
 	admin: {
 		key: 'admin',
 	},
