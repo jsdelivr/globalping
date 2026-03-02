@@ -18,7 +18,7 @@ export const USERS_TABLE = 'directus_users';
 type DProbe = {
 	id: string;
 	userId: string | null;
-	ip: string;
+	ip: string | null;
 	name: string | null;
 	altIps: string[];
 	uuid: string;
@@ -323,11 +323,13 @@ export class AdoptedProbes {
 		// 'probe' - usual API probe. 'dProbe' - dashboard probe data stored in sql.
 		const { dProbesWithProbe, dProbesWithoutProbe, probesWithoutDProbe } = this.matchDProbesAndProbes(probes);
 		const { updatedDProbes, dProbeDataUpdates } = this.generateUpdatedDProbes(dProbesWithProbe, dProbesWithoutProbe);
-		const { dProbesToDelete, dProbeAltIpUpdates } = this.findDuplicates(updatedDProbes);
+		const { dProbesToDelete, nullifyIpUpdates, dProbeAltIpUpdates } = this.findDuplicates(updatedDProbes);
 
 		const dProbeUpdates = this.mergeUpdates(dProbeDataUpdates, dProbeAltIpUpdates, dProbesToDelete);
 
 		await this.resolveIfError(this.deleteDProbes(dProbesToDelete));
+		// Nullify dProbe IPs before any other updates to avoid duplicate entry conflicts.
+		await Bluebird.map(nullifyIpUpdates, ({ dProbe, update }) => this.resolveIfError(this.updateDProbe(dProbe, update)), { concurrency: 8 });
 		await Bluebird.map(dProbeUpdates, ({ dProbe, update }) => this.resolveIfError(this.updateDProbe(dProbe, update)), { concurrency: 8 });
 		probesWithoutDProbe.length && logger.info('probesWithoutDProbe:', { probes: probesWithoutDProbe });
 		await Bluebird.map(probesWithoutDProbe, probe => this.resolveIfError(this.createDProbe(probe)), { concurrency: 8 });
@@ -372,8 +374,8 @@ export class AdoptedProbes {
 
 		this.dProbes = dProbes;
 
-		this.ipToDProbe = new Map([
-			...this.dProbes.map(adoption => [ adoption.ip, adoption ] as const),
+		this.ipToDProbe = new Map<string, DProbe>([
+			...this.dProbes.filter(adoption => !!adoption.ip).map(adoption => [ adoption.ip!, adoption ] as const),
 			...this.dProbes.map(adoption => adoption.altIps.map(altIp => [ altIp, adoption ] as const)).flat(),
 		]);
 
@@ -420,7 +422,7 @@ export class AdoptedProbes {
 		dProbesWithoutProbe = [];
 
 		dProbesToCheck.forEach((dProbe) => {
-			const probe = ipToProbe.get(dProbe.ip);
+			const probe = dProbe.ip && ipToProbe.get(dProbe.ip);
 
 			if (probe && dProbe.userId) {
 				dProbesWithProbe.push({ dProbe, probe });
@@ -437,7 +439,7 @@ export class AdoptedProbes {
 		dProbesWithoutProbe = [];
 
 		dProbesToCheck.forEach((dProbe) => {
-			const probe = altIpToProbe.get(dProbe.ip);
+			const probe = dProbe.ip && altIpToProbe.get(dProbe.ip);
 
 			if (probe && dProbe.userId) {
 				dProbesWithProbe.push({ dProbe, probe });
@@ -491,7 +493,7 @@ export class AdoptedProbes {
 		dProbesWithoutProbe = [];
 
 		dProbesToCheck.forEach((dProbe) => {
-			const probe = ipToProbe.get(dProbe.ip);
+			const probe = dProbe.ip && ipToProbe.get(dProbe.ip);
 
 			if (probe) {
 				dProbesWithProbe.push({ dProbe, probe });
@@ -508,7 +510,7 @@ export class AdoptedProbes {
 		dProbesWithoutProbe = [];
 
 		dProbesToCheck.forEach((dProbe) => {
-			const probe = altIpToProbe.get(dProbe.ip);
+			const probe = dProbe.ip && altIpToProbe.get(dProbe.ip);
 
 			if (probe) {
 				dProbesWithProbe.push({ dProbe, probe });
@@ -618,23 +620,32 @@ export class AdoptedProbes {
 
 	private findDuplicates (updatedDProbes: DProbe[]) {
 		const dProbesToDelete: DProbe[] = [];
+		const nullifyIpUpdates: { dProbe: DProbe; update: { ip: null } }[] = [];
 		const dProbeAltIpUpdates: { dProbe: DProbe; update: { altIps: string[] } }[] = [];
 		const uniqUuids = new Map<string, DProbe>();
 		const uniqIps = new Map<string, DProbe>();
 
 		updatedDProbes.forEach((dProbe) => {
-			const existingDProbe = uniqUuids.get(dProbe.uuid) || uniqIps.get(dProbe.ip);
+			const existingDProbe = uniqUuids.get(dProbe.uuid) || (dProbe.ip && uniqIps.get(dProbe.ip));
 
 			if (
 				existingDProbe
 				&& (existingDProbe.userId === dProbe.userId || dProbe.userId === null)
 			) {
-				logger.warn('Duplication found.', {
+				logger.warn('Removable duplication found.', {
 					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
 					delete: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
 				});
 
 				dProbesToDelete.push(dProbe);
+				return;
+			} else if (existingDProbe && dProbe.status === 'offline') {
+				logger.warn('Offline duplication found.', {
+					ready: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
+					offline: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
+				});
+
+				nullifyIpUpdates.push({ dProbe, update: { ip: null } });
 				return;
 			} else if (existingDProbe) {
 				logger.error('Unremovable duplication found.', {
@@ -659,11 +670,11 @@ export class AdoptedProbes {
 			}
 
 			uniqUuids.set(dProbe.uuid, dProbe);
-			uniqIps.set(dProbe.ip, dProbe);
+			dProbe.ip && uniqIps.set(dProbe.ip, dProbe);
 			newAltIps.forEach(altIp => uniqIps.set(altIp, dProbe));
 		});
 
-		return { dProbesToDelete, dProbeAltIpUpdates };
+		return { dProbesToDelete, nullifyIpUpdates, dProbeAltIpUpdates };
 	}
 
 	private mergeUpdates (
