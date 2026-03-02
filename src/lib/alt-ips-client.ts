@@ -117,6 +117,7 @@ export class AltIpsClient {
 
 			if (existingProbe && existingProbe.client !== probe.client) {
 				if (existingProbe.ipAddress === altIp) {
+					logger.info('Alt IP is a primary IP of another probe. Disconnecting another probe.', { ip: altIp, uuid: existingProbe.uuid });
 					this.disconnectBySocketId(existingProbe.client);
 					return { isValid: true };
 				}
