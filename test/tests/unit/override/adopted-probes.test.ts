@@ -866,7 +866,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
-	it('class should clear duplicate ip for offline probe', async () => {
+	it('class should clear duplicate ip for offline probe of another user', async () => {
 		// There are two rows for the same probe in the db.
 		sql.select.resolves([ defaultAdoption, { ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', userId: 'anotherUserId' }]);
 
