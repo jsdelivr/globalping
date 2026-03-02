@@ -105,6 +105,13 @@ export class MetricsAgent {
 				'gp.user.count.total': _.sum(Object.values(countByType)),
 			};
 		}, 60 * 1000);
+
+		const getDashboardPool = (): Knex.Client['pool'] => {
+			return (this.sql.client as Knex.Client).pool;
+		};
+
+		registerGuardedMetric('gp.db.dashboard.pool.used', () => getDashboardPool()?.numUsed());
+		registerGuardedMetric('gp.db.dashboard.pool.pending_acquires', () => getDashboardPool()?.numPendingAcquires());
 	}
 
 	recordMeasurementTime (type: string, time: number): void {
