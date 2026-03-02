@@ -639,8 +639,8 @@ export class AdoptedProbes {
 
 				dProbesToDelete.push(dProbe);
 				return;
-			} else if (existingDProbe && dProbe.status === 'offline') {
-				logger.warn('Offline duplication found.', {
+			} else if (existingDProbe && dProbe.ip === existingDProbe.ip && dProbe.status === 'offline') {
+				logger.warn('Offline IP duplication found.', {
 					ready: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
 					offline: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
 				});
