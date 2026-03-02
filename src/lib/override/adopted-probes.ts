@@ -646,7 +646,6 @@ export class AdoptedProbes {
 				});
 
 				nullifyIpUpdates.push({ dProbe, update: { ip: null } });
-				return;
 			} else if (existingDProbe) {
 				logger.error('Unremovable duplication found.', {
 					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),

@@ -890,6 +890,43 @@ describe('AdoptedProbes', () => {
 		expect(sql.insert.callCount).to.equal(0);
 	});
 
+	it('class should nullify duplicate offline ip and remove duplicated alt ips in same sync', async () => {
+		// There are two rows for the same probe in the db.
+		sql.select.resolves([
+			defaultAdoption,
+			{
+				...defaultAdoption,
+				id: 'p-2',
+				ip: '2.2.2.2',
+				uuid: '2-2-2-2-2',
+				userId: 'anotherUserId',
+				altIps: JSON.stringify([ '1.1.1.1' ]),
+			},
+		]);
+
+		// Now probe connects with the uuid of first adoption and ip from second row.
+		getProbesWithAdminData.returns([{
+			...defaultConnectedProbe,
+			uuid: '1-1-1-1-1',
+			ipAddress: '2.2.2.2',
+			altIpAddresses: [ '1.1.1.1' ],
+		}]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		// Duplicated probe is not deleted but ip is nullified and duplicated alt ip is removed.
+		expect(sql.delete.callCount).to.equal(0);
+		expect(sql.update.callCount).to.equal(3);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-2' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ ip: null }]);
+		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.args[1]).to.deep.equal([{ ip: '2.2.2.2', altIps: '["1.1.1.1"]' }]);
+		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-2' }]);
+		expect(sql.update.args[2]).to.deep.equal([{ status: 'offline', altIps: '[]' }]);
+		expect(sql.insert.callCount).to.equal(0);
+	});
+
 	it('class should delete duplicated probe without user', async () => {
 		// 'p-2' is a duplicate of 'p-1', 'p-4' is a duplicate of 'p-3'.
 		sql.select.resolves([
