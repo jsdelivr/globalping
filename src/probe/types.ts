@@ -47,7 +47,7 @@ export type Tag = {
 export type ProbeIndex = [ string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[] ];
 
 type Probe = {
-	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'ping-test-failed' | 'sigterm';
+	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'ping-test-failed' | 'too-many-disconnects' | 'sigterm';
 	isIPv4Supported: boolean;
 	isIPv6Supported: boolean;
 	client: string;
