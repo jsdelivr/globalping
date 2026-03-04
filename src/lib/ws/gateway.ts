@@ -14,6 +14,7 @@ import { subscribeWithHandler } from './helper/subscribe-handler.js';
 import { handleIsIPv4SupportedUpdate, handleIsIPv6SupportedUpdate } from '../../probe/handler/ip-version.js';
 import { handleNewLogs } from '../../probe/handler/logs.js';
 import { handleAltIps } from '../../probe/handler/alt-ips.js';
+import { handleAdoptionServerStart } from '../../probe/handler/local-adoption-server.js';
 import type { IoContext } from '../server.js';
 
 const logger = scopedLogger('gateway');
@@ -47,6 +48,7 @@ export const initGateway = (ioContext: IoContext) => {
 			subscribeWithHandler(socket, 'probe:measurement:ack', handleMeasurementAck(probe));
 			subscribeWithHandler(socket, 'probe:measurement:progress', handleMeasurementProgress(probe, measurementRunner));
 			subscribeWithHandler(socket, 'probe:measurement:result', handleMeasurementResult(probe, measurementRunner));
+			subscribeWithHandler(socket, 'probe:adoption:ready', handleAdoptionServerStart(probe));
 
 			socket.on('disconnect', (reason) => {
 				logger.debug(`Probe disconnected. (reason: ${reason}) [${socket.id}][${probe.ipAddress}]`);

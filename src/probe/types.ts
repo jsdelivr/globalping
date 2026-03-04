@@ -47,7 +47,7 @@ export type Tag = {
 export type ProbeIndex = [ string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[] ];
 
 type Probe = {
-	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'ping-test-failed' | 'sigterm';
+	status: 'initializing' | 'ready' | 'unbuffer-missing' | 'ping-test-failed' | 'too-many-disconnects' | 'sigterm';
 	isIPv4Supported: boolean;
 	isIPv6Supported: boolean;
 	client: string;
@@ -70,6 +70,7 @@ type Probe = {
 	adoptionToken: string | null;
 	nodeId?: string;
 	isProxy: boolean | null;
+	localAdoptionServer?: LocalAdoptionServer | null;
 };
 
 type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;
@@ -116,3 +117,9 @@ export type OfflineProbe = Modify<SocketProbe, {
 		};
 	};
 }>;
+
+export type LocalAdoptionServer = {
+	expiresAt: string;
+	token: string;
+	ips: string[];
+};

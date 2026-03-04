@@ -40,6 +40,7 @@ export const registerGetProbesRoute = (router: ExtendedRouter, context: IoContex
 			host: isAdmin ? probe.host : undefined,
 			stats: isAdmin ? probe.stats : undefined,
 			hostInfo: isAdmin ? probe.hostInfo : undefined,
+			localAdoptionServer: isAdmin ? probe.localAdoptionServer : undefined,
 		}));
 	};
 
