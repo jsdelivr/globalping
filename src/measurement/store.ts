@@ -113,15 +113,11 @@ export class MeasurementStore {
 		return Bluebird.map(ids, id => this.redis.json.get(getMeasurementKey(id, 'meta')) as Promise<ExportMeta | null>, { concurrency: 8 });
 	}
 
-	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[], userType?: AuthenticateStateUser['userType'], exportMeta?: ExportMeta): Promise<string> {
+	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[], userType?: AuthenticateStateUser['userType'], exportMeta: ExportMeta = {}): Promise<string> {
 		const startTime = new Date();
 		const results = this.probesToResults(allProbes, request.type);
 		const id = generateMeasurementId(startTime, userType);
 		const key = getMeasurementKey(id);
-		const meta: ExportMeta = {
-			origin: exportMeta?.origin ?? null,
-			userAgent: exportMeta?.userAgent ?? null,
-		};
 
 		const measurement: Partial<MeasurementRecord> = {
 			id,
@@ -134,6 +130,8 @@ export class MeasurementStore {
 			probesCount: allProbes.length,
 			...(request.locations && { locations: request.locations }),
 			measurementOptions: request.measurementOptions,
+			...(request.scheduleId && { scheduleId: request.scheduleId }),
+			...(request.configurationId && { configurationId: request.configurationId }),
 			results,
 		};
 		const measurementWithoutDefaults = this.removeDefaults(measurement, request);
@@ -144,7 +142,7 @@ export class MeasurementStore {
 			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: config.get<number>('measurement.timeout') + 30 }),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
 			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', allProbes.map(probe => probe.ipAddress)),
-			this.redis.json.set(getMeasurementKey(id, 'meta'), '$', meta),
+			this.redis.json.set(getMeasurementKey(id, 'meta'), '$', exportMeta),
 			this.redis.expire(key, config.get<number>('measurement.resultTTL')),
 			this.redis.expire(getMeasurementKey(id, 'ips'), config.get<number>('measurement.resultTTL')),
 			this.redis.expire(getMeasurementKey(id, 'meta'), config.get<number>('measurement.resultTTL')),

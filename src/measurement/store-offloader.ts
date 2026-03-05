@@ -9,9 +9,9 @@ import config from 'config';
 import { scopedLogger } from '../lib/logger.js';
 import type { Knex } from 'knex';
 import { parseMeasurementId, roundIdTime, USER_TIER_INVERTED, UserTier } from './id.js';
-import type { MeasurementRecord } from './types.js';
+import type { ExportMeta, MeasurementRecord, HttpResult, DnsResult } from './types.js';
 import { MeasurementStore } from './store.js';
-import type { ExportMeta } from './types.js';
+import { writeHttpRecords, writeDnsRecords, type TimeSeriesHttpRecord, type TimeSeriesDnsRecord } from '../time-series/writer.js';
 
 const logger = scopedLogger('db-store');
 const brotliCompress = promisify(brotliCompressCallback);
@@ -148,16 +148,15 @@ export class MeasurementStoreOffloader {
 		const table = `measurement_${tier}`;
 		const storedMeta = await this.primaryMeasurementStore.getMeasurementMetas(measurements.map(measurement => measurement.id));
 		const rows = await Bluebird.map(measurements, async (r, i) => {
-			const meta: ExportMeta = storedMeta[i] ?? {
-				origin: null,
-				userAgent: null,
-			};
+			const { timeSeriesEnabled, ...meta }: ExportMeta = storedMeta[i] ?? {};
 
 			return {
 				id: r.id,
 				createdAt: roundIdTime(new Date(r.createdAt)),
 				data: await compressRecord(JSON.stringify(r)),
 				meta,
+				scheduleId: r.scheduleId ?? null,
+				configurationId: r.configurationId ?? null,
 			};
 		}, { concurrency: 4 });
 
@@ -165,6 +164,42 @@ export class MeasurementStoreOffloader {
 			.insert(rows)
 			.onConflict([ 'id', 'createdAt' ])
 			.ignore();
+
+		const tsDnsRecords: TimeSeriesDnsRecord[] = [];
+		const tsHttpRecords: TimeSeriesHttpRecord[] = [];
+
+		for (const [ index, measurement ] of measurements.entries()) {
+			const meta = storedMeta[index];
+
+			if (!meta?.timeSeriesEnabled || !measurement.configurationId) {
+				continue;
+			}
+
+			for (const [ index, result ] of measurement.results.entries()) {
+				if (measurement.type === 'dns') {
+					tsDnsRecords.push({
+						measurementId: measurement.id,
+						testId: index.toString(),
+						configurationId: measurement.configurationId,
+						probe: result.probe,
+						result: result.result as DnsResult,
+					});
+				} else if (measurement.type === 'http') {
+					tsHttpRecords.push({
+						measurementId: measurement.id,
+						testId: index.toString(),
+						configurationId: measurement.configurationId,
+						probe: result.probe,
+						result: result.result as HttpResult,
+					});
+				}
+			}
+		}
+
+		await Promise.all([
+			writeDnsRecords(tsDnsRecords),
+			writeHttpRecords(tsHttpRecords),
+		]);
 
 		this.primaryMeasurementStore.setOffloadedExpiration(measurements.map(m => m.id)).catch(() => {});
 	}
