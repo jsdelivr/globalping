@@ -171,7 +171,7 @@ export class StreamScheduleExecutor {
 			}
 		}
 
-		return localProbes.filter(probe => allowed.has(probe));
+		return [ ...allowed.values() ];
 	}
 
 	private emitMeasurementToProbe (
