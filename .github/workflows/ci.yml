@@ -16,7 +16,7 @@ jobs:
 
     services:
       mariadb:
-        image: mariadb:10.11.5
+        image: mariadb:11.8.6
         ports:
           - 13306:3306
         env:
@@ -25,7 +25,7 @@ jobs:
           MARIADB_PASSWORD: password
           MARIADB_RANDOM_ROOT_PASSWORD: 1
         options: >-
-          --health-cmd "mysqladmin ping"
+          --health-cmd "mariadb-admin ping"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5

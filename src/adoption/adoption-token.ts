@@ -22,7 +22,7 @@ type User = {
 type DProbe = {
 	id: string;
 	name: string | null;
-	ip: string;
+	ip: string | null;
 	userId: string | null;
 };
 
