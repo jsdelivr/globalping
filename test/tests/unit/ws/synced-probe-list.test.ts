@@ -199,11 +199,11 @@ describe('SyncedProbeList', () => {
 
 		// Simulate running for the duration of syncedProbeList.remoteDataTtl.
 		while ((elapsed += syncedProbeList.syncInterval) < syncedProbeList.remoteDataTtl / 2) {
-			await clock.tickAsyncStepped(syncedProbeList.syncInterval);
+			await clock.tickAsync(syncedProbeList.syncInterval);
 			await syncedProbeList.sync();
 		}
 
-		await clock.tickAsyncStepped(2 * syncedProbeList.syncInterval);
+		await clock.tickAsync(2 * syncedProbeList.syncInterval);
 		await syncedProbeList.sync();
 		expect(redisPExpire.callCount).to.equal(2);
 	});
