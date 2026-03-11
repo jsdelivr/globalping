@@ -47,14 +47,6 @@ CREATE TABLE IF NOT EXISTS gp_probes (
 	searchIndex VARCHAR(4090) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS directus_notifications (
-	id CHAR(10),
-	recipient CHAR(36),
-	timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	subject VARCHAR(255),
-	message TEXT
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 CREATE TABLE IF NOT EXISTS `gp_tokens` (
 	`date_created` timestamp NULL DEFAULT NULL,
 	`date_last_used` date DEFAULT NULL,

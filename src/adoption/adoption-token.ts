@@ -12,7 +12,7 @@ const PROBES_TABLE = 'gp_probes';
 
 const logger = scopedLogger('adoption-token');
 const directusUrl = config.get<string>('dashboard.directusUrl');
-const systemKey = config.get<string>('systemApi.key');
+const directusToken = config.get<string>('dashboard.directusToken');
 
 type User = {
 	id: string;
@@ -142,7 +142,7 @@ export class AdoptionToken {
 				},
 			},
 			headers: {
-				'X-Api-Key': systemKey,
+				Authorization: `Bearer ${directusToken}`,
 			},
 			timeout: {
 				request: 5000,
