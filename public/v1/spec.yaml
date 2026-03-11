@@ -5,9 +5,11 @@ info:
   description: |
     The Globalping API allows you to monitor, debug, and benchmark your internet infrastructure using a globally distributed network of probes.
 
+    Supported network tests: ICMP and TCP PING, MTR, Traceroute, DNS resolve, HTTP GET and HEAD.
+
     The API is public, free to use, and doesn't require authentication.
-    However, it implements rate limits to ensure fair usage and reliability, and some of the limits
-    are higher for authenticated users. Sign up on the [Globalping Dashboard](https://dash.globalping.io/) to enjoy the higher limits.
+    However, it implements rate limits to ensure fair usage and reliability. Authenticated users get a higher amount of hourly free credits 
+    and do not have any measurement rate limits. Sign up on the [Globalping Dashboard](https://dash.globalping.io/) to enjoy unlimited testing with more free credits.
 
     Root endpoint: https://api.globalping.io
 
@@ -16,7 +18,7 @@ info:
     | Operation | Unauthenticated user | Authenticated user |
     |---|---|---|
     | **Measurements** |||
-    | Create a measurement | 250 tests/hour<br/>50 probes/measurement | 500 tests/hour*<br/>500 probes/measurement |
+    | Create a measurement | 250 free tests/hour<br/>50 probes/measurement | 500 free tests/hour*<br/>500 probes/measurement |
     | Get a measurement by ID | 2 requests/second/measurement | 2 requests/second/measurement |
     | **Probes** |||
     | List probes currently online | no limit | no limit |
