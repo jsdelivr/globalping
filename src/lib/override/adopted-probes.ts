@@ -801,7 +801,7 @@ export class AdoptedProbes {
 
 		return this.sendNotification(
 			adoption.userId,
-			'probe_location_changed',
+			'probe_location_changed_back',
 			`Your probe's location has changed back`,
 			`Globalping detected that your ${adoption.name ? `probe [**${adoption.name}**](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address **${adoption.ip}**](/probes/${adoption.id})`} has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is now applied again.`,
 		);

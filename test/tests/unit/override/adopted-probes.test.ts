@@ -688,14 +688,14 @@ describe('AdoptedProbes', () => {
 
 		expect((gotPostStub.args[2]![1] as any).json).to.deep.equal({
 			recipient: 'userId',
-			type: 'probe_location_changed',
+			type: 'probe_location_changed_back',
 			subject: 'Your probe\'s location has changed back',
 			message: 'Globalping detected that your probe [**probe-1**](/probes/p-1) with IP address **1.1.1.1** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 
 		expect((gotPostStub.args[3]![1] as any).json).to.deep.equal({
 			recipient: 'userId',
-			type: 'probe_location_changed',
+			type: 'probe_location_changed_back',
 			subject: `Your probe's location has changed back`,
 			message: 'Globalping detected that your probe [**probe-2**](/probes/p-9) with IP address **9.9.9.9** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
