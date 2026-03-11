@@ -22,7 +22,6 @@ describe('Adoption token', () => {
 		sandbox.resetHistory();
 		await deleteFakeProbes();
 		await dashboardClient('gp_probes').delete();
-		await dashboardClient('directus_notifications').delete();
 	});
 
 	after(async () => {
