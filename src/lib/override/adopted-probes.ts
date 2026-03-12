@@ -16,7 +16,7 @@ export const DASH_PROBES_TABLE = 'gp_probes';
 export const USERS_TABLE = 'directus_users';
 const NOTIFICATIONS_TABLE = 'directus_notifications';
 const directusUrl = config.get<string>('dashboard.directusUrl');
-const directusToken = config.get<string>('dashboard.directusToken');
+const systemKey = config.get<string>('systemApi.key');
 
 type DProbe = {
 	id: string;
@@ -772,7 +772,7 @@ export class AdoptedProbes {
 		await got.post(`${directusUrl}/notifications`, {
 			json: { recipient, type, subject, message },
 			headers: {
-				Authorization: `Bearer ${directusToken}`,
+				Authorization: `Bearer ${systemKey}`,
 			},
 			timeout: {
 				request: 5000,

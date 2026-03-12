@@ -16,7 +16,6 @@ module.exports = {
 	},
 	dashboard: {
 		directusUrl: 'http://localhost:18055',
-		directusToken: 'directusSystemToken',
 	},
 	admin: {
 		key: 'admin',

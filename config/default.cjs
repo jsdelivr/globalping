@@ -75,7 +75,6 @@ module.exports = {
 	},
 	dashboard: {
 		directusUrl: 'https://dash-directus.globalping.io',
-		directusToken: '',
 	},
 	admin: {
 		key: '',
