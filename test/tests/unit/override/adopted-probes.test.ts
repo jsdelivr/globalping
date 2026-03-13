@@ -141,6 +141,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	after(() => {
+		sandbox.restore();
 		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 	});
 
