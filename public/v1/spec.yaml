@@ -4,12 +4,11 @@ info:
   summary: The public Globalping API.
   description: |
     The Globalping API allows you to monitor, debug, and benchmark your internet infrastructure using a globally distributed network of probes.
+    The supported test types are ping, traceroute, MTR, DNS resolve, and HTTP.
 
-    Supported network tests: ICMP and TCP PING, MTR, Traceroute, DNS resolve, HTTP GET and HEAD.
-
-    The API is public, free to use, and doesn't require authentication.
-    However, it implements rate limits to ensure fair usage and reliability. Authenticated users get a higher amount of hourly free credits 
-    and do not have any measurement rate limits. Sign up on the [Globalping Dashboard](https://dash.globalping.io/) to enjoy unlimited testing with more free credits.
+    The API is public, free to use, and doesn't require authentication, but it implements rate limits to ensure fair usage and reliability.
+    Authenticated users get higher free limits and may run additional tests by spending credits.
+    Sign up on the [Globalping Dashboard](https://dash.globalping.io/) to enjoy the higher limits.
 
     Root endpoint: https://api.globalping.io
 
