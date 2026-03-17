@@ -142,6 +142,7 @@ describe('probe logs', () => {
 		await docker.stopProbeContainer();
 		await waitProbeToDisconnect();
 		await docker.startProbeContainer();
+		await waitProbeToConnect();
 
 		const newResponse = await waitForLogSync(PROBE_ID, authCookie, lastId as string);
 
