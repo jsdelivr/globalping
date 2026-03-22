@@ -13,20 +13,38 @@ const trustPredicate = proxyaddr.compile([
 	'linklocal',
 ]);
 
+const getSingleHeaderValue = (value: string | string[] | undefined) => {
+	if (Array.isArray(value)) {
+		if (value.length !== 1) {
+			return undefined;
+		}
+
+		return value[0];
+	}
+
+	return value;
+};
+
+const normalizeIp = (ip: string) => {
+	return (ipv4MappedPattern.test(ip) ? ip.slice(7) : ip);
+};
+
 const getFastlyClientIp = (req: IncomingMessage) => {
 	if (!fastlySharedSecret) {
 		return null;
 	}
 
-	const headerSecret = req.headers['fastly-shared-secret'];
-	const providedSecret = Array.isArray(headerSecret) ? headerSecret[0] : headerSecret;
+	const headerSecret = getSingleHeaderValue(req.headers['fastly-shared-secret']);
 
-	if (providedSecret !== fastlySharedSecret) {
+	if (!headerSecret) {
 		return null;
 	}
 
-	const headerIp = req.headers['fastly-client-ip'];
-	const fastlyClientIp = Array.isArray(headerIp) ? headerIp[0] : headerIp;
+	if (headerSecret !== fastlySharedSecret) {
+		return null;
+	}
+
+	const fastlyClientIp = getSingleHeaderValue(req.headers['fastly-client-ip']);
 
 	if (!fastlyClientIp || !isIP(fastlyClientIp)) {
 		return null;
@@ -43,14 +61,8 @@ export const getIpFromRequest = (req: IncomingMessage) => {
 	const fastlyClientIp = getFastlyClientIp(req);
 
 	if (fastlyClientIp) {
-		return fastlyClientIp;
+		return normalizeIp(fastlyClientIp);
 	}
 
-	const ip = proxyaddr(req, trustPredicate);
-
-	if (ipv4MappedPattern.test(ip)) {
-		return ip.slice(7);
-	}
-
-	return ip;
+	return normalizeIp(proxyaddr(req, trustPredicate));
 };
