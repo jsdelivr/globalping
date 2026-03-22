@@ -25,6 +25,7 @@ import { defaultJson } from './middleware/default-json.js';
 import { errorHandlerMw } from './middleware/error-handler.js';
 import { corsHandler } from './middleware/cors.js';
 import { requestIp } from './middleware/request-ip.js';
+import { defaultHeaders } from './middleware/default-headers.js';
 import { isAdminMw } from './middleware/is-admin.js';
 import { isSystemMw } from './middleware/is-system.js';
 import { docsLink } from './middleware/docs-link.js';
@@ -122,6 +123,7 @@ export const getHttpServer = (ioContext: IoContext) => {
 	app
 		.use(requestIp())
 		.use(responseTime())
+		.use(defaultHeaders())
 		.use(koaFavicon(`${publicPath}/favicon.ico`))
 		.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }))
 		.use(conditionalGet())
