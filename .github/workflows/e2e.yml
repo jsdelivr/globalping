@@ -30,7 +30,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       postgres:
-        image: timescale/timescaledb:2.22.1-pg17
+        image: timescale/timescaledb:2.25.2-pg18
         ports:
           - 15432:5432
         env:
