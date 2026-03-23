@@ -26,7 +26,7 @@ const getSingleHeaderValue = (value: string | string[] | undefined) => {
 };
 
 const normalizeIp = (ip: string) => {
-	return (ipv4MappedPattern.test(ip) ? ip.slice(7) : ip);
+	return ipv4MappedPattern.test(ip) ? ip.slice(7) : ip;
 };
 
 const getFastlyClientIp = (req: IncomingMessage) => {
