@@ -18,6 +18,7 @@ module.exports = {
 			cookieSecret: '',
 		},
 		trustedProxies: [],
+		fastlySharedSecret: '',
 	},
 	websocketServer: {
 		pingInterval: 3000,
