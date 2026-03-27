@@ -628,10 +628,7 @@ export class AdoptedProbes {
 		updatedDProbes.forEach((dProbe) => {
 			const existingDProbe = uniqUuids.get(dProbe.uuid) || (dProbe.ip && uniqIps.get(dProbe.ip));
 
-			if (
-				existingDProbe
-				&& (existingDProbe.userId === dProbe.userId || dProbe.userId === null)
-			) {
+			if (existingDProbe && (existingDProbe.userId === dProbe.userId || dProbe.userId === null)) {
 				logger.warn('Removable duplication found.', {
 					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
 					delete: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
@@ -639,7 +636,7 @@ export class AdoptedProbes {
 
 				dProbesToDelete.push(dProbe);
 				return;
-			} else if (existingDProbe && dProbe.ip === existingDProbe.ip && dProbe.status === 'offline') {
+			} else if (existingDProbe && dProbe.ip && uniqIps.has(dProbe.ip) && dProbe.status === 'offline') {
 				logger.warn('Offline IP duplication found.', {
 					ready: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
 					offline: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
