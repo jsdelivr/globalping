@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import relativeDayUtc from 'relative-day-utc';
+import got from 'got';
 import { AdoptedProbes, Row } from '../../../../src/lib/override/adopted-probes.js';
 import type { SocketProbe } from '../../../../src/probe/types.js';
 
@@ -98,6 +99,7 @@ describe('AdoptedProbes', () => {
 	};
 
 	const sandbox = sinon.createSandbox();
+	const gotPostStub = sandbox.stub(got, 'post');
 
 	const sql = {
 		select: sandbox.stub(),
@@ -105,12 +107,14 @@ describe('AdoptedProbes', () => {
 		delete: sandbox.stub(),
 		raw: sandbox.stub(),
 		where: sandbox.stub(),
+		whereRaw: sandbox.stub(),
 		orWhere: sandbox.stub(),
 		whereIn: sandbox.stub(),
 		whereNotNull: sandbox.stub(),
 		leftJoin: sandbox.stub(),
 		orderByRaw: sandbox.stub(),
 		insert: sandbox.stub(),
+		first: sandbox.stub(),
 	} as any;
 	const sqlStub = sandbox.stub() as any;
 	sqlStub.raw = sql.raw;
@@ -118,15 +122,18 @@ describe('AdoptedProbes', () => {
 
 	beforeEach(() => {
 		sandbox.reset();
+		gotPostStub.resolves({} as any);
 		sql.select.returns(sql);
 		sql.update.returns(sql);
 		sql.delete.returns(sql);
 		sql.raw.returns(sql);
 		sql.where.returns(sql);
+		sql.whereRaw.returns(sql);
 		sql.orWhere.returns(sql);
 		sql.whereIn.returns(sql);
 		sql.leftJoin.returns(sql);
 		sql.orderByRaw.returns(sql);
+		sql.first.resolves(undefined);
 		sql.select.resolves([ defaultAdoption ]);
 		sqlStub.returns(sql);
 		getProbesWithAdminData.returns([ defaultConnectedProbe ]);
@@ -134,6 +141,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	after(() => {
+		sandbox.restore();
 		delete process.env['SHOULD_SYNC_ADOPTIONS'];
 	});
 
@@ -553,23 +561,23 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.raw.callCount).to.equal(2);
+		expect(gotPostStub.callCount).to.equal(2);
+		expect(gotPostStub.args[0]![0]).to.equal('https://dash-directus.globalping.io/notifications');
 
-		expect(sql.raw.args[0]![1]).to.deep.equal({
+		expect((gotPostStub.args[0]![1] as any).json).to.deep.equal({
 			recipient: 'userId',
+			type: 'probe_location_changed',
 			subject: 'Your probe\'s location has changed',
 			message: 'Globalping detected that your probe [**probe-1**](/probes/p-1) with IP address **1.1.1.1** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).',
 		});
 
-		expect(sql.raw.args[1]![1]).to.deep.equal({
+		expect((gotPostStub.args[1]![1] as any).json).to.deep.equal({
 			recipient: 'userId',
+			type: 'probe_location_changed',
 			subject: 'Your probe\'s location has changed',
 			message: 'Globalping detected that your probe [**probe-2**](/probes/p-9) with IP address **9.9.9.9** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).',
 		});
 
-		expect(sql.where.callCount).to.equal(2);
-		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
-		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-9' }]);
 		expect(sql.update.callCount).to.equal(2);
 
 		expect(sql.update.args[0]).to.deep.equal([
@@ -677,24 +685,21 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.raw.callCount).to.equal(4);
+		expect(gotPostStub.callCount).to.equal(4);
 
-		expect(sql.raw.args[2]![1]).to.deep.equal({
+		expect((gotPostStub.args[2]![1] as any).json).to.deep.equal({
 			recipient: 'userId',
+			type: 'probe_location_changed_back',
 			subject: 'Your probe\'s location has changed back',
 			message: 'Globalping detected that your probe [**probe-1**](/probes/p-1) with IP address **1.1.1.1** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 
-		expect(sql.raw.args[3]![1]).to.deep.equal({
+		expect((gotPostStub.args[3]![1] as any).json).to.deep.equal({
 			recipient: 'userId',
+			type: 'probe_location_changed_back',
 			subject: `Your probe's location has changed back`,
 			message: 'Globalping detected that your probe [**probe-2**](/probes/p-9) with IP address **9.9.9.9** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
-
-		expect(sql.where.callCount).to.equal(4);
-		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-1' }]);
-		expect(sql.where.args[3]).to.deep.equal([{ id: 'p-9' }]);
-		expect(sql.update.callCount).to.equal(4);
 
 		expect(sql.update.args[2]).to.deep.equal([
 			{
@@ -775,7 +780,7 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.where.callCount).to.equal(1);
+		expect(sql.where.callCount).to.equal(2);
 		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.callCount).to.equal(1);
 
