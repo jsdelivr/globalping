@@ -99,8 +99,8 @@ export class MeasurementStore {
 		}).then(parse);
 	}
 
-	async getMeasurements (ids: string[]): Promise<(MeasurementRecord | null)[]> {
-		return Bluebird.map(ids, id => singleFlight(getMeasurementKey(id), key => this.redis.json.get(key) as Promise<MeasurementRecord | null>), { concurrency: 8 });
+	async getMeasurementsForOffloader (ids: string[]): Promise<(MeasurementRecord | null)[]> {
+		return Bluebird.map(ids, id => this.redis.json.get(getMeasurementKey(id)) as Promise<MeasurementRecord | null>, { concurrency: 8 });
 	}
 
 	async getMeasurementIps (id: string): Promise<string[]> {

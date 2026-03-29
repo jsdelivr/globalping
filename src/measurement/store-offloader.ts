@@ -174,7 +174,7 @@ export class MeasurementStoreOffloader {
 	}
 
 	private async insertBatchToDbByIds (tier: UserTier, ids: string[]) {
-		const records = await this.primaryMeasurementStore.getMeasurements(ids);
+		const records = await this.primaryMeasurementStore.getMeasurementsForOffloader(ids);
 		return this.insertBatchToDb(tier, records.filter(is.truthy));
 	}
 }
