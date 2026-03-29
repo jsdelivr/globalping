@@ -784,7 +784,7 @@ describe('measurement store', () => {
 		expect(result).to.deep.equal({ from: 'redis' });
 
 		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
-		expect(redisMock.json.get.callCount).to.equal(1);
+		expect(redisMock.sendCommand.callCount).to.equal(1);
 	});
 
 	it('getMeasurement should fallback to Redis if DB throws', async () => {
@@ -802,7 +802,7 @@ describe('measurement store', () => {
 		expect(result).to.deep.equal({ from: 'redis' });
 
 		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
-		expect(redisMock.json.get.callCount).to.equal(1);
+		expect(redisMock.sendCommand.callCount).to.equal(1);
 	});
 
 	it('getMeasurement should use Redis when measurement is recent', async () => {
@@ -819,7 +819,7 @@ describe('measurement store', () => {
 		expect(result).to.deep.equal({ from: 'redis' });
 
 		expect(offloaderGetMeasurementStringStub.callCount).to.equal(0);
-		expect(redisMock.json.get.callCount).to.equal(1);
+		expect(redisMock.sendCommand.callCount).to.equal(1);
 	});
 
 	it('setOffloadedExpiration should set 60m TTL on results keys', async () => {
