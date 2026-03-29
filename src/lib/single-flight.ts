@@ -12,10 +12,8 @@ export const scopedFlight = (scope: string) => {
 		result = fn(key);
 		inflight.set(scopedKey, result);
 
-		void result.finally(() => {
+		return result.finally(() => {
 			inflight.delete(scopedKey);
 		});
-
-		return result;
 	};
 };
