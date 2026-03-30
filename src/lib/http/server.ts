@@ -34,6 +34,7 @@ import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternati
 import { registerLimitsRoute } from '../../limits/route/get-limits.js';
 import { blacklist } from './middleware/blacklist.js';
 import { registerGetProbeLogsRoute } from '../../probe/route/get-probe-logs.js';
+import { captureMiddlewareSpan } from '../metrics.js';
 import type { IoContext } from '../server.js';
 
 apmAgent.addTransactionFilter(apmUtils.transactionFilter({
@@ -125,10 +126,10 @@ export const getHttpServer = (ioContext: IoContext) => {
 		.use(responseTime())
 		.use(defaultHeaders())
 		.use(koaFavicon(`${publicPath}/favicon.ico`))
-		.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }))
+		.use(captureMiddlewareSpan(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false })))
 		.use(conditionalGet())
-		.use(etag({ weak: true }))
-		.use(json({ pretty: true, spaces: 2 }))
+		.use(captureMiddlewareSpan(etag({ weak: true })))
+		.use(captureMiddlewareSpan(json({ pretty: true, spaces: 2 })))
 		.use(docsLink({ docsHost }))
 		.use(defaultJson())
 		// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
