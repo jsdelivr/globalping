@@ -12,7 +12,7 @@ export const scopedFlight = (scope: string) => {
 		}
 
 		const newResult = fn(key);
-		inflight.set(scopedKey, cachedResult);
+		inflight.set(scopedKey, newResult);
 
 		return newResult.finally(() => {
 			inflight.delete(scopedKey);
