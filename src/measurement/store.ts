@@ -66,9 +66,9 @@ export class MeasurementStore {
 		return this.getFromRedisOrOffloader(id, s => s !== null ? JSON.parse(s) as MeasurementRecord : s);
 	}
 
-	private async getFromRedisOrOffloader<T extends string | MeasurementRecord | null> (
+	private async getFromRedisOrOffloader<T extends string | MeasurementRecord> (
 		id: string,
-		parse: (s: string | null) => T = s => s as T,
+		parse: (s: string | null) => T | null = s => s as T,
 	): Promise<T | null> {
 		let userTier;
 		let minutesSinceEpoch;
