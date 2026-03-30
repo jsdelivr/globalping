@@ -19,9 +19,11 @@ import { AuthenticateStateUser } from '../lib/http/middleware/authenticate.js';
 import { generateMeasurementId, parseMeasurementId } from './id.js';
 import { MeasurementStoreOffloader } from './store-offloader.js';
 import { measurementStoreClient } from '../lib/sql/client.js';
+import { scopedFlight } from '../lib/single-flight.js';
 import type { ExportMeta } from './types.js';
 
 const logger = scopedLogger('store');
+const singleFlight = scopedFlight('store');
 
 export const getMeasurementKey = (id: string, suffix: string = 'results'): string => {
 	return `gp:m:{${id}}:${suffix}`;
@@ -57,21 +59,16 @@ export class MeasurementStore {
 	}
 
 	async getMeasurementString (id: string): Promise<string | null> {
-		return this.getFromRedisOrOffloader(id, key => this.redis.sendCommand(key, true, [ 'JSON.GET', key ]));
+		return this.getFromRedisOrOffloader(id);
 	}
 
 	async getMeasurement (id: string): Promise<MeasurementRecord | null> {
-		return this.getFromRedisOrOffloader(
-			id,
-			key => this.redis.json.get(key) as Promise<MeasurementRecord | null>,
-			s => JSON.parse(s) as MeasurementRecord,
-		);
+		return this.getFromRedisOrOffloader(id, s => s !== null ? JSON.parse(s) as MeasurementRecord : s);
 	}
 
 	private async getFromRedisOrOffloader<T extends string | MeasurementRecord> (
 		id: string,
-		fromRedis: (key: string) => Promise<T | null>,
-		parseOffloaded?: (s: string) => T,
+		parse: (s: string | null) => T | null = s => s as T,
 	): Promise<T | null> {
 		let userTier;
 		let minutesSinceEpoch;
@@ -85,32 +82,34 @@ export class MeasurementStore {
 		const createdAtMs = minutesSinceEpoch * 60_000;
 		const isOlderThan30m = Date.now() - createdAtMs > 30 * 60_000;
 
-		if (isOlderThan30m) {
-			try {
-				const offloaded = await this.offloader.getMeasurementString(id, userTier, createdAtMs);
+		return singleFlight(getMeasurementKey(id), async (key) => {
+			if (isOlderThan30m) {
+				try {
+					const offloaded = await this.offloader.getMeasurementString(id, userTier, createdAtMs);
 
-				if (offloaded) {
-					return parseOffloaded ? parseOffloaded(offloaded) : offloaded as T;
+					if (offloaded) {
+						return offloaded;
+					}
+				} catch {
+					// Fall back to Redis.
 				}
-			} catch {
-				// Fall back to Redis.
 			}
-		}
 
-		return fromRedis(getMeasurementKey(id));
+			return this.redis.sendCommand<string | null>(key, true, [ 'JSON.GET', key ]);
+		}).then(parse);
 	}
 
-	async getMeasurements (ids: string[]): Promise<(MeasurementRecord | null)[]> {
+	async getMeasurementsForOffloader (ids: string[]): Promise<(MeasurementRecord | null)[]> {
 		return Bluebird.map(ids, id => this.redis.json.get(getMeasurementKey(id)) as Promise<MeasurementRecord | null>, { concurrency: 8 });
 	}
 
 	async getMeasurementIps (id: string): Promise<string[]> {
-		const ips = await this.redis.json.get(getMeasurementKey(id, 'ips')) as string[] | null;
+		const ips = await singleFlight(getMeasurementKey(id, 'ips'), key => this.redis.json.get(key) as Promise<string[] | null>);
 		return ips || [];
 	}
 
 	async getMeasurementMetas (ids: string[]): Promise<Array<ExportMeta | null>> {
-		return Bluebird.map(ids, id => this.redis.json.get(getMeasurementKey(id, 'meta')) as Promise<ExportMeta | null>, { concurrency: 8 });
+		return Bluebird.map(ids, id => singleFlight(getMeasurementKey(id, 'meta'), key => this.redis.json.get(key) as Promise<ExportMeta | null>), { concurrency: 8 });
 	}
 
 	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[], userType?: AuthenticateStateUser['userType'], exportMeta?: ExportMeta): Promise<string> {
