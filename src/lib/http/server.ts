@@ -56,6 +56,19 @@ apmAgent.addTransactionFilter((payload) => {
 	return payload;
 });
 
+// Filter out short middleware spans.
+apmAgent.addSpanFilter((payload) => {
+	if (payload['type'] !== 'app' || payload['subtype'] !== 'middleware') {
+		return payload;
+	}
+
+	if (payload['duration'] > 1) {
+		return payload;
+	}
+
+	return false;
+});
+
 // Filter out short SPUBLISH spans.
 apmAgent.addSpanFilter((payload) => {
 	if (payload['type'] !== 'db' || payload['subtype'] !== 'redis' || ![ 'SPUBLISH' ].includes(payload['name'] as string)) {
@@ -126,10 +139,10 @@ export const getHttpServer = (ioContext: IoContext) => {
 		.use(responseTime())
 		.use(defaultHeaders())
 		.use(koaFavicon(`${publicPath}/favicon.ico`))
-		.use(captureMiddlewareSpan(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false })))
+		.use(captureMiddlewareSpan(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }), { name: 'compress' }))
 		.use(conditionalGet())
-		.use(captureMiddlewareSpan(etag({ weak: true })))
-		.use(captureMiddlewareSpan(json({ pretty: true, spaces: 2 })))
+		.use(captureMiddlewareSpan(etag({ weak: true }), { name: 'etag' }))
+		.use(captureMiddlewareSpan(json({ pretty: true, spaces: 2 }), { name: 'json' }))
 		.use(docsLink({ docsHost }))
 		.use(defaultJson())
 		// Error handler must always be the first middleware in a chain unless you know what you are doing ;)

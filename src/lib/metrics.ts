@@ -253,9 +253,15 @@ export const captureSpan = <R>(name: string, fn: () => R): R => {
 
 export const captureMiddlewareSpan = <State = unknown, Context = unknown>(
 	middleware: Middleware<State, Context>,
-	phase: 'up' | 'down' = 'up',
+	{
+		name = middleware.name || 'middleware',
+		phase = 'up',
+	}: {
+		name?: string;
+		phase?: 'up' | 'down';
+	} = {},
 ): Middleware<State, Context> => {
-	const startSpan = () => apmAgent.startSpan(middleware.name || 'middleware', 'app', 'middleware');
+	const startSpan = () => apmAgent.startSpan(name, 'app', 'middleware');
 
 	if (phase === 'down') {
 		return async (ctx, next) => {
