@@ -1,3 +1,5 @@
+import { captureSpan } from './metrics.js';
+
 const inflight = new Map();
 
 export const scopedFlight = (scope: string) => {
@@ -6,7 +8,7 @@ export const scopedFlight = (scope: string) => {
 		let result = inflight.get(scopedKey) as Promise<T> | undefined;
 
 		if (result) {
-			return result;
+			return captureSpan('singleFlight', () => result);
 		}
 
 		result = fn(key);
