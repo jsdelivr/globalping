@@ -3,6 +3,7 @@ import apmAgent from 'elastic-apm-node';
 import { monitorEventLoopDelay } from 'node:perf_hooks';
 import type { Server as SocketServer } from 'socket.io';
 import type { Knex } from 'knex';
+import type { Middleware } from 'koa';
 
 import { scopedLogger } from './logger.js';
 import { PROBES_NAMESPACE } from './ws/server.js';
@@ -248,6 +249,44 @@ export const captureSpan = <R>(name: string, fn: () => R): R => {
 		span?.end();
 		throw error;
 	}
+};
+
+export const captureMiddlewareSpan = <State = unknown, Context = unknown>(
+	middleware: Middleware<State, Context>,
+	phase: 'up' | 'down' = 'up',
+): Middleware<State, Context> => {
+	const startSpan = () => apmAgent.startSpan(middleware.name || 'middleware', 'app', 'middleware');
+
+	if (phase === 'down') {
+		return async (ctx, next) => {
+			const span = startSpan();
+
+			try {
+				await middleware(ctx, () => {
+					span?.end();
+					return next();
+				});
+			} finally {
+				span?.end();
+			}
+		};
+	}
+
+	return async (ctx, next) => {
+		let span: ReturnType<typeof startSpan> | undefined;
+
+		try {
+			await middleware(ctx, async () => {
+				await next();
+
+				if (!span) {
+					span = startSpan();
+				}
+			});
+		} finally {
+			span?.end();
+		}
+	};
 };
 
 function median (values: number[]): number | undefined {
