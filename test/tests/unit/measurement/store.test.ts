@@ -61,7 +61,7 @@ describe('measurement store', () => {
 	sandbox.stub(Math, 'random').returns(0.8);
 
 	const parseMeasurementIdStub = sandbox.stub();
-	const offloaderGetMeasurementStringStub = sandbox.stub();
+	const offloaderGetMeasurementBufferStub = sandbox.stub();
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/measurement/id.ts', {
@@ -75,8 +75,8 @@ describe('measurement store', () => {
 		class OffloaderMock {
 			startRetryWorker () { /* no-op */ }
 			enqueueForOffload () { /* no-op */ }
-			getMeasurementString (id: string, userTier: number, createdAtRounded: number) {
-				return offloaderGetMeasurementStringStub(id, userTier, createdAtRounded);
+			getMeasurementBuffer (id: string, userTier: number, createdAtRounded: number) {
+				return offloaderGetMeasurementBufferStub(id, userTier, createdAtRounded);
 			}
 		}
 
@@ -688,13 +688,13 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementStringStub.resolves('{"from":"db"}');
+		offloaderGetMeasurementBufferStub.resolves(Buffer.from('{"from":"db"}'));
 		redisMock.sendCommand.resolves(null);
 
-		const result = await store.getMeasurementString('SOME_ID');
-		expect(result).to.equal('{"from":"db"}');
+		const result = await store.getMeasurementBuffer('SOME_ID');
+		expect(result?.toString()).to.equal('{"from":"db"}');
 
-		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
+		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
 		expect(redisMock.sendCommand.callCount).to.equal(0);
 	});
 
@@ -705,14 +705,14 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementStringStub.resolves(null);
+		offloaderGetMeasurementBufferStub.resolves(null);
 		const redisValue = '{"from":"redis"}';
-		redisMock.sendCommand.resolves(redisValue);
+		redisMock.sendCommand.resolves(Buffer.from(redisValue));
 
-		const result = await store.getMeasurementString('SOME_ID');
-		expect(result).to.equal(redisValue);
+		const result = await store.getMeasurementBuffer('SOME_ID');
+		expect(result?.toString()).to.equal(redisValue);
 
-		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
+		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
 		expect(redisMock.sendCommand.callCount).to.equal(1);
 	});
 
@@ -723,14 +723,14 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementStringStub.rejects(new Error('DB error'));
+		offloaderGetMeasurementBufferStub.rejects(new Error('DB error'));
 		const redisValue = '{"from":"redis"}';
-		redisMock.sendCommand.resolves(redisValue);
+		redisMock.sendCommand.resolves(Buffer.from(redisValue));
 
-		const result = await store.getMeasurementString('SOME_ID');
-		expect(result).to.equal(redisValue);
+		const result = await store.getMeasurementBuffer('SOME_ID');
+		expect(result?.toString()).to.equal(redisValue);
 
-		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
+		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
 		expect(redisMock.sendCommand.callCount).to.equal(1);
 	});
 
@@ -741,14 +741,14 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementStringStub.resolves('{"from":"db"}');
+		offloaderGetMeasurementBufferStub.resolves(Buffer.from('{"from":"db"}'));
 
 		const redisValue = '{"from":"redis"}';
-		redisMock.sendCommand.resolves(redisValue);
+		redisMock.sendCommand.resolves(Buffer.from(redisValue));
 
-		const result = await store.getMeasurementString('SOME_ID');
-		expect(result).to.equal(redisValue);
-		expect(offloaderGetMeasurementStringStub.callCount).to.equal(0);
+		const result = await store.getMeasurementBuffer('SOME_ID');
+		expect(result?.toString()).to.equal(redisValue);
+		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(0);
 		expect(redisMock.sendCommand.callCount).to.equal(1);
 	});
 
@@ -759,13 +759,13 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementStringStub.resolves('{"from":"db"}');
+		offloaderGetMeasurementBufferStub.resolves(Buffer.from('{"from":"db"}'));
 		redisMock.sendCommand.reset();
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal({ from: 'db' });
 
-		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
+		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
 		expect(redisMock.sendCommand.callCount).to.equal(0);
 	});
 
@@ -776,14 +776,14 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementStringStub.resolves(null);
+		offloaderGetMeasurementBufferStub.resolves(null);
 		redisMock.sendCommand.reset();
-		redisMock.sendCommand.resolves('{"from":"redis"}');
+		redisMock.sendCommand.resolves(Buffer.from('{"from":"redis"}'));
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal({ from: 'redis' });
 
-		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
+		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
 		expect(redisMock.sendCommand.callCount).to.equal(1);
 	});
 
@@ -794,14 +794,14 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementStringStub.rejects(new Error('DB error'));
+		offloaderGetMeasurementBufferStub.rejects(new Error('DB error'));
 		redisMock.sendCommand.reset();
-		redisMock.sendCommand.resolves('{"from":"redis"}');
+		redisMock.sendCommand.resolves(Buffer.from('{"from":"redis"}'));
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal({ from: 'redis' });
 
-		expect(offloaderGetMeasurementStringStub.callCount).to.equal(1);
+		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
 		expect(redisMock.sendCommand.callCount).to.equal(1);
 	});
 
@@ -813,12 +813,12 @@ describe('measurement store', () => {
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
 		redisMock.sendCommand.reset();
-		redisMock.sendCommand.resolves('{"from":"redis"}');
+		redisMock.sendCommand.resolves(Buffer.from('{"from":"redis"}'));
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal({ from: 'redis' });
 
-		expect(offloaderGetMeasurementStringStub.callCount).to.equal(0);
+		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(0);
 		expect(redisMock.sendCommand.callCount).to.equal(1);
 	});
 
