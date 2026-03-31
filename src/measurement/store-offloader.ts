@@ -21,8 +21,8 @@ const compressRecord = (record: string): Promise<Buffer> => {
 	return brotliCompress(record, { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 5 } });
 };
 
-const decompressRecord = async (buffer: Buffer): Promise<string> => {
-	return (await brotliDecompress(buffer)).toString();
+const decompressRecord = async (buffer: Buffer): Promise<Buffer> => {
+	return brotliDecompress(buffer);
 };
 
 export class MeasurementStoreOffloader {
@@ -59,7 +59,7 @@ export class MeasurementStoreOffloader {
 		this.offloadQueues[tier].push(measurement);
 	}
 
-	async getMeasurementString (id: string, userTierNum: keyof typeof USER_TIER_INVERTED, createdAtRounded: number): Promise<string | null> {
+	async getMeasurementBuffer (id: string, userTierNum: keyof typeof USER_TIER_INVERTED, createdAtRounded: number): Promise<Buffer | null> {
 		const tier = USER_TIER_INVERTED[userTierNum];
 		const table = `measurement_${tier}`;
 		const createdAt = new Date(createdAtRounded);

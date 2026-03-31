@@ -16,7 +16,7 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 
 	await checkGetMeasurementRateLimit(ctx);
 
-	const result = await store.getMeasurementString(id);
+	const result = await store.getMeasurementBuffer(id);
 	apmAgent.addLabels({ gpMeasurementId: id });
 
 	if (!result) {

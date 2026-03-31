@@ -58,17 +58,17 @@ export class MeasurementStore {
 		this.offloader = new MeasurementStoreOffloader(measurementStoreClient, this);
 	}
 
-	async getMeasurementString (id: string): Promise<string | null> {
+	async getMeasurementBuffer (id: string): Promise<Buffer | null> {
 		return this.getFromRedisOrOffloader(id);
 	}
 
 	async getMeasurement (id: string): Promise<MeasurementRecord | null> {
-		return this.getFromRedisOrOffloader(id, s => s !== null ? JSON.parse(s) as MeasurementRecord : s);
+		return this.getFromRedisOrOffloader(id, b => b ? JSON.parse(b.toString('utf8')) as MeasurementRecord : b);
 	}
 
-	private async getFromRedisOrOffloader<T extends string | MeasurementRecord> (
+	private async getFromRedisOrOffloader<T extends Buffer | MeasurementRecord> (
 		id: string,
-		parse: (s: string | null) => T | null = s => s as T,
+		parse: (b: Buffer | null) => T | null = b => b as T,
 	): Promise<T | null> {
 		let userTier;
 		let minutesSinceEpoch;
@@ -85,7 +85,7 @@ export class MeasurementStore {
 		return singleFlight(getMeasurementKey(id), async (key) => {
 			if (isOlderThan30m) {
 				try {
-					const offloaded = await this.offloader.getMeasurementString(id, userTier, createdAtMs);
+					const offloaded = await this.offloader.getMeasurementBuffer(id, userTier, createdAtMs);
 
 					if (offloaded) {
 						return offloaded;
@@ -95,7 +95,7 @@ export class MeasurementStore {
 				}
 			}
 
-			return this.redis.sendCommand<string | null>(key, true, [ 'JSON.GET', key ]);
+			return this.redis.sendCommand<Buffer | null>(key, true, [ 'JSON.GET', key ], { returnBuffers: true });
 		}).then(parse);
 	}
 
