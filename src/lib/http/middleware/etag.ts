@@ -3,6 +3,7 @@ import { Stats } from 'node:fs';
 import { Stream } from 'node:stream';
 import { xxh3 } from '@node-rs/xxhash';
 import type { Context, Middleware } from 'koa';
+import { captureSpan } from '../../metrics.js';
 
 const isStats = (value: unknown): value is Stats => value instanceof Stats;
 
@@ -51,7 +52,7 @@ const getResponseEntity = async (ctx: Context) => {
 };
 
 const buildEtag = (entity: string | Buffer | Stats) => {
-	return `W/${isStats(entity) ? statTag(entity) : entityTag(entity)}`;
+	return captureSpan('buildEtag', () => `W/${isStats(entity) ? statTag(entity) : entityTag(entity)}`);
 };
 
 export const etag = (): Middleware => {
