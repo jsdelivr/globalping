@@ -228,7 +228,7 @@ export const initMetricsAgent = (io: SocketServer, fetchProbes: IoContext['fetch
 };
 
 export const captureSpan = <R>(name: string, fn: () => R): R => {
-	const span = apmAgent.startSpan(name);
+	const span = apmAgent.startSpan(name, 'app', 'custom');
 
 	try {
 		const result = fn();
@@ -289,6 +289,23 @@ export const captureMiddlewareSpan = <State = unknown, Context = unknown>(
 					span = startSpan();
 				}
 			});
+		} finally {
+			span?.end();
+		}
+	};
+};
+
+export const captureMiddlewareChainSpan = <State = unknown, Context = unknown>(
+	name: string = 'middleware',
+	subtype: string = 'middleware',
+): Middleware<State, Context> => {
+	const startSpan = () => apmAgent.startSpan(name, 'app', subtype);
+
+	return async (_ctx, next) => {
+		const span = startSpan();
+
+		try {
+			await next();
 		} finally {
 			span?.end();
 		}

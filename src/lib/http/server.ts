@@ -34,7 +34,7 @@ import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternati
 import { registerLimitsRoute } from '../../limits/route/get-limits.js';
 import { blacklist } from './middleware/blacklist.js';
 import { registerGetProbeLogsRoute } from '../../probe/route/get-probe-logs.js';
-import { captureMiddlewareSpan } from '../metrics.js';
+import { captureMiddlewareChainSpan, captureMiddlewareSpan } from '../metrics.js';
 import type { IoContext } from '../server.js';
 
 apmAgent.addTransactionFilter(apmUtils.transactionFilter({
@@ -149,6 +149,7 @@ export const getHttpServer = (ioContext: IoContext) => {
 		.use(errorHandlerMw)
 		.use(corsHandler())
 		.use(blacklist)
+		.use(captureMiddlewareChainSpan('route', 'custom'))
 		.use(rootRouter.routes())
 		.use(healthRouter.routes())
 		.use(apiRouter.routes())
