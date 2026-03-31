@@ -10,6 +10,7 @@
 		"@koa/router": "^13.1.1",
 		"@martin-kolarik/batch-queue": "^1.1.1",
 		"@maxmind/geoip2-node": "^6.3.4",
+		"@node-rs/xxhash": "^1.7.6",
 		"@redocly/openapi-core": "^2.14.4",
 		"@scure/base": "^2.0.0",
 		"@sindresorhus/base62": "^1.0.0",

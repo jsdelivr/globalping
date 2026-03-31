@@ -7,7 +7,6 @@ import json from 'koa-json';
 import Router from '@koa/router';
 import conditionalGet from 'koa-conditional-get';
 import compress from 'koa-compress';
-import etag from 'koa-etag';
 import responseTime from 'koa-response-time';
 import koaFavicon from 'koa-favicon';
 import koaStatic from 'koa-static';
@@ -24,6 +23,7 @@ import { errorHandler } from './error-handler.js';
 import { defaultJson } from './middleware/default-json.js';
 import { errorHandlerMw } from './middleware/error-handler.js';
 import { corsHandler } from './middleware/cors.js';
+import { etag } from './middleware/etag.js';
 import { requestIp } from './middleware/request-ip.js';
 import { defaultHeaders } from './middleware/default-headers.js';
 import { isAdminMw } from './middleware/is-admin.js';
@@ -141,7 +141,7 @@ export const getHttpServer = (ioContext: IoContext) => {
 		.use(koaFavicon(`${publicPath}/favicon.ico`))
 		.use(captureMiddlewareSpan(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }), { name: 'compress' }))
 		.use(conditionalGet())
-		.use(captureMiddlewareSpan(etag({ weak: true }), { name: 'etag' }))
+		.use(captureMiddlewareSpan(etag(), { name: 'etag' }))
 		.use(captureMiddlewareSpan(json({ pretty: true, spaces: 2 }), { name: 'json' }))
 		.use(docsLink({ docsHost }))
 		.use(defaultJson())
