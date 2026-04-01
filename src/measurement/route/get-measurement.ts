@@ -23,6 +23,8 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 		throw createHttpError(404, `Couldn't find the requested measurement.`, { type: 'not_found' });
 	}
 
+	ctx.set('Cache-Control', 'public, max-age=0');
+
 	ctx.type = 'application/json';
 	ctx.body = result;
 };
