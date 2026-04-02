@@ -11,11 +11,13 @@ import {
 import _ from 'lodash';
 import Bluebird from 'bluebird';
 import { type RedisScripts, scripts } from './scripts.js';
+import { compressedJsonGetBuffer } from './compressed.js';
 import { type Logger } from 'h-logger2';
 
 type ClusterExtensions = {
 	mapMasters: typeof mapMasters;
 	reduceMasters: typeof reduceMasters;
+	compressedJsonGetBuffer: typeof compressedJsonGetBuffer;
 };
 
 export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts>;
@@ -47,6 +49,7 @@ export const createRedisClusterInternal = (options: RedisClusterOptions, logger:
 	const client = Object.assign(cluster, {
 		mapMasters,
 		reduceMasters,
+		compressedJsonGetBuffer,
 	});
 
 	const connectPromise = client
