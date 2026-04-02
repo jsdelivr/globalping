@@ -2,8 +2,6 @@ FROM redis/redis-stack-server:7.4.0-v1
 
 ARG TARGETARCH
 
-USER root
-
 RUN mkdir -p /opt/redis-modules
 
 COPY config/redis/modules/redis-compressed-linux-amd64.so /tmp/redis-compressed-linux-amd64.so
@@ -17,4 +15,3 @@ RUN set -eux; \
     esac; \
     rm /tmp/redis-compressed-linux-amd64.so /tmp/redis-compressed-linux-arm64.so
 
-USER root
