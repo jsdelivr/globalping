@@ -92,6 +92,26 @@ describe('Get measurement', () => {
 					expect(response).to.matchApiSchema();
 				});
 		});
+
+		it('should return large measurement JSON stored in Redis when Redis replies with compressed payload', async () => {
+			const now = new Date();
+			const id = generateMeasurementId(now);
+			const key = getMeasurementKey(id);
+			const record = buildMeasurementRecord(id, now);
+			record.target = 'x'.repeat(12_000);
+
+			const redis = getMeasurementRedisClient();
+			await redis.json.set(key, '$', record);
+			redisKeysToCleanup.push(key);
+
+			await requestAgent
+				.get(`/v1/measurements/${id}`)
+				.expect(200)
+				.expect((response) => {
+					expect(response.body).to.deep.equal(record);
+					expect(response).to.matchApiSchema();
+				});
+		});
 	});
 
 	describe('success (from Postgres offload)', () => {

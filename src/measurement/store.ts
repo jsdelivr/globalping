@@ -95,7 +95,7 @@ export class MeasurementStore {
 				}
 			}
 
-			return this.redis.sendCommand<Buffer | null>(key, true, [ 'JSON.GET', key ], { returnBuffers: true });
+			return this.redis.compressedJsonGetBuffer(key);
 		}).then(parse);
 	}
 
