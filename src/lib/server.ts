@@ -28,6 +28,7 @@ import { initProbesLocationFilter } from '../probe/probes-location-filter.js';
 import type { SyncedProbeList } from './ws/synced-probe-list.js';
 import type { SocketProbe } from '../probe/types.js';
 import { initAltIpsClient, type AltIpsClient } from './alt-ips-client.js';
+import { setDefaultHighWaterMark } from 'node:stream';
 
 type WsServerExports = Awaited<ReturnType<typeof initWsServer>>;
 
@@ -50,6 +51,9 @@ export type IoContext = {
 	disconnectBySocketId: WsServerExports['disconnectBySocketId'];
 	onProbesUpdate: WsServerExports['onProbesUpdate'];
 };
+
+setDefaultHighWaterMark(true, 1024);
+setDefaultHighWaterMark(false, 1024 * 1024);
 
 export const createServer = async () => {
 	await initRedisClient();
