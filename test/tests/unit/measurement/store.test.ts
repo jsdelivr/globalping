@@ -35,8 +35,14 @@ describe('measurement store', () => {
 	let getMeasurementStore: () => MeasurementStore;
 
 	const sandbox = sinon.createSandbox();
+	const dedicatedRedisMock = {
+		compressedJsonGetBuffer: sandbox.stub(),
+		on: sandbox.stub(),
+		connect: sandbox.stub(),
+	};
 	const redisMock = {
 		compressedJsonGetBuffer: sandbox.stub(),
+		duplicate: sandbox.stub(),
 		hScan: sandbox.stub(),
 		hDel: sandbox.stub(),
 		hSet: sandbox.stub(),
@@ -71,7 +77,10 @@ describe('measurement store', () => {
 			parseMeasurementId: ((...args: any[]) => parseMeasurementIdStub(...args)) as unknown,
 		}, {});
 
-		await td.replaceEsm('../../../../src/lib/redis/measurement-client.ts', { getMeasurementRedisClient: () => redisMock });
+		await td.replaceEsm('../../../../src/lib/redis/measurement-client.ts', {
+			getMeasurementRedisClient: () => redisMock,
+			getDedicatedMeasurementRedisClient: () => dedicatedRedisMock,
+		});
 
 		class OffloaderMock {
 			startRetryWorker () { /* no-op */ }
@@ -86,8 +95,11 @@ describe('measurement store', () => {
 	});
 
 	beforeEach(() => {
+		dedicatedRedisMock.on.callsFake(() => dedicatedRedisMock);
+		dedicatedRedisMock.connect.resolves();
+		redisMock.duplicate.returns(dedicatedRedisMock);
 		parseMeasurementIdStub.callsFake(id.parseMeasurementId);
-		redisMock.compressedJsonGetBuffer.reset();
+		dedicatedRedisMock.compressedJsonGetBuffer.reset();
 		redisMock.recordResult.reset();
 		sandbox.resetHistory();
 	});
@@ -691,13 +703,13 @@ describe('measurement store', () => {
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
 		offloaderGetMeasurementBufferStub.resolves(Buffer.from('{"from":"db"}'));
-		redisMock.compressedJsonGetBuffer.resolves(null);
+		dedicatedRedisMock.compressedJsonGetBuffer.resolves(null);
 
 		const result = await store.getMeasurementBuffer('SOME_ID');
 		expect(result?.toString()).to.equal('{"from":"db"}');
 
 		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(0);
+		expect(dedicatedRedisMock.compressedJsonGetBuffer.callCount).to.equal(0);
 	});
 
 	it('should fallback to Redis if the offload DB returns null (miss)', async () => {
@@ -710,14 +722,14 @@ describe('measurement store', () => {
 		offloaderGetMeasurementBufferStub.resolves(null);
 
 		const redisValue = '{"from":"redis"}';
-		redisMock.compressedJsonGetBuffer.resolves(Buffer.from(redisValue));
+		dedicatedRedisMock.compressedJsonGetBuffer.resolves(Buffer.from(redisValue));
 
 		const result = await store.getMeasurementBuffer('SOME_ID');
 		expect(result?.toString()).to.equal(redisValue);
 
 		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.firstCall.args).to.deep.equal([ 'gp:m:{SOME_ID}:results' ]);
+		expect(dedicatedRedisMock.compressedJsonGetBuffer.callCount).to.equal(1);
+		expect(dedicatedRedisMock.compressedJsonGetBuffer.firstCall.args).to.deep.equal([ 'gp:m:{SOME_ID}:results' ]);
 	});
 
 	it('should fallback to Redis if DB throws', async () => {
@@ -730,13 +742,13 @@ describe('measurement store', () => {
 		offloaderGetMeasurementBufferStub.rejects(new Error('DB error'));
 
 		const redisValue = '{"from":"redis"}';
-		redisMock.compressedJsonGetBuffer.resolves(Buffer.from(redisValue));
+		dedicatedRedisMock.compressedJsonGetBuffer.resolves(Buffer.from(redisValue));
 
 		const result = await store.getMeasurementBuffer('SOME_ID');
 		expect(result?.toString()).to.equal(redisValue);
 
 		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(1);
+		expect(dedicatedRedisMock.compressedJsonGetBuffer.callCount).to.equal(1);
 	});
 
 	it('should use Redis when measurement is recent', async () => {
@@ -749,13 +761,13 @@ describe('measurement store', () => {
 		offloaderGetMeasurementBufferStub.resolves(Buffer.from('{"from":"db"}'));
 
 		const redisValue = '{"from":"redis"}';
-		redisMock.compressedJsonGetBuffer.resolves(Buffer.from(redisValue));
+		dedicatedRedisMock.compressedJsonGetBuffer.resolves(Buffer.from(redisValue));
 
 		const result = await store.getMeasurementBuffer('SOME_ID');
 		expect(result?.toString()).to.equal(redisValue);
 		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(0);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.firstCall.args).to.deep.equal([ 'gp:m:{SOME_ID}:results' ]);
+		expect(dedicatedRedisMock.compressedJsonGetBuffer.callCount).to.equal(1);
+		expect(dedicatedRedisMock.compressedJsonGetBuffer.firstCall.args).to.deep.equal([ 'gp:m:{SOME_ID}:results' ]);
 	});
 
 	it('getMeasurement should prefer the offload DB for likely offloaded measurements', async () => {
@@ -766,13 +778,13 @@ describe('measurement store', () => {
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
 		offloaderGetMeasurementBufferStub.resolves(Buffer.from('{"from":"db"}'));
-		redisMock.compressedJsonGetBuffer.reset();
+		dedicatedRedisMock.compressedJsonGetBuffer.reset();
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal({ from: 'db' });
 
 		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(0);
+		expect(dedicatedRedisMock.compressedJsonGetBuffer.callCount).to.equal(0);
 	});
 
 	it('getMeasurement should fallback to Redis if the offload DB returns null', async () => {
@@ -783,14 +795,14 @@ describe('measurement store', () => {
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
 		offloaderGetMeasurementBufferStub.resolves(null);
-		redisMock.compressedJsonGetBuffer.reset();
-		redisMock.compressedJsonGetBuffer.resolves(Buffer.from('{"from":"redis"}'));
+		dedicatedRedisMock.compressedJsonGetBuffer.reset();
+		dedicatedRedisMock.compressedJsonGetBuffer.resolves(Buffer.from('{"from":"redis"}'));
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal({ from: 'redis' });
 
 		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(1);
+		expect(dedicatedRedisMock.compressedJsonGetBuffer.callCount).to.equal(1);
 	});
 
 	it('getMeasurement should fallback to Redis if DB throws', async () => {
@@ -801,14 +813,14 @@ describe('measurement store', () => {
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
 		offloaderGetMeasurementBufferStub.rejects(new Error('DB error'));
-		redisMock.compressedJsonGetBuffer.reset();
-		redisMock.compressedJsonGetBuffer.resolves(Buffer.from('{"from":"redis"}'));
+		dedicatedRedisMock.compressedJsonGetBuffer.reset();
+		dedicatedRedisMock.compressedJsonGetBuffer.resolves(Buffer.from('{"from":"redis"}'));
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal({ from: 'redis' });
 
 		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(1);
+		expect(dedicatedRedisMock.compressedJsonGetBuffer.callCount).to.equal(1);
 	});
 
 	it('getMeasurement should use Redis when measurement is recent', async () => {
@@ -818,14 +830,14 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		redisMock.compressedJsonGetBuffer.reset();
-		redisMock.compressedJsonGetBuffer.resolves(Buffer.from('{"from":"redis"}'));
+		dedicatedRedisMock.compressedJsonGetBuffer.reset();
+		dedicatedRedisMock.compressedJsonGetBuffer.resolves(Buffer.from('{"from":"redis"}'));
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal({ from: 'redis' });
 
 		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(0);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(1);
+		expect(dedicatedRedisMock.compressedJsonGetBuffer.callCount).to.equal(1);
 	});
 
 	it('setOffloadedExpiration should set 60m TTL on results keys', async () => {

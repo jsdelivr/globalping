@@ -14,7 +14,7 @@ import type {
 	RequestType,
 } from './types.js';
 import { getDefaults } from './schema/utils.js';
-import { getMeasurementRedisClient, type RedisCluster } from '../lib/redis/measurement-client.js';
+import { getDedicatedMeasurementRedisClient, getMeasurementRedisClient, type RedisCluster } from '../lib/redis/measurement-client.js';
 import { AuthenticateStateUser } from '../lib/http/middleware/authenticate.js';
 import { generateMeasurementId, parseMeasurementId } from './id.js';
 import { MeasurementStoreOffloader } from './store-offloader.js';
@@ -53,8 +53,10 @@ const subtractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unk
 
 export class MeasurementStore {
 	private offloader: MeasurementStoreOffloader;
+	private readonly compressedJsonRedis: RedisCluster;
 
 	constructor (private readonly redis: RedisCluster) {
+		this.compressedJsonRedis = getDedicatedMeasurementRedisClient();
 		this.offloader = new MeasurementStoreOffloader(measurementStoreClient, this);
 	}
 
@@ -95,7 +97,7 @@ export class MeasurementStore {
 				}
 			}
 
-			return this.redis.compressedJsonGetBuffer(key);
+			return this.compressedJsonRedis.compressedJsonGetBuffer(key);
 		}).then(parse);
 	}
 

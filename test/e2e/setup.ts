@@ -9,7 +9,7 @@ import { docker } from './docker.js';
 import { dashboardClient, measurementStoreClient } from '../../src/lib/sql/client.js';
 import { initRedisClient } from '../../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../../src/lib/redis/persistent-client.js';
-import { initMeasurementRedisClient } from '../../src/lib/redis/measurement-client.js';
+import { initDedicatedMeasurementRedisClient, initMeasurementRedisClient } from '../../src/lib/redis/measurement-client.js';
 import { resetDbs } from '../utils/db.js';
 
 const dbClients = [ dashboardClient, measurementStoreClient ];
@@ -40,6 +40,8 @@ const flushRedis = async () => {
 		initPersistentRedisClient(),
 		initMeasurementRedisClient(),
 	]);
+
+	await initDedicatedMeasurementRedisClient();
 
 	await Bluebird.all([
 		client1.flushDb(),

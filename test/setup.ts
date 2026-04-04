@@ -23,7 +23,7 @@ import {
 import chaiOas from './plugins/oas/index.js';
 import { initRedisClient } from '../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../src/lib/redis/persistent-client.js';
-import { initMeasurementRedisClient } from '../src/lib/redis/measurement-client.js';
+import { initDedicatedMeasurementRedisClient, initMeasurementRedisClient } from '../src/lib/redis/measurement-client.js';
 import { initSubscriptionRedisClient } from '../src/lib/redis/subscription-client.js';
 import { dashboardClient, measurementStoreClient } from '../src/lib/sql/client.js';
 import { populateLegalNames } from '../src/lib/geoip/legal-name-normalization.js';
@@ -44,6 +44,7 @@ before(async () => {
 	await persistentRedisClient.flushDb();
 	const measurementRedisClient = await initMeasurementRedisClient();
 	await measurementRedisClient.mapMasters<string>(client => client.flushDb());
+	await initDedicatedMeasurementRedisClient();
 	const subscriptionRedisClient = await initSubscriptionRedisClient();
 	await subscriptionRedisClient.flushDb();
 	await resetDbs(dbClients);

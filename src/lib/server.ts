@@ -10,7 +10,7 @@ import { populateLegalNames } from './geoip/legal-name-normalization.js';
 import { populateAsnData } from './geoip/asns.js';
 import { disconnectProbes, reconnectProbes } from './ws/helper/reconnect-probes.js';
 import { initPersistentRedisClient } from './redis/persistent-client.js';
-import { initMeasurementRedisClient } from './redis/measurement-client.js';
+import { initDedicatedMeasurementRedisClient, initMeasurementRedisClient } from './redis/measurement-client.js';
 import { initSubscriptionRedisClient } from './redis/subscription-client.js';
 import termListener from './term-listener.js';
 import { auth } from './http/auth.js';
@@ -55,6 +55,7 @@ export const createServer = async () => {
 	await initRedisClient();
 	await initPersistentRedisClient();
 	await initMeasurementRedisClient();
+	await initDedicatedMeasurementRedisClient();
 	await initSubscriptionRedisClient();
 
 	// Populate in-memory lists
