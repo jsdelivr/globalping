@@ -142,7 +142,7 @@ export class AdoptionToken {
 				},
 			},
 			headers: {
-				'X-Api-Key': systemKey,
+				Authorization: `Bearer ${systemKey}`,
 			},
 			timeout: {
 				request: 5000,

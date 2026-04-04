@@ -2,6 +2,7 @@ import type { Knex } from 'knex';
 import Bluebird from 'bluebird';
 import _ from 'lodash';
 import config from 'config';
+import got from 'got';
 import { scopedLogger } from '../logger.js';
 import type { ExtendedProbeLocationWithOverrides, ServerProbe, SocketProbe, ProbeLocation, Tag } from '../../probe/types.js';
 import { getGroupingKey, normalizeCoordinate, normalizeFromPublicName, normalizeTags } from '../geoip/utils.js';
@@ -12,8 +13,10 @@ import { randomUUID } from 'crypto';
 const logger = scopedLogger('adopted-probes');
 
 export const DASH_PROBES_TABLE = 'gp_probes';
-export const NOTIFICATIONS_TABLE = 'directus_notifications';
 export const USERS_TABLE = 'directus_users';
+const NOTIFICATIONS_TABLE = 'directus_notifications';
+const directusUrl = config.get<string>('dashboard.directusUrl');
+const systemKey = config.get<string>('systemApi.key');
 
 type DProbe = {
 	id: string;
@@ -753,11 +756,28 @@ export class AdoptedProbes {
 		await this.sql(DASH_PROBES_TABLE).insert(dProbe);
 	}
 
-	private async sendNotification (recipient: string, subject: string, message: string) {
-		await this.sql.raw(`
-			INSERT INTO ${NOTIFICATIONS_TABLE} (recipient, subject, message) SELECT :recipient, :subject, :message
-			WHERE NOT EXISTS (SELECT 1 FROM ${NOTIFICATIONS_TABLE} WHERE recipient = :recipient AND message = :message AND DATE(timestamp) = CURRENT_DATE)
-		`, { recipient, subject, message });
+	private async sendNotification (recipient: string, type: string, subject: string, message: string) {
+		const existing = await this.sql(NOTIFICATIONS_TABLE)
+			.where({ recipient, message })
+			.whereRaw('DATE(timestamp) = CURRENT_DATE')
+			.first<{ recipient: string }>('recipient');
+
+		if (existing) {
+			return;
+		}
+
+		await got.post(`${directusUrl}/notifications`, {
+			json: { recipient, type, subject, message },
+			headers: {
+				Authorization: `Bearer ${systemKey}`,
+			},
+			timeout: {
+				request: 5000,
+			},
+			retry: {
+				limit: 2,
+			},
+		});
 	}
 
 	private async sendNotificationCityNotApplied (adoption: Adoption, probeCountry: string) {
@@ -766,6 +786,7 @@ export class AdoptedProbes {
 
 		return this.sendNotification(
 			adoption.userId,
+			'probe_location_changed',
 			`Your probe's location has changed`,
 			`Globalping detected that your ${adoption.name ? `probe [**${adoption.name}**](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address **${adoption.ip}**](/probes/${adoption.id})`} has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).`,
 		);
@@ -777,6 +798,7 @@ export class AdoptedProbes {
 
 		return this.sendNotification(
 			adoption.userId,
+			'probe_location_changed_back',
 			`Your probe's location has changed back`,
 			`Globalping detected that your ${adoption.name ? `probe [**${adoption.name}**](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address **${adoption.ip}**](/probes/${adoption.id})`} has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is now applied again.`,
 		);
