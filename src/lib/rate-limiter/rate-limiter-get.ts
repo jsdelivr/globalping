@@ -9,6 +9,7 @@ const redisClient = getPersistentRedisClient();
 
 export const rateLimiter = new RateLimiterRedis({
 	storeClient: redisClient,
+	useRedisPackage: true,
 	keyPrefix: 'rate:get',
 	points: config.get<number>('measurement.rateLimit.getPerMeasurement.limit'),
 	duration: config.get<number>('measurement.rateLimit.getPerMeasurement.reset'),

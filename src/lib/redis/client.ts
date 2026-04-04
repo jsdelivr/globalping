@@ -1,6 +1,5 @@
 import config from 'config';
-import type { RedisClientOptions } from 'redis';
-import { createRedisClientInternal, type RedisClient, type RedisClientInternal } from './shared.js';
+import { createRedisClientInternal, type RedisClient, type RedisClientInternal, type Resp3RedisClientOptions } from './shared.js';
 import { scopedLogger } from '../logger.js';
 
 export type { RedisClient } from './shared.js';
@@ -23,10 +22,10 @@ export const initRedisClient = async () => {
 	return redis;
 };
 
-const createRedisClient = (options?: RedisClientOptions): RedisClientInternal => {
+const createRedisClient = (options?: Partial<Resp3RedisClientOptions>): RedisClientInternal => {
 	return createRedisClientInternal({
-		...config.get<RedisClientOptions>('redis.sharedOptions'),
-		...config.get<RedisClientOptions>('redis.standaloneNonPersistent'),
+		...config.get<Partial<Resp3RedisClientOptions>>('redis.sharedOptions'),
+		...config.get<Partial<Resp3RedisClientOptions>>('redis.standaloneNonPersistent'),
 		...options,
 		name: 'non-persistent',
 	}, scopedLogger('redis-non-persistent'));

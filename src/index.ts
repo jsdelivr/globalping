@@ -26,8 +26,8 @@ if (cluster.isPrimary) {
 	const redis = await initRedisClient();
 	const persistentRedis = await initPersistentRedisClient();
 	await flushRedisCache();
-	await redis.disconnect();
-	await persistentRedis.disconnect();
+	redis.destroy();
+	persistentRedis.destroy();
 	let syncAdoptionsPid: number | null = null;
 
 	for (let i = 0; i < workerCount; i++) {

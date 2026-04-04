@@ -1,51 +1,12 @@
-import { defineScript } from 'redis';
+import { defineScript, type CommandParser } from 'redis';
 import type { HttpProgress, MeasurementRecord, MeasurementResultMessage, TestProgress } from '../../measurement/types.js';
 
-type RecordProgressScript = {
-	NUMBER_OF_KEYS: number;
-	SCRIPT: string;
-	transformArguments (measurementId: string, testId: string, progress: TestProgress | HttpProgress): string[];
-	transformReply (): null;
-} & {
-	SHA1: string;
+const pushMeasurementKeys = (parser: CommandParser, measurementId: string) => {
+	parser.pushKey(`gp:m:{${measurementId}}:results`);
+	parser.pushKey(`gp:m:{${measurementId}}:probes_awaiting`);
 };
 
-type RecordProgressAppendScript = {
-	NUMBER_OF_KEYS: number;
-	SCRIPT: string;
-	transformArguments (measurementId: string, testId: string, progress: TestProgress | HttpProgress): string[];
-	transformReply (): null;
-} & {
-	SHA1: string;
-};
-
-type RecordResultScript = {
-	NUMBER_OF_KEYS: number;
-	SCRIPT: string;
-	transformArguments (measurementId: string, testId: string, data: MeasurementResultMessage['result']): string[];
-	transformReply (reply: number): boolean;
-} & {
-	SHA1: string;
-};
-
-type MarkFinishedScript = {
-	NUMBER_OF_KEYS: number;
-	SCRIPT: string;
-	transformArguments (measurementId: string): string[];
-	transformReply (reply: string): MeasurementRecord | null;
-} & {
-	SHA1: string;
-};
-
-export type RedisScripts = {
-	recordProgress: RecordProgressScript;
-	recordProgressAppend: RecordProgressAppendScript;
-	recordResult: RecordResultScript;
-	markFinished: MarkFinishedScript;
-};
-
-const recordProgress: RecordProgressScript = defineScript({
-	FIRST_KEY_INDEX: 0, // Needed in clusters: https://github.com/redis/node-redis/issues/2521
+const recordProgress = defineScript({
 	NUMBER_OF_KEYS: 2,
 	SCRIPT: `
 	local keyMeasurementResults = KEYS[1]
@@ -75,12 +36,10 @@ const recordProgress: RecordProgressScript = defineScript({
 
 	redis.call('JSON.SET', keyMeasurementResults, '$.updatedAt', date)
 	`,
-	transformArguments (measurementId, testId, progress) {
-		return [
-			// keys
-			`gp:m:{${measurementId}}:results`,
-			`gp:m:{${measurementId}}:probes_awaiting`,
-			// values
+	parseCommand (parser: CommandParser, measurementId: string, testId: string, progress: TestProgress | HttpProgress) {
+		pushMeasurementKeys(parser, measurementId);
+
+		parser.push(
 			`$.results[${testId}].result.rawOutput`,
 			JSON.stringify(progress.rawOutput),
 			`$.results[${testId}].result.rawHeaders`,
@@ -88,15 +47,14 @@ const recordProgress: RecordProgressScript = defineScript({
 			`$.results[${testId}].result.rawBody`,
 			'rawBody' in progress ? JSON.stringify(progress.rawBody) : 'nil',
 			`"${new Date().toISOString()}"`,
-		];
+		);
 	},
 	transformReply () {
 		return null;
 	},
 });
 
-const recordProgressAppend: RecordProgressAppendScript = defineScript({
-	FIRST_KEY_INDEX: 0, // Needed in clusters: https://github.com/redis/node-redis/issues/2521
+const recordProgressAppend = defineScript({
 	NUMBER_OF_KEYS: 2,
 	SCRIPT: `
 	local keyMeasurementResults = KEYS[1]
@@ -126,12 +84,10 @@ const recordProgressAppend: RecordProgressAppendScript = defineScript({
 
 	redis.call('JSON.SET', keyMeasurementResults, '$.updatedAt', date)
 	`,
-	transformArguments (measurementId, testId, progress) {
-		return [
-			// keys
-			`gp:m:{${measurementId}}:results`,
-			`gp:m:{${measurementId}}:probes_awaiting`,
-			// values
+	parseCommand (parser: CommandParser, measurementId: string, testId: string, progress: TestProgress | HttpProgress) {
+		pushMeasurementKeys(parser, measurementId);
+
+		parser.push(
 			`$.results[${testId}].result.rawOutput`,
 			JSON.stringify(progress.rawOutput),
 			`$.results[${testId}].result.rawHeaders`,
@@ -139,15 +95,14 @@ const recordProgressAppend: RecordProgressAppendScript = defineScript({
 			`$.results[${testId}].result.rawBody`,
 			'rawBody' in progress ? JSON.stringify(progress.rawBody) : 'nil',
 			`"${new Date().toISOString()}"`,
-		];
+		);
 	},
 	transformReply () {
 		return null;
 	},
 });
 
-const recordResult: RecordResultScript = defineScript({
-	FIRST_KEY_INDEX: 0, // Needed in clusters: https://github.com/redis/node-redis/issues/2521
+const recordResult = defineScript({
 	NUMBER_OF_KEYS: 2,
 	SCRIPT: `
 	local keyMeasurementResults = KEYS[1]
@@ -171,24 +126,21 @@ const recordResult: RecordResultScript = defineScript({
 
 	return 1
 	`,
-	transformArguments (measurementId, testId, data) {
-		return [
-			// keys
-			`gp:m:{${measurementId}}:results`,
-			`gp:m:{${measurementId}}:probes_awaiting`,
-			// values
+	parseCommand (parser: CommandParser, measurementId: string, testId: string, data: MeasurementResultMessage['result']) {
+		pushMeasurementKeys(parser, measurementId);
+
+		parser.push(
 			testId,
 			JSON.stringify(data),
 			`"${new Date().toISOString()}"`,
-		];
+		);
 	},
 	transformReply (reply) {
 		return Boolean(reply);
 	},
 });
 
-const markFinished: MarkFinishedScript = defineScript({
-	FIRST_KEY_INDEX: 0, // Needed in clusters: https://github.com/redis/node-redis/issues/2521
+const markFinished = defineScript({
 	NUMBER_OF_KEYS: 2,
 	SCRIPT: `
 	local keyMeasurementResults = KEYS[1]
@@ -199,16 +151,20 @@ const markFinished: MarkFinishedScript = defineScript({
 
 	return redis.call('JSON.GET', keyMeasurementResults)
 	`,
-	transformArguments (measurementId) {
-		return [
-			// keys
-			`gp:m:{${measurementId}}:results`,
-			`gp:m:{${measurementId}}:probes_awaiting`,
-		];
+	parseCommand (parser: CommandParser, measurementId: string) {
+		pushMeasurementKeys(parser, measurementId);
 	},
-	transformReply (reply) {
+
+	transformReply (reply: string) {
 		return JSON.parse(reply) as MeasurementRecord | null;
 	},
 });
+
+export type RedisScripts = {
+	recordProgress: typeof recordProgress;
+	recordProgressAppend: typeof recordProgressAppend;
+	recordResult: typeof recordResult;
+	markFinished: typeof markFinished;
+};
 
 export const scripts: RedisScripts = { recordProgress, recordProgressAppend, recordResult, markFinished };

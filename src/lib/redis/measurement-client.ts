@@ -1,6 +1,5 @@
 import config from 'config';
-import type { RedisClientOptions, RedisClusterOptions } from 'redis';
-import { createRedisClusterInternal, type RedisCluster, type RedisClusterInternal } from './shared.js';
+import { createRedisClusterInternal, type RedisCluster, type RedisClusterInternal, type Resp3RedisClientOptions, type Resp3RedisClusterOptions } from './shared.js';
 import { scopedLogger } from '../logger.js';
 
 export type { RedisCluster } from './shared.js';
@@ -10,10 +9,10 @@ let redisConnectPromise: Promise<unknown>;
 let dedicatedRedis: RedisCluster;
 let dedicatedRedisConnectPromise: Promise<unknown>;
 
-const getMeasurementRedisOptions = (options?: Partial<RedisClusterOptions>): RedisClusterOptions => ({
-	defaults: config.get<RedisClientOptions>('redis.sharedOptions'),
+const getMeasurementRedisOptions = (options?: Partial<Resp3RedisClusterOptions>): Resp3RedisClusterOptions => ({
+	defaults: config.get<Partial<Resp3RedisClientOptions>>('redis.sharedOptions'),
 	rootNodes: Object.values(config.get<{ [index: string]: string }>('redis.clusterMeasurements.nodes')).map(url => ({ url })),
-	...config.get<Partial<RedisClusterOptions>>('redis.clusterMeasurements.options'),
+	...config.get<Partial<Resp3RedisClusterOptions>>('redis.clusterMeasurements.options'),
 	...options,
 });
 
@@ -47,11 +46,11 @@ export const initDedicatedMeasurementRedisClient = async () => {
 	return dedicatedRedis;
 };
 
-export const createMeasurementRedisClient = (options?: Partial<RedisClusterOptions>): RedisClusterInternal => {
+export const createMeasurementRedisClient = (options?: Partial<Resp3RedisClusterOptions>): RedisClusterInternal => {
 	return createRedisClusterInternal(getMeasurementRedisOptions(options), scopedLogger('redis-measurement'));
 };
 
-export const createDedicatedMeasurementRedisClient = (options?: Partial<RedisClusterOptions>): RedisClusterInternal => {
+export const createDedicatedMeasurementRedisClient = (options?: Partial<Resp3RedisClusterOptions>): RedisClusterInternal => {
 	return createRedisClusterInternal(getMeasurementRedisOptions(options), scopedLogger('redis-measurement-compressed-json'));
 };
 

@@ -223,13 +223,13 @@ export class MeasurementStore {
 	async cleanup () {
 		const SCAN_BATCH_SIZE = 5000;
 		const timeoutTime = config.get<number>('measurement.timeout') * 1000;
-		const { cursor, tuples } = await this.redis.hScan('gp:in-progress', 0, { COUNT: SCAN_BATCH_SIZE });
+		const { cursor, entries } = await this.redis.hScan('gp:in-progress', '0', { COUNT: SCAN_BATCH_SIZE });
 
-		if (cursor !== 0) {
+		if (cursor !== '0') {
 			logger.warn(`There are more than ${SCAN_BATCH_SIZE} "in-progress" elements in db`);
 		}
 
-		const timedOutIds = tuples
+		const timedOutIds = entries
 			.filter(({ value: time }) => Date.now() - Number(time) >= timeoutTime)
 			.map(({ field: id }) => id);
 

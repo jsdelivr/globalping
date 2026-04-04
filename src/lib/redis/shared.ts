@@ -20,13 +20,17 @@ type ClusterExtensions = {
 	compressedJsonGetBuffer: typeof compressedJsonGetBuffer;
 };
 
-export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts>;
-export type RedisCluster = RedisClusterType<RedisDefaultModules, RedisFunctions, RedisScripts> & ClusterExtensions;
+export type Resp3RedisClientOptions = RedisClientOptions<RedisDefaultModules, RedisFunctions, RedisScripts, 3>;
+export type Resp3RedisClusterOptions = RedisClusterOptions<RedisDefaultModules, RedisFunctions, RedisScripts, 3>;
+
+export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts, 3>;
+export type RedisCluster = RedisClusterType<RedisDefaultModules, RedisFunctions, RedisScripts, 3> & ClusterExtensions;
 export type RedisClientInternal = { connectPromise: Promise<unknown>; client: RedisClient };
 export type RedisClusterInternal = { connectPromise: Promise<unknown>; client: RedisCluster };
 
-export const createRedisClientInternal = (options: RedisClientOptions, logger: Logger): RedisClientInternal => {
+export const createRedisClientInternal = (options: Resp3RedisClientOptions, logger: Logger): RedisClientInternal => {
 	const client = createClient({
+		RESP: 3,
 		..._.cloneDeep(options),
 		scripts,
 	});
@@ -40,8 +44,9 @@ export const createRedisClientInternal = (options: RedisClientOptions, logger: L
 	return { client, connectPromise };
 };
 
-export const createRedisClusterInternal = (options: RedisClusterOptions, logger: Logger): RedisClusterInternal => {
+export const createRedisClusterInternal = (options: Resp3RedisClusterOptions, logger: Logger): RedisClusterInternal => {
 	const cluster = createCluster({
+		RESP: 3,
 		..._.cloneDeep(options),
 		scripts,
 	});

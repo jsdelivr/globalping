@@ -21,7 +21,7 @@ export class ProbeValidator {
 
 	async validateProbe (measurementId: string, testId: string, probeUuid: string): Promise<void> {
 		const measurement = this.measurementIdToTests.get(measurementId);
-		let probeId = measurement && measurement.get(testId);
+		let probeId = measurement?.get(testId) ?? null;
 
 		if (!probeId) {
 			probeId = await this.getProbeIdFromRedis(measurementId, testId);

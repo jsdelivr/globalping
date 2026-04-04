@@ -25,7 +25,7 @@ describe('redis compressed helper', () => {
 			'key',
 			true,
 			[ 'COMPRESSED.JSON.GET', 'key', '$.foo' ],
-			{ returnBuffers: true },
+			{ typeMapping: { 36: Buffer } },
 		]);
 	});
 
