@@ -11,6 +11,7 @@ import { initRedisClient } from '../../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../../src/lib/redis/persistent-client.js';
 import { initMeasurementRedisClient } from '../../src/lib/redis/measurement-client.js';
 import { resetDbs } from '../utils/db.js';
+import { setResetAfterFailure } from './failure-reset.js';
 
 const dbClients = [ dashboardClient, measurementStoreClient ];
 
@@ -29,9 +30,18 @@ before(async () => {
 	await waitProbeToConnect();
 });
 
-afterEach(async () => {
+afterEach(async function () {
+	if (this.currentTest?.state !== 'failed') {
+		return;
+	}
+
 	await flushRedis();
 	await resetDbs(dbClients);
+
+	await docker.stopProbeContainer();
+	await docker.startProbeContainer();
+	await waitProbeToConnect();
+	setResetAfterFailure();
 });
 
 after(async () => {
