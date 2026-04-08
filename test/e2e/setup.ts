@@ -29,6 +29,11 @@ before(async () => {
 	await waitProbeToConnect();
 });
 
+afterEach(async () => {
+	await flushRedis();
+	await resetDbs(dbClients);
+});
+
 after(async () => {
 	await docker.removeProbeContainer();
 	await docker.removeApiContainer();
