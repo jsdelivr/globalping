@@ -13,7 +13,7 @@ import { AuthenticateOptions } from '../../../src/lib/http/middleware/authentica
 import { JWTPayload, SignJWT } from 'jose';
 import { docker } from '../docker.js';
 import _ from 'lodash';
-import { beforeTest } from '../before-test.js';
+import { beforeTests } from '../before-tests.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
 
@@ -26,7 +26,7 @@ describe('probe logs', () => {
 		return new SignJWT(options).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
 	};
 
-	const setup = async () => {
+	beforeTests(async () => {
 		sessionKey = Buffer.from(sessionConfig.cookieSecret);
 		await dashboardClient('directus_users').delete();
 		await dashboardClient('gp_probes').delete();
@@ -73,9 +73,7 @@ describe('probe logs', () => {
 		});
 
 		await waitProbeInCity('San Luis');
-	};
-
-	beforeTest(setup, { timeout: 80000 });
+	}, { timeout: 80000 });
 
 	after(async function () {
 		this.timeout(80000);

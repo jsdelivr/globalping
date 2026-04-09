@@ -3,12 +3,12 @@ import { expect } from 'chai';
 import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { waitProbeInCity } from '../utils.js';
 import { randomUUID } from 'crypto';
-import { beforeTest } from '../before-test.js';
+import { beforeTests } from '../before-tests.js';
 
 const PROBES_TABLE = 'gp_probes';
 
 describe('adopted probes', () => {
-	const setup = async () => {
+	beforeTests(async () => {
 		await dashboardClient('directus_users').delete();
 
 		await dashboardClient('directus_users').insert({
@@ -55,9 +55,7 @@ describe('adopted probes', () => {
 		});
 
 		await waitProbeInCity('San Luis');
-	};
-
-	beforeTest(setup, { timeout: 80000 });
+	}, { timeout: 80000 });
 
 	after(async function () {
 		this.timeout(80000);

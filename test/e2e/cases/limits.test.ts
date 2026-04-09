@@ -1,12 +1,12 @@
 import got from 'got';
 import { expect } from 'chai';
 import { getPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
-import { beforeTest } from '../before-test.js';
+import { beforeTests } from '../before-tests.js';
 
 describe('/limits endpoint', () => {
 	const redis =	getPersistentRedisClient();
 
-	beforeTest(async () => {
+	beforeTests(async () => {
 		const keys = await redis.keys('rate:post:anon:*');
 		await redis.del(keys);
 	});

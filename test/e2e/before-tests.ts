@@ -19,7 +19,7 @@ type SetupOptions = {
  * @param options Optional hook settings.
  * @param options.timeout Per-hook timeout in milliseconds.
  */
-export const beforeTest = (
+export const beforeTests = (
 	setup: () => Promise<void>,
 	options: SetupOptions = {},
 ) => {
