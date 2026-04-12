@@ -103,7 +103,7 @@ class DockerManager {
 		await container.remove({ force: true });
 	}
 
-	public async stopProbeContainer () {
+	public async stopProbeContainer (kill = true) {
 		const { container, state } = await this.getContainer('globalping-probe-e2e');
 
 		if (!container || state === 'exited') {
@@ -111,7 +111,11 @@ class DockerManager {
 		}
 
 		try {
-			await container.stop();
+			if (kill) {
+				await container.kill();
+			} else {
+				await container.stop();
+			}
 		} catch (error) {
 			// 304 iff already stopped - may happen if stopProbeContainer is called in a quick succession
 			if ((error as { statusCode: number }).statusCode === 304) {

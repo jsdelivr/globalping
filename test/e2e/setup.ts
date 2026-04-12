@@ -42,7 +42,7 @@ afterEach(async function () {
 	logger.warn(`Test "${this.currentTest?.title ?? '<unknown>'}" failed and is retrying. Performing hard environment reset.`);
 
 	try {
-		await docker.stopProbeContainer();
+		await docker.stopProbeContainer(false);
 		await docker.removeApiContainer();
 
 		await flushRedis();
