@@ -110,7 +110,16 @@ class DockerManager {
 			return;
 		}
 
-		await container.stop();
+		try {
+			await container.stop();
+		} catch (error) {
+			// 304 iff already stopped - may happen if stopProbeContainer is called in a quick succession
+			if ((error as { statusCode: number }).statusCode === 304) {
+				return;
+			}
+
+			throw error;
+		}
 	}
 
 	public async startProbeContainer () {

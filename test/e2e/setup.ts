@@ -41,16 +41,19 @@ afterEach(async function () {
 
 	logger.warn(`Test "${this.currentTest?.title ?? '<unknown>'}" failed and is retrying. Performing hard environment reset.`);
 
-	await docker.stopProbeContainer();
-	await docker.removeApiContainer();
+	try {
+		await docker.stopProbeContainer();
+		await docker.removeApiContainer();
 
-	await flushRedis();
-	await resetDbs(dbClients);
+		await flushRedis();
+		await resetDbs(dbClients);
 
-	await docker.createApiContainer();
-	await docker.startProbeContainer();
-	await waitProbeToConnect();
-	setResetAfterFailure();
+		await docker.createApiContainer();
+		await docker.startProbeContainer();
+		await waitProbeToConnect();
+	} finally {
+		setResetAfterFailure();
+	}
 });
 
 after(async () => {
