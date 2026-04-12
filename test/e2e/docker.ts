@@ -117,8 +117,9 @@ class DockerManager {
 				await container.stop();
 			}
 		} catch (error) {
-			// 304 iff already stopped - may happen if stopProbeContainer is called in a quick succession
-			if ((error as { statusCode: number }).statusCode === 304) {
+			const statusCode = Number((error as { statusCode?: number })?.statusCode ?? 0);
+
+			if (statusCode === 304 || statusCode === 404 || statusCode === 409) {
 				return;
 			}
 
