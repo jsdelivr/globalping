@@ -33,7 +33,9 @@ before(async () => {
 });
 
 afterEach(async function () {
-	if (this.currentTest?.state !== 'failed') {
+	const state = this.currentTest?.state;
+
+	if (state === 'passed' || state === 'pending') {
 		return;
 	}
 
