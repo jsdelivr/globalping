@@ -39,6 +39,11 @@ afterEach(async function () {
 		return;
 	}
 
+	if (state === 'failed') {
+		logger.warn(`Test "${this.currentTest?.title ?? '<unknown>'}" failed on its final attempt. Skipping environment reset.`);
+		return;
+	}
+
 	logger.warn(`Test "${this.currentTest?.title ?? '<unknown>'}" failed and is retrying. Performing hard environment reset.`);
 
 	try {
