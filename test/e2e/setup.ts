@@ -12,7 +12,9 @@ import { initPersistentRedisClient } from '../../src/lib/redis/persistent-client
 import { initMeasurementRedisClient } from '../../src/lib/redis/measurement-client.js';
 import { resetDbs } from '../utils/db.js';
 import { setResetAfterFailure } from './failure-reset.js';
+import { scopedLogger } from '../../src/lib/logger.js';
 
+const logger = scopedLogger('e2e-setup');
 const dbClients = [ dashboardClient, measurementStoreClient ];
 
 before(async () => {
@@ -34,6 +36,8 @@ afterEach(async function () {
 	if (this.currentTest?.state !== 'failed') {
 		return;
 	}
+
+	logger.warn(`Test "${this.currentTest?.title ?? '<unknown>'}" failed and is retrying. Restarting probe and Redis.`);
 
 	await flushRedis();
 	await resetDbs(dbClients);
