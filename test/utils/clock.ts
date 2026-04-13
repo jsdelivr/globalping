@@ -8,8 +8,13 @@ export type ExtendedFakeTimers = SinonFakeTimers & {
 
 export const extendSinonClock = (clock: SinonFakeTimers): ExtendedFakeTimers => {
 	const pause = () => {
-		// @ts-expect-error need to use the original clearInterval here
-		clock._clearInterval(clock.attachedInterval);
+		// @ts-expect-error sinon stores the real auto-advance interval handle here
+		if (clock.attachedInterval) {
+			// @ts-expect-error need to use the original clearInterval here
+			clock._clearInterval(clock.attachedInterval);
+			// @ts-expect-error keep the internal handle in sync with the actual timer state
+			clock.attachedInterval = undefined;
+		}
 
 		return clock;
 	};
@@ -18,10 +23,14 @@ export const extendSinonClock = (clock: SinonFakeTimers): ExtendedFakeTimers => 
 		pause();
 
 		// @ts-expect-error need to use the original delta here
-		const advanceTimeDelta = clock.advanceTimeDelta;
+		const advanceTimeDelta = clock.tickMode.delta;
+
+		if (!advanceTimeDelta) {
+			throw new Error('Cannot advance time without a delta');
+		}
 
 		// @ts-expect-error need to use the original setInterval here
-		clock._setInterval(() => {
+		clock.attachedInterval = clock._setInterval(() => {
 			clock.tick(advanceTimeDelta);
 		}, advanceTimeDelta);
 

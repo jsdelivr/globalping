@@ -21,6 +21,8 @@ export const getTestServer = async (): Promise<Server> => {
 		const { port } = app.address() as AddressInfo;
 		url = `http://127.0.0.1:${port}/probes`;
 		ioContext.syncedProbeList.syncInterval = 40;
+		ioContext.syncedProbeList.unscheduleSync();
+		ioContext.syncedProbeList.scheduleSync();
 		ioContext.syncedProbeList.logger.writers = [ new ConsoleWriter(Logger.levels.warn) ];
 	}
 
