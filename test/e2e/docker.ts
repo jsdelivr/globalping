@@ -103,7 +103,7 @@ class DockerManager {
 		await container.remove({ force: true });
 	}
 
-	public async stopProbeContainer (kill = true) {
+	public async stopProbeContainer ({ kill }: { kill: boolean } = { kill: true }) {
 		const { container, state } = await this.getContainer('globalping-probe-e2e');
 
 		if (!container || state === 'exited') {
