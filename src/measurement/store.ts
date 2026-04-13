@@ -2,7 +2,9 @@ import is from '@sindresorhus/is';
 import Bluebird from 'bluebird';
 import config from 'config';
 import _ from 'lodash';
+import { commandOptions } from 'redis';
 
+import { parseCompressedJsonBuffer } from '../lib/redis/compressed.js';
 import type { OfflineProbe, ServerProbe } from '../probe/types.js';
 import { scopedLogger } from '../lib/logger.js';
 import type {
@@ -100,7 +102,7 @@ export class MeasurementStore {
 	}
 
 	async getMeasurementsForOffloader (ids: string[]): Promise<(MeasurementRecord | null)[]> {
-		return Bluebird.map(ids, id => this.redis.json.get(getMeasurementKey(id)) as Promise<MeasurementRecord | null>, { concurrency: 8 });
+		return Bluebird.map(ids, id => this.redis.compressedJsonGet<MeasurementRecord>(getMeasurementKey(id)), { concurrency: 8 });
 	}
 
 	async getMeasurementIps (id: string): Promise<string[]> {
@@ -173,10 +175,12 @@ export class MeasurementStore {
 	}
 
 	async markFinished (id: string): Promise<MeasurementRecord | null> {
-		const [ record ] = await Promise.all([
-			this.redis.markFinished(id),
+		const [ recordBuffer ] = await Promise.all([
+			this.redis.markFinished(commandOptions({ returnBuffers: true }), id),
 			this.redis.hDel('gp:in-progress', id),
 		]);
+
+		const record = await parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
 
 		if (record) {
 			this.offloader.enqueueForOffload(record);
@@ -191,7 +195,7 @@ export class MeasurementStore {
 		}
 
 		const keys = ids.map(id => getMeasurementKey(id));
-		const measurements = (await Bluebird.map(keys, key => this.redis.json.get(key) as Promise<MeasurementRecord | null>, { concurrency: 8 })).filter(is.truthy);
+		const measurements = (await Bluebird.map(keys, key => this.redis.compressedJsonGet<MeasurementRecord>(key), { concurrency: 8 })).filter(is.truthy);
 
 		for (const measurement of measurements) {
 			measurement.status = 'finished';
@@ -204,7 +208,11 @@ export class MeasurementStore {
 			}
 		}
 
-		const updateMeasurements = Bluebird.map(measurements, measurement => this.redis.json.set(getMeasurementKey(measurement.id), '$', measurement), { concurrency: 32 });
+		const updateMeasurements = Bluebird.map(measurements, async (measurement) => {
+			const key = getMeasurementKey(measurement.id);
+			await this.redis.json.set(key, '$', measurement);
+			await this.redis.compressedJsonCompress(key);
+		}, { concurrency: 32 });
 		const deleteAwaitingKeys = Bluebird.map(ids, id => this.redis.del(getMeasurementKey(id, 'probes_awaiting')), { concurrency: 32 });
 
 		await Promise.all([

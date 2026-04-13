@@ -1,5 +1,5 @@
 import { defineScript } from 'redis';
-import type { HttpProgress, MeasurementRecord, MeasurementResultMessage, TestProgress } from '../../measurement/types.js';
+import type { HttpProgress, MeasurementResultMessage, TestProgress } from '../../measurement/types.js';
 
 type RecordProgressScript = {
 	NUMBER_OF_KEYS: number;
@@ -32,7 +32,7 @@ type MarkFinishedScript = {
 	NUMBER_OF_KEYS: number;
 	SCRIPT: string;
 	transformArguments (measurementId: string): string[];
-	transformReply (reply: string): MeasurementRecord | null;
+	transformReply (reply: Buffer | null): Buffer | null;
 } & {
 	SHA1: string;
 };
@@ -196,8 +196,9 @@ const markFinished: MarkFinishedScript = defineScript({
 
 	redis.call('DEL', keyMeasurementAwaiting)
 	redis.call('JSON.SET', keyMeasurementResults, '$.status', '"finished"')
+	redis.call('COMPRESSED.JSON.COMPRESS', keyMeasurementResults)
 
-	return redis.call('JSON.GET', keyMeasurementResults)
+	return redis.call('COMPRESSED.JSON.GET', keyMeasurementResults)
 	`,
 	transformArguments (measurementId) {
 		return [
@@ -207,7 +208,7 @@ const markFinished: MarkFinishedScript = defineScript({
 		];
 	},
 	transformReply (reply) {
-		return JSON.parse(reply) as MeasurementRecord | null;
+		return reply;
 	},
 });
 
