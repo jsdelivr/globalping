@@ -38,5 +38,5 @@ export async function compressedJsonGet<T> (this: RedisCluster, key: string, opt
 }
 
 export function compressedJsonCompress (this: RedisCluster, key: string) {
-	return this.sendCommand<string>(key, true, [ 'COMPRESSED.JSON.COMPRESS', key ]);
+	return this.sendCommand<string>(key, false, [ 'COMPRESSED.JSON.COMPRESS', key ]);
 }

@@ -47,7 +47,7 @@ describe('redis compressed helper', () => {
 
 		expect(sendCommand.firstCall.args).to.deep.equal([
 			'key',
-			true,
+			false,
 			[ 'COMPRESSED.JSON.COMPRESS', 'key' ],
 		]);
 	});
