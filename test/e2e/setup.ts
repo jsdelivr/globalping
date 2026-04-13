@@ -44,7 +44,7 @@ afterEach(async function () {
 		return;
 	}
 
-	logger.warn(`Test "${this.currentTest?.title ?? '<unknown>'}" failed and is retrying. Performing hard environment reset.`);
+	logger.warn(`Test "${this.currentTest?.title ?? '<unknown>'}" failed and will be retried. Performing environment reset.`);
 
 	try {
 		await docker.stopProbeContainer({ kill: false });
