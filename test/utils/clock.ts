@@ -8,19 +8,24 @@ export type ExtendedFakeTimers = SinonFakeTimers & {
 
 export const extendSinonClock = (clock: SinonFakeTimers): ExtendedFakeTimers => {
 	const pause = () => {
-		// @ts-expect-error sinon stores the real auto-advance interval handle here
-		if (clock.attachedInterval) {
-			// @ts-expect-error need to use the original clearInterval here
-			clock._clearInterval(clock.attachedInterval);
-			// @ts-expect-error keep the internal handle in sync with the actual timer state
-			clock.attachedInterval = undefined;
+		// @ts-expect-error exit if already paused
+		if (!clock.attachedInterval) {
+			return clock;
 		}
+
+		// @ts-expect-error need to use the original clearInterval here
+		clock._clearInterval(clock.attachedInterval);
+		// @ts-expect-error keep the internal handle in sync with the actual timer state
+		clock.attachedInterval = undefined;
 
 		return clock;
 	};
 
 	const unpause = () => {
-		pause();
+		// @ts-expect-error exit if not paused
+		if (clock.attachedInterval) {
+			return clock;
+		}
 
 		// @ts-expect-error need to use the original delta here
 		const advanceTimeDelta = clock.tickMode.delta;

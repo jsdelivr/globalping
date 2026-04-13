@@ -39,6 +39,10 @@ describe('term-listener', () => {
 			configStub.get.withArgs('sigtermDelay').returns(5000);
 		});
 
+		afterEach(() => {
+			clock.unpause();
+		});
+
 		after(() => {
 			sandbox.restore();
 			td.reset();
@@ -64,6 +68,7 @@ describe('term-listener', () => {
 		});
 
 		it('should exit process after delay', async () => {
+			clock.pause();
 			new MasterTermListener();
 
 			const sigtermCall = processStub.on.getCalls().find((call: any) => call.args[0] === 'SIGTERM');
