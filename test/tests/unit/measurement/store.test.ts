@@ -2,6 +2,7 @@ import * as td from 'testdouble';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import relativeDayUtc from 'relative-day-utc';
+import { commandOptions } from 'redis';
 import * as id from '../../../../src/measurement/id.js';
 import type { MeasurementStore } from '../../../../src/measurement/store.js';
 import type { OfflineProbe, ServerProbe } from '../../../../src/probe/types.js';
@@ -35,7 +36,10 @@ describe('measurement store', () => {
 	let getMeasurementStore: () => MeasurementStore;
 
 	const sandbox = sinon.createSandbox();
+	const enqueueForOffloadStub = sandbox.stub();
 	const redisMock = {
+		compressedJsonCompress: sandbox.stub(),
+		compressedJsonGet: sandbox.stub(),
 		compressedJsonGetBuffer: sandbox.stub(),
 		hScan: sandbox.stub(),
 		hDel: sandbox.stub(),
@@ -75,7 +79,10 @@ describe('measurement store', () => {
 
 		class OffloaderMock {
 			startRetryWorker () { /* no-op */ }
-			enqueueForOffload () { /* no-op */ }
+			enqueueForOffload (record: unknown) {
+				enqueueForOffloadStub(record);
+			}
+
 			getMeasurementBuffer (id: string, userTier: number, createdAtRounded: number) {
 				return offloaderGetMeasurementBufferStub(id, userTier, createdAtRounded);
 			}
@@ -87,6 +94,8 @@ describe('measurement store', () => {
 
 	beforeEach(() => {
 		parseMeasurementIdStub.callsFake(id.parseMeasurementId);
+		redisMock.compressedJsonCompress.reset();
+		redisMock.compressedJsonGet.reset();
 		redisMock.compressedJsonGetBuffer.reset();
 		redisMock.recordResult.reset();
 		sandbox.resetHistory();
@@ -112,7 +121,7 @@ describe('measurement store', () => {
 			],
 		});
 
-		redisMock.json.get.onFirstCall().resolves({
+		redisMock.compressedJsonGet.onFirstCall().resolves({
 			id: mockedMeasurementId1,
 			type: 'ping',
 			status: 'in-progress',
@@ -128,7 +137,7 @@ describe('measurement store', () => {
 			}],
 		});
 
-		redisMock.json.get.onSecondCall().resolves(null);
+		redisMock.compressedJsonGet.onSecondCall().resolves(null);
 
 		getMeasurementStore();
 
@@ -136,15 +145,17 @@ describe('measurement store', () => {
 
 		expect(redisMock.hScan.callCount).to.equal(1);
 		expect(redisMock.hScan.firstCall.args).to.deep.equal([ 'gp:in-progress', 0, { COUNT: 5000 }]);
-		expect(redisMock.json.get.callCount).to.equal(2);
-		expect(redisMock.json.get.firstCall.args).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:results` ]);
-		expect(redisMock.json.get.secondCall.args).to.deep.equal([ `gp:m:{${mockedMeasurementId2}}:results` ]);
+		expect(redisMock.compressedJsonGet.callCount).to.equal(2);
+		expect(redisMock.compressedJsonGet.firstCall.args).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:results` ]);
+		expect(redisMock.compressedJsonGet.secondCall.args).to.deep.equal([ `gp:m:{${mockedMeasurementId2}}:results` ]);
 		expect(redisMock.hDel.callCount).to.equal(1);
 		expect(redisMock.hDel.firstCall.args).to.deep.equal([ 'gp:in-progress', [ mockedMeasurementId1, mockedMeasurementId2 ] ]);
 		expect(redisMock.del.callCount).to.equal(2);
 		expect(redisMock.del.firstCall.args).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:probes_awaiting` ]);
 		expect(redisMock.del.secondCall.args).to.deep.equal([ `gp:m:{${mockedMeasurementId2}}:probes_awaiting` ]);
 		expect(redisMock.json.set.callCount).to.equal(1);
+		expect(redisMock.compressedJsonCompress.callCount).to.equal(1);
+		expect(redisMock.compressedJsonCompress.firstCall.args).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:results` ]);
 
 		expect(redisMock.json.set.firstCall.args).to.have.lengthOf(3);
 		expect(redisMock.json.set.firstCall.args[0]).to.equal(`gp:m:{${mockedMeasurementId1}}:results`);
@@ -166,6 +177,28 @@ describe('measurement store', () => {
 		});
 
 		expect(new Date(redisMock.json.set.firstCall.args[2].updatedAt)).to.be.within(new Date(now + 1), new Date(now + 16_000));
+	});
+
+	it('should read compressed measurement results for the offloader batch path', async () => {
+		const store = getMeasurementStore();
+		redisMock.compressedJsonGet
+			.onFirstCall().resolves({ id: 'A', status: 'finished' })
+			.onSecondCall().resolves(null)
+			.onThirdCall().resolves({ id: 'C', status: 'finished' });
+
+		const records = await store.getMeasurementsForOffloader([ 'A', 'B', 'C' ]);
+
+		expect(records).to.deep.equal([
+			{ id: 'A', status: 'finished' },
+			null,
+			{ id: 'C', status: 'finished' },
+		]);
+
+		expect(redisMock.compressedJsonGet.callCount).to.equal(3);
+		expect(redisMock.compressedJsonGet.firstCall.args).to.deep.equal([ 'gp:m:{A}:results' ]);
+		expect(redisMock.compressedJsonGet.secondCall.args).to.deep.equal([ 'gp:m:{B}:results' ]);
+		expect(redisMock.compressedJsonGet.thirdCall.args).to.deep.equal([ 'gp:m:{C}:results' ]);
+		expect(redisMock.json.get.callCount).to.equal(0);
 	});
 
 	it('should store measurement probes in the same order as in arguments', async () => {
@@ -636,9 +669,19 @@ describe('measurement store', () => {
 
 	it('should mark measurement as finished if storeMeasurementResult returned record', async () => {
 		redisMock.recordResult.resolves({});
+		const finishedRecord = {
+			id: mockedMeasurementId1,
+			type: 'ping',
+			status: 'finished',
+			results: [],
+		};
+		redisMock.markFinished.resolves(Buffer.concat([
+			Buffer.from([ 0x00 ]),
+			Buffer.from(JSON.stringify(finishedRecord)),
+		]));
 
 		const store = getMeasurementStore();
-		await store.storeMeasurementResult({
+		const record = await store.storeMeasurementResult({
 			testId: 'testid',
 			measurementId: mockedMeasurementId1,
 			result: {
@@ -655,10 +698,14 @@ describe('measurement store', () => {
 			{ status: 'finished', rawOutput: 'output' },
 		]);
 
+		expect(record).to.deep.equal(finishedRecord);
+
 		expect(redisMock.markFinished.callCount).to.equal(1);
-		expect(redisMock.markFinished.args[0]).to.deep.equal([ mockedMeasurementId1 ]);
+		expect(redisMock.markFinished.args[0]).to.deep.equal([ commandOptions({ returnBuffers: true }), mockedMeasurementId1 ]);
 		expect(redisMock.hDel.callCount).to.equal(1);
 		expect(redisMock.hDel.args[0]).to.deep.equal([ 'gp:in-progress', mockedMeasurementId1 ]);
+		expect(enqueueForOffloadStub.callCount).to.equal(1);
+		expect(enqueueForOffloadStub.firstCall.args).to.deep.equal([ finishedRecord ]);
 	});
 
 	it('should not mark measurement as finished if storeMeasurementResult didn\'t return record', async () => {

@@ -21,8 +21,12 @@ describe('Create measurement request', () => {
 	const logHandlerStub = sandbox.stub();
 	const adoptionHandlerStub = sandbox.stub();
 	const requestHandlerStub = sandbox.stub();
-	const mockedMeasurementId = '2E2SZgEwA6W6HvzlT0001z9VK';
-	const generateMeasurementId = sandbox.stub().returns(mockedMeasurementId);
+
+	let mockedMeasurementId: string;
+	const generateMeasurementId = sandbox.stub().callsFake((createdAt: Date, userType?: Parameters<typeof id.generateMeasurementId>[1]) => {
+		mockedMeasurementId = id.generateMeasurementId(createdAt, userType);
+		return mockedMeasurementId;
+	});
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/measurement/id.ts', { ...id, generateMeasurementId }, {});
