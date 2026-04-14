@@ -568,14 +568,14 @@ describe('AdoptedProbes', () => {
 			recipient: 'userId',
 			type: 'probe_location_changed',
 			subject: 'Your probe\'s location has changed',
-			message: 'Globalping detected that your probe [**probe-1**](/probes/p-1) with IP address **1.1.1.1** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).',
+			message: 'Globalping detected that your probe [probe-1](/probes/p-1) with IP address **1.1.1.1** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).',
 		});
 
 		expect((gotPostStub.args[1]![1] as any).json).to.deep.equal({
 			recipient: 'userId',
 			type: 'probe_location_changed',
 			subject: 'Your probe\'s location has changed',
-			message: 'Globalping detected that your probe [**probe-2**](/probes/p-9) with IP address **9.9.9.9** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).',
+			message: 'Globalping detected that your probe [probe-2](/probes/p-9) with IP address **9.9.9.9** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).',
 		});
 
 		expect(sql.update.callCount).to.equal(2);
@@ -691,14 +691,14 @@ describe('AdoptedProbes', () => {
 			recipient: 'userId',
 			type: 'probe_location_changed_back',
 			subject: 'Your probe\'s location has changed back',
-			message: 'Globalping detected that your probe [**probe-1**](/probes/p-1) with IP address **1.1.1.1** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
+			message: 'Globalping detected that your probe [probe-1](/probes/p-1) with IP address **1.1.1.1** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 
 		expect((gotPostStub.args[3]![1] as any).json).to.deep.equal({
 			recipient: 'userId',
 			type: 'probe_location_changed_back',
 			subject: `Your probe's location has changed back`,
-			message: 'Globalping detected that your probe [**probe-2**](/probes/p-9) with IP address **9.9.9.9** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
+			message: 'Globalping detected that your probe [probe-2](/probes/p-9) with IP address **9.9.9.9** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 
 		expect(sql.update.args[2]).to.deep.equal([
@@ -732,6 +732,63 @@ describe('AdoptedProbes', () => {
 		]);
 
 		expect(sql.insert.callCount).to.equal(0);
+	});
+
+	it('location-change notification escapes markdown in probe name', async () => {
+		const maliciousName = '][not the probe](https://another.link)[probe';
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		sql.select.resolves([{
+			...defaultAdoption,
+			name: maliciousName,
+			customLocation: JSON.stringify({
+				country: 'IE',
+				city: 'Dublin',
+				state: null,
+				latitude: 53.33,
+				longitude: -6.25,
+			}),
+			originalLocation: JSON.stringify({
+				country: 'GB',
+				city: 'London',
+				latitude: 51.51,
+				longitude: -0.13,
+				state: null,
+			}),
+		}]);
+
+		getProbesWithAdminData.returns([{
+			ipAddress: '1.1.1.1',
+			altIpAddresses: [] as string[],
+			uuid: '1-1-1-1-1',
+			status: 'initializing',
+			isIPv4Supported: false,
+			isIPv6Supported: false,
+			version: '0.39.0',
+			nodeVersion: 'v18.17.0',
+			isHardware: false,
+			hardwareDevice: null,
+			hardwareDeviceFirmware: null,
+			tags: [
+				{ type: 'system', value: 'datacenter-network' },
+			],
+			location: {
+				continent: 'EU',
+				region: 'Northern Europe',
+				country: 'GB',
+				state: null,
+				city: 'London',
+				asn: 20473,
+				latitude: 51.51,
+				longitude: -0.13,
+				network: 'The Constant Company',
+				allowedCountries: [ 'GB' ],
+			},
+		}]);
+
+		await adoptedProbes.syncDashboardData();
+
+		const { message } = (gotPostStub.firstCall.args[1] as any).json;
+		expect(message).to.include(`probe [\\]\\[not the probe\\](https://another.link)\\[probe](/probes/p-1) with IP address **1.1.1.1**`);
 	});
 
 	it('class should partially update probe meta info if it is outdated and there is "customLocation"', async () => {

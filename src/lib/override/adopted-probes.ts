@@ -18,6 +18,18 @@ const NOTIFICATIONS_TABLE = 'directus_notifications';
 const directusUrl = config.get<string>('dashboard.directusUrl');
 const systemKey = config.get<string>('systemApi.key');
 
+export const escapeMdSymbols = (value: string): string => value
+	.replace(/&/g, '&amp;')
+	.replace(/</g, '&lt;')
+	.replace(/>/g, '&gt;')
+	.replace(/\r\n|\r|\n|\u2028|\u2029/g, ' ')
+	.replace(/\\/g, '\\\\')
+	.replace(/\[/g, '\\[')
+	.replace(/\]/g, '\\]')
+	.replace(/\*/g, '\\*')
+	.replace(/_/g, '\\_')
+	.replace(/`/g, '\\`');
+
 type DProbe = {
 	id: string;
 	userId: string | null;
@@ -788,7 +800,7 @@ export class AdoptedProbes {
 			adoption.userId,
 			'probe_location_changed',
 			`Your probe's location has changed`,
-			`Globalping detected that your ${adoption.name ? `probe [**${adoption.name}**](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address **${adoption.ip}**](/probes/${adoption.id})`} has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).`,
+			`Globalping detected that your ${adoption.name ? `probe [${escapeMdSymbols(adoption.name)}](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address ${adoption.ip}](/probes/${adoption.id})`} has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).`,
 		);
 	}
 
@@ -800,7 +812,7 @@ export class AdoptedProbes {
 			adoption.userId,
 			'probe_location_changed_back',
 			`Your probe's location has changed back`,
-			`Globalping detected that your ${adoption.name ? `probe [**${adoption.name}**](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address **${adoption.ip}**](/probes/${adoption.id})`} has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is now applied again.`,
+			`Globalping detected that your ${adoption.name ? `probe [${escapeMdSymbols(adoption.name)}](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address ${adoption.ip}](/probes/${adoption.id})`} has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is now applied again.`,
 		);
 	}
 
