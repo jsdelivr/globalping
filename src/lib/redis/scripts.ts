@@ -231,33 +231,28 @@ const markFinishedByTimeout: MarkFinishedByTimeoutScript = defineScript({
 	local date = ARGV[1]
 	local timeoutMessage = ARGV[2]
 
-	if redis.call('EXISTS', keyMeasurementAwaiting) == 0 then
-		return
-	end
-
-	redis.call('DEL', keyMeasurementAwaiting)
-
-	local measurementJson = redis.call('JSON.GET', keyMeasurementResults, '$')
-	if not measurementJson then
+	local measurementJson = redis.pcall('JSON.GET', keyMeasurementResults, '$')
+	if measurementJson.err or not measurementJson then
 		return
 	end
 
 	local measurement = cjson.decode(measurementJson)[1]
+	redis.call('DEL', keyMeasurementAwaiting)
+
 	if measurement.status ~= 'in-progress' then
 		return
 	end
 
-	measurement.status = 'finished'
-	measurement.updatedAt = date
+	redis.call('JSON.SET', keyMeasurementResults, '$.status', '"finished"')
+	redis.call('JSON.SET', keyMeasurementResults, '$.updatedAt', '"' .. date .. '"')
 
-	for _, resultObject in ipairs(measurement.results) do
+	for index, resultObject in ipairs(measurement.results) do
 		if resultObject.result.status == 'in-progress' then
-			resultObject.result.status = 'failed'
-			resultObject.result.rawOutput = (resultObject.result.rawOutput or '') .. timeoutMessage
+			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.status', '"failed"')
+			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.rawOutput', cjson.encode((resultObject.result.rawOutput or '') .. timeoutMessage))
 		end
 	end
 
-	redis.call('JSON.SET', keyMeasurementResults, '$', cjson.encode(measurement))
 	redis.call('COMPRESSED.JSON.COMPRESS', keyMeasurementResults)
 
 	return redis.call('COMPRESSED.JSON.GET', keyMeasurementResults)
