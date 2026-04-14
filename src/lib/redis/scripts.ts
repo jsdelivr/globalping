@@ -37,11 +37,21 @@ type MarkFinishedScript = {
 	SHA1: string;
 };
 
+type MarkFinishedByTimeoutScript = {
+	NUMBER_OF_KEYS: number;
+	SCRIPT: string;
+	transformArguments (measurementId: string): string[];
+	transformReply (reply: Buffer | null): Buffer | null;
+} & {
+	SHA1: string;
+};
+
 export type RedisScripts = {
 	recordProgress: RecordProgressScript;
 	recordProgressAppend: RecordProgressAppendScript;
 	recordResult: RecordResultScript;
 	markFinished: MarkFinishedScript;
+	markFinishedByTimeout: MarkFinishedByTimeoutScript;
 };
 
 const recordProgress: RecordProgressScript = defineScript({
@@ -212,4 +222,57 @@ const markFinished: MarkFinishedScript = defineScript({
 	},
 });
 
-export const scripts: RedisScripts = { recordProgress, recordProgressAppend, recordResult, markFinished };
+const markFinishedByTimeout: MarkFinishedByTimeoutScript = defineScript({
+	FIRST_KEY_INDEX: 0, // Needed in clusters: https://github.com/redis/node-redis/issues/2521
+	NUMBER_OF_KEYS: 2,
+	SCRIPT: `
+	local keyMeasurementResults = KEYS[1]
+	local keyMeasurementAwaiting = KEYS[2]
+	local date = ARGV[1]
+	local timeoutMessage = ARGV[2]
+
+	if redis.call('EXISTS', keyMeasurementAwaiting) == 0 then
+		return
+	end
+
+	redis.call('DEL', keyMeasurementAwaiting)
+
+	local measurementJson = redis.call('JSON.GET', keyMeasurementResults, '$')
+	if not measurementJson then
+		return
+	end
+
+	local measurement = cjson.decode(measurementJson)[1]
+	if measurement.status ~= 'in-progress' then
+		return
+	end
+
+	measurement.status = 'finished'
+	measurement.updatedAt = date
+
+	for _, resultObject in ipairs(measurement.results) do
+		if resultObject.result.status == 'in-progress' then
+			resultObject.result.status = 'failed'
+			resultObject.result.rawOutput = (resultObject.result.rawOutput or '') .. timeoutMessage
+		end
+	end
+
+	redis.call('JSON.SET', keyMeasurementResults, '$', cjson.encode(measurement))
+	redis.call('COMPRESSED.JSON.COMPRESS', keyMeasurementResults)
+
+	return redis.call('COMPRESSED.JSON.GET', keyMeasurementResults)
+	`,
+	transformArguments (measurementId) {
+		return [
+			`gp:m:{${measurementId}}:results`,
+			`gp:m:{${measurementId}}:probes_awaiting`,
+			new Date().toISOString(),
+			'\n\nThe measurement timed out.',
+		];
+	},
+	transformReply (reply) {
+		return reply;
+	},
+});
+
+export const scripts: RedisScripts = { recordProgress, recordProgressAppend, recordResult, markFinished, markFinishedByTimeout };

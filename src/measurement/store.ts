@@ -194,32 +194,12 @@ export class MeasurementStore {
 			return;
 		}
 
-		const keys = ids.map(id => getMeasurementKey(id));
-		const measurements = (await Bluebird.map(keys, key => this.redis.compressedJsonGet<MeasurementRecord>(key), { concurrency: 8 })).filter(is.truthy);
+		const measurements = (await Bluebird.map(ids, async (id) => {
+			const recordBuffer = await this.redis.markFinishedByTimeout(commandOptions({ returnBuffers: true }), id);
+			return parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
+		}, { concurrency: 32 })).filter(is.truthy);
 
-		for (const measurement of measurements) {
-			measurement.status = 'finished';
-			measurement.updatedAt = new Date().toISOString();
-			const inProgressResults = measurement.results.filter(resultObject => resultObject.result.status === 'in-progress');
-
-			for (const resultObject of inProgressResults) {
-				resultObject.result.status = 'failed';
-				resultObject.result.rawOutput += '\n\nThe measurement timed out.';
-			}
-		}
-
-		const updateMeasurements = Bluebird.map(measurements, async (measurement) => {
-			const key = getMeasurementKey(measurement.id);
-			await this.redis.json.set(key, '$', measurement);
-			await this.redis.compressedJsonCompress(key);
-		}, { concurrency: 32 });
-		const deleteAwaitingKeys = Bluebird.map(ids, id => this.redis.del(getMeasurementKey(id, 'probes_awaiting')), { concurrency: 32 });
-
-		await Promise.all([
-			this.redis.hDel('gp:in-progress', ids),
-			deleteAwaitingKeys,
-			updateMeasurements,
-		]);
+		await this.redis.hDel('gp:in-progress', ids);
 
 		for (const measurement of measurements) {
 			this.offloader.enqueueForOffload(measurement);
