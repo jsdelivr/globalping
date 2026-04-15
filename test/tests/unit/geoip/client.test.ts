@@ -61,7 +61,7 @@ describe('geoip service', () => {
 			longitude: -58.38,
 			network: 'InterBS S.R.L. (BAEHOST)',
 			normalizedNetwork: 'interbs s.r.l. (baehost)',
-			isProxy: null,
+			isProxy: false,
 			isHosting: null,
 			isAnycast: null,
 			allowedCountries: [ 'AR' ],
@@ -638,10 +638,18 @@ describe('geoip service', () => {
 			});
 		});
 
-		it.skip('should reject - (not in whitelisted range)', async () => {
+		it('should return isProxy: true - ip2location', async () => {
+			nockGeoIpProviders({ ip2location: 'vpn' });
+
+			const response = await client.lookup(MOCK_IP);
+
+			expect(response.isProxy).to.equal(true);
+		});
+
+		it('should return isProxy: true - ip2location (not in whitelisted range)', async () => {
 			mockFs({
 				config: {
-					'whitelist-ips.txt': `1.1.2.0/24`,
+					'whitelist-ips.txt': '1.1.2.0/24',
 				},
 			});
 
@@ -649,19 +657,9 @@ describe('geoip service', () => {
 
 			nockGeoIpProviders({ ip2location: 'vpn' });
 
-			const response: LocationInfo | Error = await client.lookup('1.1.1.1').catch((error: Error) => error);
+			const response = await client.lookup('1.1.1.1');
 
-			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.include('vpn detected');
-		});
-
-		it.skip('should reject - is_proxy field is true', async () => {
-			nockGeoIpProviders({ ip2location: 'vpn' });
-
-			const response: LocationInfo | Error = await client.lookup(MOCK_IP).catch((error: Error) => error);
-
-			expect(response).to.be.instanceof(Error);
-			expect((response as Error).message).to.include('vpn detected');
+			expect(response.isProxy).to.equal(true);
 		});
 
 		it('should reject - ASN is blocked', async () => {
