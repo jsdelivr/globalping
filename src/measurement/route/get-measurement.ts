@@ -16,7 +16,7 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 
 	await checkGetMeasurementRateLimit(ctx);
 
-	const result = await store.getMeasurementBuffer(id);
+	const result = await store.getMeasurementBufferCompressed(id);
 	apmAgent.addLabels({ gpMeasurementId: id });
 
 	if (!result) {
@@ -26,7 +26,7 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 	ctx.set('Cache-Control', 'public, max-age=0');
 
 	ctx.type = 'application/json';
-	ctx.body = result;
+	ctx.compressed(result);
 };
 
 export const registerGetMeasurementRoute = (router: ExtendedRouter): void => {

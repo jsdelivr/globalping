@@ -1,5 +1,5 @@
 import type { Server } from 'node:http';
-import { brotliCompress as brotliCompressCallback, constants as zlibConstants } from 'node:zlib';
+import { brotliCompress as brotliCompressCallback, brotliDecompress as brotliDecompressCallback, gunzip as gunzipCallback, constants as zlibConstants } from 'node:zlib';
 import { promisify } from 'node:util';
 import request, { Agent } from 'supertest';
 import Bluebird from 'bluebird';
@@ -12,6 +12,8 @@ import { generateMeasurementId, roundIdTime } from '../../../../src/measurement/
 import { getMeasurementKey } from '../../../../src/measurement/store.js';
 
 const brotliCompress = promisify(brotliCompressCallback);
+const brotliDecompress = promisify(brotliDecompressCallback);
+const gunzip = promisify(gunzipCallback);
 
 describe('Get measurement', () => {
 	let app: Server;
@@ -28,6 +30,14 @@ describe('Get measurement', () => {
 			probesCount: 1,
 			results: [],
 		};
+	};
+
+	const binaryParser = (response: any, callback: (error: Error | null, body: Buffer) => void) => {
+		const chunks: Buffer[] = [];
+
+		response.on('data', (chunk: Buffer | string) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
+		response.on('end', () => callback(null, Buffer.concat(chunks)));
+		response.on('error', (error: Error) => callback(error, Buffer.alloc(0)));
 	};
 
 	before(async () => {
@@ -110,6 +120,52 @@ describe('Get measurement', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal(record);
 					expect(response).to.matchApiSchema();
+				});
+		});
+
+		it('should return the precompressed Brotli payload when the client accepts br', async () => {
+			const now = new Date();
+			const id = generateMeasurementId(now);
+			const key = getMeasurementKey(id);
+			const record = buildMeasurementRecord(id, now);
+			record.target = 'x'.repeat(12_000);
+
+			const redis = getMeasurementRedisClient();
+			await redis.json.set(key, '$', record);
+			redisKeysToCleanup.push(key);
+
+			await requestAgent
+				.get(`/v1/measurements/${id}`)
+				.set('Accept-Encoding', 'br')
+				.buffer(true)
+				.parse(binaryParser)
+				.expect(200)
+				.expect(async (response) => {
+					expect(response.headers['content-encoding']).to.equal('br');
+					expect(JSON.parse((await brotliDecompress(response.body)).toString('utf8'))).to.deep.equal(record);
+				});
+		});
+
+		it('should decompress the precompressed payload and let koa-compress re-encode it for gzip clients', async () => {
+			const now = new Date();
+			const id = generateMeasurementId(now);
+			const key = getMeasurementKey(id);
+			const record = buildMeasurementRecord(id, now);
+			record.target = 'x'.repeat(12_000);
+
+			const redis = getMeasurementRedisClient();
+			await redis.json.set(key, '$', record);
+			redisKeysToCleanup.push(key);
+
+			await requestAgent
+				.get(`/v1/measurements/${id}`)
+				.set('Accept-Encoding', 'gzip')
+				.buffer(true)
+				.parse(binaryParser)
+				.expect(200)
+				.expect(async (response) => {
+					expect(response.headers['content-encoding']).to.equal('gzip');
+					expect(JSON.parse((await gunzip(response.body)).toString('utf8'))).to.deep.equal(record);
 				});
 		});
 	});
