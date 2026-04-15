@@ -112,6 +112,46 @@ describe('Get measurement', () => {
 					expect(response).to.matchApiSchema();
 				});
 		});
+
+		it('should return the precompressed Brotli payload when the client accepts br', async () => {
+			const now = new Date();
+			const id = generateMeasurementId(now);
+			const key = getMeasurementKey(id);
+			const record = buildMeasurementRecord(id, now);
+			record.target = 'x'.repeat(12_000);
+
+			const redis = getMeasurementRedisClient();
+			await redis.json.set(key, '$', record);
+			redisKeysToCleanup.push(key);
+
+			const response = await requestAgent
+				.get(`/v1/measurements/${id}`)
+				.set('Accept-Encoding', 'br')
+				.expect(200)
+				.expect('content-encoding', 'br');
+
+			expect(response.body).to.deep.equal(record);
+		});
+
+		it('should decompress the precompressed payload and let koa-compress re-encode it for gzip clients', async () => {
+			const now = new Date();
+			const id = generateMeasurementId(now);
+			const key = getMeasurementKey(id);
+			const record = buildMeasurementRecord(id, now);
+			record.target = 'x'.repeat(12_000);
+
+			const redis = getMeasurementRedisClient();
+			await redis.json.set(key, '$', record);
+			redisKeysToCleanup.push(key);
+
+			const response = await requestAgent
+				.get(`/v1/measurements/${id}`)
+				.set('Accept-Encoding', 'gzip')
+				.expect(200)
+				.expect('content-encoding', 'gzip');
+
+			expect(response.body).to.deep.equal(record);
+		});
 	});
 
 	describe('success (from Postgres offload)', () => {

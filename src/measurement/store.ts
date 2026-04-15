@@ -1,8 +1,12 @@
+import { promisify } from 'node:util';
+import { brotliDecompress as brotliDecompressCallback } from 'node:zlib';
 import is from '@sindresorhus/is';
 import Bluebird from 'bluebird';
 import config from 'config';
 import _ from 'lodash';
+import { commandOptions } from 'redis';
 
+import { parseCompressedJsonBuffer } from '../lib/redis/compressed.js';
 import type { OfflineProbe, ServerProbe } from '../probe/types.js';
 import { scopedLogger } from '../lib/logger.js';
 import type {
@@ -24,6 +28,7 @@ import type { ExportMeta } from './types.js';
 
 const logger = scopedLogger('store');
 const singleFlight = scopedFlight('store');
+const brotliDecompress = promisify(brotliDecompressCallback);
 
 export const getMeasurementKey = (id: string, suffix: string = 'results'): string => {
 	return `gp:m:{${id}}:${suffix}`;
@@ -58,18 +63,17 @@ export class MeasurementStore {
 		this.offloader = new MeasurementStoreOffloader(measurementStoreClient, this);
 	}
 
-	async getMeasurementBuffer (id: string): Promise<Buffer | null> {
-		return this.getFromRedisOrOffloader(id);
+	async getMeasurementBufferCompressed (id: string): Promise<Buffer | null> {
+		return this.getFromRedisOrOffloaderBufferCompressed(id);
 	}
 
 	async getMeasurement (id: string): Promise<MeasurementRecord | null> {
-		return this.getFromRedisOrOffloader(id, b => b ? JSON.parse(b.toString('utf8')) as MeasurementRecord : b);
+		return this.getFromRedisOrOffloaderBufferCompressed(id)
+			.then(b => b?.length ? brotliDecompress(b) : b)
+			.then(b => b ? JSON.parse(b.toString('utf8')) as MeasurementRecord : null);
 	}
 
-	private async getFromRedisOrOffloader<T extends Buffer | MeasurementRecord> (
-		id: string,
-		parse: (b: Buffer | null) => T | null = b => b as T,
-	): Promise<T | null> {
+	private async getFromRedisOrOffloaderBufferCompressed (id: string): Promise<Buffer | null> {
 		let userTier;
 		let minutesSinceEpoch;
 
@@ -85,7 +89,7 @@ export class MeasurementStore {
 		return singleFlight(getMeasurementKey(id), async (key) => {
 			if (isOlderThan30m) {
 				try {
-					const offloaded = await this.offloader.getMeasurementBuffer(id, userTier, createdAtMs);
+					const offloaded = await this.offloader.getMeasurementBufferCompressed(id, userTier, createdAtMs);
 
 					if (offloaded) {
 						return offloaded;
@@ -95,12 +99,12 @@ export class MeasurementStore {
 				}
 			}
 
-			return this.redis.compressedJsonGetBuffer(key);
-		}).then(parse);
+			return this.redis.compressedJsonGetBufferCompressed(key);
+		});
 	}
 
 	async getMeasurementsForOffloader (ids: string[]): Promise<(MeasurementRecord | null)[]> {
-		return Bluebird.map(ids, id => this.redis.json.get(getMeasurementKey(id)) as Promise<MeasurementRecord | null>, { concurrency: 8 });
+		return Bluebird.map(ids, id => this.redis.compressedJsonGet<MeasurementRecord>(getMeasurementKey(id)), { concurrency: 8 });
 	}
 
 	async getMeasurementIps (id: string): Promise<string[]> {
@@ -173,10 +177,12 @@ export class MeasurementStore {
 	}
 
 	async markFinished (id: string): Promise<MeasurementRecord | null> {
-		const [ record ] = await Promise.all([
-			this.redis.markFinished(id),
+		const [ recordBuffer ] = await Promise.all([
+			this.redis.markFinished(commandOptions({ returnBuffers: true }), id),
 			this.redis.hDel('gp:in-progress', id),
 		]);
+
+		const record = await parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
 
 		if (record) {
 			this.offloader.enqueueForOffload(record);
@@ -190,28 +196,12 @@ export class MeasurementStore {
 			return;
 		}
 
-		const keys = ids.map(id => getMeasurementKey(id));
-		const measurements = (await Bluebird.map(keys, key => this.redis.json.get(key) as Promise<MeasurementRecord | null>, { concurrency: 8 })).filter(is.truthy);
+		const measurements = (await Bluebird.map(ids, async (id) => {
+			const recordBuffer = await this.redis.markFinishedByTimeout(commandOptions({ returnBuffers: true }), id);
+			return parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
+		}, { concurrency: 32 })).filter(is.truthy);
 
-		for (const measurement of measurements) {
-			measurement.status = 'finished';
-			measurement.updatedAt = new Date().toISOString();
-			const inProgressResults = measurement.results.filter(resultObject => resultObject.result.status === 'in-progress');
-
-			for (const resultObject of inProgressResults) {
-				resultObject.result.status = 'failed';
-				resultObject.result.rawOutput += '\n\nThe measurement timed out.';
-			}
-		}
-
-		const updateMeasurements = Bluebird.map(measurements, measurement => this.redis.json.set(getMeasurementKey(measurement.id), '$', measurement), { concurrency: 32 });
-		const deleteAwaitingKeys = Bluebird.map(ids, id => this.redis.del(getMeasurementKey(id, 'probes_awaiting')), { concurrency: 32 });
-
-		await Promise.all([
-			this.redis.hDel('gp:in-progress', ids),
-			deleteAwaitingKeys,
-			updateMeasurements,
-		]);
+		await this.redis.hDel('gp:in-progress', ids);
 
 		for (const measurement of measurements) {
 			this.offloader.enqueueForOffload(measurement);

@@ -20,6 +20,7 @@ import { registerSendCodeRoute } from '../../adoption/route/adoption-code.js';
 import { registerHealthRoute } from '../../health/route/get.js';
 import { registerSpecRoute } from './spec.js';
 import { errorHandler } from './error-handler.js';
+import { compressed } from './middleware/compressed.js';
 import { defaultJson } from './middleware/default-json.js';
 import { errorHandlerMw } from './middleware/error-handler.js';
 import { corsHandler } from './middleware/cors.js';
@@ -149,6 +150,7 @@ export const getHttpServer = (ioContext: IoContext) => {
 		.use(errorHandlerMw)
 		.use(corsHandler())
 		.use(blacklist)
+		.use(captureMiddlewareSpan(compressed(), { name: 'compressed' }))
 		.use(captureMiddlewareChainSpan('route', 'custom'))
 		.use(rootRouter.routes())
 		.use(healthRouter.routes())

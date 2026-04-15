@@ -2,13 +2,12 @@ import got from 'got';
 import { expect } from 'chai';
 import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { waitProbeInCity } from '../utils.js';
+import { beforeTests } from '../before-tests.js';
 
 const LOCATION_OVERRIDES_TABLE = 'gp_location_overrides';
 
 describe('location overrides', () => {
-	before(async function () {
-		this.timeout(80000);
-
+	beforeTests(async () => {
 		await dashboardClient(LOCATION_OVERRIDES_TABLE).insert({
 			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			date_created: new Date(),
@@ -23,7 +22,7 @@ describe('location overrides', () => {
 		});
 
 		await waitProbeInCity('Miami');
-	});
+	}, { timeout: 80000 });
 
 	after(async function () {
 		this.timeout(80000);
