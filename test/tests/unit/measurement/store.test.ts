@@ -1,3 +1,5 @@
+import { promisify } from 'node:util';
+import { brotliCompress as brotliCompressCallback } from 'node:zlib';
 import * as td from 'testdouble';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
@@ -33,6 +35,7 @@ const getOfflineProbe = (id: string, ip: string) => ({
 } as unknown as OfflineProbe);
 
 describe('measurement store', () => {
+	const brotliCompress = promisify(brotliCompressCallback);
 	let getMeasurementStore: () => MeasurementStore;
 
 	const sandbox = sinon.createSandbox();
@@ -41,6 +44,7 @@ describe('measurement store', () => {
 		compressedJsonCompress: sandbox.stub(),
 		compressedJsonGet: sandbox.stub(),
 		compressedJsonGetBuffer: sandbox.stub(),
+		compressedJsonGetBufferCompressed: sandbox.stub(),
 		hScan: sandbox.stub(),
 		hDel: sandbox.stub(),
 		hSet: sandbox.stub(),
@@ -67,7 +71,7 @@ describe('measurement store', () => {
 	sandbox.stub(Math, 'random').returns(0.8);
 
 	const parseMeasurementIdStub = sandbox.stub();
-	const offloaderGetMeasurementBufferStub = sandbox.stub();
+	const offloaderGetMeasurementBufferCompressedStub = sandbox.stub();
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/measurement/id.ts', {
@@ -84,8 +88,8 @@ describe('measurement store', () => {
 				enqueueForOffloadStub(record);
 			}
 
-			getMeasurementBuffer (id: string, userTier: number, createdAtRounded: number) {
-				return offloaderGetMeasurementBufferStub(id, userTier, createdAtRounded);
+			getMeasurementBufferCompressed (id: string, userTier: number, createdAtRounded: number) {
+				return offloaderGetMeasurementBufferCompressedStub(id, userTier, createdAtRounded);
 			}
 		}
 
@@ -98,6 +102,7 @@ describe('measurement store', () => {
 		redisMock.compressedJsonCompress.reset();
 		redisMock.compressedJsonGet.reset();
 		redisMock.compressedJsonGetBuffer.reset();
+		redisMock.compressedJsonGetBufferCompressed.reset();
 		redisMock.recordResult.reset();
 		redisMock.markFinishedByTimeout.reset();
 		sandbox.resetHistory();
@@ -737,79 +742,79 @@ describe('measurement store', () => {
 		expect(redisMock.markFinished.callCount).to.equal(0);
 	});
 
-	it('should prefer the offload DB for likely offloaded measurements', async () => {
+	it('getMeasurementBufferCompressed should prefer the offload DB for likely offloaded measurements', async () => {
 		const store = getMeasurementStore();
 		const nowMs = Date.now();
 		const minutesOld = 45;
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementBufferStub.resolves(Buffer.from('{"from":"db"}'));
-		redisMock.compressedJsonGetBuffer.resolves(null);
+		offloaderGetMeasurementBufferCompressedStub.resolves(await brotliCompress(Buffer.from('{"from":"db"}')));
+		redisMock.compressedJsonGetBufferCompressed.resolves(null);
 
-		const result = await store.getMeasurementBuffer('SOME_ID');
-		expect(result?.toString()).to.equal('{"from":"db"}');
+		const result = await store.getMeasurementBufferCompressed('SOME_ID');
+		expect(result).to.deep.equal(await brotliCompress(Buffer.from('{"from":"db"}')));
 
-		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(0);
+		expect(offloaderGetMeasurementBufferCompressedStub.callCount).to.equal(1);
+		expect(redisMock.compressedJsonGetBufferCompressed.callCount).to.equal(0);
 	});
 
-	it('should fallback to Redis if the offload DB returns null (miss)', async () => {
+	it('getMeasurementBufferCompressed should fallback to Redis if the offload DB returns null (miss)', async () => {
 		const store = getMeasurementStore();
 		const nowMs = Date.now();
 		const minutesOld = 45;
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementBufferStub.resolves(null);
+		offloaderGetMeasurementBufferCompressedStub.resolves(null);
 
 		const redisValue = '{"from":"redis"}';
-		redisMock.compressedJsonGetBuffer.resolves(Buffer.from(redisValue));
+		redisMock.compressedJsonGetBufferCompressed.resolves(await brotliCompress(Buffer.from(redisValue)));
 
-		const result = await store.getMeasurementBuffer('SOME_ID');
-		expect(result?.toString()).to.equal(redisValue);
+		const result = await store.getMeasurementBufferCompressed('SOME_ID');
+		expect(result).to.deep.equal(await brotliCompress(Buffer.from(redisValue)));
 
-		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.firstCall.args).to.deep.equal([ 'gp:m:{SOME_ID}:results' ]);
+		expect(offloaderGetMeasurementBufferCompressedStub.callCount).to.equal(1);
+		expect(redisMock.compressedJsonGetBufferCompressed.callCount).to.equal(1);
+		expect(redisMock.compressedJsonGetBufferCompressed.firstCall.args).to.deep.equal([ 'gp:m:{SOME_ID}:results' ]);
 	});
 
-	it('should fallback to Redis if DB throws', async () => {
+	it('getMeasurementBufferCompressed should fallback to Redis if DB throws', async () => {
 		const store = getMeasurementStore();
 		const nowMs = Date.now();
 		const minutesOld = 45;
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementBufferStub.rejects(new Error('DB error'));
+		offloaderGetMeasurementBufferCompressedStub.rejects(new Error('DB error'));
 
 		const redisValue = '{"from":"redis"}';
-		redisMock.compressedJsonGetBuffer.resolves(Buffer.from(redisValue));
+		redisMock.compressedJsonGetBufferCompressed.resolves(await brotliCompress(Buffer.from(redisValue)));
 
-		const result = await store.getMeasurementBuffer('SOME_ID');
-		expect(result?.toString()).to.equal(redisValue);
+		const result = await store.getMeasurementBufferCompressed('SOME_ID');
+		expect(result).to.deep.equal(await brotliCompress(Buffer.from(redisValue)));
 
-		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(1);
+		expect(offloaderGetMeasurementBufferCompressedStub.callCount).to.equal(1);
+		expect(redisMock.compressedJsonGetBufferCompressed.callCount).to.equal(1);
 	});
 
-	it('should use Redis when measurement is recent', async () => {
+	it('getMeasurementBufferCompressed should use Redis when measurement is recent', async () => {
 		const store = getMeasurementStore();
 		const nowMs = Date.now();
 		const minutesOld = 5;
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementBufferStub.resolves(Buffer.from('{"from":"db"}'));
+		offloaderGetMeasurementBufferCompressedStub.resolves(await brotliCompress(Buffer.from('{"from":"db"}')));
 
 		const redisValue = '{"from":"redis"}';
-		redisMock.compressedJsonGetBuffer.resolves(Buffer.from(redisValue));
+		redisMock.compressedJsonGetBufferCompressed.resolves(await brotliCompress(Buffer.from(redisValue)));
 
-		const result = await store.getMeasurementBuffer('SOME_ID');
-		expect(result?.toString()).to.equal(redisValue);
-		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(0);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.firstCall.args).to.deep.equal([ 'gp:m:{SOME_ID}:results' ]);
+		const result = await store.getMeasurementBufferCompressed('SOME_ID');
+		expect(result).to.deep.equal(await brotliCompress(Buffer.from(redisValue)));
+		expect(offloaderGetMeasurementBufferCompressedStub.callCount).to.equal(0);
+		expect(redisMock.compressedJsonGetBufferCompressed.callCount).to.equal(1);
+		expect(redisMock.compressedJsonGetBufferCompressed.firstCall.args).to.deep.equal([ 'gp:m:{SOME_ID}:results' ]);
 	});
 
 	it('getMeasurement should prefer the offload DB for likely offloaded measurements', async () => {
@@ -819,14 +824,14 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementBufferStub.resolves(Buffer.from('{"from":"db"}'));
-		redisMock.compressedJsonGetBuffer.reset();
+		offloaderGetMeasurementBufferCompressedStub.resolves(await brotliCompress(Buffer.from('{"from":"db"}')));
+		redisMock.compressedJsonGetBufferCompressed.reset();
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal({ from: 'db' });
 
-		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(0);
+		expect(offloaderGetMeasurementBufferCompressedStub.callCount).to.equal(1);
+		expect(redisMock.compressedJsonGetBufferCompressed.callCount).to.equal(0);
 	});
 
 	it('getMeasurement should fallback to Redis if the offload DB returns null', async () => {
@@ -836,15 +841,15 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementBufferStub.resolves(null);
-		redisMock.compressedJsonGetBuffer.reset();
-		redisMock.compressedJsonGetBuffer.resolves(Buffer.from('{"from":"redis"}'));
+		offloaderGetMeasurementBufferCompressedStub.resolves(null);
+		redisMock.compressedJsonGetBufferCompressed.reset();
+		redisMock.compressedJsonGetBufferCompressed.resolves(await brotliCompress(Buffer.from('{"from":"redis"}')));
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal({ from: 'redis' });
 
-		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(1);
+		expect(offloaderGetMeasurementBufferCompressedStub.callCount).to.equal(1);
+		expect(redisMock.compressedJsonGetBufferCompressed.callCount).to.equal(1);
 	});
 
 	it('getMeasurement should fallback to Redis if DB throws', async () => {
@@ -854,15 +859,15 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		offloaderGetMeasurementBufferStub.rejects(new Error('DB error'));
-		redisMock.compressedJsonGetBuffer.reset();
-		redisMock.compressedJsonGetBuffer.resolves(Buffer.from('{"from":"redis"}'));
+		offloaderGetMeasurementBufferCompressedStub.rejects(new Error('DB error'));
+		redisMock.compressedJsonGetBufferCompressed.reset();
+		redisMock.compressedJsonGetBufferCompressed.resolves(await brotliCompress(Buffer.from('{"from":"redis"}')));
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal({ from: 'redis' });
 
-		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(1);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(1);
+		expect(offloaderGetMeasurementBufferCompressedStub.callCount).to.equal(1);
+		expect(redisMock.compressedJsonGetBufferCompressed.callCount).to.equal(1);
 	});
 
 	it('getMeasurement should use Redis when measurement is recent', async () => {
@@ -872,14 +877,14 @@ describe('measurement store', () => {
 		const minutesSinceEpoch = Math.floor((nowMs - minutesOld * 60_000) / 60_000);
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
-		redisMock.compressedJsonGetBuffer.reset();
-		redisMock.compressedJsonGetBuffer.resolves(Buffer.from('{"from":"redis"}'));
+		redisMock.compressedJsonGetBufferCompressed.reset();
+		redisMock.compressedJsonGetBufferCompressed.resolves(await brotliCompress(Buffer.from('{"from":"redis"}')));
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal({ from: 'redis' });
 
-		expect(offloaderGetMeasurementBufferStub.callCount).to.equal(0);
-		expect(redisMock.compressedJsonGetBuffer.callCount).to.equal(1);
+		expect(offloaderGetMeasurementBufferCompressedStub.callCount).to.equal(0);
+		expect(redisMock.compressedJsonGetBufferCompressed.callCount).to.equal(1);
 	});
 
 	it('setOffloadedExpiration should set 60m TTL on results keys', async () => {

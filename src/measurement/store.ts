@@ -1,3 +1,5 @@
+import { promisify } from 'node:util';
+import { brotliDecompress as brotliDecompressCallback } from 'node:zlib';
 import is from '@sindresorhus/is';
 import Bluebird from 'bluebird';
 import config from 'config';
@@ -26,6 +28,7 @@ import type { ExportMeta } from './types.js';
 
 const logger = scopedLogger('store');
 const singleFlight = scopedFlight('store');
+const brotliDecompress = promisify(brotliDecompressCallback);
 
 export const getMeasurementKey = (id: string, suffix: string = 'results'): string => {
 	return `gp:m:{${id}}:${suffix}`;
@@ -60,18 +63,17 @@ export class MeasurementStore {
 		this.offloader = new MeasurementStoreOffloader(measurementStoreClient, this);
 	}
 
-	async getMeasurementBuffer (id: string): Promise<Buffer | null> {
-		return this.getFromRedisOrOffloader(id);
+	async getMeasurementBufferCompressed (id: string): Promise<Buffer | null> {
+		return this.getFromRedisOrOffloaderBufferCompressed(id);
 	}
 
 	async getMeasurement (id: string): Promise<MeasurementRecord | null> {
-		return this.getFromRedisOrOffloader(id, b => b ? JSON.parse(b.toString('utf8')) as MeasurementRecord : b);
+		return this.getFromRedisOrOffloaderBufferCompressed(id)
+			.then(b => b?.length ? brotliDecompress(b) : b)
+			.then(b => b ? JSON.parse(b.toString('utf8')) as MeasurementRecord : null);
 	}
 
-	private async getFromRedisOrOffloader<T extends Buffer | MeasurementRecord> (
-		id: string,
-		parse: (b: Buffer | null) => T | null = b => b as T,
-	): Promise<T | null> {
+	private async getFromRedisOrOffloaderBufferCompressed (id: string): Promise<Buffer | null> {
 		let userTier;
 		let minutesSinceEpoch;
 
@@ -87,7 +89,7 @@ export class MeasurementStore {
 		return singleFlight(getMeasurementKey(id), async (key) => {
 			if (isOlderThan30m) {
 				try {
-					const offloaded = await this.offloader.getMeasurementBuffer(id, userTier, createdAtMs);
+					const offloaded = await this.offloader.getMeasurementBufferCompressed(id, userTier, createdAtMs);
 
 					if (offloaded) {
 						return offloaded;
@@ -97,8 +99,8 @@ export class MeasurementStore {
 				}
 			}
 
-			return this.redis.compressedJsonGetBuffer(key);
-		}).then(parse);
+			return this.redis.compressedJsonGetBufferCompressed(key);
+		});
 	}
 
 	async getMeasurementsForOffloader (ids: string[]): Promise<(MeasurementRecord | null)[]> {

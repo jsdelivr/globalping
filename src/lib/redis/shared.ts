@@ -11,7 +11,7 @@ import {
 import _ from 'lodash';
 import Bluebird from 'bluebird';
 import { type RedisScripts, scripts } from './scripts.js';
-import { compressedJsonCompress, compressedJsonGet, compressedJsonGetBuffer } from './compressed.js';
+import { compressedJsonCompress, compressedJsonGet, compressedJsonGetBuffer, compressedJsonGetBufferCompressed } from './compressed.js';
 import { type Logger } from 'h-logger2';
 
 type ClusterExtensions = {
@@ -19,6 +19,7 @@ type ClusterExtensions = {
 	reduceMasters: typeof reduceMasters;
 	compressedJsonGet: typeof compressedJsonGet;
 	compressedJsonGetBuffer: typeof compressedJsonGetBuffer;
+	compressedJsonGetBufferCompressed: typeof compressedJsonGetBufferCompressed;
 	compressedJsonCompress: typeof compressedJsonCompress;
 };
 
@@ -53,6 +54,7 @@ export const createRedisClusterInternal = (options: RedisClusterOptions, logger:
 		reduceMasters,
 		compressedJsonGet,
 		compressedJsonGetBuffer,
+		compressedJsonGetBufferCompressed,
 		compressedJsonCompress,
 	});
 
