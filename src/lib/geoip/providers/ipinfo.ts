@@ -18,6 +18,10 @@ type IpinfoResponse = {
 	loc: string | undefined;
 	privacy?: {
 		hosting: boolean;
+		vpn?: boolean;
+		proxy?: boolean;
+		tor?: boolean;
+		relay?: boolean;
 	};
 	anycast?: boolean;
 };
@@ -50,7 +54,7 @@ export const ipinfoLookup = async (addr: string): Promise<ProviderLocationInfo> 
 		longitude: Number(lon),
 		network: normalizeNetworkNamePublic(network),
 		normalizedNetwork: normalizeNetworkName(network),
-		isProxy: null,
+		isProxy: result.privacy?.vpn || result.privacy?.proxy || result.privacy?.relay || false,
 		isHosting: result.privacy?.hosting ?? null,
 		isAnycast: result.anycast ?? null,
 	};

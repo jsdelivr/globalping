@@ -1,10 +1,12 @@
 import apmAgent from 'elastic-apm-node';
 import createHttpError from 'http-errors';
+import { parseMeasurementId } from '../id.js';
 import { getMeasurementStore } from '../store.js';
 import { checkGetMeasurementRateLimit } from '../../lib/rate-limiter/rate-limiter-get.js';
 import type { ExtendedContext, ExtendedRouter } from '../../types.js';
 
 const store = getMeasurementStore();
+const notFound = () => createHttpError(404, `Couldn't find the requested measurement.`, { type: 'not_found' });
 
 const handle = async (ctx: ExtendedContext): Promise<void> => {
 	const { id } = ctx.params;
@@ -20,10 +22,26 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 	apmAgent.addLabels({ gpMeasurementId: id });
 
 	if (!result) {
-		throw createHttpError(404, `Couldn't find the requested measurement.`, { type: 'not_found' });
+		throw notFound();
 	}
 
-	ctx.set('Cache-Control', 'public, max-age=0');
+	let minutesSinceEpoch: number;
+
+	try {
+		({ minutesSinceEpoch } = parseMeasurementId(id));
+	} catch {
+		throw notFound();
+	}
+
+	const measurementAgeSeconds = Math.floor((Date.now() - minutesSinceEpoch * 60_000) / 1000);
+	const isStableMeasurement = measurementAgeSeconds >= 2 * 60;
+
+	ctx.set(
+		'Cache-Control',
+		isStableMeasurement
+			? `public, max-age=${365 * 24 * 60 * 60}, immutable`
+			: 'public, max-age=0',
+	);
 
 	ctx.type = 'application/json';
 	ctx.compressed(result);

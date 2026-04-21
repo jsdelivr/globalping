@@ -38,6 +38,7 @@ export const fastlyLookup = async (addr: string): Promise<ProviderLocationInfo> 
 	const originalCity = data.city.replace(/^(private|reserved)/, '');
 	const originalState = data.country_code === 'US' ? data.region : null;
 	const { city, state } = await getCity({ city: originalCity, state: originalState }, data.country_code, Number(data.latitude), Number(data.longitude));
+	const proxyDesc = result.client?.proxy_desc;
 
 	return {
 		provider: 'fastly',
@@ -52,7 +53,7 @@ export const fastlyLookup = async (addr: string): Promise<ProviderLocationInfo> 
 		longitude: data.longitude,
 		network: normalizeNetworkNamePublic(result.as.name),
 		normalizedNetwork: normalizeNetworkName(result.as.name),
-		isProxy: null,
+		isProxy: !!proxyDesc && proxyDesc !== '?' && proxyDesc !== 'cloud' && proxyDesc !== 'tor-exit' && proxyDesc !== 'tor-relay',
 		isHosting: null,
 		isAnycast: null,
 	};

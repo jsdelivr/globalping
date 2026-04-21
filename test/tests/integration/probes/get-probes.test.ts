@@ -26,6 +26,7 @@ describe('Get Probes', () => {
 				.send()
 				.expect(200)
 				.expect((response) => {
+					expect(response.headers['cache-control']).to.equal('public, max-age=1, stale-while-revalidate=1, stale-if-error=60');
 					expect(response.body).to.deep.equal([]);
 					expect(response).to.matchApiSchema();
 				});
