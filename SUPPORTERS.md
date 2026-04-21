@@ -1,6 +1,6 @@
 | Supporter                                                              | Website                                             |
 | :--------------------------------------------------------------------- | :-------------------------------------------------- |
-| <img src="https://rarecloud.io/rarecloud.png" alt="RareCloud logo" width="150" title="RareCloud"> | [RareCloud Website](https://rarecloud.io/)         |
+| <img src="https://billing.deluxhost.net/assets/img/logo.png" alt="RareCloud logo" width="150" title="RareCloud"> | [RareCloud Website](https://rarecloud.io/)         |
 | <img src="https://freerangecloud.com/images/logo.png" alt="Free Range Cloud Logo" width="150" title="Free Range Cloud"> | [Free Range Cloud Website](https://freerangecloud.com/) |
 | <img src="https://bytehosting.cloud/full-logo.png" alt="byehosting logo" width="150" title="bytehosting"> | [ByteHosting Website](https://bytehosting.cloud/) |
 | <img src="https://billing.deluxhost.net/templates/lagom2/assets/img/logo/logo_big_inverse.752041140.png" alt="DeluxHOST Logo" width="150" title="DeluxHOST"> | [DeluxHOST Website](https://deluxhost.net/) |
