@@ -157,7 +157,13 @@ export const getHttpServer = (ioContext: IoContext) => {
 		.use(apiRouter.routes())
 		.use(apiRouter.allowedMethods())
 		.use(koaElasticUtils.middleware(apmAgent))
-		.use(koaStatic(publicPath, { format: false }));
+		.use(koaStatic(publicPath, {
+			format: false,
+			maxage: 60_000,
+			setHeaders: (res) => {
+				res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=60, stale-if-error=86400');
+			},
+		}));
 
 	app.on('error', errorHandler);
 
