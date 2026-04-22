@@ -622,7 +622,7 @@ export class AdoptedProbes {
 
 	private findDProbeDuplicates (updatedDProbes: DProbe[]) {
 		const dProbesToDelete: DProbe[] = [];
-		const nullifyIpUpdates: { dProbe: DProbe; update: { ip: null } }[] = [];
+		const nullifyIpUpdates: { dProbe: DProbe; update: { ip: null; status: 'offline' } }[] = [];
 		const dProbeAltIpUpdates: { dProbe: DProbe; update: { altIps: string[] } }[] = [];
 		const uniqUuids = new Map<string, DProbe>();
 		const uniqIps = new Map<string, DProbe>();
@@ -644,7 +644,7 @@ export class AdoptedProbes {
 					offline: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
 				});
 
-				nullifyIpUpdates.push({ dProbe, update: { ip: null } });
+				nullifyIpUpdates.push({ dProbe, update: { ip: null, status: 'offline' } });
 			} else if (existingDProbe) {
 				logger.error('Unremovable duplication found.', {
 					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),

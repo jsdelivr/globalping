@@ -882,7 +882,7 @@ describe('AdoptedProbes', () => {
 		// Match found by UUID.
 		expect(sql.update.callCount).to.equal(3);
 		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-2' }]);
-		expect(sql.update.args[0]).to.deep.equal([{ ip: null }]);
+		expect(sql.update.args[0]).to.deep.equal([{ ip: null, status: 'offline' }]);
 		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ ip: '2.2.2.2' }]);
 		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-2' }]);
@@ -933,7 +933,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.delete.callCount).to.equal(0);
 		expect(sql.update.callCount).to.equal(2);
 		expect(sql.where.args[0]).to.deep.equal([{ id: 'dup-primary-ip' }]);
-		expect(sql.update.args[0]).to.deep.equal([{ ip: null }]);
+		expect(sql.update.args[0]).to.deep.equal([{ ip: null, status: 'offline' }]);
 		expect(sql.where.args[1]).to.deep.equal([{ id: 'dup-alt-ip' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ altIps: '[]' }]);
 		expect(sql.insert.callCount).to.equal(0);
@@ -968,7 +968,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.delete.callCount).to.equal(0);
 		expect(sql.update.callCount).to.equal(3);
 		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-2' }]);
-		expect(sql.update.args[0]).to.deep.equal([{ ip: null }]);
+		expect(sql.update.args[0]).to.deep.equal([{ ip: null, status: 'offline' }]);
 		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ ip: '2.2.2.2', altIps: '["1.1.1.1"]' }]);
 		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-2' }]);
