@@ -1067,8 +1067,8 @@ describe('AdoptedProbes', () => {
 		sql.select.resolves([{ ...defaultAdoption, status: 'offline' }]);
 
 		getProbesWithAdminData.returns([
-			{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '1.1.1.1', client: 'socket-A' },
 			{ ...defaultConnectedProbe, uuid: '9-9-9-9-9', ipAddress: '1.1.1.1', client: 'socket-B' },
+			{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '1.1.1.1', client: 'socket-A' },
 		]);
 
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
