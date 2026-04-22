@@ -1063,6 +1063,23 @@ describe('AdoptedProbes', () => {
 		});
 	});
 
+	it('class should dedupe probes with the same ipAddress: match survivor with existing dProbe and skip insert for the duplicate', async () => {
+		sql.select.resolves([{ ...defaultAdoption, status: 'offline' }]);
+
+		getProbesWithAdminData.returns([
+			{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '1.1.1.1', client: 'socket-A' },
+			{ ...defaultConnectedProbe, uuid: '9-9-9-9-9', ipAddress: '1.1.1.1', client: 'socket-B' },
+		]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.insert.callCount).to.equal(0);
+		expect(sql.update.callCount).to.equal(1);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ status: 'ready' }]);
+	});
+
 	it('class should proceed with syncing other probes if one probe sync fails', async () => {
 		sql.select.resolves([ defaultAdoption, { ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2' }]);
 

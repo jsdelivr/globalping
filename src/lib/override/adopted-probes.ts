@@ -323,7 +323,7 @@ export class AdoptedProbes {
 		// 'probe' - usual API probe. 'dProbe' - dashboard probe data stored in sql.
 		const { dProbesWithProbe, dProbesWithoutProbe, probesWithoutDProbe } = this.matchDProbesAndProbes(probes);
 		const { updatedDProbes, dProbeDataUpdates } = this.generateUpdatedDProbes(dProbesWithProbe, dProbesWithoutProbe);
-		const { dProbesToDelete, nullifyIpUpdates, dProbeAltIpUpdates } = this.findDuplicates(updatedDProbes);
+		const { dProbesToDelete, nullifyIpUpdates, dProbeAltIpUpdates } = this.findDProbeDuplicates(updatedDProbes);
 
 		const dProbeUpdates = this.mergeUpdates(dProbeDataUpdates, dProbeAltIpUpdates, dProbesToDelete);
 
@@ -396,6 +396,8 @@ export class AdoptedProbes {
 	 * This ensures that adopted probes take precedence over non-adopted ones in further logic.
 	 */
 	private matchDProbesAndProbes (probes: SocketProbe[]) {
+		// `ipAddress` duplicates are possible (https://github.com/jsdelivr/globalping/issues/502), so we are filtering them out. Sorting by client to prefer the probe that will stay after `syncIpLimit` run.
+		probes = _.uniqBy(_.sortBy(probes, [ 'client' ]), probe => probe.ipAddress);
 		const uuidToProbe = new Map(probes.map(probe => [ probe.uuid, probe ]));
 		const ipToProbe = new Map(probes.map(probe => [ probe.ipAddress, probe ]));
 		const altIpToProbe = new Map(probes.map(probe => probe.altIpAddresses.map(altIp => [ altIp, probe ] as const)).flat());
@@ -618,7 +620,7 @@ export class AdoptedProbes {
 		return { dProbeDataUpdates, updatedDProbes };
 	}
 
-	private findDuplicates (updatedDProbes: DProbe[]) {
+	private findDProbeDuplicates (updatedDProbes: DProbe[]) {
 		const dProbesToDelete: DProbe[] = [];
 		const nullifyIpUpdates: { dProbe: DProbe; update: { ip: null } }[] = [];
 		const dProbeAltIpUpdates: { dProbe: DProbe; update: { altIps: string[] } }[] = [];
