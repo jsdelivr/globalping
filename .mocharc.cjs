@@ -1,6 +1,10 @@
 process.env.NODE_ENV = 'test';
 process.env.TEST_MODE = 'unit';
 
+if (process.env.LOG_LEVEL === undefined) {
+	process.env.LOG_LEVEL = '50';
+}
+
 if (process.env.TS_NODE_TRANSPILE_ONLY === undefined) {
 	process.env.TS_NODE_TRANSPILE_ONLY = 'true';
 }
