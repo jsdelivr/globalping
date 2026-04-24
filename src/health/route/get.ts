@@ -5,6 +5,7 @@ import termListener from '../../lib/term-listener.js';
 
 const handle = (ctx: ParameterizedContext<DefaultState, DefaultContext & Router.RouterParamContext>): void => {
 	const isTerminating = termListener.getIsTerminating();
+	ctx.status = isTerminating ? 503 : 200;
 	ctx.body = isTerminating ? 'Received SIGTERM, shutting down' : 'Alive';
 };
 
