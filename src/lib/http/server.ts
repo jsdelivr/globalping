@@ -39,7 +39,6 @@ import { registerGetProbeLogsRoute } from '../../probe/route/get-probe-logs.js';
 import { captureMiddlewareChainSpan, captureMiddlewareSpan } from '../metrics.js';
 import type { IoContext } from '../server.js';
 
-
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
 const docsHost = config.get<string>('server.docsHost');
 

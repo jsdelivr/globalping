@@ -45,3 +45,14 @@ apmAgent.addSpanFilter((payload) => {
 
 	return false;
 });
+
+apmAgent.addErrorFilter((payload) => {
+	if (
+		(payload['custom'] as { scope?: unknown } | undefined)?.scope
+		|| !(payload['exception'] as { handled?: unknown } | undefined)?.handled
+	) {
+		return payload;
+	}
+
+	return false;
+});
