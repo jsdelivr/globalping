@@ -8,6 +8,7 @@ import { DASH_PROBES_TABLE } from '../../../../src/lib/override/adopted-probes.j
 import { dashboardClient } from '../../../../src/lib/sql/client.js';
 
 describe('Get Probes', () => {
+	const expectedHost = process.env['HOSTNAME'] ?? '';
 	let requestAgent: Agent;
 
 	before(async () => {
@@ -189,7 +190,7 @@ describe('Get Probes', () => {
 						version: '0.39.0',
 						isIPv4Supported: false,
 						isIPv6Supported: false,
-						host: '',
+						host: expectedHost,
 						ipAddress: '1.2.3.4',
 						altIpAddresses: [],
 						isHardware: false,

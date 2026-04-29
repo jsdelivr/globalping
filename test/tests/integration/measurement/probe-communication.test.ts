@@ -9,6 +9,7 @@ import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import * as id from '../../../../src/measurement/id.js';
 
 describe('Create measurement request', () => {
+	const expectedHost = process.env['HOSTNAME'] ?? '';
 	let probe: Socket;
 	let waitForProbesUpdate: () => Promise<void>;
 	let addFakeProbe: (events?: Record<string, any>) => Promise<Socket>;
@@ -455,7 +456,7 @@ describe('Create measurement request', () => {
 					},
 					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
-					host: '',
+					host: expectedHost,
 					stats: {
 						jobs: {
 							count: 0,
@@ -504,7 +505,7 @@ describe('Create measurement request', () => {
 					},
 					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
-					host: '',
+					host: expectedHost,
 					stats: {
 						jobs: {
 							count: 0,
@@ -547,7 +548,7 @@ describe('Create measurement request', () => {
 					},
 					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
-					host: '',
+					host: expectedHost,
 					stats: {
 						jobs: {
 							count: 0,
@@ -590,7 +591,7 @@ describe('Create measurement request', () => {
 					},
 					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
-					host: '',
+					host: expectedHost,
 					stats: {
 						jobs: {
 							count: 0,
@@ -633,7 +634,7 @@ describe('Create measurement request', () => {
 					},
 					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
-					host: '',
+					host: expectedHost,
 					stats: {
 						jobs: {
 							count: 0,
