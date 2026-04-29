@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { scopedLogger } from './logger.js';
 import { getRedisClient } from './redis/client.js';
 import { getPersistentRedisClient } from './redis/persistent-client.js';
+import { fromProjectRoot } from './paths.js';
 
 const logger = scopedLogger('flush-redis-cache');
 
@@ -14,7 +14,7 @@ export async function flushRedisCache () {
 	const redis = getRedisClient();
 	const persistentRedis = getPersistentRedisClient();
 	const hostname = process.env['HOSTNAME'] || process.env['NODE_ENV'];
-	const filePath = path.join(path.resolve(), 'data/LAST_API_COMMIT_HASH.txt');
+	const filePath = fromProjectRoot('data', 'LAST_API_COMMIT_HASH.txt');
 
 	const lastCommitHashInRedis = await persistentRedis.get(`LAST_API_COMMIT_HASH_${hostname}`);
 	const currentLastCommitHash = (await readFile(filePath, 'utf8').catch(() => '')).trim();

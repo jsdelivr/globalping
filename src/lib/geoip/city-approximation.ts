@@ -8,6 +8,7 @@ import { getRedisClient, type RedisClient } from '../redis/client.js';
 import { throttle } from '../ws/helper/throttle.js';
 import { scopedLogger } from '../logger.js';
 import { getIsDcCity } from './dc-cities.js';
+import { fromProjectRoot } from '../paths.js';
 
 type City = {
 	geonameId: string;
@@ -51,7 +52,7 @@ const query = async (url: string): Promise<Buffer> => {
 export const updateGeonamesCitiesFile = async (): Promise<void> => {
 	const response = await query(URL);
 	const zip = new AdmZip(response);
-	zip.extractEntryTo('cities15000.txt', 'data', false, true, false, FILENAME);
+	zip.extractEntryTo('cities15000.txt', fromProjectRoot('data'), false, true, false, FILENAME);
 };
 
 let redis: RedisClient;
@@ -128,7 +129,7 @@ const getApproximatedCity = async (country?: string, latitude?: number, longitud
 
 const readCitiesCsvFile = () => new Promise((resolve, reject) => {
 	const cities: CsvCityRow[] = [];
-	fs.createReadStream(`data/${FILENAME}`)
+	fs.createReadStream(fromProjectRoot('data', FILENAME))
 		.pipe(csvParser({
 			headers: [ 'geonameId', 'name', 'asciiName', 'alternateNames', 'latitude', 'longitude', 'featureClass', 'featureCode', 'countryCode', 'cc2', 'admin1Code', 'admin2Code', 'admin3Code', 'admin4Code', 'population', 'elevation', 'dem', 'timezone', 'modificationDate' ],
 			separator: '\t',
