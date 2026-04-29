@@ -120,11 +120,11 @@
 	},
 	"scripts": {
 		"build": "tsc && npm run download:files && npm run commit:hash && cp -r public dist",
-		"commit:hash": "git rev-parse HEAD > data/LAST_API_COMMIT_HASH.txt",
+		"commit:hash": "git rev-parse HEAD > data/LAST_API_COMMIT_HASH.txt || echo 'Failed to write the commit hash'",
 		"coverage": "npm run clean && c8 mocha 'test/tests/integration/**/*.test.ts' 'test/tests/unit/**/*.test.ts'",
 		"clean": "rimraf coverage",
 		"download:files": "tsx src/lib/download-files.ts",
-		"prepare": "npm run download:files; husky || echo 'Failed to install husky'",
+		"prepare": "sh ./bin/prepare-as-dep.sh; npm run download:files; husky || echo 'Failed to install husky'",
 		"stats": "tsx probes-stats/known.ts",
 		"start:dev": "NODE_ENV=development FAKE_PROBE_IP=1 tsx src/index.ts",
 		"start:test": "NODE_ENV=test knex --knexfile knexfile.dashboard.js migrate:latest && NODE_ENV=test tsx src/index.ts",

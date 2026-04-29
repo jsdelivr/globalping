@@ -1,9 +1,9 @@
 import { writeFile, readFile } from 'node:fs/promises';
-import path from 'node:path';
 import got from 'got';
 import _ from 'lodash';
 import ipaddr from 'ipaddr.js';
 import { mergeCidr } from 'cidr-tools';
+import { fromProjectRoot } from './paths.js';
 
 type ParsedIpRange = [ipaddr.IPv4 | ipaddr.IPv6, number];
 
@@ -69,7 +69,7 @@ const addIpv6Range = (cidr: string, tags: string[]) => {
 
 const populateGcpList = async () => {
 	const gcpSource = sources.gcp;
-	const filePath = path.join(path.resolve(), gcpSource.file);
+	const filePath = fromProjectRoot(gcpSource.file);
 	const json = await readFile(filePath, 'utf8');
 	const data = JSON.parse(json) as {
 		prefixes: Array<{
@@ -97,7 +97,7 @@ const populateGcpList = async () => {
 
 const populateAwsList = async () => {
 	const awsSource = sources.aws;
-	const filePath = path.join(path.resolve(), awsSource.file);
+	const filePath = fromProjectRoot(awsSource.file);
 	const json = await readFile(filePath, 'utf8');
 	const data = JSON.parse(json) as {
 		prefixes: Array<{
@@ -128,7 +128,7 @@ const populateAwsList = async () => {
 
 export async function populateAzureList () {
 	const azureSource = sources.azure;
-	const filePath = path.join(path.resolve(), azureSource.file);
+	const filePath = fromProjectRoot(azureSource.file);
 	const json = await readFile(filePath, 'utf8');
 	const data = JSON.parse(json) as {
 		values: Array<{
@@ -167,7 +167,7 @@ export async function populateAzureList () {
 
 export async function populateOracleList () {
 	const ociSource = sources.oci;
-	const filePath = path.join(path.resolve(), ociSource.file);
+	const filePath = fromProjectRoot(ociSource.file);
 	const json = await readFile(filePath, 'utf8');
 	const data = JSON.parse(json) as {
 		regions: Array<{
@@ -212,7 +212,7 @@ export const populateMemList = async (): Promise<void> => {
 export const updateIpRangeFiles = async (): Promise<void> => {
 	await Promise.all(Object.values(sources).map(async (source) => {
 		const response = await query(source.url);
-		const filePath = path.join(path.resolve(), source.file);
+		const filePath = fromProjectRoot(source.file);
 		await writeFile(filePath, response, 'utf8');
 	}));
 };
