@@ -5,6 +5,7 @@ import { pipeline } from 'node:stream/promises';
 import { normalizeLegalName, populateLegalNames } from './legal-name-normalization.js';
 import anyAscii from 'any-ascii';
 import fs from 'fs';
+import { fromProjectRoot } from '../paths.js';
 
 const SOURCE_URL = 'https://download.jsdelivr.com/ASN_INFO.csv';
 const FILENAME = 'ASN_INFO.csv';
@@ -63,7 +64,7 @@ async function fetchDescriptions (): Promise<Set<string>> {
 
 export const populateAsnData = async () => {
 	return pipeline(
-		fs.createReadStream(`data/${FILENAME}`),
+		fs.createReadStream(fromProjectRoot('data', FILENAME)),
 		csvParser(),
 		async function *(source: AsyncIterable<Record<string, string>>) {
 			for await (const row of source) {
@@ -136,5 +137,5 @@ export async function updateAsnData () {
 
 	const csv = lines.join('\n');
 
-	await writeFile(`data/${FILENAME}`, csv + '\n');
+	await writeFile(fromProjectRoot('data', FILENAME), csv + '\n');
 }

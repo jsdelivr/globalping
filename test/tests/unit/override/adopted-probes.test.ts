@@ -944,7 +944,7 @@ describe('AdoptedProbes', () => {
 		// Match found by UUID.
 		expect(sql.update.callCount).to.equal(3);
 		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-2' }]);
-		expect(sql.update.args[0]).to.deep.equal([{ ip: null }]);
+		expect(sql.update.args[0]).to.deep.equal([{ ip: null, status: 'offline' }]);
 		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ ip: '2.2.2.2' }]);
 		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-2' }]);
@@ -995,7 +995,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.delete.callCount).to.equal(0);
 		expect(sql.update.callCount).to.equal(2);
 		expect(sql.where.args[0]).to.deep.equal([{ id: 'dup-primary-ip' }]);
-		expect(sql.update.args[0]).to.deep.equal([{ ip: null }]);
+		expect(sql.update.args[0]).to.deep.equal([{ ip: null, status: 'offline' }]);
 		expect(sql.where.args[1]).to.deep.equal([{ id: 'dup-alt-ip' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ altIps: '[]' }]);
 		expect(sql.insert.callCount).to.equal(0);
@@ -1030,7 +1030,7 @@ describe('AdoptedProbes', () => {
 		expect(sql.delete.callCount).to.equal(0);
 		expect(sql.update.callCount).to.equal(3);
 		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-2' }]);
-		expect(sql.update.args[0]).to.deep.equal([{ ip: null }]);
+		expect(sql.update.args[0]).to.deep.equal([{ ip: null, status: 'offline' }]);
 		expect(sql.where.args[1]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.args[1]).to.deep.equal([{ ip: '2.2.2.2', altIps: '["1.1.1.1"]' }]);
 		expect(sql.where.args[2]).to.deep.equal([{ id: 'p-2' }]);
@@ -1123,6 +1123,23 @@ describe('AdoptedProbes', () => {
 			latitude: 53.33,
 			longitude: -6.25,
 		});
+	});
+
+	it('class should dedupe probes with the same ipAddress: match survivor with existing dProbe and skip insert for the duplicate', async () => {
+		sql.select.resolves([{ ...defaultAdoption, status: 'offline' }]);
+
+		getProbesWithAdminData.returns([
+			{ ...defaultConnectedProbe, uuid: '9-9-9-9-9', ipAddress: '1.1.1.1', client: 'socket-B' },
+			{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '1.1.1.1', client: 'socket-A' },
+		]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.insert.callCount).to.equal(0);
+		expect(sql.update.callCount).to.equal(1);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+		expect(sql.update.args[0]).to.deep.equal([{ status: 'ready' }]);
 	});
 
 	it('class should proceed with syncing other probes if one probe sync fails', async () => {

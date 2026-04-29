@@ -1,6 +1,7 @@
 .idea/
 .vscode/
 .nyc_output/
+.claude/
 node_modules/
 coverage/
 dist/
@@ -24,3 +25,4 @@ test/tests/contract/newman-env.json
 .eslintcache
 .env
 /.env.redis
+CLAUDE.md

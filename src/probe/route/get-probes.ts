@@ -9,6 +9,7 @@ export const registerGetProbesRoute = (router: ExtendedRouter, context: IoContex
 
 		if (!isAdmin) {
 			probes = probes.filter(probe => probe.status === 'ready');
+			ctx.set('Cache-Control', 'public, max-age=1, stale-while-revalidate=1, stale-if-error=60');
 		}
 
 		ctx.body = probes.map((probe: ServerProbe) => ({

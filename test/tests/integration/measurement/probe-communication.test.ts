@@ -9,6 +9,7 @@ import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import * as id from '../../../../src/measurement/id.js';
 
 describe('Create measurement request', () => {
+	const expectedHost = process.env['HOSTNAME'] ?? '';
 	let probe: Socket;
 	let waitForProbesUpdate: () => Promise<void>;
 	let addFakeProbe: (events?: Record<string, any>) => Promise<Socket>;
@@ -18,6 +19,7 @@ describe('Create measurement request', () => {
 
 	const sandbox = sinon.createSandbox();
 	const locationHandlerStub = sandbox.stub();
+	const isProxyHandlerStub = sandbox.stub();
 	const logHandlerStub = sandbox.stub();
 	const adoptionHandlerStub = sandbox.stub();
 	const requestHandlerStub = sandbox.stub();
@@ -42,6 +44,7 @@ describe('Create measurement request', () => {
 
 		probe = await addFakeProbe({
 			'api:connect:location': locationHandlerStub,
+			'api:connect:isProxy': isProxyHandlerStub,
 			'api:logs-transport:set': logHandlerStub,
 			'api:connect:adoption': adoptionHandlerStub,
 			'probe:measurement:request': requestHandlerStub,
@@ -90,6 +93,9 @@ describe('Create measurement request', () => {
 				hasOverridesApplied: true,
 			},
 		]);
+
+		expect(isProxyHandlerStub.callCount).to.equal(1);
+		expect(isProxyHandlerStub.firstCall.args).to.deep.equal([{ isProxy: false }]);
 
 		expect(adoptionHandlerStub.callCount).to.equal(1);
 		expect(adoptionHandlerStub.firstCall.args).to.deep.equal([{ message: 'You can register this probe at https://dash.globalping.io to earn extra measurement credits.', adopted: false }]);
@@ -450,7 +456,7 @@ describe('Create measurement request', () => {
 					},
 					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
-					host: '',
+					host: expectedHost,
 					stats: {
 						jobs: {
 							count: 0,
@@ -499,7 +505,7 @@ describe('Create measurement request', () => {
 					},
 					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
-					host: '',
+					host: expectedHost,
 					stats: {
 						jobs: {
 							count: 0,
@@ -542,7 +548,7 @@ describe('Create measurement request', () => {
 					},
 					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
-					host: '',
+					host: expectedHost,
 					stats: {
 						jobs: {
 							count: 0,
@@ -585,7 +591,7 @@ describe('Create measurement request', () => {
 					},
 					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
-					host: '',
+					host: expectedHost,
 					stats: {
 						jobs: {
 							count: 0,
@@ -628,7 +634,7 @@ describe('Create measurement request', () => {
 					},
 					tags: [ 'gcp-us-west4', 'gcp', 'datacenter-network' ],
 					resolvers: [],
-					host: '',
+					host: expectedHost,
 					stats: {
 						jobs: {
 							count: 0,

@@ -1,7 +1,7 @@
 import { writeFile, readFile } from 'node:fs/promises';
-import path from 'node:path';
 import got from 'got';
 import ipaddr from 'ipaddr.js';
+import { fromProjectRoot } from './paths.js';
 
 type ParsedIpRange = [ipaddr.IPv4 | ipaddr.IPv6, number];
 
@@ -31,7 +31,7 @@ const query = async (url: string): Promise<string> => {
 
 const populateAppleRelayList = async (newBlockedRangesIPv4: Set<ParsedIpRange>, newBlockedRangesIPv6: Set<ParsedIpRange>) => {
 	const appleRelaySource = sources.appleRelay;
-	const filePath = path.join(path.resolve(), appleRelaySource.file);
+	const filePath = fromProjectRoot(appleRelaySource.file);
 	const csv = await readFile(filePath, 'utf8');
 
 	csv.split('\n').forEach((line) => {
@@ -67,7 +67,7 @@ export const populateMemList = async (): Promise<void> => {
 export const updateBlockedIpRangesFiles = async (): Promise<void> => {
 	await Promise.all(Object.values(sources).map(async (source) => {
 		const response = await query(source.url);
-		const filePath = path.join(path.resolve(), source.file);
+		const filePath = fromProjectRoot(source.file);
 		await writeFile(filePath, response, 'utf8');
 	}));
 };

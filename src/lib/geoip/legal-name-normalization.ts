@@ -4,6 +4,7 @@ import csvParser from 'csv-parser';
 import transliterate from '@sindresorhus/transliterate';
 import is from '@sindresorhus/is';
 import _ from 'lodash';
+import { fromProjectRoot } from '../paths.js';
 
 // See https://github.com/jsdelivr/globalping/issues/383
 // The CSV file is from https://www.gleif.org/en/lei-data/code-lists/iso-20275-entity-legal-forms-code-list
@@ -259,7 +260,7 @@ const readLegalFormsFile = () => new Promise<{ allForms: CsvLegalFormRow[]; pref
 	const allForms: CsvLegalFormRow[] = [];
 	const prefixForms: CsvLegalFormRow[] = [];
 
-	fs.createReadStream(`data/${LEGAL_FORMS_FILENAME}`)
+	fs.createReadStream(fromProjectRoot('data', LEGAL_FORMS_FILENAME))
 		.pipe(csvParser({
 			headers: [ 'elfCode', 'countryOfFormation', 'countryCode', 'jurisdictionOfFormation', 'countrySubDivisionCode', 'entityLegalFormNameLocal', 'language', 'languageCode', 'entityLegalFormNameTransliterated', 'abbreviationsLocal', 'abbreviationsTransliterated', 'dateCreated', 'elfStatus', 'modification', 'modificationDate', 'reason' ],
 			separator: ',',
@@ -282,7 +283,7 @@ const readLegalFormsFile = () => new Promise<{ allForms: CsvLegalFormRow[]; pref
 });
 
 const readNationalSuffixesFile = async () => {
-	const contents = await fs.promises.readFile(`data/${NATIONAL_SUFFIXES_FILENAME}`, 'utf8');
+	const contents = await fs.promises.readFile(fromProjectRoot('data', NATIONAL_SUFFIXES_FILENAME), 'utf8');
 	const suffixes = contents
 		.split('\n')
 		.flatMap(line => line.split(';'))
@@ -295,7 +296,7 @@ const readNationalSuffixesFile = async () => {
 const readInternationalProvidersFile = () => new Promise<Set<string>>((resolve, reject) => {
 	const rows = new Set<string>();
 
-	fs.createReadStream(`data/${INTERNATIONAL_PROVIDERS_FILENAME}`)
+	fs.createReadStream(fromProjectRoot('data', INTERNATIONAL_PROVIDERS_FILENAME))
 		.pipe(csvParser({
 			headers: [ 'original', 'normalized' ],
 			separator: ',',

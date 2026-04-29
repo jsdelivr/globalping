@@ -32,6 +32,7 @@ export const initGateway = (ioContext: IoContext) => {
 
 			adoptionToken.validate(socket).catch(err => logger.warn('Error during adoption token validation:', err));
 			socket.emit('api:connect:ip', { ip: probe.ipAddress });
+			socket.emit('api:connect:isProxy', { isProxy: probe.isProxy });
 			socket.emit('api:connect:location', location);
 			socket.emit('api:logs-transport:set', { isActive: true });
 			logger.info(`WS client connected.`, { client: { id: socket.id, ip: probe.ipAddress }, location: { city: location.city, country: location.country, network: location.network } });
