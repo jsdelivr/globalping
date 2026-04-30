@@ -38,7 +38,6 @@ describe('ws server', () => {
 
 	after(() => {
 		td.reset();
-		sandbox.restore();
 	});
 
 	beforeEach(async () => {
