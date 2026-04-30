@@ -59,4 +59,7 @@ before(async () => {
 	await populateNockCitiesList();
 	await populateLegalNames();
 	await populateAsnData();
+
+	const { getTestServer } = await import('./utils/server.js');
+	await getTestServer();
 });

@@ -72,6 +72,8 @@ describe('SyncedProbeList', () => {
 
 	afterEach(() => {
 		syncedProbeList.unscheduleSync();
+		// Clear TTLCache to cancel pending expiry timers which can fire during later tests.
+		(syncedProbeList as unknown as { nodeData: { clear(): void } }).nodeData.clear();
 		sandbox.reset();
 	});
 
