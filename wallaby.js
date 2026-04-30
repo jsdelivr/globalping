@@ -26,8 +26,8 @@ export default function w (wallaby) {
 			'data/*',
 		],
 		tests: [
-			'test/tests/integration/**/*.test.ts',
 			'test/tests/unit/**/*.test.ts',
+			'test/tests/integration/**/*.test.ts',
 		],
 		setup (w) {
 			const path = require('path');
