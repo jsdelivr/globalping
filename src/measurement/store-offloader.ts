@@ -1,5 +1,5 @@
 import { promisify } from 'node:util';
-import { brotliCompress as brotliCompressCallback, brotliDecompress as brotliDecompressCallback, constants as zlibConstants } from 'node:zlib';
+import { brotliCompress as brotliCompressCallback, constants as zlibConstants } from 'node:zlib';
 import { Queue as BullQueue, Worker } from 'bullmq';
 import BatchQueue from '@martin-kolarik/batch-queue';
 import Bluebird from 'bluebird';
@@ -15,14 +15,9 @@ import { writeHttpRecords, writeDnsRecords, type TimeSeriesHttpRecord, type Time
 
 const logger = scopedLogger('db-store');
 const brotliCompress = promisify(brotliCompressCallback);
-const brotliDecompress = promisify(brotliDecompressCallback);
 
 const compressRecord = (record: string): Promise<Buffer> => {
 	return brotliCompress(record, { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 5 } });
-};
-
-const decompressRecord = async (buffer: Buffer): Promise<string> => {
-	return (await brotliDecompress(buffer)).toString();
 };
 
 export class MeasurementStoreOffloader {
@@ -59,7 +54,7 @@ export class MeasurementStoreOffloader {
 		this.offloadQueues[tier].push(measurement);
 	}
 
-	async getMeasurementString (id: string, userTierNum: keyof typeof USER_TIER_INVERTED, createdAtRounded: number): Promise<string | null> {
+	async getMeasurementBufferCompressed (id: string, userTierNum: keyof typeof USER_TIER_INVERTED, createdAtRounded: number): Promise<Buffer | null> {
 		const tier = USER_TIER_INVERTED[userTierNum];
 		const table = `measurement_${tier}`;
 		const createdAt = new Date(createdAtRounded);
@@ -73,7 +68,7 @@ export class MeasurementStoreOffloader {
 			return null;
 		}
 
-		return decompressRecord(row.data);
+		return row.data;
 	}
 
 	startRetryWorker () {
@@ -209,7 +204,7 @@ export class MeasurementStoreOffloader {
 	}
 
 	private async insertBatchToDbByIds (tier: UserTier, ids: string[]) {
-		const records = await this.primaryMeasurementStore.getMeasurements(ids);
+		const records = await this.primaryMeasurementStore.getMeasurementsForOffloader(ids);
 		return this.insertBatchToDb(tier, records.filter(is.truthy));
 	}
 }

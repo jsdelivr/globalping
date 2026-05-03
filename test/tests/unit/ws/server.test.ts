@@ -36,6 +36,10 @@ describe('ws server', () => {
 		await td.replaceEsm('../../../../src/lib/redis/client.ts', { getRedisClient });
 	});
 
+	after(() => {
+		td.reset();
+	});
+
 	beforeEach(async () => {
 		({ initWsServer } = await import('../../../../src/lib/ws/server.js'));
 		fetchSocketsSocketIo.reset();

@@ -71,13 +71,7 @@ export default class GeoIpClient {
 		const ip2location = results.find(result => result.provider === 'ip2location');
 		const ipinfo = results.find(result => result.provider === 'ipinfo');
 		const resultsWithCities = results.filter(s => s.city);
-
-		const isProxy = (ip2location?.isProxy && !isAddrWhitelisted(addr)) ?? null;
-
-		// Temporarily disabled to allow VPN probes to participate in VPN detection testing.
-		// if (isProxy) {
-		// 	throw new ProbeError(`vpn detected: ${addr}`);
-		// }
+		const isProxy = results.some(r => r.isProxy === true) && !isAddrWhitelisted(addr);
 
 		if (resultsWithCities.length === 0 || (resultsWithCities.length === 1 && resultsWithCities[0]?.provider === 'fastly')) {
 			throw new ProbeError(`unresolvable geoip: ${addr}`);

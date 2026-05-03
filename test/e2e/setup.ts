@@ -11,7 +11,10 @@ import { initRedisClient } from '../../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../../src/lib/redis/persistent-client.js';
 import { initMeasurementRedisClient } from '../../src/lib/redis/measurement-client.js';
 import { resetDbs } from '../utils/db.js';
+import { setResetAfterFailure } from './failure-reset.js';
+import { scopedLogger } from '../../src/lib/logger.js';
 
+const logger = scopedLogger('e2e-setup');
 const dbClients = [ dashboardClient, measurementStoreClient ];
 
 before(async () => {
@@ -27,6 +30,35 @@ before(async () => {
 	await docker.createProbeContainer();
 
 	await waitProbeToConnect();
+});
+
+afterEach(async function () {
+	const state = this.currentTest?.state;
+
+	if (state === 'passed' || state === 'pending') {
+		return;
+	}
+
+	if (state === 'failed') {
+		logger.warn(`Test "${this.currentTest?.title ?? '<unknown>'}" failed on its final attempt. Skipping environment reset.`);
+		return;
+	}
+
+	logger.warn(`Test "${this.currentTest?.title ?? '<unknown>'}" failed and will be retried. Performing environment reset.`);
+
+	try {
+		await docker.stopProbeContainer({ kill: false });
+		await docker.removeApiContainer();
+
+		await flushRedis();
+		await resetDbs(dbClients);
+
+		await docker.createApiContainer();
+		await docker.startProbeContainer();
+		await waitProbeToConnect();
+	} finally {
+		setResetAfterFailure();
+	}
 });
 
 after(async () => {

@@ -1,6 +1,7 @@
 .idea/
 .vscode/
 .nyc_output/
+.claude/
 node_modules/
 coverage/
 dist/
@@ -20,6 +21,8 @@ probes-stats/known-result.csv
 probes-stats/known-result.json
 probes-stats/all-result.csv
 probes-stats/all-result.json
+test/tests/contract/newman-env.json
 .eslintcache
 .env
 /.env.redis
+CLAUDE.md

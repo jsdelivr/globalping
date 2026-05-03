@@ -7,6 +7,8 @@ import { getRedisClient, type RedisClient } from '../../../src/lib/redis/client.
 import { getPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
 
 describe('index file', () => {
+	const hostname = process.env['HOSTNAME'] || process.env['NODE_ENV'];
+	const lastCommitHashKey = `LAST_API_COMMIT_HASH_${hostname}`;
 	const sandbox = sinon.createSandbox();
 	const cluster: any = new EventEmitter();
 	cluster.isPrimary = true;
@@ -59,7 +61,7 @@ describe('index file', () => {
 		persistentRedis.set('testfield', 'testvalue');
 		readFile.resolves('oldCommitHash');
 
-		persistentRedis.set('LAST_API_COMMIT_HASH_test', 'commitHash');
+		persistentRedis.set(lastCommitHashKey, 'commitHash');
 
 		await import('../../../src/index.js');
 
@@ -74,7 +76,7 @@ describe('index file', () => {
 		persistentRedis.set('testfield', 'testvalue');
 		readFile.resolves('commitHash');
 
-		persistentRedis.set('LAST_API_COMMIT_HASH_test', 'commitHash');
+		persistentRedis.set(lastCommitHashKey, 'commitHash');
 
 		await import('../../../src/index.js');
 

@@ -2,12 +2,12 @@ import { createServer } from 'node:http';
 import * as zlib from 'node:zlib';
 import * as url from 'node:url';
 import apmAgent from 'elastic-apm-node';
-import { apm as apmUtils, koa as koaElasticUtils } from 'elastic-apm-utils';
+import { koa as koaElasticUtils } from 'elastic-apm-utils';
+import './apm-filter.js';
 import json from 'koa-json';
 import Router from '@koa/router';
 import conditionalGet from 'koa-conditional-get';
 import compress from 'koa-compress';
-import etag from 'koa-etag';
 import responseTime from 'koa-response-time';
 import koaFavicon from 'koa-favicon';
 import koaStatic from 'koa-static';
@@ -21,10 +21,13 @@ import { registerSendCodeRoute } from '../../adoption/route/adoption-code.js';
 import { registerHealthRoute } from '../../health/route/get.js';
 import { registerSpecRoute } from './spec.js';
 import { errorHandler } from './error-handler.js';
+import { compressed } from './middleware/compressed.js';
 import { defaultJson } from './middleware/default-json.js';
 import { errorHandlerMw } from './middleware/error-handler.js';
 import { corsHandler } from './middleware/cors.js';
+import { etag } from './middleware/etag.js';
 import { requestIp } from './middleware/request-ip.js';
+import { defaultHeaders } from './middleware/default-headers.js';
 import { isAdminMw } from './middleware/is-admin.js';
 import { isSystemMw } from './middleware/is-system.js';
 import { docsLink } from './middleware/docs-link.js';
@@ -33,39 +36,8 @@ import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternati
 import { registerLimitsRoute } from '../../limits/route/get-limits.js';
 import { blacklist } from './middleware/blacklist.js';
 import { registerGetProbeLogsRoute } from '../../probe/route/get-probe-logs.js';
+import { captureMiddlewareChainSpan, captureMiddlewareSpan } from '../metrics.js';
 import type { IoContext } from '../server.js';
-
-apmAgent.addTransactionFilter(apmUtils.transactionFilter({
-	keepResponse: [ 'location' ],
-}));
-
-apmAgent.addTransactionFilter((payload) => {
-	if (!payload['context']) {
-		return payload;
-	}
-
-	const request = (payload['context'] as { request?: { body?: string; url: URL } }).request;
-
-	// Store only 10% of measurement request bodies.
-	if (request?.url.pathname === '/v1/measurements' && request?.body && Math.random() > 0.1) {
-		delete request.body;
-	}
-
-	return payload;
-});
-
-// Filter out short SPUBLISH spans.
-apmAgent.addSpanFilter((payload) => {
-	if (payload['type'] !== 'db' || payload['subtype'] !== 'redis' || ![ 'SPUBLISH' ].includes(payload['name'] as string)) {
-		return payload;
-	}
-
-	if (payload['duration'] > 10) {
-		return payload;
-	}
-
-	return false;
-});
 
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
 const docsHost = config.get<string>('server.docsHost');
@@ -122,23 +94,31 @@ export const getHttpServer = (ioContext: IoContext) => {
 	app
 		.use(requestIp())
 		.use(responseTime())
+		.use(defaultHeaders())
 		.use(koaFavicon(`${publicPath}/favicon.ico`))
-		.use(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }))
+		.use(captureMiddlewareSpan(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }), { name: 'compress' }))
 		.use(conditionalGet())
-		.use(etag({ weak: true }))
-		.use(json({ pretty: true, spaces: 2 }))
+		.use(captureMiddlewareSpan(etag(), { name: 'etag' }))
+		.use(captureMiddlewareSpan(json({ pretty: true, spaces: 2 }), { name: 'json' }))
 		.use(docsLink({ docsHost }))
 		.use(defaultJson())
 		// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
 		.use(errorHandlerMw)
 		.use(corsHandler())
 		.use(blacklist)
+		.use(captureMiddlewareSpan(compressed(), { name: 'compressed' }))
+		.use(captureMiddlewareChainSpan('route', 'custom'))
 		.use(rootRouter.routes())
 		.use(healthRouter.routes())
 		.use(apiRouter.routes())
 		.use(apiRouter.allowedMethods())
 		.use(koaElasticUtils.middleware(apmAgent))
-		.use(koaStatic(publicPath, { format: false }));
+		.use(koaStatic(publicPath, {
+			format: false,
+			setHeaders: (res) => {
+				res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=60, stale-if-error=86400');
+			},
+		}));
 
 	app.on('error', errorHandler);
 

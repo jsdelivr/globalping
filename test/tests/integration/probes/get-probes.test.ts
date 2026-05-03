@@ -8,6 +8,7 @@ import { DASH_PROBES_TABLE } from '../../../../src/lib/override/adopted-probes.j
 import { dashboardClient } from '../../../../src/lib/sql/client.js';
 
 describe('Get Probes', () => {
+	const expectedHost = process.env['HOSTNAME'] ?? '';
 	let requestAgent: Agent;
 
 	before(async () => {
@@ -26,6 +27,7 @@ describe('Get Probes', () => {
 				.send()
 				.expect(200)
 				.expect((response) => {
+					expect(response.headers['cache-control']).to.equal('public, max-age=1, stale-while-revalidate=1, stale-if-error=60');
 					expect(response.body).to.deep.equal([]);
 					expect(response).to.matchApiSchema();
 				});
@@ -188,7 +190,7 @@ describe('Get Probes', () => {
 						version: '0.39.0',
 						isIPv4Supported: false,
 						isIPv6Supported: false,
-						host: '',
+						host: expectedHost,
 						ipAddress: '1.2.3.4',
 						altIpAddresses: [],
 						isHardware: false,

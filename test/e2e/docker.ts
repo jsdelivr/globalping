@@ -103,14 +103,28 @@ class DockerManager {
 		await container.remove({ force: true });
 	}
 
-	public async stopProbeContainer () {
+	public async stopProbeContainer ({ kill }: { kill: boolean } = { kill: true }) {
 		const { container, state } = await this.getContainer('globalping-probe-e2e');
 
 		if (!container || state === 'exited') {
 			return;
 		}
 
-		await container.kill();
+		try {
+			if (kill) {
+				await container.kill();
+			} else {
+				await container.stop();
+			}
+		} catch (error) {
+			const statusCode = Number((error as { statusCode?: number })?.statusCode ?? 0);
+
+			if (statusCode === 304 || statusCode === 404 || statusCode === 409) {
+				return;
+			}
+
+			throw error;
+		}
 	}
 
 	public async startProbeContainer () {

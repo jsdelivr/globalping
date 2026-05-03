@@ -1,3 +1,9 @@
+x-redis-node-image: &redis-node-image
+  build:
+    context: .
+    dockerfile: ./config/redis/cluster/Dockerfile
+  image: globalping-redis-with-compressed:7.4.0-v1
+
 services:
   redis-standalone-1:
     image: redis/redis-stack-server:7.4.0-v1
@@ -27,38 +33,38 @@ services:
     env_file:
       - ./config/redis/.env.redis
   redis-node-01:
-    image: redis/redis-stack-server:7.4.0-v1
+    <<: *redis-node-image
     command: [ "bash", "/home/runner/mounted/node.sh", "7101" ]
     network_mode: "host"
     volumes:
-      - ./config/redis:/home/runner/mounted
+      - ./config/redis/cluster:/home/runner/mounted
       - ./data/redis/7101:/data
     env_file:
       - ./config/redis/.env.redis
   redis-node-02:
-    image: redis/redis-stack-server:7.4.0-v1
+    <<: *redis-node-image
     command: [ "bash", "/home/runner/mounted/node.sh", "7102" ]
     network_mode: "host"
     volumes:
-      - ./config/redis:/home/runner/mounted
+      - ./config/redis/cluster:/home/runner/mounted
       - ./data/redis/7102:/data
     env_file:
       - ./config/redis/.env.redis
   redis-node-03:
-    image: redis/redis-stack-server:7.4.0-v1
+    <<: *redis-node-image
     command: [ "bash", "/home/runner/mounted/node.sh", "7103" ]
     network_mode: "host"
     volumes:
-      - ./config/redis:/home/runner/mounted
+      - ./config/redis/cluster:/home/runner/mounted
       - ./data/redis/7103:/data
     env_file:
       - ./config/redis/.env.redis
   redis-node-04:
-    image: redis/redis-stack-server:7.4.0-v1
+    <<: *redis-node-image
     command: [ "bash", "/home/runner/mounted/node.sh", "7104" ]
     network_mode: "host"
     volumes:
-      - ./config/redis:/home/runner/mounted
+      - ./config/redis/cluster:/home/runner/mounted
       - ./data/redis/7104:/data
     env_file:
       - ./config/redis/.env.redis
@@ -88,7 +94,7 @@ services:
       - ./migrations/dashboard/create-tables.js.sql:/docker-entrypoint-initdb.d/02-create-tables.sql
 
   measurement-store-1:
-    image: timescale/timescaledb:2.24.0-pg18
+    image: timescale/timescaledb:2.25.2-pg18
     environment:
       - POSTGRES_USER=globalping-api
       - POSTGRES_PASSWORD=password

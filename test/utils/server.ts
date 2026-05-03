@@ -21,6 +21,8 @@ export const getTestServer = async (): Promise<Server> => {
 		const { port } = app.address() as AddressInfo;
 		url = `http://127.0.0.1:${port}/probes`;
 		ioContext.syncedProbeList.syncInterval = 40;
+		ioContext.syncedProbeList.unscheduleSync();
+		ioContext.syncedProbeList.scheduleSync();
 		ioContext.syncedProbeList.logger.writers = [ new ConsoleWriter(Logger.levels.warn) ];
 	}
 
@@ -38,47 +40,50 @@ export const addFakeProbe = async (events: object = {}, options: object = {}): P
 export const addFakeProbes = async (count: number, events: object = {}, options: object = {}): Promise<Socket[]> => {
 	const { syncedProbeList } = ioContext;
 
-	return new Promise((resolve) => {
-		const probeCount = syncedProbeList.getProbes().length;
+	const sockets = await Promise.all(Array.from({ length: count }).map(() => new Promise<Socket>((resolve) => {
+		const client = io(url, _.merge({
+			transports: [ 'websocket' ],
+			// Disable auto-reconnect so disconnected probes don't reconnect and consume nock interceptors set up by the next test.
+			reconnection: false,
+			query: {
+				version: '0.39.0',
+				nodeVersion: 'v18.17.0',
+				uuid: '1-1-1-1-1',
+				isHardware: 'undefined',
+				hardwareDevice: 'undefined',
+				hardwareDeviceFirmware: 'undefined',
+				totalMemory: 1e9,
+				totalDiskSize: 2e3,
+				availableDiskSpace: 1e3,
+			},
+		}, options));
 
+		for (const [ event, listener ] of Object.entries(events)) {
+			client.on(event, listener);
+		}
+
+		client.on('connect_error', (error: Error) => logger.error('Client connect error.', error));
+
+		client.on('connect', () => resolve(client));
+	})));
+
+	// Wait until each new socket ID appears in the synced probe list.
+	const socketIds = new Set(sockets.map(s => s.id!));
+	await new Promise<void>((resolve) => {
 		const checker = () => {
-			if (syncedProbeList.getProbes().length >= probeCount + count) {
-				resolve(socketsPromise);
+			const probeIds = new Set(syncedProbeList.getProbes().map((p: any) => p.client));
+
+			if ([ ...socketIds ].every(id => probeIds.has(id))) {
 				syncedProbeList.off(syncedProbeList.localUpdateEvent, checker);
+				resolve();
 			}
 		};
 
 		syncedProbeList.on(syncedProbeList.localUpdateEvent, checker);
-
-		const socketsPromise = Promise.all(Array.from({ length: count }).map(() => new Promise<Socket>((resolve) => {
-			const client = io(url, _.merge({
-				transports: [ 'websocket' ],
-				reconnectionDelay: 100,
-				reconnectionDelayMax: 500,
-				query: {
-					version: '0.39.0',
-					nodeVersion: 'v18.17.0',
-					uuid: '1-1-1-1-1',
-					isHardware: 'undefined',
-					hardwareDevice: 'undefined',
-					hardwareDeviceFirmware: 'undefined',
-					totalMemory: 1e9,
-					totalDiskSize: 2e3,
-					availableDiskSpace: 1e3,
-				},
-			}, options));
-
-			for (const [ event, listener ] of Object.entries(events)) {
-				client.on(event, listener);
-			}
-
-			client.on('connect_error', (error: Error) => logger.error('Client connect error.', error));
-
-			client.on('connect', () => {
-				resolve(client);
-			});
-		})));
+		checker();
 	});
+
+	return sockets;
 };
 
 export const deleteFakeProbes = async (socketsToDelete?: Socket[]): Promise<void> => {

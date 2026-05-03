@@ -25,7 +25,7 @@ describe('etag', () => {
 		it('should redirect to cache', async () => {
 			const response = await requestAgent
 				.get('/v1/probes')
-				.set('if-none-match', 'W/"2-l9Fw4VUO7kr8CvBlt4zaMCqXZ0w"')
+				.set('if-none-match', 'W/"2-ccab0b28617f1f56"')
 				.send() as Response;
 
 			expect(response.status).to.equal(304);

@@ -3,6 +3,7 @@ const path = require('path');
 module.exports = {
 	'exit': true,
 	'timeout': 40000,
+	'retries': process.env.CI ? 2 : 0,
 	'check-leaks': true,
 	'file': [
 		path.join(__dirname, 'test/e2e/setup.ts'),
