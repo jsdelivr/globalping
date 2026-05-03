@@ -857,7 +857,7 @@ describe('measurement store', () => {
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
 		offloaderGetMeasurementBufferCompressedStub.resolves(null);
 		redisMock.compressedJsonGetBufferCompressed.reset();
-		redisMock.compressedJsonGetBufferCompressed.resolves(await brotliCompress(Buffer.from(buildMinimalMeasurement('SOME_ID', { from: 'redis' }))));
+		redisMock.compressedJsonGetBufferCompressed.resolves(await brotliCompress(Buffer.from(buildMinimalMeasurementString('SOME_ID', { from: 'redis' }))));
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal(buildMinimalMeasurement('SOME_ID', { from: 'redis' }));
@@ -875,7 +875,7 @@ describe('measurement store', () => {
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
 		offloaderGetMeasurementBufferCompressedStub.rejects(new Error('DB error'));
 		redisMock.compressedJsonGetBufferCompressed.reset();
-		redisMock.compressedJsonGetBufferCompressed.resolves(await brotliCompress(Buffer.from('buildMinimalMeasurement('SOME_ID', { from: 'redis' })')));
+		redisMock.compressedJsonGetBufferCompressed.resolves(await brotliCompress(Buffer.from(buildMinimalMeasurementString('SOME_ID', { from: 'redis' }))));
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal(buildMinimalMeasurement('SOME_ID', { from: 'redis' }));
@@ -892,7 +892,7 @@ describe('measurement store', () => {
 
 		parseMeasurementIdStub.returns({ minutesSinceEpoch, userTier: 0 });
 		redisMock.compressedJsonGetBufferCompressed.reset();
-		redisMock.compressedJsonGetBufferCompressed.resolves(await brotliCompress(Buffer.from(buildMinimalMeasurement('SOME_ID', { from: 'redis' }))));
+		redisMock.compressedJsonGetBufferCompressed.resolves(await brotliCompress(Buffer.from(buildMinimalMeasurementString('SOME_ID', { from: 'redis' }))));
 
 		const result = await store.getMeasurement('SOME_ID');
 		expect(result).to.deep.equal(buildMinimalMeasurement('SOME_ID', { from: 'redis' }));
