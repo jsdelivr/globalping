@@ -59,4 +59,8 @@ before(async () => {
 	await populateNockCitiesList();
 	await populateLegalNames();
 	await populateAsnData();
+
+	// Import should be dynamic so sinon can fake time before modules like "@isaacs/ttlcache" are initiating their timers.
+	const { getTestServer } = await import('./utils/server.js');
+	await getTestServer();
 });

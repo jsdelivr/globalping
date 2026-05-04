@@ -1,28 +1,14 @@
 import { expect } from 'chai';
 import request from 'supertest';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import nock from 'nock';
-
-import { sourceList as ipSourceList, updateList as updateListIp } from '../../../../src/lib/malware/ip.js';
 import { getTestServer } from '../../../utils/server.js';
 import type { Server } from 'node:http';
-
-const mockDataPath = path.join(path.resolve(), 'test/mocks/malware');
-const ipMockResult = await readFile(path.join(mockDataPath, 'nock-ip.txt'), 'utf8');
 
 describe('blacklist middleware', () => {
 	let app: Server;
 	let requestAgent: any;
 
 	before(async () => {
-		for (const source of ipSourceList) {
-			const url = new URL(source);
-			nock(url.origin).get(url.pathname).reply(200, ipMockResult);
-		}
-
-		await updateListIp();
-
 		app = await getTestServer();
 		requestAgent = request(app);
 	});
