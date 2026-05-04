@@ -122,7 +122,7 @@ services:
     command: sh -c "npm run knex:measurement-store-1 migrate:latest"
 
   time-series-1:
-    image: timescale/timescaledb:pg18.3-ts2.25.2
+    image: timescale/timescaledb:2.26.4-pg18
     environment:
       - POSTGRES_USER=globalping-api
       - POSTGRES_PASSWORD=password
