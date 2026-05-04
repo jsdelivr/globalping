@@ -45,7 +45,7 @@ jobs:
           --health-retries 5
 
       postgresTimeSeries:
-        image: timescale/timescaledb:2.24.0-pg18
+        image: timescale/timescaledb:pg18.3-ts2.25.2
         ports:
           - 15442:5432
         env:
