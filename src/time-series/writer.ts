@@ -8,6 +8,7 @@ const HTTP_TIMEOUT = config.get<number>('measurement.timeSeries.httpTimeout');
 export type TimeSeriesDnsRecord = {
 	measurementId: string;
 	testId: string;
+	createdAt: Date;
 	configurationId: string;
 	probe: MeasurementResult['probe'];
 	result: DnsResult & DnsRegularResult;
@@ -16,6 +17,7 @@ export type TimeSeriesDnsRecord = {
 export type TimeSeriesHttpRecord = {
 	measurementId: string;
 	testId: string;
+	createdAt: Date;
 	configurationId: string;
 	probe: MeasurementResult['probe'];
 	result: HttpResult;
@@ -43,7 +45,7 @@ type HttpRow = CommonFields & {
 const mapCommonFields = (row: TimeSeriesHttpRecord | TimeSeriesDnsRecord) => ({
 	measurementId: row.measurementId,
 	testId: row.testId,
-	createdAt: timeSeriesClient.fn.now(),
+	createdAt: row.createdAt,
 	configurationId: row.configurationId,
 	continent: row.probe.continent,
 	country: row.probe.country,
@@ -55,7 +57,6 @@ const mapCommonFields = (row: TimeSeriesHttpRecord | TimeSeriesDnsRecord) => ({
 	longitude: row.probe.longitude,
 	network: row.probe.network,
 });
-
 
 export const writeDnsRecords = async (records: TimeSeriesDnsRecord[]) => {
 	const failedRows: CommonFields[] = [];
@@ -79,11 +80,11 @@ export const writeDnsRecords = async (records: TimeSeriesDnsRecord[]) => {
 	const promises: Promise<unknown>[] = [];
 
 	if (successfulRows.length > 0) {
-		promises.push(timeSeriesClient('test_dns').insert(successfulRows));
+		promises.push(timeSeriesClient('test_dns').insert(successfulRows).onConflict([ 'measurementId', 'testId', 'createdAt' ]).ignore());
 	}
 
 	if (failedRows.length > 0) {
-		promises.push(timeSeriesClient('test_dns_failed').insert(failedRows));
+		promises.push(timeSeriesClient('test_dns_failed').insert(failedRows).onConflict([ 'measurementId', 'testId', 'createdAt' ]).ignore());
 	}
 
 	await Promise.all(promises);
@@ -116,11 +117,11 @@ export const writeHttpRecords = async (records: TimeSeriesHttpRecord[]) => {
 	const promises: Promise<unknown>[] = [];
 
 	if (successfulRows.length > 0) {
-		promises.push(timeSeriesClient('test_http').insert(successfulRows));
+		promises.push(timeSeriesClient('test_http').insert(successfulRows).onConflict([ 'measurementId', 'testId', 'createdAt' ]).ignore());
 	}
 
 	if (failedRows.length > 0) {
-		promises.push(timeSeriesClient('test_http_failed').insert(failedRows));
+		promises.push(timeSeriesClient('test_http_failed').insert(failedRows).onConflict([ 'measurementId', 'testId', 'createdAt' ]).ignore());
 	}
 
 	await Promise.all(promises);

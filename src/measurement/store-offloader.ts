@@ -170,9 +170,13 @@ export class MeasurementStoreOffloader {
 				continue;
 			}
 
+			const createdAt = new Date(measurement.createdAt);
+			createdAt.setMilliseconds(0);
+
 			for (const [ index, result ] of measurement.results.entries()) {
 				if (measurement.type === 'dns') {
 					tsDnsRecords.push({
+						createdAt,
 						measurementId: measurement.id,
 						testId: index.toString(),
 						configurationId: measurement.configurationId,
@@ -181,6 +185,7 @@ export class MeasurementStoreOffloader {
 					});
 				} else if (measurement.type === 'http') {
 					tsHttpRecords.push({
+						createdAt,
 						measurementId: measurement.id,
 						testId: index.toString(),
 						configurationId: measurement.configurationId,
