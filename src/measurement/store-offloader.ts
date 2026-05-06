@@ -11,7 +11,6 @@ import type { Knex } from 'knex';
 import { parseMeasurementId, roundIdTime, USER_TIER_INVERTED, UserTier } from './id.js';
 import type { MeasurementRecord } from './types.js';
 import { MeasurementStore } from './store.js';
-import type { ExportMeta } from './types.js';
 
 const logger = scopedLogger('db-store');
 const brotliCompress = promisify(brotliCompressCallback);
@@ -143,16 +142,13 @@ export class MeasurementStoreOffloader {
 		const table = `measurement_${tier}`;
 		const storedMeta = await this.primaryMeasurementStore.getMeasurementMetas(measurements.map(measurement => measurement.id));
 		const rows = await Bluebird.map(measurements, async (r, i) => {
-			const meta: ExportMeta = storedMeta[i] ?? {
-				origin: null,
-				userAgent: null,
-			};
-
 			return {
 				id: r.id,
 				createdAt: roundIdTime(new Date(r.createdAt)),
 				data: await compressRecord(JSON.stringify(r)),
-				meta,
+				meta: storedMeta[i] ?? {},
+				scheduleId: r.scheduleId ?? null,
+				configurationId: r.configurationId ?? null,
 			};
 		}, { concurrency: 4 });
 

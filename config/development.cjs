@@ -14,6 +14,11 @@ module.exports = {
 			port: 15432,
 		},
 	},
+	timeSeriesDb: {
+		connection: {
+			port: 15442,
+		},
+	},
 	dashboard: {
 		directusUrl: 'http://localhost:18055',
 	},

@@ -25,7 +25,7 @@ import { initRedisClient } from '../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../src/lib/redis/persistent-client.js';
 import { initMeasurementRedisClient } from '../src/lib/redis/measurement-client.js';
 import { initSubscriptionRedisClient } from '../src/lib/redis/subscription-client.js';
-import { dashboardClient, measurementStoreClient } from '../src/lib/sql/client.js';
+import { dashboardClient, measurementStoreClient, timeSeriesClient } from '../src/lib/sql/client.js';
 import { populateLegalNames } from '../src/lib/geoip/legal-name-normalization.js';
 import { populateAsnData } from '../src/lib/geoip/asns.js';
 import { extendSinonClock } from './utils/clock.js';
@@ -33,7 +33,7 @@ import { resetDbs } from './utils/db.js';
 
 global.clock = extendSinonClock(clock);
 
-const dbClients = [ dashboardClient, measurementStoreClient ];
+const dbClients = [ dashboardClient, measurementStoreClient, timeSeriesClient ];
 
 before(async () => {
 	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../public/v1/spec.yaml') }));

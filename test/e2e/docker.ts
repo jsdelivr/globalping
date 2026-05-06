@@ -17,6 +17,7 @@ class DockerManager {
 	public async createApiContainer () {
 		const dashboardDbConnectionHost = config.get<string>('dashboardDb.connection.host').replace('localhost', 'host.docker.internal');
 		const measurementStoreDbConnectionHost = config.get<string>('measurementStoreDb.connection.host').replace('localhost', 'host.docker.internal');
+		const timeSeriesDbConnectionHost = config.get<string>('timeSeriesDb.connection.host').replace('localhost', 'host.docker.internal');
 		const processes = config.get<string>('server.processes');
 
 		const redisUrls = [
@@ -47,6 +48,7 @@ class DockerManager {
 				'DATA_IP_BLACKLIST_PATH=data/IP_BLACKLIST_E2E.json',
 				`DASHBOARD_DB_CONNECTION_HOST=${dashboardDbConnectionHost}`,
 				`MEASUREMENT_STORE_DB_CONNECTION_HOST=${measurementStoreDbConnectionHost}`,
+				`TIME_SERIES_DB_CONNECTION_HOST=${timeSeriesDbConnectionHost}`,
 				`SERVER_PROCESSES=${processes}`,
 				`MEASUREMENT_TIMEOUT=5`,
 				`ADOPTED_PROBES_SYNC_INTERVAL=2000`,

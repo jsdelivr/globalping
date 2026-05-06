@@ -6,7 +6,7 @@ import * as chai from 'chai';
 import { waitProbeToConnect } from './utils.js';
 import chaiOas from '../plugins/oas/index.js';
 import { docker } from './docker.js';
-import { dashboardClient, measurementStoreClient } from '../../src/lib/sql/client.js';
+import { dashboardClient, measurementStoreClient, timeSeriesClient } from '../../src/lib/sql/client.js';
 import { initRedisClient } from '../../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../../src/lib/redis/persistent-client.js';
 import { initMeasurementRedisClient } from '../../src/lib/redis/measurement-client.js';
@@ -15,7 +15,7 @@ import { setResetAfterFailure } from './failure-reset.js';
 import { scopedLogger } from '../../src/lib/logger.js';
 
 const logger = scopedLogger('e2e-setup');
-const dbClients = [ dashboardClient, measurementStoreClient ];
+const dbClients = [ dashboardClient, measurementStoreClient, timeSeriesClient ];
 
 before(async () => {
 	chai.use(await chaiOas({ specPath: path.join(fileURLToPath(new URL('.', import.meta.url)), '../../public/v1/spec.yaml') }));
