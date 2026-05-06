@@ -597,6 +597,65 @@ describe('measurement store', () => {
 		}]);
 	});
 
+	it('should store scheduled measurement metadata and export eligibility', async () => {
+		const now = clock.pause().now;
+		const store = getMeasurementStore();
+		await store.createMeasurement(
+			{
+				type: 'ping',
+				measurementOptions: { packets: 3, ipVersion: 4, port: 80, protocol: 'ICMP' },
+				target: 'jsdelivr.com',
+				locations: [],
+				limit: 1,
+				inProgressUpdates: false,
+				scheduleId: 'schedule-id',
+				configurationId: 'configuration-id',
+			},
+			new Map([ [ 0, getProbe('id', '1.1.1.1') ] ]),
+			[ getProbe('id', '1.1.1.1') ],
+			'special',
+			{ timeSeriesEnabled: true },
+		);
+
+		expect(redisMock.json.set.firstCall.args).to.deep.equal([
+			`gp:m:{${mockedMeasurementId1}}:results`,
+			'$',
+			{
+				id: mockedMeasurementId1,
+				type: 'ping',
+				status: 'in-progress',
+				createdAt: new Date(now).toISOString(),
+				updatedAt: new Date(now).toISOString(),
+				target: 'jsdelivr.com',
+				probesCount: 1,
+				scheduleId: 'schedule-id',
+				configurationId: 'configuration-id',
+				results: [{
+					probe: {
+						continent: 'continent',
+						region: 'region',
+						country: 'country',
+						state: 'state',
+						city: 'city',
+						asn: 'asn',
+						longitude: 'longitude',
+						latitude: 'latitude',
+						network: 'id',
+						tags: [],
+						resolvers: [],
+					},
+					result: { status: 'in-progress', rawOutput: '' },
+				}],
+			},
+		]);
+
+		expect(redisMock.json.set.args).to.deep.include([
+			`gp:m:{${mockedMeasurementId1}}:meta`,
+			'$',
+			{ timeSeriesEnabled: true },
+		]);
+	});
+
 	it('shouldn\'t store fields of the measurement request which are equal to the default', async () => {
 		const now = clock.pause().now;
 		const store = getMeasurementStore();
