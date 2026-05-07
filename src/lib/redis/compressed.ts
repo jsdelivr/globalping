@@ -1,12 +1,14 @@
 import { promisify } from 'node:util';
 import { brotliCompress as brotliCompressCallback, brotliDecompress as brotliDecompressCallback, constants as zlibConstants } from 'node:zlib';
-import { transformArguments as transformJsonGetArguments } from '@redis/json/dist/commands/GET.js';
+import { RESP_TYPES, type RedisArgument } from 'redis';
 import { RedisCluster } from './shared.js';
 
 const brotliCompress = promisify(brotliCompressCallback);
 const brotliDecompress = promisify(brotliDecompressCallback);
 
-export type CompressedJsonGetOptions = Parameters<typeof transformJsonGetArguments>[1];
+export type CompressedJsonGetOptions = {
+	path?: RedisArgument | RedisArgument[];
+};
 
 export async function decodeCompressedJsonBuffer (data: Buffer | null) {
 	if (!data || !data.length) {
@@ -48,10 +50,13 @@ export async function compressedJsonGetBufferCompressed (this: RedisCluster, key
 }
 
 async function compressedJsonGetRawBuffer (this: RedisCluster, key: string, options?: CompressedJsonGetOptions) {
-	const args = transformJsonGetArguments(key, options);
-	args[0] = 'COMPRESSED.JSON.GET';
+	const args: RedisArgument[] = [ 'COMPRESSED.JSON.GET', key ];
 
-	return this.sendCommand<Buffer | null>(key, true, args, { returnBuffers: true });
+	if (options?.path !== undefined) {
+		args.push(...(Array.isArray(options.path) ? options.path : [ options.path ]));
+	}
+
+	return this.sendCommand<Buffer | null>(key, true, args, { typeMapping: { [RESP_TYPES.BLOB_STRING]: Buffer } });
 }
 
 export async function compressedJsonGet<T> (this: RedisCluster, key: string, options?: CompressedJsonGetOptions) {

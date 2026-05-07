@@ -57,7 +57,7 @@ export const compressed = (): ExtendedMiddleware => {
 		ctx.vary('Accept-Encoding');
 
 		if (ctx.acceptsEncodings(compressedBody.encoding, 'identity') === compressedBody.encoding) {
-			ctx['compress'] = false;
+			ctx.compress = false;
 			ctx.set('Content-Encoding', compressedBody.encoding);
 			ctx.set('Content-Length', String(compressedBody.value.length));
 			ctx.body = compressedBody.value;

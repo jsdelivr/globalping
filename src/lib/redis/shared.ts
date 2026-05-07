@@ -7,6 +7,7 @@ import {
 	type RedisClusterType,
 	type RedisDefaultModules,
 	type RedisFunctions,
+	type RespVersions,
 } from 'redis';
 import _ from 'lodash';
 import Bluebird from 'bluebird';
@@ -23,8 +24,8 @@ type ClusterExtensions = {
 	compressedJsonCompress: typeof compressedJsonCompress;
 };
 
-export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts>;
-export type RedisCluster = RedisClusterType<RedisDefaultModules, RedisFunctions, RedisScripts> & ClusterExtensions;
+export type RedisClient = RedisClientType<RedisDefaultModules, RedisFunctions, RedisScripts, RespVersions>;
+export type RedisCluster = RedisClusterType<RedisDefaultModules, RedisFunctions, RedisScripts, RespVersions> & ClusterExtensions;
 export type RedisClientInternal = { connectPromise: Promise<unknown>; client: RedisClient };
 export type RedisClusterInternal = { connectPromise: Promise<unknown>; client: RedisCluster };
 

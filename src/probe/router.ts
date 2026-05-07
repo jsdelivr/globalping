@@ -35,7 +35,7 @@ export class ProbeRouter {
 		const preferredIpVersion = userRequest.measurementOptions?.ipVersion ?? 4;
 		const connectedProbesFilteredByIpVersion = this.probesFilter.filterByIpVersion(this.readyProbes, preferredIpVersion);
 
-		let filtered: ServerProbe[] = [];
+		let filtered: ServerProbe[];
 
 		if (locations.some(l => l.limit)) {
 			filtered = captureSpan('findWithLocationLimit', () => this.findWithLocationLimit(connectedProbesFilteredByIpVersion, locations));

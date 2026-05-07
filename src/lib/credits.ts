@@ -8,7 +8,7 @@ export class Credits {
 	constructor (private readonly sql: Knex) {}
 
 	async consume (userId: string, credits: number): Promise<{ isConsumed: boolean; remainingCredits: number }> {
-		let numberOfUpdates = null;
+		let numberOfUpdates: number;
 
 		try {
 			numberOfUpdates = await this.sql(CREDITS_TABLE).where({ user_id: userId }).update({ amount: this.sql.raw('amount - ?', [ credits ]) });

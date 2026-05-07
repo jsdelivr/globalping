@@ -2,7 +2,7 @@ import type { ParameterizedContext } from 'koa';
 
 import _ from 'lodash';
 import * as openApiCore from '@redocly/openapi-core';
-import { ExtendedRouter } from '../../types.js';
+import type { ExtendedRouter } from '../../types.js';
 
 const getYaml = async (): Promise<string> => {
 	const bundled = await openApiCore.bundle({
