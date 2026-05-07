@@ -85,7 +85,7 @@
 		"@types/lodash": "^4.17.24",
 		"@types/mocha": "^10.0.10",
 		"@types/mock-fs": "^4.13.4",
-		"@types/node": "^25.6.1",
+		"@types/node": "^24.12.3",
 		"@types/physical-cpu-count": "^2.0.2",
 		"@types/proxy-addr": "^2.0.3",
 		"@types/semver": "^7.7.1",
