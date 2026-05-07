@@ -43,6 +43,7 @@ export const extendSinonClock = (clock: SinonFakeTimers): ExtendedFakeTimers => 
 	const tickAsyncStepped = async (time: number, step = 20) => {
 		while (time > 0) {
 			await clock.tickAsync(Math.min(step, time));
+			await new Promise(resolve => setImmediate(resolve));
 			time -= step;
 		}
 	};

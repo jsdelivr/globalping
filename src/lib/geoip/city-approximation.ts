@@ -46,7 +46,7 @@ const query = async (url: string): Promise<Buffer> => {
 		timeout: { request: 5000 },
 	});
 
-	return result.body;
+	return Buffer.from(result.body.buffer, result.body.byteOffset, result.body.byteLength);
 };
 
 export const updateGeonamesCitiesFile = async (): Promise<void> => {

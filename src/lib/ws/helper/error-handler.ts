@@ -12,7 +12,7 @@ type NextConnectArgument = (
 
 type NextMwArgument = (
 	socket: Socket,
-	next: () => void
+	next: () => void,
 ) => Promise<void>;
 
 type NextArgument = NextConnectArgument | NextMwArgument;

@@ -4,7 +4,7 @@ import is from '@sindresorhus/is';
 import Bluebird from 'bluebird';
 import config from 'config';
 import _ from 'lodash';
-import { commandOptions } from 'redis';
+import { RESP_TYPES } from 'redis';
 
 import { parseCompressedJsonBuffer } from '../lib/redis/compressed.js';
 import type { OfflineProbe, ServerProbe } from '../probe/types.js';
@@ -176,7 +176,7 @@ export class MeasurementStore {
 
 	async markFinished (id: string): Promise<MeasurementRecord | null> {
 		const [ recordBuffer ] = await Promise.all([
-			this.redis.markFinished(commandOptions({ returnBuffers: true }), id),
+			this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).markFinished(id),
 			this.redis.hDel('gp:in-progress', id),
 		]);
 
@@ -195,7 +195,7 @@ export class MeasurementStore {
 		}
 
 		const measurements = (await Bluebird.map(ids, async (id) => {
-			const recordBuffer = await this.redis.markFinishedByTimeout(commandOptions({ returnBuffers: true }), id);
+			const recordBuffer = await this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).markFinishedByTimeout(id);
 			return parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
 		}, { concurrency: 32 })).filter(is.truthy);
 
@@ -209,13 +209,13 @@ export class MeasurementStore {
 	async cleanup () {
 		const SCAN_BATCH_SIZE = 5000;
 		const timeoutTime = config.get<number>('measurement.timeout') * 1000;
-		const { cursor, tuples } = await this.redis.hScan('gp:in-progress', 0, { COUNT: SCAN_BATCH_SIZE });
+		const { cursor, entries } = await this.redis.hScan('gp:in-progress', '0', { COUNT: SCAN_BATCH_SIZE });
 
-		if (cursor !== 0) {
+		if (cursor !== '0') {
 			logger.warn(`There are more than ${SCAN_BATCH_SIZE} "in-progress" elements in db`);
 		}
 
-		const timedOutIds = tuples
+		const timedOutIds = entries
 			.filter(({ value: time }) => Date.now() - Number(time) >= timeoutTime)
 			.map(({ field: id }) => id);
 

@@ -1,5 +1,5 @@
 import type { IoContext } from '../../lib/server.js';
-import { ExtendedContext, ExtendedRouter } from '../../types.js';
+import type { ExtendedContext, ExtendedRouter } from '../../types.js';
 import { authenticate } from '../../lib/http/middleware/authenticate.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 import createHttpError from 'http-errors';
