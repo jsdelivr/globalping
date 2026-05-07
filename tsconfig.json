@@ -11,10 +11,15 @@
 		],
 		"module": "NodeNext",
 		"target": "ES2024",
+		"rootDir": ".",
 		"moduleResolution": "NodeNext",
 		"resolveJsonModule": true,
 		"sourceMap": true,
-		"checkJs": true
+		"checkJs": true,
+		"types": [
+			"mocha",
+			"node"
+		]
 	},
 	"include": [
 		"src/**/*",

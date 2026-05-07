@@ -18,6 +18,7 @@ export const failedCreditsAttempts = new TTLCache<string, FailedCreditsAttemptVa
 
 export const anonymousRateLimiter = new RateLimiterRedis({
 	storeClient: redisClient,
+	useRedisPackage: true,
 	keyPrefix: 'rate:post:anon',
 	points: config.get<number>('measurement.rateLimit.post.anonymousLimit'),
 	duration: config.get<number>('measurement.rateLimit.post.reset'),
@@ -25,6 +26,7 @@ export const anonymousRateLimiter = new RateLimiterRedis({
 
 export const authenticatedRateLimiter = new RateLimiterRedis({
 	storeClient: redisClient,
+	useRedisPackage: true,
 	keyPrefix: 'rate:post:auth',
 	points: config.get<number>('measurement.rateLimit.post.authenticatedLimit'),
 	duration: config.get<number>('measurement.rateLimit.post.reset'),

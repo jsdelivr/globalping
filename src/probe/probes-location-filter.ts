@@ -74,7 +74,7 @@ export class ProbesLocationFilter {
 
 		for (const { keyword, position } of keywordsWithPositions) {
 			const noExactMatches = position === Number.MAX_SAFE_INTEGER;
-			let filteredProbes = [];
+			let filteredProbes;
 
 			if (noExactMatches) {
 				filteredProbes = resultProbes.filter(probe => this.getIndexPosition(probe, keyword.system) !== -1);

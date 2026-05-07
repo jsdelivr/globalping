@@ -8,7 +8,6 @@ export type ExtendedFakeTimers = SinonFakeTimers & {
 
 export const extendSinonClock = (clock: SinonFakeTimers): ExtendedFakeTimers => {
 	const pause = () => {
-		// @ts-expect-error exit if already paused
 		if (!clock.attachedInterval) {
 			return clock;
 		}
@@ -22,7 +21,6 @@ export const extendSinonClock = (clock: SinonFakeTimers): ExtendedFakeTimers => 
 	};
 
 	const unpause = () => {
-		// @ts-expect-error exit if not paused
 		if (clock.attachedInterval) {
 			return clock;
 		}
@@ -45,6 +43,7 @@ export const extendSinonClock = (clock: SinonFakeTimers): ExtendedFakeTimers => 
 	const tickAsyncStepped = async (time: number, step = 20) => {
 		while (time > 0) {
 			await clock.tickAsync(Math.min(step, time));
+			await new Promise(resolve => setImmediate(resolve));
 			time -= step;
 		}
 	};

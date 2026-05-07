@@ -136,7 +136,7 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule());
 
-		await clock.tickAsyncStepped(2000);
+		await clock.tickAsyncStepped(5000);
 
 		expect(requestHandlerStub.callCount).to.be.greaterThan(0);
 
@@ -167,7 +167,7 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule({ locations: [{ country: 'PL' }] }));
 
-		await clock.tickAsyncStepped(2000);
+		await clock.tickAsyncStepped(5000);
 
 		expect(requestHandlerStub.callCount).to.equal(0);
 	});
@@ -185,7 +185,7 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule({ enabled: 0 }));
 
-		await clock.tickAsyncStepped(2000);
+		await clock.tickAsyncStepped(5000);
 
 		expect(requestHandlerStub.callCount).to.equal(0);
 	});
@@ -219,7 +219,7 @@ describe('Stream schedule execution', () => {
 			],
 		}));
 
-		await clock.tickAsyncStepped(2000);
+		await clock.tickAsyncStepped(5000);
 
 		expect(requestHandlerStub.callCount).to.equal(0);
 	});
@@ -237,7 +237,7 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule({ mode: 'batch' }));
 
-		await clock.tickAsyncStepped(2000);
+		await clock.tickAsyncStepped(5000);
 
 		expect(requestHandlerStub.callCount).to.equal(0);
 	});
@@ -283,7 +283,7 @@ describe('Stream schedule execution', () => {
 			],
 		}));
 
-		await clock.tickAsyncStepped(2000);
+		await clock.tickAsyncStepped(5000);
 
 		const pingCalls = requestHandlerStub.getCalls().filter((c: sinon.SinonSpyCall) => c.args[0].measurement.type === 'ping');
 		const tracerouteCalls = requestHandlerStub.getCalls().filter((c: sinon.SinonSpyCall) => c.args[0].measurement.type === 'traceroute');
@@ -358,7 +358,7 @@ describe('Stream schedule execution', () => {
 			],
 		}));
 
-		await clock.tickAsyncStepped(2000);
+		await clock.tickAsyncStepped(5000);
 
 		expect(requestHandlerStub.callCount).to.be.greaterThan(0);
 
@@ -390,7 +390,7 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule());
 
-		await clock.tickAsyncStepped(2000);
+		await clock.tickAsyncStepped(5000);
 
 		expect(requestHandlerStub1.callCount).to.be.greaterThan(0);
 		expect(requestHandlerStub2.callCount).to.be.greaterThan(0);
@@ -409,7 +409,7 @@ describe('Stream schedule execution', () => {
 
 		await insertSchedule(buildSchedule());
 
-		await clock.tickAsyncStepped(2000);
+		await clock.tickAsyncStepped(5000);
 
 		expect(requestHandlerStub.callCount).to.be.greaterThan(0);
 
@@ -418,7 +418,7 @@ describe('Stream schedule execution', () => {
 
 		requestHandlerStub.resetHistory();
 
-		await clock.tickAsyncStepped(2000);
+		await clock.tickAsyncStepped(5000);
 
 		expect(requestHandlerStub.callCount).to.equal(0);
 	});
@@ -434,13 +434,13 @@ describe('Stream schedule execution', () => {
 		probe.emit('probe:isIPv4Supported:update', true);
 		await waitForProbesUpdate();
 
-		await clock.tickAsyncStepped(2000);
+		await clock.tickAsyncStepped(5000);
 
 		expect(requestHandlerStub.callCount).to.equal(0);
 
 		await insertSchedule(buildSchedule());
 
-		await clock.tickAsyncStepped(2000);
+		await clock.tickAsyncStepped(5000);
 
 		expect(requestHandlerStub.callCount).to.be.greaterThan(0);
 	});

@@ -43,7 +43,7 @@ before(async () => {
 	const persistentRedisClient = await initPersistentRedisClient();
 	await persistentRedisClient.flushDb();
 	const measurementRedisClient = await initMeasurementRedisClient();
-	await measurementRedisClient.mapMasters<string>(client => client.flushDb());
+	await measurementRedisClient.mapMasters(client => client.flushDb());
 	const subscriptionRedisClient = await initSubscriptionRedisClient();
 	await subscriptionRedisClient.flushDb();
 	await resetDbs(dbClients);

@@ -2,6 +2,7 @@ import { brotliCompress as brotliCompressCallback } from 'node:zlib';
 import { promisify } from 'node:util';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
+import { RESP_TYPES } from 'redis';
 
 import { compressedJsonCompress, compressedJsonGet, compressedJsonGetBuffer, compressedJsonGetBufferCompressed } from '../../../../../src/lib/redis/compressed.js';
 
@@ -25,7 +26,7 @@ describe('redis compressed helper', () => {
 			'key',
 			true,
 			[ 'COMPRESSED.JSON.GET', 'key', '$.foo' ],
-			{ returnBuffers: true },
+			{ typeMapping: { [RESP_TYPES.BLOB_STRING]: Buffer } },
 		]);
 	});
 
