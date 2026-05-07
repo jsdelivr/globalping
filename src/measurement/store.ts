@@ -253,7 +253,7 @@ export class MeasurementStore {
 			measurement.locations = measurement.locations.map(location => location.limit === 1 ? _.omit(location, 'limit') : location);
 		}
 
-		return subtractObjects(measurement, defaults) as Partial<MeasurementRecord>;
+		return subtractObjects(measurement, defaults);
 	}
 
 	probesToResults (probes: (ServerProbe | OfflineProbe)[], type: RequestType) {

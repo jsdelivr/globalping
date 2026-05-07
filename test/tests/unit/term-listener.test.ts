@@ -12,6 +12,8 @@ describe('term-listener', () => {
 			on: sandbox.stub(),
 			exit: sandbox.stub(),
 			env: {},
+			version: process.version,
+			versions: process.versions,
 		};
 
 		const worker1 = { send: sandbox.stub() };
@@ -129,6 +131,8 @@ describe('term-listener', () => {
 			pid: 67890,
 			on: sandbox.stub(),
 			env: {},
+			version: process.version,
+			versions: process.versions,
 		};
 
 		before(async () => {
