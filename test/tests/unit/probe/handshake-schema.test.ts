@@ -99,8 +99,9 @@ describe('parseHandshakeQuery', () => {
 			expect(parseHandshakeQuery({ ...validQuery, isHardware: '0' }).isHardware).to.equal(false);
 		});
 
-		it('defaults to false when missing', () => {
-			expect(parseHandshakeQuery({ ...validQuery }).isHardware).to.equal(false);
+		it('defaults to false when the key is omitted', () => {
+			const { isHardware: _unused, ...rest } = validQuery;
+			expect(parseHandshakeQuery(rest).isHardware).to.equal(false);
 		});
 	});
 
@@ -113,8 +114,9 @@ describe('parseHandshakeQuery', () => {
 			expect(parseHandshakeQuery({ ...validQuery, hardwareDevice: '' }).hardwareDevice).to.equal(null);
 		});
 
-		it('defaults to null when missing', () => {
-			expect(parseHandshakeQuery({ ...validQuery }).hardwareDevice).to.equal(null);
+		it('defaults to null when the key is omitted', () => {
+			const { hardwareDevice: _unused, ...rest } = validQuery;
+			expect(parseHandshakeQuery(rest).hardwareDevice).to.equal(null);
 		});
 
 		it('rejects v with no digits', () => {
@@ -135,8 +137,9 @@ describe('parseHandshakeQuery', () => {
 			expect(parseHandshakeQuery({ ...validQuery, hardwareDeviceFirmware: '' }).hardwareDeviceFirmware).to.equal(null);
 		});
 
-		it('defaults to null when missing', () => {
-			expect(parseHandshakeQuery({ ...validQuery }).hardwareDeviceFirmware).to.equal(null);
+		it('defaults to null when the key is omitted', () => {
+			const { hardwareDeviceFirmware: _unused, ...rest } = validQuery;
+			expect(parseHandshakeQuery(rest).hardwareDeviceFirmware).to.equal(null);
 		});
 
 		it('rejects values without a minor', () => {
@@ -157,8 +160,9 @@ describe('parseHandshakeQuery', () => {
 			expect(parseHandshakeQuery({ ...validQuery, adoptionToken: '' }).adoptionToken).to.equal(null);
 		});
 
-		it('defaults to null when missing', () => {
-			expect(parseHandshakeQuery({ ...validQuery }).adoptionToken).to.equal(null);
+		it('defaults to null when the key is omitted', () => {
+			const { adoptionToken: _unused, ...rest } = validQuery;
+			expect(parseHandshakeQuery(rest).adoptionToken).to.equal(null);
 		});
 	});
 
