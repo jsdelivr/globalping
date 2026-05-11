@@ -34,9 +34,9 @@ export const handshakeQuerySchema = Joi.object({
 	hardwareDevice: Joi.string().pattern(/^v\d+$/).empty('').default(null),
 	hardwareDeviceFirmware: Joi.string().pattern(/^v\d+\.\d+$/).empty('').default(null),
 	adoptionToken: Joi.string().empty('').default(null),
-	totalMemory: Joi.number().required(),
-	totalDiskSize: Joi.number().required(),
-	availableDiskSpace: Joi.number().required(),
+	totalMemory: Joi.number().integer().min(0).required(),
+	totalDiskSize: Joi.number().integer().min(0).required(),
+	availableDiskSpace: Joi.number().integer().min(0).required(),
 }).unknown(true).messages({
 	'version.range': 'invalid probe version ({#value})',
 });

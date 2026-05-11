@@ -178,5 +178,28 @@ describe('parseHandshakeQuery', () => {
 			const { totalMemory: _unused, ...rest } = validQuery;
 			expectProbeError(rest, 'totalMemory');
 		});
+
+		it('accepts 0 for each numeric field', () => {
+			const result = parseHandshakeQuery({ ...validQuery, totalMemory: '0', totalDiskSize: '0', availableDiskSpace: '0' });
+			expect(result.totalMemory).to.equal(0);
+			expect(result.totalDiskSize).to.equal(0);
+			expect(result.availableDiskSpace).to.equal(0);
+		});
+
+		it('rejects negative totalMemory', () => {
+			expectProbeError({ ...validQuery, totalMemory: '-1' }, 'totalMemory');
+		});
+
+		it('rejects negative totalDiskSize', () => {
+			expectProbeError({ ...validQuery, totalDiskSize: '-1' }, 'totalDiskSize');
+		});
+
+		it('rejects negative availableDiskSpace', () => {
+			expectProbeError({ ...validQuery, availableDiskSpace: '-1' }, 'availableDiskSpace');
+		});
+
+		it('rejects non-integer totalMemory', () => {
+			expectProbeError({ ...validQuery, totalMemory: '1.5' }, 'totalMemory');
+		});
 	});
 });
