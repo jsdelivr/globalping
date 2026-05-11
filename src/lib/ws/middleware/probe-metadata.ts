@@ -13,7 +13,6 @@ export const probeMetadata = (probeIpLimit: ProbeIpLimit) => errorHandler(async 
 	const clientIp = getProbeIp(socket);
 
 	try {
-		parseHandshakeQuery(socket);
 		socket.data.probe = await buildProbe(socket, probeIpLimit);
 		next();
 	} catch (error: unknown) {
@@ -31,10 +30,3 @@ export const probeMetadata = (probeIpLimit: ProbeIpLimit) => errorHandler(async 
 		});
 	}
 });
-
-
-const parseHandshakeQuery = (socket: ServerSocket) => {
-	for (const [ key, value ] of Object.entries(socket.handshake.query)) {
-		if (value === 'undefined') { socket.handshake.query[key] = undefined; }
-	}
-};

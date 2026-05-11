@@ -41,7 +41,7 @@ describe('Adoption token', () => {
 					ip: '1.2.3.4',
 					name: null,
 					altIps: [],
-					uuid: '1-1-1-1-1',
+					uuid: '11111111-1111-4111-8111-111111111111',
 					tags: [],
 					systemTags: [ 'datacenter-network' ],
 					status: 'initializing',
@@ -84,7 +84,7 @@ describe('Adoption token', () => {
 	it('should do nothing if it is the same user', async () => {
 		await dashboardClient('gp_probes').insert({
 			id: randomUUID(),
-			uuid: '1-1-1-1-1',
+			uuid: '11111111-1111-4111-8111-111111111111',
 			ip: '1.2.3.4',
 			userId: 'userIdValue',
 			status: 'offline',
