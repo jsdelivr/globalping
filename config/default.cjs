@@ -23,6 +23,7 @@ module.exports = {
 	websocketServer: {
 		pingInterval: 3000,
 		pingTimeout: 3000,
+		minProbeVersion: '0.39.0',
 	},
 	redis: {
 		standalonePersistent: {

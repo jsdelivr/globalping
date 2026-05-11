@@ -1,4 +1,5 @@
 import Joi, { type CustomHelpers } from 'joi';
+import config from 'config';
 import semver from 'semver';
 import { ProbeError } from '../../lib/probe-error.js';
 
@@ -15,10 +16,10 @@ export type HandshakeQuery = {
 	availableDiskSpace: number;
 };
 
-const versionRange = '>=0.39.0';
+const minProbeVersion = config.get<string>('websocketServer.minProbeVersion');
 
 const versionRangeCheck = (value: string, helpers: CustomHelpers) => {
-	if (!semver.satisfies(value, versionRange)) {
+	if (!semver.satisfies(value, `>=${minProbeVersion}`)) {
 		return helpers.error('version.range', { value });
 	}
 
