@@ -7,12 +7,12 @@ import { Credits } from '../../../src/lib/credits.js';
 describe('Credits', () => {
 	const sandbox = sinon.createSandbox();
 	const updateStub = sandbox.stub();
-	const firstStub = sandbox.stub();
+	const remainingCreditsStub = sandbox.stub();
 	const usersSelectStub = sandbox.stub();
 	const settingsFirstStub = sandbox.stub();
 	const whereStub = sandbox.stub().returns({
 		update: updateStub,
-		first: firstStub,
+		first: remainingCreditsStub,
 	});
 	const sqlStub = sandbox.stub() as sinon.SinonStub<any[], any> & { raw: any };
 	sqlStub.callsFake((table: string) => {
@@ -39,7 +39,7 @@ describe('Credits', () => {
 
 	it('should return true if row was updated', async () => {
 		updateStub.resolves(1);
-		firstStub.resolves({ amount: 5 });
+		remainingCreditsStub.resolves({ amount: 5 });
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
 		expect(result).to.deep.equal({ isConsumed: true, remainingCredits: 5 });
@@ -47,7 +47,7 @@ describe('Credits', () => {
 
 	it('should return true if row was updated to 0', async () => {
 		updateStub.resolves(1);
-		firstStub.resolves({ amount: 0 });
+		remainingCreditsStub.resolves({ amount: 0 });
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
 		expect(result).to.deep.equal({ isConsumed: true, remainingCredits: 0 });
@@ -57,7 +57,7 @@ describe('Credits', () => {
 		updateStub.resolves(0);
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
-		expect(firstStub.callCount).to.equal(0);
+		expect(remainingCreditsStub.callCount).to.equal(0);
 		expect(result).to.deep.equal({ isConsumed: false, remainingCredits: 0 });
 	});
 
@@ -65,7 +65,7 @@ describe('Credits', () => {
 		const error: Error & { errno?: number } = new Error('constraint');
 		error.errno = 4025;
 		updateStub.rejects(error);
-		firstStub.resolves({ amount: 5 });
+		remainingCreditsStub.resolves({ amount: 5 });
 		const credits = new Credits(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
 		expect(result).to.deep.equal({ isConsumed: false, remainingCredits: 5 });
@@ -133,43 +133,50 @@ describe('Credits', () => {
 		});
 
 		it('fires a notification when remaining drops below default threshold', async () => {
-			firstStub.resolves({ amount: 9000 });
+			remainingCreditsStub.resolves({ amount: 9000 });
 			const credits = await buildCredits();
 			await credits.consume('userId', 2000);
 			expect(gotPostStub.callCount).to.equal(1);
 			expect((gotPostStub.firstCall.args[1] as any).json).to.deep.include({ recipient: 'userId', type: 'low_credits' });
 		});
 
+		it('fires when remaining lands exactly on the threshold', async () => {
+			remainingCreditsStub.resolves({ amount: 10000 });
+			const credits = await buildCredits();
+			await credits.consume('userId', 20000); // previous 30000 → remaining exactly at threshold 10000
+			expect(gotPostStub.callCount).to.equal(1);
+		});
+
 		it('does not fire when staying below threshold', async () => {
-			firstStub.resolves({ amount: 500 });
+			remainingCreditsStub.resolves({ amount: 500 });
 			const credits = await buildCredits();
 			await credits.consume('userId', 100);
 			expect(gotPostStub.callCount).to.equal(0);
 		});
 
 		it('does not fire when staying above threshold', async () => {
-			firstStub.resolves({ amount: 50000 });
+			remainingCreditsStub.resolves({ amount: 50000 });
 			const credits = await buildCredits();
 			await credits.consume('userId', 100);
 			expect(gotPostStub.callCount).to.equal(0);
 		});
 
 		it('does not fire for users with cache entry false', async () => {
-			firstStub.resolves({ amount: 9000 });
+			remainingCreditsStub.resolves({ amount: 9000 });
 			const credits = await buildCredits(false);
 			await credits.consume('userId', 2000);
 			expect(gotPostStub.callCount).to.equal(0);
 		});
 
 		it('uses explicit per-user threshold from cache', async () => {
-			firstStub.resolves({ amount: 400 });
+			remainingCreditsStub.resolves({ amount: 400 });
 			const credits = await buildCredits(500);
 			await credits.consume('userId', 200);
 			expect(gotPostStub.callCount).to.equal(1);
 		});
 
 		it('does not block consume on notification POST failure', async () => {
-			firstStub.resolves({ amount: 9000 });
+			remainingCreditsStub.resolves({ amount: 9000 });
 			gotPostStub.rejects(new Error('directus down'));
 			const credits = await buildCredits();
 			const result = await credits.consume('userId', 2000);

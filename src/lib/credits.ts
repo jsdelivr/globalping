@@ -97,7 +97,7 @@ export class Credits {
 
 		const threshold = typeof userPreference === 'number' ? userPreference : this.defaultThreshold;
 
-		if (threshold && previousAmount >= threshold && remainingAmount < threshold) {
+		if (threshold && previousAmount > threshold && remainingAmount <= threshold) {
 			got.post(`${directusUrl}/notifications`, {
 				json: {
 					recipient: userId,
