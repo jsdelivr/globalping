@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS gp_schedule_configuration (
 
 	CONSTRAINT gp_schedule_configuration_type_check CHECK (`measurement_type` IN ('http','dns','ping','traceroute','mtr')),
 
-	CONSTRAINT gp_schedule_configuration_schedule_fk
+	CONSTRAINT gp_schedule_configuration_schedule_id_foreign
 		FOREIGN KEY (schedule_id) REFERENCES gp_schedule(id)
 			ON DELETE CASCADE ON UPDATE RESTRICT,
 
