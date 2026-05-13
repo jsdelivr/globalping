@@ -113,7 +113,7 @@ describe('Credits', () => {
 
 	describe('low_credits notification', () => {
 		const buildCredits = async (entry?: false | number) => {
-			settingsFirstStub.resolves({ low_credits_default_threshold: 10000 });
+			settingsFirstStub.resolves({ low_credits_default_threshold: 5000 });
 
 			if (entry === false) {
 				usersSelectStub.resolves([{ id: 'userId', notification_preferences: '{"low_credits":{"enabled":false}}' }]);
@@ -133,17 +133,17 @@ describe('Credits', () => {
 		});
 
 		it('fires a notification when remaining drops below default threshold', async () => {
-			remainingCreditsStub.resolves({ amount: 9000 });
+			remainingCreditsStub.resolves({ amount: 4500 });
 			const credits = await buildCredits();
-			await credits.consume('userId', 2000);
+			await credits.consume('userId', 1000); // previous 5500 → remaining 4500, threshold 5000
 			expect(gotPostStub.callCount).to.equal(1);
 			expect((gotPostStub.firstCall.args[1] as any).json).to.deep.include({ recipient: 'userId', type: 'low_credits' });
 		});
 
 		it('fires when remaining lands exactly on the threshold', async () => {
-			remainingCreditsStub.resolves({ amount: 10000 });
+			remainingCreditsStub.resolves({ amount: 5000 });
 			const credits = await buildCredits();
-			await credits.consume('userId', 20000); // previous 30000 → remaining exactly at threshold 10000
+			await credits.consume('userId', 2000); // previous 7000 → remaining exactly at threshold 5000
 			expect(gotPostStub.callCount).to.equal(1);
 		});
 
@@ -176,11 +176,11 @@ describe('Credits', () => {
 		});
 
 		it('does not block consume on notification POST failure', async () => {
-			remainingCreditsStub.resolves({ amount: 9000 });
+			remainingCreditsStub.resolves({ amount: 4500 });
 			gotPostStub.rejects(new Error('directus down'));
 			const credits = await buildCredits();
-			const result = await credits.consume('userId', 2000);
-			expect(result).to.deep.equal({ isConsumed: true, remainingCredits: 9000 });
+			const result = await credits.consume('userId', 1000);
+			expect(result).to.deep.equal({ isConsumed: true, remainingCredits: 4500 });
 		});
 
 		it('does not fire when consume failed (isConsumed: false)', async () => {
