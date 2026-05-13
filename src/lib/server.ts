@@ -97,7 +97,7 @@ export const createServer = async () => {
 
 	await Promise.all([
 		logIfTooLong(auth.syncTokens(), 'auth.syncTokens'),
-		credits.syncPreferences(),
+		logIfTooLong(credits.syncPreferences(), 'credits.syncPreferences'),
 	]);
 
 	adoptionToken.scheduleSync();

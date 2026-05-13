@@ -103,7 +103,7 @@ export class Credits {
 					recipient: userId,
 					type: 'low_credits',
 					subject: 'Your Globalping credits are running low',
-					message: `You have ${remainingAmount} credits remaining, below your configured threshold of ${threshold}.`,
+					message: `You have ${remainingAmount} credits remaining, which may run out soon. You can host more probes or become a [sponsor](https://github.com/sponsors/jsdelivr) to get more credits.`,
 				},
 				headers: { Authorization: `Bearer ${systemKey}` },
 				timeout: { request: 5000 },
