@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS directus_users (
 	user_type VARCHAR(255) NOT NULL DEFAULT 'member',
 	public_probes BOOLEAN DEFAULT 0,
 	adoption_token VARCHAR(255) NOT NULL,
-	default_prefix VARCHAR(255) NOT NULL
+	default_prefix VARCHAR(255) NOT NULL,
+	notification_preferences longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL CHECK (notification_preferences IS NULL OR json_valid(`notification_preferences`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS gp_probes (
@@ -45,6 +46,11 @@ CREATE TABLE IF NOT EXISTS gp_probes (
 	customLocation LONGTEXT COLLATE utf8mb4_bin NULL CHECK (json_valid(`customLocation`)),
 	localAdoptionServer LONGTEXT COLLATE utf8mb4_bin NULL CHECK (json_valid(`localAdoptionServer`)),
 	searchIndex VARCHAR(4090) NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS directus_settings (
+	id INT PRIMARY KEY,
+	low_credits_default_threshold INT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS directus_notifications (

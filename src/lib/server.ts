@@ -14,6 +14,7 @@ import { initMeasurementRedisClient } from './redis/measurement-client.js';
 import { initSubscriptionRedisClient } from './redis/subscription-client.js';
 import termListener from './term-listener.js';
 import { auth } from './http/auth.js';
+import { credits } from './credits.js';
 import { initAdoptionToken, type AdoptionToken } from '../adoption/adoption-token.js';
 import { logIfTooLong } from './log-if-too-long.js';
 import { initStreamScheduleLoader } from '../schedule/loader.js';
@@ -94,8 +95,13 @@ export const createServer = async () => {
 	initStreamScheduleLoader();
 	const scheduleExecutor = initStreamScheduleExecutor(io, syncedProbeList, probesLocationFilter);
 
+	await Promise.all([
+		logIfTooLong(auth.syncTokens(), 'auth.syncTokens'),
+		credits.syncPreferences(),
+	]);
+
 	adoptionToken.scheduleSync();
-	await logIfTooLong(auth.syncTokens(), 'auth.syncTokens');
+	credits.scheduleSync();
 	auth.scheduleSync();
 
 	scheduleExecutor.start();

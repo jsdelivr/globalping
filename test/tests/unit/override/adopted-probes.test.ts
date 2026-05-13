@@ -99,7 +99,7 @@ describe('AdoptedProbes', () => {
 	};
 
 	const sandbox = sinon.createSandbox();
-	const gotPostStub = sandbox.stub(got, 'post');
+	let gotPostStub!: sinon.SinonStub;
 
 	const sql = {
 		select: sandbox.stub(),
@@ -122,6 +122,7 @@ describe('AdoptedProbes', () => {
 
 	beforeEach(() => {
 		sandbox.reset();
+		gotPostStub = sandbox.stub(got, 'post');
 		gotPostStub.resolves({} as any);
 		sql.select.returns(sql);
 		sql.update.returns(sql);
@@ -138,6 +139,10 @@ describe('AdoptedProbes', () => {
 		sqlStub.returns(sql);
 		getProbesWithAdminData.returns([ defaultConnectedProbe ]);
 		process.env['SHOULD_SYNC_ADOPTIONS'] = 'true';
+	});
+
+	afterEach(() => {
+		gotPostStub.restore();
 	});
 
 	after(() => {
