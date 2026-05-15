@@ -48,7 +48,7 @@ export const addFakeProbes = async (count: number, events: object = {}, options:
 			query: {
 				version: '0.39.0',
 				nodeVersion: 'v18.17.0',
-				uuid: '1-1-1-1-1',
+				uuid: '11111111-1111-4111-8111-111111111111',
 				isHardware: 'undefined',
 				hardwareDevice: 'undefined',
 				hardwareDeviceFirmware: 'undefined',

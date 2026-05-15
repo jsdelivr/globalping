@@ -1,7 +1,6 @@
 import * as process from 'node:process';
 import type { Socket } from 'socket.io';
 import { isIpPrivate } from '../lib/private-ip.js';
-import semver from 'semver';
 import _ from 'lodash';
 import { getIndex } from '../lib/location/location.js';
 import { ProbeError } from '../lib/probe-error.js';
@@ -13,21 +12,10 @@ import type { ProbeIpLimit } from '../lib/ws/helper/probe-ip-limit.js';
 import { fakeLookup } from '../lib/geoip/fake-client.js';
 import { getGroupingKey, normalizeTags } from '../lib/geoip/utils.js';
 import { isIpBlocked } from '../lib/blocked-ip-ranges.js';
+import { parseHandshakeQuery } from './schema/handshake-schema.js';
 
 export const buildProbe = async (socket: Socket, probeIpLimit: ProbeIpLimit): Promise<SocketProbe> => {
-	const version = String(socket.handshake.query['version']);
-	const nodeVersion = String(socket.handshake.query['nodeVersion']);
-	const totalMemory = Number(socket.handshake.query['totalMemory']);
-	const totalDiskSize = Number(socket.handshake.query['totalDiskSize']);
-	const availableDiskSpace = Number(socket.handshake.query['availableDiskSpace']);
-	const uuid = String(socket.handshake.query['uuid']);
-	const isHardware = socket.handshake.query['isHardware'] === 'true' || socket.handshake.query['isHardware'] === '1';
-	const hardwareDeviceValue = socket.handshake.query['hardwareDevice'];
-	const hardwareDevice = !hardwareDeviceValue ? null : String(hardwareDeviceValue);
-	const hardwareDeviceFirmwareValue = socket.handshake.query['hardwareDeviceFirmware'];
-	const hardwareDeviceFirmware = !hardwareDeviceFirmwareValue ? null : String(hardwareDeviceFirmwareValue);
-	const adoptionTokenValue = socket.handshake.query['adoptionToken'];
-	const adoptionToken = !adoptionTokenValue ? null : String(adoptionTokenValue);
+	const handshake = parseHandshakeQuery(socket.handshake.query);
 	const host = process.env['HOSTNAME'] ?? '';
 
 	const ip = getProbeIp(socket);
@@ -38,10 +26,6 @@ export const buildProbe = async (socket: Socket, probeIpLimit: ProbeIpLimit): Pr
 
 	if (isIpBlocked(ip)) {
 		throw new ProbeError(`vpn detected: ${ip}`);
-	}
-
-	if (!semver.satisfies(version, '>=0.39.0')) {
-		throw new ProbeError(`invalid probe version (${version})`);
 	}
 
 	let ipInfo;
@@ -66,15 +50,14 @@ export const buildProbe = async (socket: Socket, probeIpLimit: ProbeIpLimit): Pr
 
 	const index = getIndex(location, normalizedTags);
 
-	// Todo: add validation and handle missing or partial data
 	return {
 		client: socket.id,
-		version,
-		nodeVersion,
-		uuid,
-		isHardware,
-		hardwareDevice,
-		hardwareDeviceFirmware,
+		version: handshake.version,
+		nodeVersion: handshake.nodeVersion,
+		uuid: handshake.uuid,
+		isHardware: handshake.isHardware,
+		hardwareDevice: handshake.hardwareDevice,
+		hardwareDeviceFirmware: handshake.hardwareDeviceFirmware,
 		ipAddress: ip,
 		altIpAddresses: [],
 		host,
@@ -90,14 +73,14 @@ export const buildProbe = async (socket: Socket, probeIpLimit: ProbeIpLimit): Pr
 			jobs: { count: 0 },
 		},
 		hostInfo: {
-			totalMemory,
-			totalDiskSize,
-			availableDiskSpace,
+			totalMemory: handshake.totalMemory,
+			totalDiskSize: handshake.totalDiskSize,
+			availableDiskSpace: handshake.availableDiskSpace,
 		},
 		status: 'initializing',
 		isIPv4Supported: false,
 		isIPv6Supported: false,
-		adoptionToken,
+		adoptionToken: handshake.adoptionToken,
 		isProxy: ipInfo.isProxy,
 	};
 };

@@ -18,11 +18,13 @@ export default function w (wallaby) {
 			'test/utils/**/*.ts',
 			'test/mocks/**/*',
 			'test/plugins/**/*',
+			'test/tests/contract/**/*',
 			'test/setup.ts',
 			'test/types.ts',
 			'package.json',
 			'knexfile.dashboard.js',
 			'knexfile.measurement-store-1.js',
+			'knexfile.time-series-1.js',
 			'data/*',
 		],
 		tests: [

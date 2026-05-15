@@ -196,7 +196,7 @@ describe('Get Probes', () => {
 						isHardware: false,
 						hardwareDevice: null,
 						hardwareDeviceFirmware: null,
-						uuid: '1-1-1-1-1',
+						uuid: '11111111-1111-4111-8111-111111111111',
 						nodeVersion: 'v18.17.0',
 						isProxy: false,
 						location: {
@@ -254,7 +254,7 @@ describe('Get Probes', () => {
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					lastSyncDate: new Date(),
 					ip: '1.2.3.4',
-					uuid: '1-1-1-1-1',
+					uuid: '11111111-1111-4111-8111-111111111111',
 					tags: '[{"prefix":"jimaek","value":"dashboardtag1"}]',
 					status: 'ready',
 					isIPv4Supported: false,
