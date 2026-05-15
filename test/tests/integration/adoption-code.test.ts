@@ -59,7 +59,7 @@ describe('Adoption code', () => {
 					ip: '1.2.3.4',
 					name: null,
 					altIps: [ '97.247.234.249' ],
-					uuid: '1-1-1-1-1',
+					uuid: '11111111-1111-4111-8111-111111111111',
 					tags: [],
 					systemTags: [ 'datacenter-network' ],
 					status: 'initializing',

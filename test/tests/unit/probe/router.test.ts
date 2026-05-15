@@ -65,6 +65,11 @@ describe('probe router', () => {
 			handshake: {
 				query: {
 					version: '0.39.0',
+					nodeVersion: 'v24.14.1',
+					uuid: '11111111-1111-4111-8111-111111111111',
+					totalMemory: '1000000000',
+					totalDiskSize: '2000',
+					availableDiskSpace: '1000',
 				},
 			},
 			data: {},
