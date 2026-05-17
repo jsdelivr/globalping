@@ -96,7 +96,12 @@ export const getHttpServer = (ioContext: IoContext) => {
 		.use(responseTime())
 		.use(defaultHeaders())
 		.use(koaFavicon(`${publicPath}/favicon.ico`))
-		.use(captureMiddlewareSpan(compress({ br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } }, gzip: { level: 3 }, deflate: false }), { name: 'compress' }))
+		.use(captureMiddlewareSpan(compress({
+			br: { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 4 } },
+			deflate: false,
+			gzip: { level: 3 },
+			zstd: { params: { [zlib.constants.ZSTD_c_compressionLevel]: 6 } },
+		}), { name: 'compress' }))
 		.use(conditionalGet())
 		.use(captureMiddlewareSpan(etag(), { name: 'etag' }))
 		.use(captureMiddlewareSpan(json({ pretty: true, spaces: 2 }), { name: 'json' }))
