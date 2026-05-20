@@ -61,6 +61,11 @@ export const getHttpServer = (ioContext: IoContext) => {
 		};
 	});
 
+	// GET /demo — redirect to /demo/ so koa-static resolves demo/index.html
+	rootRouter.get('/demo', (ctx) => {
+		ctx.redirect('/demo/');
+	});
+
 	const apiRouter = new Router<CustomState, CustomContext>({ strict: true, sensitive: true });
 
 	apiRouter.prefix('/v1')
