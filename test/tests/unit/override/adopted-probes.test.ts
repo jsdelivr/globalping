@@ -33,6 +33,7 @@ describe('AdoptedProbes', () => {
 		asn: 16509,
 		network: 'Amazon.com',
 		defaultPrefix: 'jsdelivr',
+		deprecatedPrefix: null,
 		publicProbes: 0,
 		adoptionToken: 'adoptionTokenValue',
 		allowedCountries: '["IE"]',
@@ -1384,6 +1385,22 @@ describe('AdoptedProbes', () => {
 		expect(updatedTags).to.deep.equal([
 			{ type: 'system', value: 'datacenter-network' },
 			{ type: 'system', value: 'u-jsdelivr' },
+		]);
+	});
+
+	it('getUpdatedTags method should include deprecated prefix tag', async () => {
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		sql.select.resolves([{ ...defaultAdoption, tags: '[]', publicProbes: 1, deprecatedPrefix: 'old-jsdelivr' }]);
+
+		await adoptedProbes.syncDashboardData();
+
+		// The deprecated prefix is targetable is not shown on the dashboard.
+		expect(sql.update.args[0]).to.deep.equal([{ systemTags: '["u-jsdelivr","datacenter-network"]' }]);
+		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
+		expect(updatedTags).to.deep.equal([
+			{ type: 'system', value: 'datacenter-network' },
+			{ type: 'system', value: 'u-jsdelivr' },
+			{ type: 'system', value: 'u-old-jsdelivr' },
 		]);
 	});
 });
