@@ -363,11 +363,14 @@ export class AdoptedProbes {
 
 	public async fetchDProbes () {
 		const rows = await this.sql(DASH_PROBES_TABLE)
-			.leftJoin(USERS_TABLE, `${DASH_PROBES_TABLE}.userId`, `${USERS_TABLE}.id`)
+			.leftJoin(USERS_TABLE, function () {
+				this.on(`${DASH_PROBES_TABLE}.userId`, `${USERS_TABLE}.id`)
+					.andOnVal(`${USERS_TABLE}.status`, '=', 'active');
+			})
 			// First item will be preserved, so we are prioritizing adopted and online probes.
 			// Sorting by id at the end so order is the same in any table state.
 			.orderByRaw(`IF (${DASH_PROBES_TABLE}.userId IS NOT NULL, 1, 2), ${DASH_PROBES_TABLE}.lastSyncDate DESC, ${DASH_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${DASH_PROBES_TABLE}.status, 'ready') DESC, ${DASH_PROBES_TABLE}.id DESC`)
-			.select<Row[]>(`${DASH_PROBES_TABLE}.*`, `${USERS_TABLE}.default_prefix AS defaultPrefix`, `${USERS_TABLE}.deprecated_prefix AS deprecatedPrefix`, `${USERS_TABLE}.public_probes as publicProbes`, `${USERS_TABLE}.adoption_token AS adoptionToken`);
+			.select<Row[]>(`${DASH_PROBES_TABLE}.*`, `${USERS_TABLE}.id AS userId`, `${USERS_TABLE}.default_prefix AS defaultPrefix`, `${USERS_TABLE}.deprecated_prefix AS deprecatedPrefix`, `${USERS_TABLE}.public_probes as publicProbes`, `${USERS_TABLE}.adoption_token AS adoptionToken`);
 
 		const dProbes: DProbe[] = rows.map(row => ({
 			...row,

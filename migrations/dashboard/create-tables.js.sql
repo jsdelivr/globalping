@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS directus_users (
 	github_username VARCHAR(255),
 	github_organizations longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`github_organizations`)),
 	user_type VARCHAR(255) NOT NULL DEFAULT 'member',
+	status VARCHAR(255) NOT NULL DEFAULT 'active',
 	public_probes BOOLEAN DEFAULT 0,
 	adoption_token VARCHAR(255) NOT NULL,
 	default_prefix VARCHAR(255) NOT NULL,
