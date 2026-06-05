@@ -243,7 +243,7 @@ describe('geoip service', () => {
 			network: 'Hetzner Online',
 			normalizedNetwork: 'hetzner online',
 			isProxy: false,
-			isHosting: null,
+			isHosting: true,
 			isAnycast: null,
 			allowedCountries: [ 'DE' ],
 		});
@@ -267,7 +267,7 @@ describe('geoip service', () => {
 			network: 'Hetzner Online',
 			normalizedNetwork: 'hetzner online',
 			isProxy: false,
-			isHosting: null,
+			isHosting: true,
 			isAnycast: null,
 			allowedCountries: [ 'DE' ],
 		});
