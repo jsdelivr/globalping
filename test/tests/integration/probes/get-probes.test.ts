@@ -249,6 +249,13 @@ describe('Get Probes', () => {
 
 		describe('adopted probes', () => {
 			before(async () => {
+				await dashboardClient('directus_users').insert({
+					id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+					status: 'active',
+					adoption_token: 'adoptionTokenValue',
+					default_prefix: 'jimaek',
+				});
+
 				await dashboardClient(DASH_PROBES_TABLE).insert({
 					id: randomUUID(),
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
@@ -286,6 +293,7 @@ describe('Get Probes', () => {
 
 			after(async () => {
 				await dashboardClient(DASH_PROBES_TABLE).where({ city: 'Cordoba' }).delete();
+				await dashboardClient('directus_users').delete();
 			});
 
 			it('should update probes data', async () => {
@@ -312,6 +320,87 @@ describe('Get Probes', () => {
 								network: 'InterBS S.R.L. (BAEHOST)',
 							},
 							tags: [ 'u-jimaek:dashboardtag1' ],
+							resolvers: [],
+						});
+
+						expect(response).to.matchApiSchema();
+					});
+			});
+		});
+
+		describe('probes adopted by a suspended user', () => {
+			before(async () => {
+				await dashboardClient('directus_users').insert({
+					id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+					status: 'suspended',
+					adoption_token: 'adoptionTokenValue',
+					default_prefix: 'jimaek',
+				});
+
+				await dashboardClient(DASH_PROBES_TABLE).insert({
+					id: randomUUID(),
+					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+					lastSyncDate: new Date(),
+					ip: '1.2.3.4',
+					uuid: '11111111-1111-4111-8111-111111111111',
+					tags: '[{"prefix":"jimaek","value":"dashboardtag1"}]',
+					status: 'ready',
+					isIPv4Supported: false,
+					isIPv6Supported: false,
+					version: '0.26.0',
+					nodeVersion: 'v18.14.2',
+					country: 'AR',
+					countryName: 'Argentina',
+					continent: 'SA',
+					continentName: 'South America',
+					region: 'South America',
+					city: 'Cordoba',
+					latitude: -31.41,
+					longitude: -64.18,
+					network: 'InterBS S.R.L. (BAEHOST)',
+					asn: 61004,
+					allowedCountries: '["AR"]',
+					customLocation: JSON.stringify({
+						country: 'AR',
+						city: 'Cordoba',
+						latitude: -31.41,
+						longitude: -64.18,
+						state: null,
+					}),
+				});
+
+				await getIoContext().probeOverride.fetchDashboardData();
+			});
+
+			after(async () => {
+				await dashboardClient(DASH_PROBES_TABLE).where({ city: 'Cordoba' }).delete();
+				await dashboardClient('directus_users').delete();
+			});
+
+			it('should ignore the custom location and tags', async () => {
+				nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
+				const probe = await addFakeProbe();
+				probe.emit('probe:status:update', 'ready');
+				await waitForProbesUpdate();
+
+				await requestAgent.get('/v1/probes')
+					.send()
+					.expect(200)
+					.expect((response) => {
+						expect(response.body[0]).to.deep.equal({
+							version: '0.39.0',
+							location: {
+								continent: 'SA',
+								region: 'South America',
+								country: 'AR',
+								state: null,
+								city: 'Buenos Aires',
+								latitude: -34.61,
+								longitude: -58.38,
+								asn: 61004,
+								network: 'InterBS S.R.L. (BAEHOST)',
+							},
+							tags: [],
 							resolvers: [],
 						});
 

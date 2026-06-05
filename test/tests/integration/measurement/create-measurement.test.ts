@@ -717,6 +717,13 @@ describe('Create measurement', () => {
 
 		describe('adopted probes', () => {
 			before(async () => {
+				await dashboardClient('directus_users').insert({
+					id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+					status: 'active',
+					adoption_token: 'adoptionTokenValue',
+					default_prefix: 'jsdelivr',
+				});
+
 				await dashboardClient(DASH_PROBES_TABLE).insert({
 					id: randomUUID(),
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
@@ -756,6 +763,7 @@ describe('Create measurement', () => {
 
 			after(async () => {
 				await dashboardClient(DASH_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
+				await dashboardClient('directus_users').delete();
 			});
 
 			it('should create measurement with adopted "city: Oklahoma City" location', async () => {
@@ -899,6 +907,13 @@ describe('Create measurement', () => {
 
 		describe('adopted probes + admin overrides', () => {
 			before(async () => {
+				await dashboardClient('directus_users').insert({
+					id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+					status: 'active',
+					adoption_token: 'adoptionTokenValue',
+					default_prefix: 'jsdelivr',
+				});
+
 				await dashboardClient(DASH_PROBES_TABLE).insert({
 					id: randomUUID(),
 					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
@@ -947,6 +962,7 @@ describe('Create measurement', () => {
 
 			after(async () => {
 				await dashboardClient(DASH_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
+				await dashboardClient('directus_users').delete();
 				await dashboardClient('gp_location_overrides').where({ city: 'Paris' }).delete();
 			});
 
