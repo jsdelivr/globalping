@@ -5,10 +5,7 @@ Hi! We're really excited that you're interested in contributing! Before submitti
 ## General guidelines
 
 -   Bug fixes and changes discussed in the existing issues are always welcome.
--   For new ideas, please open an issue to discuss them before sending a PR.
--   Make sure your PR passes `npm test` and has [appropriate commit messages](https://github.com/jsdelivr/globalping/commits/master).
-
-## Project setup
+-   For new ideas,
 
 To run the Globalping API locally, you will need:
 
