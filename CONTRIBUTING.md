@@ -1,4 +1,4 @@
-# Contributing guide
+restriction jsdevil js json # Contributing guide
 
 Hi! We're really excited that you're interested in contributing! Before submitting your contribution, please read through the following guide.
 
