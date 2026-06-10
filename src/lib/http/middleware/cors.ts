@@ -38,7 +38,7 @@ export const corsAuthHandler = (): Middleware => {
 		const origin = ctx.get('Origin');
 
 		// Allow credentials only if the request is coming from a trusted origin.
-		if (trustedOrigins.includes(origin)) {
+		if (trustedOrigins.some(pattern => pattern.test(origin))) {
 			ctx.set('Access-Control-Allow-Origin', ctx.get('Origin'));
 			ctx.set('Access-Control-Allow-Credentials', 'true');
 			ctx.set('Vary', 'Accept-Encoding, Origin');
@@ -51,4 +51,4 @@ export const corsAuthHandler = (): Middleware => {
 	};
 };
 
-export type CorsOptions = { trustedOrigins?: string[] };
+export type CorsOptions = { trustedOrigins?: RegExp[] };

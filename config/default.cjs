@@ -6,11 +6,8 @@ module.exports = {
 		processes: 2,
 		cors: {
 			trustedOrigins: [
-				'https://globalping.io',
-				'https://staging.globalping.io',
-				'https://dash.globalping.io',
-				'http://localhost:13000',
-				'http://localhost:13010',
+				/^https:\/\/(?:[\w-]+\.)*globalping.io$/,
+				/^http:\/\/localhost:(?:13000|13010)$/,
 			],
 		},
 		session: {
