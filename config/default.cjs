@@ -6,7 +6,7 @@ module.exports = {
 		processes: 2,
 		cors: {
 			trustedOrigins: [
-				/^https:\/\/(?:[\w-]+\.)*globalping.io$/,
+				/^https:\/\/(?:[\w-]+\.)*globalping\.io$/,
 				/^http:\/\/localhost:(?:13000|13010)$/,
 			],
 		},
