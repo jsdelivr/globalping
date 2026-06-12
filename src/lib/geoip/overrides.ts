@@ -9,4 +9,14 @@ export const isHostingOverrides = [
 		normalizedNetwork: /psychz networks/,
 		isHosting: true,
 	},
+	// https://www.hetzner.com/
+	{
+		normalizedNetwork: /hetzner online/,
+		isHosting: true,
+	},
+	// https://www.ovhcloud.com/
+	{
+		normalizedNetwork: /\bovh\b/,
+		isHosting: true,
+	},
 ];
