@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS directus_users (
 	user_type VARCHAR(255) NOT NULL DEFAULT 'member',
 	public_probes BOOLEAN DEFAULT 0,
 	adoption_token VARCHAR(255) NOT NULL,
-	default_prefix VARCHAR(255) NOT NULL
+	default_prefix VARCHAR(255) NOT NULL,
+	deprecated_prefix VARCHAR(255)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS gp_probes (
