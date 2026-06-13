@@ -41,11 +41,11 @@ export const corsAuthHandler = (): Middleware => {
 		if (trustedOrigins.some(pattern => pattern.test(origin))) {
 			ctx.set('Access-Control-Allow-Origin', ctx.get('Origin'));
 			ctx.set('Access-Control-Allow-Credentials', 'true');
-			ctx.set('Vary', 'Accept-Encoding, Origin');
 		}
 
 		ctx.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
 		ctx.set('Access-Control-Expose-Headers', exposeHeaders);
+		ctx.set('Vary', 'Accept-Encoding, Origin');
 
 		await next();
 	};
