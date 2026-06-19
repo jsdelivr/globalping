@@ -15,7 +15,7 @@ export const subscribeWithHandler = (socket: ServerSocket, event: string, method
 			const probe = socket.data.probe;
 			const clientIp = probe.ipAddress;
 			const metadata: Record<string, unknown> = {
-				client: { id: socket.id, ip: clientIp },
+				client: { id: socket.id, ip: clientIp, version: probe.version },
 				message: 'unknown',
 				args,
 			};

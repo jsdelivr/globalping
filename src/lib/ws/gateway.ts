@@ -35,7 +35,7 @@ export const initGateway = (ioContext: IoContext) => {
 			socket.emit('api:connect:isProxy', { isProxy: probe.isProxy });
 			socket.emit('api:connect:location', location);
 			socket.emit('api:logs-transport:set', { isActive: true });
-			logger.info(`WS client connected.`, { client: { id: socket.id, ip: probe.ipAddress }, location: { city: location.city, country: location.country, network: location.network } });
+			logger.info(`WS client connected.`, { client: { id: socket.id, ip: probe.ipAddress, version: probe.version }, location: { city: location.city, country: location.country, network: location.network } });
 
 			// Handlers
 			subscribeWithHandler(socket, 'probe:status:update', handleStatusUpdate(probe));
@@ -52,7 +52,7 @@ export const initGateway = (ioContext: IoContext) => {
 			subscribeWithHandler(socket, 'probe:adoption:ready', handleAdoptionServerStart(probe));
 
 			socket.on('disconnect', (reason) => {
-				logger.debug(`Probe disconnected. (reason: ${reason}) [${socket.id}][${probe.ipAddress}]`);
+				logger.debug(`Probe disconnected. (reason: ${reason}) [${socket.id}][${probe.ipAddress}]`, { client: { id: socket.id, ip: probe.ipAddress, version: probe.version } });
 
 				if (reason === 'server namespace disconnect') {
 					return; // Probe was disconnected by the .disconnect() call from the API, no need to record that

@@ -23,9 +23,10 @@ const isError = (error: unknown): error is Error => Boolean(error as Error['mess
 export const errorHandler = (next: NextArgument) => (socket: ServerSocket, mwNext?: (error?: any) => void) => {
 	next(socket, mwNext!).catch((error) => {
 		const clientIp = getProbeIp(socket) ?? '';
+		const probeVersion = socket.data.probe?.version ?? socket.handshake?.query['version'] ?? 'unknown';
 		const reason = isError(error) ? error.message : 'unknown';
 
-		logger.info(`Disconnecting client for (${reason})`, { client: { id: socket.id, ip: clientIp, handshake: socket.handshake?.query } });
+		logger.info(`Disconnecting client for (${reason})`, { client: { id: socket.id, ip: clientIp, version: probeVersion, handshake: socket.handshake?.query } });
 		logger.debug('Details:', error);
 
 		if (mwNext) {

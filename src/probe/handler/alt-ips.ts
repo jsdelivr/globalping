@@ -17,6 +17,6 @@ export const handleAltIps = (probe: SocketProbe, altIpsClient: AltIpsClient) => 
 	if (callback) {
 		callback({ addedAltIps, rejectedIpsToReasons });
 	} else {
-		logger.warn('Missing ack callback for alt IP update.', { client: { id: probe.client, ip: probe.ipAddress }, probe: { uuid: probe.uuid } });
+		logger.warn('Missing ack callback for alt IP update.', { client: { id: probe.client, ip: probe.ipAddress, version: probe.version }, probe: { uuid: probe.uuid } });
 	}
 };
