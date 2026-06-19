@@ -216,9 +216,23 @@ export class MeasurementStore {
 		const CLEANUP_LEASE_TIME = 30_000;
 		const now = Date.now();
 		const timeoutTime = config.get<number>('measurement.timeout') * 1000;
+
+		const scanLegacyInProgress = async () => {
+			const entries: { field: string; value: string }[] = [];
+			let cursor = '0';
+
+			do {
+				const result = await this.redis.hScan('gp:in-progress', cursor, { COUNT: SCAN_BATCH_SIZE });
+				cursor = result.cursor;
+				entries.push(...result.entries);
+			} while (cursor !== '0' && entries.length < SCAN_BATCH_SIZE);
+
+			return { cursor, entries };
+		};
+
 		const [ claimResult, scanResult ] = await Promise.allSettled([
 			this.redis.claimTimedOutMeasurements('gp:in-progress-timeouts', now, SCAN_BATCH_SIZE, now + CLEANUP_LEASE_TIME),
-			this.redis.hScan('gp:in-progress', '0', { COUNT: SCAN_BATCH_SIZE }),
+			scanLegacyInProgress(),
 		]);
 		const claimedTimedOutIds = claimResult.status === 'fulfilled' ? claimResult.value : [];
 		const { cursor, entries } = scanResult.status === 'fulfilled' ? scanResult.value : { cursor: '0', entries: [] };
