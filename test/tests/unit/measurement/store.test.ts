@@ -62,6 +62,8 @@ describe('measurement store', () => {
 		hDel: sandbox.stub(),
 		hSet: sandbox.stub(),
 		hExpire: sandbox.stub(),
+		zAdd: sandbox.stub(),
+		zRem: sandbox.stub(),
 		set: sandbox.stub(),
 		expire: sandbox.stub(),
 		del: sandbox.stub(),
@@ -76,6 +78,7 @@ describe('measurement store', () => {
 		recordResult: sandbox.stub(),
 		markFinished: sandbox.stub(),
 		markFinishedByTimeout: sandbox.stub(),
+		claimTimedOutMeasurements: sandbox.stub(),
 	};
 
 	const mockedMeasurementId1 = '2E2SZgEwA6W6HvzlT0001z9VK';
@@ -120,6 +123,8 @@ describe('measurement store', () => {
 		redisMock.compressedJsonGetBufferCompressed.reset();
 		redisMock.recordResult.reset();
 		redisMock.markFinishedByTimeout.reset();
+		redisMock.claimTimedOutMeasurements.reset();
+		redisMock.claimTimedOutMeasurements.resolves([]);
 		sandbox.resetHistory();
 	});
 
@@ -158,6 +163,8 @@ describe('measurement store', () => {
 			],
 		});
 
+		redisMock.claimTimedOutMeasurements.resolves([ mockedMeasurementId3 ]);
+
 		redisMock.markFinishedByTimeout.onFirstCall().resolves(Buffer.concat([
 			Buffer.from([ 0x00 ]),
 			Buffer.from(JSON.stringify(finishedRecord)),
@@ -169,13 +176,20 @@ describe('measurement store', () => {
 
 		await clock.tickAsyncStepped(16_000);
 
+		const cleanupTime = now + 12_000;
+
 		expect(redisMock.hScan.callCount).to.equal(1);
 		expect(redisMock.hScan.firstCall.args).to.deep.equal([ 'gp:in-progress', '0', { COUNT: 5000 }]);
-		expect(redisMock.markFinishedByTimeout.callCount).to.equal(2);
+		expect(redisMock.claimTimedOutMeasurements.callCount).to.equal(1);
+		expect(redisMock.claimTimedOutMeasurements.firstCall.args).to.deep.equal([ 'gp:in-progress-timeouts', cleanupTime, 5000, cleanupTime + 30_000 ]);
+		expect(redisMock.markFinishedByTimeout.callCount).to.equal(3);
 		expect(redisMock.markFinishedByTimeout.firstCall.args).to.deep.equal([ mockedMeasurementId1 ]);
 		expect(redisMock.markFinishedByTimeout.secondCall.args).to.deep.equal([ mockedMeasurementId2 ]);
+		expect(redisMock.markFinishedByTimeout.thirdCall.args).to.deep.equal([ mockedMeasurementId3 ]);
 		expect(redisMock.hDel.callCount).to.equal(1);
-		expect(redisMock.hDel.firstCall.args).to.deep.equal([ 'gp:in-progress', [ mockedMeasurementId1, mockedMeasurementId2 ] ]);
+		expect(redisMock.hDel.firstCall.args).to.deep.equal([ 'gp:in-progress', [ mockedMeasurementId1, mockedMeasurementId2, mockedMeasurementId3 ] ]);
+		expect(redisMock.zRem.callCount).to.equal(1);
+		expect(redisMock.zRem.firstCall.args).to.deep.equal([ 'gp:in-progress-timeouts', [ mockedMeasurementId1, mockedMeasurementId2, mockedMeasurementId3 ] ]);
 		expect(redisMock.del.callCount).to.equal(0);
 		expect(redisMock.json.set.callCount).to.equal(0);
 		expect(redisMock.compressedJsonCompress.callCount).to.equal(0);
@@ -203,7 +217,32 @@ describe('measurement store', () => {
 		expect(redisMock.markFinishedByTimeout.firstCall.args).to.deep.equal([ mockedMeasurementId1 ]);
 		expect(redisMock.hDel.callCount).to.equal(1);
 		expect(redisMock.hDel.firstCall.args).to.deep.equal([ 'gp:in-progress', [ mockedMeasurementId1 ] ]);
+		expect(redisMock.zRem.callCount).to.equal(1);
+		expect(redisMock.zRem.firstCall.args).to.deep.equal([ 'gp:in-progress-timeouts', [ mockedMeasurementId1 ] ]);
 		expect(enqueueForOffloadStub.callCount).to.equal(0);
+	});
+
+	it('should continue legacy timeout cleanup when the timeout index claim fails', async () => {
+		redisMock.claimTimedOutMeasurements.rejects(new Error('zset unavailable'));
+
+		redisMock.hScan.resolves({
+			cursor: '0',
+			entries: [
+				{ field: mockedMeasurementId1, value: relativeDayUtc(-1).valueOf() },
+			],
+		});
+
+		redisMock.markFinishedByTimeout.resolves(null);
+
+		const store = getMeasurementStore();
+		await store.cleanup();
+
+		expect(redisMock.markFinishedByTimeout.callCount).to.equal(1);
+		expect(redisMock.markFinishedByTimeout.firstCall.args).to.deep.equal([ mockedMeasurementId1 ]);
+		expect(redisMock.hDel.callCount).to.equal(1);
+		expect(redisMock.hDel.firstCall.args).to.deep.equal([ 'gp:in-progress', [ mockedMeasurementId1 ] ]);
+		expect(redisMock.zRem.callCount).to.equal(1);
+		expect(redisMock.zRem.firstCall.args).to.deep.equal([ 'gp:in-progress-timeouts', [ mockedMeasurementId1 ] ]);
 	});
 
 	it('should read compressed measurement results for the offloader batch path', async () => {
@@ -247,6 +286,13 @@ describe('measurement store', () => {
 		expect(redisMock.hSet.callCount).to.equal(2);
 
 		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', mockedMeasurementId1, now ]);
+		expect(redisMock.zAdd.callCount).to.equal(1);
+
+		expect(redisMock.zAdd.args[0]).to.deep.equal([ 'gp:in-progress-timeouts', {
+			score: now + 30_000,
+			value: mockedMeasurementId1,
+		}]);
+
 		expect(redisMock.set.callCount).to.equal(1);
 		expect(redisMock.set.args[0]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:probes_awaiting`, 4, { EX: 60 }]);
 		expect(redisMock.json.set.callCount).to.equal(3);
@@ -790,6 +836,8 @@ describe('measurement store', () => {
 		expect(redisMock.markFinished.args[0]).to.deep.equal([ mockedMeasurementId1 ]);
 		expect(redisMock.hDel.callCount).to.equal(1);
 		expect(redisMock.hDel.args[0]).to.deep.equal([ 'gp:in-progress', mockedMeasurementId1 ]);
+		expect(redisMock.zRem.callCount).to.equal(1);
+		expect(redisMock.zRem.args[0]).to.deep.equal([ 'gp:in-progress-timeouts', mockedMeasurementId1 ]);
 		expect(enqueueForOffloadStub.callCount).to.equal(1);
 		expect(enqueueForOffloadStub.firstCall.args).to.deep.equal([ finishedRecord ]);
 	});
