@@ -201,5 +201,35 @@ const markFinishedByTimeout = defineScript({
 	},
 });
 
-export const scripts = { recordProgress, recordProgressAppend, recordResult, markFinished, markFinishedByTimeout };
+const claimTimedOutMeasurements = defineScript({
+	NUMBER_OF_KEYS: 1,
+	SCRIPT: `
+	local keyMeasurementTimeouts = KEYS[1]
+	local now = ARGV[1]
+	local batchSize = tonumber(ARGV[2])
+	local leaseUntil = ARGV[3]
+
+	local ids = redis.call('ZRANGEBYSCORE', keyMeasurementTimeouts, '-inf', now, 'LIMIT', 0, batchSize)
+
+	for _, id in ipairs(ids) do
+		redis.call('ZADD', keyMeasurementTimeouts, leaseUntil, id)
+	end
+
+	return ids
+	`,
+	parseCommand (parser: CommandParser, key: string, now: number, batchSize: number, leaseUntil: number) {
+		parser.pushKey(key);
+
+		parser.push(
+			now.toString(),
+			batchSize.toString(),
+			leaseUntil.toString(),
+		);
+	},
+	transformReply (reply: string[]) {
+		return reply;
+	},
+});
+
+export const scripts = { recordProgress, recordProgressAppend, recordResult, markFinished, markFinishedByTimeout, claimTimedOutMeasurements };
 export type RedisScripts = typeof scripts;

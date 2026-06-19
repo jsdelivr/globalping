@@ -34,7 +34,7 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 	}
 
 	const measurementAgeSeconds = Math.floor((Date.now() - minutesSinceEpoch * 60_000) / 1000);
-	const isStableMeasurement = measurementAgeSeconds >= 2 * 60;
+	const isStableMeasurement = measurementAgeSeconds >= 3 * 60;
 
 	ctx.set(
 		'Cache-Control',
