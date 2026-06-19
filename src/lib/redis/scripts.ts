@@ -163,7 +163,7 @@ const markFinishedByTimeout = defineScript({
 	local timeoutMessage = ARGV[2]
 
 	local measurementJson = redis.pcall('JSON.GET', keyMeasurementResults, '$')
-	if measurementJson.err or not measurementJson then
+	if not measurementJson or measurementJson.err then
 		return
 	end
 
