@@ -1,8 +1,11 @@
 import type { AltIpsClient } from '../../lib/alt-ips-client.js';
+import { scopedLogger } from '../../lib/logger.js';
 import { altIpsSchema } from '../schema/probe-response-schema.js';
 import type { SocketProbe } from '../types.js';
 
-export const handleAltIps = (probe: SocketProbe, altIpsClient: AltIpsClient) => async (ipsToTokens: [string, string][], callback: (result: { addedAltIps: string[]; rejectedIpsToReasons: Record<string, string> }) => void) => {
+const logger = scopedLogger('alt-ips');
+
+export const handleAltIps = (probe: SocketProbe, altIpsClient: AltIpsClient) => async (ipsToTokens: [string, string][], callback?: (result: { addedAltIps: string[]; rejectedIpsToReasons: Record<string, string> }) => void) => {
 	const validation = altIpsSchema.validate(ipsToTokens);
 
 	if (validation.error) {
@@ -10,5 +13,10 @@ export const handleAltIps = (probe: SocketProbe, altIpsClient: AltIpsClient) => 
 	}
 
 	const { addedAltIps, rejectedIpsToReasons } = await altIpsClient.addAltIps(probe, validation.value);
-	callback({ addedAltIps, rejectedIpsToReasons });
+
+	if (callback) {
+		callback({ addedAltIps, rejectedIpsToReasons });
+	} else {
+		logger.warn('Missing ack callback for alt IP update.', { client: { id: probe.client, ip: probe.ipAddress }, probe: { uuid: probe.uuid } });
+	}
 };
