@@ -283,9 +283,7 @@ describe('measurement store', () => {
 			[ getProbe('z', '1.1.1.1'), getProbe('10', '2.2.2.2'), getProbe('x', '3.3.3.3'), getProbe('0', '4.4.4.4') ],
 		);
 
-		expect(redisMock.hSet.callCount).to.equal(2);
-
-		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:in-progress', mockedMeasurementId1, now ]);
+		expect(redisMock.hSet.callCount).to.equal(1);
 		expect(redisMock.zAdd.callCount).to.equal(1);
 
 		expect(redisMock.zAdd.args[0]).to.deep.equal([ 'gp:in-progress-timeouts', {
@@ -382,7 +380,7 @@ describe('measurement store', () => {
 
 		expect(redisMock.expire.args).to.deep.include([ `gp:m:{${mockedMeasurementId1}}:ips`, 604800 ]);
 
-		expect(redisMock.hSet.args[1]).to.deep.equal([ 'gp:test-to-probe', {
+		expect(redisMock.hSet.args[0]).to.deep.equal([ 'gp:test-to-probe', {
 			[`${mockedMeasurementId1}_0`]: 'z-z-z-z-z',
 			[`${mockedMeasurementId1}_1`]: '10-10-10-10-10',
 			[`${mockedMeasurementId1}_2`]: 'x-x-x-x-x',

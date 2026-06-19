@@ -142,7 +142,6 @@ export class MeasurementStore {
 		const testsToProbes = Object.fromEntries(Array.from(onlineProbesMap, ([ testId, probe ]) => [ `${id}_${testId}`, probe.uuid ]));
 
 		await Promise.all([
-			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
 			this.redis.zAdd('gp:in-progress-timeouts', { score: startTime.getTime() + timeoutTime, value: id }),
 			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: config.get<number>('measurement.timeout') + 30 }),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
