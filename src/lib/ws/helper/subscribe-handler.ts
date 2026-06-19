@@ -26,9 +26,11 @@ export const subscribeWithHandler = (socket: ServerSocket, event: string, method
 
 			if (Joi.isError(error)) {
 				metadata['details'] = error.details;
+				logger.warn(`Event "${event}" failed to handle`, metadata);
+				return;
 			}
 
-			logger.warn(`Event "${event}" failed to handle`, metadata);
+			logger.error(`Event "${event}" failed to handle`, error, metadata);
 		}
 	});
 };
