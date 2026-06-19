@@ -178,7 +178,6 @@ export class MeasurementStore {
 	async markFinished (id: string): Promise<MeasurementRecord | null> {
 		const [ recordBuffer ] = await Promise.all([
 			this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).markFinished(id),
-			this.redis.hDel('gp:in-progress', id),
 			this.redis.zRem('gp:in-progress-timeouts', id),
 		]);
 
@@ -201,10 +200,7 @@ export class MeasurementStore {
 			return parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
 		}, { concurrency: 32 })).filter(is.truthy);
 
-		await Promise.all([
-			this.redis.hDel('gp:in-progress', ids),
-			this.redis.zRem('gp:in-progress-timeouts', ids),
-		]);
+		await this.redis.zRem('gp:in-progress-timeouts', ids);
 
 		for (const measurement of measurements) {
 			this.offloader.enqueueForOffload(measurement);
@@ -215,36 +211,7 @@ export class MeasurementStore {
 		const SCAN_BATCH_SIZE = 5000;
 		const CLEANUP_LEASE_TIME = 30_000;
 		const now = Date.now();
-		const timeoutTime = config.get<number>('measurement.timeout') * 1000;
-
-		const scanLegacyInProgress = async () => {
-			const entries: { field: string; value: string }[] = [];
-			let cursor = '0';
-
-			do {
-				const result = await this.redis.hScan('gp:in-progress', cursor, { COUNT: SCAN_BATCH_SIZE });
-				cursor = result.cursor;
-				entries.push(...result.entries);
-			} while (cursor !== '0' && entries.length < SCAN_BATCH_SIZE);
-
-			return { cursor, entries };
-		};
-
-		const [ claimResult, scanResult ] = await Promise.allSettled([
-			this.redis.claimTimedOutMeasurements('gp:in-progress-timeouts', now, SCAN_BATCH_SIZE, now + CLEANUP_LEASE_TIME),
-			scanLegacyInProgress(),
-		]);
-		const claimedTimedOutIds = claimResult.status === 'fulfilled' ? claimResult.value : [];
-		const { cursor, entries } = scanResult.status === 'fulfilled' ? scanResult.value : { cursor: '0', entries: [] };
-
-		if (cursor !== '0') {
-			logger.warn(`There are more than ${SCAN_BATCH_SIZE} "in-progress" elements in db`);
-		}
-
-		const legacyTimedOutIds = entries
-			.filter(({ value: time }) => now - Number(time) >= timeoutTime)
-			.map(({ field: id }) => id);
-		const timedOutIds = _.uniq([ ...legacyTimedOutIds, ...claimedTimedOutIds ]);
+		const timedOutIds = await this.redis.claimTimedOutMeasurements('gp:in-progress-timeouts', now, SCAN_BATCH_SIZE, now + CLEANUP_LEASE_TIME);
 
 		await this.markFinishedByTimeout(timedOutIds);
 	}
