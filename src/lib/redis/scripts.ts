@@ -115,10 +115,14 @@ const recordResult = defineScript({
 	redis.call('JSON.SET', keyMeasurementResults, '$.updatedAt', date)
 
 	if probesAwaiting ~= 0 then
-		return 0
+		return
 	end
 
-	return 1
+	redis.call('DEL', keyMeasurementAwaiting)
+	redis.call('JSON.SET', keyMeasurementResults, '$.status', '"finished"')
+	redis.call('COMPRESSED.JSON.COMPRESS', keyMeasurementResults)
+
+	return redis.call('COMPRESSED.JSON.GET', keyMeasurementResults)
 	`,
 	parseCommand (parser: CommandParser, measurementId: string, testId: string, data: MeasurementResultMessage['result']) {
 		pushMeasurementKeys(parser, measurementId);
@@ -128,26 +132,6 @@ const recordResult = defineScript({
 			JSON.stringify(data),
 			`"${new Date().toISOString()}"`,
 		);
-	},
-	transformReply (reply: number) {
-		return Boolean(reply);
-	},
-});
-
-const markFinished = defineScript({
-	NUMBER_OF_KEYS: 2,
-	SCRIPT: `
-	local keyMeasurementResults = KEYS[1]
-	local keyMeasurementAwaiting = KEYS[2]
-
-	redis.call('DEL', keyMeasurementAwaiting)
-	redis.call('JSON.SET', keyMeasurementResults, '$.status', '"finished"')
-	redis.call('COMPRESSED.JSON.COMPRESS', keyMeasurementResults)
-
-	return redis.call('COMPRESSED.JSON.GET', keyMeasurementResults)
-	`,
-	parseCommand (parser: CommandParser, measurementId: string) {
-		pushMeasurementKeys(parser, measurementId);
 	},
 	transformReply (reply: Buffer | null) {
 		return reply;
@@ -231,5 +215,5 @@ const claimTimedOutMeasurements = defineScript({
 	},
 });
 
-export const scripts = { recordProgress, recordProgressAppend, recordResult, markFinished, markFinishedByTimeout, claimTimedOutMeasurements };
+export const scripts = { recordProgress, recordProgressAppend, recordResult, markFinishedByTimeout, claimTimedOutMeasurements };
 export type RedisScripts = typeof scripts;

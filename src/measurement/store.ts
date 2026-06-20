@@ -118,6 +118,7 @@ export class MeasurementStore {
 
 	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[], userType?: AuthenticateStateUser['userType'], exportMeta: ExportMeta = {}): Promise<string> {
 		const startTime = new Date();
+		const isFinishedImmediately = onlineProbesMap.size === 0;
 		const timeoutTime = config.get<number>('measurement.timeout') * 1000;
 		const results = this.probesToResults(allProbes, request.type);
 		const id = generateMeasurementId(startTime, userType);
@@ -126,7 +127,7 @@ export class MeasurementStore {
 		const measurement: Partial<MeasurementRecord> = {
 			id,
 			type: request.type,
-			status: 'in-progress',
+			status: isFinishedImmediately ? 'finished' : 'in-progress',
 			createdAt: startTime.toISOString(),
 			updatedAt: startTime.toISOString(),
 			target: request.target,
@@ -142,8 +143,8 @@ export class MeasurementStore {
 		const testsToProbes = Object.fromEntries(Array.from(onlineProbesMap, ([ testId, probe ]) => [ `${id}_${testId}`, probe.uuid ]));
 
 		await Promise.all([
-			this.redis.zAdd('gp:in-progress-timeouts', { score: startTime.getTime() + timeoutTime, value: id }),
-			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: config.get<number>('measurement.timeout') + 30 }),
+			!isFinishedImmediately && this.redis.zAdd('gp:in-progress-timeouts', { score: startTime.getTime() + timeoutTime, value: id }),
+			!isFinishedImmediately && this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: config.get<number>('measurement.timeout') + 30 }),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
 			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', allProbes.map(probe => probe.ipAddress)),
 			this.redis.json.set(getMeasurementKey(id, 'meta'), '$', exportMeta),
@@ -153,6 +154,11 @@ export class MeasurementStore {
 			!_.isEmpty(testsToProbes) && this.redis.hSet('gp:test-to-probe', testsToProbes),
 			!_.isEmpty(testsToProbes) && this.redis.hExpire('gp:test-to-probe', Object.keys(testsToProbes), config.get<number>('measurement.timeout') + 120),
 		]);
+
+		if (isFinishedImmediately) {
+			await this.redis.compressedJsonCompress(key);
+			this.offloader.enqueueForOffload(measurementWithoutDefaults as MeasurementRecord);
+		}
 
 		return id;
 	}
@@ -166,24 +172,11 @@ export class MeasurementStore {
 	}
 
 	async storeMeasurementResult (data: MeasurementResultMessage): Promise<MeasurementRecord | null> {
-		const isFinished = await this.redis.recordResult(data.measurementId, data.testId, data.result);
-
-		if (isFinished) {
-			return this.markFinished(data.measurementId);
-		}
-
-		return null;
-	}
-
-	async markFinished (id: string): Promise<MeasurementRecord | null> {
-		const [ recordBuffer ] = await Promise.all([
-			this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).markFinished(id),
-			this.redis.zRem('gp:in-progress-timeouts', id),
-		]);
-
+		const recordBuffer = await this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).recordResult(data.measurementId, data.testId, data.result);
 		const record = await parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
 
 		if (record) {
+			await this.redis.zRem('gp:in-progress-timeouts', data.measurementId);
 			this.offloader.enqueueForOffload(record);
 		}
 

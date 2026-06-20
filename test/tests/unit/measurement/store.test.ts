@@ -73,7 +73,6 @@ describe('measurement store', () => {
 		recordProgress: sandbox.stub(),
 		recordProgressAppend: sandbox.stub(),
 		recordResult: sandbox.stub(),
-		markFinished: sandbox.stub(),
 		markFinishedByTimeout: sandbox.stub(),
 		claimTimedOutMeasurements: sandbox.stub(),
 	};
@@ -463,7 +462,7 @@ describe('measurement store', () => {
 		]);
 	});
 
-	it('should initialize measurement object with the proper default in case of offline probes', async () => {
+	it('should create offline-only measurements as finished and offload them immediately', async () => {
 		const now = clock.pause().now;
 		const store = getMeasurementStore();
 		await store.createMeasurement(
@@ -485,7 +484,7 @@ describe('measurement store', () => {
 			{
 				id: mockedMeasurementId1,
 				type: 'ping',
-				status: 'in-progress',
+				status: 'finished',
 				createdAt: new Date(now).toISOString(),
 				updatedAt: new Date(now).toISOString(),
 				target: 'jsdelivr.com',
@@ -514,7 +513,12 @@ describe('measurement store', () => {
 			},
 		]);
 
-		expect(redisMock.set.args[0]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:probes_awaiting`, 0, { EX: 60 }]);
+		expect(redisMock.zAdd.callCount).to.equal(0);
+		expect(redisMock.set.callCount).to.equal(0);
+		expect(redisMock.compressedJsonCompress.callCount).to.equal(1);
+		expect(redisMock.compressedJsonCompress.args[0]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:results` ]);
+		expect(enqueueForOffloadStub.callCount).to.equal(1);
+		expect(enqueueForOffloadStub.firstCall.args).to.deep.equal([ redisMock.json.set.firstCall.args[2] ]);
 	});
 
 	it('should store non-default fields of the measurement request', async () => {
@@ -747,15 +751,14 @@ describe('measurement store', () => {
 		expect(redisMock.recordProgress.firstCall.args).to.deep.equal([ mockedMeasurementId1, 'testid', { rawOutput: 'output' }]);
 	});
 
-	it('should mark measurement as finished if storeMeasurementResult returned record', async () => {
-		redisMock.recordResult.resolves({});
+	it('should offload the final measurement record returned by recordResult', async () => {
 		const finishedRecord = {
 			id: mockedMeasurementId1,
 			type: 'ping',
 			status: 'finished',
 			results: [],
 		};
-		redisMock.markFinished.resolves(Buffer.concat([
+		redisMock.recordResult.resolves(Buffer.concat([
 			Buffer.from([ 0x00 ]),
 			Buffer.from(JSON.stringify(finishedRecord)),
 		]));
@@ -780,8 +783,6 @@ describe('measurement store', () => {
 
 		expect(record).to.deep.equal(finishedRecord);
 
-		expect(redisMock.markFinished.callCount).to.equal(1);
-		expect(redisMock.markFinished.args[0]).to.deep.equal([ mockedMeasurementId1 ]);
 		expect(redisMock.zRem.callCount).to.equal(1);
 		expect(redisMock.zRem.args[0]).to.deep.equal([ 'gp:in-progress-timeouts', mockedMeasurementId1 ]);
 		expect(enqueueForOffloadStub.callCount).to.equal(1);
@@ -806,8 +807,6 @@ describe('measurement store', () => {
 			'testid',
 			{ status: 'finished', rawOutput: 'output' },
 		]);
-
-		expect(redisMock.markFinished.callCount).to.equal(0);
 	});
 
 	it('getMeasurementBufferCompressed should prefer the offload DB for likely offloaded measurements', async () => {
