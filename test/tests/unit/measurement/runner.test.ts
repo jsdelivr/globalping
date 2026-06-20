@@ -381,10 +381,9 @@ describe('MeasurementRunner', () => {
 			},
 		} as unknown as ExtendedContext).catch((err: unknown) => err);
 		expect(err).to.deep.equal(createHttpError(422, 'No matching IPv4 probes available.', { type: 'no_probes_found' }));
-		expect(store.markFinished.callCount).to.equal(0);
 	});
 
-	it('should immideately call store.markFinished if there are no online probes', async () => {
+	it('should create the measurement without sending requests if there are no online probes', async () => {
 		const request = {
 			type: 'ping' as const,
 			target: 'jsdelivr.com',
@@ -415,7 +414,8 @@ describe('MeasurementRunner', () => {
 			state: {},
 		} as unknown as ExtendedContext);
 
-		expect(store.markFinished.callCount).to.equal(1);
-		expect(store.markFinished.args[0]).to.deep.equal([ mockedMeasurementId ]);
+		expect(store.createMeasurement.callCount).to.equal(1);
+		expect(to.callCount).to.equal(0);
+		expect(emit.callCount).to.equal(0);
 	});
 });
