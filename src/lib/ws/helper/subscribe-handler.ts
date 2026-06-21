@@ -1,5 +1,6 @@
 import Joi from 'joi';
 import { scopedLogger } from '../../logger.js';
+import { ProbeValidatorError } from '../../probe-validator.js';
 import type { ServerSocket } from '../server.js';
 
 const logger = scopedLogger('ws:handler:error');
@@ -26,6 +27,11 @@ export const subscribeWithHandler = (socket: ServerSocket, event: string, method
 
 			if (Joi.isError(error)) {
 				metadata['details'] = error.details;
+				logger.warn(`Event "${event}" failed to handle`, metadata);
+				return;
+			}
+
+			if (error instanceof ProbeValidatorError) {
 				logger.warn(`Event "${event}" failed to handle`, metadata);
 				return;
 			}

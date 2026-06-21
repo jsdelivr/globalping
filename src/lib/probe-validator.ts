@@ -2,6 +2,8 @@ import config from 'config';
 import { TTLCache } from '@isaacs/ttlcache';
 import { type RedisCluster, getMeasurementRedisClient } from './redis/measurement-client.js';
 
+export class ProbeValidatorError extends Error {}
+
 export class ProbeValidator {
 	private readonly measurementIdToTests = new TTLCache<string, Map<string, string>>({
 		ttl: (config.get<number>('measurement.timeout') + 30) * 1000,
@@ -28,9 +30,9 @@ export class ProbeValidator {
 		}
 
 		if (!probeId) {
-			throw new Error(`Probe ID not found for measurement ID: ${measurementId}, test ID: ${testId}`);
+			throw new ProbeValidatorError(`Probe ID not found for measurement ID: ${measurementId}, test ID: ${testId}`);
 		} else if (probeId !== probeUuid) {
-			throw new Error(`Probe ID is wrong for measurement ID: ${measurementId}, test ID: ${testId}. Expected: ${probeId}, actual: ${probeUuid}`);
+			throw new ProbeValidatorError(`Probe ID is wrong for measurement ID: ${measurementId}, test ID: ${testId}. Expected: ${probeId}, actual: ${probeUuid}`);
 		}
 	}
 
