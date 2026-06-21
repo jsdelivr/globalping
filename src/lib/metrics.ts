@@ -61,7 +61,7 @@ export class MetricsAgent {
 		this.registerAsyncCollector(`gp.measurement.stored.count`, async () => {
 			const [ dbSize, awaitingSize ] = await Promise.all([
 				this.redis.reduceMasters<number>(async (accumulator, client) => accumulator + await client.dbSize(), 0),
-				this.redis.hLen('gp:in-progress'),
+				this.redis.zCard('gp:in-progress-timeouts'),
 			]);
 
 			// running measurements use 3 keys

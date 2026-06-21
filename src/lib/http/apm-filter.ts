@@ -48,7 +48,7 @@ apmAgent.addSpanFilter((payload) => {
 
 apmAgent.addErrorFilter((payload) => {
 	if (
-		(payload['custom'] as { scope?: unknown } | undefined)?.scope
+		(payload['context'] as { custom?: { scope?: unknown } } | undefined)?.custom?.scope
 		|| !(payload['exception'] as { handled?: unknown } | undefined)?.handled
 	) {
 		return payload;

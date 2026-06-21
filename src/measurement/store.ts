@@ -118,6 +118,8 @@ export class MeasurementStore {
 
 	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[], userType?: AuthenticateStateUser['userType'], exportMeta: ExportMeta = {}): Promise<string> {
 		const startTime = new Date();
+		const isFinishedImmediately = onlineProbesMap.size === 0;
+		const timeoutTime = config.get<number>('measurement.timeout') * 1000;
 		const results = this.probesToResults(allProbes, request.type);
 		const id = generateMeasurementId(startTime, userType);
 		const key = getMeasurementKey(id);
@@ -125,7 +127,7 @@ export class MeasurementStore {
 		const measurement: Partial<MeasurementRecord> = {
 			id,
 			type: request.type,
-			status: 'in-progress',
+			status: isFinishedImmediately ? 'finished' : 'in-progress',
 			createdAt: startTime.toISOString(),
 			updatedAt: startTime.toISOString(),
 			target: request.target,
@@ -141,8 +143,8 @@ export class MeasurementStore {
 		const testsToProbes = Object.fromEntries(Array.from(onlineProbesMap, ([ testId, probe ]) => [ `${id}_${testId}`, probe.uuid ]));
 
 		await Promise.all([
-			this.redis.hSet('gp:in-progress', id, startTime.getTime()),
-			this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: config.get<number>('measurement.timeout') + 30 }),
+			!isFinishedImmediately && this.redis.zAdd('gp:in-progress-timeouts', { score: startTime.getTime() + timeoutTime, value: id }),
+			!isFinishedImmediately && this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: config.get<number>('measurement.timeout') + 30 }),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
 			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', allProbes.map(probe => probe.ipAddress)),
 			this.redis.json.set(getMeasurementKey(id, 'meta'), '$', exportMeta),
@@ -152,6 +154,11 @@ export class MeasurementStore {
 			!_.isEmpty(testsToProbes) && this.redis.hSet('gp:test-to-probe', testsToProbes),
 			!_.isEmpty(testsToProbes) && this.redis.hExpire('gp:test-to-probe', Object.keys(testsToProbes), config.get<number>('measurement.timeout') + 120),
 		]);
+
+		if (isFinishedImmediately) {
+			await this.redis.compressedJsonCompress(key);
+			this.offloader.enqueueForOffload(measurementWithoutDefaults as MeasurementRecord);
+		}
 
 		return id;
 	}
@@ -165,24 +172,11 @@ export class MeasurementStore {
 	}
 
 	async storeMeasurementResult (data: MeasurementResultMessage): Promise<MeasurementRecord | null> {
-		const isFinished = await this.redis.recordResult(data.measurementId, data.testId, data.result);
-
-		if (isFinished) {
-			return this.markFinished(data.measurementId);
-		}
-
-		return null;
-	}
-
-	async markFinished (id: string): Promise<MeasurementRecord | null> {
-		const [ recordBuffer ] = await Promise.all([
-			this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).markFinished(id),
-			this.redis.hDel('gp:in-progress', id),
-		]);
-
+		const recordBuffer = await this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).recordResult(data.measurementId, data.testId, data.result);
 		const record = await parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
 
 		if (record) {
+			await this.redis.zRem('gp:in-progress-timeouts', data.measurementId);
 			this.offloader.enqueueForOffload(record);
 		}
 
@@ -199,7 +193,7 @@ export class MeasurementStore {
 			return parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
 		}, { concurrency: 32 })).filter(is.truthy);
 
-		await this.redis.hDel('gp:in-progress', ids);
+		await this.redis.zRem('gp:in-progress-timeouts', ids);
 
 		for (const measurement of measurements) {
 			this.offloader.enqueueForOffload(measurement);
@@ -208,16 +202,9 @@ export class MeasurementStore {
 
 	async cleanup () {
 		const SCAN_BATCH_SIZE = 5000;
-		const timeoutTime = config.get<number>('measurement.timeout') * 1000;
-		const { cursor, entries } = await this.redis.hScan('gp:in-progress', '0', { COUNT: SCAN_BATCH_SIZE });
-
-		if (cursor !== '0') {
-			logger.warn(`There are more than ${SCAN_BATCH_SIZE} "in-progress" elements in db`);
-		}
-
-		const timedOutIds = entries
-			.filter(({ value: time }) => Date.now() - Number(time) >= timeoutTime)
-			.map(({ field: id }) => id);
+		const CLEANUP_LEASE_TIME = 30_000;
+		const now = Date.now();
+		const timedOutIds = await this.redis.claimTimedOutMeasurements('gp:in-progress-timeouts', now, SCAN_BATCH_SIZE, now + CLEANUP_LEASE_TIME);
 
 		await this.markFinishedByTimeout(timedOutIds);
 	}

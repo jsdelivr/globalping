@@ -115,10 +115,14 @@ const recordResult = defineScript({
 	redis.call('JSON.SET', keyMeasurementResults, '$.updatedAt', date)
 
 	if probesAwaiting ~= 0 then
-		return 0
+		return
 	end
 
-	return 1
+	redis.call('DEL', keyMeasurementAwaiting)
+	redis.call('JSON.SET', keyMeasurementResults, '$.status', '"finished"')
+	redis.call('COMPRESSED.JSON.COMPRESS', keyMeasurementResults)
+
+	return redis.call('COMPRESSED.JSON.GET', keyMeasurementResults)
 	`,
 	parseCommand (parser: CommandParser, measurementId: string, testId: string, data: MeasurementResultMessage['result']) {
 		pushMeasurementKeys(parser, measurementId);
@@ -128,26 +132,6 @@ const recordResult = defineScript({
 			JSON.stringify(data),
 			`"${new Date().toISOString()}"`,
 		);
-	},
-	transformReply (reply: number) {
-		return Boolean(reply);
-	},
-});
-
-const markFinished = defineScript({
-	NUMBER_OF_KEYS: 2,
-	SCRIPT: `
-	local keyMeasurementResults = KEYS[1]
-	local keyMeasurementAwaiting = KEYS[2]
-
-	redis.call('DEL', keyMeasurementAwaiting)
-	redis.call('JSON.SET', keyMeasurementResults, '$.status', '"finished"')
-	redis.call('COMPRESSED.JSON.COMPRESS', keyMeasurementResults)
-
-	return redis.call('COMPRESSED.JSON.GET', keyMeasurementResults)
-	`,
-	parseCommand (parser: CommandParser, measurementId: string) {
-		pushMeasurementKeys(parser, measurementId);
 	},
 	transformReply (reply: Buffer | null) {
 		return reply;
@@ -163,7 +147,7 @@ const markFinishedByTimeout = defineScript({
 	local timeoutMessage = ARGV[2]
 
 	local measurementJson = redis.pcall('JSON.GET', keyMeasurementResults, '$')
-	if measurementJson.err or not measurementJson then
+	if not measurementJson or measurementJson.err then
 		return
 	end
 
@@ -201,5 +185,35 @@ const markFinishedByTimeout = defineScript({
 	},
 });
 
-export const scripts = { recordProgress, recordProgressAppend, recordResult, markFinished, markFinishedByTimeout };
+const claimTimedOutMeasurements = defineScript({
+	NUMBER_OF_KEYS: 1,
+	SCRIPT: `
+	local keyMeasurementTimeouts = KEYS[1]
+	local now = ARGV[1]
+	local batchSize = tonumber(ARGV[2])
+	local leaseUntil = ARGV[3]
+
+	local ids = redis.call('ZRANGEBYSCORE', keyMeasurementTimeouts, '-inf', now, 'LIMIT', 0, batchSize)
+
+	for _, id in ipairs(ids) do
+		redis.call('ZADD', keyMeasurementTimeouts, leaseUntil, id)
+	end
+
+	return ids
+	`,
+	parseCommand (parser: CommandParser, key: string, now: number, batchSize: number, leaseUntil: number) {
+		parser.pushKey(key);
+
+		parser.push(
+			now.toString(),
+			batchSize.toString(),
+			leaseUntil.toString(),
+		);
+	},
+	transformReply (reply: string[]) {
+		return reply;
+	},
+});
+
+export const scripts = { recordProgress, recordProgressAppend, recordResult, markFinishedByTimeout, claimTimedOutMeasurements };
 export type RedisScripts = typeof scripts;

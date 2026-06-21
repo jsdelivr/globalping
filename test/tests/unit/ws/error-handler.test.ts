@@ -12,6 +12,8 @@ class MockSocket {
 
 	public request: any = {};
 
+	public data: any = {};
+
 	public handshake: any = {
 		query: {},
 	};
