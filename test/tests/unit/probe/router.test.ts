@@ -44,6 +44,7 @@ describe('probe router', () => {
 
 	const setProbes = (probes: ServerProbe[]) => fetchProbesMockHandler(probes);
 	const geoLookupMock = sandbox.stub();
+	const geoLookupQueue: Array<Partial<ProbeLocation>> = [];
 	const getCloudTagsMock = sandbox.stub();
 	const store = {
 		getMeasurementIps: sandbox.stub().resolves([]),
@@ -53,7 +54,10 @@ describe('probe router', () => {
 	const mockedMeasurementId = '2E2SZgEwA6W6HvzlT0001z9VK';
 
 	let buildProbeInternal: (socket: RemoteProbeSocket, probeIpLimit: any) => Promise<ServerProbe>;
-	const mockProbeIpLimit = { verifyIpLimit: sandbox.stub().resolves() };
+	const mockProbeIpLimit = {
+		verifyIpLimit: sandbox.stub().resolves(),
+		verifyAsnLimit: sandbox.stub().resolves(),
+	};
 
 	const buildProbe = async (
 		id: string,
@@ -74,7 +78,7 @@ describe('probe router', () => {
 			},
 			data: {},
 		};
-		geoLookupMock.resolves({ ...defaultLocation, ...location });
+		geoLookupQueue.push({ ...defaultLocation, ...location });
 
 		socket.data!.probe = {
 			...await buildProbeInternal(socket as RemoteProbeSocket, mockProbeIpLimit),
@@ -97,6 +101,8 @@ describe('probe router', () => {
 		sandbox.reset();
 		getCloudTagsMock.returns([]);
 		store.getMeasurementIps.resolves([]);
+		geoLookupQueue.length = 0;
+		geoLookupMock.callsFake(() => Promise.resolve(geoLookupQueue.shift()));
 	});
 
 	after(() => {
