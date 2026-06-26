@@ -28,6 +28,8 @@ export const buildProbe = async (socket: Socket, probeIpLimit: ProbeIpLimit): Pr
 		throw new ProbeError(`vpn detected: ${ip}`);
 	}
 
+	await probeIpLimit.verifyIpLimit(ip, socket.id);
+
 	let ipInfo;
 
 	if (process.env['TEST_MODE'] === 'perf' || process.env['TEST_MODE'] === 'e2e') {
@@ -41,8 +43,6 @@ export const buildProbe = async (socket: Socket, probeIpLimit: ProbeIpLimit): Pr
 		throw new Error(`couldn't detect probe location for ip ${ip}`);
 	}
 
-	await probeIpLimit.verifyIpLimit(ip, socket.id);
-
 	const location = getLocation(ipInfo);
 
 	const tags = getTags(ip, ipInfo);
@@ -50,7 +50,7 @@ export const buildProbe = async (socket: Socket, probeIpLimit: ProbeIpLimit): Pr
 
 	const index = getIndex(location, normalizedTags);
 
-	return {
+	const probe: SocketProbe = {
 		client: socket.id,
 		version: handshake.version,
 		nodeVersion: handshake.nodeVersion,
@@ -83,6 +83,10 @@ export const buildProbe = async (socket: Socket, probeIpLimit: ProbeIpLimit): Pr
 		adoptionToken: handshake.adoptionToken,
 		isProxy: ipInfo.isProxy,
 	};
+
+	await probeIpLimit.verifyAsnLimit(probe);
+
+	return probe;
 };
 
 export const updateProbeAltIps = (probe: SocketProbe, altIps: string[]): void => {

@@ -100,6 +100,10 @@ export class AdoptionToken {
 		return user;
 	}
 
+	getUserIdByToken (token: string): string | null {
+		return this.tokensToUsers.get(token)?.id ?? null;
+	}
+
 	async validateToken (token: string, probe: SocketProbe): Promise<{ message: string | null; level?: 'info' | 'warn'; adopted: boolean }> {
 		const user = await this.getUserByToken(token);
 
