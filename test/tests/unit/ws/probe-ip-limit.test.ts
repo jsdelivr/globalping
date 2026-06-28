@@ -61,13 +61,13 @@ describe('ProbeIpLimit', () => {
 			expect(disconnectBySocketId.calledOnceWithExactly('c')).to.equal(true);
 		});
 
-		it('should disconnect duplicates with alt ip', async () => {
+		it('should disconnect the primary-IP holder when another probe holds the same IP as an alt', async () => {
 			fetchProbes.resolves([ getProbe('a', '1.1.1.1'), getProbe('b', '2.2.2.2'), getProbe('c', '3.3.3.3', { altIpAddresses: [ '2.2.2.2' ] }) ]);
 
 			const probeIpLimit = createProbeIpLimit();
 			await probeIpLimit.syncIpLimit();
 
-			expect(disconnectBySocketId.calledOnceWithExactly('c')).to.equal(true);
+			expect(disconnectBySocketId.calledOnceWithExactly('b')).to.equal(true);
 		});
 
 		it('should disconnect duplicates across alt ips', async () => {
@@ -106,6 +106,30 @@ describe('ProbeIpLimit', () => {
 			await probeIpLimit.syncIpLimit();
 
 			expect(disconnectBySocketId.called).to.equal(false);
+		});
+
+		it('should keep probes whose alt IPs share a /64 (no primary in the range)', async () => {
+			fetchProbes.resolves([
+				getProbe('a', '1.1.1.1', { altIpAddresses: [ '2001:db8:0:1::1' ] }),
+				getProbe('b', '2.2.2.2', { altIpAddresses: [ '2001:db8:0:1::2' ] }),
+			]);
+
+			const probeIpLimit = createProbeIpLimit();
+			await probeIpLimit.syncIpLimit();
+
+			expect(disconnectBySocketId.called).to.equal(false);
+		});
+
+		it('should disconnect the primary-IP holder when another probe holds an alt IP in the same /64', async () => {
+			fetchProbes.resolves([
+				getProbe('a', '2001:db8:0:1::1'),
+				getProbe('b', '2.2.2.2', { altIpAddresses: [ '2001:db8:0:1::2' ] }),
+			]);
+
+			const probeIpLimit = createProbeIpLimit();
+			await probeIpLimit.syncIpLimit();
+
+			expect(disconnectBySocketId.calledOnceWithExactly('a')).to.equal(true);
 		});
 	});
 

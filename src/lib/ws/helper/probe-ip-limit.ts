@@ -76,19 +76,51 @@ export class ProbeIpLimit {
 		}
 
 		const probes = await this.fetchProbes();
-		const ipKeyToClients = this.indexIpKeys(probes);
+		const { ipToClients, primaryIpToClients, rangeToClients, primaryRangeToClients } = this.indexIpsForSync(probes);
 		const asnCityToIpKeys = this.indexAsnCity(probes);
 		const socketIdsToDisconnect = new Set<string>();
 
-		for (const clients of ipKeyToClients.values()) {
-			if (clients.size > 1) {
-				// Sorting socket ids so every worker keeps the same "first" probe and agrees on who to disconnect.
-				[ ...clients ].sort().slice(1).forEach(socketId => socketIdsToDisconnect.add(socketId));
+		// Exact IP duplicates: keep one, preferring an alt-IP holder over the primary-IP holder.
+		for (const [ ip, clients ] of ipToClients) {
+			if (clients.size <= 1) {
+				continue;
+			}
+
+			const alts = [ ...clients ].filter(socketId => !primaryIpToClients.get(ip)?.has(socketId));
+			const survivor = lowestSocketId(alts.length > 0 ? alts : [ ...clients ]);
+
+			for (const socketId of clients) {
+				if (socketId !== survivor) {
+					socketIdsToDisconnect.add(socketId);
+				}
 			}
 		}
 
+		// /64 range duplicates: a primary IP must be alone in its range; alt IPs may share a range with each other.
+		for (const [ ipKey, clients ] of rangeToClients) {
+			if (!ipKey.endsWith('/64')) {
+				continue;
+			}
+
+			const live = [ ...clients ].filter(socketId => !socketIdsToDisconnect.has(socketId));
+			const primaries = live.filter(socketId => primaryRangeToClients.get(ipKey)?.has(socketId));
+
+			if (live.length <= 1 || primaries.length === 0) {
+				continue;
+			}
+
+			// If there is at least one alt IP => disconnect all primaries, if all are primaries => keep one primary.
+			const primarySurvivor = live.length > primaries.length ? null : lowestSocketId(primaries);
+
+			for (const socketId of primaries) {
+				if (socketId !== primarySurvivor) {
+					socketIdsToDisconnect.add(socketId);
+				}
+			}
+		}
+
+		// ASN duplicates: Allowing only `asnCityPerUser` number of ipKeys per user+asn+city.
 		for (const ipKeyClients of asnCityToIpKeys.values()) {
-			// Allowing only asnCityPerUser number of ipKeys (clientGroups) per user+asn+city.
 			const clientsGroups = [ ...ipKeyClients.values() ]
 				.map(clients => [ ...clients ].filter(socketId => !socketIdsToDisconnect.has(socketId)))
 				.filter(clients => clients.length > 0);
@@ -179,6 +211,29 @@ export class ProbeIpLimit {
 		}
 
 		return ipKeyToClients;
+	}
+
+	// Indexes the list by exact IP and by /64 range, tracking which clients hold each as their primary IP.
+	private indexIpsForSync (probes: ServerProbe[]) {
+		const ipToClients = new Map<string, Set<string>>();
+		const primaryIpToClients = new Map<string, Set<string>>();
+		const rangeToClients = new Map<string, Set<string>>();
+		const primaryRangeToClients = new Map<string, Set<string>>();
+
+		for (const probe of probes) {
+			const primaryIpKey = getIpKey(probe.ipAddress);
+			addToSet(ipToClients, probe.ipAddress, probe.client);
+			addToSet(primaryIpToClients, probe.ipAddress, probe.client);
+			addToSet(rangeToClients, primaryIpKey, probe.client);
+			addToSet(primaryRangeToClients, primaryIpKey, probe.client);
+
+			for (const altIp of probe.altIpAddresses) {
+				addToSet(ipToClients, altIp, probe.client);
+				addToSet(rangeToClients, getIpKey(altIp), probe.client);
+			}
+		}
+
+		return { ipToClients, primaryIpToClients, rangeToClients, primaryRangeToClients };
 	}
 
 	// Keeping user+asn+city uniqueness by ipKey, not by client, to handle reconnecting probes.
