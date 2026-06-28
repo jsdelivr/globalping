@@ -64,13 +64,13 @@ export class ProbeIpLimit {
 		clearTimeout(this.timer);
 
 		this.timer = setTimeout(() => {
-			this.syncIpLimit()
+			this.syncProbeLimits()
 				.finally(() => this.scheduleSync())
-				.catch(error => logger.error('Error in ProbeIpLimit.syncIpLimit()', error));
+				.catch(error => logger.error('Error in ProbeIpLimit.syncProbeLimits()', error));
 		}, 60_000 * 2 * Math.random() * numberOfProcesses).unref();
 	}
 
-	async syncIpLimit () {
+	async syncProbeLimits () {
 		if (process.env['FAKE_PROBE_IP']) {
 			return;
 		}

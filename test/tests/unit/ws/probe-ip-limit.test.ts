@@ -54,12 +54,12 @@ describe('ProbeIpLimit', () => {
 		});
 	});
 
-	describe('syncIpLimit (one probe per IPv4 or IPv6/64)', () => {
+	describe('syncProbeLimits (one probe per IPv4 or IPv6/64)', () => {
 		it('should disconnect duplicates', async () => {
 			getRawProbes.returns([ getProbe('a', '1.1.1.1'), getProbe('b', '2.2.2.2'), getProbe('c', '2.2.2.2') ]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.calledOnceWithExactly('c')).to.equal(true);
 		});
@@ -68,7 +68,7 @@ describe('ProbeIpLimit', () => {
 			getRawProbes.returns([ getProbe('a', '1.1.1.1'), getProbe('b', '2.2.2.2'), getProbe('c', '3.3.3.3', { altIpAddresses: [ '2.2.2.2' ] }) ]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.calledOnceWithExactly('b')).to.equal(true);
 		});
@@ -77,7 +77,7 @@ describe('ProbeIpLimit', () => {
 			getRawProbes.returns([ getProbe('a', '1.1.1.1'), getProbe('b', '2.2.2.2', { altIpAddresses: [ '4.4.4.4' ] }), getProbe('c', '3.3.3.3', { altIpAddresses: [ '4.4.4.4' ] }) ]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.calledOnceWithExactly('c')).to.equal(true);
 		});
@@ -86,7 +86,7 @@ describe('ProbeIpLimit', () => {
 			getRawProbes.returns([ getProbe('a', '1.1.1.1'), getProbe('c', '2.2.2.2'), getProbe('b', '2.2.2.2'), getProbe('d', '2.2.2.2') ]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.calledTwice).to.equal(true);
 			expect(disconnectBySocketId.firstCall.args[0]).to.equal('c');
@@ -97,7 +97,7 @@ describe('ProbeIpLimit', () => {
 			getRawProbes.returns([ getProbe('a', '2001:db8:0:1::1'), getProbe('b', '2001:db8:0:1::ffff') ]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.calledOnceWithExactly('b')).to.equal(true);
 		});
@@ -106,7 +106,7 @@ describe('ProbeIpLimit', () => {
 			getRawProbes.returns([ getProbe('a', '2001:db8:0:1::1'), getProbe('b', '2001:db8:0:2::1') ]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.called).to.equal(false);
 		});
@@ -118,7 +118,7 @@ describe('ProbeIpLimit', () => {
 			]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.called).to.equal(false);
 		});
@@ -130,13 +130,13 @@ describe('ProbeIpLimit', () => {
 			]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.calledOnceWithExactly('a')).to.equal(true);
 		});
 	});
 
-	describe('syncIpLimit (max 2 per user + asn + city)', () => {
+	describe('syncProbeLimits (max 2 per user + asn + city)', () => {
 		it('should disconnect probes beyond the limit, keeping the earliest ids', async () => {
 			getRawProbes.returns([
 				getProbe('a', '2001:db8:0:1::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
@@ -145,7 +145,7 @@ describe('ProbeIpLimit', () => {
 			]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.calledOnceWithExactly('c')).to.equal(true);
 		});
@@ -158,7 +158,7 @@ describe('ProbeIpLimit', () => {
 			]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.called).to.equal(false);
 		});
@@ -171,7 +171,7 @@ describe('ProbeIpLimit', () => {
 			]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.called).to.equal(false);
 		});
@@ -184,7 +184,7 @@ describe('ProbeIpLimit', () => {
 			]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.calledOnceWithExactly('c')).to.equal(true);
 		});
@@ -197,7 +197,7 @@ describe('ProbeIpLimit', () => {
 			]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.called).to.equal(false);
 		});
@@ -210,7 +210,7 @@ describe('ProbeIpLimit', () => {
 			]);
 
 			const probeIpLimit = createProbeIpLimit();
-			await probeIpLimit.syncIpLimit();
+			await probeIpLimit.syncProbeLimits();
 
 			expect(disconnectBySocketId.calledOnceWithExactly('c')).to.equal(true);
 		});
