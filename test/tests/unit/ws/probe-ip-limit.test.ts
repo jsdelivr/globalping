@@ -6,18 +6,21 @@ import { ProbeIpLimit, getIpKey } from '../../../../src/lib/ws/helper/probe-ip-l
 describe('ProbeIpLimit', () => {
 	const sandbox = sinon.createSandbox();
 	const fetchProbes = sandbox.stub();
+	const getRawProbes = sandbox.stub();
+	const syncedProbeList = { fetchProbes, getRawProbes } as any;
 	const disconnectBySocketId = sandbox.stub();
 	const getByIp = sandbox.stub();
 	const getByUuid = sandbox.stub();
 	const getUserIdByToken = sandbox.stub();
 	const adoptedProbes = { getByIp, getByUuid } as any;
 	const adoptionToken = { getUserIdByToken } as any;
-	const createProbeIpLimit = () => new ProbeIpLimit(fetchProbes, disconnectBySocketId, adoptedProbes, adoptionToken);
+	const createProbeIpLimit = () => new ProbeIpLimit(syncedProbeList, disconnectBySocketId, adoptedProbes, adoptionToken);
 
 	beforeEach(() => {
 		getByIp.returns(null);
 		getByUuid.returns(null);
 		getUserIdByToken.returnsArg(0);
+		getRawProbes.returns([]);
 	});
 
 	afterEach(() => {
@@ -53,7 +56,7 @@ describe('ProbeIpLimit', () => {
 
 	describe('syncIpLimit (one probe per IPv4 or IPv6/64)', () => {
 		it('should disconnect duplicates', async () => {
-			fetchProbes.resolves([ getProbe('a', '1.1.1.1'), getProbe('b', '2.2.2.2'), getProbe('c', '2.2.2.2') ]);
+			getRawProbes.returns([ getProbe('a', '1.1.1.1'), getProbe('b', '2.2.2.2'), getProbe('c', '2.2.2.2') ]);
 
 			const probeIpLimit = createProbeIpLimit();
 			await probeIpLimit.syncIpLimit();
@@ -62,7 +65,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should disconnect the primary-IP holder when another probe holds the same IP as an alt', async () => {
-			fetchProbes.resolves([ getProbe('a', '1.1.1.1'), getProbe('b', '2.2.2.2'), getProbe('c', '3.3.3.3', { altIpAddresses: [ '2.2.2.2' ] }) ]);
+			getRawProbes.returns([ getProbe('a', '1.1.1.1'), getProbe('b', '2.2.2.2'), getProbe('c', '3.3.3.3', { altIpAddresses: [ '2.2.2.2' ] }) ]);
 
 			const probeIpLimit = createProbeIpLimit();
 			await probeIpLimit.syncIpLimit();
@@ -71,7 +74,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should disconnect duplicates across alt ips', async () => {
-			fetchProbes.resolves([ getProbe('a', '1.1.1.1'), getProbe('b', '2.2.2.2', { altIpAddresses: [ '4.4.4.4' ] }), getProbe('c', '3.3.3.3', { altIpAddresses: [ '4.4.4.4' ] }) ]);
+			getRawProbes.returns([ getProbe('a', '1.1.1.1'), getProbe('b', '2.2.2.2', { altIpAddresses: [ '4.4.4.4' ] }), getProbe('c', '3.3.3.3', { altIpAddresses: [ '4.4.4.4' ] }) ]);
 
 			const probeIpLimit = createProbeIpLimit();
 			await probeIpLimit.syncIpLimit();
@@ -80,7 +83,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should preserve socket with the earliest id', async () => {
-			fetchProbes.resolves([ getProbe('a', '1.1.1.1'), getProbe('c', '2.2.2.2'), getProbe('b', '2.2.2.2'), getProbe('d', '2.2.2.2') ]);
+			getRawProbes.returns([ getProbe('a', '1.1.1.1'), getProbe('c', '2.2.2.2'), getProbe('b', '2.2.2.2'), getProbe('d', '2.2.2.2') ]);
 
 			const probeIpLimit = createProbeIpLimit();
 			await probeIpLimit.syncIpLimit();
@@ -91,7 +94,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should disconnect a probe sharing the /64 of another (IPv6)', async () => {
-			fetchProbes.resolves([ getProbe('a', '2001:db8:0:1::1'), getProbe('b', '2001:db8:0:1::ffff') ]);
+			getRawProbes.returns([ getProbe('a', '2001:db8:0:1::1'), getProbe('b', '2001:db8:0:1::ffff') ]);
 
 			const probeIpLimit = createProbeIpLimit();
 			await probeIpLimit.syncIpLimit();
@@ -100,7 +103,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should keep probes in different /64s', async () => {
-			fetchProbes.resolves([ getProbe('a', '2001:db8:0:1::1'), getProbe('b', '2001:db8:0:2::1') ]);
+			getRawProbes.returns([ getProbe('a', '2001:db8:0:1::1'), getProbe('b', '2001:db8:0:2::1') ]);
 
 			const probeIpLimit = createProbeIpLimit();
 			await probeIpLimit.syncIpLimit();
@@ -109,7 +112,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should keep probes whose alt IPs share a /64 (no primary in the range)', async () => {
-			fetchProbes.resolves([
+			getRawProbes.returns([
 				getProbe('a', '1.1.1.1', { altIpAddresses: [ '2001:db8:0:1::1' ] }),
 				getProbe('b', '2.2.2.2', { altIpAddresses: [ '2001:db8:0:1::2' ] }),
 			]);
@@ -121,7 +124,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should disconnect the primary-IP holder when another probe holds an alt IP in the same /64', async () => {
-			fetchProbes.resolves([
+			getRawProbes.returns([
 				getProbe('a', '2001:db8:0:1::1'),
 				getProbe('b', '2.2.2.2', { altIpAddresses: [ '2001:db8:0:1::2' ] }),
 			]);
@@ -135,7 +138,7 @@ describe('ProbeIpLimit', () => {
 
 	describe('syncIpLimit (max 2 per user + asn + city)', () => {
 		it('should disconnect probes beyond the limit, keeping the earliest ids', async () => {
-			fetchProbes.resolves([
+			getRawProbes.returns([
 				getProbe('a', '2001:db8:0:1::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
 				getProbe('b', '2001:db8:0:2::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
 				getProbe('c', '2001:db8:0:3::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
@@ -148,7 +151,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should not count probes in a different asn or city', async () => {
-			fetchProbes.resolves([
+			getRawProbes.returns([
 				getProbe('a', '2001:db8:0:1::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
 				getProbe('b', '2001:db8:0:2::1', { adoptionToken: 'token', asn: 200, city: 'Paris' }),
 				getProbe('c', '2001:db8:0:3::1', { adoptionToken: 'token', asn: 100, city: 'Berlin' }),
@@ -161,7 +164,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should not count probes of a different (or missing) adoption token', async () => {
-			fetchProbes.resolves([
+			getRawProbes.returns([
 				getProbe('a', '2001:db8:0:1::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
 				getProbe('b', '2001:db8:0:2::1', { adoptionToken: 'other', asn: 100, city: 'Paris' }),
 				getProbe('c', '2001:db8:0:3::1', { asn: 100, city: 'Paris' }),
@@ -174,7 +177,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should group probes of the same owner regardless of the adoption token', async () => {
-			fetchProbes.resolves([
+			getRawProbes.returns([
 				getProbe('a', '2001:db8:0:1::1', { owner: { id: 'user1' }, adoptionToken: 'token', asn: 100, city: 'Paris' }),
 				getProbe('b', '2001:db8:0:2::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
 				getProbe('c', '2001:db8:0:3::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
@@ -187,7 +190,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should not count probes of a different owner', async () => {
-			fetchProbes.resolves([
+			getRawProbes.returns([
 				getProbe('a', '2001:db8:0:1::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
 				getProbe('b', '2001:db8:0:2::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
 				getProbe('c', '2001:db8:0:3::1', { owner: { id: 'user2' }, asn: 100, city: 'Paris' }),
@@ -200,7 +203,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should not double-disconnect a probe already removed by the IP limit', async () => {
-			fetchProbes.resolves([
+			getRawProbes.returns([
 				getProbe('a', '2001:db8:0:1::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
 				getProbe('b', '2001:db8:0:2::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
 				getProbe('c', '2001:db8:0:1::2', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
@@ -273,7 +276,7 @@ describe('ProbeIpLimit', () => {
 			const verify = (probeIpLimit: ProbeIpLimit, probe: ReturnType<typeof getProbe>) => catchError(probeIpLimit.verifyAsnLimit(probe as any));
 
 			it('throws "asn limit" when the token already has the limit of unique /64s in the asn+city', async () => {
-				fetchProbes.resolves([
+				getRawProbes.returns([
 					getProbe('a', '2001:db8:0:1::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
 					getProbe('b', '2001:db8:0:2::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
 				]);
@@ -285,7 +288,7 @@ describe('ProbeIpLimit', () => {
 			});
 
 			it('counts unique /64s, not socket count, within the asn+city', async () => {
-				fetchProbes.resolves([
+				getRawProbes.returns([
 					getProbe('x', '2001:db8:0:1::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
 					getProbe('y', '2001:db8:0:1::2', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
 				]);
@@ -299,7 +302,7 @@ describe('ProbeIpLimit', () => {
 			it('throws "asn limit" for a code-adopted probe without a token when the owner already has the limit of unique /64s', async () => {
 				getByIp.returns({ userId: 'user1' });
 
-				fetchProbes.resolves([
+				getRawProbes.returns([
 					getProbe('a', '2001:db8:0:1::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
 					getProbe('b', '2001:db8:0:2::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
 				]);
@@ -312,7 +315,7 @@ describe('ProbeIpLimit', () => {
 			it('counts code-adopted probes of the same user when connecting with a token', async () => {
 				getUserIdByToken.withArgs('token').returns('user1');
 
-				fetchProbes.resolves([
+				getRawProbes.returns([
 					getProbe('a', '2001:db8:0:1::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
 					getProbe('b', '2001:db8:0:2::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
 				]);
@@ -325,7 +328,7 @@ describe('ProbeIpLimit', () => {
 			it('does not count probes of a different owner', async () => {
 				getByIp.returns({ userId: 'user1' });
 
-				fetchProbes.resolves([
+				getRawProbes.returns([
 					getProbe('a', '2001:db8:0:1::1', { owner: { id: 'user2' }, asn: 100, city: 'Paris' }),
 					getProbe('b', '2001:db8:0:2::1', { owner: { id: 'user2' }, asn: 100, city: 'Paris' }),
 				]);
@@ -336,7 +339,7 @@ describe('ProbeIpLimit', () => {
 			});
 
 			it('does not apply the asn limit to tokenless non-adopted probes', async () => {
-				fetchProbes.resolves([
+				getRawProbes.returns([
 					getProbe('a', '2001:db8:0:1::1', { asn: 100, city: 'Paris' }),
 					getProbe('b', '2001:db8:0:2::1', { asn: 100, city: 'Paris' }),
 				]);

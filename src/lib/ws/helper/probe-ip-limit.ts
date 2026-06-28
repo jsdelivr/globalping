@@ -54,7 +54,7 @@ export class ProbeIpLimit {
 	private ipKeyIndexPromise: Promise<Map<string, Set<string>>> | undefined;
 
 	constructor (
-		private readonly fetchProbes: IoContext['fetchProbes'],
+		private readonly syncedProbeList: IoContext['syncedProbeList'],
 		private readonly disconnectBySocketId: IoContext['disconnectBySocketId'],
 		private readonly adoptedProbes: AdoptedProbes,
 		private readonly adoptionToken: AdoptionToken,
@@ -75,7 +75,7 @@ export class ProbeIpLimit {
 			return;
 		}
 
-		const probes = await this.fetchProbes();
+		const probes = this.syncedProbeList.getRawProbes();
 		const { ipToClients, primaryIpToClients, rangeToClients, primaryRangeToClients } = this.indexIpsForSync(probes);
 		const asnCityToIpKeys = this.indexAsnCity(probes);
 		const socketIdsToDisconnect = new Set<string>();
@@ -163,8 +163,7 @@ export class ProbeIpLimit {
 			return;
 		}
 
-		// Cached list is fine here: verifyIpLimit already refreshed it via allowStale: false.
-		const probes = await this.fetchProbes();
+		const probes = this.syncedProbeList.getRawProbes();
 		const ipKeys = new Set<string>();
 
 		for (const other of probes) {
@@ -192,7 +191,7 @@ export class ProbeIpLimit {
 
 		this.ipKeyIndexPromise = (async () => {
 			try {
-				return this.indexIpKeys(await this.fetchProbes({ allowStale: false }));
+				return this.indexIpKeys(await this.syncedProbeList.fetchProbes());
 			} finally {
 				this.ipKeyIndexPromise = undefined;
 			}
@@ -213,8 +212,7 @@ export class ProbeIpLimit {
 		return ipKeyToClients;
 	}
 
-	// Indexes the list by exact IP and by /64 range, tracking which clients hold each as their primary IP.
-	private indexIpsForSync (probes: ServerProbe[]) {
+	private indexIpsForSync (probes: SocketProbe[]) {
 		const ipToClients = new Map<string, Set<string>>();
 		const primaryIpToClients = new Map<string, Set<string>>();
 		const rangeToClients = new Map<string, Set<string>>();
@@ -237,7 +235,7 @@ export class ProbeIpLimit {
 	}
 
 	// Keeping user+asn+city uniqueness by ipKey, not by client, to handle reconnecting probes.
-	private indexAsnCity (probes: ServerProbe[]): Map<string, Map<string, Set<string>>> {
+	private indexAsnCity (probes: SocketProbe[]): Map<string, Map<string, Set<string>>> {
 		const asnCityToIpKeys = new Map<string, Map<string, Set<string>>>();
 
 		for (const probe of probes) {
