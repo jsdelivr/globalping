@@ -20,6 +20,7 @@ describe('ProbeIpLimit', () => {
 		getByIp.returns(null);
 		getByUuid.returns(null);
 		getUserIdByToken.returnsArg(0);
+		fetchProbes.resolves([]);
 		getRawProbes.returns([]);
 	});
 

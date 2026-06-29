@@ -265,8 +265,8 @@ export class ProbeIpLimit {
 			return userId;
 		}
 
-		// Connecting SocketProbe doesn't have `owner.id` yet, so we are searching for user by IP / UUID.
-		const dProbe = this.adoptedProbes.getByIp(probe.ipAddress) || this.adoptedProbes.getByUuid(probe.uuid);
+		// Connecting SocketProbe doesn't have `owner.id` yet, so we are searching for user by UUID / IP.
+		const dProbe = this.adoptedProbes.getByUuid(probe.uuid) || this.adoptedProbes.getByIp(probe.ipAddress);
 		return dProbe?.userId ?? null;
 	}
 }
