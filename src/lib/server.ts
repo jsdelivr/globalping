@@ -94,6 +94,7 @@ export const createServer = async () => {
 	initStreamScheduleLoader();
 	const scheduleExecutor = initStreamScheduleExecutor(io, syncedProbeList, probesLocationFilter);
 
+	await logIfTooLong(adoptionToken.syncTokens(), 'adoptionToken.syncTokens');
 	adoptionToken.scheduleSync();
 	await logIfTooLong(auth.syncTokens(), 'auth.syncTokens');
 	auth.scheduleSync();
