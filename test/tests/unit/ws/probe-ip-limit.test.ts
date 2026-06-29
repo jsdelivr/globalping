@@ -31,10 +31,9 @@ describe('ProbeIpLimit', () => {
 	const getProbe = (client: string, ipAddress: string, {
 		altIpAddresses = [] as string[],
 		adoptionToken = null as string | null,
-		owner = null as { id: string } | null,
 		asn = 1,
 		city = 'Paris',
-	} = {}) => ({ client, ipAddress, altIpAddresses, adoptionToken, owner, location: { asn, city } });
+	} = {}) => ({ client, ipAddress, altIpAddresses, adoptionToken, location: { asn, city } });
 
 	describe('getIpKey', () => {
 		it('returns IPv4 unchanged', () => {
@@ -177,11 +176,13 @@ describe('ProbeIpLimit', () => {
 			expect(disconnectBySocketId.called).to.equal(false);
 		});
 
-		it('should group probes of the same owner regardless of the adoption token', async () => {
+		it('should group probes of the same user regardless of the adoption token', async () => {
+			getByIp.returns({ userId: 'user1' });
+
 			getRawProbes.returns([
-				getProbe('a', '2001:db8:0:1::1', { owner: { id: 'user1' }, adoptionToken: 'token', asn: 100, city: 'Paris' }),
-				getProbe('b', '2001:db8:0:2::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
-				getProbe('c', '2001:db8:0:3::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
+				getProbe('a', '2001:db8:0:1::1', { adoptionToken: 'user1', asn: 100, city: 'Paris' }),
+				getProbe('b', '2001:db8:0:2::1', { asn: 100, city: 'Paris' }),
+				getProbe('c', '2001:db8:0:3::1', { asn: 100, city: 'Paris' }),
 			]);
 
 			const probeIpLimit = createProbeIpLimit();
@@ -190,11 +191,11 @@ describe('ProbeIpLimit', () => {
 			expect(disconnectBySocketId.calledOnceWithExactly('c')).to.equal(true);
 		});
 
-		it('should not count probes of a different owner', async () => {
+		it('should not count probes of a different user', async () => {
 			getRawProbes.returns([
-				getProbe('a', '2001:db8:0:1::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
-				getProbe('b', '2001:db8:0:2::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
-				getProbe('c', '2001:db8:0:3::1', { owner: { id: 'user2' }, asn: 100, city: 'Paris' }),
+				getProbe('a', '2001:db8:0:1::1', { adoptionToken: 'user1', asn: 100, city: 'Paris' }),
+				getProbe('b', '2001:db8:0:2::1', { adoptionToken: 'user1', asn: 100, city: 'Paris' }),
+				getProbe('c', '2001:db8:0:3::1', { adoptionToken: 'user2', asn: 100, city: 'Paris' }),
 			]);
 
 			const probeIpLimit = createProbeIpLimit();
@@ -300,12 +301,12 @@ describe('ProbeIpLimit', () => {
 				expect(error).to.equal(null);
 			});
 
-			it('throws "asn limit" for a code-adopted probe without a token when the owner already has the limit of unique /64s', async () => {
+			it('throws "asn limit" for a code-adopted probe without a token when the user already has the limit of unique /64s', async () => {
 				getByIp.returns({ userId: 'user1' });
 
 				getRawProbes.returns([
-					getProbe('a', '2001:db8:0:1::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
-					getProbe('b', '2001:db8:0:2::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
+					getProbe('a', '2001:db8:0:1::1', { asn: 100, city: 'Paris' }),
+					getProbe('b', '2001:db8:0:2::1', { asn: 100, city: 'Paris' }),
 				]);
 
 				const error = await verify(createProbeIpLimit(), getProbe('new', '2001:db8:0:3::1', { asn: 100, city: 'Paris' }));
@@ -314,27 +315,25 @@ describe('ProbeIpLimit', () => {
 			});
 
 			it('counts code-adopted probes of the same user when connecting with a token', async () => {
-				getUserIdByToken.withArgs('token').returns('user1');
+				getByIp.returns({ userId: 'user1' });
 
 				getRawProbes.returns([
-					getProbe('a', '2001:db8:0:1::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
-					getProbe('b', '2001:db8:0:2::1', { owner: { id: 'user1' }, asn: 100, city: 'Paris' }),
+					getProbe('a', '2001:db8:0:1::1', { asn: 100, city: 'Paris' }),
+					getProbe('b', '2001:db8:0:2::1', { asn: 100, city: 'Paris' }),
 				]);
 
-				const error = await verify(createProbeIpLimit(), getProbe('new', '2001:db8:0:3::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }));
+				const error = await verify(createProbeIpLimit(), getProbe('new', '2001:db8:0:3::1', { adoptionToken: 'user1', asn: 100, city: 'Paris' }));
 
 				expect(error?.message).to.equal('asn limit');
 			});
 
-			it('does not count probes of a different owner', async () => {
-				getByIp.returns({ userId: 'user1' });
-
+			it('does not count probes of a different user', async () => {
 				getRawProbes.returns([
-					getProbe('a', '2001:db8:0:1::1', { owner: { id: 'user2' }, asn: 100, city: 'Paris' }),
-					getProbe('b', '2001:db8:0:2::1', { owner: { id: 'user2' }, asn: 100, city: 'Paris' }),
+					getProbe('a', '2001:db8:0:1::1', { adoptionToken: 'user2', asn: 100, city: 'Paris' }),
+					getProbe('b', '2001:db8:0:2::1', { adoptionToken: 'user2', asn: 100, city: 'Paris' }),
 				]);
 
-				const error = await verify(createProbeIpLimit(), getProbe('new', '2001:db8:0:3::1', { asn: 100, city: 'Paris' }));
+				const error = await verify(createProbeIpLimit(), getProbe('new', '2001:db8:0:3::1', { adoptionToken: 'user1', asn: 100, city: 'Paris' }));
 
 				expect(error).to.equal(null);
 			});

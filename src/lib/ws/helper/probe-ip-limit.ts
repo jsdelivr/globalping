@@ -47,7 +47,7 @@ const addToSet = <K>(map: Map<K, Set<string>>, key: K, value: string) => {
 
 const lowestSocketId = (socketIds: string[]) => socketIds.reduce((min, id) => id < min ? id : min);
 
-type UserProbe = Pick<ServerProbe, 'adoptionToken' | 'ipAddress' | 'uuid'> & { owner?: { id: string } };
+type UserProbe = Pick<ServerProbe, 'adoptionToken' | 'ipAddress' | 'uuid'>;
 
 export class ProbeIpLimit {
 	private timer: NodeJS.Timeout | undefined;
@@ -255,17 +255,12 @@ export class ProbeIpLimit {
 	}
 
 	private getUserId (probe: UserProbe): string | null {
-		if (probe.owner?.id) {
-			return probe.owner.id;
-		}
-
 		const userId = probe.adoptionToken && this.adoptionToken.getUserIdByToken(probe.adoptionToken);
 
 		if (userId) {
 			return userId;
 		}
 
-		// Connecting SocketProbe doesn't have `owner.id` yet, so we are searching for user by UUID / IP.
 		const dProbe = this.adoptedProbes.getByUuid(probe.uuid) || this.adoptedProbes.getByIp(probe.ipAddress);
 		return dProbe?.userId ?? null;
 	}
