@@ -277,7 +277,7 @@ describe('ProbeIpLimit', () => {
 		describe('verifyAsnLimit (asn + city)', () => {
 			const verify = (probeIpLimit: ProbeIpLimit, probe: ReturnType<typeof getProbe>) => catchError(probeIpLimit.verifyAsnLimit(probe as any));
 
-			it('throws "asn limit" when the token already has the limit of unique /64s in the asn+city', async () => {
+			it('throws "user asn limit" when the token already has the limit of unique /64s in the asn+city', async () => {
 				getRawProbes.returns([
 					getProbe('a', '2001:db8:0:1::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
 					getProbe('b', '2001:db8:0:2::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }),
@@ -286,7 +286,7 @@ describe('ProbeIpLimit', () => {
 				const probeIpLimit = createProbeIpLimit();
 				const error = await verify(probeIpLimit, getProbe('new', '2001:db8:0:3::1', { adoptionToken: 'token', asn: 100, city: 'Paris' }));
 
-				expect(error?.message).to.equal('asn limit');
+				expect(error?.message).to.equal('user asn limit');
 			});
 
 			it('counts unique /64s, not socket count, within the asn+city', async () => {
@@ -301,7 +301,7 @@ describe('ProbeIpLimit', () => {
 				expect(error).to.equal(null);
 			});
 
-			it('throws "asn limit" for a code-adopted probe without a token when the user already has the limit of unique /64s', async () => {
+			it('throws "user asn limit" for a code-adopted probe without a token when the user already has the limit of unique /64s', async () => {
 				getByIp.returns({ userId: 'user1' });
 
 				getRawProbes.returns([
@@ -311,7 +311,7 @@ describe('ProbeIpLimit', () => {
 
 				const error = await verify(createProbeIpLimit(), getProbe('new', '2001:db8:0:3::1', { asn: 100, city: 'Paris' }));
 
-				expect(error?.message).to.equal('asn limit');
+				expect(error?.message).to.equal('user asn limit');
 			});
 
 			it('counts code-adopted probes of the same user when connecting with a token', async () => {
@@ -324,7 +324,7 @@ describe('ProbeIpLimit', () => {
 
 				const error = await verify(createProbeIpLimit(), getProbe('new', '2001:db8:0:3::1', { adoptionToken: 'user1', asn: 100, city: 'Paris' }));
 
-				expect(error?.message).to.equal('asn limit');
+				expect(error?.message).to.equal('user asn limit');
 			});
 
 			it('does not count probes of a different user', async () => {
@@ -338,7 +338,7 @@ describe('ProbeIpLimit', () => {
 				expect(error).to.equal(null);
 			});
 
-			it('does not apply the asn limit to tokenless non-adopted probes', async () => {
+			it('does not apply the per-user asn limit to tokenless non-adopted probes', async () => {
 				getRawProbes.returns([
 					getProbe('a', '2001:db8:0:1::1', { asn: 100, city: 'Paris' }),
 					getProbe('b', '2001:db8:0:2::1', { asn: 100, city: 'Paris' }),

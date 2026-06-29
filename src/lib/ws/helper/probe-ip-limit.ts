@@ -178,7 +178,7 @@ export class ProbeIpLimit {
 
 			if (ipKeys.size >= asnCityPerUser) {
 				logger.warn(`WS client ${probe.client} has reached the asn limit.`, { userId, ip: probe.ipAddress, ipKeys: [ ...ipKeys ], asn: probe.location.asn, city: probe.location.city });
-				throw new ProbeError('asn limit');
+				throw new ProbeError('user asn limit');
 			}
 		}
 	}
