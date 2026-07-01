@@ -3,6 +3,7 @@ import ipaddr from 'ipaddr.js';
 import { LRUCache } from 'lru-cache';
 import { scopedLogger } from '../../logger.js';
 import { ProbeError } from '../../probe-error.js';
+import * as scheduler from '../../scheduler.js';
 import type { ServerProbe, SocketProbe } from '../../../probe/types.js';
 import type { IoContext } from '../../server.js';
 import type { AdoptedProbes } from '../../override/adopted-probes.js';
@@ -76,14 +77,14 @@ export class ProbeIpLimit {
 		}
 
 		const probes = this.syncedProbeList.getRawProbes();
-		const { ipToClients, primaryIpToClients, rangeToClients, primaryRangeToClients } = this.indexIpsForSync(probes);
-		const asnCityToIpKeys = this.indexAsnCity(probes);
+		const { ipToClients, primaryIpToClients, rangeToClients, primaryRangeToClients } = await scheduler.run(() => this.indexIpsForSync(probes));
+		const asnCityToIpKeys = await scheduler.run(() => this.indexAsnCity(probes));
 		const socketIdsToDisconnect = new Set<string>();
 
 		// Exact IP duplicates: keep one, preferring an alt-IP holder over the primary-IP holder.
-		for (const [ ip, clients ] of ipToClients) {
+		await scheduler.forEach(ipToClients, ([ ip, clients ]) => {
 			if (clients.size <= 1) {
-				continue;
+				return;
 			}
 
 			const alts = [ ...clients ].filter(socketId => !primaryIpToClients.get(ip)?.has(socketId));
@@ -94,19 +95,19 @@ export class ProbeIpLimit {
 					socketIdsToDisconnect.add(socketId);
 				}
 			}
-		}
+		});
 
 		// /64 range duplicates: a primary IP must be alone in its range; alt IPs may share a range with each other.
-		for (const [ ipKey, clients ] of rangeToClients) {
+		await scheduler.forEach(rangeToClients, ([ ipKey, clients ]) => {
 			if (!ipKey.endsWith('/64')) {
-				continue;
+				return;
 			}
 
 			const live = [ ...clients ].filter(socketId => !socketIdsToDisconnect.has(socketId));
 			const primaries = live.filter(socketId => primaryRangeToClients.get(ipKey)?.has(socketId));
 
 			if (live.length <= 1 || primaries.length === 0) {
-				continue;
+				return;
 			}
 
 			// If there is at least one alt IP => disconnect all primaries, if all are primaries => keep one primary.
@@ -117,23 +118,23 @@ export class ProbeIpLimit {
 					socketIdsToDisconnect.add(socketId);
 				}
 			}
-		}
+		});
 
 		// ASN duplicates: Allowing only `asnCityPerUser` number of ipKeys per user+asn+city.
-		for (const ipKeyClients of asnCityToIpKeys.values()) {
+		await scheduler.forEach(asnCityToIpKeys.values(), (ipKeyClients) => {
 			const clientsGroups = [ ...ipKeyClients.values() ]
 				.map(clients => [ ...clients ].filter(socketId => !socketIdsToDisconnect.has(socketId)))
 				.filter(clients => clients.length > 0);
 
 			if (clientsGroups.length <= asnCityPerUser) {
-				continue;
+				return;
 			}
 
 			clientsGroups
 				.sort((a, b) => lowestSocketId(a) < lowestSocketId(b) ? -1 : 1)
 				.slice(asnCityPerUser)
 				.forEach(clients => clients.forEach(socketId => socketIdsToDisconnect.add(socketId)));
-		}
+		});
 
 		socketIdsToDisconnect.forEach(socketId => this.disconnectBySocketId(socketId));
 	}
