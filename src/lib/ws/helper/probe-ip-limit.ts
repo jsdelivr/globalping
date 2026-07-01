@@ -14,7 +14,7 @@ const asnCityPerUser = config.get<number>('probeLimit.asnCityPerUser');
 
 const logger = scopedLogger('ws:limit');
 
-const ipKeyCache = new LRUCache<string, string>({ max: 500_000 });
+const ipKeyCache = new LRUCache<string, string>({ max: 100_000 });
 
 export const getIpKey = (ip: string): string => {
 	const cached = ipKeyCache.get(ip);
@@ -38,7 +38,7 @@ export const getIpKey = (ip: string): string => {
 	return ipKey;
 };
 
-const asnCityKey = (userId: string, location: { asn: number; city: string }) => JSON.stringify([ userId, location.asn, location.city ]);
+const asnCityKey = (userId: string, location: { asn: number; city: string }) => `${userId}:${location.asn}:${location.city}`;
 
 const addToSet = <K>(map: Map<K, Set<string>>, key: K, value: string) => {
 	const set = map.get(key) ?? new Set<string>();
