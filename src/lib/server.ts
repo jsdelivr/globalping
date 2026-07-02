@@ -82,8 +82,8 @@ export const createServer = async () => {
 
 	const { io, syncedProbeList, fetchRawSockets, disconnectBySocketId, fetchProbes, getProbeByIp, onProbesUpdate } = await logIfTooLong(initWsServer(probeOverride), 'initWsServer');
 
-	const probeIpLimit = new ProbeIpLimit(fetchProbes, disconnectBySocketId, getProbeByIp);
 	const adoptionToken = initAdoptionToken(adoptedProbes);
+	const probeIpLimit = new ProbeIpLimit(syncedProbeList, disconnectBySocketId, adoptedProbes, adoptionToken);
 	const metricsAgent = initMetricsAgent(io, fetchProbes);
 	const altIpsClient = initAltIpsClient(probeOverride, getProbeByIp, disconnectBySocketId);
 	const probesLocationFilter = initProbesLocationFilter(onProbesUpdate);
@@ -94,6 +94,7 @@ export const createServer = async () => {
 	initStreamScheduleLoader();
 	const scheduleExecutor = initStreamScheduleExecutor(io, syncedProbeList, probesLocationFilter);
 
+	await logIfTooLong(adoptionToken.syncTokens(), 'adoptionToken.syncTokens');
 	adoptionToken.scheduleSync();
 	await logIfTooLong(auth.syncTokens(), 'auth.syncTokens');
 	auth.scheduleSync();

@@ -419,7 +419,7 @@ export class AdoptedProbes {
 	 * This ensures that adopted probes take precedence over non-adopted ones in further logic.
 	 */
 	private matchDProbesAndProbes (probes: SocketProbe[]) {
-		// `ipAddress` duplicates are possible (https://github.com/jsdelivr/globalping/issues/502), so we are filtering them out. Sorting by client to prefer the probe that will stay after `syncIpLimit` run.
+		// `ipAddress` duplicates are possible (https://github.com/jsdelivr/globalping/issues/502), so we are filtering them out. Sorting by client to prefer the probe that will stay after `syncProbeLimits` run.
 		probes = _.uniqBy(_.sortBy(probes, [ 'client' ]), probe => probe.ipAddress);
 		const uuidToProbe = new Map(probes.map(probe => [ probe.uuid, probe ]));
 		const ipToProbe = new Map(probes.map(probe => [ probe.ipAddress, probe ]));
