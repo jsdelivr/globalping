@@ -737,6 +737,30 @@ describe('resultSchema', () => {
 		expect(response).to.matchApiSchema();
 	});
 
+	it('mtr: accept null latency stats', async () => {
+		const responseBody = _.cloneDeep(defaultMtrResponseBody);
+		responseBody.results[0]!.result.hops![0]!.stats = {
+			min: null,
+			max: null,
+			avg: null,
+			total: 3,
+			loss: 100,
+			rcv: 0,
+			drop: 3,
+			stDev: null,
+			jMin: null,
+			jMax: null,
+			jAvg: null,
+		};
+
+		getResponseBody.returns(responseBody);
+
+		const response = await request(mockServer).get('/v1/measurements/measurement-id');
+
+		Joi.assert(responseBody.results[0]?.result, mtrResultSchema);
+		expect(response).to.matchApiSchema();
+	});
+
 	it('http: accept regular valid response', async () => {
 		const responseBody = _.cloneDeep(defaultHttpResponseBody);
 		getResponseBody.returns(responseBody);
