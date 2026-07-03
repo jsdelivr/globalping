@@ -417,3 +417,4 @@ If you are stuck or want to give us your feedback, please [open a new issue](htt
 
 ## Development
 Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
+docker run -d --log-driver local --network host --restart=always --name globalping-probe globalping/globalping-probe
