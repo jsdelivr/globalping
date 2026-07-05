@@ -811,15 +811,31 @@ components:
     StatsJitterMin:
       type: number
       description: The lowest jitter value.
+    StatsJitterMinNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableNumber'
+        - description: The lowest jitter value.
     StatsJitterAvg:
       type: number
       description: The average jitter value.
+    StatsJitterAvgNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableNumber'
+        - description: The average jitter value.
     StatsJitterMax:
       type: number
       description: The highest jitter value.
+    StatsJitterMaxNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableNumber'
+        - description: The highest jitter value.
     StatsStDev:
       type: number
       description: The standard deviation of the `rtt` values.
+    StatsStDevNullable:
+      allOf:
+        - $ref: 'schemas.yaml#/components/schemas/NullableNumber'
+        - description: The standard deviation of the `rtt` values.
     Tags:
       type: array
       description: |
@@ -1156,19 +1172,19 @@ components:
                       - loss
                     properties:
                       min:
-                        $ref: 'schemas.yaml#/components/schemas/StatsRttMin'
+                        $ref: 'schemas.yaml#/components/schemas/StatsRttMinNullable'
                       avg:
-                        $ref: 'schemas.yaml#/components/schemas/StatsRttAvg'
+                        $ref: 'schemas.yaml#/components/schemas/StatsRttAvgNullable'
                       max:
-                        $ref: 'schemas.yaml#/components/schemas/StatsRttMax'
+                        $ref: 'schemas.yaml#/components/schemas/StatsRttMaxNullable'
                       stDev:
-                        $ref: 'schemas.yaml#/components/schemas/StatsStDev'
+                        $ref: 'schemas.yaml#/components/schemas/StatsStDevNullable'
                       jMin:
-                        $ref: 'schemas.yaml#/components/schemas/StatsJitterMin'
+                        $ref: 'schemas.yaml#/components/schemas/StatsJitterMinNullable'
                       jAvg:
-                        $ref: 'schemas.yaml#/components/schemas/StatsJitterAvg'
+                        $ref: 'schemas.yaml#/components/schemas/StatsJitterAvgNullable'
                       jMax:
-                        $ref: 'schemas.yaml#/components/schemas/StatsJitterMax'
+                        $ref: 'schemas.yaml#/components/schemas/StatsJitterMaxNullable'
                       total:
                         $ref: 'schemas.yaml#/components/schemas/StatsPacketsTotal'
                       rcv:
