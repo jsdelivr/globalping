@@ -55,16 +55,21 @@ export class Credits {
 
 			try {
 				await this.sql(CREDITS_TABLE).where({ user_id: userId }).update({ amount: this.sql.raw('amount - ?', [ flushed ]) });
-				entry.remaining = Math.max(await this.getRemainingCreditsFromDb(userId) - entry.pending, 0);
 			} catch (error) {
 				if ((error as Error & { errno?: number }).errno === ER_CONSTRAINT_FAILED_CODE) {
-					entry.remaining = Math.max(await this.getRemainingCreditsFromDb(userId) - entry.pending, 0);
 					logger.warn(`Dropped ${flushed} buffered credits of user ${userId} that exceed the current balance.`);
 				} else {
 					entry.pending += flushed;
 					this.buffer.set(userId, entry);
 					logger.error('Failed to flush buffered credits.', error);
+					return;
 				}
+			}
+
+			try {
+				entry.remaining = Math.max(await this.getRemainingCreditsFromDb(userId) - entry.pending, 0);
+			} catch (error) {
+				logger.error('Failed to refresh the remaining credits.', error);
 			}
 		}, { concurrency: 8 });
 	}

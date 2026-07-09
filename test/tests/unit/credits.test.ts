@@ -214,6 +214,24 @@ describe('Credits', () => {
 			expect(sqlStub.raw.lastCall.args).to.deep.equal([ 'amount - ?', [ 10 ] ]);
 		});
 
+		it('should not re-queue the buffer item when only the reconcile read fails', async () => {
+			updateStub.resolves(1);
+			firstStub.resolves({ amount: 50000 });
+			const credits = new Credits(sqlStub as unknown as Knex);
+			await credits.consume('userId', 10);
+			await credits.consume('userId', 10);
+
+			firstStub.rejects(new Error('read failed'));
+			await credits.flush();
+			expect(updateStub.callCount).to.equal(2);
+			expect(await credits.getRemainingCredits('userId').catch(() => 'rejected')).to.equal('rejected');
+
+			firstStub.resolves({ amount: 49980 });
+			await credits.flush();
+			expect(updateStub.callCount).to.equal(2);
+			expect(await credits.getRemainingCredits('userId')).to.equal(49980);
+		});
+
 		it('should keep retrying the buffer item through a DB outage longer than the TTL', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 50000 });
