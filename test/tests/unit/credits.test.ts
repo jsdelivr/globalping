@@ -108,7 +108,7 @@ describe('Credits', () => {
 			await credits.flush();
 
 			expect(updateStub.callCount).to.equal(2);
-			expect(sqlStub.raw.args[1]).to.deep.equal([ 'amount - ?', [ 15 ] ]);
+			expect(sqlStub.raw.args[1]).to.deep.equal([ 'GREATEST(amount - ?, 0)', [ 15 ] ]);
 			expect(firstStub.callCount).to.equal(2);
 			expect(await credits.getRemainingCredits('userId')).to.equal(49985);
 		});
@@ -123,7 +123,7 @@ describe('Credits', () => {
 			await clock.tickAsync(1000);
 
 			expect(updateStub.callCount).to.equal(2);
-			expect(sqlStub.raw.args[1]).to.deep.equal([ 'amount - ?', [ 10 ] ]);
+			expect(sqlStub.raw.args[1]).to.deep.equal([ 'GREATEST(amount - ?, 0)', [ 10 ] ]);
 		});
 
 		it('should fall back to the direct path when the balance drops below the threshold', async () => {
@@ -160,22 +160,19 @@ describe('Credits', () => {
 			expect(firstStub.callCount).to.equal(3);
 		});
 
-		it('should drop the buffer item and resync when the flush hits the balance constraint', async () => {
+		it('should clamp the balance to zero on overdraw instead of rejecting', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 50000 });
 			const credits = new Credits(sqlStub as unknown as Knex);
 			await credits.consume('userId', 10);
 			await credits.consume('userId', 10);
 
-			const error: Error & { errno?: number } = new Error('constraint');
-			error.errno = 4025;
-			updateStub.rejects(error);
-			firstStub.resolves({ amount: 3 });
+			firstStub.resolves({ amount: 0 });
 			await credits.flush();
 
-			expect(await credits.getRemainingCredits('userId')).to.equal(3);
+			expect(sqlStub.raw.lastCall.args).to.deep.equal([ 'GREATEST(amount - ?, 0)', [ 10 ] ]);
+			expect(await credits.getRemainingCredits('userId')).to.equal(0);
 
-			updateStub.resolves(1);
 			await credits.flush();
 			expect(updateStub.callCount).to.equal(2);
 		});
@@ -211,7 +208,7 @@ describe('Credits', () => {
 			firstStub.resolves({ amount: 49990 });
 			await credits.flush();
 			expect(updateStub.callCount).to.equal(3);
-			expect(sqlStub.raw.lastCall.args).to.deep.equal([ 'amount - ?', [ 10 ] ]);
+			expect(sqlStub.raw.lastCall.args).to.deep.equal([ 'GREATEST(amount - ?, 0)', [ 10 ] ]);
 		});
 
 		it('should not re-queue the buffer item when only the reconcile read fails', async () => {
@@ -247,7 +244,7 @@ describe('Credits', () => {
 			sqlStub.raw.resetHistory();
 			await clock.tickAsync(1000);
 			expect(updateStub.callCount).to.equal(1);
-			expect(sqlStub.raw.args[0]).to.deep.equal([ 'amount - ?', [ 10 ] ]);
+			expect(sqlStub.raw.args[0]).to.deep.equal([ 'GREATEST(amount - ?, 0)', [ 10 ] ]);
 
 			await clock.tickAsync(1000);
 			expect(updateStub.callCount).to.equal(1);

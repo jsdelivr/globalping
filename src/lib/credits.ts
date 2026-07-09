@@ -54,16 +54,12 @@ export class Credits {
 			entry.pending = 0;
 
 			try {
-				await this.sql(CREDITS_TABLE).where({ user_id: userId }).update({ amount: this.sql.raw('amount - ?', [ flushed ]) });
+				await this.sql(CREDITS_TABLE).where({ user_id: userId }).update({ amount: this.sql.raw('GREATEST(amount - ?, 0)', [ flushed ]) });
 			} catch (error) {
-				if ((error as Error & { errno?: number }).errno === ER_CONSTRAINT_FAILED_CODE) {
-					logger.warn(`Dropped ${flushed} buffered credits of user ${userId} that exceed the current balance.`);
-				} else {
-					entry.pending += flushed;
-					this.buffer.set(userId, entry);
-					logger.error('Failed to flush buffered credits.', error);
-					return;
-				}
+				entry.pending += flushed;
+				this.buffer.set(userId, entry);
+				logger.error('Failed to flush buffered credits.', error);
+				return;
 			}
 
 			try {
