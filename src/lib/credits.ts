@@ -6,22 +6,25 @@ import { dashboardClient } from './sql/client.js';
 
 export const CREDITS_TABLE = 'gp_credits';
 const ER_CONSTRAINT_FAILED_CODE = 4025;
-const BUFFER_MIN_REMAINING = 10_000;
+const MIN_CREDITS_FOR_BUFFER = 10_000;
 const FLUSH_INTERVAL = 1000;
 const IDLE_ENTRY_TTL = 60_000;
 
 const logger = scopedLogger('credits');
 
-type BufferEntry = {
-	remaining: number;
-	pending: number;
-};
-
 export class Credits {
-	private readonly buffer = new TTLCache<string, BufferEntry>({ ttl: IDLE_ENTRY_TTL });
+	private readonly buffer = new TTLCache<string, { remaining: number; pending: number }>({ ttl: IDLE_ENTRY_TTL });
 
 	constructor (private readonly sql: Knex) {
 		this.scheduleFlush();
+	}
+
+	private scheduleFlush () {
+		setTimeout(() => {
+			this.flush()
+				.finally(() => this.scheduleFlush())
+				.catch(error => logger.error('Failed to flush the credits buffer.', error));
+		}, FLUSH_INTERVAL).unref();
 	}
 
 	async consume (userId: string, credits: number): Promise<{ isConsumed: boolean; remainingCredits: number }> {
@@ -69,7 +72,7 @@ export class Credits {
 	private consumeFromBuffer (userId: string, credits: number): { isConsumed: boolean; remainingCredits: number } | null {
 		const entry = this.buffer.get(userId);
 
-		if (!entry || entry.remaining - credits < BUFFER_MIN_REMAINING) {
+		if (!entry || entry.remaining - credits < MIN_CREDITS_FOR_BUFFER) {
 			return null;
 		}
 
@@ -111,7 +114,7 @@ export class Credits {
 		const pending = entry?.pending ?? 0;
 		const remaining = Math.max(remainingFromDb - pending, 0);
 
-		if (remaining >= BUFFER_MIN_REMAINING) {
+		if (remaining >= MIN_CREDITS_FOR_BUFFER) {
 			this.buffer.set(userId, { remaining, pending });
 		} else if (entry) {
 			entry.remaining = remaining;
@@ -122,14 +125,6 @@ export class Credits {
 		}
 
 		return remaining;
-	}
-
-	private scheduleFlush () {
-		setTimeout(() => {
-			this.flush()
-				.finally(() => this.scheduleFlush())
-				.catch(error => logger.error('Failed to flush the credits buffer.', error));
-		}, FLUSH_INTERVAL).unref();
 	}
 }
 
