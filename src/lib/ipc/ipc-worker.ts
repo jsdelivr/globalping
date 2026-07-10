@@ -41,7 +41,14 @@ export class IpcWorker {
 
 			timer.unref();
 			this.pending.set(id, { resolve, reject, timer });
-			process.send?.({ type: 'req', target, id, method, args });
+
+			process.send?.({ type: 'req', target, id, method, args }, undefined, (error) => {
+				if (error) {
+					this.pending.delete(id);
+					clearTimeout(timer);
+					reject(error);
+				}
+			});
 		});
 	}
 }

@@ -28,7 +28,11 @@ const handleMessage = async (worker: Worker, message: IpcRequest): Promise<void>
 
 	try {
 		const handler = getHandler(target, method);
-		worker.send({ type: 'res', target, id, result: await handler(...args) });
+		const result = await handler(...args);
+
+		if (!worker.isConnected()) { return; }
+
+		worker.send({ type: 'res', target, id, result });
 	} catch (error) {
 		logger.error(`IPC request "${target}.${method}" failed.`, error);
 		worker.send({ type: 'res', target, id, error: (error as Error).message });
@@ -39,6 +43,8 @@ export const initIPC = (): void => {
 	if (!cluster.isPrimary) {
 		throw new Error('`initIPC` called on non-primary process.');
 	}
+
+	cluster.on('fork', worker => worker.on('error', error => logger.error('Worker IPC channel error.', error)));
 
 	cluster.on('message', (worker: Worker, message: IpcRequest) => {
 		void handleMessage(worker, message);
