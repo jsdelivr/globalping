@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import type { Knex } from 'knex';
 import * as sinon from 'sinon';
-import { Credits } from '../../../src/lib/credits.js';
+import { CreditsMaster } from '../../../src/lib/credits-master.js';
 
-describe('Credits', () => {
+describe('CreditsMaster', () => {
 	const sandbox = sinon.createSandbox();
 	const updateStub = sandbox.stub();
 	const firstStub = sandbox.stub();
@@ -23,7 +23,7 @@ describe('Credits', () => {
 	it('should return true if row was updated', async () => {
 		updateStub.resolves(1);
 		firstStub.resolves({ amount: 5 });
-		const credits = new Credits(sqlStub as unknown as Knex);
+		const credits = new CreditsMaster(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
 		expect(result).to.deep.equal({ isConsumed: true, remainingCredits: 5 });
 	});
@@ -31,14 +31,14 @@ describe('Credits', () => {
 	it('should return true if row was updated to 0', async () => {
 		updateStub.resolves(1);
 		firstStub.resolves({ amount: 0 });
-		const credits = new Credits(sqlStub as unknown as Knex);
+		const credits = new CreditsMaster(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
 		expect(result).to.deep.equal({ isConsumed: true, remainingCredits: 0 });
 	});
 
 	it(`should return false if row wasn't updated`, async () => {
 		updateStub.resolves(0);
-		const credits = new Credits(sqlStub as unknown as Knex);
+		const credits = new CreditsMaster(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
 		expect(firstStub.callCount).to.equal(0);
 		expect(result).to.deep.equal({ isConsumed: false, remainingCredits: 0 });
@@ -49,7 +49,7 @@ describe('Credits', () => {
 		error.errno = 4025;
 		updateStub.rejects(error);
 		firstStub.resolves({ amount: 5 });
-		const credits = new Credits(sqlStub as unknown as Knex);
+		const credits = new CreditsMaster(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10);
 		expect(result).to.deep.equal({ isConsumed: false, remainingCredits: 5 });
 	});
@@ -57,7 +57,7 @@ describe('Credits', () => {
 	it(`should throw if update throws other error`, async () => {
 		const error = new Error('other error');
 		updateStub.rejects(error);
-		const credits = new Credits(sqlStub as unknown as Knex);
+		const credits = new CreditsMaster(sqlStub as unknown as Knex);
 		const result = await credits.consume('userId', 10).catch(err => err);
 		expect(result).to.equal(error);
 	});
@@ -80,7 +80,7 @@ describe('Credits', () => {
 		it('should buffer consumes after seeding with a large balance', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 50000 });
-			const credits = new Credits(sqlStub as unknown as Knex);
+			const credits = new CreditsMaster(sqlStub as unknown as Knex);
 
 			const first = await credits.consume('userId', 10);
 			expect(first).to.deep.equal({ isConsumed: true, remainingCredits: 50000 });
@@ -99,7 +99,7 @@ describe('Credits', () => {
 		it('should flush accumulated deductions in a single update', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 50000 });
-			const credits = new Credits(sqlStub as unknown as Knex);
+			const credits = new CreditsMaster(sqlStub as unknown as Knex);
 			await credits.consume('userId', 10); // Initial seed from DB, not buffered.
 			await credits.consume('userId', 10);
 			await credits.consume('userId', 5);
@@ -116,7 +116,7 @@ describe('Credits', () => {
 		it('should flush automatically on the interval', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 50000 });
-			const credits = new Credits(sqlStub as unknown as Knex);
+			const credits = new CreditsMaster(sqlStub as unknown as Knex);
 			await credits.consume('userId', 10); // Initial seed from DB, not buffered.
 			await credits.consume('userId', 10);
 
@@ -129,7 +129,7 @@ describe('Credits', () => {
 		it('should fall back to the direct path when the balance drops below the threshold', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 10005 });
-			const credits = new Credits(sqlStub as unknown as Knex);
+			const credits = new CreditsMaster(sqlStub as unknown as Knex);
 			await credits.consume('userId', 10);
 			expect(updateStub.callCount).to.equal(1);
 
@@ -147,7 +147,7 @@ describe('Credits', () => {
 		it('should return fresh remaining reconciled with unflushed deductions', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 50000 });
-			const credits = new Credits(sqlStub as unknown as Knex);
+			const credits = new CreditsMaster(sqlStub as unknown as Knex);
 			await credits.consume('userId', 10);
 			expect(firstStub.callCount).to.equal(1);
 			await credits.consume('userId', 10);
@@ -163,7 +163,7 @@ describe('Credits', () => {
 		it('should clamp the balance to zero on overdraw instead of rejecting', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 50000 });
-			const credits = new Credits(sqlStub as unknown as Knex);
+			const credits = new CreditsMaster(sqlStub as unknown as Knex);
 			await credits.consume('userId', 10);
 			await credits.consume('userId', 10);
 
@@ -180,7 +180,7 @@ describe('Credits', () => {
 		it('should drop the buffer item and resync when the credits row is gone', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 50000 });
-			const credits = new Credits(sqlStub as unknown as Knex);
+			const credits = new CreditsMaster(sqlStub as unknown as Knex);
 			await credits.consume('userId', 10);
 			await credits.consume('userId', 10);
 
@@ -196,7 +196,7 @@ describe('Credits', () => {
 		it('should retry the buffer item after a generic flush error', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 50000 });
-			const credits = new Credits(sqlStub as unknown as Knex);
+			const credits = new CreditsMaster(sqlStub as unknown as Knex);
 			await credits.consume('userId', 10);
 			await credits.consume('userId', 10);
 
@@ -214,7 +214,7 @@ describe('Credits', () => {
 		it('should not re-queue the buffer item when only the reconcile read fails', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 50000 });
-			const credits = new Credits(sqlStub as unknown as Knex);
+			const credits = new CreditsMaster(sqlStub as unknown as Knex);
 			await credits.consume('userId', 10);
 			await credits.consume('userId', 10);
 
@@ -232,7 +232,7 @@ describe('Credits', () => {
 		it('should keep retrying the buffer item through a DB outage longer than the TTL', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 50000 });
-			const credits = new Credits(sqlStub as unknown as Knex);
+			const credits = new CreditsMaster(sqlStub as unknown as Knex);
 			await credits.consume('userId', 10);
 			await credits.consume('userId', 10);
 
@@ -253,7 +253,7 @@ describe('Credits', () => {
 		it('should evict idle entries', async () => {
 			updateStub.resolves(1);
 			firstStub.resolves({ amount: 50000 });
-			const credits = new Credits(sqlStub as unknown as Knex);
+			const credits = new CreditsMaster(sqlStub as unknown as Knex);
 			await credits.consume('userId', 10);
 			expect(updateStub.callCount).to.equal(1);
 

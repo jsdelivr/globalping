@@ -7,6 +7,7 @@ import { initRedisClient } from './lib/redis/client.js';
 import { initPersistentRedisClient } from './lib/redis/persistent-client.js';
 import { flushRedisCache } from './lib/flush-redis-cache.js';
 import { MasterTermListener } from './lib/term-listener.js';
+import { initIPC } from './lib/ipc/ipc-master.js';
 
 const logger = scopedLogger('index');
 const port = process.env['PORT'] ?? config.get<number>('server.port');
@@ -28,6 +29,7 @@ if (cluster.isPrimary) {
 	await flushRedisCache();
 	await redis.disconnect();
 	await persistentRedis.disconnect();
+	initIPC();
 	let syncAdoptionsPid: number | null = null;
 
 	for (let i = 0; i < workerCount; i++) {

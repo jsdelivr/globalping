@@ -6,7 +6,7 @@ import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { anonymousRateLimiter, authenticatedRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-post.js';
 import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
-import { CREDITS_TABLE } from '../../../src/lib/credits.js';
+import { CREDITS_TABLE } from '../../../src/lib/credits-master.js';
 
 describe('rate limiter', () => {
 	let app: Server;
