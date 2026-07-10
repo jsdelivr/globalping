@@ -1,4 +1,5 @@
 import type { Server } from 'node:http';
+import { setTimeout } from 'node:timers/promises';
 import { expect } from 'chai';
 import nock from 'nock';
 import config from 'config';
@@ -101,13 +102,25 @@ describe('authenticate', () => {
 				})
 				.expect(202);
 
-			const tokens = await dashboardClient(GP_TOKENS_TABLE).select<Token[]>([ 'date_last_used' ]).where({
-				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
-			});
-
 			const currentDate = new Date();
 			currentDate.setHours(0, 0, 0, 0);
-			expect(tokens[0]?.date_last_used?.toString()).to.equal(currentDate.toString());
+
+			// date_last_used is updated fire-and-forget, so poll until it lands.
+			let dateLastUsed;
+
+			for (let i = 0; i < 20 && dateLastUsed === undefined; i++) {
+				const tokens = await dashboardClient(GP_TOKENS_TABLE).select<Token[]>([ 'date_last_used' ]).where({
+					value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
+				});
+
+				dateLastUsed = tokens[0]?.date_last_used ?? undefined;
+
+				if (dateLastUsed === undefined) {
+					await setTimeout(50);
+				}
+			}
+
+			expect(dateLastUsed?.toString()).to.equal(currentDate.toString());
 		});
 
 		it('should get token from db if it is not synced yet', async () => {

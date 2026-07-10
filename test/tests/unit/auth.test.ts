@@ -5,7 +5,7 @@ import { Auth } from '../../../src/lib/http/auth.js';
 
 describe('Auth', () => {
 	const sandbox = sinon.createSandbox();
-	const updateStub = sandbox.stub();
+	const updateStub = sandbox.stub().resolves();
 	const selectStub = sandbox.stub().resolves([]);
 	const whereStub = sandbox.stub().returns({
 		update: updateStub,

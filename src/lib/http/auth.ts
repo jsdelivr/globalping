@@ -130,16 +130,18 @@ export class Auth {
 			return null;
 		}
 
-		await this.updateLastUsedDate(token);
+		this.updateLastUsedDate(token);
 		return { userId: token.user_created, username: token.user_github_username, userType: token.user_user_type, scopes: token.scopes, hashedToken: token.value };
 	}
 
-	private async updateLastUsedDate (token: Token) {
-		if (!token.date_last_used || !this.isToday(token.date_last_used)) {
-			const date = new Date();
-			await this.sql(GP_TOKENS_TABLE).where({ value: token.value }).update({ date_last_used: date });
-			token.date_last_used = date;
-		}
+	private updateLastUsedDate (token: Token) {
+		if (token.date_last_used && this.isToday(token.date_last_used)) { return; }
+
+		const date = new Date();
+		token.date_last_used = date;
+
+		this.sql(GP_TOKENS_TABLE).where({ value: token.value }).update({ date_last_used: date })
+			.catch(error => logger.error('Failed to update the token last used date.', error));
 	}
 
 	private isExpired (date: Date) {
