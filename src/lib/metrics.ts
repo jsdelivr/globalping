@@ -3,6 +3,7 @@ import apmAgent from 'elastic-apm-node';
 import { monitorEventLoopDelay } from 'node:perf_hooks';
 import type { Server as SocketServer } from 'socket.io';
 import type { Knex } from 'knex';
+import type { Pool } from 'tarn';
 import type { Middleware } from 'koa';
 
 import { scopedLogger } from './logger.js';
@@ -107,8 +108,8 @@ export class MetricsAgent {
 			};
 		}, 60 * 1000);
 
-		const getDashboardPool = (): Knex.Client['pool'] => {
-			return (this.sql.client as Knex.Client).pool;
+		const getDashboardPool = (): Pool<unknown> | undefined => {
+			return (this.sql.client as Knex.Client).pool as Pool<unknown> | undefined;
 		};
 
 		registerGuardedMetric('gp.db.dashboard.pool.used', () => getDashboardPool()?.numUsed());

@@ -1,6 +1,5 @@
 import config from 'config';
-import { type City, WebServiceClient } from '@maxmind/geoip2-node';
-import type { WebServiceClientError } from '@maxmind/geoip2-node/dist/src/types.js';
+import { type City, type WebServiceClientError, WebServiceClient } from '@maxmind/geoip2-node';
 import type { ProviderLocationInfo } from '../client.js';
 import {
 	normalizeCityName,
