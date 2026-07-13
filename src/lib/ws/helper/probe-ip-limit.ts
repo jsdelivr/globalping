@@ -49,10 +49,12 @@ const addToSet = <K>(map: Map<K, Set<string>>, key: K, value: string) => {
 const lowestSocketId = (socketIds: string[]) => socketIds.reduce((min, id) => id < min ? id : min);
 
 type UserProbe = Pick<ServerProbe, 'adoptionToken' | 'ipAddress' | 'uuid'>;
+type IpKeyIndex = Map<string, Set<string>>;
 
 export class ProbeIpLimit {
 	private timer: NodeJS.Timeout | undefined;
-	private ipKeyIndexPromise: Promise<Map<string, Set<string>>> | undefined;
+	private ipKeyIndexPromise: Promise<IpKeyIndex> | undefined;
+	private nextIpKeyIndexPromise: Promise<IpKeyIndex> | undefined;
 
 	constructor (
 		private readonly syncedProbeList: IoContext['syncedProbeList'],
@@ -184,11 +186,21 @@ export class ProbeIpLimit {
 		}
 	}
 
-	private buildIpKeyIndex (): Promise<Map<string, Set<string>>> {
-		// If same promise is already in-flight - return it.
+	private buildIpKeyIndex (): Promise<IpKeyIndex> {
+		// If index promise is already in-flight - wait for the next promise (only next one will have up-to-date data).
 		if (this.ipKeyIndexPromise) {
-			return this.ipKeyIndexPromise;
+			this.nextIpKeyIndexPromise ??= this.ipKeyIndexPromise
+				.catch(() => {})
+				.then(() => this.startIpKeyIndex());
+
+			return this.nextIpKeyIndexPromise;
 		}
+
+		return this.startIpKeyIndex();
+	}
+
+	private startIpKeyIndex (): Promise<IpKeyIndex> {
+		this.nextIpKeyIndexPromise = undefined;
 
 		this.ipKeyIndexPromise = (async () => {
 			try {
@@ -201,8 +213,8 @@ export class ProbeIpLimit {
 		return this.ipKeyIndexPromise;
 	}
 
-	private indexIpKeys (probes: ServerProbe[]): Map<string, Set<string>> {
-		const ipKeyToClients = new Map<string, Set<string>>();
+	private indexIpKeys (probes: ServerProbe[]): IpKeyIndex {
+		const ipKeyToClients: IpKeyIndex = new Map();
 
 		for (const probe of probes) {
 			for (const ip of [ probe.ipAddress, ...probe.altIpAddresses ]) {

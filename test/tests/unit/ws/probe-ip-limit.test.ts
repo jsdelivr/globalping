@@ -257,20 +257,43 @@ describe('ProbeIpLimit', () => {
 				expect(error).to.equal(null);
 			});
 
-			it('shares one in-flight probe fetch across concurrent connects', async () => {
-				let resolveFetch: (probes: unknown[]) => void = () => {};
-				fetchProbes.returns(new Promise((resolve) => {
-					resolveFetch = resolve;
+			it('always uses upcoming index promise instead of running one', async () => {
+				let resolveStale: any;
+				fetchProbes.onFirstCall().returns(new Promise((resolve) => {
+					resolveStale = resolve;
 				}));
 
+				fetchProbes.onSecondCall().resolves([]);
+
 				const probeIpLimit = createProbeIpLimit();
-				const first = catchError(probeIpLimit.verifyIpLimit('2001:db8:0:1::1', 'x'));
-				const second = catchError(probeIpLimit.verifyIpLimit('2001:db8:0:2::1', 'y'));
+				const first = catchError(probeIpLimit.verifyIpLimit('9.9.9.9', 'x'));
+				const second = catchError(probeIpLimit.verifyIpLimit('1.1.1.1', 'new'));
 
-				resolveFetch([ getProbe('a', '2001:db8:0:9::1') ]);
+				resolveStale([ getProbe('gone', '1.1.1.1') ]);
 
-				expect(await Promise.all([ first, second ])).to.deep.equal([ null, null ]);
-				expect(fetchProbes.callCount).to.equal(1);
+				expect(await first).to.equal(null);
+				expect(await second).to.equal(null);
+				expect(fetchProbes.callCount).to.equal(2);
+			});
+
+			it('batches connects that arrive during an in-flight fetch into a single follow-up fetch', async () => {
+				let resolveStale: any;
+				fetchProbes.onFirstCall().returns(new Promise((resolve) => {
+					resolveStale = resolve;
+				}));
+
+				fetchProbes.onSecondCall().resolves([]);
+
+				const probeIpLimit = createProbeIpLimit();
+				const first = catchError(probeIpLimit.verifyIpLimit('9.9.9.9', 'x'));
+				const second = catchError(probeIpLimit.verifyIpLimit('2.2.2.2', 'y'));
+				const third = catchError(probeIpLimit.verifyIpLimit('3.3.3.3', 'z'));
+				const forth = catchError(probeIpLimit.verifyIpLimit('4.4.4.4', 'a'));
+
+				resolveStale([]);
+
+				expect(await Promise.all([ first, second, third, forth ])).to.deep.equal([ null, null, null, null ]);
+				expect(fetchProbes.callCount).to.equal(2);
 			});
 		});
 
