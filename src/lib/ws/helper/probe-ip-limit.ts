@@ -150,7 +150,7 @@ export class ProbeIpLimit {
 		const ipKey = getIpKey(ipAddress);
 		const clients = ipKeyToClients.get(ipKey);
 
-		if (clients && (clients.size > 1 || !clients.has(socketId))) {
+		if (clients) {
 			logger.warn(`WS client ${socketId} has reached the concurrent IP limit.`, { ip: ipAddress, ipKey });
 			throw new ProbeError('ip limit');
 		}
@@ -173,7 +173,6 @@ export class ProbeIpLimit {
 		for (const other of probes) {
 			if (other.location.asn !== probe.location.asn
 				|| other.location.city !== probe.location.city
-				|| other.client === probe.client
 				|| this.getUserId(other) !== userId) {
 				continue;
 			}
