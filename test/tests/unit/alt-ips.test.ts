@@ -1,5 +1,6 @@
 import sinon from 'sinon';
 import { expect } from 'chai';
+import { ConsoleWriter } from 'h-logger2';
 import { AltIpsClient } from '../../../src/lib/alt-ips-client.js';
 import type { ServerProbe } from '../../../src/probe/types.js';
 
@@ -15,6 +16,8 @@ describe('AltIpsClient', () => {
 	let altIps: AltIpsClient;
 
 	beforeEach(() => {
+		sandbox.stub(ConsoleWriter.prototype, 'write');
+
 		probe = {
 			client: 'socketId1',
 			ipAddress: '1.1.1.1',
@@ -46,8 +49,8 @@ describe('AltIpsClient', () => {
 		altIps = new AltIpsClient(redis, geoIpClient, probeOverride, getProbeByIp, disconnectBySocketId);
 	});
 
-	afterEach(async () => {
-		sandbox.reset();
+	afterEach(() => {
+		sandbox.restore();
 	});
 
 	it('should generate token and store it in redis', async () => {

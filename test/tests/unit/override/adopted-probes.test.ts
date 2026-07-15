@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import relativeDayUtc from 'relative-day-utc';
+import { ConsoleWriter } from 'h-logger2';
 import got from 'got';
 import { AdoptedProbes, Row } from '../../../../src/lib/override/adopted-probes.js';
 import type { SocketProbe } from '../../../../src/probe/types.js';
@@ -120,6 +121,10 @@ describe('AdoptedProbes', () => {
 	const sqlStub = sandbox.stub() as any;
 	sqlStub.raw = sql.raw;
 	const getProbesWithAdminData = sandbox.stub();
+
+	before(() => {
+		sandbox.stub(ConsoleWriter.prototype, 'write');
+	});
 
 	beforeEach(() => {
 		sandbox.reset();

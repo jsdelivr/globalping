@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as td from 'testdouble';
+import { ConsoleWriter } from 'h-logger2';
 
 describe('city approximation', () => {
 	let getCity: any;
@@ -19,6 +20,10 @@ describe('city approximation', () => {
 		await populateCitiesList();
 	});
 
+	before(() => {
+		sandbox.stub(ConsoleWriter.prototype, 'write');
+	});
+
 	beforeEach(() => {
 		redis.geoAdd.reset();
 		redis.geoSearch.reset();
@@ -26,6 +31,7 @@ describe('city approximation', () => {
 	});
 
 	after(() => {
+		sandbox.restore();
 		td.reset();
 	});
 
