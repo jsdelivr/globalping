@@ -76,7 +76,7 @@ describe('IpcWorker', () => {
 
 		it('should reject when the master does not respond', async () => {
 			const settled = worker.request('credits', 'consume', [ 'user', 5 ]).catch(e => e);
-			await clock.tickAsync(5000);
+			await clock.tickAsync(10_000);
 
 			const error = await settled as Error;
 			expect(error).to.be.instanceOf(Error);

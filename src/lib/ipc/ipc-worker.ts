@@ -1,7 +1,7 @@
 import process from 'node:process';
 import type { IpcResponse } from './ipc-master.js';
 
-const IPC_TIMEOUT = 5000;
+const IPC_TIMEOUT = 10000;
 
 export class IpcWorker {
 	private lastId = 0;
