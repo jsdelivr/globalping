@@ -14,7 +14,7 @@ module.exports = {
 	'node-option': [
 		'enable-source-maps',
 		'experimental-specifier-resolution=node',
-		'loader=ts-node/esm',
+		'import=tsx',
 	],
 	'globals': [
 		'__extends',

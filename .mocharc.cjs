@@ -5,10 +5,6 @@ if (process.env.LOG_LEVEL === undefined) {
 	process.env.LOG_LEVEL = '50';
 }
 
-if (process.env.TS_NODE_TRANSPILE_ONLY === undefined) {
-	process.env.TS_NODE_TRANSPILE_ONLY = 'true';
-}
-
 module.exports = {
 	'exit': true,
 	'timeout': 20000,
@@ -19,7 +15,7 @@ module.exports = {
 	'node-option': [
 		'enable-source-maps',
 		'experimental-specifier-resolution=node',
-		'loader=ts-node/esm',
+		'import=tsx',
 	],
 	'globals': [
 		'__extends',

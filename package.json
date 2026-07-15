@@ -111,7 +111,6 @@
 		"start-server-and-test": "^3.0.11",
 		"supertest": "^7.2.2",
 		"testdouble": "^3.20.2",
-		"ts-node": "^10.9.2",
 		"tsx": "^4.23.0",
 		"typescript": "npm:@typescript/typescript6@^6.0.3"
 	},
@@ -136,8 +135,7 @@
 		"lint:types": "tsc --noEmit",
 		"test": "npm run lint && npm run test:mocha && npm run test:portman",
 		"test:dist": "node --test-reporter=spec test/dist.js",
-		"test:mocha": "TS_NODE_TRANSPILE_ONLY=false mocha 'test/tests/unit/**/*.test.ts' 'test/tests/integration/**/*.test.ts'",
-		"test:mocha:dev": "LOG_LEVEL=30 mocha 'test/tests/unit/**/*.test.ts' 'test/tests/integration/**/*.test.ts'",
+		"test:mocha": "mocha 'test/tests/unit/**/*.test.ts' 'test/tests/integration/**/*.test.ts'",
 		"test:mocha:custom": "mocha",
 		"test:perf": "npm i --no-save artillery && tsx test-perf/index.ts",
 		"test:portman": "TEST_DONT_RESTART_WORKERS=1 start-test 'npm run start:test' http://localhost:3000/health 'npm run test:portman:create && npm run test:portman:setup && npm run test:portman:run' || E=$?; rm -rf tmp; exit $E;",
@@ -148,7 +146,7 @@
 		"test:e2e:ipv4": "npm run test:e2e:docker && npm run test:e2e:run -- --grep IPv6 --invert",
 		"test:e2e:ipv6": "npm run test:e2e:docker && npm run test:e2e:run -- --grep IPv6",
 		"test:e2e:docker": "docker build -t globalping-api-e2e . && docker build -t globalping-probe-e2e https://github.com/jsdelivr/globalping-probe.git",
-		"test:e2e:run": "TS_NODE_TRANSPILE_ONLY=true NODE_ENV=test mocha --config .mocharc.e2e.cjs",
+		"test:e2e:run": "NODE_ENV=test mocha --config .mocharc.e2e.cjs",
 		"update:asn-data": "tsx bin/fetch-asn-data.ts"
 	},
 	"lint-staged": {
