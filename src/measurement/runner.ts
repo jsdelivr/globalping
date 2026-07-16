@@ -9,7 +9,7 @@ import type { MetricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
 import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage, UserRequest, MeasurementRequestMessage } from './types.js';
-import { checkPostMeasurementRateLimit } from '../lib/rate-limiter/rate-limiter-post.js';
+import { checkPostMeasurementRateLimit, precheckPostMeasurementRateLimit } from '../lib/rate-limiter/rate-limiter-post.js';
 import type { ExtendedContext } from '../types.js';
 
 export class MeasurementRunner {
@@ -17,12 +17,15 @@ export class MeasurementRunner {
 		private readonly io: Server,
 		private readonly store: MeasurementStore,
 		private readonly router: ProbeRouter,
+		private readonly precheckRateLimit: typeof precheckPostMeasurementRateLimit,
 		private readonly checkRateLimit: typeof checkPostMeasurementRateLimit,
 		private readonly metrics: MetricsAgent,
 	) {}
 
 	async run (ctx: ExtendedContext): Promise<{ measurementId: string; probesCount: number }> {
 		const userRequest = ctx.request.body as UserRequest;
+		await this.precheckRateLimit(ctx, userRequest);
+
 		const { onlineProbesMap, allProbes, request } = await this.router.findMatchingProbes(userRequest);
 		const ipVersion = userRequest.measurementOptions?.ipVersion;
 
@@ -92,5 +95,12 @@ export class MeasurementRunner {
 }
 
 export const initMeasurementRunner = (io: Server, router: ProbeRouter, metricsAgent: MetricsAgent) => {
-	return new MeasurementRunner(io, getMeasurementStore(), router, checkPostMeasurementRateLimit, metricsAgent);
+	return new MeasurementRunner(
+		io,
+		getMeasurementStore(),
+		router,
+		precheckPostMeasurementRateLimit,
+		checkPostMeasurementRateLimit,
+		metricsAgent,
+	);
 };

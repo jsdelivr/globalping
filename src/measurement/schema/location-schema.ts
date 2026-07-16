@@ -25,8 +25,10 @@ const validateMagic = (value: string, helpers: CustomHelpers): string | ErrorRep
 	return value;
 };
 
+export const getSumOfLocationsLimits = (locations: LocationWithLimit[]) => locations.reduce((sum, location) => sum + (location.limit || 1), 0);
+
 export const sumOfLocationsLimits = (code: string, max: number) => (value: LocationWithLimit[], helpers: CustomHelpers): LocationWithLimit[] | ErrorReport => {
-	const sum = value.reduce((sum, location) => sum + (location.limit || 1), 0);
+	const sum = getSumOfLocationsLimits(value);
 
 	if (sum > max) {
 		return helpers.error(code);

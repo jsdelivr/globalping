@@ -138,9 +138,7 @@ describe('rate limiter', () => {
 				await dashboardClient(CREDITS_TABLE).insert({
 					user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 					amount: 10,
-				}).onConflict().merge({
-					amount: 10,
-				});
+				}).onConflict().merge();
 
 				const response = await requestAgent.get('/v1/limits')
 					.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')

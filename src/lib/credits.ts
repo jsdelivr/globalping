@@ -12,4 +12,4 @@ export class CreditsWorker implements Credits {
 }
 
 // In the master (and single-process runs, e.g. tests) callers use the buffer directly.
-export const credits: Credits = creditsMaster ?? new CreditsWorker();
+export const credits: CreditsWorker = creditsMaster ?? new CreditsWorker();
