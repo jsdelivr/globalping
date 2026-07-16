@@ -59,7 +59,7 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ubicloud/setup-node@v4
         with:
           node-version: 26.x
