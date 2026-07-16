@@ -49,10 +49,12 @@ const addToSet = <K>(map: Map<K, Set<string>>, key: K, value: string) => {
 const lowestSocketId = (socketIds: string[]) => socketIds.reduce((min, id) => id < min ? id : min);
 
 type UserProbe = Pick<ServerProbe, 'adoptionToken' | 'ipAddress' | 'uuid'>;
+type IpKeyIndex = Map<string, Set<string>>;
 
 export class ProbeIpLimit {
 	private timer: NodeJS.Timeout | undefined;
-	private ipKeyIndexPromise: Promise<Map<string, Set<string>>> | undefined;
+	private ipKeyIndexPromise: Promise<IpKeyIndex> | undefined;
+	private nextIpKeyIndexPromise: Promise<IpKeyIndex> | undefined;
 
 	constructor (
 		private readonly syncedProbeList: IoContext['syncedProbeList'],
@@ -145,10 +147,11 @@ export class ProbeIpLimit {
 		}
 
 		const ipKeyToClients = await this.buildIpKeyIndex();
-		const clients = ipKeyToClients.get(getIpKey(ipAddress));
+		const ipKey = getIpKey(ipAddress);
+		const clients = ipKeyToClients.get(ipKey);
 
-		if (clients && (clients.size > 1 || !clients.has(socketId))) {
-			logger.warn(`WS client ${socketId} has reached the concurrent IP limit.`, { message: ipAddress });
+		if (clients) {
+			logger.warn(`WS client ${socketId} has reached the concurrent IP limit.`, { ip: ipAddress, ipKey });
 			throw new ProbeError('ip limit');
 		}
 	}
@@ -170,7 +173,6 @@ export class ProbeIpLimit {
 		for (const other of probes) {
 			if (other.location.asn !== probe.location.asn
 				|| other.location.city !== probe.location.city
-				|| other.client === probe.client
 				|| this.getUserId(other) !== userId) {
 				continue;
 			}
@@ -184,11 +186,21 @@ export class ProbeIpLimit {
 		}
 	}
 
-	private buildIpKeyIndex (): Promise<Map<string, Set<string>>> {
-		// If same promise is already in-flight - return it.
+	private buildIpKeyIndex (): Promise<IpKeyIndex> {
+		// If index promise is already in-flight - wait for the next promise (only next one will have up-to-date data).
 		if (this.ipKeyIndexPromise) {
-			return this.ipKeyIndexPromise;
+			this.nextIpKeyIndexPromise ??= this.ipKeyIndexPromise
+				.catch(() => {})
+				.then(() => this.startIpKeyIndex());
+
+			return this.nextIpKeyIndexPromise;
 		}
+
+		return this.startIpKeyIndex();
+	}
+
+	private startIpKeyIndex (): Promise<IpKeyIndex> {
+		this.nextIpKeyIndexPromise = undefined;
 
 		this.ipKeyIndexPromise = (async () => {
 			try {
@@ -201,8 +213,8 @@ export class ProbeIpLimit {
 		return this.ipKeyIndexPromise;
 	}
 
-	private indexIpKeys (probes: ServerProbe[]): Map<string, Set<string>> {
-		const ipKeyToClients = new Map<string, Set<string>>();
+	private indexIpKeys (probes: ServerProbe[]): IpKeyIndex {
+		const ipKeyToClients: IpKeyIndex = new Map();
 
 		for (const probe of probes) {
 			for (const ip of [ probe.ipAddress, ...probe.altIpAddresses ]) {

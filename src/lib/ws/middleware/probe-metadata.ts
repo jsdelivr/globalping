@@ -19,8 +19,8 @@ export const probeMetadata = (probeIpLimit: ProbeIpLimit) => errorHandler(async 
 		let message = 'failed to collect probe metadata';
 
 		if (error instanceof ProbeError) {
-			logger.warn(message, error);
 			message = error.message;
+			logger.warn(message, error);
 		} else {
 			logger.error(message, error);
 		}
