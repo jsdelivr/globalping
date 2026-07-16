@@ -7,7 +7,7 @@ import { anonymousRateLimiter as anonymousPostRateLimiter, authenticatedRateLimi
 import { rateLimiter as getRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-get.js';
 import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
-import { CREDITS_TABLE } from '../../../src/lib/credits.js';
+import { CREDITS_TABLE } from '../../../src/lib/credits-master.js';
 import { getPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
 
 describe('rate limiter', () => {

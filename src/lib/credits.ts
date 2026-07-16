@@ -1,38 +1,15 @@
-import type { Knex } from 'knex';
-import { dashboardClient } from './sql/client.js';
+import { ipcWorker } from './ipc/ipc-worker.js';
+import { creditsMaster, type ConsumeResult, type Credits } from './credits-master.js';
 
-export const CREDITS_TABLE = 'gp_credits';
-const ER_CONSTRAINT_FAILED_CODE = 4025;
-
-export class Credits {
-	constructor (private readonly sql: Knex) {}
-
-	async consume (userId: string, credits: number): Promise<{ isConsumed: boolean; remainingCredits: number }> {
-		let numberOfUpdates: number;
-
-		try {
-			numberOfUpdates = await this.sql(CREDITS_TABLE).where({ user_id: userId }).update({ amount: this.sql.raw('amount - ?', [ credits ]) });
-		} catch (error) {
-			if (error && (error as Error & { errno?: number }).errno === ER_CONSTRAINT_FAILED_CODE) {
-				const remainingCredits = await this.getRemainingCredits(userId);
-				return { isConsumed: false, remainingCredits };
-			}
-
-			throw error;
-		}
-
-		if (numberOfUpdates === 0) {
-			return { isConsumed: false, remainingCredits: 0 };
-		}
-
-		const remainingCredits = await this.getRemainingCredits(userId);
-		return { isConsumed: true, remainingCredits };
+export class CreditsWorker implements Credits {
+	async consume (userId: string, credits: number): Promise<ConsumeResult> {
+		return ipcWorker.request('credits', 'consume', [ userId, credits ]) as Promise<ConsumeResult>;
 	}
 
 	async getRemainingCredits (userId: string): Promise<number> {
-		const result = await this.sql(CREDITS_TABLE).where({ user_id: userId }).first<{ amount: number } | undefined>('amount');
-		return result?.amount || 0;
+		return ipcWorker.request('credits', 'getRemainingCredits', [ userId ]) as Promise<number>;
 	}
 }
 
-export const credits = new Credits(dashboardClient);
+// In the master (and single-process runs, e.g. tests) callers use the buffer directly.
+export const credits: Credits = creditsMaster ?? new CreditsWorker();
