@@ -5,6 +5,7 @@ import nock from 'nock';
 import type { Socket } from 'socket.io-client';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
+import { ConsoleWriter } from 'h-logger2';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import * as id from '../../../../src/measurement/id.js';
 
@@ -31,6 +32,7 @@ describe('Create measurement request', () => {
 	});
 
 	before(async () => {
+		sandbox.stub(ConsoleWriter.prototype, 'write');
 		await td.replaceEsm('../../../../src/measurement/id.ts', { ...id, generateMeasurementId }, {});
 		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getCloudTags: () => [ 'gcp-us-west4', 'gcp' ], populateMemList: () => Promise.resolve() });
 		({ getTestServer, waitForProbesUpdate, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
@@ -57,6 +59,7 @@ describe('Create measurement request', () => {
 	});
 
 	after(() => {
+		sandbox.restore();
 		td.reset();
 	});
 

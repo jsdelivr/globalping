@@ -97,10 +97,13 @@ export const createStreamScheduleLoader = () => new ScheduleLoader(dashboardClie
 
 let streamScheduleLoader: ScheduleLoader | undefined;
 
-export const initStreamScheduleLoader = () => {
+export const initStreamScheduleLoader = ({ scheduleSync = true } = {}) => {
 	if (!streamScheduleLoader) {
 		streamScheduleLoader = createStreamScheduleLoader();
-		streamScheduleLoader.scheduleSync();
+
+		if (scheduleSync) {
+			streamScheduleLoader.scheduleSync();
+		}
 	}
 
 	return streamScheduleLoader;

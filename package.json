@@ -136,7 +136,7 @@
 		"lint:types": "tsc --noEmit",
 		"test": "npm run lint && npm run test:mocha && npm run test:portman",
 		"test:dist": "node --test-reporter=spec test/dist.js",
-		"test:mocha": "LOG_LEVEL=30 TS_NODE_TRANSPILE_ONLY=false mocha 'test/tests/unit/**/*.test.ts' 'test/tests/integration/**/*.test.ts'",
+		"test:mocha": "TS_NODE_TRANSPILE_ONLY=false mocha 'test/tests/unit/**/*.test.ts' 'test/tests/integration/**/*.test.ts'",
 		"test:mocha:dev": "LOG_LEVEL=30 mocha 'test/tests/unit/**/*.test.ts' 'test/tests/integration/**/*.test.ts'",
 		"test:mocha:custom": "mocha",
 		"test:perf": "npm i --no-save artillery && tsx test-perf/index.ts",
