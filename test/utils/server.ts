@@ -14,7 +14,7 @@ const logger = scopedLogger('test-server');
 
 export const getTestServer = async (): Promise<Server> => {
 	if (!app) {
-		const result = await createServer();
+		const result = await createServer({ startBackgroundJobs: false });
 		app = result.httpServer;
 		ioContext = result.ioContext;
 		app.listen(0);
@@ -23,6 +23,7 @@ export const getTestServer = async (): Promise<Server> => {
 		ioContext.syncedProbeList.syncInterval = 40;
 		ioContext.syncedProbeList.unscheduleSync();
 		ioContext.syncedProbeList.scheduleSync();
+		ioContext.scheduleExecutor.start();
 		ioContext.syncedProbeList.logger.writers = [ new ConsoleWriter(Logger.levels.warn) ];
 	}
 

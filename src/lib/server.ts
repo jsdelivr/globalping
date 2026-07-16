@@ -33,6 +33,10 @@ import { initAltIpsClient, type AltIpsClient } from './alt-ips-client.js';
 
 type WsServerExports = Awaited<ReturnType<typeof initWsServer>>;
 
+type CreateServerOptions = {
+	startBackgroundJobs?: boolean;
+};
+
 export type IoContext = {
 	io: WsServer;
 	syncedProbeList: SyncedProbeList;
@@ -54,7 +58,7 @@ export type IoContext = {
 	onProbesUpdate: WsServerExports['onProbesUpdate'];
 };
 
-export const createServer = async () => {
+export const createServer = async ({ startBackgroundJobs = true }: CreateServerOptions = {}) => {
 	await initRedisClient();
 	await initPersistentRedisClient();
 	await initMeasurementRedisClient();
@@ -78,7 +82,6 @@ export const createServer = async () => {
 
 	// Populate Dashboard override data before using it during initWsServer()
 	await logIfTooLong(probeOverride.fetchDashboardData(), 'probeOverride.fetchDashboardData');
-	probeOverride.scheduleSync();
 
 	const { io, syncedProbeList, fetchRawSockets, disconnectBySocketId, fetchProbes, getProbeByIp, onProbesUpdate } = await logIfTooLong(initWsServer(probeOverride), 'initWsServer');
 
@@ -91,18 +94,12 @@ export const createServer = async () => {
 	const measurementRunner = initMeasurementRunner(io, probeRouter, metricsAgent);
 	const codeSender = initCodeSender(io, getProbeByIp);
 
-	initStreamScheduleLoader();
+	initStreamScheduleLoader({ scheduleSync: startBackgroundJobs });
 	const scheduleExecutor = initStreamScheduleExecutor(io, syncedProbeList, probesLocationFilter);
 
 	await logIfTooLong(adoptionToken.syncTokens(), 'adoptionToken.syncTokens');
-	adoptionToken.scheduleSync();
 	await logIfTooLong(auth.syncTokens(), 'auth.syncTokens');
-	auth.scheduleSync();
 
-	scheduleExecutor.start();
-	probeIpLimit.scheduleSync();
-
-	reconnectProbes(fetchRawSockets);
 	// Disconnect probes shortly before shutdown to prevent data loss.
 	termListener.on('terminating', ({ delay }) => setTimeout(() => void disconnectProbes(fetchRawSockets, 0), delay - 10000));
 
@@ -134,7 +131,15 @@ export const createServer = async () => {
 	const { initGateway } = await import('./ws/gateway.js');
 	initGateway(ioContext);
 
-	metricsAgent.run();
+	if (startBackgroundJobs) {
+		probeOverride.scheduleSync();
+		adoptionToken.scheduleSync();
+		scheduleExecutor.start();
+		probeIpLimit.scheduleSync();
+		auth.scheduleSync();
+		reconnectProbes(fetchRawSockets);
+		metricsAgent.run();
+	}
 
 	return { httpServer, ioContext };
 };
