@@ -246,6 +246,11 @@ describe('rate limiter', () => {
 				target: 'jsdelivr.com',
 			}).expect(429) as Response;
 
+			expect(response.body.error).to.deep.equal({
+				type: 'rate_limit_exceeded',
+				message: 'This measurement exceeds the remaining hourly rate limit for your IP address.',
+			});
+
 			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
 		});
 
@@ -426,6 +431,11 @@ describe('rate limiter', () => {
 					target: 'jsdelivr.com',
 					limit: 2,
 				}).expect(429) as Response;
+
+			expect(response.body.error).to.deep.equal({
+				type: 'insufficient_credits',
+				message: 'Not enough credits to run this measurement.',
+			});
 
 			expect(response.headers['x-ratelimit-consumed']).to.equal('0');
 			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
@@ -634,6 +644,11 @@ describe('rate limiter', () => {
 				}).expect(429) as Response;
 
 			// The second request is rejected by the precheck, before matching.
+			expect(response2.body.error).to.deep.equal({
+				type: 'insufficient_credits',
+				message: 'Not enough credits to run this measurement.',
+			});
+
 			expect(response2.headers['x-request-cost']).to.equal('50');
 			expect(response2.headers['x-ratelimit-consumed']).to.equal('0');
 			expect(response2.headers['x-ratelimit-remaining']).to.equal('0');

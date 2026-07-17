@@ -19,7 +19,7 @@ const checkRateLimit = async (ctx: ExtendedContext) => {
 		await rateLimiter.consume(ip);
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
-			throw createHttpError(429, `Too many requests.`, { type: 'too_many_requests' });
+			throw createHttpError(429, `Too many alternative IP requests from this IP address. Please retry later.`, { type: 'too_many_requests' });
 		}
 
 		throw createHttpError(500);

@@ -474,7 +474,7 @@ describe('MeasurementRunner', () => {
 			inProgressUpdates: false,
 		};
 
-		const error = createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
+		const error = createHttpError(429, 'This measurement exceeds the remaining hourly rate limit for your IP address.', { type: 'rate_limit_exceeded' });
 		precheckRateLimit.rejects(error);
 
 		const err = await runner.run({

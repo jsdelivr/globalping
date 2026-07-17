@@ -64,6 +64,10 @@ const getMaxRequestedProbes = (userRequest: UserRequest) => {
 	return locations.some(l => l.limit) ? getSumOfLocationsLimits(locations) : userRequest.limit;
 };
 
+const createRateLimitError = (ctx: ExtendedContext) => ctx.state.user?.id
+	? createHttpError(429, 'Not enough credits to run this measurement.', { type: 'insufficient_credits' })
+	: createHttpError(429, 'This measurement exceeds the remaining hourly rate limit for your IP address.', { type: 'rate_limit_exceeded' });
+
 export const precheckPostMeasurementRateLimit = async (ctx: ExtendedContext, userRequest: UserRequest) => {
 	if (ctx['isAdmin']) {
 		return;
@@ -95,7 +99,7 @@ export const precheckPostMeasurementRateLimit = async (ctx: ExtendedContext, use
 
 	setRequestCostHeaders(ctx, maxProbes);
 	setRateLimitHeaders(ctx, rateLimiterRes, rateLimiter, 0);
-	throw createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
+	throw createRateLimitError(ctx);
 };
 
 export const checkPostMeasurementRateLimit = async (ctx: ExtendedContext, numberOfProbes: number) => {
@@ -126,7 +130,7 @@ export const checkPostMeasurementRateLimit = async (ctx: ExtendedContext, number
 
 			const result = await rateLimiter.reward(id, numberOfProbes);
 			setRateLimitHeaders(ctx, result, rateLimiter, 0);
-			throw createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
+			throw createRateLimitError(ctx);
 		}
 
 		throw createHttpError(500);
