@@ -4,6 +4,8 @@ import { RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
 import { getPersistentRedisClient } from '../redis/persistent-client.js';
 import createHttpError from 'http-errors';
 import type { ExtendedContext } from '../../types.js';
+import type { UserRequest } from '../../measurement/types.js';
+import { getSumOfLocationsLimits } from '../../measurement/schema/location-schema.js';
 import { credits } from '../credits.js';
 import { getIdFromRequest } from './get-id-from-request.js';
 
@@ -50,6 +52,50 @@ const getRateLimiter = (ctx: ExtendedContext): {
 		id: ctx.state.user?.hashedToken ?? getIdFromRequest(ctx.request),
 		rateLimiter: anonymousRateLimiter,
 	};
+};
+
+const getMaxRequestedProbes = (userRequest: UserRequest) => {
+	const locations = userRequest.locations ?? [];
+
+	if (typeof locations === 'string') {
+		return null;
+	}
+
+	return locations.some(l => l.limit) ? getSumOfLocationsLimits(locations) : userRequest.limit;
+};
+
+export const precheckPostMeasurementRateLimit = async (ctx: ExtendedContext, userRequest: UserRequest) => {
+	if (ctx['isAdmin']) {
+		return;
+	}
+
+	const maxProbes = getMaxRequestedProbes(userRequest);
+
+	if (maxProbes === null) {
+		return;
+	}
+
+	const { rateLimiter, id } = getRateLimiter(ctx);
+	const rateLimiterRes = await rateLimiter.get(id);
+
+	if (!rateLimiterRes || rateLimiterRes.remainingPoints >= maxProbes) {
+		return;
+	}
+
+	if (ctx.state.user?.id) {
+		const requiredCredits = maxProbes - rateLimiterRes.remainingPoints;
+		const attempt = failedCreditsAttempts.get(ctx.state.user.id);
+
+		if (!attempt || requiredCredits < attempt.requiredCredits) {
+			return;
+		}
+
+		setCreditsConsumedHeaders(ctx, 0, attempt.remainingCredits);
+	}
+
+	setRequestCostHeaders(ctx, maxProbes);
+	setRateLimitHeaders(ctx, rateLimiterRes, rateLimiter, 0);
+	throw createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
 };
 
 export const checkPostMeasurementRateLimit = async (ctx: ExtendedContext, numberOfProbes: number) => {

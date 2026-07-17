@@ -347,9 +347,7 @@ describe('rate limiter', () => {
 			await dashboardClient(CREDITS_TABLE).insert({
 				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 				amount: 10,
-			}).onConflict().merge({
-				amount: 10,
-			});
+			}).onConflict().merge();
 		});
 
 		it('should consume free credits before paid credits', async () => {
@@ -506,6 +504,211 @@ describe('rate limiter', () => {
 			expect(response.headers['x-request-cost']).to.equal('2');
 			const credits = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
 			expect(credits).to.deep.equal([]);
+		});
+	});
+
+	describe('rate limit precheck', () => {
+		it('should reject before matching if the potential cost exceeds the remaining points (anonymous)', async () => {
+			await anonymousPostRateLimiter.set(clientId, 240, 0); // 10 remaining
+
+			const response = await requestAgent.post('/v1/measurements').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+				limit: 50,
+			}).expect(429) as Response;
+
+			expect(response.headers['x-ratelimit-consumed']).to.equal('0');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('10');
+			expect(response.headers['x-request-cost']).to.equal('50');
+
+			const rateLimiterRes = await anonymousPostRateLimiter.get(clientId);
+			expect(rateLimiterRes?.consumedPoints).to.equal(240);
+		});
+
+		it('should reject before matching based on the sum of the location limits (anonymous)', async () => {
+			await anonymousPostRateLimiter.set(clientId, 240, 0); // 10 remaining
+
+			const response = await requestAgent.post('/v1/measurements').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+				locations: [
+					{ continent: 'EU', limit: 25 },
+					{ continent: 'NA', limit: 25 },
+				],
+			}).expect(429) as Response;
+
+			expect(response.headers['x-ratelimit-consumed']).to.equal('0');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('10');
+			expect(response.headers['x-request-cost']).to.equal('50');
+		});
+
+		it('should skip the precheck when locations is a measurement id (anonymous)', async () => {
+			const { body: { id } } = await requestAgent.post('/v1/measurements').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+				limit: 2,
+			}).expect(202) as Response;
+
+			await anonymousPostRateLimiter.set(clientId, 240, 0); // 10 remaining
+
+			const response = await requestAgent.post('/v1/measurements').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+				locations: id,
+				limit: 50,
+			}).expect(202) as Response;
+
+			expect(response.headers['x-ratelimit-consumed']).to.equal('2');
+			expect(response.headers['x-request-cost']).to.equal('2');
+		});
+
+		it('should pass if the remaining points cover the potential cost (anonymous)', async () => {
+			await anonymousPostRateLimiter.set(clientId, 200, 0); // 50 remaining
+
+			const response = await requestAgent.post('/v1/measurements').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+				limit: 50,
+			}).expect(202) as Response;
+
+			expect(response.headers['x-ratelimit-consumed']).to.equal('2');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('48');
+			expect(response.headers['x-request-cost']).to.equal('2');
+		});
+
+		it('should pass when there is no recent failed credits attempt (authenticated)', async () => {
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 490, 0); // 10 remaining
+
+			await dashboardClient(CREDITS_TABLE).insert({
+				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				amount: 100,
+			}).onConflict().merge();
+
+			const response = await requestAgent.post('/v1/measurements')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
+				.send({
+					type: 'ping',
+					target: 'jsdelivr.com',
+					limit: 50,
+				}).expect(202) as Response;
+
+			expect(response.headers['x-ratelimit-consumed']).to.equal('2');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('8');
+			expect(response.headers['x-credits-consumed']).to.not.exist;
+			expect(response.headers['x-request-cost']).to.equal('2');
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			expect(amount).to.equal(100);
+		});
+
+		it('should reject before matching after a failed credits attempt (authenticated)', async () => {
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0); // 0 remaining
+
+			await dashboardClient(CREDITS_TABLE).insert({
+				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				amount: 1,
+			}).onConflict().merge();
+
+			const response = await requestAgent.post('/v1/measurements')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
+				.send({
+					type: 'ping',
+					target: 'jsdelivr.com',
+					limit: 50,
+				}).expect(429) as Response;
+
+			// The first request is rejected by the real check, after matching.
+			expect(response.headers['x-request-cost']).to.equal('2');
+			expect(response.headers['x-ratelimit-consumed']).to.equal('0');
+			expect(response.headers['x-ratelimit-remaining']).to.equal('0');
+			expect(response.headers['x-credits-consumed']).to.equal('0');
+			expect(response.headers['x-credits-remaining']).to.equal('1');
+
+			expect(failedCreditsAttempts.get('89da69bd-a236-4ab7-9c5d-b5f52ce09959')).to.deep.equal({ requiredCredits: 2, remainingCredits: 1 });
+
+			const response2 = await requestAgent.post('/v1/measurements')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
+				.send({
+					type: 'ping',
+					target: 'jsdelivr.com',
+					limit: 50,
+				}).expect(429) as Response;
+
+			// The second request is rejected by the precheck, before matching.
+			expect(response2.headers['x-request-cost']).to.equal('50');
+			expect(response2.headers['x-ratelimit-consumed']).to.equal('0');
+			expect(response2.headers['x-ratelimit-remaining']).to.equal('0');
+			expect(response2.headers['x-credits-consumed']).to.equal('0');
+			expect(response2.headers['x-credits-remaining']).to.equal('1');
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			expect(amount).to.equal(1);
+		});
+
+		it('should keep rejecting after a donation until the failed attempt expires (authenticated)', async () => {
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0); // 0 remaining
+
+			await dashboardClient(CREDITS_TABLE).insert({
+				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				amount: 1,
+			}).onConflict().merge();
+
+			await requestAgent.post('/v1/measurements')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
+				.send({
+					type: 'ping',
+					target: 'jsdelivr.com',
+					limit: 50,
+				}).expect(429) as Response;
+
+			await dashboardClient(CREDITS_TABLE).update({
+				amount: 100,
+			}).where({
+				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+			});
+
+			const response = await requestAgent.post('/v1/measurements')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
+				.send({
+					type: 'ping',
+					target: 'jsdelivr.com',
+					limit: 50,
+				}).expect(429) as Response;
+
+			expect(response.headers['x-request-cost']).to.equal('50');
+			expect(response.headers['x-credits-remaining']).to.equal('1');
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			expect(amount).to.equal(100);
+		});
+
+		it('should pass a smaller request after a failed attempt on a bigger one (authenticated)', async () => {
+			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0); // 0 remaining
+
+			await dashboardClient(CREDITS_TABLE).insert({
+				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				amount: 1,
+			}).onConflict().merge();
+
+			await requestAgent.post('/v1/measurements')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
+				.send({
+					type: 'ping',
+					target: 'jsdelivr.com',
+					limit: 50,
+				}).expect(429) as Response;
+
+			const response = await requestAgent.post('/v1/measurements')
+				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
+				.send({
+					type: 'ping',
+					target: 'jsdelivr.com',
+					limit: 1,
+				}).expect(202) as Response;
+
+			expect(response.headers['x-request-cost']).to.equal('1');
+			expect(response.headers['x-ratelimit-consumed']).to.equal('0');
+			expect(response.headers['x-credits-consumed']).to.equal('1');
+			expect(response.headers['x-credits-remaining']).to.equal('0');
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			expect(amount).to.equal(0);
 		});
 	});
 });

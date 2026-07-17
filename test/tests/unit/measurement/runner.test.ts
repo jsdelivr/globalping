@@ -29,6 +29,7 @@ describe('MeasurementRunner', () => {
 	const router = sandbox.createStubInstance(ProbeRouter);
 	const metrics = sandbox.createStubInstance(MetricsAgent);
 	const rateLimit = sandbox.stub();
+	const precheckRateLimit = sandbox.stub();
 	let runner: MeasurementRunner;
 	let testId: number;
 
@@ -38,7 +39,7 @@ describe('MeasurementRunner', () => {
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', null, () => testId++);
 		const { MeasurementRunner } = await import('../../../../src/measurement/runner.js');
-		runner = new MeasurementRunner(io, store, router, rateLimit, metrics);
+		runner = new MeasurementRunner(io, store, router, precheckRateLimit, rateLimit, metrics);
 	});
 
 	beforeEach(() => {
@@ -47,6 +48,7 @@ describe('MeasurementRunner', () => {
 		to.returns({ emit });
 		io.of.withArgs('/probes').returns({ to } as any);
 		store.createMeasurement.resolves(mockedMeasurementId);
+		precheckRateLimit.resolves();
 		testId = 0;
 	});
 
@@ -417,5 +419,76 @@ describe('MeasurementRunner', () => {
 		expect(store.createMeasurement.callCount).to.equal(1);
 		expect(to.callCount).to.equal(0);
 		expect(emit.callCount).to.equal(0);
+	});
+
+	it('should precheck the rate limit before matching probes', async () => {
+		const request = {
+			type: 'ping' as const,
+			target: 'jsdelivr.com',
+			measurementOptions: {
+				packets: 3,
+				ipVersion: 4,
+				port: 80,
+				protocol: 'ICMP',
+			} as const,
+			locations: [{ country: 'US' }, { country: 'DE' }],
+			limit: 10,
+			inProgressUpdates: false,
+		};
+
+		router.findMatchingProbes.resolves({
+			onlineProbesMap: new Map([ getProbe(0) ].entries()),
+			allProbes: [ getProbe(0) ],
+			request,
+		});
+
+		const ctx = {
+			set,
+			get,
+			req,
+			request: {
+				body: request,
+			},
+			state: {},
+		} as unknown as ExtendedContext;
+
+		await runner.run(ctx);
+
+		expect(precheckRateLimit.callCount).to.equal(1);
+		expect(precheckRateLimit.args[0]).to.deep.equal([ ctx, request ]);
+		expect(precheckRateLimit.calledBefore(router.findMatchingProbes)).to.equal(true);
+	});
+
+	it('should not match probes if the precheck rejects', async () => {
+		const request = {
+			type: 'ping' as const,
+			target: 'jsdelivr.com',
+			measurementOptions: {
+				packets: 3,
+				ipVersion: 4,
+				port: 80,
+				protocol: 'ICMP',
+			} as const,
+			locations: [],
+			limit: 10,
+			inProgressUpdates: false,
+		};
+
+		const error = createHttpError(429, 'Too Many Probes Requested', { type: 'too_many_probes' });
+		precheckRateLimit.rejects(error);
+
+		const err = await runner.run({
+			set,
+			get,
+			req,
+			request: {
+				body: request,
+			},
+			state: {},
+		} as unknown as ExtendedContext).catch((err: unknown) => err);
+
+		expect(err).to.equal(error);
+		expect(router.findMatchingProbes.callCount).to.equal(0);
+		expect(store.createMeasurement.callCount).to.equal(0);
 	});
 });

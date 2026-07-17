@@ -8,6 +8,7 @@ import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { addFakeProbe, deleteFakeProbes, getTestServer, waitForProbesUpdate } from '../../../utils/server.js';
 import { dashboardClient } from '../../../../src/lib/sql/client.js';
 import { auth, GP_TOKENS_TABLE, Token } from '../../../../src/lib/http/auth.js';
+import { authenticatedRateLimiter } from '../../../../src/lib/rate-limiter/rate-limiter-post.js';
 import type { AuthenticateOptions } from '../../../../src/lib/http/middleware/authenticate.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
@@ -134,6 +135,7 @@ describe('authenticate', () => {
 			});
 
 			await auth.syncTokens();
+			await authenticatedRateLimiter.delete('89da69bd-a236-4ab7-9c5d-b5f52ce09959');
 
 			await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer hf2fnprguymlgliirdk7qv23664c2xcr')
