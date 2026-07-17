@@ -1,12 +1,12 @@
 components:
   headers:
     CreditsConsumed:
-      description: The number of credits consumed by the request. Returned only when an attempt to use credits was made (requests with a valid token exceeding the hourly rate limit).
+      description: The number of credits consumed by the request. Returned only when an authenticated request requires credits after exceeding the free hourly rate limit.
       required: false
       schema:
         type: integer
     CreditsRemaining:
-      description: The number of remaining credits. This value is only approximate and may not always fully reflect requests made in the past few seconds. Returned only when an attempt to use credits was made (requests with a valid token exceeding the hourly rate limit).
+      description: The number of remaining credits. This value is only approximate and may not always fully reflect requests made in the past few seconds. Returned only when an authenticated request requires credits after exceeding the free hourly rate limit.
       required: false
       schema:
         type: integer

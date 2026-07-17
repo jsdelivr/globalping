@@ -127,11 +127,18 @@ components:
                   message:
                     type: string
           examples:
-            json:
+            rateLimitExceeded:
+              summary: Hourly rate limit exceeded
               value:
                 error:
                   type: rate_limit_exceeded
-                  message: API rate limit exceeded.
+                  message: This measurement exceeds the remaining hourly rate limit for your IP address.
+            insufficientCredits:
+              summary: Insufficient credits
+              value:
+                error:
+                  type: insufficient_credits
+                  message: Not enough credits to run this measurement.
     measurements202:
       description: |
         If the API accepted the request for processing, it returns status `202 Accepted` and a body containing the ID of the newly created measurement.
