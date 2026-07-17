@@ -1,5 +1,6 @@
 .idea/
 .vscode/
+.worktrees/
 .nyc_output/
 .claude/
 node_modules/
