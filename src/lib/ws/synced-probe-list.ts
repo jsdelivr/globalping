@@ -205,12 +205,16 @@ export class SyncedProbeList extends EventEmitter {
 	}
 
 	private handleUpdate (message: NodeData) {
+		this.setNodeData(message);
+		this.updateProbes();
+	}
+
+	private setNodeData (message: NodeData) {
 		if (message.nodeId !== this.nodeId && !this.nodeData.has(message.nodeId)) {
 			this.logger.info(`Registered new node ${message.nodeId}.`);
 		}
 
 		this.nodeData.set(message.nodeId, message, { ttl: this.syncTimeout });
-		this.updateProbes();
 	}
 
 	private getRemoteDataKey (nodeId: string) {
@@ -400,95 +404,105 @@ export class SyncedProbeList extends EventEmitter {
 		}
 
 		const eventsByNode = _.groupBy(eventsToProcess, event => event.message[MESSAGE_TYPES.NODE]);
+		let appliedUpdates = 0;
 
-		await Promise.all(Object.entries(eventsByNode).map(([ nodeId, nodeEvents ]) => {
-			const changes: NodeChanges = {
-				nodeId,
-				revalidateTimestamp: undefined,
-				reloadNode: hasMissedEvents,
-				removeProbes: new Set(),
-				updateProbes: new Set(),
-				updateStats: new Map(),
-			};
+		try {
+			await Promise.all(Object.entries(eventsByNode).map(([ nodeId, nodeEvents ]) => {
+				const changes: NodeChanges = {
+					nodeId,
+					revalidateTimestamp: undefined,
+					reloadNode: hasMissedEvents,
+					removeProbes: new Set(),
+					updateProbes: new Set(),
+					updateStats: new Map(),
+				};
 
-			if (changes.reloadNode) {
-				return changes;
-			}
+				if (changes.reloadNode) {
+					return changes;
+				}
 
-			for (const event of nodeEvents) {
-				for (const [ key, value ] of Object.entries(event.message)) {
-					switch (key) {
-						case MESSAGE_TYPES.ALIVE:
-							changes.revalidateTimestamp = Number(value);
-							break;
+				for (const event of nodeEvents) {
+					for (const [ key, value ] of Object.entries(event.message)) {
+						switch (key) {
+							case MESSAGE_TYPES.ALIVE:
+								changes.revalidateTimestamp = Number(value);
+								break;
 
-						case MESSAGE_TYPES.RELOAD:
-							changes.reloadNode = true;
-							return changes;
+							case MESSAGE_TYPES.RELOAD:
+								changes.reloadNode = true;
+								return changes;
 
-						case MESSAGE_TYPES.REMOVE:
-							value.split(',').forEach(id => changes.removeProbes.add(id));
-							break;
+							case MESSAGE_TYPES.REMOVE:
+								value.split(',').forEach(id => changes.removeProbes.add(id));
+								break;
 
-						case MESSAGE_TYPES.UPDATE:
-							value.split(',').forEach(id => changes.updateProbes.add(id));
-							break;
+							case MESSAGE_TYPES.UPDATE:
+								value.split(',').forEach(id => changes.updateProbes.add(id));
+								break;
 
-						case MESSAGE_TYPES.STATS:
-							Object.entries(JSON.parse(value) as Record<string, string>).forEach(([ id, statsString ]) => {
-								changes.updateStats.set(id, this.unserializeProbeStats(statsString));
-							});
+							case MESSAGE_TYPES.STATS:
+								Object.entries(JSON.parse(value) as Record<string, string>).forEach(([ id, statsString ]) => {
+									changes.updateStats.set(id, this.unserializeProbeStats(statsString));
+								});
 
-							break;
+								break;
+						}
 					}
 				}
-			}
 
-			return changes;
-		}).map(async (changes: NodeChanges) => {
-			const nodeData = this.nodeData.get(changes.nodeId);
+				return changes;
+			}).map(async (changes: NodeChanges) => {
+				const nodeData = this.nodeData.get(changes.nodeId);
 
-			if (!nodeData || changes.reloadNode || changes.updateProbes.size > 5) {
-				const newNodeData = await this.getRemoteNodeData(changes.nodeId);
+				if (!nodeData || changes.reloadNode || changes.updateProbes.size > 5) {
+					const newNodeData = await this.getRemoteNodeData(changes.nodeId);
 
-				if (newNodeData) {
-					this.handleUpdate(newNodeData);
+					if (newNodeData) {
+						this.setNodeData(newNodeData);
+						appliedUpdates++;
+					}
+
+					return;
 				}
 
-				return;
-			}
+				const probesById = _.pickBy(nodeData.probesById, ((probe) => {
+					return !changes.removeProbes.has(probe.client);
+				}));
 
-			const probesById = _.pickBy(nodeData.probesById, ((probe) => {
-				return !changes.removeProbes.has(probe.client);
+				changes.updateStats.forEach((stats, id) => {
+					if (probesById[id]) {
+						probesById[id].stats = stats;
+					}
+				});
+
+				if (changes.updateProbes.size) {
+					const paths = Array.from(changes.updateProbes).map(probeId => `$.probesById['${probeId}']`);
+					const newProbesByPath = await this.getRemoteNodeDataAtPaths<ServerProbe>(changes.nodeId, paths);
+
+					if (newProbesByPath) {
+						newProbesByPath.forEach((probe) => {
+							if (probe) {
+								probesById[probe.client] = probe;
+							}
+						});
+					}
+				}
+
+				const newNodeData: NodeData = {
+					...nodeData,
+					...changes.revalidateTimestamp ? { revalidateTimestamp: changes.revalidateTimestamp } : {},
+					probesById,
+				};
+
+				this.setNodeData(newNodeData);
+				appliedUpdates++;
 			}));
-
-			changes.updateStats.forEach((stats, id) => {
-				if (probesById[id]) {
-					probesById[id].stats = stats;
-				}
-			});
-
-			if (changes.updateProbes.size) {
-				const paths = Array.from(changes.updateProbes).map(probeId => `$.probesById['${probeId}']`);
-				const newProbesByPath = await this.getRemoteNodeDataAtPaths<ServerProbe>(changes.nodeId, paths);
-
-				if (newProbesByPath) {
-					newProbesByPath.forEach((probe) => {
-						if (probe) {
-							probesById[probe.client] = probe;
-						}
-					});
-				}
+		} finally {
+			// A single rebuild for the whole batch; runs even on partial failure so the merged list matches nodeData.
+			if (appliedUpdates) {
+				this.updateProbes();
 			}
-
-			const newNodeData: NodeData = {
-				...nodeData,
-				...changes.revalidateTimestamp ? { revalidateTimestamp: changes.revalidateTimestamp } : {},
-				probesById,
-			};
-
-			this.handleUpdate(newNodeData);
-		}));
+		}
 
 		this.lastReadEventId = events.at(-1)!.id;
 	}

@@ -273,6 +273,34 @@ describe('SyncedProbeList', () => {
 		expect(redisJsonGet.callCount).to.equal(2);
 	});
 
+	it('rebuilds the probe list once per syncPull batch', async () => {
+		const probesA = { A: getProbe('A') };
+		const probesB = { B: getProbe('B') };
+		const updateListener = sandbox.stub();
+		syncedProbeList.on(syncedProbeList.localUpdateEvent, updateListener);
+
+		redisXRange.resolves([
+			{ id: '1-1', message: { n: 'remote1', r: '1' } },
+			{ id: '1-2', message: { n: 'remote2', r: '1' } },
+		]);
+
+		redisJsonGet.onFirstCall().resolves({ nodeId: 'remote1', probesById: probesA, changeTimestamp: Date.now(), revalidateTimestamp: Date.now() });
+		redisJsonGet.onSecondCall().resolves({ nodeId: 'remote2', probesById: probesB, changeTimestamp: Date.now(), revalidateTimestamp: Date.now() });
+
+		await syncedProbeList.syncPull();
+		expect(updateListener.callCount).to.equal(1);
+		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal([ ...Object.values(probesA), ...Object.values(probesB) ]);
+
+		redisXRange.resolves([
+			{ id: '1-2', message: {} },
+			{ id: '1-3', message: { n: 'remote1', a: '2' } },
+			{ id: '1-4', message: { n: 'remote2', a: '2' } },
+		]);
+
+		await syncedProbeList.syncPull();
+		expect(updateListener.callCount).to.equal(2);
+	});
+
 	it('expires remote probes after the timeout', async () => {
 		const probes = {
 			A: getProbe('A'),
