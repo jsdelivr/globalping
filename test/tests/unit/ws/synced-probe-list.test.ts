@@ -301,6 +301,37 @@ describe('SyncedProbeList', () => {
 		expect(updateListener.callCount).to.equal(2);
 	});
 
+	it('applies successful updates on partial failure, then retries the whole batch', async () => {
+		const probesA = { A: getProbe('A') };
+		const probesB = { B: getProbe('B') };
+		const updateListener = sandbox.stub();
+		syncedProbeList.on(syncedProbeList.localUpdateEvent, updateListener);
+
+		redisXRange.resolves([
+			{ id: '1-1', message: { n: 'remote1', r: '1' } },
+			{ id: '1-2', message: { n: 'remote2', r: '1' } },
+		]);
+
+		redisJsonGet.withArgs('gp:spl:probes:remote1').resolves({ nodeId: 'remote1', probesById: probesA, changeTimestamp: Date.now(), revalidateTimestamp: Date.now() });
+		redisJsonGet.withArgs('gp:spl:probes:remote2').rejects(new Error('redis error'));
+
+		const cursorBefore = (syncedProbeList as unknown as { lastReadEventId: string }).lastReadEventId;
+		const error = await syncedProbeList.syncPull().catch((err: Error) => err);
+
+		expect(error).to.be.an('error');
+		expect(updateListener.callCount).to.equal(1);
+		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal(Object.values(probesA));
+		expect((syncedProbeList as unknown as { lastReadEventId: string }).lastReadEventId).to.equal(cursorBefore);
+
+		// The event cursor wasn't advanced, so the next pull retries the same events.
+		redisJsonGet.withArgs('gp:spl:probes:remote2').resolves({ nodeId: 'remote2', probesById: probesB, changeTimestamp: Date.now(), revalidateTimestamp: Date.now() });
+
+		await syncedProbeList.syncPull();
+
+		expect(updateListener.callCount).to.equal(2);
+		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal([ ...Object.values(probesA), ...Object.values(probesB) ]);
+	});
+
 	it('expires remote probes after the timeout', async () => {
 		const probes = {
 			A: getProbe('A'),
