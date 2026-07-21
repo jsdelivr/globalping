@@ -1357,13 +1357,13 @@ describe('AdoptedProbes', () => {
 		expect(updatedLocation).to.equal(null);
 	});
 
-	it('getUpdatedTags method should return same tags array', async () => {
+	it('getUpdatedTags method should return null if there is nothing to update', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{ ...defaultAdoption, tags: '[]' }]);
 
 		await adoptedProbes.syncDashboardData();
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
-		expect(updatedTags).to.equal(defaultConnectedProbe.tags);
+		expect(updatedTags).to.equal(null);
 	});
 
 	it('getUpdatedTags method should return user tags', async () => {

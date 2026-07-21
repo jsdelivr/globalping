@@ -279,11 +279,11 @@ export class AdoptedProbes {
 		};
 	}
 
-	getUpdatedTags (probe: SocketProbe): Tag[] {
+	getUpdatedTags (probe: SocketProbe): Tag[] | null {
 		const adoption = this.getByIp(probe.ipAddress);
 
 		if (!adoption || (!adoption.tags.length && !adoption.publicProbes)) {
-			return probe.tags;
+			return null;
 		}
 
 		return [
@@ -308,17 +308,19 @@ export class AdoptedProbes {
 				return { ...probe, location: { ...probe.location, hasOverridesApplied: true } };
 			}
 
-			const newLocation = this.getUpdatedLocation(probe) || { ...probe.location, hasOverridesApplied: true };
-
-			const newTags = this.getUpdatedTags(probe);
-			const newNormalizedTags = normalizeTags(newTags);
+			const customLocation = this.getUpdatedLocation(probe);
+			const newLocation = customLocation || { ...probe.location, hasOverridesApplied: true as const };
+			const customTags = this.getUpdatedTags(probe);
+			const newTags = customTags || probe.tags;
+			const newNormalizedTags = customTags ? normalizeTags(customTags) : probe.normalizedTags;
+			const newIndex = customLocation || customTags ? getIndex(newLocation, newNormalizedTags) : probe.index;
 
 			return {
 				...probe,
 				location: newLocation,
 				tags: newTags,
 				normalizedTags: newNormalizedTags,
-				index: getIndex(newLocation, newNormalizedTags),
+				index: newIndex,
 				owner: { id: adoption.userId },
 			};
 		});
