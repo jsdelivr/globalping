@@ -115,27 +115,52 @@ export const getRegionAliases = (key: string): string[] => {
 	return array ?? [];
 };
 
+const toIndexString = (s: string) => s.toLowerCase().replaceAll('-', ' ');
+const toIndexStrings = (array: string[]) => array.map(toIndexString);
+
+const getCountryCategories = _.memoize((country: string) => [
+	[ toIndexString(country) ],
+	[ toIndexString(getCountryIso3ByIso2(country)) ],
+	[ toIndexString(getCountryByIso(country)) ],
+	toIndexStrings(getCountryAliases(country)),
+]);
+
+const getCityCategory = _.memoize((normalizedCity: string) => [ toIndexString(normalizedCity) ]);
+
+const getStateCategories = _.memoize((state: string) => [
+	[ toIndexString(state) ],
+	[ toIndexString(getStateExtendedIsoByIso(state)) ],
+	[ toIndexString(getStateNameByIso(state)) ],
+]);
+
+const getContinentCategories = _.memoize((continent: string) => [
+	[ toIndexString(continent) ],
+	continent ? [ toIndexString(getContinentName(continent)) ] : [],
+]);
+
+const getRegionCategories = _.memoize((region: string) => [
+	[ toIndexString(region) ],
+	toIndexStrings(getRegionAliases(region)),
+]);
+
+const getNetworkCategories = _.memoize((normalizedNetwork: string) => [
+	toIndexStrings(getNetworkPrefixes(normalizedNetwork)),
+	toIndexStrings(getNetworkAliases(normalizedNetwork)),
+]);
+
 export const getIndex = (location: ProbeLocation, normalizedTags: Tag[]) => {
 	// Storing the index as string[][] so each category has its exact position in the index array across all probes.
 	// When adding/removing/moving categories, make sure to update ProbeIndex and all places where it's used.
 	const index = [
-		[ location.country ],
-		[ getCountryIso3ByIso2(location.country) ],
-		[ getCountryByIso(location.country) ],
-		getCountryAliases(location.country),
-		[ location.normalizedCity ],
-		location.state ? [ location.state ] : [],
-		location.state ? [ getStateExtendedIsoByIso(location.state) ] : [],
-		location.state ? [ getStateNameByIso(location.state) ] : [],
-		[ location.continent ],
-		location.continent ? [ getContinentName(location.continent) ] : [],
-		[ location.region ],
-		getRegionAliases(location.region),
+		...getCountryCategories(location.country),
+		getCityCategory(location.normalizedCity),
+		...(location.state ? getStateCategories(location.state) : [ [], [], [] ]),
+		...getContinentCategories(location.continent),
+		...getRegionCategories(location.region),
 		[ `as${location.asn}` ],
-		normalizedTags.filter(tag => tag.type === 'system').map(tag => tag.value),
-		getNetworkPrefixes(location.normalizedNetwork),
-		getNetworkAliases(location.normalizedNetwork),
-	].map(category => category.map(s => s.toLowerCase().replaceAll('-', ' ')));
+		normalizedTags.filter(tag => tag.type === 'system').map(tag => toIndexString(tag.value)),
+		...getNetworkCategories(location.normalizedNetwork),
+	];
 
 	return index as ProbeIndex;
 };
