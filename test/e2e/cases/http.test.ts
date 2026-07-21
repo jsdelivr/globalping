@@ -280,6 +280,7 @@ describe('http measurement', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('failed');
+		expect(response.body.results[0].result.failureSource).to.equal('target');
 		expect(response.body.results[0].result.rawOutput).to.include('ENOTFOUND');
 		expect(response).to.matchApiSchema();
 	});
@@ -299,6 +300,7 @@ describe('http measurement', () => {
 
 		expect(response.body.status).to.equal('finished');
 		expect(response.body.results[0].result.status).to.equal('failed');
+		expect(response.body.results[0].result.failureSource).to.equal('target');
 		expect(response).to.matchApiSchema();
 	});
 });

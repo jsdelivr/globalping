@@ -7,7 +7,10 @@ import type { Location } from '../lib/location/types.js';
 export type TestResult = {
 	rawOutput: string;
 	status: 'in-progress' | 'finished' | 'failed' | 'offline';
+	failureSource?: FailureSource;
 };
+
+export type FailureSource = 'target' | 'resolver' | 'internal';
 
 type PingTest = {
 	packets: number;

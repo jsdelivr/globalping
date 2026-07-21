@@ -15,6 +15,7 @@ export const handleMeasurementResult = (probe: SocketProbe, measurementRunner: M
 			testId: data.testId,
 			result: {
 				status: 'failed',
+				failureSource: 'internal',
 				rawOutput: 'The probe reported an invalid result.',
 			},
 		});
