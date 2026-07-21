@@ -332,6 +332,30 @@ describe('SyncedProbeList', () => {
 		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal([ ...Object.values(probesA), ...Object.values(probesB) ]);
 	});
 
+	it('rebuilds only after all node updates settle on partial failure', async () => {
+		const probesB = { B: getProbe('B') };
+		const updateListener = sandbox.stub();
+		syncedProbeList.on(syncedProbeList.localUpdateEvent, updateListener);
+
+		redisXRange.resolves([
+			{ id: '1-1', message: { n: 'remote1', r: '1' } },
+			{ id: '1-2', message: { n: 'remote2', r: '1' } },
+		]);
+
+		redisJsonGet.withArgs('gp:spl:probes:remote1').rejects(new Error('redis error'));
+
+		redisJsonGet.withArgs('gp:spl:probes:remote2').callsFake(async () => {
+			await new Promise(resolve => setImmediate(resolve));
+			return { nodeId: 'remote2', probesById: probesB, changeTimestamp: Date.now(), revalidateTimestamp: Date.now() };
+		});
+
+		const error = await syncedProbeList.syncPull().catch((err: Error) => err);
+
+		expect(error).to.be.an('error');
+		expect(omitNode(syncedProbeList.getProbes())).to.deep.equal(Object.values(probesB));
+		expect(updateListener.callCount).to.equal(1);
+	});
+
 	it('expires remote probes after the timeout', async () => {
 		const probes = {
 			A: getProbe('A'),

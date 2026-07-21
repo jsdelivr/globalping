@@ -406,7 +406,7 @@ export class SyncedProbeList extends EventEmitter {
 		const eventsByNode = _.groupBy(eventsToProcess, event => event.message[MESSAGE_TYPES.NODE]);
 		let appliedUpdates = false;
 
-		await Promise.all(Object.entries(eventsByNode).map(([ nodeId, nodeEvents ]) => {
+		const results = await Promise.allSettled(Object.entries(eventsByNode).map(([ nodeId, nodeEvents ]) => {
 			const changes: NodeChanges = {
 				nodeId,
 				revalidateTimestamp: undefined,
@@ -495,11 +495,17 @@ export class SyncedProbeList extends EventEmitter {
 
 			this.setNodeData(newNodeData);
 			appliedUpdates = true;
-		})).finally(() => {
-			if (appliedUpdates) {
-				this.updateProbes();
-			}
-		});
+		}));
+
+		if (appliedUpdates) {
+			this.updateProbes();
+		}
+
+		const error = results.find(result => result.status === 'rejected');
+
+		if (error) {
+			throw error.reason;
+		}
 
 		this.lastReadEventId = events.at(-1)!.id;
 	}
