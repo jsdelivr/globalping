@@ -415,8 +415,48 @@ describe('Create measurement request', () => {
 			.expect(200).expect((response) => {
 				expect(response.body.results[0].result).to.deep.equal({
 					status: 'failed',
+					failureSource: 'internal',
 					rawOutput: 'The probe reported an invalid result.',
 				});
+			});
+	});
+
+	it('should preserve the failure source reported by the probe', async () => {
+		probe.emit('probe:status:update', 'ready');
+		probe.emit('probe:isIPv4Supported:update', true);
+		probe.emit('probe:isIPv6Supported:update', true);
+		await waitForProbesUpdate();
+
+		await requestAgent.post('/v1/measurements').send({
+			type: 'ping',
+			target: 'missing.example',
+			locations: [{ country: 'US' }],
+			measurementOptions: { packets: 4 },
+		}).expect(202);
+
+		await setTimeout(20);
+
+		probe.emit('probe:measurement:result', {
+			testId: '0',
+			measurementId: mockedMeasurementId,
+			result: {
+				status: 'failed',
+				failureSource: 'target',
+				rawOutput: 'Name or service not known',
+			},
+		});
+
+		await setTimeout(100);
+
+		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send()
+			.expect(200).expect((response) => {
+				expect(response.body.results[0].result).to.deep.equal({
+					status: 'failed',
+					failureSource: 'target',
+					rawOutput: 'Name or service not known',
+				});
+
+				expect(response).to.matchApiSchema();
 			});
 	});
 

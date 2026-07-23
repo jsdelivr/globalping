@@ -144,6 +144,7 @@ describe('measurement store', () => {
 				probe: {},
 				result: {
 					status: 'failed',
+					failureSource: 'internal',
 					rawOutput: '\n\nThe measurement timed out.',
 				},
 			}],

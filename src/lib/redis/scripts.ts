@@ -164,6 +164,7 @@ const markFinishedByTimeout = defineScript({
 	for index, resultObject in ipairs(measurement.results) do
 		if resultObject.result.status == 'in-progress' then
 			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.status', '"failed"')
+			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.failureSource', '"internal"')
 			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.rawOutput', cjson.encode((resultObject.result.rawOutput or '') .. timeoutMessage))
 		end
 	end

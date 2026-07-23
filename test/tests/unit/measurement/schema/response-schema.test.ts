@@ -816,4 +816,42 @@ describe('resultSchema', () => {
 		Joi.assert(responseBody.results[0]?.result, httpResultSchema);
 		expect(response).to.matchApiSchema();
 	});
+
+	for (const failureSource of [ 'target', 'resolver', 'internal' ] as const) {
+		it(`accepts failed results with the ${failureSource} failure source`, async () => {
+			const responseBody = _.cloneDeep(defaultPingResponseBody);
+			(responseBody.results[0]!.result as PingResult) = {
+				status: 'failed',
+				failureSource,
+				rawOutput: 'Test failed.',
+			};
+
+			getResponseBody.returns(responseBody);
+
+			const response = await request(mockServer).get('/v1/measurements/measurement-id');
+
+			Joi.assert(responseBody.results[0]?.result, pingResultSchema);
+			expect(response).to.matchApiSchema();
+		});
+	}
+
+	it('rejects invalid failure sources', () => {
+		const validation = pingResultSchema.validate({
+			status: 'failed',
+			failureSource: 'unknown',
+			rawOutput: 'Test failed.',
+		});
+
+		expect(validation.error).to.not.be.undefined;
+	});
+
+	it('rejects a failure source on finished results', () => {
+		const validation = pingResultSchema.validate({
+			status: 'finished',
+			failureSource: 'target',
+			rawOutput: '',
+		});
+
+		expect(validation.error).to.not.be.undefined;
+	});
 });
