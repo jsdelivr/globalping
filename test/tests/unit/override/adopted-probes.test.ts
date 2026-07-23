@@ -1357,13 +1357,26 @@ describe('AdoptedProbes', () => {
 		expect(updatedLocation).to.equal(null);
 	});
 
-	it('getUpdatedTags method should return same tags array', async () => {
+	it(`getUpdatedProbes method should reuse the tags and index of the probe if the adoption doesn't change them`, async () => {
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		sql.select.resolves([{ ...defaultAdoption, tags: '[]' }]);
+
+		await adoptedProbes.syncDashboardData();
+		const updatedProbe = adoptedProbes.getUpdatedProbes([ defaultConnectedProbe ])[0]!;
+
+		expect(updatedProbe.tags).to.equal(defaultConnectedProbe.tags);
+		expect(updatedProbe.normalizedTags).to.equal(defaultConnectedProbe.normalizedTags);
+		expect(updatedProbe.index).to.equal(defaultConnectedProbe.index);
+		expect(updatedProbe.owner).to.deep.equal({ id: 'userId' });
+	});
+
+	it('getUpdatedTags method should return null if there is nothing to update', async () => {
 		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
 		sql.select.resolves([{ ...defaultAdoption, tags: '[]' }]);
 
 		await adoptedProbes.syncDashboardData();
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
-		expect(updatedTags).to.equal(defaultConnectedProbe.tags);
+		expect(updatedTags).to.equal(null);
 	});
 
 	it('getUpdatedTags method should return user tags', async () => {
