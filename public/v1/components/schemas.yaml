@@ -1310,11 +1310,11 @@ components:
         - resolver
         - internal
       description: |
-        The source where the failure most likely occurred:
-         - `target` covers missing DNS records and protocol errors or timeouts,
+        The most likely source of the failure:
+         - `target` covers the target and its network path, including misconfigured DNS records and timeouts,
          - `resolver` covers failures communicating with or receiving an unusable response from the DNS resolver,
-         - `internal` covers probe or API failures and policy rejections.
-        The exact cause of the failure may not always be clear so this field is best-effort only.
+         - `internal` covers Globalping probe and API failures.
+        The exact source cannot always be determined reliably, so this field is a best-effort classification.
     OfflineTestStatus:
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/BaseTestStatus'
