@@ -161,12 +161,12 @@ describe('measurement store', () => {
 
 		getMeasurementStore();
 
-		await clock.tickAsyncStepped(16_000);
+		await clock.tickAsyncStepped(5_000);
 
-		const cleanupTime = now + 12_000;
+		const cleanupTime = now + 4_000;
 
 		expect(redisMock.claimTimedOutMeasurements.callCount).to.equal(1);
-		expect(redisMock.claimTimedOutMeasurements.firstCall.args).to.deep.equal([ 'gp:in-progress-timeouts', cleanupTime, 5000, cleanupTime + 30_000 ]);
+		expect(redisMock.claimTimedOutMeasurements.firstCall.args).to.deep.equal([ 'gp:in-progress-timeouts', cleanupTime, 2000, cleanupTime + 30_000 ]);
 		expect(redisMock.markFinishedByTimeout.callCount).to.equal(2);
 		expect(redisMock.markFinishedByTimeout.firstCall.args).to.deep.equal([ mockedMeasurementId1 ]);
 		expect(redisMock.markFinishedByTimeout.secondCall.args).to.deep.equal([ mockedMeasurementId2 ]);
@@ -186,7 +186,7 @@ describe('measurement store', () => {
 
 		getMeasurementStore();
 
-		await clock.tickAsyncStepped(16_000);
+		await clock.tickAsyncStepped(5_000);
 
 		expect(redisMock.markFinishedByTimeout.callCount).to.equal(1);
 		expect(redisMock.markFinishedByTimeout.firstCall.args).to.deep.equal([ mockedMeasurementId1 ]);
