@@ -1312,7 +1312,7 @@ components:
       description: |
         The source where the failure most likely occurred:
          - `target` covers missing DNS records and protocol errors or timeouts,
-         - `resolver` covers failures communicating with or receiving a unusable response from the DNS resolver,
+         - `resolver` covers failures communicating with or receiving an unusable response from the DNS resolver,
          - `internal` covers probe or API failures and policy rejections.
         The exact cause of the failure may not always be clear so this field is best-effort only.
     OfflineTestStatus:
