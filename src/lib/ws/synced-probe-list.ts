@@ -404,7 +404,7 @@ export class SyncedProbeList extends EventEmitter {
 		}
 
 		const eventsByNode = _.groupBy(eventsToProcess, event => event.message[MESSAGE_TYPES.NODE]);
-		let appliedUpdates = false;
+		let nodeDataChanged = false;
 
 		const results = await Promise.allSettled(Object.entries(eventsByNode).map(([ nodeId, nodeEvents ]) => {
 			const changes: NodeChanges = {
@@ -458,7 +458,7 @@ export class SyncedProbeList extends EventEmitter {
 
 				if (newNodeData) {
 					this.setNodeData(newNodeData);
-					appliedUpdates = true;
+					nodeDataChanged = true;
 				}
 
 				return;
@@ -494,10 +494,10 @@ export class SyncedProbeList extends EventEmitter {
 			};
 
 			this.setNodeData(newNodeData);
-			appliedUpdates = true;
+			nodeDataChanged = true;
 		}));
 
-		if (appliedUpdates) {
+		if (nodeDataChanged) {
 			this.updateProbes();
 		}
 
