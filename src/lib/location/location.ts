@@ -115,27 +115,66 @@ export const getRegionAliases = (key: string): string[] => {
 	return array ?? [];
 };
 
+const toIndexStrings = (array: string[]) => array.map(s => s.toLowerCase().replaceAll('-', ' '));
+
+const getCountryCategories = _.memoize((country: string) => [
+	toIndexStrings([ country ]),
+	toIndexStrings([ getCountryIso3ByIso2(country) ]),
+	toIndexStrings([ getCountryByIso(country) ]),
+	toIndexStrings(getCountryAliases(country)),
+]);
+
+const getCityCategory = _.memoize((normalizedCity: string) => toIndexStrings([ normalizedCity ]));
+
+const getStateCategories = _.memoize((state: string) => [
+	toIndexStrings([ state ]),
+	toIndexStrings([ getStateExtendedIsoByIso(state) ]),
+	toIndexStrings([ getStateNameByIso(state) ]),
+]);
+
+const getContinentCategories = _.memoize((continent: string) => [
+	toIndexStrings([ continent ]),
+	continent ? toIndexStrings([ getContinentName(continent) ]) : [],
+]);
+
+const getRegionCategories = _.memoize((region: string) => [
+	toIndexStrings([ region ]),
+	toIndexStrings(getRegionAliases(region)),
+]);
+
+const getNetworkCategories = _.memoize((normalizedNetwork: string) => [
+	toIndexStrings(getNetworkPrefixes(normalizedNetwork)),
+	toIndexStrings(getNetworkAliases(normalizedNetwork)),
+]);
+
 export const getIndex = (location: ProbeLocation, normalizedTags: Tag[]) => {
+	const [ country, countryIso3, countryName, countryAliases ] = getCountryCategories(location.country);
+	const city = getCityCategory(location.normalizedCity);
+	const [ state, stateExtendedIso, stateName ] = location.state ? getStateCategories(location.state) : [ [], [], [] ];
+	const [ continent, continentName ] = getContinentCategories(location.continent);
+	const [ region, regionAliases ] = getRegionCategories(location.region);
+	const [ networkPrefixes, networkAliases ] = getNetworkCategories(location.normalizedNetwork);
+
 	// Storing the index as string[][] so each category has its exact position in the index array across all probes.
 	// When adding/removing/moving categories, make sure to update ProbeIndex and all places where it's used.
 	const index = [
-		[ location.country ],
-		[ getCountryIso3ByIso2(location.country) ],
-		[ getCountryByIso(location.country) ],
-		getCountryAliases(location.country),
-		[ location.normalizedCity ],
-		location.state ? [ location.state ] : [],
-		location.state ? [ getStateExtendedIsoByIso(location.state) ] : [],
-		location.state ? [ getStateNameByIso(location.state) ] : [],
-		[ location.continent ],
-		location.continent ? [ getContinentName(location.continent) ] : [],
-		[ location.region ],
-		getRegionAliases(location.region),
+		country,
+		countryIso3,
+		countryName,
+		countryAliases,
+		city,
+		state,
+		stateExtendedIso,
+		stateName,
+		continent,
+		continentName,
+		region,
+		regionAliases,
 		[ `as${location.asn}` ],
-		normalizedTags.filter(tag => tag.type === 'system').map(tag => tag.value),
-		getNetworkPrefixes(location.normalizedNetwork),
-		getNetworkAliases(location.normalizedNetwork),
-	].map(category => category.map(s => s.toLowerCase().replaceAll('-', ' ')));
+		toIndexStrings(normalizedTags.filter(tag => tag.type === 'system').map(tag => tag.value)),
+		networkPrefixes,
+		networkAliases,
+	];
 
 	return index as ProbeIndex;
 };

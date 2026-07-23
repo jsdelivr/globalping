@@ -205,12 +205,16 @@ export class SyncedProbeList extends EventEmitter {
 	}
 
 	private handleUpdate (message: NodeData) {
+		this.setNodeData(message);
+		this.updateProbes();
+	}
+
+	private setNodeData (message: NodeData) {
 		if (message.nodeId !== this.nodeId && !this.nodeData.has(message.nodeId)) {
 			this.logger.info(`Registered new node ${message.nodeId}.`);
 		}
 
 		this.nodeData.set(message.nodeId, message, { ttl: this.syncTimeout });
-		this.updateProbes();
 	}
 
 	private getRemoteDataKey (nodeId: string) {
@@ -400,8 +404,9 @@ export class SyncedProbeList extends EventEmitter {
 		}
 
 		const eventsByNode = _.groupBy(eventsToProcess, event => event.message[MESSAGE_TYPES.NODE]);
+		let nodeDataChanged = false;
 
-		await Promise.all(Object.entries(eventsByNode).map(([ nodeId, nodeEvents ]) => {
+		const results = await Promise.allSettled(Object.entries(eventsByNode).map(([ nodeId, nodeEvents ]) => {
 			const changes: NodeChanges = {
 				nodeId,
 				revalidateTimestamp: undefined,
@@ -452,7 +457,8 @@ export class SyncedProbeList extends EventEmitter {
 				const newNodeData = await this.getRemoteNodeData(changes.nodeId);
 
 				if (newNodeData) {
-					this.handleUpdate(newNodeData);
+					this.setNodeData(newNodeData);
+					nodeDataChanged = true;
 				}
 
 				return;
@@ -487,8 +493,19 @@ export class SyncedProbeList extends EventEmitter {
 				probesById,
 			};
 
-			this.handleUpdate(newNodeData);
+			this.setNodeData(newNodeData);
+			nodeDataChanged = true;
 		}));
+
+		if (nodeDataChanged) {
+			this.updateProbes();
+		}
+
+		const error = results.find(result => result.status === 'rejected');
+
+		if (error) {
+			throw error.reason;
+		}
 
 		this.lastReadEventId = events.at(-1)!.id;
 	}
