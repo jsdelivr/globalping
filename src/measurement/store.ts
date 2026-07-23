@@ -201,7 +201,7 @@ export class MeasurementStore {
 	}
 
 	async cleanup () {
-		const SCAN_BATCH_SIZE = 5000;
+		const SCAN_BATCH_SIZE = 2000;
 		const CLEANUP_LEASE_TIME = 30_000;
 		const now = Date.now();
 		const timedOutIds = await this.redis.claimTimedOutMeasurements('gp:in-progress-timeouts', now, SCAN_BATCH_SIZE, now + CLEANUP_LEASE_TIME);
@@ -210,7 +210,7 @@ export class MeasurementStore {
 	}
 
 	scheduleCleanup () {
-		const SCAN_INTERVAL_TIME = 15_000;
+		const SCAN_INTERVAL_TIME = 5_000;
 		const intervalTime = Math.round(Math.random() * SCAN_INTERVAL_TIME);
 
 		setTimeout(() => {
