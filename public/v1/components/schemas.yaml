@@ -698,7 +698,9 @@ components:
         country:
           $ref: 'schemas.yaml#/components/schemas/CountryCode'
         state:
-          $ref: 'schemas.yaml#/components/schemas/StateCode'
+          anyOf:
+            - $ref: 'schemas.yaml#/components/schemas/StateCode'
+            - type: 'null'
         city:
           $ref: 'schemas.yaml#/components/schemas/CityName'
         asn:
@@ -772,9 +774,7 @@ components:
         - 'null'
       description: The resolved hostname of the `target`.
     StateCode:
-      type:
-        - string
-        - 'null'
+      type: string
       description: A two-letter [US state code](https://www.faa.gov/air_traffic/publications/atpubs/cnt_html/appendix_a.html).
     StatsRttMin:
       type: number
