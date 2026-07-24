@@ -44,6 +44,8 @@ components:
                   message: Parameter validation failed.
                   params:
                     measurement: '\"measurement\" does not match any of the allowed types'
+                links:
+                  documentation: https://globalping.io/docs/api.globalping.io#post-/v1/measurements
     '404':
       description: |
         If the API couldn't find the requested resource, it returns status `404 Not Found`
@@ -78,6 +80,8 @@ components:
                 error:
                   type: not_found
                   message: Couldn't find the requested item.
+                links:
+                  documentation: https://globalping.io/docs/api.globalping.io#get-/v1/measurements/-id-
     measurements422:
       description: |
         If the API couldn't find suitable probes for your request, it returns status `422 Unprocessable Content` and a body with more
@@ -112,6 +116,8 @@ components:
                 error:
                   type: no_probes_found
                   message: No matching IPv4 probes available.
+                links:
+                  documentation: https://globalping.io/docs/api.globalping.io#post-/v1/measurements
     measurements429:
       description: |
         If you've exceeded the API rate limit, you'll receive status `429 Too Many Requests` and a body containing more information about the error.
@@ -161,12 +167,16 @@ components:
                 error:
                   type: rate_limit_exceeded
                   message: This measurement exceeds the remaining hourly rate limit for your IP address.
+                links:
+                  documentation: https://globalping.io/docs/api.globalping.io#post-/v1/measurements
             insufficientCredits:
               summary: Insufficient credits
               value:
                 error:
                   type: insufficient_credits
                   message: Not enough credits to run this measurement.
+                links:
+                  documentation: https://globalping.io/docs/api.globalping.io#post-/v1/measurements
     measurements202:
       description: |
         If the API accepted the request for processing, it returns status `202 Accepted` and a body containing the ID of the newly created measurement.
@@ -260,6 +270,8 @@ components:
                 error:
                   type: too_many_requests
                   message: Too many requests. Please retry in 4 seconds.
+                links:
+                  documentation: https://globalping.io/docs/api.globalping.io#get-/v1/measurements/-id-
     probes200:
       description: |
         A successful request returns status `200 OK` and a body containing a list of all probes currently online and their metadata.
