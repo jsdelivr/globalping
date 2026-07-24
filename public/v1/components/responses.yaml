@@ -29,6 +29,13 @@ components:
                     description: Additional information that might be present if the error is related to a specific parameter or payload field.
                     additionalProperties:
                       type: string
+              links:
+                type: object
+                properties:
+                  documentation:
+                    type: string
+                    format: uri
+                    description: A link to documentation for the relevant endpoint.
           examples:
             json:
               value:
@@ -58,6 +65,13 @@ components:
                     type: string
                   message:
                     type: string
+              links:
+                type: object
+                properties:
+                  documentation:
+                    type: string
+                    format: uri
+                    description: A link to documentation for the relevant endpoint.
           examples:
             json:
               value:
@@ -85,6 +99,13 @@ components:
                     type: string
                   message:
                     type: string
+              links:
+                type: object
+                properties:
+                  documentation:
+                    type: string
+                    format: uri
+                    description: A link to documentation for the relevant endpoint.
           examples:
             json:
               value:
@@ -126,6 +147,13 @@ components:
                     type: string
                   message:
                     type: string
+              links:
+                type: object
+                properties:
+                  documentation:
+                    type: string
+                    format: uri
+                    description: A link to documentation for the relevant endpoint.
           examples:
             rateLimitExceeded:
               summary: Hourly rate limit exceeded
@@ -219,6 +247,13 @@ components:
                     type: string
                   message:
                     type: string
+              links:
+                type: object
+                properties:
+                  documentation:
+                    type: string
+                    format: uri
+                    description: A link to documentation for the relevant endpoint.
           examples:
             json:
               value:
