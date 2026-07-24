@@ -19,6 +19,7 @@ const getYamlMemoized = _.memoize(getYaml);
 
 const handle = async (ctx: ParameterizedContext): Promise<void> => {
 	ctx.body = await (ctx.app.env === 'production' ? getYamlMemoized : getYaml)();
+	ctx.type = 'application/yaml';
 };
 
 export const registerSpecRoute = (router: ExtendedRouter): void => {
