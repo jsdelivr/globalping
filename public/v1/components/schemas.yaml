@@ -1311,7 +1311,7 @@ components:
         - resolver
         - internal
       description: |
-        The most likely source of the failure:
+        EXPERIMENTAL: The most likely source of the failure:
          - `target` covers the target and its network path, including misconfigured DNS records and timeouts,
          - `resolver` covers failures communicating with or receiving an unusable response from the DNS resolver,
          - `internal` covers Globalping probe and API failures.
