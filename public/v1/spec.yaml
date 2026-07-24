@@ -47,6 +47,7 @@ info:
     identifier: OSL-3.0
 servers:
   - url: https://api.globalping.io
+security: []
 tags:
   - name: Measurements
   - name: Probes
