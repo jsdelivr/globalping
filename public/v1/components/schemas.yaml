@@ -2,6 +2,7 @@ components:
   schemas:
     AsnCode:
       type: integer
+      minimum: 1
       description: An autonomous system number (ASN).
     CountryCode:
       type: string
