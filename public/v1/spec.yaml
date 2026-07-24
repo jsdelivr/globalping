@@ -50,8 +50,11 @@ servers:
 security: []
 tags:
   - name: Measurements
+    description: Create network measurements and retrieve their results.
   - name: Probes
+    description: Discover the probes currently available for measurements.
   - name: Limits
+    description: Inspect the current user's or IP address's rate limits and credits.
 paths:
   /v1/measurements:
     post:
