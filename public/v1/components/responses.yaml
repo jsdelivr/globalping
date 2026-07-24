@@ -167,6 +167,12 @@ components:
           examples:
             '0':
               $ref: 'examples.yaml#/components/examples/createMeasurementResponse'
+      links:
+        getMeasurement:
+          operationId: getMeasurement
+          parameters:
+            id: '$response.body#/id'
+          description: Retrieve the results of the newly created measurement.
     measurement200:
       description: |
         A successful request returns status `200 OK` and a body containing the requested measurement results.
