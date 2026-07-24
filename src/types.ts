@@ -3,8 +3,9 @@ import type Router from '@koa/router';
 import type { DocsLinkContext } from './lib/http/middleware/docs-link.js';
 import type { AuthenticateState } from './lib/http/middleware/authenticate.js';
 import type { CompressedContext } from './lib/http/middleware/compressed.js';
+import type { DiscoveryLinksState } from './lib/http/middleware/discovery-links.js';
 
-export type CustomState = Koa.DefaultState & AuthenticateState;
+export type CustomState = Koa.DefaultState & AuthenticateState & DiscoveryLinksState;
 export type CustomContext = Koa.DefaultContext & DocsLinkContext & CompressedContext;
 
 export type UnknownNext = () => Promise<unknown>;

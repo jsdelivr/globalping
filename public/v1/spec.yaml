@@ -47,10 +47,14 @@ info:
     identifier: OSL-3.0
 servers:
   - url: https://api.globalping.io
+security: []
 tags:
   - name: Measurements
+    description: Create network measurements and retrieve their results.
   - name: Probes
+    description: Discover the probes currently available for measurements.
   - name: Limits
+    description: Inspect the current user's or IP address's rate limits and credits.
 paths:
   /v1/measurements:
     post:
@@ -72,6 +76,7 @@ paths:
           - Repeating the measurement with fewer probes.
       requestBody:
         description: Use the request body to set the measurement parameters.
+        required: true
         content:
           application/json:
             schema:
