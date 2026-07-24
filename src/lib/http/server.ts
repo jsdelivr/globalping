@@ -32,6 +32,7 @@ import { defaultHeaders } from './middleware/default-headers.js';
 import { isAdminMw } from './middleware/is-admin.js';
 import { isSystemMw } from './middleware/is-system.js';
 import { docsLink } from './middleware/docs-link.js';
+import { discoveryLinks } from './middleware/discovery-links.js';
 import { CustomContext, CustomState } from '../../types.js';
 import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternative-ip.js';
 import { registerLimitsRoute } from '../../limits/route/get-limits.js';
@@ -45,7 +46,7 @@ const docsHost = config.get<string>('server.docsHost');
 const apiHost = config.get<string>('server.host');
 
 export const getHttpServer = (ioContext: IoContext) => {
-	const app = new Koa();
+	const app = new Koa<CustomState, CustomContext>();
 
 	const rootRouter = new Router({ strict: true, sensitive: true });
 
@@ -109,6 +110,7 @@ export const getHttpServer = (ioContext: IoContext) => {
 		.use(conditionalGet())
 		.use(captureMiddlewareSpan(etag(), { name: 'etag' }))
 		.use(captureMiddlewareSpan(json({ pretty: true, spaces: 2 }), { name: 'json' }))
+		.use(discoveryLinks({ apiHost, docsHost }))
 		.use(docsLink({ docsHost }))
 		.use(defaultJson())
 		// Error handler must always be the first middleware in a chain unless you know what you are doing ;)
@@ -122,6 +124,13 @@ export const getHttpServer = (ioContext: IoContext) => {
 		.use(apiRouter.routes())
 		.use(apiRouter.allowedMethods())
 		.use(koaElasticUtils.middleware(apmAgent))
+		.use(async (ctx, next) => {
+			await next();
+
+			if (ctx.body) {
+				ctx.state.isStaticFile = true;
+			}
+		})
 		.use(koaStatic(publicPath, {
 			format: false,
 			setHeaders: (res) => {
