@@ -76,6 +76,7 @@ paths:
           - Repeating the measurement with fewer probes.
       requestBody:
         description: Use the request body to set the measurement parameters.
+        required: true
         content:
           application/json:
             schema:
