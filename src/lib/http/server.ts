@@ -19,6 +19,7 @@ import { registerGetMeasurementRoute } from '../../measurement/route/get-measure
 import { registerCreateMeasurementRoute } from '../../measurement/route/create-measurement.js';
 import { registerSendCodeRoute } from '../../adoption/route/adoption-code.js';
 import { registerHealthRoute } from '../../health/route/get.js';
+import { registerApiCatalogRoute } from './api-catalog.js';
 import { registerSpecRoute } from './spec.js';
 import { errorHandler } from './error-handler.js';
 import { compressed } from './middleware/compressed.js';
@@ -41,6 +42,7 @@ import type { IoContext } from '../server.js';
 
 const publicPath = url.fileURLToPath(new URL('.', import.meta.url)) + '/../../../public';
 const docsHost = config.get<string>('server.docsHost');
+const apiHost = config.get<string>('server.host');
 
 export const getHttpServer = (ioContext: IoContext) => {
 	const app = new Koa();
@@ -60,6 +62,8 @@ export const getHttpServer = (ioContext: IoContext) => {
 			},
 		};
 	});
+
+	registerApiCatalogRoute(rootRouter, { apiHost, docsHost });
 
 	const apiRouter = new Router<CustomState, CustomContext>({ strict: true, sensitive: true });
 
