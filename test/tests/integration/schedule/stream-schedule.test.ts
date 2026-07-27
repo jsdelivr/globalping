@@ -73,7 +73,7 @@ describe('Stream schedule execution', () => {
 				measurement_type: 'ping',
 				measurement_target: 'example.com',
 				measurement_options: {
-					packets: 1,
+					packets: 16,
 					protocol: 'ICMP',
 					port: 80,
 					ipVersion: 4,
@@ -147,10 +147,10 @@ describe('Stream schedule execution', () => {
 				target: 'example.com',
 				protocol: 'ICMP',
 				ipVersion: 4,
-				packets: 1,
+				packets: 16,
 				port: 80,
 				inProgressUpdates: false,
-				timeout: 5,
+				timeout: 11,
 			},
 		});
 	});
