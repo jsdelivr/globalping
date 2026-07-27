@@ -119,7 +119,8 @@ export class MeasurementStore {
 	async createMeasurement (request: MeasurementRequest, onlineProbesMap: Map<number, ServerProbe>, allProbes: (ServerProbe | OfflineProbe)[], userType?: AuthenticateStateUser['userType'], exportMeta: ExportMeta = {}): Promise<string> {
 		const startTime = new Date();
 		const isFinishedImmediately = onlineProbesMap.size === 0;
-		const timeoutTime = config.get<number>('measurement.timeout') * 1000;
+		const timeoutSeconds = request.timeout + 5;
+		const timeoutTime = timeoutSeconds * 1000;
 		const results = this.probesToResults(allProbes, request.type);
 		const id = generateMeasurementId(startTime, userType);
 		const key = getMeasurementKey(id);
@@ -131,6 +132,7 @@ export class MeasurementStore {
 			createdAt: startTime.toISOString(),
 			updatedAt: startTime.toISOString(),
 			target: request.target,
+			timeout: request.timeout,
 			...(request.limit && { limit: request.limit }),
 			probesCount: allProbes.length,
 			...(request.locations && { locations: request.locations }),
@@ -144,7 +146,7 @@ export class MeasurementStore {
 
 		await Promise.all([
 			!isFinishedImmediately && this.redis.zAdd('gp:in-progress-timeouts', { score: startTime.getTime() + timeoutTime, value: id }),
-			!isFinishedImmediately && this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: config.get<number>('measurement.timeout') + 30 }),
+			!isFinishedImmediately && this.redis.set(getMeasurementKey(id, 'probes_awaiting'), onlineProbesMap.size, { EX: timeoutSeconds + 30 }),
 			this.redis.json.set(key, '$', measurementWithoutDefaults),
 			this.redis.json.set(getMeasurementKey(id, 'ips'), '$', allProbes.map(probe => probe.ipAddress)),
 			this.redis.json.set(getMeasurementKey(id, 'meta'), '$', exportMeta),
@@ -152,7 +154,7 @@ export class MeasurementStore {
 			this.redis.expire(getMeasurementKey(id, 'ips'), config.get<number>('measurement.resultTTL')),
 			this.redis.expire(getMeasurementKey(id, 'meta'), config.get<number>('measurement.resultTTL')),
 			!_.isEmpty(testsToProbes) && this.redis.hSet('gp:test-to-probe', testsToProbes),
-			!_.isEmpty(testsToProbes) && this.redis.hExpire('gp:test-to-probe', Object.keys(testsToProbes), config.get<number>('measurement.timeout') + 120),
+			!_.isEmpty(testsToProbes) && this.redis.hExpire('gp:test-to-probe', Object.keys(testsToProbes), timeoutSeconds + 120),
 		]);
 
 		if (isFinishedImmediately) {

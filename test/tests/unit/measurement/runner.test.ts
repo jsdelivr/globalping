@@ -73,6 +73,7 @@ describe('MeasurementRunner', () => {
 			locations: [],
 			limit: 10,
 			inProgressUpdates: false,
+			timeout: 5,
 		};
 
 		router.findMatchingProbes.resolves({
@@ -104,6 +105,7 @@ describe('MeasurementRunner', () => {
 				locations: [],
 				limit: 10,
 				inProgressUpdates: false,
+				timeout: 5,
 			},
 			new Map([ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ].entries()),
 			[ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ],
@@ -118,6 +120,7 @@ describe('MeasurementRunner', () => {
 		expect(emit.args[0]).to.deep.equal([ 'probe:measurement:request', {
 			measurement: {
 				inProgressUpdates: false,
+				timeout: 5,
 				packets: 3,
 				ipVersion: 4,
 				port: 80,
@@ -134,6 +137,7 @@ describe('MeasurementRunner', () => {
 		expect(emit.args[1]).to.deep.equal([ 'probe:measurement:request', {
 			measurement: {
 				inProgressUpdates: false,
+				timeout: 5,
 				packets: 3,
 				ipVersion: 4,
 				port: 80,
@@ -150,6 +154,7 @@ describe('MeasurementRunner', () => {
 		expect(emit.args[2]).to.deep.equal([ 'probe:measurement:request', {
 			measurement: {
 				inProgressUpdates: false,
+				timeout: 5,
 				packets: 3,
 				ipVersion: 4,
 				port: 80,
@@ -166,6 +171,7 @@ describe('MeasurementRunner', () => {
 		expect(emit.args[3]).to.deep.equal([ 'probe:measurement:request', {
 			measurement: {
 				inProgressUpdates: false,
+				timeout: 5,
 				packets: 3,
 				ipVersion: 4,
 				port: 80,
@@ -194,6 +200,7 @@ describe('MeasurementRunner', () => {
 			locations: [],
 			limit: 10,
 			inProgressUpdates: true,
+			timeout: 5,
 		};
 
 		router.findMatchingProbes.resolves({
@@ -225,6 +232,7 @@ describe('MeasurementRunner', () => {
 				locations: [],
 				limit: 10,
 				inProgressUpdates: true,
+				timeout: 5,
 			},
 			new Map([ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ].entries()),
 			[ getProbe(0), getProbe(1), getProbe(2), getProbe(3) ],
@@ -238,6 +246,7 @@ describe('MeasurementRunner', () => {
 		expect(emit.args[0]).to.deep.equal([ 'probe:measurement:request', {
 			measurement: {
 				inProgressUpdates: true,
+				timeout: 5,
 				packets: 3,
 				ipVersion: 4,
 				port: 80,
@@ -252,6 +261,7 @@ describe('MeasurementRunner', () => {
 		expect(emit.args[1]).to.deep.equal([ 'probe:measurement:request', {
 			measurement: {
 				inProgressUpdates: true,
+				timeout: 5,
 				packets: 3,
 				ipVersion: 4,
 				port: 80,
@@ -266,6 +276,7 @@ describe('MeasurementRunner', () => {
 		expect(emit.args[2]).to.deep.equal([ 'probe:measurement:request', {
 			measurement: {
 				inProgressUpdates: false,
+				timeout: 5,
 				packets: 3,
 				ipVersion: 4,
 				port: 80,
@@ -280,6 +291,7 @@ describe('MeasurementRunner', () => {
 		expect(emit.args[3]).to.deep.equal([ 'probe:measurement:request', {
 			measurement: {
 				inProgressUpdates: false,
+				timeout: 5,
 				packets: 3,
 				ipVersion: 4,
 				port: 80,
@@ -329,6 +341,7 @@ describe('MeasurementRunner', () => {
 			locations: [],
 			limit: 10,
 			inProgressUpdates: false,
+			timeout: 5,
 		};
 
 		router.findMatchingProbes.resolves({
@@ -366,6 +379,7 @@ describe('MeasurementRunner', () => {
 			locations: [],
 			limit: 10,
 			inProgressUpdates: false,
+			timeout: 5,
 		};
 
 		router.findMatchingProbes.resolves({
@@ -398,6 +412,7 @@ describe('MeasurementRunner', () => {
 			locations: [],
 			limit: 10,
 			inProgressUpdates: false,
+			timeout: 5,
 		};
 
 		router.findMatchingProbes.resolves({
@@ -434,6 +449,7 @@ describe('MeasurementRunner', () => {
 			locations: [{ country: 'US' }, { country: 'DE' }],
 			limit: 10,
 			inProgressUpdates: false,
+			timeout: 5,
 		};
 
 		router.findMatchingProbes.resolves({
@@ -472,6 +488,7 @@ describe('MeasurementRunner', () => {
 			locations: [],
 			limit: 10,
 			inProgressUpdates: false,
+			timeout: 5,
 		};
 
 		const error = createHttpError(429, 'This measurement exceeds the remaining hourly rate limit for your IP address.', { type: 'rate_limit_exceeded' });

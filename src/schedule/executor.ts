@@ -10,6 +10,7 @@ import type { WsServer } from '../lib/ws/server.js';
 import type { SyncedProbeList } from '../lib/ws/synced-probe-list.js';
 import type { MeasurementStore } from '../measurement/store.js';
 import { getMeasurementStore } from '../measurement/store.js';
+import { getMeasurementTimeout } from '../measurement/schema/utils.js';
 import { getStreamScheduleLoader, type ScheduleLoader } from './loader.js';
 
 const logger = scopedLogger('schedule-executor');
@@ -128,6 +129,10 @@ export class StreamScheduleExecutor {
 				continue;
 			}
 
+			const timeout = getMeasurementTimeout(
+				configuration.measurement_type,
+				'packets' in configuration.measurement_options ? configuration.measurement_options.packets : undefined,
+			);
 			const requestBase = {
 				type: configuration.measurement_type,
 				target: configuration.measurement_target,
@@ -136,6 +141,7 @@ export class StreamScheduleExecutor {
 				scheduleId: schedule.id,
 				configurationId: configuration.id,
 				inProgressUpdates: false,
+				timeout,
 				limit: undefined,
 			};
 
@@ -187,6 +193,7 @@ export class StreamScheduleExecutor {
 				...requestBase.measurementOptions,
 				type: requestBase.type,
 				target: requestBase.target,
+				timeout: requestBase.timeout,
 				inProgressUpdates: requestBase.inProgressUpdates,
 			},
 		});

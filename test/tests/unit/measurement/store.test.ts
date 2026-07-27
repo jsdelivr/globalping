@@ -228,6 +228,7 @@ describe('measurement store', () => {
 				locations: [],
 				limit: 4,
 				inProgressUpdates: false,
+				timeout: 11,
 			},
 			new Map([ getProbe('z', '1.1.1.1'), getProbe('10', '2.2.2.2'), getProbe('x', '3.3.3.3'), getProbe('0', '4.4.4.4') ].entries()),
 			[ getProbe('z', '1.1.1.1'), getProbe('10', '2.2.2.2'), getProbe('x', '3.3.3.3'), getProbe('0', '4.4.4.4') ],
@@ -237,12 +238,12 @@ describe('measurement store', () => {
 		expect(redisMock.zAdd.callCount).to.equal(1);
 
 		expect(redisMock.zAdd.args[0]).to.deep.equal([ 'gp:in-progress-timeouts', {
-			score: now + 30_000,
+			score: now + 16_000,
 			value: mockedMeasurementId1,
 		}]);
 
 		expect(redisMock.set.callCount).to.equal(1);
-		expect(redisMock.set.args[0]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:probes_awaiting`, 4, { EX: 60 }]);
+		expect(redisMock.set.args[0]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:probes_awaiting`, 4, { EX: 46 }]);
 		expect(redisMock.json.set.callCount).to.equal(3);
 
 		expect(redisMock.json.set.args[0]).to.deep.equal([ `gp:m:{${mockedMeasurementId1}}:results`, '$', {
@@ -252,6 +253,7 @@ describe('measurement store', () => {
 			createdAt: new Date(now).toISOString(),
 			updatedAt: new Date(now).toISOString(),
 			target: 'jsdelivr.com',
+			timeout: 11,
 			limit: 4,
 			probesCount: 4,
 			results: [{
@@ -347,7 +349,7 @@ describe('measurement store', () => {
 				`${mockedMeasurementId1}_2`,
 				`${mockedMeasurementId1}_3`,
 			],
-			150,
+			136,
 		]);
 	});
 
@@ -362,6 +364,7 @@ describe('measurement store', () => {
 				locations: [],
 				limit: 1,
 				inProgressUpdates: false,
+				timeout: 5,
 			},
 			new Map([ [ 0, getProbe('id', '1.1.1.1') ] ]),
 			[ getProbe('id', '1.1.1.1') ],
@@ -420,6 +423,7 @@ describe('measurement store', () => {
 				locations: [],
 				limit: 1,
 				inProgressUpdates: false,
+				timeout: 10,
 			},
 			new Map([ [ 0, getProbe('id', '1.1.1.1') ] ]),
 			[ getProbe('id', '1.1.1.1') ],
@@ -474,6 +478,7 @@ describe('measurement store', () => {
 				locations: [],
 				limit: 1,
 				inProgressUpdates: false,
+				timeout: 5,
 			},
 			new Map(),
 			[ getOfflineProbe('id', '1.1.1.1') ],
@@ -550,6 +555,7 @@ describe('measurement store', () => {
 				}],
 				limit: 2,
 				inProgressUpdates: false,
+				timeout: 10,
 			},
 			new Map([ [ 0, getProbe('id', '1.1.1.1') ] ]),
 			[ getProbe('id', '1.1.1.1') ],
@@ -608,6 +614,7 @@ describe('measurement store', () => {
 				locations: [],
 				limit: 1,
 				inProgressUpdates: false,
+				timeout: 5,
 				scheduleId: 'schedule-id',
 				configurationId: 'configuration-id',
 			},
@@ -676,6 +683,7 @@ describe('measurement store', () => {
 				limit: 1,
 				locations: [],
 				inProgressUpdates: false,
+				timeout: 10,
 			},
 			new Map([ [ 0, getProbe('id', '1.1.1.1') ] ]),
 			[ getProbe('id', '1.1.1.1') ],
