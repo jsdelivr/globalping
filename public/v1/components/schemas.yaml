@@ -596,6 +596,13 @@ components:
               $ref: 'schemas.yaml#/components/schemas/MeasurementLocations'
             limit:
               $ref: 'schemas.yaml#/components/schemas/MeasurementLimit'
+            timeout:
+              type: integer
+              minimum: 5
+              maximum: 30
+              description: |
+                The probe-side wall-clock timeout for each test, in seconds. If omitted, the value is calculated based on the provided measurement options and can be up to 20 seconds.
+                In all cases, callers should allow at least 10 additional seconds for probe-to-API communication and API measurement finalization before triggering a client-side timeout.
             measurementOptions:
               $ref: 'schemas.yaml#/components/schemas/MeasurementOptions'
     MeasurementResponse:
@@ -640,6 +647,12 @@ components:
           allOf:
             - $ref: 'schemas.yaml#/components/schemas/MeasurementLimit'
             - description: The limit you specified when creating the measurement if different from the default value.
+        timeout:
+          type: integer
+          minimum: 5
+          maximum: 30
+          description: |
+            The probe-side wall-clock timeout for each test, in seconds, if different from the calculated value.
         measurementOptions:
           allOf:
             - $ref: 'schemas.yaml#/components/schemas/MeasurementOptions'

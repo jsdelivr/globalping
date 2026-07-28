@@ -11,7 +11,7 @@ import {
 } from '../../lib/malware/client.js';
 import { joiValidate as joiMalwareValidateIp } from '../../lib/malware/ip.js';
 import { joiValidate as joiMalwareValidateDomain } from '../../lib/malware/domain.js';
-import type { MeasurementRecord, MeasurementRequest } from '../types.js';
+import type { MeasurementOptions, MeasurementRecord, MeasurementRequest, RequestType } from '../types.js';
 import { isIpPrivate } from '../../lib/private-ip.js';
 
 export const globalIpOptions: { version: string[]; cidr: PresenceMode } = { version: [ 'ipv4', 'ipv6' ], cidr: 'forbidden' };
@@ -143,6 +143,26 @@ export const COMMAND_DEFAULTS = {
 	},
 } as const;
 
+export const getMeasurementTimeout = (type: RequestType, measurementOptions: MeasurementOptions): number => {
+	if (type === 'ping') {
+		const packets = 'packets' in measurementOptions ? measurementOptions.packets : COMMAND_DEFAULTS.ping.packets;
+		return Math.max(5, Math.ceil((packets - 1) * 0.5 + 3));
+	}
+
+	if (type === 'mtr') {
+		const packets = 'packets' in measurementOptions ? measurementOptions.packets : COMMAND_DEFAULTS.mtr.packets;
+		// Packet intervals + MTR grace + target DNS + ASN lookups.
+		return Math.max(5, Math.ceil(packets * 0.5 + 3 + 3 + 3));
+	}
+
+	if (type === 'dns') {
+		// Four servers, two attempts each, averaging two seconds per attempt.
+		return 'trace' in measurementOptions && measurementOptions.trace ? 4 * 2 * 2 : 7;
+	}
+
+	return { http: 10, traceroute: 5 }[type];
+};
+
 // Some joi defaults are not values but functions, they need to be executed to get actual value
 const processFunctionDefaults = (obj: object, request: MeasurementRequest): unknown => _.mapValues(obj, (value: unknown) => {
 	if (_.isFunction(value)) {
@@ -158,6 +178,7 @@ export const getDefaults = (request: MeasurementRequest) => {
 	const defaultRules = {
 		...GLOBAL_DEFAULTS,
 		measurementOptions: COMMAND_DEFAULTS[request.type],
+		timeout: getMeasurementTimeout(request.type, request.measurementOptions),
 	};
 
 	const defaults = processFunctionDefaults(defaultRules, request) as Partial<MeasurementRecord>;

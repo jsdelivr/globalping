@@ -74,6 +74,7 @@ export class MeasurementRunner {
 					type: request.type,
 					target: request.target,
 					inProgressUpdates,
+					timeout: request.timeout,
 				},
 			};
 			this.io.of(PROBES_NAMESPACE).to(probe.client).emit('probe:measurement:request', requestMessage);
