@@ -129,10 +129,7 @@ export class StreamScheduleExecutor {
 				continue;
 			}
 
-			const timeout = getMeasurementTimeout(
-				configuration.measurement_type,
-				'packets' in configuration.measurement_options ? configuration.measurement_options.packets : undefined,
-			);
+			const timeout = getMeasurementTimeout(configuration.measurement_type, configuration.measurement_options);
 			const requestBase = {
 				type: configuration.measurement_type,
 				target: configuration.measurement_target,

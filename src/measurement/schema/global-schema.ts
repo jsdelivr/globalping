@@ -15,10 +15,7 @@ export const schema = Joi.object({
 	type: Joi.string().valid('ping', 'traceroute', 'dns', 'mtr', 'http').insensitive().required(),
 	target: targetSchema,
 	measurementOptions: measurementSchema,
-	timeout: Joi.number().integer().min(5).max(30).default((request: MeasurementRequest) => getMeasurementTimeout(
-		request.type,
-		'packets' in request.measurementOptions ? request.measurementOptions.packets : undefined,
-	)),
+	timeout: Joi.number().integer().min(5).max(30).default((request: MeasurementRequest) => getMeasurementTimeout(request.type, request.measurementOptions)),
 	locations: locationSchema,
 	limit: Joi.number().min(1).when('$user.id', {
 		is: Joi.string().required(),
