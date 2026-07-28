@@ -68,7 +68,7 @@ describe('probe router', () => {
 			id,
 			handshake: {
 				query: {
-					version: '0.39.0',
+					version: '0.50.0',
 					nodeVersion: 'v24.14.1',
 					uuid: '11111111-1111-4111-8111-111111111111',
 					totalMemory: '1000000000',

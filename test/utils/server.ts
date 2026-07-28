@@ -47,7 +47,7 @@ export const addFakeProbes = async (count: number, events: object = {}, options:
 			// Disable auto-reconnect so disconnected probes don't reconnect and consume nock interceptors set up by the next test.
 			reconnection: false,
 			query: {
-				version: '0.39.0',
+				version: '0.50.0',
 				nodeVersion: 'v18.17.0',
 				uuid: '11111111-1111-4111-8111-111111111111',
 				isHardware: 'undefined',
