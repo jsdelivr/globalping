@@ -8,7 +8,7 @@ const expectProbeError = (query: Record<string, unknown>, fieldName: string) => 
 
 describe('parseHandshakeQuery', () => {
 	const validQuery = {
-		version: '0.39.0',
+		version: '0.50.0',
 		nodeVersion: 'v18.17.0',
 		totalMemory: '1000000000',
 		totalDiskSize: '2000',
@@ -24,7 +24,7 @@ describe('parseHandshakeQuery', () => {
 		const result = parseHandshakeQuery({ ...validQuery });
 
 		expect(result).to.deep.equal({
-			version: '0.39.0',
+			version: '0.50.0',
 			nodeVersion: 'v18.17.0',
 			totalMemory: 1000000000,
 			totalDiskSize: 2000,
@@ -43,7 +43,7 @@ describe('parseHandshakeQuery', () => {
 
 	describe('version', () => {
 		it('rejects an out-of-range version', () => {
-			expect(() => parseHandshakeQuery({ ...validQuery, version: '0.38.0' })).to.throw(ProbeError, 'invalid probe version (0.38.0)');
+			expect(() => parseHandshakeQuery({ ...validQuery, version: '0.49.0' })).to.throw(ProbeError, 'invalid probe version (0.49.0)');
 		});
 
 		it('rejects a missing version', () => {
