@@ -662,6 +662,7 @@ components:
           description: An array containing the measurement results.
           items:
             $ref: 'schemas.yaml#/components/schemas/MeasurementResultItem'
+          x-schema-expanded: true
     NetworkName:
       type: string
       description: A network name, such as "Google LLC" or "DigitalOcean, LLC".
