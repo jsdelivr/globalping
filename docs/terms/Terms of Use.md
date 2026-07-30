@@ -1,6 +1,6 @@
 # Terms of Use
 
-*Effective date: November 16, 2024*
+*Effective date: July 31, 2026*
 
 We are Volentio JSD Limited (“Volentio JSD”, "us", "we", or "our") (trading as Globalping), a company registered in England and Wales under company registration number 14984373. Our registered office is at Suite 2a1, Northside House, Mount Pleasant, Barnet, England, EN4 9EB.
 
@@ -30,7 +30,11 @@ Volentio JSD and our licensors, vendors, and agents retain ownership of all inte
 
 ## 4. Limits and Restrictions
 
-To maintain the performance and security of Globalping, we have various limits and restrictions in place which are set out on the Website.
+To maintain the performance, security, and integrity of Globalping, we apply technical and operational limits to use of the Services, including the hosting and operation of probes. Current limits are published on the Website and in our official documentation.
+
+Limits may apply by IP address, IP address range, network, location, ASN, probe, or user account. You must comply with these limits and must not avoid or circumvent them by using additional accounts, IP addresses, probes, or any other means.
+
+We may disconnect probes that exceed our limits, provide limited value to the network, produce unreliable data, or otherwise threaten the integrity or operation of the Services.
 
 ## 5. Prohibited Use - Globalping
 
@@ -43,6 +47,10 @@ The following behaviour is prohibited in connection to your use or access of Glo
    - is unlawful or prohibited by these Terms.
 2. Abusing the Service and its resources.
 3. Trying to bypass our limits or restrictions in any way. We will be happy to remove limits or provide custom solutions for legitimate projects.
+4. Operating excessive numbers of probes in the same network and location, including for the purpose of generating credits or measurement results.
+5. Connecting a probe containing any modifications to the official Globalping Probe code without our prior written authorization.
+6. Providing false, manipulated, incomplete, or misleading information through a probe or user account.
+7. Interfering with probe updates, limits, quality-control mechanisms, or other safeguards used by Globalping.
 
 ## 6. Third Party Websites
 
@@ -98,6 +106,8 @@ We may update and change our Website from time to time to reflect changes to our
 ## 12. We may suspend or withdraw our Services
 
 We may withdraw or restrict the availability of all or any part of Globalping for business and operational reasons or where your use of Globalping violates or breaches these Terms.
+
+Where we reasonably believe that these Terms, our published limits, or our probe hosting rules have been violated, we may disconnect probes and temporarily or permanently block associated IP addresses or user accounts.
 
 You are also responsible for ensuring that all persons who access Globalping through your internet connection are aware of these Terms of use and other applicable terms and conditions, and that they comply with them.
 

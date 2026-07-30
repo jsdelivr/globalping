@@ -362,12 +362,13 @@ docker run -d --log-driver local --network host --restart=always --name globalpi
 ```
 And it works on x86 and ARM architectures. [Podman instructions](https://github.com/jsdelivr/globalping-probe#podman-alternative)
 
-Notes on probe security and customization
+Notes on probe security and customization:
 - Probes don't open any ports or accept any incoming connections. They can only establish a connection with our API.
 - We include regularly updated lists and databases of domains and IPs associated with malware or potentially dangerous content and completely ban them at the API  level.
 - Tests scale to the amount of available CPU cores. Our code is very lightweight and shouldn't use too many of your resources. Therefore, in most cases, we recommend running our probe as is. However, if you're worried, you can use `--cpuset-cpus="0-2"` with your Docker command to limit the number of available cores.
 - We rate-limited all users on the API level to prevent the abuse of the network.
 - No local network tests are allowed, only public endpoints.
+- Probe hosting is subject to our [hosting limits and acceptable-use rules](https://github.com/jsdelivr/globalping-probe#limitations).
 
 Learn more in the [Globalping Probe respository](https://github.com/jsdelivr/globalping-probe).
 
