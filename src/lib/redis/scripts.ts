@@ -163,9 +163,10 @@ const markFinishedByTimeout = defineScript({
 
 	for index, resultObject in ipairs(measurement.results) do
 		if resultObject.result.status == 'in-progress' then
+			local rawOutput = resultObject.result.rawOutput or ''
 			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.status', '"failed"')
 			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.failureSource', '"internal"')
-			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.rawOutput', cjson.encode((resultObject.result.rawOutput or '') .. timeoutMessage))
+			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.rawOutput', cjson.encode(rawOutput .. (rawOutput ~= '' and '\\n\\n' or '') .. timeoutMessage))
 		end
 	end
 
@@ -178,7 +179,7 @@ const markFinishedByTimeout = defineScript({
 
 		parser.push(
 			new Date().toISOString(),
-			'\n\nThe measurement timed out.',
+			'The measurement timed out.',
 		);
 	},
 	transformReply (reply: Buffer | null) {
