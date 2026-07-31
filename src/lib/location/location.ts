@@ -117,6 +117,19 @@ export const getRegionAliases = (key: string): string[] => {
 
 const toIndexStrings = (array: string[]) => array.map(s => s.toLowerCase().replaceAll('-', ' '));
 
+const getTagCategory = _.memoize((tag: string) => {
+	if (tag.startsWith('u-') || tag.startsWith('u:')) {
+		return toIndexStrings([ tag ]);
+	}
+
+	const prefixes = tag.split('-').reduce((acc: string[], _, i, parts) => {
+		acc.push(parts.slice(0, parts.length - i).join('-'));
+		return acc;
+	}, []);
+
+	return toIndexStrings(prefixes);
+});
+
 const getCountryCategories = _.memoize((country: string) => [
 	toIndexStrings([ country ]),
 	toIndexStrings([ getCountryIso3ByIso2(country) ]),
@@ -171,11 +184,10 @@ export const getIndex = (location: ProbeLocation, normalizedTags: Tag[]) => {
 		region,
 		regionAliases,
 		[ `as${location.asn}` ],
-		toIndexStrings(normalizedTags.filter(tag => tag.type === 'system').map(tag => tag.value)),
+		normalizedTags.filter(tag => tag.type === 'system').flatMap(tag => getTagCategory(tag.value)),
 		networkPrefixes,
 		networkAliases,
 	];
 
 	return index as ProbeIndex;
 };
-
