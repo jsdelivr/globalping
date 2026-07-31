@@ -239,7 +239,7 @@ Other location examples:
 - frankfurt, dallas, sydney
 - as396982, as16509
 - comcast, google, ovh, orange, t-mobile
-- eyeball, datacenter
+- eyeball-network, datacenter-network
 
 > [!NOTE]
 > Providing no location defaults to `world`, selecting a probe from a random location.
@@ -252,7 +252,7 @@ Examples:
 - `from google+germany` returns a Google Cloud probe in Germany (useful if you forget the cloud region name!).
 
 You can combine as many parameters as you like:
-- `from cogent+europe+datacenter` returns a probe hosted at Cogent in Europe, tagged as a data center probe. Or you could use the `eyeball` tag to target probes that aren't part of a data center.
+- `from cogent+europe+datacenter-network` returns a probe hosted at Cogent in Europe, tagged as a data center probe. Or you could use the `eyeball-network` tag to target probes that aren't part of a data center.
 ### Define multiple locations 🌐
 To run tests at multiple locations in a single request, list them with a comma, for example:
 
@@ -275,7 +275,7 @@ returns probes from these countries in roughly equal proportions to meet the lim
 Many probes are going to be tagged by our system. At the moment, this includes:
 
 - **Google Cloud and AWS cloud region names**. For example, `aws-eu-west-1` and `gcp-us-south1`. These tags follow the respective provider's naming scheme and are prefixed with their name.
-- **Eyeball and data center network tags**. `eyeball` and `datacenter`. `eyeball` probes are hosted with ISPs that provide internet access to regular people and small businesses. As the name suggests, `datacenter` tags are intended for probes hosted in a data center.
+- **Eyeball and data center network tags**. `eyeball-network` and `datacenter-network`. `eyeball-network` probes are hosted with ISPs that provide internet access to regular people and small businesses. As the name suggests, `datacenter-network` tags are intended for probes hosted in a data center.
 
 ### High-volume tests
 If you need to execute thousands of tests frequently, you may run into the limit of 500 probes per measurement.
