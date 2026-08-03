@@ -70,13 +70,15 @@ services:
       - ./config/redis/.env.redis
   redis-cluster-creator:
     image: redis/redis-stack-server:7.4.0-v1
-    command: bash -c 'redis-cli -a "$$REDIS_PASSWORD" --cluster create $$REDIS_PUBLIC_IP:7101 $$REDIS_PUBLIC_IP:7102 $$REDIS_PUBLIC_IP:7103 $$REDIS_PUBLIC_IP:7104 --cluster-replicas 0 --cluster-yes'
+    command: [ "sh", "/home/runner/mounted/create.sh" ]
     network_mode: "host"
     depends_on:
       - redis-node-01
       - redis-node-02
       - redis-node-03
       - redis-node-04
+    volumes:
+      - ./config/redis/cluster:/home/runner/mounted
     env_file:
       - ./config/redis/.env.redis
 
@@ -92,6 +94,24 @@ services:
     volumes:
       - ./config/dashboard/create-dbs.sql:/docker-entrypoint-initdb.d/01-create-dbs.sql
       - ./migrations/dashboard/create-tables.js.sql:/docker-entrypoint-initdb.d/02-create-tables.sql
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  dashboard-migrator:
+    image: node:22-alpine
+    working_dir: /app
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
+      - NODE_CONFIG={"dashboardDb":{"connection":{"host":"mariadb","port":3306,"multipleStatements":true}}}
+    volumes:
+      - ./:/app
+    command: sh -c "npm run knex:dashboard migrate:latest && NODE_ENV=test npm run knex:dashboard migrate:latest"
 
   measurement-store-1:
     image: timescale/timescaledb:2.25.2-pg18
