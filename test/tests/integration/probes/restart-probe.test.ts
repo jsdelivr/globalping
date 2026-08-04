@@ -49,10 +49,13 @@ describe('Restart Probe', () => {
 		}
 	});
 
-	it('should respond with 404 if user is not authorized', async () => {
+	it('should respond with 404 if user does not own the probe', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
+		nockGeoIpProviders();
+		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
+		const jwt = await getSignedJwt({ id: 'other-user-id', app_access: true });
 
-		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`).send().expect(404);
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(404);
 	});
 
 	it('should respond with 404 if user is admin and probe does not exist', async () => {
