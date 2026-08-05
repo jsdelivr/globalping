@@ -20,6 +20,7 @@ export const registerRestartProbeRoute = (router: ExtendedRouter, context: IoCon
 			throw createHttpError(404, `Probe not found.`, { type: 'not_found' });
 		}
 
+		// TODO: possibly index this later if needed in more endpoints
 		const probe = context.syncedProbeList.getProbes().find(probe => probe.uuid === adoptedProbe.uuid);
 
 		if (!probe) {
