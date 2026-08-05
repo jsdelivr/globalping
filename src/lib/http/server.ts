@@ -38,6 +38,7 @@ import { registerAlternativeIpRoute } from '../../alternative-ip/route/alternati
 import { registerLimitsRoute } from '../../limits/route/get-limits.js';
 import { blacklist } from './middleware/blacklist.js';
 import { registerGetProbeLogsRoute } from '../../probe/route/get-probe-logs.js';
+import { registerRestartProbeRoute } from '../../probe/route/restart-probe.js';
 import { captureMiddlewareChainSpan, captureMiddlewareSpan } from '../metrics.js';
 import type { IoContext } from '../server.js';
 
@@ -83,6 +84,8 @@ export const getHttpServer = (ioContext: IoContext) => {
 	registerGetProbesRoute(apiRouter, ioContext);
 	// GET /probes/:id/logs
 	registerGetProbeLogsRoute(apiRouter, ioContext);
+	// POST /probes/:id/restart
+	registerRestartProbeRoute(apiRouter, ioContext);
 	// POST /send-code
 	registerSendCodeRoute(apiRouter, ioContext);
 	// POST /alternative-ip
