@@ -44,11 +44,11 @@ describe('command schema', async () => {
 			});
 
 			it('should resolve defaults based on the measurement type and packets', () => {
-				expect(validate({ type: 'http', target: 'example.com' }).timeout).to.equal(10);
-				expect(validate({ type: 'traceroute', target: 'example.com' }).timeout).to.equal(5);
-				expect(validate({ type: 'dns', target: 'example.com' }).timeout).to.equal(7);
-				expect(validate({ type: 'dns', target: 'example.com', measurementOptions: { trace: true } }).timeout).to.equal(16);
-				expect(validate({ type: 'ping', target: 'example.com', measurementOptions: { packets: 3 } }).timeout).to.equal(5);
+				expect(validate({ type: 'http', target: 'example.com' }).timeout).to.equal(15);
+				expect(validate({ type: 'traceroute', target: 'example.com' }).timeout).to.equal(10);
+				expect(validate({ type: 'dns', target: 'example.com' }).timeout).to.equal(10);
+				expect(validate({ type: 'dns', target: 'example.com', measurementOptions: { trace: true } }).timeout).to.equal(25);
+				expect(validate({ type: 'ping', target: 'example.com', measurementOptions: { packets: 3 } }).timeout).to.equal(10);
 				expect(validate({ type: 'ping', target: 'example.com', measurementOptions: { packets: 16 } }).timeout).to.equal(11);
 				expect(validate({ type: 'mtr', target: 'example.com', measurementOptions: { packets: 3 } }).timeout).to.equal(11);
 				expect(validate({ type: 'mtr', target: 'example.com', measurementOptions: { packets: 16 } }).timeout).to.equal(17);
@@ -927,7 +927,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 5 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should populate with default values (no measurementOptions)', () => {
@@ -952,7 +952,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 5 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should pass (deep equal) ip version 6 target is a domain', () => {
@@ -977,7 +977,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 5 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should fail ip version provided when target is an ip', () => {
@@ -1020,7 +1020,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 5 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should pass (deep equal) ip version 6 automatically selected when target ipv6', () => {
@@ -1045,7 +1045,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 5 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should pass (deep equal) ip version 6 automatically selected when target is bracketed ipv6', () => {
@@ -1071,7 +1071,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 5 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 	});
 
@@ -1341,7 +1341,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 5 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should populate body with default values (no measurementOptions)', () => {
@@ -1365,7 +1365,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 5 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should fail ip version provided when target is an ip', () => {
@@ -1419,7 +1419,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 5 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should pass (deep equal) ip version 6 automatically selected when target ipv6', () => {
@@ -1443,7 +1443,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 5 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should pass (deep equal) ip version 6 automatically selected when target bracketed ipv6', () => {
@@ -1468,7 +1468,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 5 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 	});
 
@@ -1728,7 +1728,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 7 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should pass (deep equal) ip version 6 resolver is a domain', () => {
@@ -1757,7 +1757,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 7 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should pass (deep equal) ip version 4 automatically selected when resolver is ipv4', () => {
@@ -1796,7 +1796,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 7 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should pass (deep equal) ip version 6 automatically selected when resolver is ipv6', () => {
@@ -1835,7 +1835,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 7 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should populate body with default values (no measurementOptions)', () => {
@@ -1863,7 +1863,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 7 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
 		});
 
 		it('should fail (ip version provided when resolver is an ip)', () => {
@@ -2773,7 +2773,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 15 });
 		});
 
 		it('should pass', () => {
@@ -2816,7 +2816,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 15 });
 		});
 
 		it('should populate body with default values (no measurementOptions)', () => {
@@ -2846,7 +2846,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 15 });
 		});
 
 		it('should pass (deep equal) ip version 6 target is a domain', () => {
@@ -2894,7 +2894,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 15 });
 		});
 
 		it('should fail ip version provided when target is an ip', () => {
@@ -2989,7 +2989,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 15 });
 		});
 
 		it('should pass (deep equal) ip version 6 automatically selected when target is ipv6', () => {
@@ -3036,7 +3036,7 @@ describe('command schema', async () => {
 			const valid = globalSchema.validate(input, { convert: true });
 
 			expect(valid.error).to.not.exist;
-			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
+			expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 15 });
 		});
 	});
 
@@ -3084,6 +3084,6 @@ describe('command schema', async () => {
 		const valid = globalSchema.validate(input, { convert: true });
 
 		expect(valid.error).to.not.exist;
-		expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 10 });
+		expect(valid.value).to.deep.equal({ ...desiredOutput, timeout: 15 });
 	});
 });

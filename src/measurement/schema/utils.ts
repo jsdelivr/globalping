@@ -146,21 +146,21 @@ export const COMMAND_DEFAULTS = {
 export const getMeasurementTimeout = (type: RequestType, measurementOptions: MeasurementOptions): number => {
 	if (type === 'ping') {
 		const packets = 'packets' in measurementOptions ? measurementOptions.packets : COMMAND_DEFAULTS.ping.packets;
-		return Math.max(5, Math.ceil((packets - 1) * 0.5 + 3));
+		return Math.max(10, Math.ceil((packets - 1) * 0.5 + 3));
 	}
 
 	if (type === 'mtr') {
 		const packets = 'packets' in measurementOptions ? measurementOptions.packets : COMMAND_DEFAULTS.mtr.packets;
-		// Packet intervals + MTR grace + target DNS + ASN lookups.
+		// Packet intervals, MTR grace, expected target DNS headroom, and best-effort ASN headroom.
 		return Math.max(5, Math.ceil(packets * 0.5 + 3 + 3 + 3));
 	}
 
 	if (type === 'dns') {
-		// Four servers, two attempts each, averaging two seconds per attempt.
-		return 'trace' in measurementOptions && measurementOptions.trace ? 4 * 2 * 2 : 7;
+		// Four servers, two attempts each, three seconds per attempt, plus one second of overhead.
+		return 'trace' in measurementOptions && measurementOptions.trace ? 4 * 2 * 3 + 1 : 10;
 	}
 
-	return { http: 10, traceroute: 5 }[type];
+	return { http: 15, traceroute: 10 }[type];
 };
 
 // Some joi defaults are not values but functions, they need to be executed to get actual value
