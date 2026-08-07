@@ -380,6 +380,7 @@ describe('measurement store', () => {
 				createdAt: new Date(now).toISOString(),
 				updatedAt: new Date(now).toISOString(),
 				target: 'jsdelivr.com',
+				timeout: 5,
 				probesCount: 1,
 				results: [
 					{
@@ -439,6 +440,7 @@ describe('measurement store', () => {
 				createdAt: new Date(now).toISOString(),
 				updatedAt: new Date(now).toISOString(),
 				target: 'jsdelivr.com',
+				timeout: 10,
 				probesCount: 1,
 				results: [
 					{
@@ -494,6 +496,7 @@ describe('measurement store', () => {
 				createdAt: new Date(now).toISOString(),
 				updatedAt: new Date(now).toISOString(),
 				target: 'jsdelivr.com',
+				timeout: 5,
 				probesCount: 1,
 				results: [
 					{
@@ -568,6 +571,7 @@ describe('measurement store', () => {
 			createdAt: new Date(now).toISOString(),
 			updatedAt: new Date(now).toISOString(),
 			target: 'jsdelivr.com',
+			timeout: 10,
 			probesCount: 1,
 			measurementOptions: {
 				protocol: 'HTTP',
@@ -634,6 +638,7 @@ describe('measurement store', () => {
 				createdAt: new Date(now).toISOString(),
 				updatedAt: new Date(now).toISOString(),
 				target: 'jsdelivr.com',
+				timeout: 5,
 				probesCount: 1,
 				scheduleId: 'schedule-id',
 				configurationId: 'configuration-id',
@@ -683,7 +688,7 @@ describe('measurement store', () => {
 				limit: 1,
 				locations: [],
 				inProgressUpdates: false,
-				timeout: 10,
+				timeout: 15,
 			},
 			new Map([ [ 0, getProbe('id', '1.1.1.1') ] ]),
 			[ getProbe('id', '1.1.1.1') ],

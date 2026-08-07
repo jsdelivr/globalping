@@ -302,7 +302,7 @@ describe('Stream schedule execution', () => {
 				packets: 1,
 				port: 80,
 				inProgressUpdates: false,
-				timeout: 5,
+				timeout: 10,
 			},
 		});
 
@@ -315,7 +315,7 @@ describe('Stream schedule execution', () => {
 				ipVersion: 4,
 				port: 80,
 				inProgressUpdates: false,
-				timeout: 5,
+				timeout: 10,
 			},
 		});
 	});
