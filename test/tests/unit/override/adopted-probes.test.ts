@@ -44,6 +44,7 @@ describe('AdoptedProbes', () => {
 		continentName: 'Europe',
 		region: 'Northern Europe',
 		localAdoptionServer: null,
+		settings: '{"meteredConnection":false}',
 	};
 
 	const defaultConnectedProbe: SocketProbe = {
@@ -1277,6 +1278,7 @@ describe('AdoptedProbes', () => {
 			isIPv6Supported: true,
 			publicProbes: false,
 			allowedCountries: [ 'IE' ],
+			settings: { meteredConnection: false },
 		});
 	});
 

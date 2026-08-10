@@ -30,6 +30,10 @@ export const escapeMdSymbols = (value: string): string => value
 	.replace(/_/g, '\\_')
 	.replace(/`/g, '\\`');
 
+export type ProbeSettings = {
+	meteredConnection?: boolean;
+};
+
 type DProbe = {
 	id: string;
 	userId: string | null;
@@ -86,6 +90,7 @@ type DProbe = {
 		expiresAt: string;
 		ips: string[];
 	} | null;
+	settings: ProbeSettings;
 };
 
 export type Adoption = Omit<DProbe, 'userId'> & {
@@ -97,7 +102,7 @@ type AdoptionWithCustomLocation = Adoption & {
 	originalLocation: NonNullable<DProbe['originalLocation']>;
 };
 
-export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation' | 'originalLocation' | 'localAdoptionServer'> & {
+export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation' | 'originalLocation' | 'localAdoptionServer' | 'settings'> & {
 	altIps: string;
 	tags: string;
 	systemTags: string;
@@ -108,6 +113,7 @@ export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Support
 	customLocation: string | null;
 	originalLocation: string | null;
 	localAdoptionServer: string | null;
+	settings: string;
 };
 
 type DProbeFieldDescription = {
@@ -395,6 +401,7 @@ export class AdoptedProbes {
 			customLocation: row.customLocation ? JSON.parse(row.customLocation) as DProbe['customLocation'] : null,
 			originalLocation: row.originalLocation ? JSON.parse(row.originalLocation) as DProbe['originalLocation'] : null,
 			localAdoptionServer: row.localAdoptionServer ? JSON.parse(row.localAdoptionServer) as DProbe['localAdoptionServer'] : null,
+			settings: JSON.parse(row.settings) as ProbeSettings,
 		}));
 
 		this.dProbes = dProbes;
@@ -837,7 +844,7 @@ export class AdoptedProbes {
 		return `u-${defaultPrefix}`;
 	}
 
-	static formatProbeAsDProbe (probe: SocketProbe): Omit<DProbe, 'id' | 'lastSyncDate' | 'defaultPrefix' | 'deprecatedPrefix' | 'publicProbes' | 'adoptionToken'> {
+	static formatProbeAsDProbe (probe: SocketProbe): Omit<DProbe, 'id' | 'lastSyncDate' | 'defaultPrefix' | 'deprecatedPrefix' | 'publicProbes' | 'adoptionToken' | 'settings'> {
 		return {
 			userId: null,
 			ip: probe.ipAddress,
