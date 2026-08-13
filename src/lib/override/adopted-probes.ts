@@ -31,7 +31,7 @@ export const escapeMdSymbols = (value: string): string => value
 	.replace(/`/g, '\\`');
 
 export type ProbeSettings = {
-	meteredConnection?: boolean;
+	meteredConnection: boolean;
 };
 
 type DProbe = {
