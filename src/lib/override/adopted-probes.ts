@@ -30,10 +30,6 @@ export const escapeMdSymbols = (value: string): string => value
 	.replace(/_/g, '\\_')
 	.replace(/`/g, '\\`');
 
-export type ProbeSettings = {
-	meteredConnection: boolean;
-};
-
 type DProbe = {
 	id: string;
 	userId: string | null;
@@ -90,7 +86,9 @@ type DProbe = {
 		expiresAt: string;
 		ips: string[];
 	} | null;
-	settings: ProbeSettings;
+	settings: {
+		meteredConnection: boolean;
+	};
 };
 
 export type Adoption = Omit<DProbe, 'userId'> & {
@@ -401,7 +399,7 @@ export class AdoptedProbes {
 			customLocation: row.customLocation ? JSON.parse(row.customLocation) as DProbe['customLocation'] : null,
 			originalLocation: row.originalLocation ? JSON.parse(row.originalLocation) as DProbe['originalLocation'] : null,
 			localAdoptionServer: row.localAdoptionServer ? JSON.parse(row.localAdoptionServer) as DProbe['localAdoptionServer'] : null,
-			settings: JSON.parse(row.settings) as ProbeSettings,
+			settings: JSON.parse(row.settings) as DProbe['settings'],
 		}));
 
 		this.dProbes = dProbes;
