@@ -1,5 +1,5 @@
 import { initRedisClient } from './redis/client.js';
-import { initWsServer, type WsServer } from './ws/server.js';
+import { initWsServer, PROBES_NAMESPACE, type WsServer } from './ws/server.js';
 import { initMetricsAgent, type MetricsAgent } from './metrics.js';
 import { populateMemList as populateMemMalwareList } from './malware/client.js';
 import { populateMemList as populateMemCloudIpRangesList } from './cloud-ip-ranges.js';
@@ -54,6 +54,7 @@ export type IoContext = {
 	fetchProbes: WsServerExports['fetchProbes'];
 	getProbeByIp: WsServerExports['getProbeByIp'];
 	fetchRawSockets: WsServerExports['fetchRawSockets'];
+	fetchRawLocalSockets: WsServerExports['fetchRawLocalSockets'];
 	disconnectBySocketId: WsServerExports['disconnectBySocketId'];
 	onProbesUpdate: WsServerExports['onProbesUpdate'];
 };
@@ -76,14 +77,24 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 	]);
 
 	const getProbesWithAdminData = (): SocketProbe[] => syncedProbeList.getProbesWithAdminData();
-	const adoptedProbes = new AdoptedProbes(dashboardClient, getProbesWithAdminData);
+
+	const fetchRawLocalProbes = async () => {
+		const rawSockets = await ioContext.fetchRawLocalSockets();
+		return rawSockets.map(socket => socket.data.probe);
+	};
+
+	const adoptedProbes = new AdoptedProbes(dashboardClient, getProbesWithAdminData, fetchRawLocalProbes);
 	const adminData = new AdminData(dashboardClient);
 	const probeOverride = new ProbeOverride(adoptedProbes, adminData);
 
 	// Populate Dashboard override data before using it during initWsServer()
 	await logIfTooLong(probeOverride.fetchDashboardData(), 'probeOverride.fetchDashboardData');
 
-	const { io, syncedProbeList, fetchRawSockets, disconnectBySocketId, fetchProbes, getProbeByIp, onProbesUpdate } = await logIfTooLong(initWsServer(probeOverride), 'initWsServer');
+	const { io, syncedProbeList, fetchRawSockets, fetchRawLocalSockets, disconnectBySocketId, fetchProbes, getProbeByIp, onProbesUpdate } = await logIfTooLong(initWsServer(probeOverride), 'initWsServer');
+
+	adoptedProbes.setSettingsUpdateHandler((probe: SocketProbe) => {
+		io.of(PROBES_NAMESPACE).to(probe.client).emit('api:settings:update', probe.settings);
+	});
 
 	const adoptionToken = initAdoptionToken(adoptedProbes);
 	const probeIpLimit = new ProbeIpLimit(syncedProbeList, disconnectBySocketId, adoptedProbes, adoptionToken);
@@ -118,6 +129,7 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 		adoptionToken,
 		altIpsClient,
 		fetchProbes,
+		fetchRawLocalSockets,
 		getProbeByIp,
 		fetchRawSockets,
 		disconnectBySocketId,

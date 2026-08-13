@@ -20,7 +20,7 @@ import type { IoContext } from '../server.js';
 const logger = scopedLogger('gateway');
 
 export const initGateway = (ioContext: IoContext) => {
-	const { io, probeOverride, metricsAgent, adoptionToken, probeIpLimit, measurementRunner, altIpsClient } = ioContext;
+	const { io, adoptedProbes, probeOverride, metricsAgent, adoptionToken, probeIpLimit, measurementRunner, altIpsClient } = ioContext;
 
 	io
 		.of(PROBES_NAMESPACE)
@@ -29,6 +29,9 @@ export const initGateway = (ioContext: IoContext) => {
 		.on('connect', errorHandler(async (socket: ServerSocket) => {
 			const probe = socket.data.probe;
 			const location = probeOverride.getUpdatedLocation(probe);
+
+			const settings = adoptedProbes.getByIp(probe.ipAddress)?.settings;
+			settings && socket.emit('api:settings:update', settings);
 
 			adoptionToken.validate(socket).catch(err => logger.warn('Error during adoption token validation:', err));
 			socket.emit('api:connect:ip', { ip: probe.ipAddress });

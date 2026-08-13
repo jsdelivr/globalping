@@ -279,6 +279,7 @@ describe('Get Probes', () => {
 					network: 'InterBS S.R.L. (BAEHOST)',
 					asn: 61004,
 					allowedCountries: '["AR"]',
+					settings: JSON.stringify({ meteredConnection: false }),
 					customLocation: JSON.stringify({
 						country: 'AR',
 						city: 'Cordoba',
@@ -325,6 +326,23 @@ describe('Get Probes', () => {
 
 						expect(response).to.matchApiSchema();
 					});
+			});
+
+			it('should send updated settings to the probe', async () => {
+				nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
+				let resolveInitialSettings!: (settings: unknown) => void;
+				const initialSettings = new Promise((resolve) => { resolveInitialSettings = resolve; });
+				const probe = await addFakeProbe({ 'api:settings:update': resolveInitialSettings });
+				await initialSettings;
+
+				await dashboardClient(DASH_PROBES_TABLE)
+					.where({ uuid: '11111111-1111-4111-8111-111111111111' })
+					.update({ settings: JSON.stringify({ meteredConnection: true }) });
+
+				const settingsUpdate = new Promise(resolve => probe.once('api:settings:update', resolve));
+				await getIoContext().adoptedProbes.syncDashboardData();
+
+				expect(await settingsUpdate).to.deep.equal({ meteredConnection: true });
 			});
 		});
 

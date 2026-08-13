@@ -44,6 +44,8 @@ export type Tag = {
 	value: string;
 };
 
+export type ProbeSettings = { meteredConnection: boolean };
+
 export type ProbeIndex = [ string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[], string[] ];
 
 type Probe = {
@@ -71,6 +73,7 @@ type Probe = {
 	nodeId?: string;
 	isProxy: boolean | null;
 	localAdoptionServer?: LocalAdoptionServer | null;
+	settings: ProbeSettings;
 };
 
 type Modify<T, Fields> = Omit<T, keyof Fields> & Fields;

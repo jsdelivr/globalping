@@ -51,6 +51,7 @@ export const initWsServer = async (probeOverride: ProbeOverride) => {
 	syncedProbeList.scheduleSync();
 
 	const fetchRawSockets = async () => io.of(PROBES_NAMESPACE).fetchSockets();
+	const fetchRawLocalSockets = async () => io.of(PROBES_NAMESPACE).local.fetchSockets();
 
 	const disconnectBySocketId = (socketId: string) => io.of(PROBES_NAMESPACE).in(socketId).disconnectSockets();
 
@@ -84,6 +85,7 @@ export const initWsServer = async (probeOverride: ProbeOverride) => {
 		io,
 		syncedProbeList,
 		fetchRawSockets,
+		fetchRawLocalSockets,
 		disconnectBySocketId,
 		fetchProbes,
 		getProbeByIp,
