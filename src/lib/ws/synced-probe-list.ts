@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { TTLCache } from '@isaacs/ttlcache';
 import { scopedLoggerWithPrefix } from '../logger.js';
-import type { WsServerNamespace } from './server.js';
+import type { FetchRawLocalSockets } from './server.js';
 import type { ServerProbe, ProbeStats, SocketProbe } from '../../probe/types.js';
 import type { ProbeOverride } from '../override/probe-override.js';
 import type { RedisClient } from '../redis/shared.js';
@@ -72,7 +72,7 @@ export class SyncedProbeList extends EventEmitter {
 	constructor (
 		private readonly redis: RedisClient,
 		private readonly subRedisClient: RedisClient,
-		private readonly ioNamespace: WsServerNamespace,
+		private readonly fetchRawLocalSockets: FetchRawLocalSockets,
 		private readonly probeOverride: ProbeOverride,
 	) {
 		super();
@@ -291,7 +291,7 @@ export class SyncedProbeList extends EventEmitter {
 	}
 
 	async syncPush () {
-		const sockets = await this.ioNamespace.local.fetchSockets();
+		const sockets = await this.fetchRawLocalSockets();
 		const currentProbes = sockets.map(socket => _.cloneDeep(socket.data.probe));
 		const previousNodeData = this.nodeData.get(this.nodeId);
 

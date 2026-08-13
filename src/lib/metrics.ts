@@ -1,13 +1,11 @@
 import _ from 'lodash';
 import apmAgent from 'elastic-apm-node';
 import { monitorEventLoopDelay } from 'node:perf_hooks';
-import type { Server as SocketServer } from 'socket.io';
 import type { Knex } from 'knex';
 import type { Pool } from 'tarn';
 import type { Middleware } from 'koa';
 
 import { scopedLogger } from './logger.js';
-import { PROBES_NAMESPACE } from './ws/server.js';
 import { getMeasurementRedisClient, type RedisCluster } from './redis/measurement-client.js';
 import { USERS_TABLE } from './http/auth.js';
 import { dashboardClient } from './sql/client.js';
@@ -25,7 +23,7 @@ export class MetricsAgent {
 	private readonly timers: Record<string, NodeJS.Timeout> = {};
 
 	constructor (
-		private readonly io: SocketServer,
+		private readonly fetchRawLocalSockets: IoContext['fetchRawLocalSockets'],
 		private readonly redis: RedisCluster,
 		private readonly sql: Knex,
 		private readonly fetchProbes: IoContext['fetchProbes'],
@@ -72,7 +70,7 @@ export class MetricsAgent {
 		}, 60 * 1000);
 
 		this.registerAsyncCollector(`gp.probe.count.local`, async () => {
-			return this.io.of(PROBES_NAMESPACE).local.fetchSockets().then(sockets => sockets.length);
+			return this.fetchRawLocalSockets().then(sockets => sockets.length);
 		}, 10 * 1000);
 
 		this.registerAsyncGroupCollector('global probe stats', async () => {
@@ -224,8 +222,8 @@ export class MetricsAgent {
 	}
 }
 
-export const initMetricsAgent = (io: SocketServer, fetchProbes: IoContext['fetchProbes']) => {
-	return new MetricsAgent(io, getMeasurementRedisClient(), dashboardClient, fetchProbes);
+export const initMetricsAgent = (fetchRawLocalSockets: IoContext['fetchRawLocalSockets'], fetchProbes: IoContext['fetchProbes']) => {
+	return new MetricsAgent(fetchRawLocalSockets, getMeasurementRedisClient(), dashboardClient, fetchProbes);
 };
 
 export const captureSpan = <R>(name: string, fn: () => R): R => {

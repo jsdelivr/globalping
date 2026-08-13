@@ -2,7 +2,6 @@ import _ from 'lodash';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 
-import { type WsServerNamespace } from '../../../../src/lib/ws/server.js';
 import { SyncedProbeList } from '../../../../src/lib/ws/synced-probe-list.js';
 import type { ServerProbe, SocketProbe } from '../../../../src/probe/types.js';
 import { getRegionByCountry } from '../../../../src/lib/location/location.js';
@@ -46,12 +45,6 @@ describe('SyncedProbeList', () => {
 		stats: { cpu: { load: [{ usage: 0 }] }, jobs: { count: 0 } },
 	} as unknown as ServerProbe);
 
-	const ioNamespace = {
-		local: {
-			fetchSockets: localFetchSocketsStub,
-		},
-	} as unknown as WsServerNamespace;
-
 	const probeOverride = sandbox.createStubInstance(ProbeOverride);
 	const omitNode = (probes: ServerProbe[]) => probes.map(p => _.omit(p, 'nodeId'));
 
@@ -67,7 +60,7 @@ describe('SyncedProbeList', () => {
 
 		subRedisClient = await initSubscriptionRedisClient();
 		redisSubscribe = sandbox.stub(subRedisClient, 'subscribe');
-		syncedProbeList = new SyncedProbeList(redisClient, subRedisClient, ioNamespace, probeOverride);
+		syncedProbeList = new SyncedProbeList(redisClient, subRedisClient, localFetchSocketsStub, probeOverride);
 	});
 
 	afterEach(() => {

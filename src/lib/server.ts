@@ -98,7 +98,7 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 
 	const adoptionToken = initAdoptionToken(adoptedProbes);
 	const probeIpLimit = new ProbeIpLimit(syncedProbeList, disconnectBySocketId, adoptedProbes, adoptionToken);
-	const metricsAgent = initMetricsAgent(io, fetchProbes);
+	const metricsAgent = initMetricsAgent(fetchRawLocalSockets, fetchProbes);
 	const altIpsClient = initAltIpsClient(probeOverride, getProbeByIp, disconnectBySocketId);
 	const probesLocationFilter = initProbesLocationFilter(onProbesUpdate);
 	const probeRouter = initProbeRouter(onProbesUpdate, probesLocationFilter);
