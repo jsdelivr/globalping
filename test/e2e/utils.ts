@@ -14,9 +14,9 @@ export type GetProbeLogsResponse = {
 	lastId: string | null;
 	logs: {
 		message: string;
-		timestamp?: string;
-		scope?: string;
-		level?: string;
+		timestamp: string;
+		scope: string | null;
+		level: string | null;
 	}[];
 };
 
@@ -104,12 +104,13 @@ export const waitRowInTable = async (table: string) => {
 	}
 };
 
-export const waitForLogSync = async (id: string, authCookie: string, after: string = '-', timeout: number = 25000) => {
+export const waitForLogSync = async (id: string, authCookie: string, after?: string, timeout: number = 25000) => {
 	const start = Date.now();
+	const query = after === undefined ? '' : `?after=${after}`;
 
 	while (true) {
 		const response = await got<GetProbeLogsResponse>(
-			`http://localhost:80/v1/probes/${id}/logs?after=${after}`,
+			`http://localhost:80/v1/probes/${id}/logs${query}`,
 			{
 				responseType: 'json',
 				throwHttpErrors: false,
@@ -126,5 +127,59 @@ export const waitForLogSync = async (id: string, authCookie: string, after: stri
 		}
 
 		await setTimeout(100);
+	}
+};
+
+export const waitForStableProbeLogs = async (id: string, authCookie: string, quietInterval: number = 1000, timeout: number = 25000) => {
+	const start = Date.now();
+	let unchangedSince = start;
+	let previousBody: GetProbeLogsResponse | undefined;
+
+	while (true) {
+		const requestTimeout = timeout - (Date.now() - start);
+
+		if (requestTimeout <= 0) {
+			throw new Error('Probe logs did not stabilize.');
+		}
+
+		const response = await got<GetProbeLogsResponse>(
+			`http://localhost:80/v1/probes/${id}/logs`,
+			{
+				responseType: 'json',
+				throwHttpErrors: false,
+				followRedirect: false,
+				headers: { Cookie: authCookie },
+				timeout: { request: requestTimeout },
+				retry: { limit: 0 },
+			},
+		).catch((error: RequestError) => {
+			if (error.code === 'ETIMEDOUT' || Date.now() - start >= timeout) {
+				throw new Error('Probe logs did not stabilize.');
+			}
+
+			throw error;
+		});
+		const now = Date.now();
+
+		if (now - start >= timeout) {
+			throw new Error('Probe logs did not stabilize.');
+		}
+
+		if (response.statusCode === 200 && previousBody && _.isEqual(response.body, previousBody)) {
+			if (now - unchangedSince >= quietInterval) {
+				return response;
+			}
+		} else {
+			previousBody = response.statusCode === 200 ? response.body : undefined;
+			unchangedSince = now;
+		}
+
+		const remaining = timeout - (Date.now() - start);
+
+		if (remaining <= 0) {
+			throw new Error('Probe logs did not stabilize.');
+		}
+
+		await setTimeout(Math.min(100, remaining));
 	}
 };

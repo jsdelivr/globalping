@@ -4,7 +4,7 @@ import { authenticate } from '../../lib/http/middleware/authenticate.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 import createHttpError from 'http-errors';
 import { getProbeLogStorage } from '../logs-storage.js';
-import { schema } from '../schema/get-probe-logs-schema.js';
+import { schema, type GetProbeLogsQuery } from '../schema/get-probe-logs-schema.js';
 
 const probeLogStorage = getProbeLogStorage();
 
@@ -29,9 +29,14 @@ export const registerGetProbeLogsRoute = (router: ExtendedRouter, context: IoCon
 			throw createHttpError(404, `Probe not found.`, { type: 'not_found' });
 		}
 
-		const logs = await probeLogStorage.readLogs(probe.uuid, ctx.query['after'] as string | undefined);
-		const lastId = logs[logs.length - 1]?.id ?? null;
-		ctx.body = { logs: logs.map(log => log.message), lastId };
+		const { after, scopes, search } = valid.value as GetProbeLogsQuery;
+		const logs = await probeLogStorage.readLogs(probe.uuid, { after, scopes, search });
+		const lastId = logs.length > 0 ? String(logs[logs.length - 1]!.probeLogId) : null;
+
+		ctx.body = {
+			logs: logs.map(({ timestamp, level, scope, message }) => ({ timestamp, level, scope, message })),
+			lastId,
+		};
 	};
 
 	router.get('/probes/:id/logs', '/probes/:id/logs', corsAuthHandler(), authenticate(), handle)

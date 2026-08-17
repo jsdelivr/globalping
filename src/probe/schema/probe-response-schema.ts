@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import validator from 'validator';
 import { SocketProbe, ProbeStats, LocalAdoptionServer } from '../types.js';
 import { globalIpOptions } from '../../measurement/schema/utils.js';
 
@@ -19,15 +20,23 @@ export const statsSchema = Joi.object<ProbeStats>({
 	}).required(),
 }).required();
 
+const logTimestampSchema = Joi.string().isoDate().strict().custom((value: string, helpers) => {
+	if (!validator.isISO8601(value, { strict: true })) {
+		return helpers.error('string.isoDate');
+	}
+
+	return value;
+});
+
 const logEntrySchema = Joi.object({
 	message: Joi.string().max(8192).required(),
-	timestamp: Joi.string().max(32).required(),
+	timestamp: logTimestampSchema.required(),
 	level: Joi.string().max(8).required(),
 	scope: Joi.string().max(64).required(),
 });
 
 export const logMessageSchema = Joi.object({
-	skipped: Joi.number().integer().min(0).required(),
+	skipped: Joi.number().integer().min(0).strict().required(),
 	logs: Joi.array().items(logEntrySchema).min(0).max(200).required(),
 }).required();
 
