@@ -158,7 +158,7 @@ export class StreamScheduleExecutor {
 	}
 
 	private getFilteredLocalProbes (schedule: Schedule) {
-		const localProbes = this.syncedProbeList.getLocalProbes();
+		const localProbes = this.syncedProbeList.getLocalProbes().filter(probe => probe.status === 'ready');
 
 		if (schedule.locations.length === 0) {
 			return localProbes;
