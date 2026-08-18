@@ -4,7 +4,7 @@ import { authenticate } from '../../lib/http/middleware/authenticate.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 import createHttpError from 'http-errors';
 import { getProbeLogStorage } from '../logs-storage.js';
-import { schema, type GetProbeLogsQuery } from '../schema/get-probe-logs-schema.js';
+import { schema } from '../schema/get-probe-logs-schema.js';
 
 const probeLogStorage = getProbeLogStorage();
 
@@ -29,7 +29,7 @@ export const registerGetProbeLogsRoute = (router: ExtendedRouter, context: IoCon
 			throw createHttpError(404, `Probe not found.`, { type: 'not_found' });
 		}
 
-		const { after, scopes, search } = valid.value as GetProbeLogsQuery;
+		const { after, scopes, search } = valid.value;
 		const logs = await probeLogStorage.readLogs(probe.uuid, { after, scopes, search });
 		const lastId = logs.length > 0 ? String(logs[logs.length - 1]!.probeLogId) : null;
 

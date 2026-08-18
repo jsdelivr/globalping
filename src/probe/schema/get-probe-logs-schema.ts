@@ -30,7 +30,7 @@ const afterSchema = Joi.string().pattern(/^\d+$/).custom((value: string, helpers
 	return value;
 });
 
-export const schema = Joi.object({
+export const schema = Joi.object<GetProbeLogsQuery>({
 	after: afterSchema.optional(),
 	scopes: scopesSchema.optional(),
 	search: Joi.string().empty('').max(128).optional(),

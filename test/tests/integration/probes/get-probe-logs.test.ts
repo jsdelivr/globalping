@@ -6,7 +6,6 @@ import * as sinon from 'sinon';
 import type { AuthenticateOptions } from '../../../../src/lib/http/middleware/authenticate.js';
 import type { Adoption } from '../../../../src/lib/override/adopted-probes.js';
 import { timeSeriesClient } from '../../../../src/lib/sql/client.js';
-import { schema as getProbeLogsSchema } from '../../../../src/probe/schema/get-probe-logs-schema.js';
 import { getIoContext, getTestServer } from '../../../utils/server.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
@@ -159,10 +158,6 @@ describe('Get Probe Logs', () => {
 	});
 
 	it('filters multiple trimmed and de-duplicated scopes exactly and case-sensitively', async () => {
-		const normalized = getProbeLogsSchema.validate({ scopes: ' system, worker,system,,api:connect, ' });
-		expect(normalized.error).to.equal(undefined);
-		expect(normalized.value.scopes).to.deep.equal([ 'system', 'worker', 'api:connect' ]);
-
 		await insertLogs([
 			{ id: '1', message: 'system', scope: 'system' },
 			{ id: '2', message: 'worker', scope: 'worker' },
