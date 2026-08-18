@@ -161,10 +161,6 @@ export const waitForStableProbeLogs = async (id: string, authCookie: string, qui
 		});
 		const now = Date.now();
 
-		if (now - start >= timeout) {
-			throw new Error('Probe logs did not stabilize.');
-		}
-
 		if (response.statusCode === 200 && previousBody && _.isEqual(response.body, previousBody)) {
 			if (now - unchangedSince >= quietInterval) {
 				return response;
@@ -172,6 +168,10 @@ export const waitForStableProbeLogs = async (id: string, authCookie: string, qui
 		} else {
 			previousBody = response.statusCode === 200 ? response.body : undefined;
 			unchangedSince = now;
+		}
+
+		if (now - start >= timeout) {
+			throw new Error('Probe logs did not stabilize.');
 		}
 
 		const remaining = timeout - (Date.now() - start);
