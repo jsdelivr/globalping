@@ -183,6 +183,13 @@ describe('Get Probe Logs', () => {
 			.expect(200);
 		expect(emptyFilter.body.logs).to.have.length(5);
 
+		expect(emptyFilter.body.logs[4]).to.deep.equal({
+			timestamp: '2026-08-15T10:00:00.000Z',
+			level: null,
+			scope: null,
+			message: 'synthetic',
+		});
+
 		const caseSensitive = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ scopes: 'system' })
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
