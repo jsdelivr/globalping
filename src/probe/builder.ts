@@ -84,8 +84,6 @@ export const buildProbe = async (socket: Socket, probeIpLimit: ProbeIpLimit): Pr
 		isProxy: ipInfo.isProxy,
 	};
 
-	await probeIpLimit.verifyAsnLimit(probe);
-
 	return probe;
 };
 
