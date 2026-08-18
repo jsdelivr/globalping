@@ -20,7 +20,7 @@ export const statsSchema = Joi.object<ProbeStats>({
 	}).required(),
 }).required();
 
-const logTimestampSchema = Joi.string().isoDate().strict().custom((value: string, helpers) => {
+const logTimestampSchema = Joi.string().max(32).isoDate().strict().custom((value: string, helpers) => {
 	if (!validator.isISO8601(value, { strict: true })) {
 		return helpers.error('string.isoDate');
 	}

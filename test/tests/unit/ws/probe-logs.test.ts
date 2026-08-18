@@ -44,17 +44,21 @@ describe('probe logs', () => {
 	};
 
 	it('validates batch-size and field boundaries before opening a transaction', async () => {
+		const maxLengthTimestamp = `2026-08-15T10:00:00.${'0'.repeat(11)}Z`;
+
 		await expectValid({ skipped: 0, logs: Array.from({ length: 200 }, () => ({ ...validLog })) });
 		await expectValid({ skipped: 0, logs: [{ ...validLog, message: 'm'.repeat(8192) }] });
 		await expectValid({ skipped: 0, logs: [{ ...validLog, level: 'l'.repeat(8) }] });
 		await expectValid({ skipped: 0, logs: [{ ...validLog, scope: 's'.repeat(64) }] });
 		await expectValid({ skipped: 0, logs: [{ ...validLog, timestamp: '2026-08-15' }] });
+		await expectValid({ skipped: 0, logs: [{ ...validLog, timestamp: maxLengthTimestamp }] });
 		await expectValid({ skipped: 0, logs: [{ ...validLog }] });
 
 		await expectInvalid({ skipped: 0, logs: Array.from({ length: 201 }, () => ({ ...validLog })) });
 		await expectInvalid({ skipped: 0, logs: [{ ...validLog, message: 'm'.repeat(8193) }] });
 		await expectInvalid({ skipped: 0, logs: [{ ...validLog, timestamp: 'not-a-date' }] });
 		await expectInvalid({ skipped: 0, logs: [{ ...validLog, timestamp: '2025-02-31T00:00:00Z' }] });
+		await expectInvalid({ skipped: 0, logs: [{ ...validLog, timestamp: `${maxLengthTimestamp.slice(0, -1)}0Z` }] });
 		await expectInvalid({ skipped: 0, logs: [{ ...validLog, level: 'l'.repeat(9) }] });
 		await expectInvalid({ skipped: 0, logs: [{ ...validLog, scope: 's'.repeat(65) }] });
 	});
