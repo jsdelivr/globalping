@@ -399,6 +399,35 @@ describe('Stream schedule execution', () => {
 		expect(requestHandlerStub2.callCount).to.be.greaterThan(0);
 	});
 
+	it('skips probes that are not in the ready status', async () => {
+		const requestHandlerStub1 = sandbox.stub();
+		const requestHandlerStub2 = sandbox.stub();
+
+		const probe1 = await addFakeProbe({
+			'probe:measurement:request': requestHandlerStub1,
+		});
+
+		probe1.emit('probe:status:update', 'ready');
+		probe1.emit('probe:isIPv4Supported:update', true);
+
+		nockGeoIpProviders();
+
+		const probe2 = await addFakeProbe({
+			'probe:measurement:request': requestHandlerStub2,
+		});
+
+		probe2.emit('probe:status:update', 'icmp-tcp-test-failed');
+		probe2.emit('probe:isIPv4Supported:update', true);
+		await waitForProbesUpdate();
+
+		await insertSchedule(buildSchedule());
+
+		await clock.tickAsyncStepped(5000);
+
+		expect(requestHandlerStub1.callCount).to.be.greaterThan(0);
+		expect(requestHandlerStub2.callCount).to.equal(0);
+	});
+
 	it('stops emitting measurements after schedule is disabled', async () => {
 		const requestHandlerStub = sandbox.stub();
 

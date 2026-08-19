@@ -85,8 +85,6 @@ export const buildProbe = async (socket: Socket, probeIpLimit: ProbeIpLimit): Pr
 		settings: { meteredConnection: false },
 	};
 
-	await probeIpLimit.verifyAsnLimit(probe);
-
 	return probe;
 };
 
