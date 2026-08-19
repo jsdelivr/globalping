@@ -4,7 +4,7 @@ import { LRUCache } from 'lru-cache';
 import { scopedLogger } from '../../logger.js';
 import { ProbeError } from '../../probe-error.js';
 import * as scheduler from '../../scheduler.js';
-import type { ServerProbe, SocketProbe } from '../../../probe/types.js';
+import type { ServerProbe } from '../../../probe/types.js';
 import type { IoContext } from '../../server.js';
 import type { AdoptedProbes } from '../../override/adopted-probes.js';
 import type { AdoptionToken } from '../../../adoption/adoption-token.js';
@@ -78,7 +78,7 @@ export class ProbeIpLimit {
 			return;
 		}
 
-		const probes = this.syncedProbeList.getRawProbes();
+		const probes = this.syncedProbeList.getProbes();
 		const { ipToClients, primaryIpToClients, rangeToClients, primaryRangeToClients } = await scheduler.run(() => this.indexIpsForSync(probes));
 		const asnCityToIpKeys = await scheduler.run(() => this.indexAsnCity(probes));
 		const socketIdsToDisconnect = new Set<string>();
@@ -156,7 +156,7 @@ export class ProbeIpLimit {
 		}
 	}
 
-	async verifyAsnLimit (probe: SocketProbe): Promise<void> {
+	async verifyAsnLimit (probe: ServerProbe): Promise<void> {
 		if (process.env['FAKE_PROBE_IP'] || process.env['TEST_MODE'] === 'unit') {
 			return;
 		}
@@ -167,7 +167,7 @@ export class ProbeIpLimit {
 			return;
 		}
 
-		const probes = this.syncedProbeList.getRawProbes();
+		const probes = this.syncedProbeList.getProbes();
 		const ipKeys = new Set<string>();
 
 		for (const other of probes) {
@@ -225,7 +225,7 @@ export class ProbeIpLimit {
 		return ipKeyToClients;
 	}
 
-	private indexIpsForSync (probes: SocketProbe[]) {
+	private indexIpsForSync (probes: ServerProbe[]) {
 		const ipToClients = new Map<string, Set<string>>();
 		const primaryIpToClients = new Map<string, Set<string>>();
 		const rangeToClients = new Map<string, Set<string>>();
@@ -248,7 +248,7 @@ export class ProbeIpLimit {
 	}
 
 	// Keeping user+asn+city uniqueness by ipKey, not by client, to handle reconnecting probes.
-	private indexAsnCity (probes: SocketProbe[]): Map<string, Map<string, Set<string>>> {
+	private indexAsnCity (probes: ServerProbe[]): Map<string, Map<string, Set<string>>> {
 		const asnCityToIpKeys = new Map<string, Map<string, Set<string>>>();
 
 		for (const probe of probes) {

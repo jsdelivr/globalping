@@ -25,7 +25,7 @@ export const initGateway = (ioContext: IoContext) => {
 	io
 		.of(PROBES_NAMESPACE)
 		.use(health)
-		.use(probeMetadata(probeIpLimit))
+		.use(probeMetadata(probeIpLimit, probeOverride))
 		.on('connect', errorHandler(async (socket: ServerSocket) => {
 			const probe = socket.data.probe;
 			const location = probeOverride.getUpdatedLocation(probe);
