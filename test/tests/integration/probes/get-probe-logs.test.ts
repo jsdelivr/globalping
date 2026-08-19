@@ -34,14 +34,14 @@ describe('Get Probe Logs', () => {
 	const insertLogs = async (logs: Array<{
 		id: string;
 		message: string;
-		timestamp?: string;
+		timestamp?: string | null;
 		receivedAt?: Date | ReturnType<typeof timeSeriesClient.raw>;
 		level?: string | null;
 		scope?: string | null;
 	}>) => timeSeriesClient('probe_log').insert(logs.map(log => ({
 		probeUuid: PROBE_UUID,
 		probeLogId: log.id,
-		timestamp: log.timestamp ?? '2026-08-15T10:00:00.000Z',
+		timestamp: log.timestamp === undefined ? '2026-08-15T10:00:00.000Z' : log.timestamp,
 		receivedAt: log.receivedAt ?? new Date(),
 		level: log.level === undefined ? 'info' : log.level,
 		scope: log.scope === undefined ? 'system' : log.scope,
@@ -163,7 +163,7 @@ describe('Get Probe Logs', () => {
 			{ id: '2', message: 'worker', scope: 'worker' },
 			{ id: '3', message: 'api', scope: 'api:connect' },
 			{ id: '4', message: 'case mismatch', scope: 'System' },
-			{ id: '5', message: 'synthetic', scope: null, level: null },
+			{ id: '5', message: 'synthetic', timestamp: null, scope: null, level: null },
 		]);
 
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
@@ -184,7 +184,7 @@ describe('Get Probe Logs', () => {
 		expect(emptyFilter.body.logs).to.have.length(5);
 
 		expect(emptyFilter.body.logs[4]).to.deep.equal({
-			timestamp: '2026-08-15T10:00:00.000Z',
+			timestamp: null,
 			level: null,
 			scope: null,
 			message: 'synthetic',

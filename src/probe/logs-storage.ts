@@ -8,7 +8,7 @@ const MAX_RETAINED_LOGS = 100_000n;
 
 export type ProbeLog = {
 	probeLogId: string;
-	timestamp: Date;
+	timestamp: Date | null;
 	level: string | null;
 	scope: string | null;
 	message: string;
@@ -63,7 +63,7 @@ export class ProbeLogsStorage {
 
 		const logs: Array<{
 			message: string;
-			timestamp: string;
+			timestamp: string | null;
 			level: string | null;
 			scope: string | null;
 		}> = logMessage.logs.map(log => ({ ...log }));
@@ -71,7 +71,7 @@ export class ProbeLogsStorage {
 		if (logMessage.skipped > 0) {
 			logs.unshift({
 				message: `...${logMessage.skipped} messages skipped...`,
-				timestamp: logMessage.logs[0]?.timestamp ?? receivedAt.toISOString(),
+				timestamp: null,
 				level: null,
 				scope: null,
 			});

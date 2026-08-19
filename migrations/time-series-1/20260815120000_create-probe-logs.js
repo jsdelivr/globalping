@@ -7,7 +7,7 @@ export const up = async (db) => {
 	await db.schema.createTable('probe_log', (table) => {
 		table.uuid('probeUuid').notNullable();
 		table.bigInteger('probeLogId').notNullable();
-		table.timestamp('timestamp', { useTz: true }).notNullable();
+		table.timestamp('timestamp', { useTz: true });
 		table.timestamp('receivedAt', { useTz: true }).notNullable();
 		table.string('level', 8);
 		table.string('scope', 64);

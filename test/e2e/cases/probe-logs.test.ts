@@ -150,7 +150,7 @@ describe('probe logs', () => {
 		expect(offlineResponse.body.lastId).to.be.a('string');
 		expect(offlineResponse.body.lastId).to.match(/^\d+$/);
 
-		const settledTimestamps = offlineResponse.body.logs.map(log => log.timestamp);
+		const settledTimestamps = offlineResponse.body.logs.flatMap(log => log.timestamp ? [ log.timestamp ] : []);
 		const lastId = offlineResponse.body.lastId;
 
 		await docker.startProbeContainer();
@@ -162,7 +162,7 @@ describe('probe logs', () => {
 		expect(newResponse.body.lastId).to.match(/^\d+$/);
 		expect(newResponse.body.lastId).to.not.equal(lastId);
 
-		const newTimestamps = newResponse.body.logs.map(log => log.timestamp);
+		const newTimestamps = newResponse.body.logs.flatMap(log => log.timestamp ? [ log.timestamp ] : []);
 		expect(_.intersection(settledTimestamps, newTimestamps).length).to.equal(0);
 	});
 

@@ -14,7 +14,7 @@ export type GetProbeLogsResponse = {
 	lastId: string | null;
 	logs: {
 		message: string;
-		timestamp: string;
+		timestamp: string | null;
 		scope: string | null;
 		level: string | null;
 	}[];
