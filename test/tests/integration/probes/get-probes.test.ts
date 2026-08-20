@@ -6,6 +6,7 @@ import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate, get
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { DASH_PROBES_TABLE } from '../../../../src/lib/override/adopted-probes.js';
 import { dashboardClient } from '../../../../src/lib/sql/client.js';
+import { PROBES_NAMESPACE } from '../../../../src/lib/ws/server.js';
 
 describe('Get Probes', () => {
 	const expectedHost = process.env['HOSTNAME'] ?? '';
@@ -344,7 +345,11 @@ describe('Get Probes', () => {
 
 				expect(settings).to.deep.equal({ meteredConnection: true });
 
+				const serverSocket = getIoContext().io.of(PROBES_NAMESPACE).sockets.get(probe.id!);
+				const settingsUpdate = new Promise<void>(resolve => serverSocket!.once('probe:settings:update', resolve));
 				probe.emit('probe:settings:update', settings);
+				await settingsUpdate;
+
 				const [ updatedProbe ] = await getIoContext().syncedProbeList.fetchProbes();
 				expect(updatedProbe?.settings).to.deep.equal({ meteredConnection: true });
 			});
