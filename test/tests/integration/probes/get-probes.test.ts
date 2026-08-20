@@ -330,19 +330,23 @@ describe('Get Probes', () => {
 
 			it('should send updated settings to the probe', async () => {
 				nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
-				let resolveInitialSettings!: (settings: unknown) => void;
-				const initialSettings = new Promise((resolve) => { resolveInitialSettings = resolve; });
-				const probe = await addFakeProbe({ 'api:settings:update': resolveInitialSettings });
-				await initialSettings;
 
 				await dashboardClient(DASH_PROBES_TABLE)
 					.where({ uuid: '11111111-1111-4111-8111-111111111111' })
 					.update({ settings: JSON.stringify({ meteredConnection: true }) });
 
-				const settingsUpdate = new Promise(resolve => probe.once('api:settings:update', resolve));
-				await getIoContext().adoptedProbes.syncDashboardData();
+				await getIoContext().adoptedProbes.fetchDProbes();
 
-				expect(await settingsUpdate).to.deep.equal({ meteredConnection: true });
+				let resolveInitialSettings!: (settings: unknown) => void;
+				const initialSettings = new Promise((resolve) => { resolveInitialSettings = resolve; });
+				const probe = await addFakeProbe({ 'api:settings:update': resolveInitialSettings });
+				const settings = await initialSettings;
+
+				expect(settings).to.deep.equal({ meteredConnection: true });
+
+				probe.emit('probe:settings:update', settings);
+				const [ updatedProbe ] = await getIoContext().syncedProbeList.fetchProbes();
+				expect(updatedProbe?.settings).to.deep.equal({ meteredConnection: true });
 			});
 		});
 

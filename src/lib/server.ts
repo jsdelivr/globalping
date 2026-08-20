@@ -77,13 +77,11 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 	]);
 
 	const getProbesWithAdminData = (): SocketProbe[] => syncedProbeList.getProbesWithAdminData();
-
-	const fetchRawLocalProbes = async () => {
-		const rawSockets = await ioContext.fetchRawLocalSockets();
-		return rawSockets.map(socket => socket.data.probe);
+	const emitToProbe = (client: string, event: string, payload: unknown) => {
+		io.of(PROBES_NAMESPACE).to(client).emit(event, payload);
 	};
 
-	const adoptedProbes = new AdoptedProbes(dashboardClient, getProbesWithAdminData, fetchRawLocalProbes);
+	const adoptedProbes = new AdoptedProbes(dashboardClient, getProbesWithAdminData, emitToProbe);
 	const adminData = new AdminData(dashboardClient);
 	const probeOverride = new ProbeOverride(adoptedProbes, adminData);
 
@@ -91,10 +89,6 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 	await logIfTooLong(probeOverride.fetchDashboardData(), 'probeOverride.fetchDashboardData');
 
 	const { io, syncedProbeList, fetchRawSockets, fetchRawLocalSockets, disconnectBySocketId, fetchProbes, getProbeByIp, onProbesUpdate } = await logIfTooLong(initWsServer(probeOverride), 'initWsServer');
-
-	adoptedProbes.setSettingsUpdateHandler((probe: SocketProbe) => {
-		io.of(PROBES_NAMESPACE).to(probe.client).emit('api:settings:update', probe.settings);
-	});
 
 	const adoptionToken = initAdoptionToken(adoptedProbes);
 	const probeIpLimit = new ProbeIpLimit(syncedProbeList, disconnectBySocketId, adoptedProbes, adoptionToken);

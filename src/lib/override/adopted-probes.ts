@@ -126,7 +126,6 @@ export class AdoptedProbes {
 	private idToDProbe: Map<string, DProbe> = new Map();
 	private ipToDProbe: Map<string, DProbe> = new Map();
 	private uuidToDProbe: Map<string, DProbe> = new Map();
-	private settingsUpdateHandler?: (probe: SocketProbe) => void;
 	private syncBackToDashboard = process.env['SHOULD_SYNC_ADOPTIONS'] === 'true';
 	static readonly dProbeFieldToProbeField = {
 		uuid: {
@@ -247,7 +246,7 @@ export class AdoptedProbes {
 	constructor (
 		private readonly sql: Knex,
 		private readonly getProbesWithAdminData: () => SocketProbe[],
-		private readonly fetchLocalSocketProbes: () => Promise<SocketProbe[]>,
+		private readonly emitToProbe: (client: string, event: string, payload: unknown) => void,
 	) {}
 
 	getById (id: string) {
@@ -260,10 +259,6 @@ export class AdoptedProbes {
 
 	getByUuid (uuid: string) {
 		return this.uuidToDProbe.get(uuid) || null;
-	}
-
-	setSettingsUpdateHandler (handler: (probe: SocketProbe) => void) {
-		this.settingsUpdateHandler = handler;
 	}
 
 	getUpdatedLocation (probe: SocketProbe, adminLocation?: ProbeLocation | null): ExtendedProbeLocationWithOverrides | null {
@@ -346,16 +341,6 @@ export class AdoptedProbes {
 
 	async syncDashboardData () {
 		await this.fetchDProbes();
-		const localSocketProbes = await this.fetchLocalSocketProbes();
-
-		for (const probe of localSocketProbes) {
-			const dProbe = this.getByUuid(probe.uuid);
-
-			if (dProbe && !_.isEqual(probe.settings, dProbe.settings)) {
-				probe.settings = dProbe.settings;
-				this.settingsUpdateHandler?.(probe);
-			}
-		}
 
 		if (!this.syncBackToDashboard) {
 			return;
@@ -364,6 +349,13 @@ export class AdoptedProbes {
 		const probes = this.getProbesWithAdminData();
 		// 'probe' - usual API probe. 'dProbe' - dashboard probe data stored in sql.
 		const { dProbesWithProbe, dProbesWithoutProbe, probesWithoutDProbe } = this.matchDProbesAndProbes(probes);
+
+		for (const { dProbe, probe } of dProbesWithProbe) {
+			if (!_.isEqual(probe.settings, dProbe.settings)) {
+				this.emitToProbe(probe.client, 'api:settings:update', dProbe.settings);
+			}
+		}
+
 		const { updatedDProbes, dProbeDataUpdates } = this.generateUpdatedDProbes(dProbesWithProbe, dProbesWithoutProbe);
 		const { dProbesToDelete, nullifyIpUpdates, dProbeAltIpUpdates } = this.findDProbeDuplicates(updatedDProbes);
 
