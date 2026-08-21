@@ -317,6 +317,14 @@ describe('Get Probe Logs', () => {
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200);
+
+		const expiredLog = await timeSeriesClient('probe_log')
+			.select('probeLogId')
+			.where({ probeUuid: PROBE_UUID, probeLogId: '5' })
+			.first();
+
+		expect(expiredLog).to.exist;
+
 		expect(response.body).to.deep.equal({
 			logs: [{
 				timestamp: '2026-08-15T10:00:00.000Z',
