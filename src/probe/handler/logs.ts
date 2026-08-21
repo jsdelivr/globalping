@@ -22,6 +22,12 @@ export const handleNewLogs = (probe: SocketProbe) => async (logMessage: LogMessa
 		throw validation.error;
 	}
 
-	await probeLogStorage.writeLogs(probe.uuid, logMessage);
+	try {
+		await probeLogStorage.writeLogs(probe.uuid, logMessage);
+	} catch (error: unknown) {
+		callback?.('error');
+		throw error;
+	}
+
 	callback?.('success');
 };
