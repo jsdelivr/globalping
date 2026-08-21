@@ -349,12 +349,7 @@ export class AdoptedProbes {
 		const probes = this.getProbesWithAdminData();
 		// 'probe' - usual API probe. 'dProbe' - dashboard probe data stored in sql.
 		const { dProbesWithProbe, dProbesWithoutProbe, probesWithoutDProbe } = this.matchDProbesAndProbes(probes);
-
-		for (const { dProbe, probe } of dProbesWithProbe) {
-			if (!_.isEqual(probe.settings, dProbe.settings)) {
-				this.emitToProbe(probe.client, 'api:settings:update', dProbe.settings);
-			}
-		}
+		this.syncProbeSettings(dProbesWithProbe);
 
 		const { updatedDProbes, dProbeDataUpdates } = this.generateUpdatedDProbes(dProbesWithProbe, dProbesWithoutProbe);
 		const { dProbesToDelete, nullifyIpUpdates, dProbeAltIpUpdates } = this.findDProbeDuplicates(updatedDProbes);
@@ -603,6 +598,14 @@ export class AdoptedProbes {
 
 		const probesWithoutDProbe = [ ...uuidToProbe.values() ];
 		return { dProbesWithProbe, dProbesWithoutProbe, probesWithoutDProbe };
+	}
+
+	private syncProbeSettings (dProbesWithProbe: { dProbe: DProbe; probe: SocketProbe }[]) {
+		for (const { dProbe, probe } of dProbesWithProbe) {
+			if (!_.isEqual(probe.settings, dProbe.settings)) {
+				this.emitToProbe(probe.client, 'api:settings:update', dProbe.settings);
+			}
+		}
 	}
 
 	private generateUpdatedDProbes (dProbesWithProbe: { dProbe: DProbe; probe: SocketProbe }[], dProbesWithoutProbe: DProbe[]) {
