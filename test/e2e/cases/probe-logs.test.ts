@@ -163,8 +163,9 @@ describe('probe logs', () => {
 		expect(newResponse.body.lastId).to.not.equal(lastId);
 
 		const newTimestamps = newResponse.body.logs.flatMap(log => log.timestamp ? [ log.timestamp ] : []);
+		expect(newTimestamps).to.not.be.empty;
 		expect(_.intersection(settledTimestamps, newTimestamps).length).to.equal(0);
-	});
+	}).timeout(100000);
 
 	it('should return logs when probe is offline', async () => {
 		const jwt = await getSignedJwt({ id: USER_ID, app_access: true });

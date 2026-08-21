@@ -157,16 +157,21 @@ export const waitForStableProbeLogs = async (id: string, authCookie: string, qui
 				throw new Error('Probe logs did not stabilize.');
 			}
 
-			throw error;
+			if (error.code !== 'ECONNRESET' && error.code !== 'ECONNREFUSED') {
+				throw error;
+			}
+
+			logger.info(error.code);
+			return undefined;
 		});
 		const now = Date.now();
 
-		if (response.statusCode === 200 && previousBody && _.isEqual(response.body, previousBody)) {
+		if (response?.statusCode === 200 && previousBody && _.isEqual(response.body, previousBody)) {
 			if (now - unchangedSince >= quietInterval) {
 				return response;
 			}
 		} else {
-			previousBody = response.statusCode === 200 ? response.body : undefined;
+			previousBody = response?.statusCode === 200 ? response.body : undefined;
 			unchangedSince = now;
 		}
 
