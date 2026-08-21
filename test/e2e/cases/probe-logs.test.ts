@@ -126,7 +126,7 @@ describe('probe logs', () => {
 		);
 
 		expect(newResponse.statusCode).to.equal(200);
-		expect(newResponse.body.lastId).to.be.null;
+		expect(newResponse.body.lastId).to.equal(lastId);
 		expect(newResponse.body.logs).to.be.an('array');
 		expect(newResponse.body.logs.length).to.equal(0);
 	});

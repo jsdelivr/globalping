@@ -118,7 +118,7 @@ export const waitForLogSync = async (id: string, authCookie: string, after?: str
 			},
 		);
 
-		if (response.body.lastId) {
+		if (response.body.lastId && (after === undefined || response.body.lastId !== after)) {
 			return response;
 		}
 

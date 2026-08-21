@@ -20,8 +20,9 @@ export type ProbeLogFilters = {
 	search?: string | undefined;
 };
 
-type ProbeLogReadEntry = Omit<ProbeLog, 'probeLogId'> & {
-	probeLogId?: string;
+type ProbeLogReadResult = {
+	logs: (Omit<ProbeLog, 'probeLogId'> & { probeLogId?: string })[];
+	lastId: string | null;
 };
 
 const escapeLikePattern = (value: string) => value
@@ -32,13 +33,15 @@ const escapeLikePattern = (value: string) => value
 export class ProbeLogsStorage {
 	constructor (private readonly sql: Knex) {}
 
-	async readLogs (probeUuid: string, filters: ProbeLogFilters = {}): Promise<ProbeLogReadEntry[]> {
+	async readLogs (probeUuid: string, filters: ProbeLogFilters = {}): Promise<ProbeLogReadResult> {
 		const { after, scopes = [], search } = filters;
 
-		const createQuery = (sql: Knex) => {
-			const query = sql<ProbeLog>('probe_log')
-				.where('probeUuid', probeUuid)
-				.whereRaw(`"receivedAt" >= now() - interval '3 days'`);
+		const createBaseQuery = (sql: Knex) => sql<ProbeLog>('probe_log')
+			.where('probeUuid', probeUuid)
+			.whereRaw(`"receivedAt" >= now() - interval '3 days'`);
+
+		const createFilteredQuery = (sql: Knex) => {
+			const query = createBaseQuery(sql);
 
 			if (scopes.length > 0) {
 				query.whereIn('scope', scopes);
@@ -52,10 +55,27 @@ export class ProbeLogsStorage {
 		};
 
 		// fetch the READ_LIMIT newest logs and count how many log messages were skipped
-		if (after) {
-			return this.sql.transaction(async (transaction) => {
-				const query = createQuery(transaction)
-					.where('probeLogId', '>', after);
+		return this.sql.transaction(async (transaction) => {
+			// find the actual lastId across ALL logs
+			const latestLog = await createBaseQuery(transaction)
+				.select('probeLogId')
+				.orderBy('probeLogId', 'desc')
+				.first();
+
+			const lastId = latestLog?.probeLogId ?? null;
+
+			if (lastId === null) {
+				return { logs: [], lastId: after ?? null };
+			}
+
+			if (after && BigInt(after) >= BigInt(lastId)) {
+				return { logs: [], lastId: after };
+			}
+
+			const query = createFilteredQuery(transaction);
+
+			if (after) {
+				void query.where('probeLogId', '>', after);
 
 				const logs = await query.clone()
 					.select('probeLogId', 'timestamp', 'level', 'scope', 'message')
@@ -63,7 +83,7 @@ export class ProbeLogsStorage {
 					.limit(READ_LIMIT);
 
 				if (logs.length < READ_LIMIT) {
-					return logs.reverse();
+					return { logs: logs.reverse(), lastId };
 				}
 
 				const retainedLogs = logs.slice(0, READ_LIMIT - 1);
@@ -75,24 +95,27 @@ export class ProbeLogsStorage {
 
 				const skippedCount = Number(skippedQuery[0]!.count);
 
-				return [
-					{
-						timestamp: null,
-						level: null,
-						scope: null,
-						message: `...${skippedCount} messages skipped...`,
-					},
-					...retainedLogs.reverse(),
-				];
-			}, { isolationLevel: 'repeatable read', readOnly: true });
-		}
+				return {
+					logs: [
+						{
+							timestamp: null,
+							level: null,
+							scope: null,
+							message: `...${skippedCount} messages skipped...`,
+						},
+						...retainedLogs.reverse(),
+					],
+					lastId,
+				};
+			}
 
-		const logs = await createQuery(this.sql)
-			.select('probeLogId', 'timestamp', 'level', 'scope', 'message')
-			.orderBy('probeLogId', 'desc')
-			.limit(READ_LIMIT);
+			const logs = await query
+				.select('probeLogId', 'timestamp', 'level', 'scope', 'message')
+				.orderBy('probeLogId', 'desc')
+				.limit(READ_LIMIT);
 
-		return logs.reverse();
+			return { logs: logs.reverse(), lastId };
+		}, { isolationLevel: 'repeatable read', readOnly: true });
 	}
 
 	async writeLogs (probeUuid: string, logMessage: LogMessage): Promise<void> {

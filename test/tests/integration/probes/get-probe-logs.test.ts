@@ -77,7 +77,8 @@ describe('Get Probe Logs', () => {
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.set('Cookie', `${sessionConfig.cookieName}=${ownerJwt}`)
 			.send()
-			.expect(200);
+			.expect(200)
+			.expect({ logs: [], lastId: null });
 
 		const adminJwt = await getSignedJwt({ id: 'admin-user', admin_access: true, app_access: true });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
@@ -149,19 +150,26 @@ describe('Get Probe Logs', () => {
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200);
-		expect(secondResponse.body).to.deep.equal({ logs: [], lastId: null });
+		expect(secondResponse.body).to.deep.equal({ logs: [], lastId: firstResponse.body.lastId });
 	});
 
-	it('returns an empty result and null lastId when no rows match', async () => {
+	it('advances an empty filtered result and never moves an incremental cursor backwards', async () => {
 		await insertLogs([{ id: '1', message: 'first' }]);
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.query({ after: '1' })
+			.query({ search: 'missing' })
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200)
-			.expect({ logs: [], lastId: null });
+			.expect({ logs: [], lastId: '1' });
+
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
+			.query({ after: '2' })
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(200)
+			.expect({ logs: [], lastId: '2' });
 	});
 
 	it('filters multiple trimmed and de-duplicated scopes exactly and case-sensitively', async () => {
@@ -181,7 +189,7 @@ describe('Get Probe Logs', () => {
 			.send()
 			.expect(200);
 		expect(filtered.body.logs.map((log: { message: string }) => log.message)).to.deep.equal([ 'system', 'worker', 'api' ]);
-		expect(filtered.body.lastId).to.equal('3');
+		expect(filtered.body.lastId).to.equal('5');
 
 		const emptyFilter = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ scopes: ', ,,' })
@@ -316,7 +324,7 @@ describe('Get Probe Logs', () => {
 				scope: 'worker',
 				message: 'needle match',
 			}],
-			lastId: '3',
+			lastId: '4',
 		});
 	});
 
