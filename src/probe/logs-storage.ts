@@ -20,6 +20,10 @@ export type ProbeLogFilters = {
 	search?: string | undefined;
 };
 
+type ProbeLogReadEntry = Omit<ProbeLog, 'probeLogId'> & {
+	probeLogId?: string;
+};
+
 const escapeLikePattern = (value: string) => value
 	.replaceAll('\\', '\\\\')
 	.replaceAll('%', '\\%')
@@ -28,30 +32,63 @@ const escapeLikePattern = (value: string) => value
 export class ProbeLogsStorage {
 	constructor (private readonly sql: Knex) {}
 
-	async readLogs (probeUuid: string, filters: ProbeLogFilters = {}): Promise<ProbeLog[]> {
+	async readLogs (probeUuid: string, filters: ProbeLogFilters = {}): Promise<ProbeLogReadEntry[]> {
 		const { after, scopes = [], search } = filters;
 
-		const query = this.sql<ProbeLog>('probe_log')
-			.select('probeLogId', 'timestamp', 'level', 'scope', 'message')
-			.where('probeUuid', probeUuid)
-			.whereRaw(`"receivedAt" >= now() - interval '3 days'`);
+		const createQuery = (sql: Knex) => {
+			const query = sql<ProbeLog>('probe_log')
+				.where('probeUuid', probeUuid)
+				.whereRaw(`"receivedAt" >= now() - interval '3 days'`);
 
-		if (scopes.length > 0) {
-			query.whereIn('scope', scopes);
-		}
+			if (scopes.length > 0) {
+				query.whereIn('scope', scopes);
+			}
 
-		if (search) {
-			query.whereRaw('"message" ILIKE ?', [ `%${escapeLikePattern(search)}%` ]);
-		}
+			if (search) {
+				query.whereRaw('"message" ILIKE ?', [ `%${escapeLikePattern(search)}%` ]);
+			}
 
+			return query;
+		};
+
+		// fetch the READ_LIMIT newest logs and count how many log messages were skipped
 		if (after) {
-			return query
-				.where('probeLogId', '>', after)
-				.orderBy('probeLogId', 'asc')
-				.limit(READ_LIMIT);
+			return this.sql.transaction(async (transaction) => {
+				const query = createQuery(transaction)
+					.where('probeLogId', '>', after);
+
+				const logs = await query.clone()
+					.select('probeLogId', 'timestamp', 'level', 'scope', 'message')
+					.orderBy('probeLogId', 'desc')
+					.limit(READ_LIMIT);
+
+				if (logs.length < READ_LIMIT) {
+					return logs.reverse();
+				}
+
+				const retainedLogs = logs.slice(0, READ_LIMIT - 1);
+				const oldestRetainedId = retainedLogs[retainedLogs.length - 1]!.probeLogId;
+
+				const skippedQuery = await query.clone()
+					.where('probeLogId', '<', oldestRetainedId)
+					.count<{ count: string }[]>({ count: '*' });
+
+				const skippedCount = Number(skippedQuery[0]!.count);
+
+				return [
+					{
+						timestamp: null,
+						level: null,
+						scope: null,
+						message: `...${skippedCount} messages skipped...`,
+					},
+					...retainedLogs.reverse(),
+				];
+			}, { isolationLevel: 'repeatable read', readOnly: true });
 		}
 
-		const logs = await query
+		const logs = await createQuery(this.sql)
+			.select('probeLogId', 'timestamp', 'level', 'scope', 'message')
 			.orderBy('probeLogId', 'desc')
 			.limit(READ_LIMIT);
 

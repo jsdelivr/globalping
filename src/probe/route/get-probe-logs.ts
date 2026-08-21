@@ -31,7 +31,7 @@ export const registerGetProbeLogsRoute = (router: ExtendedRouter, context: IoCon
 
 		const { after, scopes, search } = valid.value;
 		const logs = await probeLogStorage.readLogs(probe.uuid, { after, scopes, search });
-		const lastId = logs.length > 0 ? String(logs[logs.length - 1]!.probeLogId) : null;
+		const lastId = logs.findLast(log => log.probeLogId !== undefined)?.probeLogId ?? null;
 
 		ctx.body = {
 			logs: logs.map(({ timestamp, level, scope, message }) => ({ timestamp, level, scope, message })),

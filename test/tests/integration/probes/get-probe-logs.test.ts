@@ -116,7 +116,7 @@ describe('Get Probe Logs', () => {
 			});
 	});
 
-	it('paginates forward with decimal cursors and preserves bigint cursor precision', async () => {
+	it('returns the newest incremental tail with a skip marker and preserves bigint cursor precision', async () => {
 		const firstId = 9_007_199_254_740_993n;
 		await insertLogs(Array.from({ length: 1002 }, (_, index) => ({
 			id: (firstId + BigInt(index)).toString(),
@@ -132,17 +132,24 @@ describe('Get Probe Logs', () => {
 			.send()
 			.expect(200);
 		expect(firstResponse.body.logs).to.have.length(1000);
-		expect(firstResponse.body.logs[0].message).to.equal('log 1');
-		expect(firstResponse.body.logs[999].message).to.equal('log 1000');
-		expect(firstResponse.body.lastId).to.equal((firstId + 999n).toString());
+
+		expect(firstResponse.body.logs[0]).to.deep.equal({
+			timestamp: null,
+			level: null,
+			scope: null,
+			message: '...3 messages skipped...',
+		});
+
+		expect(firstResponse.body.logs[1].message).to.equal('log 4');
+		expect(firstResponse.body.logs[999].message).to.equal('log 1002');
+		expect(firstResponse.body.lastId).to.equal((firstId + 1001n).toString());
 
 		const secondResponse = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ after: firstResponse.body.lastId })
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200);
-		expect(secondResponse.body.logs.map((log: { message: string }) => log.message)).to.deep.equal([ 'log 1001', 'log 1002' ]);
-		expect(secondResponse.body.lastId).to.equal((firstId + 1001n).toString());
+		expect(secondResponse.body).to.deep.equal({ logs: [], lastId: null });
 	});
 
 	it('returns an empty result and null lastId when no rows match', async () => {
