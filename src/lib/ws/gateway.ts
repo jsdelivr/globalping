@@ -31,7 +31,8 @@ export const initGateway = (ioContext: IoContext) => {
 			const probe = socket.data.probe;
 			const location = probeOverride.getUpdatedLocation(probe);
 
-			const settings = adoptedProbes.getByIp(probe.ipAddress)?.settings;
+			const settings = (adoptedProbes.getByUuid(probe.uuid) || adoptedProbes.getByIp(probe.ipAddress))?.settings;
+
 			settings && socket.emit('api:settings:update', settings);
 
 			adoptionToken.validate(socket).catch(err => logger.warn('Error during adoption token validation:', err));
