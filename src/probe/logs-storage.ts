@@ -38,7 +38,7 @@ export class ProbeLogsStorage {
 
 		const createBaseQuery = (sql: Knex) => sql<ProbeLog>('probe_log')
 			.where('probeUuid', probeUuid)
-			.whereRaw(`"receivedAt" >= now() - interval '3 days'`);
+			.whereRaw(`"receivedAt" >= now() - interval '30 days'`);
 
 		const createFilteredQuery = (sql: Knex) => {
 			const query = createBaseQuery(sql);

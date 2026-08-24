@@ -15,7 +15,7 @@ export const up = async (db) => {
 	});
 
 	await db.raw(`SELECT create_hypertable('probe_log', by_range('receivedAt', INTERVAL '1 day'))`);
-	await db.raw(`SELECT add_retention_policy('probe_log', INTERVAL '3 days')`);
+	await db.raw(`SELECT add_retention_policy('probe_log', INTERVAL '30 days')`);
 	await db.raw(`CREATE INDEX probe_log_probe_cursor_idx ON probe_log ("probeUuid", "probeLogId" DESC)`);
 	await db.raw(`CREATE INDEX probe_log_probe_scope_cursor_idx ON probe_log ("probeUuid", "scope", "probeLogId" DESC)`);
 };

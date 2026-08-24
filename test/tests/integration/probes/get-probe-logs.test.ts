@@ -297,7 +297,7 @@ describe('Get Probe Logs', () => {
 			{ id: '2', message: 'needle wrong scope', scope: 'system' },
 			{ id: '3', message: 'needle match', scope: 'worker' },
 			{ id: '4', message: 'other text', scope: 'worker' },
-			{ id: '5', message: 'needle expired', scope: 'worker', receivedAt: timeSeriesClient.raw(`now() - interval '3 days 1 minute'`) },
+			{ id: '5', message: 'needle expired', scope: 'worker', receivedAt: timeSeriesClient.raw(`now() - interval '30 days 1 minute'`) },
 		]);
 
 		await timeSeriesClient('probe_log').insert({
