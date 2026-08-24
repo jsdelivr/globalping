@@ -9,7 +9,7 @@ export type GetProbeLogsQuery = {
 	search?: string;
 };
 
-const scopesSchema = Joi.string().empty('').custom((value: string, helpers) => {
+const scopesSchema = Joi.string().empty('').max(1024).custom((value: string, helpers) => {
 	const scopes = [ ...new Set(value.split(',').map(scope => scope.trim()).filter(Boolean)) ];
 
 	if (scopes.some(scope => scope.length > 64)) {
@@ -19,7 +19,7 @@ const scopesSchema = Joi.string().empty('').custom((value: string, helpers) => {
 	return scopes;
 });
 
-const afterSchema = Joi.string().pattern(/^\d+$/).custom((value: string, helpers) => {
+const afterSchema = Joi.string().max(20).pattern(/^\d+$/).custom((value: string, helpers) => {
 	const normalized = value.replace(/^0+(?=\d)/, '');
 
 	if (normalized.length > MAX_PROBE_LOG_ID.length
