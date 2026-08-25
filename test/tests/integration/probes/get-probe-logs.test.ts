@@ -78,7 +78,7 @@ describe('Get Probe Logs', () => {
 			.set('Cookie', `${sessionConfig.cookieName}=${ownerJwt}`)
 			.send()
 			.expect(200)
-			.expect({ logs: [], lastId: null });
+			.expect({ logs: [], lastId: null, firstId: null, hasOlder: false });
 
 		const adminJwt = await getSignedJwt({ id: 'admin-user', admin_access: true, app_access: true });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
@@ -95,7 +95,12 @@ describe('Get Probe Logs', () => {
 	});
 
 	it('returns the newest 1,000 matching rows oldest-first when after is missing', async () => {
-		await insertLogs(Array.from({ length: 1002 }, (_, index) => ({ id: String(index + 1), message: `log ${index + 1}` })));
+		await insertLogs(Array.from({ length: 1002 }, (_, index) => ({
+			id: String(index + 1),
+			message: `log ${index + 1}`,
+			scope: index < 2 ? 'archive' : 'system',
+		})));
+
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
@@ -114,10 +119,24 @@ describe('Get Probe Logs', () => {
 
 				expect(response.body.logs[999].message).to.equal('log 1002');
 				expect(response.body.lastId).to.equal('1002');
+				expect(response.body.firstId).to.equal('3');
+				expect(response.body.hasOlder).to.equal(true);
+			});
+
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
+			.query({ scopes: 'system' })
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(200)
+			.expect((response) => {
+				expect(response.body.logs).to.have.length(1000);
+				expect(response.body.logs[0].message).to.equal('log 3');
+				expect(response.body.firstId).to.equal('3');
+				expect(response.body.hasOlder).to.equal(false);
 			});
 	});
 
-	it('returns the newest incremental tail with a skip marker and preserves bigint cursor precision', async () => {
+	it('returns the newest incremental tail and preserves bigint cursor precision', async () => {
 		const firstId = 9_007_199_254_740_993n;
 		await insertLogs(Array.from({ length: 1002 }, (_, index) => ({
 			id: (firstId + BigInt(index)).toString(),
@@ -133,24 +152,55 @@ describe('Get Probe Logs', () => {
 			.send()
 			.expect(200);
 		expect(firstResponse.body.logs).to.have.length(1000);
-
-		expect(firstResponse.body.logs[0]).to.deep.equal({
-			timestamp: null,
-			level: null,
-			scope: null,
-			message: '...3 messages skipped...',
-		});
-
-		expect(firstResponse.body.logs[1].message).to.equal('log 4');
+		expect(firstResponse.body.logs[0].message).to.equal('log 3');
 		expect(firstResponse.body.logs[999].message).to.equal('log 1002');
 		expect(firstResponse.body.lastId).to.equal((firstId + 1001n).toString());
+		expect(firstResponse.body.firstId).to.equal((firstId + 2n).toString());
+		expect(firstResponse.body.hasOlder).to.equal(true);
+
+		const historicalResponse = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
+			.query({ after, before: (firstId + 1002n).toString() })
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(200);
+		expect(historicalResponse.body.logs).to.have.length(1000);
+		expect(historicalResponse.body.logs[0].message).to.equal('log 3');
+		expect(historicalResponse.body.logs[999].message).to.equal('log 1002');
+		expect(historicalResponse.body.lastId).to.equal(firstResponse.body.lastId);
+		expect(historicalResponse.body.firstId).to.equal((firstId + 2n).toString());
+		expect(historicalResponse.body.hasOlder).to.equal(true);
+
+		const recoveryResponse = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
+			.query({ after, before: historicalResponse.body.firstId })
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(200);
+		expect(recoveryResponse.body.logs.map((log: { message: string }) => log.message)).to.deep.equal([ 'log 1', 'log 2' ]);
+		expect(recoveryResponse.body.lastId).to.equal(firstResponse.body.lastId);
+		expect(recoveryResponse.body.firstId).to.equal(firstId.toString());
+		expect(recoveryResponse.body.hasOlder).to.equal(false);
+
+		const exactLimitResponse = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
+			.query({ after: (firstId + 1n).toString() })
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(200);
+		expect(exactLimitResponse.body.logs).to.have.length(1000);
+		expect(exactLimitResponse.body.logs[0].message).to.equal('log 3');
+		expect(exactLimitResponse.body.firstId).to.equal((firstId + 2n).toString());
+		expect(exactLimitResponse.body.hasOlder).to.equal(false);
 
 		const secondResponse = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ after: firstResponse.body.lastId })
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200);
-		expect(secondResponse.body).to.deep.equal({ logs: [], lastId: firstResponse.body.lastId });
+		expect(secondResponse.body).to.deep.equal({
+			logs: [],
+			lastId: firstResponse.body.lastId,
+			firstId: null,
+			hasOlder: false,
+		});
 	});
 
 	it('advances an empty filtered result and never moves an incremental cursor backwards', async () => {
@@ -162,14 +212,14 @@ describe('Get Probe Logs', () => {
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200)
-			.expect({ logs: [], lastId: '1' });
+			.expect({ logs: [], lastId: '1', firstId: null, hasOlder: false });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ after: '2' })
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200)
-			.expect({ logs: [], lastId: '2' });
+			.expect({ logs: [], lastId: '2', firstId: null, hasOlder: false });
 	});
 
 	it('filters multiple trimmed and de-duplicated scopes exactly and case-sensitively', async () => {
@@ -291,12 +341,12 @@ describe('Get Probe Logs', () => {
 		}
 	});
 
-	it('combines after, scope, search, UUID, and receivedAt conditions', async () => {
+	it('combines after, before, scope, search, UUID, and receivedAt conditions', async () => {
 		await insertLogs([
 			{ id: '1', message: 'needle before cursor', scope: 'worker' },
 			{ id: '2', message: 'needle wrong scope', scope: 'system' },
 			{ id: '3', message: 'needle match', scope: 'worker' },
-			{ id: '4', message: 'other text', scope: 'worker' },
+			{ id: '4', message: 'needle at boundary', scope: 'worker' },
 			{ id: '5', message: 'needle expired', scope: 'worker', receivedAt: timeSeriesClient.raw(`now() - interval '30 days 1 minute'`) },
 		]);
 
@@ -313,7 +363,7 @@ describe('Get Probe Logs', () => {
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
 
 		const response = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.query({ after: '1', scopes: 'worker', search: 'NEEDLE' })
+			.query({ after: '1', before: '4', scopes: 'worker', search: 'NEEDLE' })
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200);
@@ -333,18 +383,34 @@ describe('Get Probe Logs', () => {
 				message: 'needle match',
 			}],
 			lastId: '4',
+			firstId: '3',
+			hasOlder: false,
 		});
 	});
 
-	it('rejects non-decimal after values and other invalid query parameters', async () => {
+	it('rejects invalid log ID cursors and other invalid query parameters', async () => {
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
-		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.query({ after: '9223372036854775807' })
-			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
-			.send()
-			.expect(200);
 
-		for (const query of [{ after: '9223372036854775808' }, { after: '-' }, { after: '1705917173120-0' }, { after: 'foo' }, { before: '1' }]) {
+		for (const query of [{ after: '9223372036854775807' }, { before: '9223372036854775807' }]) {
+			await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
+				.query(query)
+				.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+				.send()
+				.expect(200);
+		}
+
+		for (const query of [
+			{ after: '9223372036854775808' },
+			{ after: '-' },
+			{ after: '1705917173120-0' },
+			{ after: 'foo' },
+			{ before: '9223372036854775808' },
+			{ before: '-' },
+			{ before: '1705917173120-0' },
+			{ before: 'foo' },
+			{ after: '2', before: '2' },
+			{ after: '2', before: '1' },
+		]) {
 			await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 				.query(query)
 				.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)

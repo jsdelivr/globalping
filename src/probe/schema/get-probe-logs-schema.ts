@@ -5,6 +5,7 @@ const MAX_PROBE_LOG_ID = '9223372036854775807';
 
 export type GetProbeLogsQuery = {
 	after?: string;
+	before?: string;
 	scopes?: string[];
 	search?: string;
 };
@@ -19,7 +20,7 @@ const scopesSchema = Joi.string().empty('').max(1024).custom((value: string, hel
 	return scopes;
 });
 
-const afterSchema = Joi.string().max(20).pattern(/^\d+$/).custom((value: string, helpers) => {
+const logIdSchema = Joi.string().max(20).pattern(/^\d+$/).custom((value: string, helpers) => {
 	const normalized = value.replace(/^0+(?=\d)/, '');
 
 	if (normalized.length > MAX_PROBE_LOG_ID.length
@@ -31,7 +32,14 @@ const afterSchema = Joi.string().max(20).pattern(/^\d+$/).custom((value: string,
 });
 
 export const schema = Joi.object<GetProbeLogsQuery>({
-	after: afterSchema.optional(),
+	after: logIdSchema.optional(),
+	before: logIdSchema.optional(),
 	scopes: scopesSchema.optional(),
 	search: Joi.string().empty('').max(128).optional(),
-}).unknown(false);
+}).unknown(false).custom((value: GetProbeLogsQuery, helpers) => {
+	if (value.after !== undefined && value.before !== undefined && BigInt(value.before) <= BigInt(value.after)) {
+		return helpers.error('any.invalid');
+	}
+
+	return value;
+});

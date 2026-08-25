@@ -29,12 +29,14 @@ export const registerGetProbeLogsRoute = (router: ExtendedRouter, context: IoCon
 			throw createHttpError(404, `Probe not found.`, { type: 'not_found' });
 		}
 
-		const { after, scopes, search } = valid.value;
-		const { logs, lastId } = await probeLogStorage.readLogs(probe.uuid, { after, scopes, search });
+		const { after, before, scopes, search } = valid.value;
+		const { logs, lastId, firstId, hasOlder } = await probeLogStorage.readLogs(probe.uuid, { after, before, scopes, search });
 
 		ctx.body = {
 			logs: logs.map(({ timestamp, level, scope, message }) => ({ timestamp, level, scope, message })),
 			lastId,
+			firstId,
+			hasOlder,
 		};
 	};
 

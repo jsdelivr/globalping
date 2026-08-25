@@ -16,13 +16,16 @@ export type ProbeLog = {
 
 export type ProbeLogFilters = {
 	after?: string | undefined;
+	before?: string | undefined;
 	scopes?: string[] | undefined;
 	search?: string | undefined;
 };
 
 type ProbeLogReadResult = {
-	logs: (Omit<ProbeLog, 'probeLogId'> & { probeLogId?: string })[];
+	logs: ProbeLog[];
 	lastId: string | null;
+	firstId: string | null;
+	hasOlder: boolean;
 };
 
 const escapeLikePattern = (value: string) => value
@@ -34,7 +37,7 @@ export class ProbeLogsStorage {
 	constructor (private readonly sql: Knex) {}
 
 	async readLogs (probeUuid: string, filters: ProbeLogFilters = {}): Promise<ProbeLogReadResult> {
-		const { after, scopes = [], search } = filters;
+		const { after, before, scopes = [], search } = filters;
 
 		const createBaseQuery = (sql: Knex) => sql<ProbeLog>('probe_log')
 			.where('probeUuid', probeUuid)
@@ -54,7 +57,6 @@ export class ProbeLogsStorage {
 			return query;
 		};
 
-		// fetch the READ_LIMIT newest logs and count how many log messages were skipped
 		return this.sql.transaction(async (transaction) => {
 			// find the actual lastId across ALL logs
 			const latestLog = await createBaseQuery(transaction)
@@ -64,57 +66,35 @@ export class ProbeLogsStorage {
 
 			const lastId = latestLog?.probeLogId ?? null;
 
-			if (lastId === null) {
-				return { logs: [], lastId: after ?? null };
-			}
-
-			if (after && BigInt(after) >= BigInt(lastId)) {
-				return { logs: [], lastId: after };
+			if (lastId === null || (after && BigInt(after) >= BigInt(lastId))) {
+				return { logs: [], lastId: after ?? lastId, firstId: null, hasOlder: false };
 			}
 
 			const query = createFilteredQuery(transaction);
 
 			if (after) {
 				void query.where('probeLogId', '>', after);
-
-				const logs = await query.clone()
-					.select('probeLogId', 'timestamp', 'level', 'scope', 'message')
-					.orderBy('probeLogId', 'desc')
-					.limit(READ_LIMIT);
-
-				if (logs.length < READ_LIMIT) {
-					return { logs: logs.reverse(), lastId };
-				}
-
-				const retainedLogs = logs.slice(0, READ_LIMIT - 1);
-				const oldestRetainedId = retainedLogs[retainedLogs.length - 1]!.probeLogId;
-
-				const skippedQuery = await query.clone()
-					.where('probeLogId', '<', oldestRetainedId)
-					.count<{ count: string }[]>({ count: '*' });
-
-				const skippedCount = Number(skippedQuery[0]!.count);
-
-				return {
-					logs: [
-						{
-							timestamp: null,
-							level: null,
-							scope: null,
-							message: `...${skippedCount} messages skipped...`,
-						},
-						...retainedLogs.reverse(),
-					],
-					lastId,
-				};
 			}
 
+			if (before) {
+				void query.where('probeLogId', '<', before);
+			}
+
+			// fetch one extra log to detect older history
 			const logs = await query
 				.select('probeLogId', 'timestamp', 'level', 'scope', 'message')
 				.orderBy('probeLogId', 'desc')
-				.limit(READ_LIMIT);
+				.limit(READ_LIMIT + 1);
 
-			return { logs: logs.reverse(), lastId };
+			const retainedLogs = logs.slice(0, READ_LIMIT);
+			const firstId = retainedLogs[retainedLogs.length - 1]?.probeLogId ?? null;
+
+			return {
+				logs: retainedLogs.reverse(),
+				lastId,
+				firstId,
+				hasOlder: logs.length > READ_LIMIT,
+			};
 		}, { isolationLevel: 'repeatable read', readOnly: true });
 	}
 

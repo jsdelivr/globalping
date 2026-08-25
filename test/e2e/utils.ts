@@ -12,6 +12,8 @@ logger.info(`There are ${processes} workers running.`);
 
 export type GetProbeLogsResponse = {
 	lastId: string | null;
+	firstId: string | null;
+	hasOlder: boolean;
 	logs: {
 		message: string;
 		timestamp: string | null;
