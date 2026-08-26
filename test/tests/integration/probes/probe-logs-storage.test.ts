@@ -115,7 +115,7 @@ describe('Probe Logs Storage', () => {
 		expect(await timeSeriesClient('probe_log')).to.have.length(4);
 	});
 
-	it('expires scopes after 30 days and refreshes them when reported again', async () => {
+	it('ignores expired scopes when enforcing the cap and refreshes them when reported again', async () => {
 		await timeSeriesClient('probe_log_scope').insert([
 			{
 				probeUuid: PROBE_UUIDS[0]!,
@@ -127,22 +127,26 @@ describe('Probe Logs Storage', () => {
 				scope: 'expired',
 				lastSeenAt: timeSeriesClient.raw(`now() - interval '30 days 1 minute'`),
 			},
+			...Array.from({ length: 99 }, (_, index) => ({
+				probeUuid: PROBE_UUIDS[0]!,
+				scope: `expired-${index}`,
+				lastSeenAt: timeSeriesClient.raw(`now() - interval '30 days 1 minute'`),
+			})),
 		]);
 
 		expect(await storage.readScopes()).to.be.empty;
 
-		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage([ 'reported-again' ]), true);
+		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage([ 'reported-again', 'new-after-expiry' ]), true);
 
-		const scopes = await timeSeriesClient('probe_log_scope')
-			.select('probeUuid', 'scope', 'lastSeenAt')
-			.orderBy('probeUuid');
+		const refreshed = await timeSeriesClient('probe_log_scope')
+			.where({ probeUuid: PROBE_UUIDS[0]!, scope: 'reported-again' })
+			.first();
+		const added = await timeSeriesClient('probe_log_scope')
+			.where({ probeUuid: PROBE_UUIDS[0]!, scope: 'new-after-expiry' })
+			.first();
 
-		expect(scopes).to.have.length(2);
-		expect(scopes[0]!.probeUuid).to.equal(PROBE_UUIDS[0]);
-		expect(scopes[0]!.scope).to.equal('reported-again');
-		expect(scopes[0]!.lastSeenAt).to.be.instanceof(Date);
-		expect(scopes[1]!.probeUuid).to.equal(PROBE_UUIDS[1]);
-		expect(scopes[1]!.scope).to.equal('expired');
+		expect(refreshed.lastSeenAt).to.be.instanceof(Date);
+		expect(added.lastSeenAt).to.be.instanceof(Date);
 		expect(await storage.readScopes()).to.be.empty;
 
 		await storage.writeLogs(PROBE_UUIDS[1]!, createMessage([ 'reported-again' ]), true);

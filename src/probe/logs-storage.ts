@@ -162,7 +162,8 @@ export class ProbeLogsStorage {
 			if (logScopes.length > 0) {
 				const existingScopeRows = await transaction<{ scope: string }>('probe_log_scope')
 					.select('scope')
-					.where('probeUuid', probeUuid);
+					.where('probeUuid', probeUuid)
+					.whereRaw('"lastSeenAt" >= now() - ?::interval', [ SCOPE_RETENTION ]);
 
 				const existingScopes = new Set(existingScopeRows.map(({ scope }) => scope));
 
