@@ -5,6 +5,11 @@ import { timeSeriesClient } from '../lib/sql/client.js';
 const READ_LIMIT = 1000;
 const CLEANUP_INTERVAL = 10_000n;
 const MAX_RETAINED_LOGS = 100_000n;
+const MAX_SCOPES_PER_PROBE = 100;
+const MIN_SCOPE_PROBES = 2;
+const SCOPE_OPTIONS_LIMIT = 100;
+const SCOPE_REFRESH_INTERVAL = '1 hour';
+const SCOPE_RETENTION = '30 days';
 
 export type ProbeLog = {
 	probeLogId: string;
@@ -35,6 +40,21 @@ const escapeLikePattern = (value: string) => value
 
 export class ProbeLogsStorage {
 	constructor (private readonly sql: Knex) {}
+
+	async readScopes (): Promise<string[]> {
+		const result = await this.sql.raw<{ rows: { scope: string }[] }>(`
+			SELECT "scope"
+			FROM probe_log_scope
+			WHERE "lastSeenAt" >= now() - ?::interval
+				AND "scope" !~ '(^[[:space:]]|[[:space:]]$|,)'
+			GROUP BY "scope"
+			HAVING count(*) >= ?
+			ORDER BY count(*) DESC, "scope" ASC
+			LIMIT ?
+		`, [ SCOPE_RETENTION, MIN_SCOPE_PROBES, SCOPE_OPTIONS_LIMIT ]);
+
+		return result.rows.map(({ scope }) => scope);
+	}
 
 	async readLogs (probeUuid: string, filters: ProbeLogFilters = {}): Promise<ProbeLogReadResult> {
 		const { after, before, scopes = [], search } = filters;
@@ -98,7 +118,7 @@ export class ProbeLogsStorage {
 		}, { isolationLevel: 'repeatable read', readOnly: true });
 	}
 
-	async writeLogs (probeUuid: string, logMessage: LogMessage): Promise<void> {
+	async writeLogs (probeUuid: string, logMessage: LogMessage, trackScopes: boolean): Promise<void> {
 		const receivedAt = new Date();
 
 		const logs: Array<{
@@ -121,6 +141,12 @@ export class ProbeLogsStorage {
 			return;
 		}
 
+		const logScopes = trackScopes
+			? [ ...new Set(logs
+				.map(({ scope }) => scope)
+				.filter((scope): scope is string => !!scope && scope === scope.trim() && !scope.includes(','))) ]
+			: [];
+
 		await this.sql.transaction(async (transaction) => {
 			const allocation = await transaction.raw<{ rows: { lastAllocatedId: string }[] }>(`
 				INSERT INTO probe_log_counter ("probeUuid", "lastAllocatedId")
@@ -132,6 +158,27 @@ export class ProbeLogsStorage {
 
 			const newLastAllocatedId = BigInt(allocation.rows[0]!.lastAllocatedId);
 			const previousLastAllocatedId = newLastAllocatedId - BigInt(logs.length);
+
+			if (logScopes.length > 0) {
+				const existingScopeRows = await transaction<{ scope: string }>('probe_log_scope')
+					.select('scope')
+					.where('probeUuid', probeUuid);
+
+				const existingScopes = new Set(existingScopeRows.map(({ scope }) => scope));
+				const availableSlots = Math.max(0, MAX_SCOPES_PER_PROBE - existingScopes.size);
+				const newScopes = logScopes.filter(scope => !existingScopes.has(scope)).slice(0, availableSlots);
+				const retainedScopes = logScopes.filter(scope => existingScopes.has(scope)).concat(newScopes);
+
+				if (retainedScopes.length > 0) {
+					await transaction('probe_log_scope')
+						.insert(retainedScopes.map(scope => ({ probeUuid, scope, lastSeenAt: transaction.fn.now() })))
+						.onConflict([ 'probeUuid', 'scope' ])
+						.merge({
+							lastSeenAt: transaction.raw('GREATEST(probe_log_scope."lastSeenAt", EXCLUDED."lastSeenAt")'),
+						})
+						.whereRaw('probe_log_scope."lastSeenAt" < EXCLUDED."lastSeenAt" - ?::interval', [ SCOPE_REFRESH_INTERVAL ]);
+				}
+			}
 
 			await transaction('probe_log').insert(logs.map((log, index) => ({
 				probeUuid,

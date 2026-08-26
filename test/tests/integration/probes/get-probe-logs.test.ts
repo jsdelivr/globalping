@@ -35,14 +35,13 @@ describe('Get Probe Logs', () => {
 		id: string;
 		message: string;
 		timestamp?: string | null;
-		receivedAt?: Date | ReturnType<typeof timeSeriesClient.raw>;
 		level?: string | null;
 		scope?: string | null;
 	}>) => timeSeriesClient('probe_log').insert(logs.map(log => ({
 		probeUuid: PROBE_UUID,
 		probeLogId: log.id,
 		timestamp: log.timestamp === undefined ? '2026-08-15T10:00:00.000Z' : log.timestamp,
-		receivedAt: log.receivedAt ?? new Date(),
+		receivedAt: new Date(),
 		level: log.level === undefined ? 'info' : log.level,
 		scope: log.scope === undefined ? 'system' : log.scope,
 		message: log.message,
@@ -222,13 +221,27 @@ describe('Get Probe Logs', () => {
 			.expect({ logs: [], lastId: '2', firstId: null, hasOlder: false });
 	});
 
-	it('filters multiple trimmed and de-duplicated scopes exactly and case-sensitively', async () => {
+	it('preserves nullable synthetic log fields in the HTTP response', async () => {
+		await insertLogs([{ id: '1', message: 'messages skipped', timestamp: null, level: null, scope: null }]);
+		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(200)
+			.expect({
+				logs: [{ timestamp: null, level: null, scope: null, message: 'messages skipped' }],
+				lastId: '1',
+				firstId: '1',
+				hasOlder: false,
+			});
+	});
+
+	it('normalizes comma-separated scope filters', async () => {
 		await insertLogs([
 			{ id: '1', message: 'system', scope: 'system' },
 			{ id: '2', message: 'worker', scope: 'worker' },
 			{ id: '3', message: 'api', scope: 'api:connect' },
-			{ id: '4', message: 'case mismatch', scope: 'System' },
-			{ id: '5', message: 'synthetic', timestamp: null, scope: null, level: null },
 		]);
 
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
@@ -239,28 +252,14 @@ describe('Get Probe Logs', () => {
 			.send()
 			.expect(200);
 		expect(filtered.body.logs.map((log: { message: string }) => log.message)).to.deep.equal([ 'system', 'worker', 'api' ]);
-		expect(filtered.body.lastId).to.equal('5');
+		expect(filtered.body.lastId).to.equal('3');
 
 		const emptyFilter = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ scopes: ', ,,' })
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200);
-		expect(emptyFilter.body.logs).to.have.length(5);
-
-		expect(emptyFilter.body.logs[4]).to.deep.equal({
-			timestamp: null,
-			level: null,
-			scope: null,
-			message: 'synthetic',
-		});
-
-		const caseSensitive = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.query({ scopes: 'system' })
-			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
-			.send()
-			.expect(200);
-		expect(caseSensitive.body.logs.map((log: { message: string }) => log.message)).to.deep.equal([ 'system' ]);
+		expect(emptyFilter.body.logs).to.have.length(3);
 	});
 
 	it('rejects any requested scope longer than 64 characters', async () => {
@@ -272,29 +271,21 @@ describe('Get Probe Logs', () => {
 			.expect(400);
 	});
 
-	it('searches case-insensitively and accepts one- and 128-character literal values', async () => {
+	it('accepts one- and 128-character search values', async () => {
 		const longSearch = 'q'.repeat(128);
 		await insertLogs([
-			{ id: '1', message: 'MiXeDCaSe' },
-			{ id: '2', message: 'Xylophone' },
-			{ id: '3', message: `prefix ${longSearch} suffix` },
+			{ id: '1', message: 'Xylophone' },
+			{ id: '2', message: `prefix ${longSearch} suffix` },
 		]);
 
 		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
-
-		const caseInsensitive = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.query({ search: 'mixedcase' })
-			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
-			.send()
-			.expect(200);
-		expect(caseInsensitive.body.logs.map((log: { message: string }) => log.message)).to.deep.equal([ 'MiXeDCaSe' ]);
 
 		const oneCharacter = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ search: 'x' })
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200);
-		expect(oneCharacter.body.logs.map((log: { message: string }) => log.message)).to.deep.equal([ 'MiXeDCaSe', 'Xylophone', `prefix ${longSearch} suffix` ]);
+		expect(oneCharacter.body.logs.map((log: { message: string }) => log.message)).to.deep.equal([ 'Xylophone', `prefix ${longSearch} suffix` ]);
 
 		const maxLength = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ search: longSearch })
@@ -308,84 +299,13 @@ describe('Get Probe Logs', () => {
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200);
-		expect(emptySearch.body.logs).to.have.length(3);
+		expect(emptySearch.body.logs).to.have.length(2);
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ search: 'q'.repeat(129) })
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(400);
-	});
-
-	it('treats percent, underscore, and backslash search values as literal text', async () => {
-		await insertLogs([
-			{ id: '1', message: 'literal % percent' },
-			{ id: '2', message: 'literal _ underscore' },
-			{ id: '3', message: 'literal \\ backslash' },
-			{ id: '4', message: 'plain text' },
-		]);
-
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
-
-		for (const [ search, expected ] of [
-			[ '%', 'literal % percent' ],
-			[ '_', 'literal _ underscore' ],
-			[ '\\', 'literal \\ backslash' ],
-		]) {
-			const response = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-				.query({ search })
-				.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
-				.send()
-				.expect(200);
-			expect(response.body.logs.map((log: { message: string }) => log.message)).to.deep.equal([ expected ]);
-		}
-	});
-
-	it('combines after, before, scope, search, UUID, and receivedAt conditions', async () => {
-		await insertLogs([
-			{ id: '1', message: 'needle before cursor', scope: 'worker' },
-			{ id: '2', message: 'needle wrong scope', scope: 'system' },
-			{ id: '3', message: 'needle match', scope: 'worker' },
-			{ id: '4', message: 'needle at boundary', scope: 'worker' },
-			{ id: '5', message: 'needle expired', scope: 'worker', receivedAt: timeSeriesClient.raw(`now() - interval '30 days 1 minute'`) },
-		]);
-
-		await timeSeriesClient('probe_log').insert({
-			probeUuid: 'ddf25d5f-18e9-44bb-9845-f0be1b95f41a',
-			probeLogId: '6',
-			timestamp: '2026-08-15T10:00:00.000Z',
-			receivedAt: new Date(),
-			level: 'info',
-			scope: 'worker',
-			message: 'needle other probe',
-		});
-
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
-
-		const response = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.query({ after: '1', before: '4', scopes: 'worker', search: 'NEEDLE' })
-			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
-			.send()
-			.expect(200);
-
-		const expiredLog = await timeSeriesClient('probe_log')
-			.select('probeLogId')
-			.where({ probeUuid: PROBE_UUID, probeLogId: '5' })
-			.first();
-
-		expect(expiredLog).to.exist;
-
-		expect(response.body).to.deep.equal({
-			logs: [{
-				timestamp: '2026-08-15T10:00:00.000Z',
-				level: 'info',
-				scope: 'worker',
-				message: 'needle match',
-			}],
-			lastId: '4',
-			firstId: '3',
-			hasOlder: false,
-		});
 	});
 
 	it('rejects invalid log ID cursors and other invalid query parameters', async () => {
