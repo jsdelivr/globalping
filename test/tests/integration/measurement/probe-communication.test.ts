@@ -133,7 +133,7 @@ describe('Create measurement request', () => {
 		expect(requestHandlerStub.firstCall.args[0]).to.deep.equal({
 			measurementId: mockedMeasurementId,
 			testId: '0',
-			measurement: { packets: 4, port: 80, protocol: 'ICMP', ipVersion: 4, type: 'ping', target: 'jsdelivr.com', inProgressUpdates: false, timeout: 10 },
+			measurement: { packets: 4, port: 80, protocol: 'ICMP', ipVersion: 4, type: 'ping', target: 'jsdelivr.com', inProgressUpdates: false, timeout: 15 },
 		});
 
 		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send()
