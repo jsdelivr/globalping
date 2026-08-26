@@ -165,9 +165,23 @@ export class ProbeLogsStorage {
 					.where('probeUuid', probeUuid);
 
 				const existingScopes = new Set(existingScopeRows.map(({ scope }) => scope));
+
+				// if we have never persisted probe scopes (probe was not adopted), backfill them here
+				const historicScopes = existingScopes.size === 0
+					? await transaction<{ scope: string }>('probe_log')
+						.distinct('scope')
+						.where('probeUuid', probeUuid)
+						.whereRaw('"receivedAt" >= now() - ?::interval', [ SCOPE_RETENTION ])
+						.whereNotNull('scope')
+						.whereRaw('"scope" !~ \'(^[[:space:]]|[[:space:]]$|,)\'')
+						.orderBy('scope')
+						.limit(MAX_SCOPES_PER_PROBE)
+					: [];
+
+				const scopes = [ ...new Set([ ...logScopes, ...historicScopes.map(({ scope }) => scope) ]) ];
 				const availableSlots = Math.max(0, MAX_SCOPES_PER_PROBE - existingScopes.size);
-				const newScopes = logScopes.filter(scope => !existingScopes.has(scope)).slice(0, availableSlots);
-				const retainedScopes = logScopes.filter(scope => existingScopes.has(scope)).concat(newScopes);
+				const newScopes = scopes.filter(scope => !existingScopes.has(scope)).slice(0, availableSlots);
+				const retainedScopes = scopes.filter(scope => existingScopes.has(scope)).concat(newScopes);
 
 				if (retainedScopes.length > 0) {
 					await transaction('probe_log_scope')

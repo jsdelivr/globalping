@@ -48,7 +48,7 @@ describe('Probe Logs Storage', () => {
 
 	afterEach(cleanUp);
 
-	it('persists logs and counters without tracking scopes for an unadopted probe', async () => {
+	it('persists unadopted logs and backfills their scopes after adoption', async () => {
 		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage([ 'ignored' ]), false);
 
 		const logs = await timeSeriesClient('probe_log').where('probeUuid', PROBE_UUIDS[0]!);
@@ -63,11 +63,13 @@ describe('Probe Logs Storage', () => {
 
 		const updatedLogs = await timeSeriesClient('probe_log').where('probeUuid', PROBE_UUIDS[0]!);
 		const updatedCounter = await timeSeriesClient('probe_log_counter').where('probeUuid', PROBE_UUIDS[0]!).first();
-		const trackedScopes = await timeSeriesClient('probe_log_scope').where('probeUuid', PROBE_UUIDS[0]!);
+		const trackedScopes = await timeSeriesClient('probe_log_scope')
+			.where('probeUuid', PROBE_UUIDS[0]!)
+			.orderBy('scope');
 
 		expect(updatedLogs).to.have.length(2);
 		expect(updatedCounter.lastAllocatedId).to.equal('2');
-		expect(trackedScopes.map(({ scope }) => scope)).to.deep.equal([ 'tracked' ]);
+		expect(trackedScopes.map(({ scope }) => scope)).to.deep.equal([ 'ignored', 'tracked' ]);
 	});
 
 	it('stores each scope once and caps concurrent writes for one probe at 100 scopes', async () => {
