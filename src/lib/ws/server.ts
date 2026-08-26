@@ -22,6 +22,8 @@ export type SocketData = {
 
 export type RemoteProbeSocket = RemoteSocket<DefaultEventsMap, SocketData>;
 
+export type FetchRawLocalSockets = () => Promise<RemoteProbeSocket[]>;
+
 export type ServerSocket = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 
 export type WsServer = Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
@@ -45,12 +47,13 @@ export const initWsServer = async (probeOverride: ProbeOverride) => {
 		subscriptionMode: 'dynamic-private',
 	}));
 
-	const syncedProbeList = new SyncedProbeList(redis, subClient2, io.of(PROBES_NAMESPACE), probeOverride);
+	const fetchRawSockets = async () => io.of(PROBES_NAMESPACE).fetchSockets();
+	const fetchRawLocalSockets: FetchRawLocalSockets = async () => io.of(PROBES_NAMESPACE).local.fetchSockets();
+
+	const syncedProbeList = new SyncedProbeList(redis, subClient2, fetchRawLocalSockets, probeOverride);
 
 	await syncedProbeList.sync();
 	syncedProbeList.scheduleSync();
-
-	const fetchRawSockets = async () => io.of(PROBES_NAMESPACE).fetchSockets();
 
 	const disconnectBySocketId = (socketId: string) => io.of(PROBES_NAMESPACE).in(socketId).disconnectSockets();
 
@@ -84,6 +87,7 @@ export const initWsServer = async (probeOverride: ProbeOverride) => {
 		io,
 		syncedProbeList,
 		fetchRawSockets,
+		fetchRawLocalSockets,
 		disconnectBySocketId,
 		fetchProbes,
 		getProbeByIp,

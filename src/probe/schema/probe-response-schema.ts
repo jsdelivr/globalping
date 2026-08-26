@@ -1,10 +1,14 @@
 import Joi from 'joi';
-import { SocketProbe, ProbeStats, LocalAdoptionServer } from '../types.js';
+import { SocketProbe, ProbeStats, LocalAdoptionServer, ProbeSettings } from '../types.js';
 import { globalIpOptions } from '../../measurement/schema/utils.js';
 
 export const statusSchema = Joi.string<SocketProbe['status']>().valid('initializing', 'ready', 'unbuffer-missing', 'ping-test-failed', 'icmp-tcp-test-failed', 'too-many-disconnects', 'sigterm').required();
 
 export const ipVersionSchema = Joi.boolean().required();
+
+export const settingsSchema = Joi.object<ProbeSettings>({
+	meteredConnection: Joi.boolean().required(),
+}).unknown(false).required();
 
 export const dnsSchema = Joi.array<string[]>().max(1024).items(Joi.string().max(1024)).required();
 

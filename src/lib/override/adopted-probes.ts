@@ -86,6 +86,9 @@ type DProbe = {
 		expiresAt: string;
 		ips: string[];
 	} | null;
+	settings: {
+		meteredConnection: boolean;
+	};
 };
 
 export type Adoption = Omit<DProbe, 'userId'> & {
@@ -97,7 +100,7 @@ type AdoptionWithCustomLocation = Adoption & {
 	originalLocation: NonNullable<DProbe['originalLocation']>;
 };
 
-export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation' | 'originalLocation' | 'localAdoptionServer'> & {
+export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation' | 'originalLocation' | 'localAdoptionServer' | 'settings'> & {
 	altIps: string;
 	tags: string;
 	systemTags: string;
@@ -108,6 +111,7 @@ export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Support
 	customLocation: string | null;
 	originalLocation: string | null;
 	localAdoptionServer: string | null;
+	settings: string;
 };
 
 type DProbeFieldDescription = {
@@ -242,6 +246,7 @@ export class AdoptedProbes {
 	constructor (
 		private readonly sql: Knex,
 		private readonly getProbesWithAdminData: () => SocketProbe[],
+		private readonly emitToProbe: (client: string, event: string, payload: unknown) => void,
 	) {}
 
 	getById (id: string) {
@@ -344,6 +349,8 @@ export class AdoptedProbes {
 		const probes = this.getProbesWithAdminData();
 		// 'probe' - usual API probe. 'dProbe' - dashboard probe data stored in sql.
 		const { dProbesWithProbe, dProbesWithoutProbe, probesWithoutDProbe } = this.matchDProbesAndProbes(probes);
+		this.syncProbeSettings(dProbesWithProbe);
+
 		const { updatedDProbes, dProbeDataUpdates } = this.generateUpdatedDProbes(dProbesWithProbe, dProbesWithoutProbe);
 		const { dProbesToDelete, nullifyIpUpdates, dProbeAltIpUpdates } = this.findDProbeDuplicates(updatedDProbes);
 
@@ -395,6 +402,7 @@ export class AdoptedProbes {
 			customLocation: row.customLocation ? JSON.parse(row.customLocation) as DProbe['customLocation'] : null,
 			originalLocation: row.originalLocation ? JSON.parse(row.originalLocation) as DProbe['originalLocation'] : null,
 			localAdoptionServer: row.localAdoptionServer ? JSON.parse(row.localAdoptionServer) as DProbe['localAdoptionServer'] : null,
+			settings: JSON.parse(row.settings) as DProbe['settings'],
 		}));
 
 		this.dProbes = dProbes;
@@ -590,6 +598,14 @@ export class AdoptedProbes {
 
 		const probesWithoutDProbe = [ ...uuidToProbe.values() ];
 		return { dProbesWithProbe, dProbesWithoutProbe, probesWithoutDProbe };
+	}
+
+	private syncProbeSettings (dProbesWithProbe: { dProbe: DProbe; probe: SocketProbe }[]) {
+		for (const { dProbe, probe } of dProbesWithProbe) {
+			if (!_.isEqual(probe.settings, dProbe.settings)) {
+				this.emitToProbe(probe.client, 'api:settings:update', dProbe.settings);
+			}
+		}
 	}
 
 	private generateUpdatedDProbes (dProbesWithProbe: { dProbe: DProbe; probe: SocketProbe }[], dProbesWithoutProbe: DProbe[]) {
@@ -837,7 +853,7 @@ export class AdoptedProbes {
 		return `u-${defaultPrefix}`;
 	}
 
-	static formatProbeAsDProbe (probe: SocketProbe): Omit<DProbe, 'id' | 'lastSyncDate' | 'defaultPrefix' | 'deprecatedPrefix' | 'publicProbes' | 'adoptionToken'> {
+	static formatProbeAsDProbe (probe: SocketProbe): Omit<DProbe, 'id' | 'lastSyncDate' | 'defaultPrefix' | 'deprecatedPrefix' | 'publicProbes' | 'adoptionToken' | 'settings'> {
 		return {
 			userId: null,
 			ip: probe.ipAddress,

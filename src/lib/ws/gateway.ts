@@ -15,12 +15,13 @@ import { handleIsIPv4SupportedUpdate, handleIsIPv6SupportedUpdate } from '../../
 import { handleNewLogs } from '../../probe/handler/logs.js';
 import { handleAltIps } from '../../probe/handler/alt-ips.js';
 import { handleAdoptionServerStart } from '../../probe/handler/local-adoption-server.js';
+import { handleSettingsUpdate } from '../../probe/handler/settings.js';
 import type { IoContext } from '../server.js';
 
 const logger = scopedLogger('gateway');
 
 export const initGateway = (ioContext: IoContext) => {
-	const { io, probeOverride, metricsAgent, adoptionToken, probeIpLimit, measurementRunner, altIpsClient } = ioContext;
+	const { io, adoptedProbes, probeOverride, metricsAgent, adoptionToken, probeIpLimit, measurementRunner, altIpsClient } = ioContext;
 
 	io
 		.of(PROBES_NAMESPACE)
@@ -29,6 +30,10 @@ export const initGateway = (ioContext: IoContext) => {
 		.on('connect', errorHandler(async (socket: ServerSocket) => {
 			const probe = socket.data.probe;
 			const location = probeOverride.getUpdatedLocation(probe);
+
+			const settings = (adoptedProbes.getByUuid(probe.uuid) || adoptedProbes.getByIp(probe.ipAddress))?.settings;
+
+			settings && socket.emit('api:settings:update', settings);
 
 			adoptionToken.validate(socket).catch(err => logger.warn('Error during adoption token validation:', err));
 			socket.emit('api:connect:ip', { ip: probe.ipAddress });
@@ -50,6 +55,7 @@ export const initGateway = (ioContext: IoContext) => {
 			subscribeWithHandler(socket, 'probe:measurement:progress', handleMeasurementProgress(probe, measurementRunner));
 			subscribeWithHandler(socket, 'probe:measurement:result', handleMeasurementResult(probe, measurementRunner));
 			subscribeWithHandler(socket, 'probe:adoption:ready', handleAdoptionServerStart(probe));
+			subscribeWithHandler(socket, 'probe:settings:update', handleSettingsUpdate(probe));
 
 			socket.on('disconnect', (reason) => {
 				logger.debug(`Probe disconnected. (reason: ${reason}) [${socket.id}][${probe.ipAddress}]`, { client: { id: socket.id, ip: probe.ipAddress, version: probe.version } });

@@ -1,5 +1,5 @@
 import { initRedisClient } from './redis/client.js';
-import { initWsServer, type WsServer } from './ws/server.js';
+import { initWsServer, PROBES_NAMESPACE, type WsServer } from './ws/server.js';
 import { initMetricsAgent, type MetricsAgent } from './metrics.js';
 import { populateMemList as populateMemMalwareList } from './malware/client.js';
 import { populateMemList as populateMemCloudIpRangesList } from './cloud-ip-ranges.js';
@@ -54,6 +54,7 @@ export type IoContext = {
 	fetchProbes: WsServerExports['fetchProbes'];
 	getProbeByIp: WsServerExports['getProbeByIp'];
 	fetchRawSockets: WsServerExports['fetchRawSockets'];
+	fetchRawLocalSockets: WsServerExports['fetchRawLocalSockets'];
 	disconnectBySocketId: WsServerExports['disconnectBySocketId'];
 	onProbesUpdate: WsServerExports['onProbesUpdate'];
 };
@@ -76,18 +77,22 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 	]);
 
 	const getProbesWithAdminData = (): SocketProbe[] => syncedProbeList.getProbesWithAdminData();
-	const adoptedProbes = new AdoptedProbes(dashboardClient, getProbesWithAdminData);
+	const emitToProbe = (client: string, event: string, payload: unknown) => {
+		io.of(PROBES_NAMESPACE).to(client).emit(event, payload);
+	};
+
+	const adoptedProbes = new AdoptedProbes(dashboardClient, getProbesWithAdminData, emitToProbe);
 	const adminData = new AdminData(dashboardClient);
 	const probeOverride = new ProbeOverride(adoptedProbes, adminData);
 
 	// Populate Dashboard override data before using it during initWsServer()
 	await logIfTooLong(probeOverride.fetchDashboardData(), 'probeOverride.fetchDashboardData');
 
-	const { io, syncedProbeList, fetchRawSockets, disconnectBySocketId, fetchProbes, getProbeByIp, onProbesUpdate } = await logIfTooLong(initWsServer(probeOverride), 'initWsServer');
+	const { io, syncedProbeList, fetchRawSockets, fetchRawLocalSockets, disconnectBySocketId, fetchProbes, getProbeByIp, onProbesUpdate } = await logIfTooLong(initWsServer(probeOverride), 'initWsServer');
 
 	const adoptionToken = initAdoptionToken(adoptedProbes);
 	const probeIpLimit = new ProbeIpLimit(syncedProbeList, disconnectBySocketId, adoptedProbes, adoptionToken);
-	const metricsAgent = initMetricsAgent(io, fetchProbes);
+	const metricsAgent = initMetricsAgent(fetchRawLocalSockets, fetchProbes);
 	const altIpsClient = initAltIpsClient(probeOverride, getProbeByIp, disconnectBySocketId);
 	const probesLocationFilter = initProbesLocationFilter(onProbesUpdate);
 	const probeRouter = initProbeRouter(onProbesUpdate, probesLocationFilter);
@@ -118,6 +123,7 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 		adoptionToken,
 		altIpsClient,
 		fetchProbes,
+		fetchRawLocalSockets,
 		getProbeByIp,
 		fetchRawSockets,
 		disconnectBySocketId,
