@@ -4,12 +4,12 @@ import { expect } from 'chai';
 import * as td from 'testdouble';
 import { MeasurementStore } from '../../../../src/measurement/store.js';
 import { ProbeRouter } from '../../../../src/probe/router.js';
-import { MetricsAgent } from '../../../../src/lib/metrics.js';
 import type { ServerProbe } from '../../../../src/probe/types.js';
 import type { MeasurementRunner } from '../../../../src/measurement/runner.js';
 import type { MeasurementRecord, MeasurementResultMessage } from '../../../../src/measurement/types.js';
 import createHttpError from 'http-errors';
 import type { ExtendedContext } from '../../../../src/types.js';
+import * as metricsModule from '../../../../src/lib/metrics.js';
 
 const getProbe = (id: number) => ({ client: id } as unknown as ServerProbe);
 
@@ -27,7 +27,8 @@ describe('MeasurementRunner', () => {
 	const io = sandbox.createStubInstance(Server);
 	const store = sandbox.createStubInstance(MeasurementStore);
 	const router = sandbox.createStubInstance(ProbeRouter);
-	const metrics = sandbox.createStubInstance(MetricsAgent);
+	const recordMeasurement = sandbox.stub();
+	const recordMeasurementTime = sandbox.stub();
 	const rateLimit = sandbox.stub();
 	const precheckRateLimit = sandbox.stub();
 	let runner: MeasurementRunner;
@@ -38,8 +39,17 @@ describe('MeasurementRunner', () => {
 
 	before(async () => {
 		await td.replaceEsm('crypto-random-string', null, () => testId++);
+
+		await td.replaceEsm('../../../../src/lib/metrics.ts', {
+			...metricsModule,
+			metricsAgent: {
+				recordMeasurement,
+				recordMeasurementTime,
+			},
+		});
+
 		const { MeasurementRunner } = await import('../../../../src/measurement/runner.js');
-		runner = new MeasurementRunner(io, store, router, precheckRateLimit, rateLimit, metrics);
+		runner = new MeasurementRunner(io, store, router, precheckRateLimit, rateLimit);
 	});
 
 	beforeEach(() => {
@@ -183,8 +193,8 @@ describe('MeasurementRunner', () => {
 			testId: '3',
 		}]);
 
-		expect(metrics.recordMeasurement.callCount).to.equal(1);
-		expect(metrics.recordMeasurement.args[0]).to.deep.equal([ 'ping', 4 ]);
+		expect(recordMeasurement.callCount).to.equal(1);
+		expect(recordMeasurement.args[0]).to.deep.equal([ 'ping', 4 ]);
 	});
 
 	it('should send `inProgressUpdates: true` to the first N probes if requested', async () => {
@@ -303,8 +313,8 @@ describe('MeasurementRunner', () => {
 			testId: '3',
 		}]);
 
-		expect(metrics.recordMeasurement.callCount).to.equal(1);
-		expect(metrics.recordMeasurement.args[0]).to.deep.equal([ 'ping', 4 ]);
+		expect(recordMeasurement.callCount).to.equal(1);
+		expect(recordMeasurement.args[0]).to.deep.equal([ 'ping', 4 ]);
 	});
 
 	it('should properly handle result events from probes', async () => {
@@ -324,8 +334,8 @@ describe('MeasurementRunner', () => {
 		expect(store.storeMeasurementResult.args[0]).to.deep.equal([{ measurementId: mockedMeasurementId, testId: 'testid1', result: {} }]);
 		expect(store.storeMeasurementResult.args[1]).to.deep.equal([{ measurementId: mockedMeasurementId, testId: 'testid2', result: {} }]);
 		expect(store.storeMeasurementResult.args[2]).to.deep.equal([{ measurementId: mockedMeasurementId, testId: 'testid3', result: {} }]);
-		expect(metrics.recordMeasurementTime.callCount).to.equal(1);
-		expect(metrics.recordMeasurementTime.args[0]).to.deep.equal([ 'ping', 25000 ]);
+		expect(recordMeasurementTime.callCount).to.equal(1);
+		expect(recordMeasurementTime.args[0]).to.deep.equal([ 'ping', 25000 ]);
 	});
 
 	it('should call rate limiter with the number of online probes', async () => {

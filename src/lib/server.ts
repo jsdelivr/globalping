@@ -1,6 +1,6 @@
 import { initRedisClient } from './redis/client.js';
 import { initWsServer, PROBES_NAMESPACE, type WsServer } from './ws/server.js';
-import { initMetricsAgent, type MetricsAgent } from './metrics.js';
+import { initMetricsCollector } from './metrics-collector.js';
 import { populateMemList as populateMemMalwareList } from './malware/client.js';
 import { populateMemList as populateMemCloudIpRangesList } from './cloud-ip-ranges.js';
 import { populateMemList as populateMemBlockedIpRangesList } from './blocked-ip-ranges.js';
@@ -44,7 +44,6 @@ export type IoContext = {
 	adminData: AdminData;
 	probeOverride: ProbeOverride;
 	probeIpLimit: ProbeIpLimit;
-	metricsAgent: MetricsAgent;
 	measurementRunner: MeasurementRunner;
 	codeSender: CodeSender;
 	scheduleExecutor: StreamScheduleExecutor;
@@ -92,11 +91,11 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 
 	const adoptionToken = initAdoptionToken(adoptedProbes);
 	const probeIpLimit = new ProbeIpLimit(syncedProbeList, disconnectBySocketId, adoptedProbes, adoptionToken);
-	const metricsAgent = initMetricsAgent(fetchRawLocalSockets, fetchProbes);
+	const metricsCollector = initMetricsCollector(fetchRawLocalSockets, fetchProbes);
 	const altIpsClient = initAltIpsClient(probeOverride, getProbeByIp, disconnectBySocketId);
 	const probesLocationFilter = initProbesLocationFilter(onProbesUpdate);
 	const probeRouter = initProbeRouter(onProbesUpdate, probesLocationFilter);
-	const measurementRunner = initMeasurementRunner(io, probeRouter, metricsAgent);
+	const measurementRunner = initMeasurementRunner(io, probeRouter);
 	const codeSender = initCodeSender(io, getProbeByIp);
 
 	initStreamScheduleLoader({ scheduleSync: startBackgroundJobs });
@@ -115,7 +114,6 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 		adminData,
 		probeOverride,
 		probeIpLimit,
-		metricsAgent,
 		measurementRunner,
 		codeSender,
 		scheduleExecutor,
@@ -144,7 +142,7 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 		probeIpLimit.scheduleSync();
 		auth.scheduleSync();
 		reconnectProbes(fetchRawSockets);
-		metricsAgent.run();
+		metricsCollector.run();
 	}
 
 	return { httpServer, ioContext };
