@@ -40,3 +40,29 @@ export const subscribeWithHandler = (socket: ServerSocket, event: string, method
 		}
 	});
 };
+
+export const subscribeWithAckHandler = (socket: ServerSocket, event: string, method: HandlerMethod) => {
+	subscribeWithHandler(socket, event, async (...args) => {
+		const lastArg: unknown = args.at(-1);
+		const callback = typeof lastArg === 'function' ? lastArg as (response?: unknown) => void : undefined;
+		const handlerArgs = callback ? args.slice(0, -1) : args;
+		let acknowledged = false;
+
+		const wrappedCallback = callback ? (response?: unknown) => {
+			acknowledged = true;
+			callback(response);
+		} : undefined;
+
+		try {
+			await method(...handlerArgs, wrappedCallback as never);
+
+			if (wrappedCallback && !acknowledged) {
+				throw new Error(`Ack handler for event "${event}" resolved without acknowledging.`);
+			}
+		} finally {
+			if (wrappedCallback && !acknowledged) {
+				wrappedCallback();
+			}
+		}
+	});
+};

@@ -10,7 +10,7 @@ import { PROBES_NAMESPACE, type ServerSocket } from './server.js';
 import { health } from './middleware/health.js';
 import { probeMetadata } from './middleware/probe-metadata.js';
 import { errorHandler } from './helper/error-handler.js';
-import { subscribeWithHandler } from './helper/subscribe-handler.js';
+import { subscribeWithAckHandler, subscribeWithHandler } from './helper/subscribe-handler.js';
 import { handleIsIPv4SupportedUpdate, handleIsIPv6SupportedUpdate } from '../../probe/handler/ip-version.js';
 import { handleNewLogs } from '../../probe/handler/logs.js';
 import { handleAltIps } from '../../probe/handler/alt-ips.js';
@@ -45,7 +45,7 @@ export const initGateway = (ioContext: IoContext) => {
 
 			// Handlers
 			subscribeWithHandler(socket, 'probe:status:update', handleStatusUpdate(probe));
-			subscribeWithHandler(socket, 'probe:logs', handleNewLogs(probe));
+			subscribeWithAckHandler(socket, 'probe:logs', handleNewLogs(probe));
 			subscribeWithHandler(socket, 'probe:alt-ips', handleAltIps(probe, altIpsClient));
 			subscribeWithHandler(socket, 'probe:isIPv6Supported:update', handleIsIPv6SupportedUpdate(probe));
 			subscribeWithHandler(socket, 'probe:isIPv4Supported:update', handleIsIPv4SupportedUpdate(probe));
