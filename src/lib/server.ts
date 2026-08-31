@@ -91,7 +91,6 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 
 	const adoptionToken = initAdoptionToken(adoptedProbes);
 	const probeIpLimit = new ProbeIpLimit(syncedProbeList, disconnectBySocketId, adoptedProbes, adoptionToken);
-	const metricsCollector = initMetricsCollector(fetchRawLocalSockets, fetchProbes);
 	const altIpsClient = initAltIpsClient(probeOverride, getProbeByIp, disconnectBySocketId);
 	const probesLocationFilter = initProbesLocationFilter(onProbesUpdate);
 	const probeRouter = initProbeRouter(onProbesUpdate, probesLocationFilter);
@@ -142,7 +141,7 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 		probeIpLimit.scheduleSync();
 		auth.scheduleSync();
 		reconnectProbes(fetchRawSockets);
-		metricsCollector.run();
+		initMetricsCollector(fetchRawLocalSockets, fetchProbes).run();
 	}
 
 	return { httpServer, ioContext };
