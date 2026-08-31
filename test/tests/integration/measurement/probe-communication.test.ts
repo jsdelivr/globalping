@@ -174,8 +174,6 @@ describe('Create measurement request', () => {
 				expect(response).to.matchApiSchema();
 			});
 
-		probe.emit('probe:measurement:ack', null, () => {});
-
 		probe.emit('probe:measurement:progress', {
 			testId: '0',
 			measurementId: mockedMeasurementId,
@@ -355,8 +353,6 @@ describe('Create measurement request', () => {
 				rawOutput: '',
 			});
 		});
-
-		probe.emit('probe:measurement:ack', null, () => {});
 
 		probe.emit('probe:measurement:progress', {
 			testId: '0',

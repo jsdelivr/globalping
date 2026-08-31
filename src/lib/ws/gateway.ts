@@ -1,5 +1,4 @@
 import { listenMeasurementRequest } from '../../measurement/handler/request.js';
-import { handleMeasurementAck } from '../../measurement/handler/ack.js';
 import { handleMeasurementResult } from '../../measurement/handler/result.js';
 import { handleMeasurementProgress } from '../../measurement/handler/progress.js';
 import { handleStatusUpdate } from '../../probe/handler/status.js';
@@ -52,7 +51,6 @@ export const initGateway = (ioContext: IoContext) => {
 			subscribeWithHandler(socket, 'probe:dns:update', handleDnsUpdate(probe));
 			subscribeWithHandler(socket, 'probe:stats:report', handleStatsReport(probe));
 			socket.onAnyOutgoing(listenMeasurementRequest(probe));
-			subscribeWithHandler(socket, 'probe:measurement:ack', handleMeasurementAck(probe));
 			subscribeWithHandler(socket, 'probe:measurement:progress', handleMeasurementProgress(probe, measurementRunner));
 			subscribeWithHandler(socket, 'probe:measurement:result', handleMeasurementResult(probe, measurementRunner));
 			subscribeWithHandler(socket, 'probe:adoption:ready', handleAdoptionServerStart(probe));
