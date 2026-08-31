@@ -19,7 +19,7 @@ export const statsSchema = Joi.object<ProbeStats>({
 		})).required(),
 	}).required(),
 	jobs: Joi.object({
-		count: Joi.number().required(),
+		count: Joi.number().integer().required(),
 	}).required(),
 }).required();
 

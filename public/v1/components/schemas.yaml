@@ -1338,7 +1338,7 @@ components:
       type: number
       description: The round-trip time for this packet.
     TimingPacketTtl:
-      type: number
+      type: integer
       description: The time-to-live value of this packet.
     TimingHttpTotalNullable:
       allOf:
@@ -1413,7 +1413,7 @@ components:
           $ref: 'schemas.yaml#/components/schemas/TlsKeyType'
         keyBits:
           type:
-            - number
+            - integer
             - 'null'
           description: The size of the used key, or `null` for unrecognized types.
         serialNumber:

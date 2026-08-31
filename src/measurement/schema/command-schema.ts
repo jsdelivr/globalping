@@ -85,7 +85,7 @@ const allowedMtrProtocols = [ 'UDP', 'TCP', 'ICMP' ];
 
 export const mtrSchema = Joi.object({
 	protocol: Joi.string().valid(...allowedMtrProtocols).insensitive().default(COMMAND_DEFAULTS.mtr.protocol),
-	packets: Joi.number().min(1).max(16).default(COMMAND_DEFAULTS.mtr.packets),
+	packets: Joi.number().integer().min(1).max(16).default(COMMAND_DEFAULTS.mtr.packets),
 	port: Joi.number().port().default(COMMAND_DEFAULTS.mtr.port),
 	ipVersion: ipVersionSchema,
 }).default().messages(schemaErrorMessages);
@@ -98,7 +98,7 @@ const pingTargetSchema = Joi.alternatives()
 	.messages(schemaErrorMessages);
 
 export const pingSchema = Joi.object({
-	packets: Joi.number().min(1).max(16).default(COMMAND_DEFAULTS.ping.packets),
+	packets: Joi.number().integer().min(1).max(16).default(COMMAND_DEFAULTS.ping.packets),
 	protocol: Joi.string().valid('TCP', 'ICMP').insensitive().default(COMMAND_DEFAULTS.ping.protocol),
 	port: Joi.number().port().default(COMMAND_DEFAULTS.ping.port),
 	ipVersion: ipVersionSchema,
