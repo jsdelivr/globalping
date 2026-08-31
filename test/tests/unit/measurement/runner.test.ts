@@ -29,6 +29,8 @@ describe('MeasurementRunner', () => {
 	const router = sandbox.createStubInstance(ProbeRouter);
 	const recordMeasurement = sandbox.stub();
 	const recordMeasurementTime = sandbox.stub();
+	const recordNoProbesFound = sandbox.stub();
+	const recordMeasurementCompleted = sandbox.stub();
 	const rateLimit = sandbox.stub();
 	const precheckRateLimit = sandbox.stub();
 	let runner: MeasurementRunner;
@@ -45,6 +47,8 @@ describe('MeasurementRunner', () => {
 			metricsAgent: {
 				recordMeasurement,
 				recordMeasurementTime,
+				recordNoProbesFound,
+				recordMeasurementCompleted,
 			},
 		});
 

@@ -23,6 +23,30 @@ export class MetricsAgent {
 		this.incrementCounter(`gp.probe.disconnect_${type.replaceAll(' ', '_')}`);
 	}
 
+	recordProbeSyncGap (operation: 'push' | 'pull', value: number): void {
+		this.recordStats(`gp.probe_sync.${operation}_gap.ms`, value);
+	}
+
+	recordProbeSyncPullEvents (eventType: 'alive' | 'reload' | 'remove' | 'update' | 'stats', value: number): void {
+		this.incrementCounter(`gp.probe_sync.pull.event.count.${eventType}`, value);
+	}
+
+	recordNoProbesFound (): void {
+		this.incrementCounter('gp.measurement.no_probes_found.count');
+	}
+
+	recordMeasurementCompleted (type: string): void {
+		this.incrementCounter(`gp.measurement.completed.count.${type}`);
+		this.incrementCounter('gp.measurement.completed.count.total');
+	}
+
+	recordMeasurementTimeout (type: string, testCount: number): void {
+		this.incrementCounter(`gp.measurement.timeout.count.${type}`);
+		this.incrementCounter('gp.measurement.timeout.count.total');
+		this.incrementCounter(`gp.test.timeout.count.${type}`, testCount);
+		this.incrementCounter('gp.test.timeout.count.total', testCount);
+	}
+
 	private incrementCounter (name: string, value: number = 1): void {
 		if (!this.counters[name]) {
 			this.registerCounter(name);

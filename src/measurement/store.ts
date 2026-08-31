@@ -25,6 +25,7 @@ import { MeasurementStoreOffloader } from './store-offloader.js';
 import { measurementStoreClient } from '../lib/sql/client.js';
 import { scopedFlight } from '../lib/single-flight.js';
 import type { ExportMeta } from './types.js';
+import { metricsAgent } from '../lib/metrics.js';
 
 const logger = scopedLogger('store');
 const singleFlight = scopedFlight('store');
@@ -191,14 +192,21 @@ export class MeasurementStore {
 		}
 
 		const measurements = (await Bluebird.map(ids, async (id) => {
-			const recordBuffer = await this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).markFinishedByTimeout(id);
-			return parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
+			const result = await this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).markFinishedByTimeout(id);
+
+			if (!result) {
+				return null;
+			}
+
+			const measurement = await parseCompressedJsonBuffer<MeasurementRecord>(result.recordBuffer);
+			return measurement && { measurement, timedOutTests: result.timedOutTests };
 		}, { concurrency: 32 })).filter(is.truthy);
 
 		await this.redis.zRem('gp:in-progress-timeouts', ids);
 
-		for (const measurement of measurements) {
+		for (const { measurement, timedOutTests } of measurements) {
 			this.offloader.enqueueForOffload(measurement);
+			metricsAgent.recordMeasurementTimeout(measurement.type, timedOutTests);
 		}
 	}
 

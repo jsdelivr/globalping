@@ -29,6 +29,7 @@ export class MeasurementRunner {
 		const ipVersion = userRequest.measurementOptions?.ipVersion;
 
 		if (allProbes.length === 0) {
+			metricsAgent.recordNoProbesFound();
 			throw createHttpError(422, `No matching IPv${ipVersion} probes available.`, { type: 'no_probes_found' });
 		}
 
@@ -41,6 +42,8 @@ export class MeasurementRunner {
 
 		if (onlineProbesMap.size) {
 			this.sendToProbes(measurementId, onlineProbesMap, request);
+		} else {
+			metricsAgent.recordMeasurementCompleted(request.type);
 		}
 
 		metricsAgent.recordMeasurement(request.type, onlineProbesMap.size);
@@ -56,6 +59,7 @@ export class MeasurementRunner {
 		const record = await this.store.storeMeasurementResult(data);
 
 		if (record) {
+			metricsAgent.recordMeasurementCompleted(record.type);
 			metricsAgent.recordMeasurementTime(record.type, Date.now() - new Date(record.createdAt).getTime());
 		}
 	}

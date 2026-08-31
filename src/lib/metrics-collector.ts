@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { Queue as BullQueue } from 'bullmq';
 import { monitorEventLoopDelay } from 'node:perf_hooks';
 import type { Knex } from 'knex';
 import type { Pool } from 'tarn';
@@ -9,9 +10,11 @@ import { USERS_TABLE } from './http/auth.js';
 import { dashboardClient } from './sql/client.js';
 import type { IoContext } from './server.js';
 import { registerGuardedMetric } from './metrics.js';
+import { getMeasurementStoreFallbackQueueConnectionOptions, MEASUREMENT_STORE_FALLBACK_QUEUE_NAME } from '../measurement/store-offloader.js';
 
 const logger = scopedLogger('metrics');
 const eventLoopMonitorResolution = 10;
+const measurementOffloadPendingStates = [ 'waiting', 'active', 'delayed', 'paused' ] as const;
 
 export class MetricsCollector {
 	private readonly asyncSeries: Record<string, number[]> = {};
@@ -22,6 +25,7 @@ export class MetricsCollector {
 		private readonly redis: RedisCluster,
 		private readonly sql: Knex,
 		private readonly fetchProbes: IoContext['fetchProbes'],
+		private readonly measurementOffloadQueue: BullQueue,
 	) {}
 
 	run (): void {
@@ -63,6 +67,27 @@ export class MetricsCollector {
 			// 1 global key tracks the in-progress measurements
 			return Math.round((dbSize - awaitingSize - 1) / 2);
 		}, 60 * 1000);
+
+		this.registerAsyncGroupCollector('measurement cleanup stats', async () => {
+			const now = Date.now();
+			const [ inProgressCount, pendingCleanupCount ] = await Promise.all([
+				this.redis.zCard('gp:in-progress-timeouts'),
+				this.redis.zCount('gp:in-progress-timeouts', '-inf', now),
+			]);
+
+			return {
+				'gp.measurement.in_progress.count': inProgressCount,
+				'gp.measurement.cleanup.pending.count': pendingCleanupCount,
+			};
+		}, 10 * 1000);
+
+		this.registerAsyncGroupCollector('measurement offload stats', async () => {
+			const counts = await this.measurementOffloadQueue.getJobCounts(...measurementOffloadPendingStates);
+
+			return {
+				'gp.measurement.offload.pending.count': _.sum(Object.values(counts)),
+			};
+		}, 10 * 1000);
 
 		this.registerAsyncCollector(`gp.probe.count.local`, async () => {
 			return this.fetchRawLocalSockets().then(sockets => sockets.length);
@@ -151,5 +176,9 @@ export class MetricsCollector {
 }
 
 export const initMetricsCollector = (fetchRawLocalSockets: IoContext['fetchRawLocalSockets'], fetchProbes: IoContext['fetchProbes']) => {
-	return new MetricsCollector(fetchRawLocalSockets, getMeasurementRedisClient(), dashboardClient, fetchProbes);
+	const measurementOffloadQueue = new BullQueue(MEASUREMENT_STORE_FALLBACK_QUEUE_NAME, {
+		connection: getMeasurementStoreFallbackQueueConnectionOptions(),
+	});
+
+	return new MetricsCollector(fetchRawLocalSockets, getMeasurementRedisClient(), dashboardClient, fetchProbes, measurementOffloadQueue);
 };

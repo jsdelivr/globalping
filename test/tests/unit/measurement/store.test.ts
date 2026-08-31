@@ -152,10 +152,13 @@ describe('measurement store', () => {
 
 		redisMock.claimTimedOutMeasurements.resolves([ mockedMeasurementId1, mockedMeasurementId2 ]);
 
-		redisMock.markFinishedByTimeout.onFirstCall().resolves(Buffer.concat([
-			Buffer.from([ 0x00 ]),
-			Buffer.from(JSON.stringify(finishedRecord)),
-		]));
+		redisMock.markFinishedByTimeout.onFirstCall().resolves({
+			recordBuffer: Buffer.concat([
+				Buffer.from([ 0x00 ]),
+				Buffer.from(JSON.stringify(finishedRecord)),
+			]),
+			timedOutTests: 1,
+		});
 
 		redisMock.markFinishedByTimeout.onSecondCall().resolves(null);
 
