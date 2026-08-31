@@ -103,7 +103,7 @@
 		"husky": "^9.1.7",
 		"lint-staged": "^17.0.8",
 		"mocha": "11.6.0",
-		"mock-fs": "^5.5.0",
+		"mock-fs": "github:MartinKolarik/mock-fs#gh-447",
 		"nock": "^14.0.16",
 		"relative-day-utc": "^1.3.0",
 		"rimraf": "^6.1.3",
