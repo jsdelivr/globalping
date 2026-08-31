@@ -45,7 +45,7 @@ export const initGateway = (ioContext: IoContext) => {
 			// Handlers
 			subscribeWithHandler(socket, 'probe:status:update', handleStatusUpdate(probe));
 			subscribeWithAckHandler(socket, 'probe:logs', handleNewLogs(probe));
-			subscribeWithHandler(socket, 'probe:alt-ips', handleAltIps(probe, altIpsClient));
+			subscribeWithAckHandler(socket, 'probe:alt-ips', handleAltIps(probe, altIpsClient));
 			subscribeWithHandler(socket, 'probe:isIPv6Supported:update', handleIsIPv6SupportedUpdate(probe));
 			subscribeWithHandler(socket, 'probe:isIPv4Supported:update', handleIsIPv4SupportedUpdate(probe));
 			subscribeWithHandler(socket, 'probe:dns:update', handleDnsUpdate(probe));
