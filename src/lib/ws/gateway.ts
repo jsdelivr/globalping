@@ -17,11 +17,12 @@ import { handleAltIps } from '../../probe/handler/alt-ips.js';
 import { handleAdoptionServerStart } from '../../probe/handler/local-adoption-server.js';
 import { handleSettingsUpdate } from '../../probe/handler/settings.js';
 import type { IoContext } from '../server.js';
+import { metricsAgent } from '../metrics.js';
 
 const logger = scopedLogger('gateway');
 
 export const initGateway = (ioContext: IoContext) => {
-	const { io, adoptedProbes, probeOverride, metricsAgent, adoptionToken, probeIpLimit, measurementRunner, altIpsClient } = ioContext;
+	const { io, adoptedProbes, probeOverride, adoptionToken, probeIpLimit, measurementRunner, altIpsClient } = ioContext;
 
 	io
 		.of(PROBES_NAMESPACE)

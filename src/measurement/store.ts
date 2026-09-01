@@ -1,6 +1,5 @@
 import { promisify } from 'node:util';
 import { brotliDecompress as brotliDecompressCallback } from 'node:zlib';
-import is from '@sindresorhus/is';
 import Bluebird from 'bluebird';
 import config from 'config';
 import _ from 'lodash';
@@ -25,6 +24,7 @@ import { MeasurementStoreOffloader } from './store-offloader.js';
 import { measurementStoreClient } from '../lib/sql/client.js';
 import { scopedFlight } from '../lib/single-flight.js';
 import type { ExportMeta } from './types.js';
+import { metricsAgent } from '../lib/metrics.js';
 
 const logger = scopedLogger('store');
 const singleFlight = scopedFlight('store');
@@ -178,8 +178,9 @@ export class MeasurementStore {
 		const record = await parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
 
 		if (record) {
-			await this.redis.zRem('gp:in-progress-timeouts', data.measurementId);
 			this.offloader.enqueueForOffload(record);
+			metricsAgent.recordMeasurementCompleted(record.type);
+			await this.redis.zRem('gp:in-progress-timeouts', data.measurementId);
 		}
 
 		return record;
@@ -190,16 +191,24 @@ export class MeasurementStore {
 			return;
 		}
 
-		const measurements = (await Bluebird.map(ids, async (id) => {
-			const recordBuffer = await this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).markFinishedByTimeout(id);
-			return parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
-		}, { concurrency: 32 })).filter(is.truthy);
+		await Bluebird.map(ids, async (id) => {
+			const result = await this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).markFinishedByTimeout(id);
+
+			if (!result) {
+				return;
+			}
+
+			const measurement = await parseCompressedJsonBuffer<MeasurementRecord>(result.recordBuffer);
+
+			if (!measurement) {
+				return;
+			}
+
+			this.offloader.enqueueForOffload(measurement);
+			metricsAgent.recordMeasurementTimeout(measurement.type, result.timedOutTests);
+		}, { concurrency: 32 });
 
 		await this.redis.zRem('gp:in-progress-timeouts', ids);
-
-		for (const measurement of measurements) {
-			this.offloader.enqueueForOffload(measurement);
-		}
 	}
 
 	async cleanup () {

@@ -15,21 +15,30 @@ import { MeasurementStore } from './store.js';
 const logger = scopedLogger('db-store');
 const brotliCompress = promisify(brotliCompressCallback);
 
+export const MEASUREMENT_STORE_FALLBACK_QUEUE_NAME = 'measurement-db-store-fallback';
+
+export const getMeasurementStoreFallbackQueueConnectionOptions = () => {
+	const url = config.get<string>('redis.standalonePersistentNoEviction.url');
+	const password = config.get<string>('redis.sharedOptions.password');
+	const tls = config.get<boolean>('redis.sharedOptions.socket.tls');
+
+	return { url, password, tls };
+};
+
 const compressRecord = (record: string): Promise<Buffer> => {
 	return brotliCompress(record, { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 5 } });
 };
 
 export class MeasurementStoreOffloader {
 	private readonly fallbackQueue: BullQueue;
-	private readonly fallbackQueueName = 'measurement-db-store-fallback';
 	private readonly offloadQueues: Record<UserTier, InstanceType<typeof BatchQueue>>;
 
 	constructor (
 		private readonly measurementStoreDb: Knex,
 		private readonly primaryMeasurementStore: MeasurementStore,
 	) {
-		this.fallbackQueue = new BullQueue<{ tier: UserTier; ids: string[] }>(this.fallbackQueueName, {
-			connection: this.getBullConnectionOptions(),
+		this.fallbackQueue = new BullQueue<{ tier: UserTier; ids: string[] }>(MEASUREMENT_STORE_FALLBACK_QUEUE_NAME, {
+			connection: getMeasurementStoreFallbackQueueConnectionOptions(),
 			defaultJobOptions: {
 				attempts: 28,
 				backoff: { type: 'custom' },
@@ -72,12 +81,12 @@ export class MeasurementStoreOffloader {
 
 	startRetryWorker () {
 		const worker = new Worker<{ tier: UserTier; ids: string[] }>(
-			this.fallbackQueueName,
+			MEASUREMENT_STORE_FALLBACK_QUEUE_NAME,
 			async (job) => {
 				await this.insertBatchToDbByIds(job.data.tier, job.data.ids);
 			},
 			{
-				connection: this.getBullConnectionOptions(),
+				connection: getMeasurementStoreFallbackQueueConnectionOptions(),
 				concurrency: 4,
 				settings: {
 					backoffStrategy (attempts) {
@@ -120,14 +129,6 @@ export class MeasurementStoreOffloader {
 				}
 			}
 		}, { batchSize: 100, timeout: 2000 });
-	}
-
-	private getBullConnectionOptions () {
-		const url = config.get<string>('redis.standalonePersistentNoEviction.url');
-		const password = config.get<string>('redis.sharedOptions.password');
-		const tls = config.get<boolean>('redis.sharedOptions.socket.tls');
-
-		return { url, password, tls };
 	}
 
 	private getTierFromMeasurementId (id: string): UserTier {

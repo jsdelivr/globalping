@@ -5,7 +5,7 @@ import apmAgent from 'elastic-apm-node';
 import { PROBES_NAMESPACE } from '../lib/ws/server.js';
 import type { ProbeRouter } from '../probe/router.js';
 import type { ServerProbe } from '../probe/types.js';
-import type { MetricsAgent } from '../lib/metrics.js';
+import { metricsAgent } from '../lib/metrics.js';
 import type { MeasurementStore } from './store.js';
 import { getMeasurementStore } from './store.js';
 import type { MeasurementRequest, MeasurementResultMessage, MeasurementProgressMessage, UserRequest, MeasurementRequestMessage } from './types.js';
@@ -19,7 +19,6 @@ export class MeasurementRunner {
 		private readonly router: ProbeRouter,
 		private readonly precheckRateLimit: typeof precheckPostMeasurementRateLimit,
 		private readonly checkRateLimit: typeof checkPostMeasurementRateLimit,
-		private readonly metrics: MetricsAgent,
 	) {}
 
 	async run (ctx: ExtendedContext): Promise<{ measurementId: string; probesCount: number }> {
@@ -30,6 +29,7 @@ export class MeasurementRunner {
 		const ipVersion = userRequest.measurementOptions?.ipVersion;
 
 		if (allProbes.length === 0) {
+			metricsAgent.recordNoProbesFound();
 			throw createHttpError(422, `No matching IPv${ipVersion} probes available.`, { type: 'no_probes_found' });
 		}
 
@@ -42,9 +42,11 @@ export class MeasurementRunner {
 
 		if (onlineProbesMap.size) {
 			this.sendToProbes(measurementId, onlineProbesMap, request);
+		} else {
+			metricsAgent.recordMeasurementCompleted(request.type);
 		}
 
-		this.metrics.recordMeasurement(request.type, onlineProbesMap.size);
+		metricsAgent.recordMeasurement(request.type, onlineProbesMap.size);
 
 		return { measurementId, probesCount: allProbes.length };
 	}
@@ -57,7 +59,7 @@ export class MeasurementRunner {
 		const record = await this.store.storeMeasurementResult(data);
 
 		if (record) {
-			this.metrics.recordMeasurementTime(record.type, Date.now() - new Date(record.createdAt).getTime());
+			metricsAgent.recordMeasurementTime(record.type, Date.now() - new Date(record.createdAt).getTime());
 		}
 	}
 
@@ -95,13 +97,12 @@ export class MeasurementRunner {
 	}
 }
 
-export const initMeasurementRunner = (io: Server, router: ProbeRouter, metricsAgent: MetricsAgent) => {
+export const initMeasurementRunner = (io: Server, router: ProbeRouter) => {
 	return new MeasurementRunner(
 		io,
 		getMeasurementStore(),
 		router,
 		precheckPostMeasurementRateLimit,
 		checkPostMeasurementRateLimit,
-		metricsAgent,
 	);
 };
