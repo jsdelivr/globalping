@@ -2076,6 +2076,16 @@ describe('command schema', async () => {
 	});
 
 	describe('mtr', () => {
+		it('should fail (fractional packets)', () => {
+			const valid = globalSchema.validate({
+				type: 'mtr',
+				target: 'abc.com',
+				measurementOptions: { packets: 3.5 },
+			}, { convert: true });
+
+			expect(valid.error?.message).to.equal('"measurementOptions.packets" must be an integer');
+		});
+
 		it('should fail (missing values)', () => {
 			const input = {
 				type: 'mtr',

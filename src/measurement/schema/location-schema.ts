@@ -52,7 +52,7 @@ export const schema = Joi.alternatives().try(
 		asn: Joi.number().integer().positive(),
 		magic: Joi.string().min(1).max(128).custom(validateMagic).custom(normalizeValue),
 		tags: Joi.array().max(32).items(Joi.string().min(1).max(128).custom(normalizeValue)),
-		limit: Joi.number().min(1).when('$user.id', {
+		limit: Joi.number().integer().min(1).when('$user.id', {
 			is: Joi.string().required(),
 			then: Joi.number().max(authenticatedTestsPerLocation),
 			otherwise: Joi.number().max(anonymousTestsPerLocation),

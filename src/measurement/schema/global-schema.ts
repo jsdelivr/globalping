@@ -17,7 +17,7 @@ export const schema = Joi.object({
 	measurementOptions: measurementSchema,
 	timeout: Joi.number().integer().min(5).max(30).default((request: MeasurementRequest) => getMeasurementTimeout(request.type, request.measurementOptions)),
 	locations: locationSchema,
-	limit: Joi.number().min(1).when('$user.id', {
+	limit: Joi.number().integer().min(1).when('$user.id', {
 		is: Joi.string().required(),
 		then: Joi.number().max(authenticatedTestsPerMeasurement),
 		otherwise: Joi.number().max(anonymousTestsPerMeasurement),
