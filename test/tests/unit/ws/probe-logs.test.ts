@@ -6,7 +6,7 @@ import type { ServerProbe } from '../../../../src/probe/types.js';
 
 describe('probe logs', () => {
 	let sandbox: sinon.SinonSandbox;
-	let logHandler: (logMessage: LogMessage, callback?: () => void) => Promise<void>;
+	let logHandler: (logMessage: LogMessage, callback?: (response: 'success' | 'discard') => void) => Promise<void>;
 
 	let transactionStub: {
 		xAdd: sinon.SinonStub;
@@ -43,7 +43,8 @@ describe('probe logs', () => {
 	});
 
 	it('should throw on invalid inputs', async () => {
-		const result1 = await logHandler({ skipped: 0 } as LogMessage).catch(err => err);
+		const callback = sandbox.stub();
+		const result1 = await logHandler({ skipped: 0 } as LogMessage, callback).catch(err => err);
 		const result2 = await logHandler({ logs: [] } as unknown as LogMessage).catch(err => err);
 		const result3 = await logHandler({ skipped: 1, logs: [{ invalid: true }] } as unknown as LogMessage).catch(err => err);
 		const result4 = await logHandler({ skipped: 1, logs: [], extra: true } as LogMessage).catch(err => err);
@@ -57,23 +58,36 @@ describe('probe logs', () => {
 		expect(result3).to.be.instanceof(Error);
 		expect(result4).to.be.instanceof(Error);
 		expect(result5).to.be.instanceof(Error);
-
+		expect(callback.calledOnceWithExactly('discard')).to.equal(true);
 		expect(multiStub.called).to.equal(false);
 		expect(transactionStub.xAdd.called).to.equal(false);
 		expect(transactionStub.pExpire.called).to.equal(false);
 		expect(transactionStub.exec.called).to.equal(false);
 	});
 
+	it('throws when writing logs fails', async () => {
+		const callback = sandbox.stub();
+		const error = new Error('Redis write failed.');
+		transactionStub.exec.rejects(error);
+
+		const result = await logHandler({ skipped: 0, logs: [] }, callback).catch(err => err);
+
+		expect(result).to.equal(error);
+		expect(callback.called).to.equal(false);
+	});
+
 	it('writes only provided logs when skipped = 0', async () => {
+		const callback = sandbox.stub();
 		const logs = [
 			{ message: '1', timestamp: 't1', level: 'info', scope: 'system' },
 			{ message: '2'.repeat(8192), timestamp: 't2', level: 'warn', scope: 'system' },
 		];
 
-		await logHandler({ skipped: 0, logs });
+		await logHandler({ skipped: 0, logs }, callback);
 
 		expect(multiStub.calledOnce).to.equal(true);
 		expect(transactionStub.xAdd.callCount).to.equal(2);
+		expect(callback.calledOnceWithExactly('success')).to.equal(true);
 
 		for (let i = 0; i < logs.length; i++) {
 			const call = transactionStub.xAdd.getCall(i);

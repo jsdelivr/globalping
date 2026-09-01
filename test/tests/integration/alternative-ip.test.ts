@@ -1,4 +1,5 @@
 import type { Server } from 'node:http';
+import { setTimeout } from 'node:timers/promises';
 import nock from 'nock';
 import * as sinon from 'sinon';
 import request, { type Agent } from 'supertest';
@@ -150,5 +151,16 @@ describe('Alternative IPs', () => {
 
 		expect(ack.callCount).to.equal(1);
 		expect(ack.args[0]![0]).to.deep.equal({ addedAltIps: [], rejectedIpsToReasons: { '1.2.3.4': 'Invalid alt IP token.' } });
+	});
+
+	it('should acknowledge invalid alt ip updates', async () => {
+		nockGeoIpProviders();
+		const probe = await addFakeProbe();
+		const response = await Promise.race([
+			new Promise(resolve => probe.emit('probe:alt-ips', null as never, (response: unknown) => resolve(response))),
+			setTimeout(1000, 'timeout'),
+		]);
+
+		expect(response).to.equal(null);
 	});
 });
