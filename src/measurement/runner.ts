@@ -59,7 +59,6 @@ export class MeasurementRunner {
 		const record = await this.store.storeMeasurementResult(data);
 
 		if (record) {
-			metricsAgent.recordMeasurementCompleted(record.type);
 			metricsAgent.recordMeasurementTime(record.type, Date.now() - new Date(record.createdAt).getTime());
 		}
 	}
