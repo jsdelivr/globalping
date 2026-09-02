@@ -10,14 +10,17 @@ import { dashboardClient } from '../../../../src/lib/sql/client.js';
 import { auth, GP_TOKENS_TABLE, Token } from '../../../../src/lib/http/auth.js';
 import { authenticatedRateLimiter } from '../../../../src/lib/rate-limiter/rate-limiter-post.js';
 import type { AuthenticateOptions } from '../../../../src/lib/http/middleware/authenticate.js';
+import { createUser } from '../../../utils/fixtures.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
 
 describe('authenticate', () => {
 	let app: Server;
 	let requestAgent: Agent;
+	let user: { id: string; accountId: string };
 
 	before(async () => {
+		user = await createUser(dashboardClient);
 		app = await getTestServer();
 		requestAgent = request(app);
 		nockGeoIpProviders();
@@ -50,7 +53,8 @@ describe('authenticate', () => {
 		it('should accept if valid token was passed', async () => {
 			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
-				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				user_created: user.id,
+				account_id: user.accountId,
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			});
 
@@ -68,7 +72,8 @@ describe('authenticate', () => {
 		it('should accept if origin is correct', async () => {
 			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
-				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				user_created: user.id,
+				account_id: user.accountId,
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 				origins: JSON.stringify([ 'https://jsdelivr.com' ]),
 			});
@@ -88,7 +93,8 @@ describe('authenticate', () => {
 		it('should update "date_last_used" field', async () => {
 			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
-				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				user_created: user.id,
+				account_id: user.accountId,
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			});
 
@@ -114,7 +120,8 @@ describe('authenticate', () => {
 		it('should get token from db if it is not synced yet', async () => {
 			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
-				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				user_created: user.id,
+				account_id: user.accountId,
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			});
 
@@ -130,12 +137,13 @@ describe('authenticate', () => {
 		it('should use authenticatedTestsPerMeasurement limit for authenticated requests', async () => {
 			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
-				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				user_created: user.id,
+				account_id: user.accountId,
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			});
 
 			await auth.syncTokens();
-			await authenticatedRateLimiter.delete('89da69bd-a236-4ab7-9c5d-b5f52ce09959');
+			await authenticatedRateLimiter.delete(user.accountId);
 
 			await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer hf2fnprguymlgliirdk7qv23664c2xcr')
@@ -231,7 +239,8 @@ describe('authenticate', () => {
 		it('should reject if token is expired', async () => {
 			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
-				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				user_created: user.id,
+				account_id: user.accountId,
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 				expire: new Date('01-01-2024'),
 			});
@@ -250,7 +259,8 @@ describe('authenticate', () => {
 		it('should reject if previously not synced token is expired', async () => {
 			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
-				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				user_created: user.id,
+				account_id: user.accountId,
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 				expire: new Date('01-01-2024'),
 			});
@@ -267,7 +277,8 @@ describe('authenticate', () => {
 		it('should reject if origin is wrong', async () => {
 			await dashboardClient(GP_TOKENS_TABLE).insert({
 				name: 'test token',
-				user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				user_created: user.id,
+				account_id: user.accountId,
 				value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 				origins: JSON.stringify([ 'https://jsdelivr.com' ]),
 			});
@@ -289,7 +300,7 @@ describe('authenticate', () => {
 
 		it('should accept if valid cookie was passed', async () => {
 			const jwt = await new SignJWT({
-				id: 'cookie-user-id',
+				id: user.id,
 				app_access: true,
 			}).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
 

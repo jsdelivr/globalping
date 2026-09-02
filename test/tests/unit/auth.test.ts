@@ -35,6 +35,7 @@ describe('Auth', () => {
 		selectStub.onCall(1).resolves([{
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
+			account_id: 'account1',
 			user_github_username: 'gh_user1',
 			user_user_type: 'member',
 		}]);
@@ -47,6 +48,7 @@ describe('Auth', () => {
 		const user1 = await auth.validate('hf2fnprguymlgliirdk7qv23664c2xcr', 'https://jsdelivr.com');
 		expect(user1).to.deep.equal({
 			userId: 'user1',
+			accountId: 'account1',
 			username: 'gh_user1',
 			userType: 'member',
 			scopes: [],
@@ -60,6 +62,7 @@ describe('Auth', () => {
 		selectStub.onCall(3).resolves([{
 			value: '8YZ2pZoGQxfOeEGvUUkagX1yizZckq3weL+IN0chvU0=',
 			user_created: 'user2',
+			account_id: 'account2',
 			user_github_username: null,
 			user_user_type: 'member',
 		}]);
@@ -73,6 +76,7 @@ describe('Auth', () => {
 		const user2afterSync = await auth.validate('vumzijbzihrskmc2hj34yw22batpibmt', 'https://jsdelivr.com');
 		expect(user2afterSync).to.deep.equal({
 			userId: 'user2',
+			accountId: 'account2',
 			username: null,
 			userType: 'member',
 			scopes: [],
@@ -88,6 +92,7 @@ describe('Auth', () => {
 		selectStub.resolves([{
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
+			account_id: 'account1',
 			user_github_username: 'gh_user1',
 			user_user_type: 'member',
 		}]);
@@ -101,6 +106,7 @@ describe('Auth', () => {
 
 		expect(user).to.deep.equal({
 			userId: 'user1',
+			accountId: 'account1',
 			username: 'gh_user1',
 			userType: 'member',
 			scopes: [],
@@ -116,6 +122,7 @@ describe('Auth', () => {
 		selectStub.resolves([{
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
+			account_id: 'account1',
 			user_github_username: 'gh_user1',
 			user_user_type: 'member',
 		}]);
@@ -127,6 +134,7 @@ describe('Auth', () => {
 
 		expect(user).to.deep.equal({
 			userId: 'user1',
+			accountId: 'account1',
 			username: 'gh_user1',
 			userType: 'member',
 			scopes: [],
@@ -142,6 +150,7 @@ describe('Auth', () => {
 		selectStub.resolves([{
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
+			account_id: 'account1',
 			user_github_username: 'gh_user1',
 			date_last_used: new Date(),
 			user_user_type: 'member',
@@ -161,6 +170,7 @@ describe('Auth', () => {
 		selectStub.resolves([{
 			value: '/bSluuDrAPX9zIiZZ/hxEKARwOg+e//EdJgCFpmApbg=',
 			user_created: 'user1',
+			account_id: 'account1',
 			user_github_username: 'gh_user1',
 			user_user_type: 'member',
 		}]);

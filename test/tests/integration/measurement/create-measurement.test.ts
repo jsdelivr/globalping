@@ -7,6 +7,7 @@ import type { Socket } from 'socket.io-client';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { dashboardClient } from '../../../../src/lib/sql/client.js';
 import geoIpMocks from '../../../mocks/nock-geoip.json' with { type: 'json' };
+import { createUser } from '../../../utils/fixtures.js';
 
 describe('Create measurement', () => {
 	let addFakeProbe: () => Promise<Socket>;
@@ -717,16 +718,11 @@ describe('Create measurement', () => {
 
 		describe('adopted probes', () => {
 			before(async () => {
-				await dashboardClient('directus_users').insert({
-					id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
-					status: 'active',
-					adoption_token: 'adoptionTokenValue',
-					default_prefix: 'jsdelivr',
-				});
+				const user = await createUser(dashboardClient, { status: 'active', github_username: 'jsdelivr' });
 
 				await dashboardClient(DASH_PROBES_TABLE).insert({
 					id: randomUUID(),
-					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+					account_id: user.accountId,
 					lastSyncDate: new Date(),
 					ip: '1.2.3.4',
 					uuid: '11111111-1111-4111-8111-111111111111',
@@ -907,16 +903,11 @@ describe('Create measurement', () => {
 
 		describe('adopted probes + admin overrides', () => {
 			before(async () => {
-				await dashboardClient('directus_users').insert({
-					id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
-					status: 'active',
-					adoption_token: 'adoptionTokenValue',
-					default_prefix: 'jsdelivr',
-				});
+				const user = await createUser(dashboardClient, { status: 'active', github_username: 'jsdelivr' });
 
 				await dashboardClient(DASH_PROBES_TABLE).insert({
 					id: randomUUID(),
-					userId: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+					account_id: user.accountId,
 					lastSyncDate: new Date(),
 					ip: '1.2.3.4',
 					uuid: '11111111-1111-4111-8111-111111111111',

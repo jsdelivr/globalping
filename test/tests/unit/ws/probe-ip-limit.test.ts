@@ -11,15 +11,15 @@ describe('ProbeIpLimit', () => {
 	const disconnectBySocketId = sandbox.stub();
 	const getByIp = sandbox.stub();
 	const getByUuid = sandbox.stub();
-	const getUserIdByToken = sandbox.stub();
+	const getAccountIdByToken = sandbox.stub();
 	const adoptedProbes = { getByIp, getByUuid } as any;
-	const adoptionToken = { getUserIdByToken } as any;
+	const adoptionToken = { getAccountIdByToken } as any;
 	const createProbeIpLimit = () => new ProbeIpLimit(syncedProbeList, disconnectBySocketId, adoptedProbes, adoptionToken);
 
 	beforeEach(() => {
 		getByIp.returns(null);
 		getByUuid.returns(null);
-		getUserIdByToken.returnsArg(0);
+		getAccountIdByToken.returnsArg(0);
 		fetchProbes.resolves([]);
 		getProbes.returns([]);
 	});
@@ -189,7 +189,7 @@ describe('ProbeIpLimit', () => {
 		});
 
 		it('should group probes of the same user regardless of the adoption token', async () => {
-			getByIp.returns({ userId: 'user1' });
+			getByIp.returns({ accountId: 'user1' });
 
 			getProbes.returns([
 				getProbe('a', '2001:db8:0:1::1', { adoptionToken: 'user1', asn: 100, city: 'Paris' }),
@@ -348,7 +348,7 @@ describe('ProbeIpLimit', () => {
 			});
 
 			it('throws "user asn limit" for a code-adopted probe without a token when the user already has the limit of unique /64s', async () => {
-				getByIp.returns({ userId: 'user1' });
+				getByIp.returns({ accountId: 'user1' });
 
 				getProbes.returns([
 					getProbe('a', '2001:db8:0:1::1', { asn: 100, city: 'Paris' }),
@@ -361,7 +361,7 @@ describe('ProbeIpLimit', () => {
 			});
 
 			it('counts code-adopted probes of the same user when connecting with a token', async () => {
-				getByIp.returns({ userId: 'user1' });
+				getByIp.returns({ accountId: 'user1' });
 
 				getProbes.returns([
 					getProbe('a', '2001:db8:0:1::1', { asn: 100, city: 'Paris' }),

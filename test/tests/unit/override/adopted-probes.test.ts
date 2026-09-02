@@ -10,7 +10,7 @@ describe('AdoptedProbes', () => {
 	const defaultAdoption: Row = {
 		id: 'p-1',
 		name: 'probe-1',
-		userId: 'userId',
+		accountId: 'accountId',
 		ip: '1.1.1.1',
 		altIps: '[]',
 		uuid: '1-1-1-1-1',
@@ -304,8 +304,8 @@ describe('AdoptedProbes', () => {
 
 	it('class should prioritize adopted dProbe match over non-adopted', async () => {
 		sql.select.resolves([
-			{ ...defaultAdoption, id: 'p-1', uuid: '1-1-1-1-1', ip: '1.1.1.1', userId: 'userId', status: 'offline' },
-			{ ...defaultAdoption, id: 'p-2', uuid: '2-2-2-2-2', ip: '2.2.2.2', userId: null, status: 'offline' },
+			{ ...defaultAdoption, id: 'p-1', uuid: '1-1-1-1-1', ip: '1.1.1.1', accountId: 'accountId', status: 'offline' },
+			{ ...defaultAdoption, id: 'p-2', uuid: '2-2-2-2-2', ip: '2.2.2.2', accountId: null, status: 'offline' },
 		]);
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '2-2-2-2-2', ip: '1.1.1.1' }]);
@@ -585,14 +585,14 @@ describe('AdoptedProbes', () => {
 		expect(gotPostStub.args[0]![0]).to.equal('https://dash-directus.globalping.io/notifications');
 
 		expect((gotPostStub.args[0]![1] as any).json).to.deep.equal({
-			recipient: 'userId',
+			account: 'accountId',
 			type: 'probe_location_changed',
 			subject: 'Your probe\'s location has changed',
 			message: 'Globalping detected that your probe [probe-1](/probes/p-1) with IP address **1.1.1.1** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).',
 		});
 
 		expect((gotPostStub.args[1]![1] as any).json).to.deep.equal({
-			recipient: 'userId',
+			account: 'accountId',
 			type: 'probe_location_changed',
 			subject: 'Your probe\'s location has changed',
 			message: 'Globalping detected that your probe [probe-2](/probes/p-9) with IP address **9.9.9.9** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).',
@@ -708,14 +708,14 @@ describe('AdoptedProbes', () => {
 		expect(gotPostStub.callCount).to.equal(4);
 
 		expect((gotPostStub.args[2]![1] as any).json).to.deep.equal({
-			recipient: 'userId',
+			account: 'accountId',
 			type: 'probe_location_changed_back',
 			subject: 'Your probe\'s location has changed back',
 			message: 'Globalping detected that your probe [probe-1](/probes/p-1) with IP address **1.1.1.1** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 
 		expect((gotPostStub.args[3]![1] as any).json).to.deep.equal({
-			recipient: 'userId',
+			account: 'accountId',
 			type: 'probe_location_changed_back',
 			subject: `Your probe's location has changed back`,
 			message: 'Globalping detected that your probe [probe-2](/probes/p-9) with IP address **9.9.9.9** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
@@ -857,7 +857,7 @@ describe('AdoptedProbes', () => {
 
 		await adoptedProbes.syncDashboardData();
 
-		expect(sql.where.callCount).to.equal(2);
+		expect(sql.where.callCount).to.equal(3);
 		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
 		expect(sql.update.callCount).to.equal(1);
 
@@ -950,7 +950,7 @@ describe('AdoptedProbes', () => {
 
 	it('class should clear duplicate ip for offline probe of another user', async () => {
 		// There are two rows for the same probe in the db.
-		sql.select.resolves([ defaultAdoption, { ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', userId: 'anotherUserId' }]);
+		sql.select.resolves([ defaultAdoption, { ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', accountId: 'anotherAccountId' }]);
 
 		// Now probe connects with the uuid of first adoption and ip of second.
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '2.2.2.2' }]);
@@ -977,7 +977,7 @@ describe('AdoptedProbes', () => {
 			{
 				...defaultAdoption,
 				id: 'stay',
-				userId: 'user-1',
+				accountId: 'account-1',
 				ip: '1.1.1.1',
 				altIps: JSON.stringify([ '2.2.2.2' ]),
 				uuid: '1-1-1-1-1',
@@ -985,7 +985,7 @@ describe('AdoptedProbes', () => {
 			{
 				...defaultAdoption,
 				id: 'dup-primary-ip',
-				userId: 'user-2',
+				accountId: 'account-2',
 				ip: '2.2.2.2',
 				altIps: JSON.stringify([]),
 				uuid: '2-2-2-2-2',
@@ -994,7 +994,7 @@ describe('AdoptedProbes', () => {
 			{
 				...defaultAdoption,
 				id: 'dup-alt-ip',
-				userId: 'user-2',
+				accountId: 'account-2',
 				ip: '3.3.3.3',
 				altIps: JSON.stringify([ '2.2.2.2' ]),
 				uuid: '3-3-3-3-3',
@@ -1030,7 +1030,7 @@ describe('AdoptedProbes', () => {
 				id: 'p-2',
 				ip: '2.2.2.2',
 				uuid: '2-2-2-2-2',
-				userId: 'anotherUserId',
+				accountId: 'anotherAccountId',
 				altIps: JSON.stringify([ '1.1.1.1' ]),
 			},
 		]);
@@ -1063,8 +1063,8 @@ describe('AdoptedProbes', () => {
 		sql.select.resolves([
 			{ ...defaultAdoption, altIps: '["2.2.2.2"]' },
 			{ ...defaultAdoption, id: 'p-3', ip: '3.3.3.3', uuid: '3-3-3-3-3' },
-			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', userId: null },
-			{ ...defaultAdoption, id: 'p-4', ip: '4.4.4.4', uuid: '4-4-4-4-4', userId: null },
+			{ ...defaultAdoption, id: 'p-2', ip: '2.2.2.2', uuid: '2-2-2-2-2', accountId: null },
+			{ ...defaultAdoption, id: 'p-4', ip: '4.4.4.4', uuid: '4-4-4-4-4', accountId: null },
 		]);
 
 		getProbesWithAdminData.returns([
@@ -1194,7 +1194,7 @@ describe('AdoptedProbes', () => {
 
 		sql.select.resolves([{
 			...defaultAdoption,
-			userId: null,
+			accountId: null,
 			localAdoptionServer: null,
 		}]);
 
@@ -1225,7 +1225,7 @@ describe('AdoptedProbes', () => {
 
 		sql.select.resolves([{
 			...defaultAdoption,
-			userId: null,
+			accountId: null,
 			localAdoptionServer: JSON.stringify(expiredLocalAdoptionServer),
 		}]);
 
@@ -1256,7 +1256,7 @@ describe('AdoptedProbes', () => {
 
 		sql.select.resolves([{
 			...defaultAdoption,
-			userId: 'user-id',
+			accountId: 'account-id',
 			localAdoptionServer: JSON.stringify(validLocalAdoptionServer),
 		}]);
 
@@ -1382,7 +1382,7 @@ describe('AdoptedProbes', () => {
 		expect(updatedProbe.tags).to.equal(defaultConnectedProbe.tags);
 		expect(updatedProbe.normalizedTags).to.equal(defaultConnectedProbe.normalizedTags);
 		expect(updatedProbe.index).to.equal(defaultConnectedProbe.index);
-		expect(updatedProbe.owner).to.deep.equal({ id: 'userId' });
+		expect(updatedProbe.owner).to.deep.equal({ id: 'accountId' });
 	});
 
 	it('getUpdatedTags method should return null if there is nothing to update', async () => {
