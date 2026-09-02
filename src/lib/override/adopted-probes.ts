@@ -12,11 +12,11 @@ import { randomUUID } from 'crypto';
 
 const logger = scopedLogger('adopted-probes');
 
-export const DASH_PROBES_TABLE = 'gp_probes';
+export const PROBES_TABLE = 'gp_probes';
 export const USERS_TABLE = 'directus_users';
 export const ACCOUNTS_TABLE = 'gp_accounts';
 export const ORGS_TABLE = 'gp_orgs';
-export const ORG_MEMBERS_TABLE = 'gp_org_members';
+export const MEMBERS_TABLE = 'gp_org_members';
 const NOTIFICATIONS_TABLE = 'directus_notifications';
 const directusUrl = config.get<string>('dashboard.directusUrl');
 const systemKey = config.get<string>('systemApi.key');
@@ -374,8 +374,8 @@ export class AdoptedProbes {
 	}
 
 	public async fetchDProbes () {
-		const rows = await this.sql(DASH_PROBES_TABLE)
-			.leftJoin(ACCOUNTS_TABLE, `${DASH_PROBES_TABLE}.account_id`, `${ACCOUNTS_TABLE}.id`)
+		const rows = await this.sql(PROBES_TABLE)
+			.leftJoin(ACCOUNTS_TABLE, `${PROBES_TABLE}.account_id`, `${ACCOUNTS_TABLE}.id`)
 			// A suspended user's account resolves to nothing, so their probes lose the overrides, as before accounts.
 			.leftJoin(USERS_TABLE, function () {
 				this.on(`${ACCOUNTS_TABLE}.user`, `${USERS_TABLE}.id`)
@@ -384,10 +384,10 @@ export class AdoptedProbes {
 			.leftJoin(ORGS_TABLE, `${ACCOUNTS_TABLE}.org`, `${ORGS_TABLE}.id`)
 			// First item will be preserved, so we are prioritizing adopted and online probes.
 			// Sorting by id at the end so order is the same in any table state.
-			.orderByRaw(`IF (${DASH_PROBES_TABLE}.account_id IS NOT NULL, 1, 2), ${DASH_PROBES_TABLE}.lastSyncDate DESC, ${DASH_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${DASH_PROBES_TABLE}.status, 'ready') DESC, ${DASH_PROBES_TABLE}.id DESC`)
+			.orderByRaw(`IF (${PROBES_TABLE}.account_id IS NOT NULL, 1, 2), ${PROBES_TABLE}.lastSyncDate DESC, ${PROBES_TABLE}.onlineTimesToday DESC, FIELD(${PROBES_TABLE}.status, 'ready') DESC, ${PROBES_TABLE}.id DESC`)
 			.select<Row[]>(
-				`${DASH_PROBES_TABLE}.*`,
-				this.sql.raw(`IF(${USERS_TABLE}.id IS NOT NULL OR ${ORGS_TABLE}.id IS NOT NULL, ${DASH_PROBES_TABLE}.account_id, NULL) AS accountId`),
+				`${PROBES_TABLE}.*`,
+				this.sql.raw(`IF(${USERS_TABLE}.id IS NOT NULL OR ${ORGS_TABLE}.id IS NOT NULL, ${PROBES_TABLE}.account_id, NULL) AS accountId`),
 				this.sql.raw(`COALESCE(${ORGS_TABLE}.name, ${USERS_TABLE}.default_prefix) AS defaultPrefix`),
 				`${USERS_TABLE}.deprecated_prefix AS deprecatedPrefix`,
 				this.sql.raw(`COALESCE(${ORGS_TABLE}.public_probes, ${USERS_TABLE}.public_probes) AS publicProbes`),
@@ -762,7 +762,7 @@ export class AdoptedProbes {
 			key, (_.isObject(value) && !_.isDate(value)) ? JSON.stringify(value) : value,
 		]));
 
-		await this.sql(DASH_PROBES_TABLE).where({ id: dProbe.id }).update(formattedUpdate);
+		await this.sql(PROBES_TABLE).where({ id: dProbe.id }).update(formattedUpdate);
 
 		// If there is a custom city in a country that is no longer in the allowedCountries list, send notification to user.
 		if (update.country && dProbe.accountId) {
@@ -779,7 +779,7 @@ export class AdoptedProbes {
 	private async deleteDProbes (dProbesToDelete: DProbe[]) {
 		if (dProbesToDelete.length) {
 			logger.warn('Deleting ids:', dProbesToDelete.map(({ id }) => id));
-			await this.sql(DASH_PROBES_TABLE).whereIn('id', dProbesToDelete.map(({ id }) => id)).delete();
+			await this.sql(PROBES_TABLE).whereIn('id', dProbesToDelete.map(({ id }) => id)).delete();
 		}
 	}
 
@@ -806,18 +806,18 @@ export class AdoptedProbes {
 		});
 
 		logger.info('inserting dProbe:', { probe: dProbe });
-		await this.sql(DASH_PROBES_TABLE).insert(dProbe);
+		await this.sql(PROBES_TABLE).insert(dProbe);
 	}
 
 	// Directus resolves the account into recipients: the user for a personal account, the admins for an org one.
 	private async sendNotification (accountId: string, type: string, subject: string, message: string) {
 		const recipients = this.sql(ACCOUNTS_TABLE)
-			.leftJoin(ORG_MEMBERS_TABLE, function () {
-				this.on(`${ORG_MEMBERS_TABLE}.org`, `${ACCOUNTS_TABLE}.org`)
-					.andOnVal(`${ORG_MEMBERS_TABLE}.role`, '=', 'admin');
+			.leftJoin(MEMBERS_TABLE, function () {
+				this.on(`${MEMBERS_TABLE}.org`, `${ACCOUNTS_TABLE}.org`)
+					.andOnVal(`${MEMBERS_TABLE}.role`, '=', 'admin');
 			})
 			.where(`${ACCOUNTS_TABLE}.id`, accountId)
-			.select(this.sql.raw(`COALESCE(${ACCOUNTS_TABLE}.user, ${ORG_MEMBERS_TABLE}.user)`));
+			.select(this.sql.raw(`COALESCE(${ACCOUNTS_TABLE}.user, ${MEMBERS_TABLE}.user)`));
 
 		const existing = await this.sql(NOTIFICATIONS_TABLE)
 			.where({ message })

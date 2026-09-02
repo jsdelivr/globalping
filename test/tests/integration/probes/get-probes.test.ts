@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import request, { type Agent } from 'supertest';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate, getIoContext } from '../../../utils/server.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
-import { DASH_PROBES_TABLE } from '../../../../src/lib/override/adopted-probes.js';
+import { PROBES_TABLE } from '../../../../src/lib/override/adopted-probes.js';
 import { dashboardClient } from '../../../../src/lib/sql/client.js';
 import { PROBES_NAMESPACE } from '../../../../src/lib/ws/server.js';
 import { createUser } from '../../../utils/fixtures.js';
@@ -253,7 +253,7 @@ describe('Get Probes', () => {
 			before(async () => {
 				const user = await createUser(dashboardClient, { status: 'active', github_username: 'jimaek' });
 
-				await dashboardClient(DASH_PROBES_TABLE).insert({
+				await dashboardClient(PROBES_TABLE).insert({
 					id: randomUUID(),
 					account_id: user.accountId,
 					lastSyncDate: new Date(),
@@ -290,7 +290,7 @@ describe('Get Probes', () => {
 			});
 
 			after(async () => {
-				await dashboardClient(DASH_PROBES_TABLE).where({ city: 'Cordoba' }).delete();
+				await dashboardClient(PROBES_TABLE).where({ city: 'Cordoba' }).delete();
 				await dashboardClient('directus_users').delete();
 			});
 
@@ -328,7 +328,7 @@ describe('Get Probes', () => {
 			it('should send updated settings to the probe', async () => {
 				nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
 
-				await dashboardClient(DASH_PROBES_TABLE)
+				await dashboardClient(PROBES_TABLE)
 					.where({ uuid: '11111111-1111-4111-8111-111111111111' })
 					.update({ settings: JSON.stringify({ meteredConnection: true }) });
 
@@ -355,7 +355,7 @@ describe('Get Probes', () => {
 			before(async () => {
 				const user = await createUser(dashboardClient, { status: 'suspended', github_username: 'jimaek' });
 
-				await dashboardClient(DASH_PROBES_TABLE).insert({
+				await dashboardClient(PROBES_TABLE).insert({
 					id: randomUUID(),
 					account_id: user.accountId,
 					lastSyncDate: new Date(),
@@ -391,7 +391,7 @@ describe('Get Probes', () => {
 			});
 
 			after(async () => {
-				await dashboardClient(DASH_PROBES_TABLE).where({ city: 'Cordoba' }).delete();
+				await dashboardClient(PROBES_TABLE).where({ city: 'Cordoba' }).delete();
 				await dashboardClient('directus_users').delete();
 			});
 

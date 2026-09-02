@@ -16,12 +16,12 @@ describe('Create measurement', () => {
 	let getTestServer: any;
 	let getIoContext: any;
 	let requestAgent: Agent;
-	let DASH_PROBES_TABLE: string;
+	let PROBES_TABLE: string;
 
 	before(async () => {
 		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getCloudTags: () => [ 'gcp-us-west4', 'gcp' ], populateMemList: () => Promise.resolve() });
 		({ getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate, getIoContext } = await import('../../../utils/server.js'));
-		({ DASH_PROBES_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
+		({ PROBES_TABLE } = await import('../../../../src/lib/override/adopted-probes.js'));
 		const app = await getTestServer();
 		requestAgent = request(app);
 	});
@@ -720,7 +720,7 @@ describe('Create measurement', () => {
 			before(async () => {
 				const user = await createUser(dashboardClient, { status: 'active', github_username: 'jsdelivr' });
 
-				await dashboardClient(DASH_PROBES_TABLE).insert({
+				await dashboardClient(PROBES_TABLE).insert({
 					id: randomUUID(),
 					account_id: user.accountId,
 					lastSyncDate: new Date(),
@@ -758,7 +758,7 @@ describe('Create measurement', () => {
 			});
 
 			after(async () => {
-				await dashboardClient(DASH_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
+				await dashboardClient(PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
 				await dashboardClient('directus_users').delete();
 			});
 
@@ -905,7 +905,7 @@ describe('Create measurement', () => {
 			before(async () => {
 				const user = await createUser(dashboardClient, { status: 'active', github_username: 'jsdelivr' });
 
-				await dashboardClient(DASH_PROBES_TABLE).insert({
+				await dashboardClient(PROBES_TABLE).insert({
 					id: randomUUID(),
 					account_id: user.accountId,
 					lastSyncDate: new Date(),
@@ -952,7 +952,7 @@ describe('Create measurement', () => {
 			});
 
 			after(async () => {
-				await dashboardClient(DASH_PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
+				await dashboardClient(PROBES_TABLE).where({ city: 'Oklahoma City' }).delete();
 				await dashboardClient('directus_users').delete();
 				await dashboardClient('gp_location_overrides').where({ city: 'Paris' }).delete();
 			});
