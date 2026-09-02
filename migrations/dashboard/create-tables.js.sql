@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS gp_probes (
 	date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	date_updated TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	userId VARCHAR(255),
+	account_id VARCHAR(36),
 	ip VARCHAR(255) NULL,
 	altIps LONGTEXT COLLATE utf8mb4_bin DEFAULT '[]' NOT NULL,
 	uuid VARCHAR(255) NOT NULL,
@@ -71,6 +72,7 @@ CREATE TABLE IF NOT EXISTS `gp_tokens` (
 	`origins` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`origins`)),
 	`user_created` char(36) DEFAULT NULL,
 	`user_updated` char(36) DEFAULT NULL,
+	`account_id` varchar(36) DEFAULT NULL,
 	`value` varchar(255) DEFAULT NULL,
 	`scopes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`scopes`)),
 	`type` varchar(255) DEFAULT 'access_token',
@@ -87,9 +89,37 @@ CREATE TABLE IF NOT EXISTS gp_credits (
 	id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	AMOUNT INT,
-	user_id VARCHAR(36) NOT NULL,
+	user_id VARCHAR(36),
+	account_id VARCHAR(36),
 	CONSTRAINT gp_credits_user_id_unique UNIQUE (user_id),
+	CONSTRAINT gp_credits_account_id_unique UNIQUE (account_id),
 	CONSTRAINT gp_credits_amount_positive CHECK (`amount` >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS gp_orgs (
+	id CHAR(36) PRIMARY KEY,
+	name VARCHAR(255),
+	github_id VARCHAR(255),
+	adoption_token VARCHAR(255),
+	extra_adoption_tokens LONGTEXT COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`extra_adoption_tokens`)),
+	public_probes BOOLEAN NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS gp_org_members (
+	id CHAR(36) PRIMARY KEY,
+	org CHAR(36) NOT NULL,
+	user CHAR(36) NOT NULL,
+	role VARCHAR(255) NOT NULL,
+	CONSTRAINT gp_org_members_org_user_unique UNIQUE (org, user)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS gp_accounts (
+	id CHAR(36) PRIMARY KEY,
+	user CHAR(36),
+	org CHAR(36),
+	CONSTRAINT gp_accounts_user_unique UNIQUE (user),
+	CONSTRAINT gp_accounts_org_unique UNIQUE (org),
+	CONSTRAINT gp_accounts_user_xor_org CHECK (`user` IS NULL <> (`org` IS NULL))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS gp_location_overrides (

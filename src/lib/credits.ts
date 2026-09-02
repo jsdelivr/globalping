@@ -2,12 +2,12 @@ import { ipcWorker } from './ipc/ipc-worker.js';
 import { creditsMaster, type ConsumeResult, type Credits } from './credits-master.js';
 
 export class CreditsWorker implements Credits {
-	async consume (userId: string, credits: number): Promise<ConsumeResult> {
-		return ipcWorker.request('credits', 'consume', [ userId, credits ]) as Promise<ConsumeResult>;
+	async consume (accountId: string, credits: number): Promise<ConsumeResult> {
+		return ipcWorker.request('credits', 'consume', [ accountId, credits ]) as Promise<ConsumeResult>;
 	}
 
-	async getRemainingCredits (userId: string): Promise<number> {
-		return ipcWorker.request('credits', 'getRemainingCredits', [ userId ]) as Promise<number>;
+	async getRemainingCredits (accountId: string): Promise<number> {
+		return ipcWorker.request('credits', 'getRemainingCredits', [ accountId ]) as Promise<number>;
 	}
 }
 

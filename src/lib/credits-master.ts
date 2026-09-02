@@ -16,8 +16,8 @@ const logger = scopedLogger('credits-master');
 export type ConsumeResult = { isConsumed: boolean; remainingCredits: number };
 
 export interface Credits {
-	consume (userId: string, credits: number): Promise<ConsumeResult>;
-	getRemainingCredits (userId: string): Promise<number>;
+	consume (accountId: string, credits: number): Promise<ConsumeResult>;
+	getRemainingCredits (accountId: string): Promise<number>;
 }
 
 export class CreditsMaster implements Credits {
@@ -35,18 +35,18 @@ export class CreditsMaster implements Credits {
 		}, FLUSH_INTERVAL).unref();
 	}
 
-	async consume (userId: string, credits: number): Promise<ConsumeResult> {
-		const result = this.consumeFromBuffer(userId, credits);
+	async consume (accountId: string, credits: number): Promise<ConsumeResult> {
+		const result = this.consumeFromBuffer(accountId, credits);
 
 		if (result) { return result; }
 
-		const { isConsumed, remainingCredits } = await this.consumeFromDb(userId, credits);
-		return { isConsumed, remainingCredits: this.updateBuffer(userId, remainingCredits) };
+		const { isConsumed, remainingCredits } = await this.consumeFromDb(accountId, credits);
+		return { isConsumed, remainingCredits: this.updateBuffer(accountId, remainingCredits) };
 	}
 
-	async getRemainingCredits (userId: string): Promise<number> {
-		const remainingFromDb = await this.getRemainingCreditsFromDb(userId);
-		const entry = this.buffer.get(userId);
+	async getRemainingCredits (accountId: string): Promise<number> {
+		const remainingFromDb = await this.getRemainingCreditsFromDb(accountId);
+		const entry = this.buffer.get(accountId);
 
 		if (!entry) {
 			return remainingFromDb;
@@ -57,29 +57,29 @@ export class CreditsMaster implements Credits {
 	}
 
 	async flush (): Promise<void> {
-		await Bluebird.map([ ...this.buffer.entries() ].filter(([ , entry ]) => entry.pending), async ([ userId, entry ]) => {
+		await Bluebird.map([ ...this.buffer.entries() ].filter(([ , entry ]) => entry.pending), async ([ accountId, entry ]) => {
 			const flushed = entry.pending;
 			entry.pending = 0;
 
 			try {
-				await this.sql(CREDITS_TABLE).where({ user_id: userId }).update({ amount: this.sql.raw('GREATEST(amount - ?, 0)', [ flushed ]) });
+				await this.sql(CREDITS_TABLE).where({ account_id: accountId }).update({ amount: this.sql.raw('GREATEST(amount - ?, 0)', [ flushed ]) });
 			} catch (error) {
 				entry.pending += flushed;
-				this.buffer.set(userId, entry);
+				this.buffer.set(accountId, entry);
 				logger.error('Failed to flush buffered credits.', error);
 				return;
 			}
 
 			try {
-				entry.remaining = Math.max(await this.getRemainingCreditsFromDb(userId) - entry.pending, 0);
+				entry.remaining = Math.max(await this.getRemainingCreditsFromDb(accountId) - entry.pending, 0);
 			} catch (error) {
 				logger.error('Failed to refresh the remaining credits.', error);
 			}
 		}, { concurrency: 8 });
 	}
 
-	private consumeFromBuffer (userId: string, credits: number): ConsumeResult | null {
-		const entry = this.buffer.get(userId);
+	private consumeFromBuffer (accountId: string, credits: number): ConsumeResult | null {
+		const entry = this.buffer.get(accountId);
 
 		if (!entry || entry.remaining - credits < MIN_CREDITS_FOR_BUFFER) {
 			return null;
@@ -87,18 +87,18 @@ export class CreditsMaster implements Credits {
 
 		entry.remaining -= credits;
 		entry.pending += credits;
-		this.buffer.set(userId, entry);
+		this.buffer.set(accountId, entry);
 		return { isConsumed: true, remainingCredits: entry.remaining };
 	}
 
-	private async consumeFromDb (userId: string, credits: number): Promise<ConsumeResult> {
+	private async consumeFromDb (accountId: string, credits: number): Promise<ConsumeResult> {
 		let numberOfUpdates: number;
 
 		try {
-			numberOfUpdates = await this.sql(CREDITS_TABLE).where({ user_id: userId }).update({ amount: this.sql.raw('amount - ?', [ credits ]) });
+			numberOfUpdates = await this.sql(CREDITS_TABLE).where({ account_id: accountId }).update({ amount: this.sql.raw('amount - ?', [ credits ]) });
 		} catch (error) {
 			if (error && (error as Error & { errno?: number }).errno === ER_CONSTRAINT_FAILED_CODE) {
-				const remainingCredits = await this.getRemainingCreditsFromDb(userId);
+				const remainingCredits = await this.getRemainingCreditsFromDb(accountId);
 				return { isConsumed: false, remainingCredits };
 			}
 
@@ -109,27 +109,27 @@ export class CreditsMaster implements Credits {
 			return { isConsumed: false, remainingCredits: 0 };
 		}
 
-		const remainingCredits = await this.getRemainingCreditsFromDb(userId);
+		const remainingCredits = await this.getRemainingCreditsFromDb(accountId);
 		return { isConsumed: true, remainingCredits };
 	}
 
-	private async getRemainingCreditsFromDb (userId: string): Promise<number> {
-		const result = await this.sql(CREDITS_TABLE).where({ user_id: userId }).first<{ amount: number } | undefined>('amount');
+	private async getRemainingCreditsFromDb (accountId: string): Promise<number> {
+		const result = await this.sql(CREDITS_TABLE).where({ account_id: accountId }).first<{ amount: number } | undefined>('amount');
 		return result?.amount || 0;
 	}
 
-	private updateBuffer (userId: string, remainingFromDb: number): number {
-		const entry = this.buffer.get(userId);
+	private updateBuffer (accountId: string, remainingFromDb: number): number {
+		const entry = this.buffer.get(accountId);
 		const pending = entry?.pending ?? 0;
 		const remaining = Math.max(remainingFromDb - pending, 0);
 
 		if (remaining >= MIN_CREDITS_FOR_BUFFER) {
-			this.buffer.set(userId, { remaining, pending });
+			this.buffer.set(accountId, { remaining, pending });
 		} else if (entry) {
 			entry.remaining = remaining;
 
 			if (!entry.pending) {
-				this.buffer.delete(userId);
+				this.buffer.delete(accountId);
 			}
 		}
 

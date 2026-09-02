@@ -39,10 +39,12 @@ const getRateLimiter = (ctx: ExtendedContext): {
 	id: string;
 	rateLimiter: RateLimiterRedis;
 } => {
-	if (ctx.state.user?.id) {
+	const accountId = ctx.state.user?.accountId;
+
+	if (accountId) {
 		return {
 			type: 'user',
-			id: ctx.state.user.id ?? '',
+			id: accountId,
 			rateLimiter: authenticatedRateLimiter,
 		};
 	}
@@ -86,9 +88,9 @@ export const precheckPostMeasurementRateLimit = async (ctx: ExtendedContext, use
 		return;
 	}
 
-	if (ctx.state.user?.id) {
+	if (ctx.state.user?.accountId) {
 		const requiredCredits = maxProbes - rateLimiterRes.remainingPoints;
-		const attempt = failedCreditsAttempts.get(ctx.state.user.id);
+		const attempt = failedCreditsAttempts.get(ctx.state.user.accountId);
 
 		if (!attempt || requiredCredits < attempt.requiredCredits) {
 			return;
@@ -115,8 +117,8 @@ export const checkPostMeasurementRateLimit = async (ctx: ExtendedContext, number
 		setRateLimitHeaders(ctx, result, rateLimiter, numberOfProbes);
 	} catch (error) {
 		if (error instanceof RateLimiterRes) {
-			if (ctx.state.user?.id) {
-				const { isConsumed, requiredCredits, remainingCredits } = await consumeCredits(ctx.state.user.id, error, numberOfProbes);
+			if (ctx.state.user?.accountId) {
+				const { isConsumed, requiredCredits, remainingCredits } = await consumeCredits(ctx.state.user.accountId, error, numberOfProbes);
 
 				if (isConsumed) {
 					const result = await rateLimiter.reward(id, requiredCredits);
@@ -165,10 +167,10 @@ export const getPostMeasurementRateLimitState = async (ctx: ExtendedContext) => 
 	};
 };
 
-const consumeCredits = async (userId: string, rateLimiterRes: RateLimiterRes, numberOfProbes: number) => {
+const consumeCredits = async (accountId: string, rateLimiterRes: RateLimiterRes, numberOfProbes: number) => {
 	const freeCredits = config.get<number>('measurement.rateLimit.post.authenticatedLimit');
 	const requiredCredits = Math.min(rateLimiterRes.consumedPoints - freeCredits, numberOfProbes);
-	const attempt = failedCreditsAttempts.get(userId);
+	const attempt = failedCreditsAttempts.get(accountId);
 
 	// If there was a recent attempt to use credits, and it failed, and requiredCredits is same or higher, reject immediately.
 	if (attempt && requiredCredits >= attempt.requiredCredits) {
@@ -179,10 +181,10 @@ const consumeCredits = async (userId: string, rateLimiterRes: RateLimiterRes, nu
 		};
 	}
 
-	const { isConsumed, remainingCredits } = await credits.consume(userId, requiredCredits);
+	const { isConsumed, remainingCredits } = await credits.consume(accountId, requiredCredits);
 
 	if (!isConsumed) {
-		failedCreditsAttempts.set(userId, { requiredCredits, remainingCredits });
+		failedCreditsAttempts.set(accountId, { requiredCredits, remainingCredits });
 	}
 
 	return {

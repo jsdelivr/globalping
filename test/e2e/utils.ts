@@ -128,3 +128,8 @@ export const waitForLogSync = async (id: string, authCookie: string, after: stri
 		await setTimeout(100);
 	}
 };
+
+export const getAccountId = async (userId: string) => {
+	const account = await dashboardClient('gp_accounts').where({ user: userId }).first<{ id: string }>('id');
+	return account.id;
+};
