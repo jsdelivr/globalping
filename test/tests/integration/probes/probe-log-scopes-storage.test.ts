@@ -116,7 +116,7 @@ describe('Probe Log Scopes Storage', () => {
 		await writeScopes(storage, '192.0.2.3', [ 'rolling-window' ]);
 
 		expect(await redis.zRange(key, 0, -1)).to.deep.equal([ '192.0.2.2', '192.0.2.3' ]);
-		expect(await redis.ttl(key)).to.equal(SCOPE_ACTIVE_WINDOW);
+		expect(await redis.ttl(key)).to.be.within(SCOPE_ACTIVE_WINDOW - 2, SCOPE_ACTIVE_WINDOW);
 	});
 
 	it('limits each IP to 64 active scopes without partially storing rejected reports', async () => {
@@ -188,7 +188,7 @@ describe('Probe Log Scopes Storage', () => {
 		expect(await writeScopes(storage, ipAddress, replacementScopes)).to.equal(true);
 		expect(await redis.zCard(reporterKey)).to.equal(MAX_SCOPES_PER_REPORTER);
 		expect(await redis.zScore(reporterKey, expiredScopes[0]!)).to.equal(null);
-		expect(await redis.ttl(reporterKey)).to.equal(SCOPE_ACTIVE_WINDOW);
+		expect(await redis.ttl(reporterKey)).to.be.within(SCOPE_ACTIVE_WINDOW - 2, SCOPE_ACTIVE_WINDOW);
 	});
 
 	it('requires both ten reporters and half of the reporting fleet', async () => {
