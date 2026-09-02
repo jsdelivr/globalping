@@ -2,7 +2,7 @@ import { TTLCache } from '@isaacs/ttlcache';
 import { dashboardClient } from './sql/client.js';
 
 export const ACCOUNTS_TABLE = 'gp_accounts';
-export const ORG_MEMBERS_TABLE = 'gp_org_members';
+export const MEMBERS_TABLE = 'gp_org_members';
 const ACCOUNT_TTL = 60 * 60 * 1000;
 const ROLE_TTL = 60 * 1000;
 
@@ -37,17 +37,17 @@ export const getAccountRole = async (accountId: string, userId: string): Promise
 	}
 
 	const account = await dashboardClient(ACCOUNTS_TABLE)
-		.leftJoin(ORG_MEMBERS_TABLE, function () {
-			this.on(`${ORG_MEMBERS_TABLE}.org`, `${ACCOUNTS_TABLE}.org`)
-				.andOnVal(`${ORG_MEMBERS_TABLE}.user`, '=', userId);
+		.leftJoin(MEMBERS_TABLE, function () {
+			this.on(`${MEMBERS_TABLE}.org`, `${ACCOUNTS_TABLE}.org`)
+				.andOnVal(`${MEMBERS_TABLE}.user`, '=', userId);
 		})
 		.where(`${ACCOUNTS_TABLE}.id`, accountId)
 		.where(function () {
-			this.where(`${ACCOUNTS_TABLE}.user`, userId).orWhereNotNull(`${ORG_MEMBERS_TABLE}.id`);
+			this.where(`${ACCOUNTS_TABLE}.user`, userId).orWhereNotNull(`${MEMBERS_TABLE}.id`);
 		})
 		.first<{ role: AccountRole } | undefined>(dashboardClient.raw(
 			`IF(?? = ?, 'owner', ??) AS role`,
-			[ `${ACCOUNTS_TABLE}.user`, userId, `${ORG_MEMBERS_TABLE}.role` ],
+			[ `${ACCOUNTS_TABLE}.user`, userId, `${MEMBERS_TABLE}.role` ],
 		));
 
 	const role = account?.role ?? null;
