@@ -4,11 +4,12 @@ import { dashboardClient } from './sql/client.js';
 export const ACCOUNTS_TABLE = 'gp_accounts';
 export const ORG_MEMBERS_TABLE = 'gp_org_members';
 const ACCOUNT_TTL = 60 * 60 * 1000;
-const MEMBERSHIP_TTL = 60 * 1000;
-const SPENDING_ROLES = [ 'admin', 'member' ];
+const ROLE_TTL = 60 * 1000;
+
+export type AccountRole = 'owner' | 'admin' | 'member' | 'viewer';
 
 const accountIdsByUserId = new TTLCache<string, string>({ ttl: ACCOUNT_TTL });
-const availabilityByUserAndAccount = new TTLCache<string, boolean>({ ttl: MEMBERSHIP_TTL });
+const rolesByUserAndAccount = new TTLCache<string, AccountRole | null>({ ttl: ROLE_TTL });
 
 export const getUserAccountId = async (userId: string): Promise<string | null> => {
 	const cached = accountIdsByUserId.get(userId);
@@ -26,10 +27,10 @@ export const getUserAccountId = async (userId: string): Promise<string | null> =
 	return account?.id ?? null;
 };
 
-// Is it a personal account of the user, or an org account where their role is 'admin' or 'member'?
-export const isAccountAvailable = async (accountId: string, userId: string): Promise<boolean> => {
+// The role of the user in the account: 'owner' for their own, their membership role for an org, null if they are not in it.
+export const getAccountRole = async (accountId: string, userId: string): Promise<AccountRole | null> => {
 	const key = `${userId}:${accountId}`;
-	const cached = availabilityByUserAndAccount.get(key);
+	const cached = rolesByUserAndAccount.get(key);
 
 	if (cached !== undefined) {
 		return cached;
@@ -38,17 +39,19 @@ export const isAccountAvailable = async (accountId: string, userId: string): Pro
 	const account = await dashboardClient(ACCOUNTS_TABLE)
 		.leftJoin(ORG_MEMBERS_TABLE, function () {
 			this.on(`${ORG_MEMBERS_TABLE}.org`, `${ACCOUNTS_TABLE}.org`)
-				.andOnVal(`${ORG_MEMBERS_TABLE}.user`, '=', userId)
-				.andOnIn(`${ORG_MEMBERS_TABLE}.role`, SPENDING_ROLES);
+				.andOnVal(`${ORG_MEMBERS_TABLE}.user`, '=', userId);
 		})
 		.where(`${ACCOUNTS_TABLE}.id`, accountId)
 		.where(function () {
 			this.where(`${ACCOUNTS_TABLE}.user`, userId).orWhereNotNull(`${ORG_MEMBERS_TABLE}.id`);
 		})
-		.first<{ id: string } | undefined>(`${ACCOUNTS_TABLE}.id`);
+		.first<{ role: AccountRole } | undefined>(dashboardClient.raw(
+			`IF(?? = ?, 'owner', ??) AS role`,
+			[ `${ACCOUNTS_TABLE}.user`, userId, `${ORG_MEMBERS_TABLE}.role` ],
+		));
 
-	const isAvailable = Boolean(account);
-	availabilityByUserAndAccount.set(key, isAvailable);
+	const role = account?.role ?? null;
+	rolesByUserAndAccount.set(key, role);
 
-	return isAvailable;
+	return role;
 };
