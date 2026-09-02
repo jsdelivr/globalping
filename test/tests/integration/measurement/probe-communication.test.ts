@@ -10,7 +10,7 @@ import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { waitFor } from '../../../utils/wait.js';
 import * as id from '../../../../src/measurement/id.js';
 import { getPersistentRedisClient } from '../../../../src/lib/redis/persistent-client.js';
-import { KNOWN_SCOPES_KEY, REPORTER_SCOPES_KEY_PREFIX, SCOPE_KEY_PREFIX } from '../../../../src/probe/log-scopes-storage.js';
+import { REPORTER_SCOPES_KEY_PREFIX, SCOPE_KEY_PREFIX } from '../../../../src/probe/log-scopes-storage.js';
 
 describe('Create measurement request', () => {
 	const expectedHost = process.env['HOSTNAME'] ?? '';
@@ -118,7 +118,6 @@ describe('Create measurement request', () => {
 
 		try {
 			await Promise.all([
-				redis.sRem(KNOWN_SCOPES_KEY, scope),
 				redis.del(scopeKey),
 				redis.zRem(reporterKey, scope),
 			]);
@@ -126,11 +125,9 @@ describe('Create measurement request', () => {
 			probe.emit('probe:log-scopes', [ scope ]);
 			await waitFor(async () => await redis.zScore(scopeKey, '1.2.3.4') !== null);
 
-			expect(await redis.sIsMember(KNOWN_SCOPES_KEY, scope)).to.equal(1);
 			expect(await redis.zScore(reporterKey, scope)).to.be.a('number');
 		} finally {
 			await Promise.all([
-				redis.sRem(KNOWN_SCOPES_KEY, scope),
 				redis.del(scopeKey),
 				redis.zRem(reporterKey, scope),
 			]);
