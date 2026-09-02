@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import request, { type Agent } from 'supertest';
 import * as sinon from 'sinon';
-import { getProbeLogStorage } from '../../../../src/probe/logs-storage.js';
+import { getProbeLogScopesStorage } from '../../../../src/probe/log-scopes-storage.js';
 import { getTestServer } from '../../../utils/server.js';
 
 describe('Get Probe Log Scopes', () => {
@@ -15,7 +15,7 @@ describe('Get Probe Log Scopes', () => {
 	afterEach(() => sandbox.restore());
 
 	it('publicly returns scopes with one-hour caching', async () => {
-		const readScopes = sandbox.stub(getProbeLogStorage(), 'readScopes').resolves([ 'system', 'worker' ]);
+		const readScopes = sandbox.stub(getProbeLogScopesStorage(), 'readScopes').resolves([ 'system', 'worker' ]);
 
 		const response = await requestAgent.get('/v1/probes/log-scopes')
 			.send()

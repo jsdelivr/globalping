@@ -217,5 +217,111 @@ const claimTimedOutMeasurements = defineScript({
 	},
 });
 
-export const scripts = { recordProgress, recordProgressAppend, recordResult, markFinishedByTimeout, claimTimedOutMeasurements };
+const registerProbeLogScopes = defineScript({
+	SCRIPT: `
+	local reporterKey = KEYS[1]
+	local knownScopesKey = KEYS[2]
+	local activeWindow = tonumber(ARGV[1])
+	local maxScopes = tonumber(ARGV[2])
+	local reporterIdentity = ARGV[3]
+	local now = tonumber(redis.call('TIME')[1])
+	local cutoff = now - activeWindow
+
+	redis.call('ZREMRANGEBYSCORE', reporterKey, '-inf', cutoff)
+
+	local scores = redis.call('ZMSCORE', reporterKey, unpack(ARGV, 4))
+	local newScopes = 0
+
+	for index = 1, #scores do
+		if not scores[index] then
+			newScopes = newScopes + 1
+		end
+	end
+
+	if redis.call('ZCARD', reporterKey) + newScopes > maxScopes then
+		return 0
+	end
+
+	local zaddArguments = {}
+
+	for index = 4, #ARGV do
+		table.insert(zaddArguments, now)
+		table.insert(zaddArguments, ARGV[index])
+	end
+
+	redis.call('ZADD', reporterKey, 'GT', unpack(zaddArguments))
+	redis.call('EXPIRE', reporterKey, activeWindow)
+
+	for index = 3, #KEYS do
+		local scopeKey = KEYS[index]
+
+		redis.call('ZADD', scopeKey, 'GT', now, reporterIdentity)
+		redis.call('ZREMRANGEBYSCORE', scopeKey, '-inf', cutoff)
+		redis.call('EXPIRE', scopeKey, activeWindow)
+	end
+
+	redis.call('SADD', knownScopesKey, unpack(ARGV, 4))
+	return 1
+	`,
+	parseCommand (
+		parser: CommandParser,
+		reporterKey: string,
+		knownScopesKey: string,
+		scopeKeys: string[],
+		reporterIdentity: string,
+		activeWindow: number,
+		maxScopes: number,
+		scopes: string[],
+	) {
+		parser.push((scopeKeys.length + 2).toString());
+		parser.pushKey(reporterKey);
+		parser.pushKey(knownScopesKey);
+		scopeKeys.forEach(scopeKey => parser.pushKey(scopeKey));
+
+		parser.push(
+			activeWindow.toString(),
+			maxScopes.toString(),
+			reporterIdentity,
+			...scopes,
+		);
+	},
+	transformReply (reply: number) {
+		return reply === 1;
+	},
+});
+
+const countProbeLogScopeReporters = defineScript({
+	NUMBER_OF_KEYS: 2,
+	SCRIPT: `
+	local now = tonumber(redis.call('TIME')[1])
+	local cutoff = now - tonumber(ARGV[2])
+
+	redis.call('ZREMRANGEBYSCORE', KEYS[2], '-inf', cutoff)
+	local count = redis.call('ZCARD', KEYS[2])
+
+	if count == 0 then
+		redis.call('SREM', KEYS[1], ARGV[1])
+	end
+
+	return count
+	`,
+	parseCommand (parser: CommandParser, knownScopesKey: string, scopeKey: string, scope: string, activeWindow: number) {
+		parser.pushKey(knownScopesKey);
+		parser.pushKey(scopeKey);
+		parser.push(scope, activeWindow.toString());
+	},
+	transformReply (reply: number) {
+		return reply;
+	},
+});
+
+export const scripts = {
+	recordProgress,
+	recordProgressAppend,
+	recordResult,
+	markFinishedByTimeout,
+	claimTimedOutMeasurements,
+	registerProbeLogScopes,
+	countProbeLogScopeReporters,
+};
 export type RedisScripts = typeof scripts;

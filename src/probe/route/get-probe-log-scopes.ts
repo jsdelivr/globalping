@@ -1,11 +1,11 @@
 import type { ExtendedContext, ExtendedRouter } from '../../types.js';
-import { getProbeLogStorage } from '../logs-storage.js';
+import { getProbeLogScopesStorage } from '../log-scopes-storage.js';
 
-const probeLogStorage = getProbeLogStorage();
+const probeLogScopesStorage = getProbeLogScopesStorage();
 
 export const registerGetProbeLogScopesRoute = (router: ExtendedRouter): void => {
 	const handle = async (ctx: ExtendedContext) => {
-		const scopes = await probeLogStorage.readScopes();
+		const scopes = await probeLogScopesStorage.readScopes();
 
 		ctx.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=3600, stale-if-error=86400');
 		ctx.body = scopes;

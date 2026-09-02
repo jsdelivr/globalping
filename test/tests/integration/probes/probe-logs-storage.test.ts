@@ -36,7 +36,6 @@ describe('Probe Logs Storage', () => {
 	})));
 
 	const cleanUp = async () => {
-		await timeSeriesClient('probe_log_scope').delete();
 		await timeSeriesClient('probe_log').whereIn('probeUuid', PROBE_UUIDS).delete();
 		await timeSeriesClient('probe_log_counter').whereIn('probeUuid', PROBE_UUIDS).delete();
 	};
@@ -48,172 +47,21 @@ describe('Probe Logs Storage', () => {
 
 	afterEach(cleanUp);
 
-	it('persists unadopted logs and backfills their scopes after adoption', async () => {
-		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage([ 'ignored' ]), false);
+	it('assigns sequential IDs across log batches', async () => {
+		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage([ 'first' ]));
+		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage([ 'second' ]));
 
-		const logs = await timeSeriesClient('probe_log').where('probeUuid', PROBE_UUIDS[0]!);
+		const logs = await timeSeriesClient('probe_log')
+			.where('probeUuid', PROBE_UUIDS[0]!)
+			.orderBy('probeLogId');
 		const counter = await timeSeriesClient('probe_log_counter').where('probeUuid', PROBE_UUIDS[0]!).first();
-		const ignoredScopes = await timeSeriesClient('probe_log_scope').where('probeUuid', PROBE_UUIDS[0]!);
 
-		expect(logs).to.have.length(1);
-		expect(counter.lastAllocatedId).to.equal('1');
-		expect(ignoredScopes).to.be.empty;
-
-		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage([ 'tracked' ]), true);
-
-		const updatedLogs = await timeSeriesClient('probe_log').where('probeUuid', PROBE_UUIDS[0]!);
-		const updatedCounter = await timeSeriesClient('probe_log_counter').where('probeUuid', PROBE_UUIDS[0]!).first();
-		const trackedScopes = await timeSeriesClient('probe_log_scope')
-			.where('probeUuid', PROBE_UUIDS[0]!)
-			.orderBy('scope');
-
-		expect(updatedLogs).to.have.length(2);
-		expect(updatedCounter.lastAllocatedId).to.equal('2');
-		expect(trackedScopes.map(({ scope }) => scope)).to.deep.equal([ 'ignored', 'tracked' ]);
-	});
-
-	it('stores each scope once and caps concurrent writes for one probe at 100 scopes', async () => {
-		const firstScopes = Array.from({ length: 60 }, (_, index) => `scope-${String(index).padStart(3, '0')}`);
-		const secondScopes = Array.from({ length: 60 }, (_, index) => `scope-${String(index + 59).padStart(3, '0')}`);
-
-		await Promise.all([
-			storage.writeLogs(PROBE_UUIDS[0]!, createMessage(firstScopes), true),
-			storage.writeLogs(PROBE_UUIDS[0]!, createMessage(secondScopes), true),
+		expect(logs.map(({ probeLogId, scope }) => ({ probeLogId, scope }))).to.deep.equal([
+			{ probeLogId: '1', scope: 'first' },
+			{ probeLogId: '2', scope: 'second' },
 		]);
 
-		const storedScopes = await timeSeriesClient('probe_log_scope')
-			.select('scope')
-			.where('probeUuid', PROBE_UUIDS[0]!)
-			.orderBy('scope');
-
-		expect(storedScopes).to.have.length(100);
-		expect(new Set(storedScopes.map(({ scope }) => scope)).size).to.equal(100);
-	});
-
-	it('ranks scopes by contributing probe count instead of message volume', async () => {
-		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage(Array.from({ length: 50 }, () => 'volume')), true);
-		await storage.writeLogs(PROBE_UUIDS[1]!, createMessage(Array.from({ length: 50 }, () => 'volume')), true);
-		await storage.writeLogs(PROBE_UUIDS[2]!, createMessage([ 'shared' ]), true);
-		await storage.writeLogs(PROBE_UUIDS[3]!, createMessage([ 'shared' ]), true);
-		await storage.writeLogs(PROBE_UUIDS[4]!, createMessage([ 'shared' ]), true);
-		await storage.writeLogs(PROBE_UUIDS[5]!, createMessage([ 'zeta' ]), true);
-		await storage.writeLogs(PROBE_UUIDS[6]!, createMessage([ 'zeta' ]), true);
-		await storage.writeLogs(PROBE_UUIDS[7]!, createMessage([ 'alpha' ]), true);
-		await storage.writeLogs(PROBE_UUIDS[8]!, createMessage([ 'alpha' ]), true);
-
-		expect(await storage.readScopes()).to.deep.equal([ 'shared', 'alpha', 'volume', 'zeta' ]);
-	});
-
-	it('does not discover scopes that cannot round-trip through the filter query', async () => {
-		const scopes = [ 'foo,bar', ' worker ' ];
-
-		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage(scopes), true);
-		await storage.writeLogs(PROBE_UUIDS[1]!, createMessage(scopes), true);
-
-		expect(await storage.readScopes()).to.be.empty;
-		expect(await timeSeriesClient('probe_log_scope')).to.be.empty;
-		expect(await timeSeriesClient('probe_log')).to.have.length(4);
-	});
-
-	it('ignores expired scopes when enforcing the cap and refreshes them when reported again', async () => {
-		await timeSeriesClient('probe_log_scope').insert([
-			{
-				probeUuid: PROBE_UUIDS[0]!,
-				scope: 'reported-again',
-				lastSeenAt: timeSeriesClient.raw(`now() - interval '30 days 1 minute'`),
-			},
-			{
-				probeUuid: PROBE_UUIDS[1]!,
-				scope: 'expired',
-				lastSeenAt: timeSeriesClient.raw(`now() - interval '30 days 1 minute'`),
-			},
-			...Array.from({ length: 99 }, (_, index) => ({
-				probeUuid: PROBE_UUIDS[0]!,
-				scope: `expired-${index}`,
-				lastSeenAt: timeSeriesClient.raw(`now() - interval '30 days 1 minute'`),
-			})),
-		]);
-
-		expect(await storage.readScopes()).to.be.empty;
-
-		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage([ 'reported-again', 'new-after-expiry' ]), true);
-
-		const refreshed = await timeSeriesClient('probe_log_scope')
-			.where({ probeUuid: PROBE_UUIDS[0]!, scope: 'reported-again' })
-			.first();
-		const added = await timeSeriesClient('probe_log_scope')
-			.where({ probeUuid: PROBE_UUIDS[0]!, scope: 'new-after-expiry' })
-			.first();
-
-		expect(refreshed.lastSeenAt).to.be.instanceof(Date);
-		expect(added.lastSeenAt).to.be.instanceof(Date);
-		expect(await storage.readScopes()).to.be.empty;
-
-		await storage.writeLogs(PROBE_UUIDS[1]!, createMessage([ 'reported-again' ]), true);
-
-		expect(await storage.readScopes()).to.deep.equal([ 'reported-again' ]);
-	});
-
-	it('throttles scope refreshes and keeps lastSeenAt monotonic', async () => {
-		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage([ 'system' ]), true);
-
-		const initial = await timeSeriesClient('probe_log_scope').where('probeUuid', PROBE_UUIDS[0]!).first();
-		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage([ 'system' ]), true);
-		const throttled = await timeSeriesClient('probe_log_scope').where('probeUuid', PROBE_UUIDS[0]!).first();
-
-		expect(throttled.lastSeenAt).to.deep.equal(initial.lastSeenAt);
-
-		await timeSeriesClient('probe_log_scope')
-			.where('probeUuid', PROBE_UUIDS[0]!)
-			.update({ lastSeenAt: timeSeriesClient.raw(`now() + interval '1 day'`) });
-
-		const future = await timeSeriesClient('probe_log_scope').where('probeUuid', PROBE_UUIDS[0]!).first();
-
-		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage([ 'system' ]), true);
-		const monotonic = await timeSeriesClient('probe_log_scope').where('probeUuid', PROBE_UUIDS[0]!).first();
-
-		expect(monotonic.lastSeenAt).to.deep.equal(future.lastSeenAt);
-
-		await timeSeriesClient('probe_log_scope')
-			.where('probeUuid', PROBE_UUIDS[0]!)
-			.update({ lastSeenAt: timeSeriesClient.raw(`now() - interval '2 hours'`) });
-
-		const stale = await timeSeriesClient('probe_log_scope').where('probeUuid', PROBE_UUIDS[0]!).first();
-
-		await storage.writeLogs(PROBE_UUIDS[0]!, createMessage([ 'system' ]), true);
-		const refreshed = await timeSeriesClient('probe_log_scope').where('probeUuid', PROBE_UUIDS[0]!).first();
-
-		expect(refreshed.lastSeenAt).to.be.greaterThan(stale.lastSeenAt);
-	});
-
-	it('registers a daily database job that removes expired scopes', async () => {
-		await timeSeriesClient('probe_log_scope').insert([
-			{
-				probeUuid: PROBE_UUIDS[0]!,
-				scope: 'expired',
-				lastSeenAt: timeSeriesClient.raw(`now() - interval '30 days 1 minute'`),
-			},
-			{
-				probeUuid: PROBE_UUIDS[1]!,
-				scope: 'current',
-				lastSeenAt: new Date(),
-			},
-		]);
-
-		const result = await timeSeriesClient.raw<{ rows: Array<{ jobId: number; schedule: string }> }>(`
-			SELECT job_id AS "jobId", schedule_interval::text AS "schedule"
-			FROM timescaledb_information.jobs
-			WHERE proc_schema = 'public' AND proc_name = 'cleanup_probe_log_scopes'
-		`);
-
-		expect(result.rows).to.have.length(1);
-		expect(result.rows[0]!.schedule).to.equal('1 day');
-
-		await timeSeriesClient.raw('CALL run_job(?)', [ result.rows[0]!.jobId ]);
-
-		const scopes = await timeSeriesClient('probe_log_scope').select('scope');
-
-		expect(scopes.map(({ scope }) => scope)).to.deep.equal([ 'current' ]);
+		expect(counter.lastAllocatedId).to.equal('2');
 	});
 
 	it('filters scopes exactly and case-sensitively', async () => {

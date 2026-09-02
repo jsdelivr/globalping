@@ -40,6 +40,11 @@ export const logMessageSchema = Joi.object({
 	logs: Joi.array().items(logEntrySchema).min(0).max(200).required(),
 }).required();
 
+export const logScopesSchema = Joi.array<string[]>()
+	.max(64)
+	.items(Joi.string().min(1).max(64).pattern(/^[a-zA-Z0-9:_-]+$/).required())
+	.required();
+
 export const altIpsSchema = Joi.array().max(2048).items(Joi.array<[string, string]>().ordered(Joi.string().ip(globalIpOptions).required(), Joi.string().length(32).required()));
 
 export const localAdoptionServerSchema = Joi.object<LocalAdoptionServer>({

@@ -15,12 +15,13 @@ import { handleIsIPv4SupportedUpdate, handleIsIPv6SupportedUpdate } from '../../
 import { handleNewLogs } from '../../probe/handler/logs.js';
 import { handleAltIps } from '../../probe/handler/alt-ips.js';
 import { handleAdoptionServerStart } from '../../probe/handler/local-adoption-server.js';
+import { handleLogScopes } from '../../probe/handler/log-scopes.js';
 import type { IoContext } from '../server.js';
 
 const logger = scopedLogger('gateway');
 
 export const initGateway = (ioContext: IoContext) => {
-	const { io, probeOverride, metricsAgent, adoptionToken, adoptedProbes, probeIpLimit, measurementRunner, altIpsClient } = ioContext;
+	const { io, probeOverride, metricsAgent, adoptionToken, probeIpLimit, measurementRunner, altIpsClient } = ioContext;
 
 	io
 		.of(PROBES_NAMESPACE)
@@ -39,7 +40,8 @@ export const initGateway = (ioContext: IoContext) => {
 
 			// Handlers
 			subscribeWithHandler(socket, 'probe:status:update', handleStatusUpdate(probe));
-			subscribeWithHandler(socket, 'probe:logs', handleNewLogs(probe, adoptedProbes));
+			subscribeWithHandler(socket, 'probe:logs', handleNewLogs(probe));
+			subscribeWithHandler(socket, 'probe:log-scopes', handleLogScopes(probe));
 			subscribeWithHandler(socket, 'probe:alt-ips', handleAltIps(probe, altIpsClient));
 			subscribeWithHandler(socket, 'probe:isIPv6Supported:update', handleIsIPv6SupportedUpdate(probe));
 			subscribeWithHandler(socket, 'probe:isIPv4Supported:update', handleIsIPv4SupportedUpdate(probe));

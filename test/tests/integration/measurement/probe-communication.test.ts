@@ -8,6 +8,7 @@ import { expect } from 'chai';
 import { ConsoleWriter } from 'h-logger2';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import * as id from '../../../../src/measurement/id.js';
+import { getProbeLogScopesStorage } from '../../../../src/probe/log-scopes-storage.js';
 
 describe('Create measurement request', () => {
 	const expectedHost = process.env['HOSTNAME'] ?? '';
@@ -105,6 +106,26 @@ describe('Create measurement request', () => {
 
 		expect(logHandlerStub.callCount).to.equal(1);
 		expect(logHandlerStub.firstCall.args).to.deep.equal([{ isActive: true }]);
+	});
+
+	it('should handle log scope reports from a connected probe', async () => {
+		const scopes = [ 'general', 'status-manager' ];
+		const writeScopes = sandbox.stub(getProbeLogScopesStorage(), 'writeScopes');
+		const handled = new Promise<void>((resolve) => {
+			writeScopes.callsFake(async () => {
+				resolve();
+				return true;
+			});
+		});
+
+		try {
+			probe.emit('probe:log-scopes', scopes);
+			await handled;
+
+			expect(writeScopes.calledOnceWithExactly('1.2.3.4', scopes)).to.equal(true);
+		} finally {
+			writeScopes.restore();
+		}
 	});
 
 	it('should send and handle proper events during measurement request', async () => {
