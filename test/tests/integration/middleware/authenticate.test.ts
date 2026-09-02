@@ -10,7 +10,7 @@ import { dashboardClient } from '../../../../src/lib/sql/client.js';
 import { auth, GP_TOKENS_TABLE, Token } from '../../../../src/lib/http/auth.js';
 import { authenticatedRateLimiter } from '../../../../src/lib/rate-limiter/rate-limiter-post.js';
 import type { AuthenticateOptions } from '../../../../src/lib/http/middleware/authenticate.js';
-import { createUser } from '../../../utils/fixtures.js';
+import { createOrg, createUser } from '../../../utils/fixtures.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
 
@@ -18,9 +18,11 @@ describe('authenticate', () => {
 	let app: Server;
 	let requestAgent: Agent;
 	let user: { id: string; accountId: string };
+	let viewerOrg: { id: string; accountId: string };
 
 	before(async () => {
 		user = await createUser(dashboardClient);
+		viewerOrg = await createOrg(dashboardClient, { members: [{ userId: user.id, role: 'viewer' }] });
 		app = await getTestServer();
 		requestAgent = request(app);
 		nockGeoIpProviders();
@@ -313,6 +315,22 @@ describe('authenticate', () => {
 
 			expect(response.status).to.equal(202);
 			expect(response.headers['x-ratelimit-limit']).to.equal('500');
+		});
+
+		it('should reject a measurement from a viewer of the org they act for', async () => {
+			const jwt = await new SignJWT({
+				id: user.id,
+				app_access: true,
+				user_account_id: user.accountId,
+			}).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
+
+			await requestAgent.post('/v1/measurements')
+				.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${viewerOrg.accountId}`)
+				.send({
+					type: 'ping',
+					target: 'example.com',
+				})
+				.expect(403);
 		});
 
 		it('should ignore if cookie without app_access was passed', async () => {

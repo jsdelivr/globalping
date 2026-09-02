@@ -2,7 +2,7 @@ import config from 'config';
 import { jwtVerify } from 'jose';
 import apmAgent from 'elastic-apm-node';
 
-import { getUserAccountId, isAccountAvailable } from '../../accounts.js';
+import { type AccountRole, getAccountRole, getUserAccountId } from '../../accounts.js';
 import { auth } from '../auth.js';
 import type { ExtendedMiddleware } from '../../../types.js';
 
@@ -29,6 +29,7 @@ export type AuthenticateOptions = {
 export type AuthenticateStateUser = {
 	id: string | null;
 	accountId: string | null;
+	accountRole?: AccountRole;
 	username: string | null;
 	userType: 'member' | 'sponsor' | 'special';
 	scopes?: string[];
@@ -41,7 +42,7 @@ export type AuthenticateState = {
 	user?: AuthenticateStateUser;
 };
 
-const resolveAccountId = async (ctx: Parameters<ExtendedMiddleware>[0], payload: SessionCookiePayload): Promise<string | null> => {
+const resolveAccount = async (ctx: Parameters<ExtendedMiddleware>[0], payload: SessionCookiePayload) => {
 	// PHASE5: drop the lookup. Directus puts the account in the cookie, but the sessions issued before that shipped stay
 	// valid for a day, so until then it still has to be resolved here.
 	const userAccountId = payload.user_account_id ?? await getUserAccountId(payload.id!);
@@ -49,10 +50,14 @@ const resolveAccountId = async (ctx: Parameters<ExtendedMiddleware>[0], payload:
 
 	// user_account_id is trusted as it is signed by the dashboard, unlike the activeAccountId which is a cookie set by dashboard FE.
 	if (!activeAccountId || activeAccountId === userAccountId) {
-		return userAccountId;
+		return { accountId: userAccountId, accountRole: 'owner' as AccountRole };
 	}
 
-	return await isAccountAvailable(activeAccountId, payload.id!) ? activeAccountId : userAccountId;
+	const role = await getAccountRole(activeAccountId, payload.id!);
+
+	return role
+		? { accountId: activeAccountId, accountRole: role }
+		: { accountId: userAccountId, accountRole: 'owner' as AccountRole };
 };
 
 export const authenticate = (): ExtendedMiddleware => {
@@ -88,8 +93,8 @@ export const authenticate = (): ExtendedMiddleware => {
 				const appAccess = typeof result.payload.app_access === 'boolean' ? result.payload.app_access : false;
 
 				if (result.payload.id && appAccess) {
-					const accountId = await resolveAccountId(ctx, result.payload);
-					ctx.state.user = { id: result.payload.id, accountId, username: result.payload.github_username || null, userType: result.payload.user_type || 'member', authMode: 'cookie', adminAccess };
+					const { accountId, accountRole } = await resolveAccount(ctx, result.payload);
+					ctx.state.user = { id: result.payload.id, accountId, accountRole, username: result.payload.github_username || null, userType: result.payload.user_type || 'member', authMode: 'cookie', adminAccess };
 					apmAgent.setUserContext({ id: result.payload.id, username: result.payload.github_username || `ID(${result.payload.id})` });
 				}
 			} catch {}

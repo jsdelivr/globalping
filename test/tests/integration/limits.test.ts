@@ -223,7 +223,7 @@ describe('rate limiter', () => {
 				expect(response.body.credits).to.deep.equal({ remaining: 10 });
 			});
 
-			it('should ignore an org where the user is only a viewer', async () => {
+			it('should show the org credits to a viewer, who can see them but not spend them', async () => {
 				await insertCredits(user.accountId, 10);
 				await insertCredits(viewerOrg.accountId, 20);
 
@@ -231,7 +231,7 @@ describe('rate limiter', () => {
 					.set('Cookie', await getCookies(user.id, viewerOrg.accountId))
 					.send();
 
-				expect(response.body.credits).to.deep.equal({ remaining: 10 });
+				expect(response.body.credits).to.deep.equal({ remaining: 20 });
 			});
 		});
 	});

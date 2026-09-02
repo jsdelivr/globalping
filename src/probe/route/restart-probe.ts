@@ -14,6 +14,10 @@ export const registerRestartProbeRoute = (router: ExtendedRouter, context: IoCon
 			throw createHttpError(400, `Probe ID missing.`);
 		}
 
+		if (user?.accountRole === 'viewer') {
+			throw createHttpError(403, 'Viewers can not restart the probes of this organization.', { type: 'forbidden' });
+		}
+
 		const adoptedProbe = context.adoptedProbes.getById(id);
 
 		if (!adoptedProbe?.uuid || !user?.id || (!user.adminAccess && adoptedProbe.accountId !== user.accountId)) {

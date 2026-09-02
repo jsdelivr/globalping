@@ -10,7 +10,7 @@ import { Adoption } from '../../../../src/lib/override/adopted-probes.js';
 import { expect } from 'chai';
 import { RedisCluster } from '../../../../src/lib/redis/shared.js';
 import { dashboardClient } from '../../../../src/lib/sql/client.js';
-import { createUser } from '../../../utils/fixtures.js';
+import { createOrg, createUser } from '../../../utils/fixtures.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
 
@@ -25,6 +25,7 @@ describe('Get Probe Logs', () => {
 	const REDIS_LOG_KEY = 'probe:mock-probe-uuid:logs';
 
 	let user: { id: string; accountId: string };
+	let viewerOrg: { id: string; accountId: string };
 	let mockAdoption: Adoption;
 
 	const redisLogs = [
@@ -54,6 +55,7 @@ describe('Get Probe Logs', () => {
 
 	before(async () => {
 		user = await createUser(dashboardClient);
+		viewerOrg = await createOrg(dashboardClient, { members: [{ userId: user.id, role: 'viewer' }] });
 		mockAdoption = { id: PROBE_ID, uuid: PROBE_UUID, accountId: user.accountId } as Adoption;
 
 		sessionKey = Buffer.from(sessionConfig.cookieSecret);
@@ -106,6 +108,16 @@ describe('Get Probe Logs', () => {
 		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(200);
+	});
+
+	it('should respond with 200 if the user is a viewer of the org owning the probe', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: viewerOrg.accountId });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, user_account_id: user.accountId });
+
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${viewerOrg.accountId}`)
+			.send()
+			.expect(200);
 	});
 
 	it('should return logs in the expected format', async () => {

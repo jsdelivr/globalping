@@ -1,4 +1,5 @@
 import config from 'config';
+import createHttpError from 'http-errors';
 import type { IoContext } from '../../lib/server.js';
 import { bodyParser } from '../../lib/http/middleware/body-parser.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
@@ -11,6 +12,10 @@ const hostConfig = config.get<string>('server.host');
 
 export const registerCreateMeasurementRoute = (router: ExtendedRouter, ioContext: IoContext): void => {
 	const handle = async (ctx: ExtendedContext): Promise<void> => {
+		if (ctx.state.user?.accountRole === 'viewer') {
+			throw createHttpError(403, 'Viewers can not run measurements for this organization.', { type: 'forbidden' });
+		}
+
 		const { measurementId, probesCount } = await ioContext.measurementRunner.run(ctx);
 
 		ctx.status = 202;
