@@ -65,7 +65,7 @@ describe('Adoption code', () => {
 					status: 'initializing',
 					isIPv4Supported: false,
 					isIPv6Supported: false,
-					version: '0.50.0',
+					version: '0.52.0',
 					nodeVersion: 'v18.17.0',
 					hardwareDevice: null,
 					hardwareDeviceFirmware: null,

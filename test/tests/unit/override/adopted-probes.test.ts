@@ -44,6 +44,7 @@ describe('AdoptedProbes', () => {
 		continentName: 'Europe',
 		region: 'Northern Europe',
 		localAdoptionServer: null,
+		settings: '{"meteredConnection":false}',
 	};
 
 	const defaultConnectedProbe: SocketProbe = {
@@ -98,6 +99,7 @@ describe('AdoptedProbes', () => {
 			availableDiskSpace: 0,
 		},
 		adoptionToken: null,
+		settings: { meteredConnection: false },
 	};
 
 	const sandbox = sinon.createSandbox();
@@ -121,6 +123,7 @@ describe('AdoptedProbes', () => {
 	const sqlStub = sandbox.stub() as any;
 	sqlStub.raw = sql.raw;
 	const getProbesWithAdminData = sandbox.stub();
+	const emitToProbe = sandbox.stub();
 
 	before(() => {
 		sandbox.stub(ConsoleWriter.prototype, 'write');
@@ -152,7 +155,12 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('syncDashboardData method should sync the data', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		getProbesWithAdminData.returns([{
+			...defaultConnectedProbe,
+			settings: { meteredConnection: true },
+		}]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 
 		expect(sqlStub.callCount).to.equal(0);
 		expect(sql.select.callCount).to.equal(0);
@@ -162,11 +170,17 @@ describe('AdoptedProbes', () => {
 		expect(sqlStub.callCount).to.equal(1);
 		expect(sqlStub.args[0]).deep.equal([ 'gp_probes' ]);
 		expect(sql.select.callCount).to.equal(1);
+
+		expect(emitToProbe.calledOnceWithExactly(
+			defaultConnectedProbe.client,
+			'api:settings:update',
+			{ meteredConnection: false },
+		)).to.be.true;
 	});
 
 	it('syncDashboardData method should fetch adoption data even without SHOULD_SYNC_ADOPTIONS', async () => {
 		delete process.env['SHOULD_SYNC_ADOPTIONS'];
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 
 		expect(sqlStub.callCount).to.equal(0);
 		expect(sql.select.callCount).to.equal(0);
@@ -189,7 +203,7 @@ describe('AdoptedProbes', () => {
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, altIpAddresses: [ '2.2.2.2' ] }]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.update.callCount).to.equal(2);
@@ -214,7 +228,7 @@ describe('AdoptedProbes', () => {
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, altIpAddresses: [ '2.2.2.2' ] }]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.update.callCount).to.equal(2);
@@ -238,7 +252,7 @@ describe('AdoptedProbes', () => {
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, altIpAddresses: [ '2.2.2.2' ] }]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.update.callCount).to.equal(2);
@@ -259,7 +273,7 @@ describe('AdoptedProbes', () => {
 
 		getProbesWithAdminData.returns([ defaultConnectedProbe ]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.where.callCount).to.equal(1);
@@ -277,7 +291,7 @@ describe('AdoptedProbes', () => {
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, altIpAddresses: [ '2.2.2.2' ] }]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.where.callCount).to.equal(1);
@@ -296,7 +310,7 @@ describe('AdoptedProbes', () => {
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '2-2-2-2-2', ip: '1.1.1.1' }]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.delete.callCount).to.equal(1);
@@ -313,7 +327,7 @@ describe('AdoptedProbes', () => {
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, ipAddress: '2.2.2.2', uuid: '2-2-2-2-2', altIpAddresses: [ '2.2.2.2' ], adoptionToken: 'adoptionTokenValue' }]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.where.callCount).to.equal(1);
@@ -339,7 +353,7 @@ describe('AdoptedProbes', () => {
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, adoptionToken: 'adoptionTokenValue' }]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.update.callCount).to.equal(0);
@@ -348,7 +362,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should update status to "offline" if probe was not found', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([{ ...defaultAdoption, lastSyncDate: relativeDayUtc(-15) }]);
 		getProbesWithAdminData.returns([]);
 
@@ -362,7 +376,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should do nothing if probe was not found but it is already "offline"', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([{ ...defaultAdoption, lastSyncDate: relativeDayUtc(-15), status: 'offline' }]);
 		getProbesWithAdminData.returns([]);
 
@@ -375,7 +389,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should update lastSyncDate if probe is connected', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([{ ...defaultAdoption, lastSyncDate: relativeDayUtc(-15) }]);
 
 		await adoptedProbes.syncDashboardData();
@@ -389,7 +403,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should not update anything if lastSyncDate is today', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -400,7 +414,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should update probe info if it is outdated', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 
 		getProbesWithAdminData.returns([
 			{
@@ -462,7 +476,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should update country and send notification if country of the probe changes', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		const defaultAdoptions = [
 			{
 				...defaultAdoption,
@@ -742,7 +756,7 @@ describe('AdoptedProbes', () => {
 
 	it('location-change notification escapes markdown in probe name', async () => {
 		const maliciousName = '][not the probe](https://another.link)[probe';
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([{
 			...defaultAdoption,
 			name: maliciousName,
@@ -798,7 +812,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should partially update probe meta info if it is outdated and there is "customLocation"', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([{
 			...defaultAdoption,
 			customLocation: JSON.stringify({
@@ -868,7 +882,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should not update probe meta info if it is actual', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -879,7 +893,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should treat null and undefined values as equal', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([{ ...defaultAdoption, state: null }]);
 
 		await adoptedProbes.syncDashboardData();
@@ -897,7 +911,7 @@ describe('AdoptedProbes', () => {
 		// Now probe connects with the uuid of first adoption and ip of second.
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '2.2.2.2' }]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		// Match found by UUID.
@@ -920,7 +934,7 @@ describe('AdoptedProbes', () => {
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '2.2.2.2', altIpAddresses: [ '1.1.1.1' ] }]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.delete.callCount).to.equal(1);
@@ -941,7 +955,7 @@ describe('AdoptedProbes', () => {
 		// Now probe connects with the uuid of first adoption and ip of second.
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '2.2.2.2' }]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		// Duplicated probe with ip 1.1.1.1 is not deleted, as it belongs to different user.
@@ -995,7 +1009,7 @@ describe('AdoptedProbes', () => {
 			uuid: '1-1-1-1-1',
 		}]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.delete.callCount).to.equal(0);
@@ -1029,7 +1043,7 @@ describe('AdoptedProbes', () => {
 			altIpAddresses: [ '1.1.1.1' ],
 		}]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		// Duplicated probe is not deleted but ip is nullified and duplicated alt ip is removed.
@@ -1058,7 +1072,7 @@ describe('AdoptedProbes', () => {
 			{ ...defaultConnectedProbe, uuid: '3-3-3-3-3', ipAddress: '4.4.4.4' },
 		]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.delete.callCount).to.equal(1);
@@ -1085,7 +1099,7 @@ describe('AdoptedProbes', () => {
 
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, altIpAddresses: [ '9.9.9.9' ] }]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.update.callCount).to.equal(1);
@@ -1099,7 +1113,7 @@ describe('AdoptedProbes', () => {
 		sql.select.resolves([ defaultAdoption ]);
 		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, uuid: '2-2-2-2-2', ipAddress: '2.2.2.2' }]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		// Match found by UUID.
@@ -1139,7 +1153,7 @@ describe('AdoptedProbes', () => {
 			{ ...defaultConnectedProbe, uuid: '1-1-1-1-1', ipAddress: '1.1.1.1', client: 'socket-A' },
 		]);
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		expect(sql.insert.callCount).to.equal(0);
@@ -1159,7 +1173,7 @@ describe('AdoptedProbes', () => {
 
 		sql.update.rejects(new Error('some sql error'));
 
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		await adoptedProbes.syncDashboardData();
 
 		// Second update is still fired, even when first was rejected.
@@ -1170,7 +1184,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should update localAdoptionServer if probe is not adopted', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 
 		const validLocalAdoptionServer = {
 			token: 'valid-token',
@@ -1201,7 +1215,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should clear localAdoptionServer if adoption token is expired', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 
 		const expiredLocalAdoptionServer = {
 			token: 'expired-token',
@@ -1232,7 +1246,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('class should clear localAdoptionServer if probe is adopted', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 
 		const validLocalAdoptionServer = {
 			token: 'valid-token',
@@ -1263,7 +1277,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getByIp method should return adopted probe data', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 
 		await adoptedProbes.syncDashboardData();
 
@@ -1277,11 +1291,12 @@ describe('AdoptedProbes', () => {
 			isIPv6Supported: true,
 			publicProbes: false,
 			allowedCountries: [ 'IE' ],
+			settings: { meteredConnection: false },
 		});
 	});
 
 	it('getUpdatedLocation method should return updated location', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([{
 			...defaultAdoption,
 			city: 'Nuuk',
@@ -1327,7 +1342,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedLocation method should return null if !connected.allowedCountries.includes(adopted.country)', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([{
 			...defaultAdoption,
 			country: 'GB',
@@ -1349,7 +1364,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedLocation method should return null if "!adopted.customLocation"', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([ defaultAdoption ]);
 
 		await adoptedProbes.syncDashboardData();
@@ -1358,7 +1373,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it(`getUpdatedProbes method should reuse the tags and index of the probe if the adoption doesn't change them`, async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([{ ...defaultAdoption, tags: '[]' }]);
 
 		await adoptedProbes.syncDashboardData();
@@ -1371,7 +1386,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedTags method should return null if there is nothing to update', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([{ ...defaultAdoption, tags: '[]' }]);
 
 		await adoptedProbes.syncDashboardData();
@@ -1380,7 +1395,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedTags method should return user tags', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 
 		await adoptedProbes.syncDashboardData();
 		const updatedTags = adoptedProbes.getUpdatedTags(defaultConnectedProbe);
@@ -1391,7 +1406,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedTags method should include user tag if public_probes: true', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([{ ...defaultAdoption, tags: '[]', publicProbes: 1 }]);
 
 		await adoptedProbes.syncDashboardData();
@@ -1407,7 +1422,7 @@ describe('AdoptedProbes', () => {
 	});
 
 	it('getUpdatedTags method should include deprecated prefix tag', async () => {
-		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData);
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
 		sql.select.resolves([{ ...defaultAdoption, tags: '[]', publicProbes: 1, deprecatedPrefix: 'old-jsdelivr' }]);
 
 		await adoptedProbes.syncDashboardData();

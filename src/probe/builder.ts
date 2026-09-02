@@ -82,6 +82,7 @@ export const buildProbe = async (socket: Socket, probeIpLimit: ProbeIpLimit): Pr
 		isIPv6Supported: false,
 		adoptionToken: handshake.adoptionToken,
 		isProxy: ipInfo.isProxy,
+		settings: { meteredConnection: false },
 	};
 
 	return probe;

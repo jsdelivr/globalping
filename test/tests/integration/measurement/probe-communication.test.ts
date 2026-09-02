@@ -7,8 +7,10 @@ import * as sinon from 'sinon';
 import { expect } from 'chai';
 import { ConsoleWriter } from 'h-logger2';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
+import { waitFor } from '../../../utils/wait.js';
 import * as id from '../../../../src/measurement/id.js';
-import { getProbeLogScopesStorage } from '../../../../src/probe/log-scopes-storage.js';
+import { getPersistentRedisClient } from '../../../../src/lib/redis/persistent-client.js';
+import { KNOWN_SCOPES_KEY, REPORTER_SCOPES_KEY_PREFIX, SCOPE_KEY_PREFIX } from '../../../../src/probe/log-scopes-storage.js';
 
 describe('Create measurement request', () => {
 	const expectedHost = process.env['HOSTNAME'] ?? '';
@@ -108,23 +110,30 @@ describe('Create measurement request', () => {
 		expect(logHandlerStub.firstCall.args).to.deep.equal([{ isActive: true }]);
 	});
 
-	it('should handle log scope reports from a connected probe', async () => {
-		const scopes = [ 'general', 'status-manager' ];
-		const writeScopes = sandbox.stub(getProbeLogScopesStorage(), 'writeScopes');
-		const handled = new Promise<void>((resolve) => {
-			writeScopes.callsFake(async () => {
-				resolve();
-				return true;
-			});
-		});
+	it('stores log scope reports received from a connected probe', async () => {
+		const redis = getPersistentRedisClient();
+		const scope = 'gateway-report';
+		const scopeKey = `${SCOPE_KEY_PREFIX}${scope}`;
+		const reporterKey = `${REPORTER_SCOPES_KEY_PREFIX}1.2.3.4`;
 
 		try {
-			probe.emit('probe:log-scopes', scopes);
-			await handled;
+			await Promise.all([
+				redis.sRem(KNOWN_SCOPES_KEY, scope),
+				redis.del(scopeKey),
+				redis.zRem(reporterKey, scope),
+			]);
 
-			expect(writeScopes.calledOnceWithExactly('1.2.3.4', scopes)).to.equal(true);
+			probe.emit('probe:log-scopes', [ scope ]);
+			await waitFor(async () => await redis.zScore(scopeKey, '1.2.3.4') !== null);
+
+			expect(await redis.sIsMember(KNOWN_SCOPES_KEY, scope)).to.equal(1);
+			expect(await redis.zScore(reporterKey, scope)).to.be.a('number');
 		} finally {
-			writeScopes.restore();
+			await Promise.all([
+				redis.sRem(KNOWN_SCOPES_KEY, scope),
+				redis.del(scopeKey),
+				redis.zRem(reporterKey, scope),
+			]);
 		}
 	});
 
@@ -154,7 +163,7 @@ describe('Create measurement request', () => {
 		expect(requestHandlerStub.firstCall.args[0]).to.deep.equal({
 			measurementId: mockedMeasurementId,
 			testId: '0',
-			measurement: { packets: 4, port: 80, protocol: 'ICMP', ipVersion: 4, type: 'ping', target: 'jsdelivr.com', inProgressUpdates: false, timeout: 10 },
+			measurement: { packets: 4, port: 80, protocol: 'ICMP', ipVersion: 4, type: 'ping', target: 'jsdelivr.com', inProgressUpdates: false, timeout: 15 },
 		});
 
 		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send()
@@ -194,8 +203,6 @@ describe('Create measurement request', () => {
 
 				expect(response).to.matchApiSchema();
 			});
-
-		probe.emit('probe:measurement:ack', null, () => {});
 
 		probe.emit('probe:measurement:progress', {
 			testId: '0',
@@ -377,8 +384,6 @@ describe('Create measurement request', () => {
 			});
 		});
 
-		probe.emit('probe:measurement:ack', null, () => {});
-
 		probe.emit('probe:measurement:progress', {
 			testId: '0',
 			measurementId: mockedMeasurementId,
@@ -504,7 +509,7 @@ describe('Create measurement request', () => {
 					status: 'initializing',
 					isIPv4Supported: false,
 					isIPv6Supported: false,
-					version: '0.50.0',
+					version: '0.52.0',
 					nodeVersion: 'v18.17.0',
 					uuid: '11111111-1111-4111-8111-111111111111',
 					location: {
@@ -553,7 +558,7 @@ describe('Create measurement request', () => {
 					status: 'ready',
 					isIPv4Supported: true,
 					isIPv6Supported: true,
-					version: '0.50.0',
+					version: '0.52.0',
 					nodeVersion: 'v18.17.0',
 					uuid: '11111111-1111-4111-8111-111111111111',
 					location: {
@@ -596,7 +601,7 @@ describe('Create measurement request', () => {
 					status: 'ready',
 					isIPv4Supported: true,
 					isIPv6Supported: false,
-					version: '0.50.0',
+					version: '0.52.0',
 					nodeVersion: 'v18.17.0',
 					uuid: '11111111-1111-4111-8111-111111111111',
 					location: {
@@ -639,7 +644,7 @@ describe('Create measurement request', () => {
 					status: 'ready',
 					isIPv4Supported: false,
 					isIPv6Supported: true,
-					version: '0.50.0',
+					version: '0.52.0',
 					nodeVersion: 'v18.17.0',
 					uuid: '11111111-1111-4111-8111-111111111111',
 					location: {
@@ -682,7 +687,7 @@ describe('Create measurement request', () => {
 					status: 'ping-test-failed',
 					isIPv4Supported: false,
 					isIPv6Supported: false,
-					version: '0.50.0',
+					version: '0.52.0',
 					nodeVersion: 'v18.17.0',
 					uuid: '11111111-1111-4111-8111-111111111111',
 					location: {

@@ -90,12 +90,35 @@ describe('probe logs', () => {
 		expect(transactionStub.called).to.equal(false);
 	});
 
-	it('passes validated log batches to storage', async () => {
+	it('acknowledges a valid batch after storage succeeds', async () => {
+		const callback = sandbox.stub();
 		const writeLogsStub = sandbox.stub(getProbeLogStorage(), 'writeLogs').resolves();
 		const message = { skipped: 0, logs: [{ ...validLog }] };
 
-		await logHandler(message);
+		await logHandler(message, callback);
 
 		expect(writeLogsStub.calledOnceWithExactly(mockProbe.uuid, message)).to.equal(true);
+		expect(callback.calledOnceWithExactly('success')).to.equal(true);
+	});
+
+	it('acknowledges an invalid batch as discarded', async () => {
+		const callback = sandbox.stub();
+
+		const error = await logHandler({ skipped: 0 } as LogMessage, callback).catch(err => err as Error);
+
+		expect(error).to.be.instanceof(Error);
+		expect(callback.calledOnceWithExactly('discard')).to.equal(true);
+		expect(transactionStub.called).to.equal(false);
+	});
+
+	it('does not acknowledge before a failed storage write', async () => {
+		const callback = sandbox.stub();
+		const error = new Error('Database write failed.');
+		transactionStub.rejects(error);
+
+		const result = await logHandler({ skipped: 0, logs: [{ ...validLog }] }, callback).catch(err => err);
+
+		expect(result).to.equal(error);
+		expect(callback.called).to.equal(false);
 	});
 });

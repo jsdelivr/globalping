@@ -4,10 +4,11 @@ import { randomBytes } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { TTLCache } from '@isaacs/ttlcache';
 import { scopedLoggerWithPrefix } from '../logger.js';
-import type { WsServerNamespace } from './server.js';
+import type { FetchRawLocalSockets } from './server.js';
 import type { ServerProbe, ProbeStats, SocketProbe } from '../../probe/types.js';
 import type { ProbeOverride } from '../override/probe-override.js';
 import type { RedisClient } from '../redis/shared.js';
+import { metricsAgent } from '../metrics.js';
 
 type NodeData = {
 	nodeId: string;
@@ -44,6 +45,14 @@ const MESSAGE_TYPES = {
 	STATS: 's',
 };
 
+const PULL_EVENT_TYPES = [
+	[ MESSAGE_TYPES.ALIVE, 'alive' ],
+	[ MESSAGE_TYPES.RELOAD, 'reload' ],
+	[ MESSAGE_TYPES.REMOVE, 'remove' ],
+	[ MESSAGE_TYPES.UPDATE, 'update' ],
+	[ MESSAGE_TYPES.STATS, 'stats' ],
+] as const;
+
 export class SyncedProbeList extends EventEmitter {
 	remoteDataTtl = 60 * 60 * 1000;
 	syncInterval = 2000;
@@ -61,6 +70,8 @@ export class SyncedProbeList extends EventEmitter {
 	private pushTimer: NodeJS.Timeout | undefined;
 	private pullTimer: NodeJS.Timeout | undefined;
 	private lastReadEventId: string;
+	private lastPushTimestamp: number | undefined;
+	private lastPullTimestamp: number | undefined;
 
 	private readonly nodeId: string;
 	private readonly nodeData: TTLCache<string, NodeData>;
@@ -72,7 +83,7 @@ export class SyncedProbeList extends EventEmitter {
 	constructor (
 		private readonly redis: RedisClient,
 		private readonly subRedisClient: RedisClient,
-		private readonly ioNamespace: WsServerNamespace,
+		private readonly fetchRawLocalSockets: FetchRawLocalSockets,
 		private readonly probeOverride: ProbeOverride,
 	) {
 		super();
@@ -291,7 +302,15 @@ export class SyncedProbeList extends EventEmitter {
 	}
 
 	async syncPush () {
-		const sockets = await this.ioNamespace.local.fetchSockets();
+		const now = Date.now();
+
+		if (this.lastPushTimestamp !== undefined) {
+			metricsAgent.recordProbeSyncGap('push', now - this.lastPushTimestamp);
+		}
+
+		this.lastPushTimestamp = now;
+
+		const sockets = await this.fetchRawLocalSockets();
 		const currentProbes = sockets.map(socket => _.cloneDeep(socket.data.probe));
 		const previousNodeData = this.nodeData.get(this.nodeId);
 
@@ -389,6 +408,14 @@ export class SyncedProbeList extends EventEmitter {
 	}
 
 	async syncPull () {
+		const now = Date.now();
+
+		if (this.lastPullTimestamp !== undefined) {
+			metricsAgent.recordProbeSyncGap('pull', now - this.lastPullTimestamp);
+		}
+
+		this.lastPullTimestamp = now;
+
 		// Returns an *inclusive* range starting from this.lastReadEventId
 		const events = await this.redis.xRange(this.remoteEventsStream, this.lastReadEventId, '+');
 		const hasMissedEvents = events[0]?.id !== this.lastReadEventId;
@@ -402,6 +429,16 @@ export class SyncedProbeList extends EventEmitter {
 		if (!eventsToProcess.length) {
 			return;
 		}
+
+		const pullEventMetrics = eventsToProcess.reduce((metrics, event) => {
+			for (const [ messageType, eventType ] of PULL_EVENT_TYPES) {
+				if (messageType in event.message) {
+					metrics[eventType] = (metrics[eventType] ?? 0) + 1;
+				}
+			}
+
+			return metrics;
+		}, {} as Partial<Record<(typeof PULL_EVENT_TYPES)[number][1], number>>);
 
 		const eventsByNode = _.groupBy(eventsToProcess, event => event.message[MESSAGE_TYPES.NODE]);
 		let nodeDataChanged = false;
@@ -508,6 +545,14 @@ export class SyncedProbeList extends EventEmitter {
 		}
 
 		this.lastReadEventId = events.at(-1)!.id;
+
+		for (const [ , eventType ] of PULL_EVENT_TYPES) {
+			const value = pullEventMetrics[eventType];
+
+			if (value) {
+				metricsAgent.recordProbeSyncPullEvents(eventType, value);
+			}
+		}
 	}
 
 	async sync () {

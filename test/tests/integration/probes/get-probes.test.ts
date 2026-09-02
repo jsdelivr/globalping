@@ -6,6 +6,7 @@ import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate, get
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { DASH_PROBES_TABLE } from '../../../../src/lib/override/adopted-probes.js';
 import { dashboardClient } from '../../../../src/lib/sql/client.js';
+import { PROBES_NAMESPACE } from '../../../../src/lib/ws/server.js';
 
 describe('Get Probes', () => {
 	const expectedHost = process.env['HOSTNAME'] ?? '';
@@ -72,7 +73,7 @@ describe('Get Probes', () => {
 				.expect((response) => {
 					expect(response.body).to.deep.equal([
 						{
-							version: '0.50.0',
+							version: '0.52.0',
 							location: {
 								continent: 'SA',
 								region: 'South America',
@@ -88,7 +89,7 @@ describe('Get Probes', () => {
 							resolvers: [],
 						},
 						{
-							version: '0.50.0',
+							version: '0.52.0',
 							location: {
 								continent: 'NA',
 								region: 'Northern America',
@@ -104,7 +105,7 @@ describe('Get Probes', () => {
 							resolvers: [],
 						},
 						{
-							version: '0.50.0',
+							version: '0.52.0',
 							location: {
 								continent: 'NA',
 								region: 'Northern America',
@@ -120,7 +121,7 @@ describe('Get Probes', () => {
 							resolvers: [],
 						},
 						{
-							version: '0.50.0',
+							version: '0.52.0',
 							location: {
 								asn: 701,
 								city: 'Washington',
@@ -155,7 +156,7 @@ describe('Get Probes', () => {
 				.expect(200)
 				.expect((response) => {
 					expect(response.body).to.deep.equal([{
-						version: '0.50.0',
+						version: '0.52.0',
 						location: {
 							continent: 'SA',
 							region: 'South America',
@@ -187,7 +188,7 @@ describe('Get Probes', () => {
 				.expect(200)
 				.expect((response) => {
 					expect(response.body[0]).to.deep.equal({
-						version: '0.50.0',
+						version: '0.52.0',
 						isIPv4Supported: false,
 						isIPv6Supported: false,
 						host: expectedHost,
@@ -279,6 +280,7 @@ describe('Get Probes', () => {
 					network: 'InterBS S.R.L. (BAEHOST)',
 					asn: 61004,
 					allowedCountries: '["AR"]',
+					settings: JSON.stringify({ meteredConnection: false }),
 					customLocation: JSON.stringify({
 						country: 'AR',
 						city: 'Cordoba',
@@ -307,7 +309,7 @@ describe('Get Probes', () => {
 					.expect(200)
 					.expect((response) => {
 						expect(response.body[0]).to.deep.equal({
-							version: '0.50.0',
+							version: '0.52.0',
 							location: {
 								continent: 'SA',
 								region: 'South America',
@@ -325,6 +327,31 @@ describe('Get Probes', () => {
 
 						expect(response).to.matchApiSchema();
 					});
+			});
+
+			it('should send updated settings to the probe', async () => {
+				nockGeoIpProviders({ ip2location: 'argentina', ipmap: 'argentina', maxmind: 'argentina', ipinfo: 'argentina', fastly: 'argentina' });
+
+				await dashboardClient(DASH_PROBES_TABLE)
+					.where({ uuid: '11111111-1111-4111-8111-111111111111' })
+					.update({ settings: JSON.stringify({ meteredConnection: true }) });
+
+				await getIoContext().adoptedProbes.fetchDProbes();
+
+				let resolveInitialSettings!: (settings: unknown) => void;
+				const initialSettings = new Promise((resolve) => { resolveInitialSettings = resolve; });
+				const probe = await addFakeProbe({ 'api:settings:update': resolveInitialSettings });
+				const settings = await initialSettings;
+
+				expect(settings).to.deep.equal({ meteredConnection: true });
+
+				const serverSocket = getIoContext().io.of(PROBES_NAMESPACE).sockets.get(probe.id!);
+				const settingsUpdate = new Promise<void>(resolve => serverSocket!.once('probe:settings:update', resolve));
+				probe.emit('probe:settings:update', settings);
+				await settingsUpdate;
+
+				const [ updatedProbe ] = await getIoContext().syncedProbeList.fetchProbes();
+				expect(updatedProbe?.settings).to.deep.equal({ meteredConnection: true });
 			});
 		});
 
@@ -388,7 +415,7 @@ describe('Get Probes', () => {
 					.expect(200)
 					.expect((response) => {
 						expect(response.body[0]).to.deep.equal({
-							version: '0.50.0',
+							version: '0.52.0',
 							location: {
 								continent: 'SA',
 								region: 'South America',

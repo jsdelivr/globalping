@@ -14,20 +14,14 @@ export type LogMessage = {
 
 const probeLogStorage = getProbeLogStorage();
 
-export const handleNewLogs = (probe: SocketProbe) => async (logMessage: LogMessage, callback?: (arg: string) => void) => {
+export const handleNewLogs = (probe: SocketProbe) => async (logMessage: LogMessage, callback?: (response: 'success' | 'discard') => void) => {
 	const validation = logMessageSchema.validate(logMessage);
 
 	if (validation.error) {
-		callback?.('error');
+		callback?.('discard');
 		throw validation.error;
 	}
 
-	try {
-		await probeLogStorage.writeLogs(probe.uuid, logMessage);
-	} catch (error: unknown) {
-		callback?.('error');
-		throw error;
-	}
-
+	await probeLogStorage.writeLogs(probe.uuid, logMessage);
 	callback?.('success');
 };

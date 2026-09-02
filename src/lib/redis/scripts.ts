@@ -145,6 +145,7 @@ const markFinishedByTimeout = defineScript({
 	local keyMeasurementAwaiting = KEYS[2]
 	local date = ARGV[1]
 	local timeoutMessage = ARGV[2]
+	local timedOutTests = 0
 
 	local measurementJson = redis.pcall('JSON.GET', keyMeasurementResults, '$')
 	if not measurementJson or measurementJson.err then
@@ -163,6 +164,7 @@ const markFinishedByTimeout = defineScript({
 
 	for index, resultObject in ipairs(measurement.results) do
 		if resultObject.result.status == 'in-progress' then
+			timedOutTests = timedOutTests + 1
 			local rawOutput = resultObject.result.rawOutput or ''
 			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.status', '"failed"')
 			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.failureSource', '"internal"')
@@ -172,7 +174,7 @@ const markFinishedByTimeout = defineScript({
 
 	redis.call('COMPRESSED.JSON.COMPRESS', keyMeasurementResults)
 
-	return redis.call('COMPRESSED.JSON.GET', keyMeasurementResults)
+	return { redis.call('COMPRESSED.JSON.GET', keyMeasurementResults), timedOutTests }
 	`,
 	parseCommand (parser: CommandParser, measurementId: string) {
 		pushMeasurementKeys(parser, measurementId);
@@ -182,8 +184,15 @@ const markFinishedByTimeout = defineScript({
 			'The measurement timed out.',
 		);
 	},
-	transformReply (reply: Buffer | null) {
-		return reply;
+	transformReply (reply: [Buffer, number] | null) {
+		if (!reply) {
+			return null;
+		}
+
+		return {
+			recordBuffer: reply[0],
+			timedOutTests: reply[1],
+		};
 	},
 });
 

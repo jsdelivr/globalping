@@ -2,6 +2,7 @@ import config from 'config';
 import _ from 'lodash';
 import { PROBES_NAMESPACE } from '../lib/ws/server.js';
 import { scopedLogger } from '../lib/logger.js';
+import { metricsAgent } from '../lib/metrics.js';
 import type { ServerProbe } from '../probe/types.js';
 import type { ProbesLocationFilter } from '../probe/probes-location-filter.js';
 import type { MeasurementRequest } from '../measurement/types.js';
@@ -147,6 +148,7 @@ export class StreamScheduleExecutor {
 				const measurementId = await this.store.createMeasurement(requestBase, probesMap, probesChunk, 'special', {
 					timeSeriesEnabled: Boolean(schedule.time_series_enabled),
 				});
+				metricsAgent.recordMeasurement(requestBase.type, probesMap.size);
 
 				logger.debug(`Executing a scheduled measurement.`, { measurementId, scheduleId });
 
