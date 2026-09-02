@@ -232,13 +232,14 @@ const registerProbeLogScopes = defineScript({
 	local knownScopesKey = KEYS[2]
 	local activeWindow = tonumber(ARGV[1])
 	local maxScopes = tonumber(ARGV[2])
-	local reporterIdentity = ARGV[3]
+	local minReporters = tonumber(ARGV[3])
+	local reporterIdentity = ARGV[4]
 	local now = tonumber(redis.call('TIME')[1])
 	local cutoff = now - activeWindow
 
 	redis.call('ZREMRANGEBYSCORE', reporterKey, '-inf', cutoff)
 
-	local scores = redis.call('ZMSCORE', reporterKey, unpack(ARGV, 4))
+	local scores = redis.call('ZMSCORE', reporterKey, unpack(ARGV, 5))
 	local newScopes = 0
 
 	for index = 1, #scores do
@@ -253,7 +254,7 @@ const registerProbeLogScopes = defineScript({
 
 	local zaddArguments = {}
 
-	for index = 4, #ARGV do
+	for index = 5, #ARGV do
 		table.insert(zaddArguments, now)
 		table.insert(zaddArguments, ARGV[index])
 	end
@@ -261,15 +262,26 @@ const registerProbeLogScopes = defineScript({
 	redis.call('ZADD', reporterKey, 'GT', unpack(zaddArguments))
 	redis.call('EXPIRE', reporterKey, activeWindow)
 
+	local knownScopes = redis.call('SMISMEMBER', knownScopesKey, unpack(ARGV, 5))
+	local newKnownScopes = {}
+
 	for index = 3, #KEYS do
 		local scopeKey = KEYS[index]
+		local scopeIndex = index - 2
 
 		redis.call('ZADD', scopeKey, 'GT', now, reporterIdentity)
 		redis.call('ZREMRANGEBYSCORE', scopeKey, '-inf', cutoff)
 		redis.call('EXPIRE', scopeKey, activeWindow)
+
+		if knownScopes[scopeIndex] == 0 and redis.call('ZCARD', scopeKey) >= minReporters then
+			table.insert(newKnownScopes, ARGV[index + 2])
+		end
 	end
 
-	redis.call('SADD', knownScopesKey, unpack(ARGV, 4))
+	if #newKnownScopes > 0 then
+		redis.call('SADD', knownScopesKey, unpack(newKnownScopes))
+	end
+
 	return 1
 	`,
 	parseCommand (
@@ -280,6 +292,7 @@ const registerProbeLogScopes = defineScript({
 		reporterIdentity: string,
 		activeWindow: number,
 		maxScopes: number,
+		minReporters: number,
 		scopes: string[],
 	) {
 		parser.push((scopeKeys.length + 2).toString());
@@ -290,6 +303,7 @@ const registerProbeLogScopes = defineScript({
 		parser.push(
 			activeWindow.toString(),
 			maxScopes.toString(),
+			minReporters.toString(),
 			reporterIdentity,
 			...scopes,
 		);
@@ -308,16 +322,16 @@ const countProbeLogScopeReporters = defineScript({
 	redis.call('ZREMRANGEBYSCORE', KEYS[2], '-inf', cutoff)
 	local count = redis.call('ZCARD', KEYS[2])
 
-	if count == 0 then
+	if count < tonumber(ARGV[3]) then
 		redis.call('SREM', KEYS[1], ARGV[1])
 	end
 
 	return count
 	`,
-	parseCommand (parser: CommandParser, knownScopesKey: string, scopeKey: string, scope: string, activeWindow: number) {
+	parseCommand (parser: CommandParser, knownScopesKey: string, scopeKey: string, scope: string, activeWindow: number, minReporters: number) {
 		parser.pushKey(knownScopesKey);
 		parser.pushKey(scopeKey);
-		parser.push(scope, activeWindow.toString());
+		parser.push(scope, activeWindow.toString(), minReporters.toString());
 	},
 	transformReply (reply: number) {
 		return reply;

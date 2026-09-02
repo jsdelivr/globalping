@@ -5,6 +5,7 @@ import { getIpKey } from '../../../../src/lib/ws/helper/probe-ip-limit.js';
 import {
 	KNOWN_SCOPES_KEY,
 	MAX_SCOPES_PER_REPORTER,
+	MIN_SCOPE_REPORTERS,
 	ProbeLogScopesStorage,
 	REPORTER_SCOPES_KEY_PREFIX,
 	SCOPE_ACTIVE_WINDOW,
@@ -197,9 +198,11 @@ describe('Probe Log Scopes Storage', () => {
 		scopes.forEach(scopeKey);
 
 		await report(writer, 9, [ 'general', 'alpha' ]);
+		expect(await redis.sIsMember(KNOWN_SCOPES_KEY, 'alpha')).to.equal(0);
 		expect(await createStorage().readScopes()).to.deep.equal([]);
 
 		await writeScopes(writer, '192.0.2.9', [ 'general', 'alpha' ]);
+		expect(await redis.sIsMember(KNOWN_SCOPES_KEY, 'alpha')).to.equal(1);
 		expect(await createStorage().readScopes()).to.deep.equal([ 'alpha', 'general' ]);
 
 		await report(writer, 10, [ 'general' ], 10);
@@ -258,9 +261,10 @@ describe('Probe Log Scopes Storage', () => {
 
 		expect(await storage.readScopes()).to.deep.equal([ 'general' ]);
 		expect(await redis.zCard(partialKey)).to.equal(9);
+		expect(await redis.sIsMember(KNOWN_SCOPES_KEY, 'partial')).to.equal(0);
 	});
 
-	it('registers both indexes and known scopes in one Redis command', async () => {
+	it('delegates scope registration to one Redis command', async () => {
 		const storage = createStorage();
 		const ipAddress = '192.0.2.100';
 		const scopes = [ 'general', 'status-manager' ];
@@ -281,6 +285,7 @@ describe('Probe Log Scopes Storage', () => {
 			ipAddress,
 			SCOPE_ACTIVE_WINDOW,
 			MAX_SCOPES_PER_REPORTER,
+			MIN_SCOPE_REPORTERS,
 			scopes,
 		)).to.equal(true);
 

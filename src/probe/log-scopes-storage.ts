@@ -34,6 +34,7 @@ export class ProbeLogScopesStorage {
 			reporterIdentity,
 			SCOPE_ACTIVE_WINDOW,
 			MAX_SCOPES_PER_REPORTER,
+			MIN_SCOPE_REPORTERS,
 			uniqueScopes,
 		);
 	}
@@ -50,9 +51,10 @@ export class ProbeLogScopesStorage {
 			`${SCOPE_KEY_PREFIX}${scope}`,
 			scope,
 			SCOPE_ACTIVE_WINDOW,
+			MIN_SCOPE_REPORTERS,
 		)));
 
-		const totalReporters = Math.max(0, ...counts);
+		const totalReporters = counts.reduce((max, count) => Math.max(max, count), 0);
 		const threshold = Math.max(totalReporters * SCOPE_FLEET_SHARE, MIN_SCOPE_REPORTERS);
 
 		this.cachedScopes = knownScopes
