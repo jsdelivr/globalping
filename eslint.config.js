@@ -43,6 +43,13 @@ export default defineConfig([
 		},
 	},
 	{
+		files: [ 'test/dist.js' ],
+
+		rules: {
+			'n/no-missing-import': 'off',
+		},
+	},
+	{
 		files: [ 'test/**' ],
 
 		rules: {
