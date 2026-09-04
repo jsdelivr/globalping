@@ -2,7 +2,11 @@
 
 set -eu
 
-PORTS="7101 7102 7103 7104"
+PORT_1="${REDIS_CLUSTER_NODE_1_PORT:-7101}"
+PORT_2="${REDIS_CLUSTER_NODE_2_PORT:-7102}"
+PORT_3="${REDIS_CLUSTER_NODE_3_PORT:-7103}"
+PORT_4="${REDIS_CLUSTER_NODE_4_PORT:-7104}"
+PORTS="$PORT_1 $PORT_2 $PORT_3 $PORT_4"
 MAX_ATTEMPTS=60
 attempt=1
 
@@ -34,7 +38,7 @@ done
 attempt=1
 
 while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
-	cluster_nodes="$(redis-cli --no-auth-warning -h "$REDIS_PUBLIC_IP" -p 7101 -a "$REDIS_PASSWORD" cluster nodes 2> /dev/null || true)"
+	cluster_nodes="$(redis-cli --no-auth-warning -h "$REDIS_PUBLIC_IP" -p "$PORT_1" -a "$REDIS_PASSWORD" cluster nodes 2> /dev/null || true)"
 	known_nodes="$(printf '%s\n' "$cluster_nodes" | grep -Ec '^[0-9a-f]{40} ' || true)"
 
 	if [ "$known_nodes" -gt 0 ]; then
@@ -54,7 +58,7 @@ if [ "$known_nodes" -gt 1 ]; then
 	attempt=1
 
 	while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
-		if redis-cli --no-auth-warning -h "$REDIS_PUBLIC_IP" -p 7101 -a "$REDIS_PASSWORD" cluster info | grep -q '^cluster_state:ok'; then
+		if redis-cli --no-auth-warning -h "$REDIS_PUBLIC_IP" -p "$PORT_1" -a "$REDIS_PASSWORD" cluster info | grep -q '^cluster_state:ok'; then
 			echo "Redis cluster is already initialized."
 			exit 0
 		fi
@@ -70,9 +74,9 @@ if [ "$known_nodes" -gt 1 ]; then
 fi
 
 redis-cli --no-auth-warning -a "$REDIS_PASSWORD" --cluster create \
-	"$REDIS_PUBLIC_IP:7101" \
-	"$REDIS_PUBLIC_IP:7102" \
-	"$REDIS_PUBLIC_IP:7103" \
-	"$REDIS_PUBLIC_IP:7104" \
+	"$REDIS_PUBLIC_IP:$PORT_1" \
+	"$REDIS_PUBLIC_IP:$PORT_2" \
+	"$REDIS_PUBLIC_IP:$PORT_3" \
+	"$REDIS_PUBLIC_IP:$PORT_4" \
 	--cluster-replicas 0 \
 	--cluster-yes

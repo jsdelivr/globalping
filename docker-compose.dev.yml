@@ -8,7 +8,7 @@ services:
   redis-standalone-1:
     image: redis/redis-stack-server:7.4.0-v1
     ports:
-      - "7001:7001"
+      - "${REDIS_STANDALONE_1_PORT:-7001}:7001"
     volumes:
       - ./config/redis/standalone-1.conf:/redis-stack.conf
       - ./data/redis/7001:/data
@@ -17,7 +17,7 @@ services:
   redis-standalone-2:
     image: redis/redis-stack-server:7.4.0-v1
     ports:
-      - "7002:7002"
+      - "${REDIS_STANDALONE_2_PORT:-7002}:7002"
     volumes:
       - ./config/redis/standalone-2.conf:/redis-stack.conf
       - ./data/redis/7002:/data
@@ -26,7 +26,7 @@ services:
   redis-standalone-3:
     image: redis/redis-stack-server:7.4.0-v1
     ports:
-      - "7003:7003"
+      - "${REDIS_STANDALONE_3_PORT:-7003}:7003"
     volumes:
       - ./config/redis/standalone-3.conf:/redis-stack.conf
       - ./data/redis/7003:/data
@@ -34,7 +34,7 @@ services:
       - ./config/redis/.env.redis
   redis-node-01:
     <<: *redis-node-image
-    command: [ "bash", "/home/runner/mounted/node.sh", "7101" ]
+    command: [ "bash", "/home/runner/mounted/node.sh", "${REDIS_CLUSTER_NODE_1_PORT:-7101}", "${REDIS_CLUSTER_NODE_1_BUS_PORT:-17101}" ]
     network_mode: "host"
     volumes:
       - ./config/redis/cluster:/home/runner/mounted
@@ -43,7 +43,7 @@ services:
       - ./config/redis/.env.redis
   redis-node-02:
     <<: *redis-node-image
-    command: [ "bash", "/home/runner/mounted/node.sh", "7102" ]
+    command: [ "bash", "/home/runner/mounted/node.sh", "${REDIS_CLUSTER_NODE_2_PORT:-7102}", "${REDIS_CLUSTER_NODE_2_BUS_PORT:-17102}" ]
     network_mode: "host"
     volumes:
       - ./config/redis/cluster:/home/runner/mounted
@@ -52,7 +52,7 @@ services:
       - ./config/redis/.env.redis
   redis-node-03:
     <<: *redis-node-image
-    command: [ "bash", "/home/runner/mounted/node.sh", "7103" ]
+    command: [ "bash", "/home/runner/mounted/node.sh", "${REDIS_CLUSTER_NODE_3_PORT:-7103}", "${REDIS_CLUSTER_NODE_3_BUS_PORT:-17103}" ]
     network_mode: "host"
     volumes:
       - ./config/redis/cluster:/home/runner/mounted
@@ -61,7 +61,7 @@ services:
       - ./config/redis/.env.redis
   redis-node-04:
     <<: *redis-node-image
-    command: [ "bash", "/home/runner/mounted/node.sh", "7104" ]
+    command: [ "bash", "/home/runner/mounted/node.sh", "${REDIS_CLUSTER_NODE_4_PORT:-7104}", "${REDIS_CLUSTER_NODE_4_BUS_PORT:-17104}" ]
     network_mode: "host"
     volumes:
       - ./config/redis/cluster:/home/runner/mounted
@@ -81,6 +81,11 @@ services:
       - ./config/redis/cluster:/home/runner/mounted
     env_file:
       - ./config/redis/.env.redis
+    environment:
+      - REDIS_CLUSTER_NODE_1_PORT=${REDIS_CLUSTER_NODE_1_PORT:-7101}
+      - REDIS_CLUSTER_NODE_2_PORT=${REDIS_CLUSTER_NODE_2_PORT:-7102}
+      - REDIS_CLUSTER_NODE_3_PORT=${REDIS_CLUSTER_NODE_3_PORT:-7103}
+      - REDIS_CLUSTER_NODE_4_PORT=${REDIS_CLUSTER_NODE_4_PORT:-7104}
 
   mariadb:
     image: mariadb:11.8.6
@@ -90,7 +95,7 @@ services:
       - MARIADB_PASSWORD=password
       - MARIADB_ROOT_PASSWORD=root
     ports:
-      - "13306:3306"
+      - "${DASHBOARD_DB_PORT:-13306}:3306"
     volumes:
       - ./config/dashboard/create-dbs.sql:/docker-entrypoint-initdb.d/01-create-dbs.sql
       - ./migrations/dashboard/create-tables.js.sql:/docker-entrypoint-initdb.d/02-create-tables.sql
@@ -119,7 +124,7 @@ services:
       - POSTGRES_USER=globalping-api
       - POSTGRES_PASSWORD=password
     ports:
-      - "15432:5432"
+      - "${MEASUREMENT_STORE_DB_PORT:-15432}:5432"
     volumes:
       - ./config/measurement-store-1/create-dbs.sql:/docker-entrypoint-initdb.d/01-create-dbs.sql
     healthcheck:
@@ -147,7 +152,7 @@ services:
       - POSTGRES_USER=globalping-api
       - POSTGRES_PASSWORD=password
     ports:
-      - "15442:5432"
+      - "${TIME_SERIES_DB_PORT:-15442}:5432"
     volumes:
       - ./config/time-series-1/create-dbs.sql:/docker-entrypoint-initdb.d/01-create-dbs.sql
     healthcheck:
