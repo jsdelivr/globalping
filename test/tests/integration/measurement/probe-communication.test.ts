@@ -7,7 +7,10 @@ import * as sinon from 'sinon';
 import { expect } from 'chai';
 import { ConsoleWriter } from 'h-logger2';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
+import { waitFor } from '../../../utils/wait.js';
 import * as id from '../../../../src/measurement/id.js';
+import { getPersistentRedisClient } from '../../../../src/lib/redis/persistent-client.js';
+import { REPORTER_SCOPES_KEY_PREFIX, SCOPE_KEY_PREFIX } from '../../../../src/probe/log-scopes-storage.js';
 
 describe('Create measurement request', () => {
 	const expectedHost = process.env['HOSTNAME'] ?? '';
@@ -105,6 +108,30 @@ describe('Create measurement request', () => {
 
 		expect(logHandlerStub.callCount).to.equal(1);
 		expect(logHandlerStub.firstCall.args).to.deep.equal([{ isActive: true }]);
+	});
+
+	it('stores log scope reports received from a connected probe', async () => {
+		const redis = getPersistentRedisClient();
+		const scope = 'gateway-report';
+		const scopeKey = `${SCOPE_KEY_PREFIX}${scope}`;
+		const reporterKey = `${REPORTER_SCOPES_KEY_PREFIX}1.2.3.4`;
+
+		try {
+			await Promise.all([
+				redis.del(scopeKey),
+				redis.zRem(reporterKey, scope),
+			]);
+
+			probe.emit('probe:log-scopes', [ scope ]);
+			await waitFor(async () => await redis.zScore(scopeKey, '1.2.3.4') !== null);
+
+			expect(await redis.zScore(reporterKey, scope)).to.be.a('number');
+		} finally {
+			await Promise.all([
+				redis.del(scopeKey),
+				redis.zRem(reporterKey, scope),
+			]);
+		}
 	});
 
 	it('should send and handle proper events during measurement request', async () => {

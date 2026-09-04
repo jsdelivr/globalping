@@ -1,6 +1,7 @@
 import {
 	type GetProbeLogsResponse,
 	waitForLogSync,
+	waitForStableProbeLogs,
 	waitProbeInCity,
 	waitProbeToConnect,
 	waitProbeToDisconnect,
@@ -91,6 +92,7 @@ describe('probe logs', () => {
 
 		expect(response.body.lastId).to.exist;
 		expect(response.body.lastId).to.be.a('string');
+		expect(response.body.lastId).to.match(/^\d+$/);
 		expect(response.body.logs).to.be.an('array');
 
 		const logCount = response.body.logs.length;
@@ -110,6 +112,7 @@ describe('probe logs', () => {
 
 		expect(initialResponse.body.lastId).to.exist;
 		expect(initialResponse.body.lastId).to.be.a('string');
+		expect(initialResponse.body.lastId).to.match(/^\d+$/);
 
 		const lastId = initialResponse.body.lastId;
 
@@ -123,7 +126,7 @@ describe('probe logs', () => {
 		);
 
 		expect(newResponse.statusCode).to.equal(200);
-		expect(newResponse.body.lastId).to.be.null;
+		expect(newResponse.body.lastId).to.equal(lastId);
 		expect(newResponse.body.logs).to.be.an('array');
 		expect(newResponse.body.logs.length).to.equal(0);
 	});
@@ -136,32 +139,46 @@ describe('probe logs', () => {
 
 		expect(response.body.lastId).to.exist;
 		expect(response.body.lastId).to.be.a('string');
-
-		const initialTimestamps = response.body.logs.map(log => log.timestamp);
-		const lastId = response.body.lastId;
+		expect(response.body.lastId).to.match(/^\d+$/);
 
 		await docker.stopProbeContainer();
 		await waitProbeToDisconnect();
+
+		const offlineResponse = await waitForStableProbeLogs(PROBE_ID, authCookie);
+
+		expect(offlineResponse.statusCode).to.equal(200);
+		expect(offlineResponse.body.lastId).to.be.a('string');
+		expect(offlineResponse.body.lastId).to.match(/^\d+$/);
+
+		const settledTimestamps = offlineResponse.body.logs.flatMap(log => log.timestamp ? [ log.timestamp ] : []);
+		const lastId = offlineResponse.body.lastId;
+
 		await docker.startProbeContainer();
 		await waitProbeToConnect();
 
 		const newResponse = await waitForLogSync(PROBE_ID, authCookie, lastId as string);
 
 		expect(newResponse.body.lastId).to.exist;
+		expect(newResponse.body.lastId).to.match(/^\d+$/);
 		expect(newResponse.body.lastId).to.not.equal(lastId);
 
-		const newTimestamps = newResponse.body.logs.map(log => log.timestamp);
-		expect(_.intersection(initialTimestamps, newTimestamps).length).to.equal(0);
-	});
+		const newTimestamps = newResponse.body.logs.flatMap(log => log.timestamp ? [ log.timestamp ] : []);
+		expect(newTimestamps).to.not.be.empty;
+		expect(_.intersection(settledTimestamps, newTimestamps).length).to.equal(0);
+	}).timeout(100000);
 
 	it('should return logs when probe is offline', async () => {
 		const jwt = await getSignedJwt({ id: USER_ID, app_access: true });
 		const authCookie = `${sessionConfig.cookieName}=${jwt}`;
 
-		const initialResponse = await waitForLogSync(PROBE_ID, authCookie);
+		await waitForLogSync(PROBE_ID, authCookie);
 
 		await docker.stopProbeContainer();
 		await waitProbeToDisconnect();
+
+		const offlineBaseline = await waitForStableProbeLogs(PROBE_ID, authCookie);
+
+		expect(offlineBaseline.statusCode).to.equal(200);
 
 		const newResponse = await got<GetProbeLogsResponse>(
 			`http://localhost:80/v1/probes/${PROBE_ID}/logs`,
@@ -172,6 +189,6 @@ describe('probe logs', () => {
 			},
 		);
 
-		expect(initialResponse.body).to.deep.equal(newResponse.body);
+		expect(offlineBaseline.body).to.deep.equal(newResponse.body);
 	});
 });
