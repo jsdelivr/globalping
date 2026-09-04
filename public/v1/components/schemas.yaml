@@ -65,6 +65,7 @@ components:
       default: A
     HttpProtocol:
       type: string
+      description: The protocol to use for the HTTP request.
       enum:
         - HTTP
         - HTTPS
