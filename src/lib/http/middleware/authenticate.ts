@@ -46,10 +46,14 @@ const resolveAccount = async (ctx: Parameters<ExtendedMiddleware>[0], payload: S
 	// PHASE5: drop the lookup. Directus puts the account in the cookie, but the sessions issued before that shipped stay
 	// valid for a day, so until then it still has to be resolved here.
 	const userAccountId = payload.user_account_id ?? await getUserAccountId(payload.id!);
-	const activeAccountId = ctx.cookies.get(sessionConfig.activeAccountCookieName);
+	const [ cookieUserId, activeAccountId ] = (ctx.cookies.get(sessionConfig.activeAccountCookieName) ?? '').split(':');
 
 	// user_account_id is trusted as it is signed by the dashboard, unlike the activeAccountId which is a cookie set by dashboard FE.
-	if (!activeAccountId || activeAccountId === userAccountId) {
+	if (
+		// If who set the cookie doesn't match the requester => fallback to the requester's account.
+		cookieUserId !== payload.id
+		 || !activeAccountId
+		 || activeAccountId === userAccountId) {
 		return { accountId: userAccountId, accountRole: 'owner' as AccountRole };
 	}
 

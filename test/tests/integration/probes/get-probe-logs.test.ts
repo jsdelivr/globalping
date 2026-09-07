@@ -115,7 +115,7 @@ describe('Get Probe Logs', () => {
 		const jwt = await getSignedJwt({ id: user.id, app_access: true, user_account_id: user.accountId });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${viewerOrg.accountId}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${viewerOrg.accountId}`)
 			.send()
 			.expect(200);
 	});

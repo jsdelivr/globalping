@@ -27,7 +27,7 @@ describe('rate limiter', () => {
 	let viewerOrg: { id: string; accountId: string };
 	let otherOrg: { id: string; accountId: string };
 
-	const getCookies = async (userId: string, activeAccountId?: string) => {
+	const getCookies = async (userId: string, activeAccountId?: string, activeAccountUserId = userId) => {
 		const jwt = await new SignJWT({ id: userId, app_access: true, user_account_id: user.accountId })
 			.setProtectedHeader({ alg: 'HS256' })
 			.setIssuedAt()
@@ -36,7 +36,7 @@ describe('rate limiter', () => {
 
 		return [
 			`${sessionConfig.cookieName}=${jwt}`,
-			...activeAccountId ? [ `${sessionConfig.activeAccountCookieName}=${activeAccountId}` ] : [],
+			...activeAccountId ? [ `${sessionConfig.activeAccountCookieName}=${activeAccountUserId}:${activeAccountId}` ] : [],
 		];
 	};
 
@@ -218,6 +218,17 @@ describe('rate limiter', () => {
 
 				const response = await requestAgent.get('/v1/limits')
 					.set('Cookie', await getCookies(user.id, otherOrg.accountId))
+					.send();
+
+				expect(response.body.credits).to.deep.equal({ remaining: 10 });
+			});
+
+			it('should ignore the active account left by another user of the same device', async () => {
+				await insertCredits(user.accountId, 10);
+				await insertCredits(memberOrg.accountId, 20);
+
+				const response = await requestAgent.get('/v1/limits')
+					.set('Cookie', await getCookies(user.id, memberOrg.accountId, 'another-user-id'))
 					.send();
 
 				expect(response.body.credits).to.deep.equal({ remaining: 10 });

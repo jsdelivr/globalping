@@ -325,7 +325,7 @@ describe('authenticate', () => {
 			}).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
 
 			await requestAgent.post('/v1/measurements')
-				.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${viewerOrg.accountId}`)
+				.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${viewerOrg.accountId}`)
 				.send({
 					type: 'ping',
 					target: 'example.com',

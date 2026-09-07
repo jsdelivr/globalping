@@ -66,7 +66,7 @@ describe('Restart Probe', () => {
 		const jwt = await getSignedJwt({ id: user.id, app_access: true, user_account_id: user.accountId });
 
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
-			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${viewerOrg.accountId}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${viewerOrg.accountId}`)
 			.send()
 			.expect(403);
 	});
