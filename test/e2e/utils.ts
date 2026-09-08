@@ -130,6 +130,11 @@ export const waitForLogSync = async (id: string, authCookie: string, after: stri
 };
 
 export const getAccountId = async (userId: string) => {
-	const account = await dashboardClient('gp_accounts').where({ user: userId }).first<{ id: string }>('id');
+	const account = await dashboardClient('gp_accounts').where({ user: userId }).first<{ id: string } | undefined>('id');
+
+	if (!account) {
+		throw new Error(`No account created for user ${userId}.`);
+	}
+
 	return account.id;
 };

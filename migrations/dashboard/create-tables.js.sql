@@ -122,6 +122,12 @@ CREATE TABLE IF NOT EXISTS gp_accounts (
 	CONSTRAINT gp_accounts_user_xor_org CHECK (`user` IS NULL <> (`org` IS NULL))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE OR REPLACE TRIGGER directus_users_create_account AFTER INSERT ON directus_users
+FOR EACH ROW INSERT IGNORE INTO gp_accounts (id, user) VALUES (UUID(), NEW.id);
+
+CREATE OR REPLACE TRIGGER gp_orgs_create_account AFTER INSERT ON gp_orgs
+FOR EACH ROW INSERT IGNORE INTO gp_accounts (id, org) VALUES (UUID(), NEW.id);
+
 CREATE TABLE IF NOT EXISTS gp_location_overrides (
 	id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 	user_created CHAR(36),

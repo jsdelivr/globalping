@@ -19,7 +19,7 @@ describe('Adoption token', () => {
 	before(async () => {
 		await getTestServer();
 
-		user = await createUser(dashboardClient, { id: 'userIdValue', accountId: 'accountIdValue', adoption_token: 'adoptionTokenValue' });
+		user = await createUser(dashboardClient, { id: 'userIdValue', adoption_token: 'adoptionTokenValue' });
 
 		org = await createOrg(dashboardClient, {
 			adoption_token: 'orgAdoptionToken',
@@ -97,7 +97,7 @@ describe('Adoption token', () => {
 					allowedCountries: [ 'US' ],
 					localAdoptionServer: null,
 				},
-				account: { id: 'accountIdValue' },
+				account: { id: user.accountId },
 			});
 
 			return true;
@@ -115,7 +115,7 @@ describe('Adoption token', () => {
 			id: randomUUID(),
 			uuid: '11111111-1111-4111-8111-111111111111',
 			ip: '1.2.3.4',
-			account_id: 'accountIdValue',
+			account_id: user.accountId,
 			status: 'offline',
 			version: '0.39.0',
 			nodeVersion: 'v18.17.0',
