@@ -827,7 +827,7 @@ export class AdoptedProbes {
 		return this.sendNotification(
 			adoption.userId,
 			'probe_location_changed',
-			`Your probe's location has changed`,
+			adoption.name ? `Your probe ${adoption.name} changed location` : `Your probe's location has changed`,
 			`Globalping detected that your ${adoption.name ? `probe [${escapeMdSymbols(adoption.name)}](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address ${adoption.ip}](/probes/${adoption.id})`} has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).`,
 		);
 	}
@@ -839,7 +839,7 @@ export class AdoptedProbes {
 		return this.sendNotification(
 			adoption.userId,
 			'probe_location_changed_back',
-			`Your probe's location has changed back`,
+			adoption.name ? `Your probe ${adoption.name} returned to its previous location` : `Your probe's location has changed back`,
 			`Globalping detected that your ${adoption.name ? `probe [${escapeMdSymbols(adoption.name)}](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address ${adoption.ip}](/probes/${adoption.id})`} has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is now applied again.`,
 		);
 	}
