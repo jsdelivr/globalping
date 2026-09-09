@@ -1,4 +1,5 @@
 import { countries, getCountryDataList } from 'countries-list';
+import anyAscii from 'any-ascii';
 import config from 'config';
 import _ from 'lodash';
 import type { Location } from '../lib/location/types.js';
@@ -27,7 +28,7 @@ export class ProbesLocationFilter {
 		this.globalIndex = [
 			/* 00 */ new Set(Object.keys(countries).map(c => c.toLowerCase())),
 			/* 01 */ new Set(getCountryDataList().map(c => c.iso3.toLowerCase())),
-			/* 02 */ new Set(Object.values(countries).map(c => c.name.toLowerCase())),
+			/* 02 */ new Set(Object.values(countries).map(c => anyAscii(c.name).toLowerCase())),
 			/* 03 */ new Set(countryAliases.flat()),
 			/* 04 */ new Set(),
 			/* 05 */ new Set(Object.values(states).map(s => s.toLowerCase())),

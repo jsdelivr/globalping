@@ -361,6 +361,51 @@ describe('Create measurement', () => {
 				});
 		});
 
+		describe('country matching in magic mode', () => {
+			let turkeyProbe: Socket;
+
+			before(async () => {
+				nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).reply(400);
+				nock('https://api.ip2location.io').get(/.*/).reply(400);
+				nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(400);
+				nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(400);
+
+				nock('https://ipinfo.io').get(/.*/).reply(200, {
+					city: 'Istanbul',
+					region: 'Istanbul',
+					country: 'TR',
+					loc: '41.0082,28.9784',
+					org: 'AS9121 Turk Telekom',
+				});
+
+				turkeyProbe = await addFakeProbe();
+				turkeyProbe.emit('probe:status:update', 'ready');
+				turkeyProbe.emit('probe:isIPv4Supported:update', true);
+				await waitForProbesUpdate();
+			});
+
+			after(async () => {
+				turkeyProbe.disconnect();
+				await waitForProbesUpdate();
+			});
+
+			for (const magic of [ 'Türkiye', 'turkiye', 'Turkey' ]) {
+				it(`should create measurement with "magic: ${magic}" location`, async () => {
+					await requestAgent.post('/v1/measurements')
+						.send({
+							type: 'ping',
+							target: 'example.com',
+							locations: [{ magic }],
+						})
+						.expect(202)
+						.expect((response) => {
+							expect(response.body.probesCount).to.equal(1);
+							expect(response).to.matchApiSchema();
+						});
+				});
+			}
+		});
+
 		it('should create measurement with partial tag value "magic: GCP-us-West4" location', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
