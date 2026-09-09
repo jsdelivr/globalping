@@ -365,17 +365,12 @@ describe('Create measurement', () => {
 			let turkeyProbe: Socket;
 
 			before(async () => {
-				nock('https://ipmap-api.ripe.net/v1/locate/').get(/.*/).reply(400);
-				nock('https://api.ip2location.io').get(/.*/).reply(400);
-				nock('https://globalping-geoip.global.ssl.fastly.net').get(/.*/).reply(400);
-				nock('https://geoip.maxmind.com/geoip/v2.1/city/').get(/.*/).reply(400);
-
-				nock('https://ipinfo.io').get(/.*/).reply(200, {
-					city: 'Istanbul',
-					region: 'Istanbul',
-					country: 'TR',
-					loc: '41.0082,28.9784',
-					org: 'AS9121 Turk Telekom',
+				nockGeoIpProviders({
+					ipmap: 'empty',
+					ip2location: 'empty',
+					maxmind: 'empty',
+					ipinfo: 'turkey',
+					fastly: 'empty',
 				});
 
 				turkeyProbe = await addFakeProbe();
