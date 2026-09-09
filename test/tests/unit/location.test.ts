@@ -3,6 +3,28 @@ import { getIndex, getRegionByCountry } from '../../../src/lib/location/location
 import type { ProbeLocation, Tag } from '../../../src/probe/types.js';
 
 describe('location index', () => {
+	it('normalizes country names and includes backwards-compatible aliases', () => {
+		const location: ProbeLocation = {
+			continent: 'AS',
+			region: getRegionByCountry('TR'),
+			country: 'TR',
+			state: null,
+			city: 'Istanbul',
+			normalizedCity: 'istanbul',
+			asn: 9121,
+			latitude: 41.0082,
+			longitude: 28.9784,
+			network: 'Turk Telekom',
+			normalizedNetwork: 'turk telekom',
+			allowedCountries: [],
+		};
+
+		const index = getIndex(location, []);
+
+		expect(index[2]).to.deep.equal([ 'turkiye' ]);
+		expect(index[3]).to.deep.equal([ 'tr', 'turkey' ]);
+	});
+
 	it('adds prefixes for system tags except user-prefixed tags', () => {
 		const location: ProbeLocation = {
 			continent: 'EU',

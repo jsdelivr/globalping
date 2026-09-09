@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import anyAscii from 'any-ascii';
 import { countries, getCountryData, TCountryCode } from 'countries-list';
 import { regions, aliases as regionAliases } from './regions.js';
 import { states } from './states.js';
@@ -115,7 +116,7 @@ export const getRegionAliases = (key: string): string[] => {
 	return array ?? [];
 };
 
-const toIndexStrings = (array: string[]) => array.map(s => s.toLowerCase().replaceAll('-', ' '));
+const toIndexStrings = (array: string[]) => array.map(s => anyAscii(s).toLowerCase().replaceAll('-', ' '));
 
 const getTagCategory = _.memoize((tag: string) => {
 	if (tag.startsWith('u-') || tag.startsWith('u:')) {
