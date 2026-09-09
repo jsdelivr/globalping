@@ -6,4 +6,5 @@
  * */
 export const aliases = [
 	[ 'gb', 'uk', 'great britain', 'england', 'northern ireland', 'wales', 'scotland' ],
+	[ 'tr', 'turkey' ],
 ];

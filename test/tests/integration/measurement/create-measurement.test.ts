@@ -361,6 +361,46 @@ describe('Create measurement', () => {
 				});
 		});
 
+		describe('country matching in magic mode', () => {
+			let turkeyProbe: Socket;
+
+			before(async () => {
+				nockGeoIpProviders({
+					ipmap: 'empty',
+					ip2location: 'empty',
+					maxmind: 'empty',
+					ipinfo: 'turkey',
+					fastly: 'empty',
+				});
+
+				turkeyProbe = await addFakeProbe();
+				turkeyProbe.emit('probe:status:update', 'ready');
+				turkeyProbe.emit('probe:isIPv4Supported:update', true);
+				await waitForProbesUpdate();
+			});
+
+			after(async () => {
+				turkeyProbe.disconnect();
+				await waitForProbesUpdate();
+			});
+
+			for (const magic of [ 'Türkiye', 'turkiye', 'Turkey' ]) {
+				it(`should create measurement with "magic: ${magic}" location`, async () => {
+					await requestAgent.post('/v1/measurements')
+						.send({
+							type: 'ping',
+							target: 'example.com',
+							locations: [{ magic }],
+						})
+						.expect(202)
+						.expect((response) => {
+							expect(response.body.probesCount).to.equal(1);
+							expect(response).to.matchApiSchema();
+						});
+				});
+			}
+		});
+
 		it('should create measurement with partial tag value "magic: GCP-us-West4" location', async () => {
 			await requestAgent.post('/v1/measurements')
 				.send({
