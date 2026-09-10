@@ -135,14 +135,16 @@ export type DnsTraceResult = {
 
 export type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);
 
+export type HttpRequest = {
+	method: 'HEAD' | 'GET' | 'OPTIONS';
+	host?: string;
+	path: string;
+	query: string;
+	headers: Record<string, string>;
+};
+
 type HttpTest = {
-	request: {
-		method: 'HEAD' | 'GET' | 'OPTIONS';
-		host?: string;
-		path: string;
-		query: string;
-		headers: Record<string, string>;
-	};
+	request: HttpRequest;
 	port?: number;
 	protocol: 'HTTPS' | 'HTTP' | 'HTTP2';
 	resolver?: string;

@@ -2,6 +2,7 @@ import Joi from 'joi';
 import {
 	joiSchemaErrorMessages as joiMalwareSchemaErrorMessages,
 } from '../../lib/malware/client.js';
+import { joiValidateHttpRequest } from './http-request-blacklist.js';
 import {
 	joiValidateDomain,
 	joiValidateDomainForDns,
@@ -18,6 +19,7 @@ export const schemaErrorMessages = {
 	'ip.private': '{{#label}} must not be a private hostname',
 	'domain.invalid': '{{#label}} must be a valid domain name',
 	'ip.invalid': '{{#label}} must be a valid ipv4 or ipv6 address',
+	'http.request.blacklisted': '{{#label}} contains a value that is not allowed for security reasons',
 };
 
 
@@ -67,7 +69,7 @@ export const httpSchema = Joi.object({
 		path: Joi.string().max(16384).optional().default(COMMAND_DEFAULTS.http.request.path),
 		query: Joi.string().max(16384).optional().default(COMMAND_DEFAULTS.http.request.query),
 		headers: Joi.object().max(128).pattern(/^/, Joi.string().max(8192)).default(COMMAND_DEFAULTS.http.request.headers),
-	}).default(),
+	}).custom(joiValidateHttpRequest).default(),
 	resolver: Joi.string().ip(globalIpOptions).custom(joiValidateTarget('ip')),
 	protocol: Joi.string().valid(...allowedHttpProtocols).insensitive().default(COMMAND_DEFAULTS.http.protocol),
 	port: Joi.number().port(),
