@@ -20,7 +20,17 @@ if (blacklistedPaths.length === 0) {
 const blacklistedPathRegExp = new RegExp(`(?:^|/)(?:${blacklistedPaths.join('|')})/?$`);
 
 const requestBlacklistRules: HttpRequestBlacklistRule[] = [
-	request => blacklistedPathRegExp.test(request.path),
+	(request) => {
+		if (blacklistedPathRegExp.test(request.path)) {
+			return true;
+		}
+
+		try {
+			return blacklistedPathRegExp.test(decodeURIComponent(request.path));
+		} catch {
+			return false;
+		}
+	},
 ];
 
 export const joiValidateHttpRequest = (value: HttpRequest, helpers: CustomHelpers): HttpRequest | ErrorReport => {
