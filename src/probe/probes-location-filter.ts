@@ -19,6 +19,11 @@ const locationKeyMap = {
 	city: 'normalizedCity',
 };
 
+type MagicKeyword = {
+	system: string;
+	userTag: string;
+};
+
 const MAX_MEASUREMENT_PROBES = config.get<number>('measurement.limits.authenticatedTestsPerMeasurement');
 
 export class ProbesLocationFilter {
@@ -64,9 +69,8 @@ export class ProbesLocationFilter {
 		return i === -1 ? Number.MAX_SAFE_INTEGER : i;
 	}
 
-	magicFilter (probes: ServerProbe[], magicLocation: string) {
+	magicFilter (probes: ServerProbe[], keywords: MagicKeyword[]) {
 		let resultProbes = probes;
-		const keywords = magicLocation.toLowerCase().split('+').map(k => ({ system: k.replaceAll('-', ' ').trim(), userTag: k.trim() }));
 
 		const keywordsWithPositions = keywords.map(keyword => ({
 			keyword,
@@ -135,12 +139,17 @@ export class ProbesLocationFilter {
 
 		let filteredProbes = probes;
 
+		const magicKeywords = location.magic?.toLowerCase().split('+').map(keyword => ({
+			system: keyword.replaceAll('-', ' ').trim(),
+			userTag: keyword.trim(),
+		}));
+
 		Object.keys(location).forEach((key) => {
 			if (key === 'tags') {
 				const normalizedRequestTags = location.tags!.map(tag => tag.toLowerCase());
 				filteredProbes = filteredProbes.filter(probe => normalizedRequestTags.every(tag => this.hasTag(probe, tag)));
 			} else if (key === 'magic') {
-				filteredProbes = this.magicFilter(filteredProbes, location.magic!);
+				filteredProbes = this.magicFilter(filteredProbes, magicKeywords!);
 			} else {
 				const probeKey = Object.hasOwn(locationKeyMap, key) ? locationKeyMap[key as keyof typeof locationKeyMap] : key;
 				// @ts-expect-error it's a string
@@ -150,8 +159,7 @@ export class ProbesLocationFilter {
 			}
 		});
 
-		const isMagicSorting = Object.keys(location).includes('magic');
-		return isMagicSorting ? this.magicSort(filteredProbes, location.magic!) : this.diversifiedShuffle(filteredProbes);
+		return magicKeywords ? this.magicSort(filteredProbes, magicKeywords) : this.diversifiedShuffle(filteredProbes);
 	}
 
 	public filterByLocationAndWeight (probes: ServerProbe[], distribution: Map<Location, number>, limit: number): ServerProbe[] {
@@ -193,11 +201,10 @@ export class ProbesLocationFilter {
 		return [ ...pickedProbes ];
 	}
 
-	private magicSort (probes: ServerProbe[], magicString: string): ServerProbe[] {
+	private magicSort (probes: ServerProbe[], keywords: MagicKeyword[]): ServerProbe[] {
 		const getClosestIndexPosition = (probe: ServerProbe) => {
-			const keywords = magicString.split('+');
 			const closestIndexPosition = keywords.reduce((smallestIndex, keyword) => {
-				const indexPosition = this.getIndexPosition(probe, keyword);
+				const indexPosition = this.getIndexPosition(probe, keyword.system);
 				return indexPosition < smallestIndex ? indexPosition : smallestIndex;
 			}, Number.POSITIVE_INFINITY);
 			return closestIndexPosition;
