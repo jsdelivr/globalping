@@ -77,8 +77,6 @@ export class AdoptionToken {
 		const filterToken = (column: string) => (query: Knex.QueryBuilder) => {
 			if (token) {
 				query.where(column, token);
-			} else {
-				query.whereNotNull(column);
 			}
 		};
 

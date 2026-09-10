@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS gp_orgs (
 	id CHAR(36) PRIMARY KEY,
 	name VARCHAR(255),
 	github_id VARCHAR(255),
-	adoption_token VARCHAR(255),
+	adoption_token VARCHAR(255) NOT NULL,
 	extra_adoption_tokens LONGTEXT COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`extra_adoption_tokens`)),
 	public_probes BOOLEAN NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
