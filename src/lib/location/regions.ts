@@ -7,9 +7,11 @@ export const regions = {
 	'Southern Africa': [ 'BW', 'LS', 'NA', 'ZA', 'SZ' ],
 	'Western Africa': [ 'BJ', 'BF', 'CV', 'GM', 'GH', 'GN', 'GW', 'CI', 'LR', 'ML', 'MR', 'NE', 'NG', 'SN', 'SL', 'TG', 'SH' ],
 
+	'Antarctica': [ 'AQ' ],
+
 	'Caribbean': [ 'AG', 'BS', 'BB', 'CU', 'DM', 'DO', 'GD', 'HT', 'JM', 'KN', 'LC', 'VC', 'TT', 'GP', 'KY', 'MQ', 'MS', 'TC', 'AW', 'VG', 'VI', 'PR', 'AI', 'MF', 'BL', 'SX', 'CW', 'BQ' ],
 	'Central America': [ 'BZ', 'CR', 'SV', 'GT', 'HN', 'MX', 'NI', 'PA' ],
-	'South America': [ 'AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PY', 'PE', 'SR', 'UY', 'VE', 'FK', 'GF', 'GS' ],
+	'South America': [ 'AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PY', 'PE', 'SR', 'UY', 'VE', 'BV', 'FK', 'GF', 'GS' ],
 	'Northern America': [ 'CA', 'US', 'BM', 'GL', 'PM' ],
 
 	'Central Asia': [ 'KZ', 'KG', 'TJ', 'TM', 'UZ' ],
@@ -23,10 +25,10 @@ export const regions = {
 	'Southern Europe': [ 'AL', 'AD', 'BA', 'HR', 'GR', 'IT', 'MK', 'MT', 'ME', 'PT', 'SM', 'RS', 'SI', 'ES', 'VA', 'GI' ],
 	'Western Europe': [ 'AT', 'BE', 'FR', 'DE', 'LI', 'LU', 'MC', 'NL', 'CH', 'JE', 'IM' ],
 
-	'Australia and New Zealand': [ 'AU', 'NZ', 'NF' ],
+	'Australia and New Zealand': [ 'AU', 'NZ', 'CC', 'CX', 'HM', 'NF' ],
 	'Melanesia': [ 'FJ', 'PG', 'SB', 'VU', 'NC' ],
-	'Micronesia': [ 'KI', 'MH', 'FM', 'NR', 'PW', 'MP', 'GU' ],
-	'Polynesia': [ 'WS', 'TO', 'TV', 'CK', 'NU', 'PF', 'PN', 'TK', 'WF' ],
+	'Micronesia': [ 'KI', 'MH', 'FM', 'NR', 'PW', 'MP', 'GU', 'UM' ],
+	'Polynesia': [ 'WS', 'TO', 'TV', 'AS', 'CK', 'NU', 'PF', 'PN', 'TK', 'WF' ],
 };
 
 export const aliases = [
