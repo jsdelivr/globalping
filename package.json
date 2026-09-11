@@ -25,7 +25,7 @@
 		"cidr-tools": "^12.1.2",
 		"config": "^4.4.2",
 		"config-mapper-env": "^3.0.2",
-		"countries-list": "^3.4.0",
+		"countries-list": "^3.4.1",
 		"crypto-random-string": "^5.0.0",
 		"csv-parser": "^3.2.1",
 		"elastic-apm-node": "^4.18.0",
