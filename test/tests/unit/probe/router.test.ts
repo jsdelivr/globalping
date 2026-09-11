@@ -762,6 +762,46 @@ describe('probe router', () => {
 			expect(allProbes[2]!.location.country).to.equal('CZ');
 		});
 
+		it('should preserve magic field priority for normalized partial matches', async () => {
+			const probes: Array<DeepPartial<ServerProbe>> = [
+				await buildProbe('socket-1', { country: 'DE', normalizedCity: 'priority match city', normalizedNetwork: 'other network' }),
+				await buildProbe('socket-2', { country: 'RS', normalizedCity: 'network city', normalizedNetwork: 'the priority match network' }),
+				await buildProbe('socket-3', { country: 'RS', normalizedCity: 'network city', normalizedNetwork: 'the priority match network' }),
+			];
+			setProbes(probes as never);
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({
+				locations: [
+					{ magic: 'PRIORITY-MATCH' },
+				],
+				limit: 1,
+			} as unknown as UserRequest);
+
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes[0]!.location.country).to.equal('DE');
+		});
+
+		it('should preserve magic field priority if there is an empty keyword', async () => {
+			const probes: Array<DeepPartial<ServerProbe>> = [
+				await buildProbe('socket-1', { country: 'DE', normalizedCity: 'priority match city', normalizedNetwork: 'other network' }),
+				await buildProbe('socket-2', { country: 'RS', normalizedCity: 'network city', normalizedNetwork: 'the priority match network' }),
+				await buildProbe('socket-3', { country: 'RS', normalizedCity: 'network city', normalizedNetwork: 'the priority match network' }),
+			];
+			setProbes(probes as never);
+
+			const { onlineProbesMap, allProbes } = await router.findMatchingProbes({
+				locations: [
+					{ magic: 'priority-match+' },
+				],
+				limit: 1,
+			} as unknown as UserRequest);
+
+			expect(allProbes.length).to.equal(1);
+			expect(onlineProbesMap.size).to.equal(1);
+			expect(allProbes[0]!.location.country).to.equal('DE');
+		});
+
 		it('should ignore low-priority partial matches if there is an exact match', async () => {
 			const probes: Array<DeepPartial<ServerProbe>> = [
 				await buildProbe('socket-3', { country: 'VN', normalizedCity: 'hanoi', normalizedNetwork: 'ultra networks' }),

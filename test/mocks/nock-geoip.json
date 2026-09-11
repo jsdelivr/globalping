@@ -17,6 +17,13 @@
 			"loc": "-34.6131,-58.3772",
 			"org": "AS61004 InterBS S.R.L. (BAEHOST)"
 		},
+		"turkey": {
+			"city": "Istanbul",
+			"region": "Istanbul",
+			"country": "TR",
+			"loc": "41.0082,28.9784",
+			"org": "AS9121 Turk Telekom"
+		},
 		"empty": {
 			"city": "",
 			"region": "",

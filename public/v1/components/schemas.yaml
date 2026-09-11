@@ -65,6 +65,7 @@ components:
       default: A
     HttpProtocol:
       type: string
+      description: The protocol to use for the HTTP request.
       enum:
         - HTTP
         - HTTPS
@@ -1283,17 +1284,17 @@ components:
                 - download
               properties:
                 total:
-                  $ref: 'schemas.yaml#/components/schemas/TimingHttpTotalNullable'
+                  $ref: 'schemas.yaml#/components/schemas/TimingHttpTotal'
                 dns:
                   $ref: 'schemas.yaml#/components/schemas/TimingHttpDnsNullable'
                 tcp:
-                  $ref: 'schemas.yaml#/components/schemas/TimingHttpTcpNullable'
+                  $ref: 'schemas.yaml#/components/schemas/TimingHttpTcp'
                 tls:
                   $ref: 'schemas.yaml#/components/schemas/TimingHttpTlsNullable'
                 firstByte:
-                  $ref: 'schemas.yaml#/components/schemas/TimingHttpFirstByteNullable'
+                  $ref: 'schemas.yaml#/components/schemas/TimingHttpFirstByte'
                 download:
-                  $ref: 'schemas.yaml#/components/schemas/TimingHttpDownloadNullable'
+                  $ref: 'schemas.yaml#/components/schemas/TimingHttpDownload'
             tls:
               description: Information about the TLS certificate or `null` if no TLS certificate is available.
               oneOf:
@@ -1341,30 +1342,26 @@ components:
     TimingPacketTtl:
       type: integer
       description: The time-to-live value of this packet.
-    TimingHttpTotalNullable:
-      allOf:
-        - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
-        - description: The total HTTP request time.
+    TimingHttpTotal:
+      type: integer
+      description: The total HTTP request time.
     TimingHttpDnsNullable:
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
-        - description: The time required to perform the DNS lookup.
-    TimingHttpTcpNullable:
-      allOf:
-        - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
-        - description: The time from performing the DNS lookup to establishing the TCP connection.
+        - description: The time required to perform the DNS lookup, or `null` when the target is an IP address and no lookup is performed.
+    TimingHttpTcp:
+      type: integer
+      description: The time from performing the DNS lookup to establishing the TCP connection.
     TimingHttpTlsNullable:
       allOf:
         - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
-        - description: The time from establishing the TCP connection to establishing the TLS session.
-    TimingHttpFirstByteNullable:
-      allOf:
-        - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
-        - description: The time from establishing the TCP/TLS connection to the first response byte.
-    TimingHttpDownloadNullable:
-      allOf:
-        - $ref: 'schemas.yaml#/components/schemas/NullableInteger'
-        - description: The time from the first response byte to downloading the entire response.
+        - description: The time from establishing the TCP connection to establishing the TLS session, or `null` for plain HTTP requests.
+    TimingHttpFirstByte:
+      type: integer
+      description: The time from establishing the TCP/TLS connection to the first response byte.
+    TimingHttpDownload:
+      type: integer
+      description: The time from the first response byte to downloading the entire response.
     TlsCertificate:
       type: object
       title: TlsCertificate

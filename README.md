@@ -35,7 +35,7 @@ Register on the [Globalping Dashboard](https://dash.globalping.io/)  to increase
 ## Our major sponsors
 We thank our sponsors who contribute to the development of Globalping and help us expand our probe network!
 
-| <img src="https://gcore.com/favicon.ico" width="15" height="15"> [Gcore](https://gcore.com) | <img src="https://xtom.com/favicon.ico" width="15" height="15"> [xTom](https://xtom.com) | <img src="https://www.edisglobal.com/favicon.png" width="15" height="15"> [Edis Global](https://www.edisglobal.com) |
+| <img src="https://gcore.com/favicon.ico" width="15" height="15"> [Gcore](https://gcore.com) | <img src="https://xtom.com/favicon.ico" width="15" height="15"> [xTom](https://xtom.com) | <img src="https://www.edisglobal.com/favicon.ico" width="15" height="15"> [Edis Global](https://www.edisglobal.com) |
 |---|---|---|
 
 ### Support the Globalping community and platform
