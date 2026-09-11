@@ -17,7 +17,7 @@ if (blacklistedPaths.length === 0) {
 	throw new Error('HTTP request blacklist is empty');
 }
 
-const blacklistedPathRegExp = new RegExp(`(?:^|/)(?:${blacklistedPaths.join('|')})/?$`);
+const blacklistedPathRegExp = new RegExp(`(?:^|/)(?:${blacklistedPaths.join('|')})/?$`, 'i');
 
 const requestBlacklistRules: HttpRequestBlacklistRule[] = [
 	(request) => {

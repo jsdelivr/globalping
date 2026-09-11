@@ -2626,10 +2626,12 @@ describe('command schema', async () => {
 		it('should reject blacklisted HTTP requests after one decoding layer without matching similar paths', () => {
 			const cases = [
 				{ method: 'GET', path: '/.env', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'GET', path: '/.ENV', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
 				{ method: 'GET', path: '.env', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
 				{ method: 'GET', path: '/%2eenv', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
 				{ method: 'GET', path: '.git', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
 				{ method: 'GET', path: '.git/', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'GET', path: '/application/.GIT/', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
 				{ method: 'HEAD', path: '/application/.env', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
 				{ method: 'OPTIONS', path: '/application/.git/', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
 				{ method: 'GET', path: '/application%2F%2Egit%2F', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
