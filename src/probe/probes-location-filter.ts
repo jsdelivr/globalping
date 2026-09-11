@@ -142,7 +142,7 @@ export class ProbesLocationFilter {
 		const magicKeywords = location.magic?.toLowerCase().split('+').map(keyword => ({
 			system: keyword.replaceAll('-', ' ').trim(),
 			userTag: keyword.trim(),
-		}));
+		})).filter(keyword => keyword.system);
 
 		Object.keys(location).forEach((key) => {
 			if (key === 'tags') {
