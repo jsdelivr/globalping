@@ -38,7 +38,7 @@ export const getIpKey = (ip: string): string => {
 	return ipKey;
 };
 
-const asnCityKey = (userId: string, location: { asn: number; city: string }) => `${userId}:${location.asn}:${location.city}`;
+const asnCityKey = (accountId: string, location: { asn: number; city: string }) => `${accountId}:${location.asn}:${location.city}`;
 
 const addToSet = <K>(map: Map<K, Set<string>>, key: K, value: string) => {
 	const set = map.get(key) ?? new Set<string>();
@@ -161,9 +161,9 @@ export class ProbeIpLimit {
 			return;
 		}
 
-		const userId = this.getUserId(probe);
+		const accountId = this.getAccountId(probe);
 
-		if (!userId) {
+		if (!accountId) {
 			return;
 		}
 
@@ -173,14 +173,14 @@ export class ProbeIpLimit {
 		for (const other of probes) {
 			if (other.location.asn !== probe.location.asn
 				|| other.location.city !== probe.location.city
-				|| this.getUserId(other) !== userId) {
+				|| this.getAccountId(other) !== accountId) {
 				continue;
 			}
 
 			ipKeys.add(getIpKey(other.ipAddress));
 
 			if (ipKeys.size >= asnCityPerUser) {
-				logger.warn(`WS client ${probe.client} has reached the asn limit.`, { userId, ip: probe.ipAddress, ipKeys: [ ...ipKeys ], asn: probe.location.asn, city: probe.location.city });
+				logger.warn(`WS client ${probe.client} has reached the asn limit.`, { accountId, ip: probe.ipAddress, ipKeys: [ ...ipKeys ], asn: probe.location.asn, city: probe.location.city });
 				throw new ProbeError('user asn limit');
 			}
 		}
@@ -252,13 +252,13 @@ export class ProbeIpLimit {
 		const asnCityToIpKeys = new Map<string, Map<string, Set<string>>>();
 
 		for (const probe of probes) {
-			const userId = this.getUserId(probe);
+			const accountId = this.getAccountId(probe);
 
-			if (!userId) {
+			if (!accountId) {
 				continue;
 			}
 
-			const key = asnCityKey(userId, probe.location);
+			const key = asnCityKey(accountId, probe.location);
 			const ipKeyClients = asnCityToIpKeys.get(key) ?? new Map<string, Set<string>>();
 			asnCityToIpKeys.set(key, ipKeyClients);
 			addToSet(ipKeyClients, getIpKey(probe.ipAddress), probe.client);
@@ -267,14 +267,14 @@ export class ProbeIpLimit {
 		return asnCityToIpKeys;
 	}
 
-	private getUserId (probe: UserProbe): string | null {
-		const userId = probe.adoptionToken && this.adoptionToken.getUserIdByToken(probe.adoptionToken);
+	private getAccountId (probe: UserProbe): string | null {
+		const accountId = probe.adoptionToken && this.adoptionToken.getAccountIdByToken(probe.adoptionToken);
 
-		if (userId) {
-			return userId;
+		if (accountId) {
+			return accountId;
 		}
 
 		const dProbe = this.adoptedProbes.getByUuid(probe.uuid) || this.adoptedProbes.getByIp(probe.ipAddress);
-		return dProbe?.userId ?? null;
+		return dProbe?.accountId ?? null;
 	}
 }

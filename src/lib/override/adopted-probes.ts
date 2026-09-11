@@ -12,8 +12,11 @@ import { randomUUID } from 'crypto';
 
 const logger = scopedLogger('adopted-probes');
 
-export const DASH_PROBES_TABLE = 'gp_probes';
+export const PROBES_TABLE = 'gp_probes';
 export const USERS_TABLE = 'directus_users';
+export const ACCOUNTS_TABLE = 'gp_accounts';
+export const ORGS_TABLE = 'gp_orgs';
+export const MEMBERS_TABLE = 'gp_org_members';
 const NOTIFICATIONS_TABLE = 'directus_notifications';
 const directusUrl = config.get<string>('dashboard.directusUrl');
 const systemKey = config.get<string>('systemApi.key');
@@ -32,7 +35,7 @@ export const escapeMdSymbols = (value: string): string => value
 
 type DProbe = {
 	id: string;
-	userId: string | null;
+	accountId: string | null;
 	ip: string | null;
 	name: string | null;
 	altIps: string[];
@@ -91,8 +94,8 @@ type DProbe = {
 	};
 };
 
-export type Adoption = Omit<DProbe, 'userId'> & {
-	userId: string;
+export type Adoption = Omit<DProbe, 'accountId'> & {
+	accountId: string;
 };
 
 type AdoptionWithCustomLocation = Adoption & {
@@ -234,7 +237,7 @@ export class AdoptedProbes {
 			format: (value: SocketProbe['localAdoptionServer'], _probe: SocketProbe, dProbe?: DProbe) => {
 				const parsedDate = value?.expiresAt && Date.parse(value.expiresAt);
 
-				if (!value || dProbe?.userId || (parsedDate && parsedDate <= Date.now())) {
+				if (!value || dProbe?.accountId || (parsedDate && parsedDate <= Date.now())) {
 					return null;
 				}
 
@@ -309,7 +312,7 @@ export class AdoptedProbes {
 		return probes.map((probe) => {
 			const adoption = this.getByIp(probe.ipAddress);
 
-			if (!adoption || !adoption.userId) {
+			if (!adoption || !adoption.accountId) {
 				return { ...probe, location: { ...probe.location, hasOverridesApplied: true } };
 			}
 
@@ -326,7 +329,7 @@ export class AdoptedProbes {
 				tags: newTags,
 				normalizedTags: newNormalizedTags,
 				index: newIndex,
-				owner: { id: adoption.userId },
+				owner: { id: adoption.accountId },
 			};
 		});
 	}
@@ -371,15 +374,25 @@ export class AdoptedProbes {
 	}
 
 	public async fetchDProbes () {
-		const rows = await this.sql(DASH_PROBES_TABLE)
+		const rows = await this.sql(PROBES_TABLE)
+			.leftJoin(ACCOUNTS_TABLE, `${PROBES_TABLE}.account_id`, `${ACCOUNTS_TABLE}.id`)
+			// A suspended user's account resolves to nothing, so their probes lose the overrides, as before accounts.
 			.leftJoin(USERS_TABLE, function () {
-				this.on(`${DASH_PROBES_TABLE}.userId`, `${USERS_TABLE}.id`)
+				this.on(`${ACCOUNTS_TABLE}.user`, `${USERS_TABLE}.id`)
 					.andOnVal(`${USERS_TABLE}.status`, '=', 'active');
 			})
+			.leftJoin(ORGS_TABLE, `${ACCOUNTS_TABLE}.org`, `${ORGS_TABLE}.id`)
 			// First item will be preserved, so we are prioritizing adopted and online probes.
 			// Sorting by id at the end so order is the same in any table state.
-			.orderByRaw(`IF (${DASH_PROBES_TABLE}.userId IS NOT NULL, 1, 2), ${DASH_PROBES_TABLE}.lastSyncDate DESC, ${DASH_PROBES_TABLE}.onlineTimesToday DESC, FIELD(${DASH_PROBES_TABLE}.status, 'ready') DESC, ${DASH_PROBES_TABLE}.id DESC`)
-			.select<Row[]>(`${DASH_PROBES_TABLE}.*`, `${USERS_TABLE}.id AS userId`, `${USERS_TABLE}.default_prefix AS defaultPrefix`, `${USERS_TABLE}.deprecated_prefix AS deprecatedPrefix`, `${USERS_TABLE}.public_probes as publicProbes`, `${USERS_TABLE}.adoption_token AS adoptionToken`);
+			.orderByRaw(`IF (${PROBES_TABLE}.account_id IS NOT NULL, 1, 2), ${PROBES_TABLE}.lastSyncDate DESC, ${PROBES_TABLE}.onlineTimesToday DESC, FIELD(${PROBES_TABLE}.status, 'ready') DESC, ${PROBES_TABLE}.id DESC`)
+			.select<Row[]>(
+				`${PROBES_TABLE}.*`,
+				this.sql.raw(`IF(${USERS_TABLE}.id IS NOT NULL OR ${ORGS_TABLE}.id IS NOT NULL, ${PROBES_TABLE}.account_id, NULL) AS accountId`),
+				this.sql.raw(`COALESCE(${ORGS_TABLE}.name, ${USERS_TABLE}.default_prefix) AS defaultPrefix`),
+				`${USERS_TABLE}.deprecated_prefix AS deprecatedPrefix`,
+				this.sql.raw(`COALESCE(${ORGS_TABLE}.public_probes, ${USERS_TABLE}.public_probes) AS publicProbes`),
+				this.sql.raw(`COALESCE(${ORGS_TABLE}.adoption_token, ${USERS_TABLE}.adoption_token) AS adoptionToken`),
+			);
 
 		const dProbes: DProbe[] = rows.map(row => ({
 			...row,
@@ -442,7 +455,7 @@ export class AdoptedProbes {
 		this.dProbes.forEach((dProbe) => {
 			const probe = dProbe.uuid && uuidToProbe.get(dProbe.uuid);
 
-			if (probe && dProbe.userId) {
+			if (probe && dProbe.accountId) {
 				dProbesWithProbe.push({ dProbe, probe });
 				uuidToProbe.delete(probe.uuid);
 				ipToProbe.delete(probe.ipAddress);
@@ -459,7 +472,7 @@ export class AdoptedProbes {
 		dProbesToCheck.forEach((dProbe) => {
 			const probe = dProbe.ip && ipToProbe.get(dProbe.ip);
 
-			if (probe && dProbe.userId) {
+			if (probe && dProbe.accountId) {
 				dProbesWithProbe.push({ dProbe, probe });
 				uuidToProbe.delete(probe.uuid);
 				ipToProbe.delete(probe.ipAddress);
@@ -476,7 +489,7 @@ export class AdoptedProbes {
 		dProbesToCheck.forEach((dProbe) => {
 			const probe = dProbe.ip && altIpToProbe.get(dProbe.ip);
 
-			if (probe && dProbe.userId) {
+			if (probe && dProbe.accountId) {
 				dProbesWithProbe.push({ dProbe, probe });
 				uuidToProbe.delete(probe.uuid);
 				ipToProbe.delete(probe.ipAddress);
@@ -494,7 +507,7 @@ export class AdoptedProbes {
 			for (const altIp of dProbe.altIps) {
 				const probe = ipToProbe.get(altIp) || altIpToProbe.get(altIp);
 
-				if (probe && dProbe.userId) {
+				if (probe && dProbe.accountId) {
 					dProbesWithProbe.push({ dProbe, probe });
 					uuidToProbe.delete(probe.uuid);
 					ipToProbe.delete(probe.ipAddress);
@@ -671,25 +684,25 @@ export class AdoptedProbes {
 		updatedDProbes.forEach((dProbe) => {
 			const existingDProbe = uniqUuids.get(dProbe.uuid) || (dProbe.ip && uniqIps.get(dProbe.ip));
 
-			if (existingDProbe && (existingDProbe.userId === dProbe.userId || dProbe.userId === null)) {
+			if (existingDProbe && (existingDProbe.accountId === dProbe.accountId || dProbe.accountId === null)) {
 				logger.warn('Removable duplication found.', {
-					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
-					delete: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
+					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'accountId' ]),
+					delete: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'accountId' ]),
 				});
 
 				dProbesToDelete.push(dProbe);
 				return;
 			} else if (existingDProbe && dProbe.ip && uniqIps.has(dProbe.ip) && dProbe.status === 'offline') {
 				logger.warn('Offline IP duplication found.', {
-					ready: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
-					offline: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
+					ready: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'accountId' ]),
+					offline: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'accountId' ]),
 				});
 
 				nullifyIpUpdates.push({ dProbe, update: { ip: null, status: 'offline' } });
 			} else if (existingDProbe) {
 				logger.error('Unremovable duplication found.', {
-					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
-					duplicate: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'userId' ]),
+					stay: _.pick(existingDProbe, [ 'id', 'uuid', 'ip', 'altIps', 'accountId' ]),
+					duplicate: _.pick(dProbe, [ 'id', 'uuid', 'ip', 'altIps', 'accountId' ]),
 				});
 			}
 
@@ -749,10 +762,10 @@ export class AdoptedProbes {
 			key, (_.isObject(value) && !_.isDate(value)) ? JSON.stringify(value) : value,
 		]));
 
-		await this.sql(DASH_PROBES_TABLE).where({ id: dProbe.id }).update(formattedUpdate);
+		await this.sql(PROBES_TABLE).where({ id: dProbe.id }).update(formattedUpdate);
 
 		// If there is a custom city in a country that is no longer in the allowedCountries list, send notification to user.
-		if (update.country && dProbe.userId) {
+		if (update.country && dProbe.accountId) {
 			const adoption = dProbe as Adoption;
 
 			if (dProbe.customLocation && dProbe.country === dProbe.customLocation.country) {
@@ -766,7 +779,7 @@ export class AdoptedProbes {
 	private async deleteDProbes (dProbesToDelete: DProbe[]) {
 		if (dProbesToDelete.length) {
 			logger.warn('Deleting ids:', dProbesToDelete.map(({ id }) => id));
-			await this.sql(DASH_PROBES_TABLE).whereIn('id', dProbesToDelete.map(({ id }) => id)).delete();
+			await this.sql(PROBES_TABLE).whereIn('id', dProbesToDelete.map(({ id }) => id)).delete();
 		}
 	}
 
@@ -793,12 +806,22 @@ export class AdoptedProbes {
 		});
 
 		logger.info('inserting dProbe:', { probe: dProbe });
-		await this.sql(DASH_PROBES_TABLE).insert(dProbe);
+		await this.sql(PROBES_TABLE).insert(dProbe);
 	}
 
-	private async sendNotification (recipient: string, type: string, subject: string, message: string) {
+	// Directus resolves the account into recipients: the user for a personal account, the admins for an org one.
+	private async sendNotification (accountId: string, type: string, subject: string, message: string) {
+		const recipients = this.sql(ACCOUNTS_TABLE)
+			.leftJoin(MEMBERS_TABLE, function () {
+				this.on(`${MEMBERS_TABLE}.org`, `${ACCOUNTS_TABLE}.org`)
+					.andOnVal(`${MEMBERS_TABLE}.role`, '=', 'admin');
+			})
+			.where(`${ACCOUNTS_TABLE}.id`, accountId)
+			.select(this.sql.raw(`COALESCE(${ACCOUNTS_TABLE}.user, ${MEMBERS_TABLE}.user)`));
+
 		const existing = await this.sql(NOTIFICATIONS_TABLE)
-			.where({ recipient, message })
+			.where({ message })
+			.whereIn('recipient', recipients)
 			.whereRaw('DATE(timestamp) = CURRENT_DATE')
 			.first<{ recipient: string }>('recipient');
 
@@ -807,7 +830,7 @@ export class AdoptedProbes {
 		}
 
 		await got.post(`${directusUrl}/notifications`, {
-			json: { recipient, type, subject, message },
+			json: { account: accountId, type, subject, message },
 			headers: {
 				Authorization: `Bearer ${systemKey}`,
 			},
@@ -825,7 +848,7 @@ export class AdoptedProbes {
 		const oldCountry = countries[adoption.country as keyof typeof countries]?.name || adoption.country;
 
 		return this.sendNotification(
-			adoption.userId,
+			adoption.accountId,
 			'probe_location_changed',
 			adoption.name ? `Your probe ${adoption.name} changed location` : `Your probe's location has changed`,
 			`Globalping detected that your ${adoption.name ? `probe [${escapeMdSymbols(adoption.name)}](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address ${adoption.ip}](/probes/${adoption.id})`} has changed its location from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).`,
@@ -837,7 +860,7 @@ export class AdoptedProbes {
 		const oldCountry = countries[adoption.country as keyof typeof countries]?.name || adoption.country;
 
 		return this.sendNotification(
-			adoption.userId,
+			adoption.accountId,
 			'probe_location_changed_back',
 			adoption.name ? `Your probe ${adoption.name} returned to its previous location` : `Your probe's location has changed back`,
 			`Globalping detected that your ${adoption.name ? `probe [${escapeMdSymbols(adoption.name)}](/probes/${adoption.id}) with IP address **${adoption.ip}**` : `[probe with IP address ${adoption.ip}](/probes/${adoption.id})`} has changed its location back from ${oldCountry} to ${newCountry}. The custom city value "${adoption.customLocation!.city}" is now applied again.`,
@@ -855,7 +878,7 @@ export class AdoptedProbes {
 
 	static formatProbeAsDProbe (probe: SocketProbe): Omit<DProbe, 'id' | 'lastSyncDate' | 'defaultPrefix' | 'deprecatedPrefix' | 'publicProbes' | 'adoptionToken' | 'settings'> {
 		return {
-			userId: null,
+			accountId: null,
 			ip: probe.ipAddress,
 			name: null,
 			altIps: probe.altIpAddresses,

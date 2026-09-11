@@ -25,7 +25,7 @@ export const registerGetProbeLogsRoute = (router: ExtendedRouter, context: IoCon
 
 		const probe = context.adoptedProbes.getById(id);
 
-		if (!probe?.uuid || !user?.id || (!user.adminAccess && probe.userId !== user.id)) {
+		if (!probe?.uuid || !user?.id || (!user.adminAccess && probe.accountId !== user.accountId)) {
 			throw createHttpError(404, `Probe not found.`, { type: 'not_found' });
 		}
 

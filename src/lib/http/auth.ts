@@ -14,6 +14,7 @@ const TOKEN_TTL = 2 * 60 * 1000;
 
 export type Token = {
 	user_created: string | null;
+	account_id: string | null;
 	user_github_username: string | null;
 	user_user_type: 'member' | 'sponsor' | 'special';
 	value: string;
@@ -90,7 +91,7 @@ export class Auth {
 		const rows = await this.sql(GP_TOKENS_TABLE)
 			.leftJoin(USERS_TABLE, 'user_created', `${USERS_TABLE}.id`)
 			.where(filter)
-			.select<Row[]>([ 'user_created', 'value', 'expire', 'origins', 'date_last_used', 'scopes', 'github_username as user_github_username', 'user_type as user_user_type' ]);
+			.select<Row[]>([ 'user_created', 'account_id', 'value', 'expire', 'origins', 'date_last_used', 'scopes', 'github_username as user_github_username', 'user_type as user_user_type' ]);
 
 		const tokens: Token[] = rows.map(row => ({
 			...row,
@@ -131,7 +132,7 @@ export class Auth {
 		}
 
 		await this.updateLastUsedDate(token);
-		return { userId: token.user_created, username: token.user_github_username, userType: token.user_user_type, scopes: token.scopes, hashedToken: token.value };
+		return { userId: token.user_created, accountId: token.account_id, username: token.user_github_username, userType: token.user_user_type, scopes: token.scopes, hashedToken: token.value };
 	}
 
 	private async updateLastUsedDate (token: Token) {
