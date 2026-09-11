@@ -2623,6 +2623,42 @@ describe('command schema', async () => {
 			expect(valid.error!.message).to.equal('"measurementOptions.request.method" must be one of [GET, HEAD, OPTIONS]');
 		});
 
+		it('should reject blacklisted HTTP requests after one decoding layer without matching similar paths', () => {
+			const cases = [
+				{ method: 'GET', path: '/.env', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'GET', path: '/.ENV', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'GET', path: '.env', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'GET', path: '/%2eenv', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'GET', path: '.git', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'GET', path: '.git/', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'GET', path: '/application/.GIT/', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'HEAD', path: '/application/.env', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'OPTIONS', path: '/application/.git/', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'GET', path: '/application%2F%2Egit%2F', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'GET', path: '/invalid%/.env', message: '"measurementOptions.request" contains a value that is not allowed for security reasons' },
+				{ method: 'GET', path: '/.github', message: undefined },
+				{ method: 'GET', path: '/xenv', message: undefined },
+				{ method: 'GET', path: '/xgit', message: undefined },
+				{ method: 'GET', path: '/xx.env', message: undefined },
+				{ method: 'GET', path: '/xx.envx', message: undefined },
+				{ method: 'GET', path: '/%252eenv', message: undefined },
+				{ method: 'GET', path: '/health', message: undefined },
+			];
+
+			for (const { method, path, message } of cases) {
+				const input = {
+					type: 'http',
+					target: 'example.com',
+					measurementOptions: {
+						request: { method, path },
+					},
+				};
+
+				const { error } = globalSchema.validate(input, { convert: true });
+				expect(error?.message, path).to.equal(message);
+			}
+		});
+
 		it('should fail (unsupported protocol)', () => {
 			const input = {
 				type: 'http',
