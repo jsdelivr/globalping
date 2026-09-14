@@ -112,7 +112,7 @@ module.exports = {
 		syncInterval: 60000,
 	},
 	probeLimit: {
-		asnCityPerUser: 2,
+		asnCityPerAccount: 2,
 	},
 	adminData: {
 		syncInterval: 60000,

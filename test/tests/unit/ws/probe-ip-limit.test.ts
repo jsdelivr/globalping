@@ -347,7 +347,7 @@ describe('ProbeIpLimit', () => {
 				expect(error).to.equal(null);
 			});
 
-			it('throws "user asn limit" for a code-adopted probe without a token when the user already has the limit of unique /64s', async () => {
+			it('throws "user asn limit" for a code-adopted probe without a token when the account already has the limit of unique /64s', async () => {
 				getByIp.returns({ accountId: 'user1' });
 
 				getProbes.returns([
