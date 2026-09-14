@@ -66,7 +66,7 @@ const getMaxRequestedProbes = (userRequest: UserRequest) => {
 	return locations.some(l => l.limit) ? getSumOfLocationsLimits(locations) : userRequest.limit;
 };
 
-const createRateLimitError = (ctx: ExtendedContext) => ctx.state.user?.id
+const createRateLimitError = (ctx: ExtendedContext) => ctx.state.user?.accountId
 	? createHttpError(429, 'Not enough credits to run this measurement.', { type: 'insufficient_credits' })
 	: createHttpError(429, 'This measurement exceeds the remaining hourly rate limit for your IP address.', { type: 'rate_limit_exceeded' });
 
