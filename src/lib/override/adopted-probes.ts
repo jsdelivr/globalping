@@ -376,7 +376,6 @@ export class AdoptedProbes {
 	public async fetchDProbes () {
 		const rows = await this.sql(PROBES_TABLE)
 			.leftJoin(ACCOUNTS_TABLE, `${PROBES_TABLE}.account_id`, `${ACCOUNTS_TABLE}.id`)
-			// A suspended user's account resolves to nothing, so their probes lose the overrides, as before accounts.
 			.leftJoin(USERS_TABLE, function () {
 				this.on(`${ACCOUNTS_TABLE}.user`, `${USERS_TABLE}.id`)
 					.andOnVal(`${USERS_TABLE}.status`, '=', 'active');
