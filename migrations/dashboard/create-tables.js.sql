@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS directus_users (
 	github_organizations longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`github_organizations`)),
 	user_type VARCHAR(255) NOT NULL DEFAULT 'member',
 	status VARCHAR(255) NOT NULL DEFAULT 'active',
-	public_probes BOOLEAN DEFAULT 0,
+	public_probes BOOLEAN NOT NULL DEFAULT 0,
 	adoption_token VARCHAR(255) NOT NULL,
 	default_prefix VARCHAR(255) NOT NULL,
 	deprecated_prefix VARCHAR(255)
@@ -55,10 +55,10 @@ CREATE TABLE IF NOT EXISTS gp_probes (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS directus_notifications (
-	id CHAR(10),
-	recipient CHAR(36),
+	id CHAR(10) NOT NULL,
+	recipient CHAR(36) NOT NULL,
 	timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	subject VARCHAR(255),
+	subject VARCHAR(255) NOT NULL,
 	message TEXT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS `gp_tokens` (
 	`account_id` varchar(36) DEFAULT NULL,
 	`value` varchar(255) DEFAULT NULL,
 	`scopes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`scopes`)),
-	`type` varchar(255) DEFAULT 'access_token',
+	`type` varchar(255) NOT NULL DEFAULT 'access_token',
 	`parent` int(10) unsigned DEFAULT NULL,
 	PRIMARY KEY (`id`),
 	UNIQUE KEY `gp_tokens_value_unique` (`value`),
@@ -98,8 +98,8 @@ CREATE TABLE IF NOT EXISTS gp_credits (
 
 CREATE TABLE IF NOT EXISTS gp_orgs (
 	id CHAR(36) PRIMARY KEY,
-	name VARCHAR(255),
-	github_id VARCHAR(255),
+	name VARCHAR(255) NOT NULL,
+	github_id VARCHAR(255) NOT NULL,
 	adoption_token VARCHAR(255) NOT NULL,
 	extra_adoption_tokens LONGTEXT COLLATE utf8mb4_bin NOT NULL DEFAULT '[]' CHECK (json_valid(`extra_adoption_tokens`)),
 	public_probes BOOLEAN NOT NULL DEFAULT 0

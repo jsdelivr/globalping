@@ -26,7 +26,7 @@ export const createUser = async (sql: Knex, { id = randomUUID(), ...fields }: Us
 };
 
 export const createOrg = async (sql: Knex, { id = randomUUID(), members = [], ...fields }: OrgFields = {}) => {
-	await sql('gp_orgs').insert({ id, name: 'test-org', adoption_token: randomUUID(), ...fields });
+	await sql('gp_orgs').insert({ id, name: 'test-org', github_id: randomUUID(), adoption_token: randomUUID(), ...fields });
 
 	if (members.length) {
 		await sql('gp_org_members').insert(members.map(({ userId, role }) => ({ id: randomUUID(), org: id, user: userId, role })));
