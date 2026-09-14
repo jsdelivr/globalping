@@ -69,6 +69,7 @@ type DProbe = {
 	deprecatedPrefix: string | null;
 	publicProbes: boolean;
 	adoptionToken: string | null;
+	extraAdoptionTokens: string[];
 	allowedCountries: string[];
 	customLocation: {
 		country: string;
@@ -103,7 +104,7 @@ type AdoptionWithCustomLocation = Adoption & {
 	originalLocation: NonNullable<DProbe['originalLocation']>;
 };
 
-export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation' | 'originalLocation' | 'localAdoptionServer' | 'settings'> & {
+export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Supported' | 'isIPv6Supported' | 'publicProbes' | 'allowedCountries' | 'customLocation' | 'originalLocation' | 'localAdoptionServer' | 'settings' | 'extraAdoptionTokens'> & {
 	altIps: string;
 	tags: string;
 	systemTags: string;
@@ -115,6 +116,7 @@ export type Row = Omit<DProbe, 'tags' | 'systemTags' | 'altIps' | 'isIPv4Support
 	originalLocation: string | null;
 	localAdoptionServer: string | null;
 	settings: string;
+	extraAdoptionTokens: string | null;
 };
 
 type DProbeFieldDescription = {
@@ -391,10 +393,12 @@ export class AdoptedProbes {
 				`${USERS_TABLE}.deprecated_prefix AS deprecatedPrefix`,
 				this.sql.raw(`COALESCE(${ORGS_TABLE}.public_probes, ${USERS_TABLE}.public_probes) AS publicProbes`),
 				this.sql.raw(`COALESCE(${ORGS_TABLE}.adoption_token, ${USERS_TABLE}.adoption_token) AS adoptionToken`),
+				this.sql.raw(`${ORGS_TABLE}.extra_adoption_tokens AS extraAdoptionTokens`),
 			);
 
 		const dProbes: DProbe[] = rows.map(row => ({
 			...row,
+			extraAdoptionTokens: row.extraAdoptionTokens ? (JSON.parse(row.extraAdoptionTokens) as { token: string }[]).map(extra => extra.token) : [],
 			altIps: JSON.parse(row.altIps) as string[],
 			tags: (JSON.parse(row.tags) as { prefix: string; value: string; format?: string }[])
 				.map(({ prefix, value, format }) => {
@@ -595,8 +599,13 @@ export class AdoptedProbes {
 		const adoptionTokenToProbes = _.groupBy(([ ...uuidToProbe.values() ]).filter(probe => !!probe.adoptionToken), probe => `${probe.adoptionToken}-${probe.location.asn}-${probe.location.city}`);
 
 		dProbesToCheck.forEach((dProbe) => {
-			const probes = dProbe.adoptionToken && dProbe.status === 'offline' && adoptionTokenToProbes[`${dProbe.adoptionToken}-${dProbe.asn}-${dProbe.city}`];
-			const probe = probes && probes.length > 0 && probes.shift();
+			const group = dProbe.status === 'offline'
+				? [ dProbe.adoptionToken, ...dProbe.extraAdoptionTokens ]
+					.filter((token): token is string => !!token)
+					.map(token => adoptionTokenToProbes[`${token}-${dProbe.asn}-${dProbe.city}`])
+					.find(probes => probes?.length)
+				: undefined;
+			const probe = group?.shift();
 
 			if (probe) {
 				dProbesWithProbe.push({ dProbe, probe });
@@ -875,7 +884,7 @@ export class AdoptedProbes {
 		return `u-${defaultPrefix}`;
 	}
 
-	static formatProbeAsDProbe (probe: SocketProbe): Omit<DProbe, 'id' | 'lastSyncDate' | 'defaultPrefix' | 'deprecatedPrefix' | 'publicProbes' | 'adoptionToken' | 'settings'> {
+	static formatProbeAsDProbe (probe: SocketProbe): Omit<DProbe, 'id' | 'lastSyncDate' | 'defaultPrefix' | 'deprecatedPrefix' | 'publicProbes' | 'adoptionToken' | 'extraAdoptionTokens' | 'settings'> {
 		return {
 			accountId: null,
 			ip: probe.ipAddress,

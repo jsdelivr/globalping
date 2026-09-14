@@ -37,6 +37,7 @@ describe('AdoptedProbes', () => {
 		deprecatedPrefix: null,
 		publicProbes: 0,
 		adoptionToken: 'adoptionTokenValue',
+		extraAdoptionTokens: null,
 		allowedCountries: '["IE"]',
 		customLocation: null,
 		originalLocation: null,
@@ -343,6 +344,38 @@ describe('AdoptedProbes', () => {
 
 		expect(sql.delete.callCount).to.equal(0);
 		expect(sql.insert.callCount).to.equal(0);
+	});
+
+	it('class should match dProbe to probe by an extra adoption token', async () => {
+		sql.select.resolves([{ ...defaultAdoption, status: 'offline', adoptionToken: 'primaryToken', extraAdoptionTokens: '[{ "token": "extraToken" }]' }]);
+
+		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, ipAddress: '2.2.2.2', uuid: '2-2-2-2-2', altIpAddresses: [ '2.2.2.2' ], adoptionToken: 'extraToken' }]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.update.callCount).to.equal(1);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+
+		expect(sql.update.args[0]).to.deep.equal([{
+			uuid: '2-2-2-2-2',
+			ip: '2.2.2.2',
+			altIps: '["2.2.2.2"]',
+			status: 'ready',
+		}]);
+
+		expect(sql.insert.callCount).to.equal(0);
+	});
+
+	it('class should not match dProbe to probe by an unrelated adoption token', async () => {
+		sql.select.resolves([{ ...defaultAdoption, status: 'offline', adoptionToken: 'primaryToken', extraAdoptionTokens: '[{ "token": "extraToken" }]' }]);
+
+		getProbesWithAdminData.returns([{ ...defaultConnectedProbe, ipAddress: '2.2.2.2', uuid: '2-2-2-2-2', altIpAddresses: [ '2.2.2.2' ], adoptionToken: 'unrelatedToken' }]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.update.callCount).to.equal(0);
 	});
 
 	it('class should not use already matched probes in search by: offline dProbe token+asn+city -> probe token+asn+city', async () => {
@@ -1285,6 +1318,7 @@ describe('AdoptedProbes', () => {
 		expect(adoption).to.deep.equal({
 			...defaultAdoption,
 			altIps: [],
+			extraAdoptionTokens: [],
 			systemTags: [ 'datacenter-network' ],
 			tags: [{ type: 'user', value: 'u-jimaek:dashboardtag' }],
 			isIPv4Supported: true,
