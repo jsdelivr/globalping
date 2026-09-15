@@ -61,7 +61,7 @@ const resolveAccount = async (ctx: Parameters<ExtendedMiddleware>[0], payload: S
 			return personal;
 		}
 
-		// activeAccountId is a cookie set by dashboard FE so it is trusted, unlike user_account_id which is signed by the dashboard.
+		// user_account_id is a cookie set by dashboard FE so it is trusted, unlike activeAccountId which is signed by the dashboard.
 		const resolved = await getAccountRole(activeAccountId, payload.id!);
 
 		return resolved
