@@ -13,7 +13,7 @@ const hostConfig = config.get<string>('server.host');
 export const registerCreateMeasurementRoute = (router: ExtendedRouter, ioContext: IoContext): void => {
 	const handle = async (ctx: ExtendedContext): Promise<void> => {
 		if (ctx.state.user?.accountRole === 'viewer') {
-			throw createHttpError(403, 'Viewers can not run measurements for this organization.', { type: 'forbidden' });
+			throw createHttpError(403, 'Viewers can not run measurements for the organization.', { type: 'access_forbidden' });
 		}
 
 		const { measurementId, probesCount } = await ioContext.measurementRunner.run(ctx);
