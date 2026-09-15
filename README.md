@@ -199,7 +199,7 @@ For example:
 - `from WZIAtMx4LLhzit02`
 
 > [!IMPORTANT]
-> This is a best-effort action, and if some of the probes are no longer online, they will be missing from the new results. Additionally, as measurements expire (lifetime depends on user type), you should not hard-code measurement IDs, as new tests will break after a measurement expires.
+> This is a best-effort action, and if some probes are no longer online, they will be missing from the new results. Additionally, as measurements expire after up to six months, you should not hard-code measurement IDs, as new tests will break after a measurement expires.
 
 You can obtain the measurement ID through the "share" functionality. For example, use `--share` in the CLI, find the "Share URL" section at the bottom of the web results or receive it by calling the API directly.
 
@@ -329,6 +329,8 @@ Here are some tips:
 - **Avoid regional blocking:** Be mindful that some countries implement strict IP and domain filtering. If you encounter regional connectivity issues, use specific location filters to bypass or isolate those areas.
 
 ### Things to keep in mind
+
+Measurement parameters and results are public, may be accessed by anyone with the measurement ID, and may be published or made discoverable. Do not include credentials or other confidential information in measurement targets, options, or headers, and avoid including unnecessary personal data. Measurements are typically available for up to six months.
 
 #### Probes share no UUIDs
 Our probes don't expose unique IDs that you can use to target them explicitly. Instead, we recommend fine-tuning the probe selection by using and combining filters or specifying IDs from previous measurements, as described in the best practice section above.
