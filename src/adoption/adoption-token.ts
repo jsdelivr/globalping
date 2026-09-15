@@ -7,8 +7,6 @@ import { AdoptedProbes } from '../lib/override/adopted-probes.js';
 import got from 'got';
 import config from 'config';
 
-const PROBES_TABLE = 'gp_probes';
-
 const logger = scopedLogger('adoption-token');
 const directusUrl = config.get<string>('dashboard.directusUrl');
 const systemKey = config.get<string>('systemApi.key');
@@ -25,6 +23,7 @@ type DProbe = {
 	accountId: string | null;
 };
 
+const PROBES_TABLE = 'gp_probes';
 const ACCOUNTS_TABLE = 'gp_accounts';
 const ORGS_TABLE = 'gp_orgs';
 const USERS_TABLE = 'directus_users';

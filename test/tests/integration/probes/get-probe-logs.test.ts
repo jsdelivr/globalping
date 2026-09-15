@@ -3,7 +3,7 @@ import { getTestServer, getIoContext } from '../../../utils/server.js';
 import request from 'supertest';
 import config from 'config';
 import type { AuthenticateOptions } from '../../../../src/lib/http/middleware/authenticate.js';
-import { JWTPayload, SignJWT } from 'jose';
+import { getSignedJwt } from '../../../utils/session.js';
 import * as redis from '../../../../src/lib/redis/measurement-client.js';
 import * as sinon from 'sinon';
 import { Adoption } from '../../../../src/lib/override/adopted-probes.js';
@@ -16,7 +16,6 @@ const sessionConfig = config.get<AuthenticateOptions['session']>('server.session
 
 describe('Get Probe Logs', () => {
 	let requestAgent: Agent;
-	let sessionKey: Buffer;
 	let sandbox: sinon.SinonSandbox;
 	let client: RedisCluster;
 
@@ -49,16 +48,11 @@ describe('Get Probe Logs', () => {
 		},
 	];
 
-	const getSignedJwt = (options: JWTPayload) => {
-		return new SignJWT(options).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
-	};
-
 	before(async () => {
 		user = await createUser(dashboardClient);
 		viewerOrg = await createOrg(dashboardClient, { members: [{ userId: user.id, role: 'viewer' }] });
 		mockAdoption = { id: PROBE_ID, uuid: PROBE_UUID, accountId: user.accountId } as Adoption;
 
-		sessionKey = Buffer.from(sessionConfig.cookieSecret);
 		const app = await getTestServer();
 		requestAgent = request(app);
 

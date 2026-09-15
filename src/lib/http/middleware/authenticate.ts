@@ -56,8 +56,8 @@ const resolveAccount = async (ctx: Parameters<ExtendedMiddleware>[0], payload: S
 		if (
 			// If who set the cookie doesn't match the requester => fallback to the requester's account.
 			cookieUserId !== payload.id
-			 || !activeAccountId
-			 || activeAccountId === personal.accountId) {
+			|| !activeAccountId
+			|| activeAccountId === personal.accountId) {
 			return personal;
 		}
 

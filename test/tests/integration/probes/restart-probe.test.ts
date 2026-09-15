@@ -1,6 +1,5 @@
 import config from 'config';
-import type { JWTPayload } from 'jose';
-import { SignJWT } from 'jose';
+import { getSignedJwt } from '../../../utils/session.js';
 import request, { type Agent } from 'supertest';
 import * as sinon from 'sinon';
 import type { Socket } from 'socket.io-client';
@@ -15,7 +14,6 @@ const sessionConfig = config.get<AuthenticateOptions['session']>('server.session
 
 describe('Restart Probe', () => {
 	let requestAgent: Agent;
-	let sessionKey: Buffer;
 	let sandbox: sinon.SinonSandbox;
 	let probe: Socket | undefined;
 
@@ -28,10 +26,6 @@ describe('Restart Probe', () => {
 	let adminOrg: { id: string; accountId: string };
 	let mockAdoption: Adoption;
 
-	const getSignedJwt = (options: JWTPayload) => {
-		return new SignJWT(options).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
-	};
-
 	before(async () => {
 		user = await createUser(dashboardClient);
 		viewerOrg = await createOrg(dashboardClient, { members: [{ userId: user.id, role: 'viewer' }] });
@@ -39,7 +33,6 @@ describe('Restart Probe', () => {
 		adminOrg = await createOrg(dashboardClient, { members: [{ userId: user.id, role: 'admin' }] });
 		mockAdoption = { id: PROBE_ID, uuid: PROBE_UUID, accountId: user.accountId } as Adoption;
 
-		sessionKey = Buffer.from(sessionConfig.cookieSecret);
 		requestAgent = request(await getTestServer());
 	});
 
