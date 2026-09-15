@@ -1,14 +1,13 @@
 import config from 'config';
 import { jwtVerify } from 'jose';
+import createHttpError from 'http-errors';
 import apmAgent from 'elastic-apm-node';
 
 import { type AccountRole, getAccountRole, getUserAccountId } from '../../accounts.js';
 import { auth } from '../auth.js';
-import { scopedLogger } from '../../logger.js';
 import type { ExtendedMiddleware } from '../../../types.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
-const logger = scopedLogger('authenticate');
 
 type SessionCookiePayload = {
 	id?: string;
@@ -45,32 +44,27 @@ export type AuthenticateState = {
 };
 
 const resolveAccount = async (ctx: Parameters<ExtendedMiddleware>[0], payload: SessionCookiePayload) => {
-	const personal = { accountId: payload.user_account_id ?? null, accountRole: 'owner' as AccountRole };
+	// PHASE5: drop the lookup. Directus puts the account in the cookie, but the sessions issued before that stay
+	// valid for a day, so until then it still has to be resolved here.
+	const userAccountId = payload.user_account_id ?? await getUserAccountId(payload.id!);
+	const [ cookieUserId, activeAccountId ] = (ctx.cookies.get(sessionConfig.activeAccountCookieName) ?? '').split(':');
 
-	try {
-		// PHASE5: drop the lookup. Directus puts the account in the cookie, but the sessions issued before that shipped stay
-		// valid for a day, so until then it still has to be resolved here.
-		personal.accountId ??= await getUserAccountId(payload.id!);
-		const [ cookieUserId, activeAccountId ] = (ctx.cookies.get(sessionConfig.activeAccountCookieName) ?? '').split(':');
-
-		if (
-			// If who set the cookie doesn't match the requester => fallback to the requester's account.
-			cookieUserId !== payload.id
-			|| !activeAccountId
-			|| activeAccountId === personal.accountId) {
-			return personal;
-		}
-
-		// user_account_id is a cookie set by dashboard FE so it is trusted, unlike activeAccountId which is signed by the dashboard.
-		const resolved = await getAccountRole(activeAccountId, payload.id!);
-
-		return resolved
-			? { accountId: resolved.id, accountRole: resolved.role }
-			: personal;
-	} catch (error) {
-		logger.error('Failed to resolve the active account.', error);
-		return personal;
+	if (
+		// If its not the cookie of the requester => fallback to the requester's account.
+		cookieUserId !== payload.id
+		|| !activeAccountId
+		|| activeAccountId === userAccountId) {
+		return { accountId: userAccountId, accountRole: 'owner' as AccountRole };
 	}
+
+	// activeAccountId is a cookie set by dashboard FE so it is untrusted, unlike userAccountId which is signed by the dashboard.
+	const resolved = await getAccountRole(activeAccountId, payload.id!);
+
+	if (!resolved) {
+		throw createHttpError(403, 'The selected account is not available.', { type: 'access_forbidden' });
+	}
+
+	return { accountId: resolved.id, accountRole: resolved.role };
 };
 
 export const verifySessionPayload = async (cookie: string, key: Uint8Array): Promise<SessionCookiePayload | undefined> => {

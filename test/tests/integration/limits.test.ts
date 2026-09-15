@@ -212,7 +212,7 @@ describe('rate limiter', () => {
 				expect(response.body.credits).to.deep.equal({ remaining: 20 });
 			});
 
-			it('should ignore an org the user is not a member of', async () => {
+			it('should respond with 403 for an org the user is not a member of', async () => {
 				await insertCredits(user.accountId, 10);
 				await insertCredits(otherOrg.accountId, 20);
 
@@ -220,7 +220,8 @@ describe('rate limiter', () => {
 					.set('Cookie', await getCookies(user.id, otherOrg.accountId))
 					.send();
 
-				expect(response.body.credits).to.deep.equal({ remaining: 10 });
+				expect(response.status).to.equal(403);
+				expect(response.body.error.type).to.equal('access_forbidden');
 			});
 
 			it('should ignore the active account left by another user of the same device', async () => {

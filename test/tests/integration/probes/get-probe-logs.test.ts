@@ -83,6 +83,13 @@ describe('Get Probe Logs', () => {
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).send().expect(404);
 	});
 
+	it('should respond with 404 if neither the user nor the probe has an account', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: null } as unknown as Adoption);
+		const jwt = await getSignedJwt({ id: 'user-without-account-id', app_access: true });
+
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(404);
+	});
+
 	it('should respond with 404 if user is admin and probe does not exist', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(null);
 		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });

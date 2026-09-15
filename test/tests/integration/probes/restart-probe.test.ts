@@ -58,6 +58,15 @@ describe('Restart Probe', () => {
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(404);
 	});
 
+	it('should respond with 404 if neither the user nor the probe has an account', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: null } as unknown as Adoption);
+		nockGeoIpProviders();
+		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
+		const jwt = await getSignedJwt({ id: 'user-without-account-id', app_access: true });
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(404);
+	});
+
 	it('should respond with 403 if the user is only a viewer of the org they act for', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
 		const jwt = await getSignedJwt({ id: user.id, app_access: true, user_account_id: user.accountId });
