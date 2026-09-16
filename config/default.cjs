@@ -22,6 +22,7 @@ module.exports = {
 		pingInterval: 3000,
 		pingTimeout: 3000,
 		minProbeVersion: '0.52.0',
+		channelPrefix: 'socket.io',
 	},
 	redis: {
 		standalonePersistent: {
