@@ -4,6 +4,7 @@ import { TTLCache } from '@isaacs/ttlcache';
 import { base32 } from '@scure/base';
 import { scopedLogger } from '../logger.js';
 import { dashboardClient } from '../sql/client.js';
+import { ACCOUNTS_TABLE, MEMBERS_TABLE, type AccountRole } from '../accounts.js';
 
 export const GP_TOKENS_TABLE = 'gp_tokens';
 export const USERS_TABLE = 'directus_users';
@@ -15,6 +16,7 @@ const TOKEN_TTL = 2 * 60 * 1000;
 export type Token = {
 	user_created: string | null;
 	account_id: string | null;
+	account_role: AccountRole | null;
 	user_github_username: string | null;
 	user_user_type: 'member' | 'sponsor' | 'special';
 	value: string;
@@ -90,8 +92,24 @@ export class Auth {
 	async fetchTokens (filter: Partial<Row> = {}) {
 		const rows = await this.sql(GP_TOKENS_TABLE)
 			.leftJoin(USERS_TABLE, 'user_created', `${USERS_TABLE}.id`)
+			.leftJoin(ACCOUNTS_TABLE, `${ACCOUNTS_TABLE}.id`, `${GP_TOKENS_TABLE}.account_id`)
+			.leftJoin(MEMBERS_TABLE, function () {
+				this.on(`${MEMBERS_TABLE}.org`, `${ACCOUNTS_TABLE}.org`)
+					.andOn(`${MEMBERS_TABLE}.user`, `${GP_TOKENS_TABLE}.user_created`);
+			})
 			.where(filter)
-			.select<Row[]>([ 'user_created', 'account_id', 'value', 'expire', 'origins', 'date_last_used', 'scopes', 'github_username as user_github_username', 'user_type as user_user_type' ]);
+			.select<Row[]>([
+				'user_created',
+				'account_id',
+				'value',
+				'expire',
+				'origins',
+				'date_last_used',
+				'scopes',
+				'github_username as user_github_username',
+				'user_type as user_user_type',
+				this.sql.raw(`IF(?? = ??, 'owner', ??) AS account_role`, [ `${ACCOUNTS_TABLE}.user`, `${GP_TOKENS_TABLE}.user_created`, `${MEMBERS_TABLE}.role` ]),
+			]);
 
 		const tokens: Token[] = rows.map(row => ({
 			...row,
@@ -131,8 +149,12 @@ export class Auth {
 			return null;
 		}
 
+		if (token.account_id && !token.account_role) {
+			return null;
+		}
+
 		await this.updateLastUsedDate(token);
-		return { userId: token.user_created, accountId: token.account_id, username: token.user_github_username, userType: token.user_user_type, scopes: token.scopes, hashedToken: token.value };
+		return { userId: token.user_created, accountId: token.account_id, accountRole: token.account_role, username: token.user_github_username, userType: token.user_user_type, scopes: token.scopes, hashedToken: token.value };
 	}
 
 	private async updateLastUsedDate (token: Token) {

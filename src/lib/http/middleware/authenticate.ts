@@ -30,7 +30,7 @@ export type AuthenticateOptions = {
 export type AuthenticateStateUser = {
 	id: string | null;
 	accountId: string | null;
-	accountRole?: AccountRole;
+	accountRole: AccountRole | null;
 	username: string | null;
 	userType: 'member' | 'sponsor' | 'special';
 	scopes?: string[];
@@ -99,7 +99,7 @@ export const authenticate = (): ExtendedMiddleware => {
 				return;
 			}
 
-			ctx.state.user = { id: result.userId, accountId: result.accountId, username: result.username, userType: result.userType, scopes: result.scopes, authMode: 'token', hashedToken: result.hashedToken };
+			ctx.state.user = { id: result.userId, accountId: result.accountId, accountRole: result.accountRole, username: result.username, userType: result.userType, scopes: result.scopes, authMode: 'token', hashedToken: result.hashedToken };
 			apmAgent.setUserContext({ id: result.userId || 'anonymous-token', username: result.username || 'anonymous-token' });
 		} else if (sessionCookie) {
 			const payload = await verifySessionPayload(sessionCookie, sessionKey);
