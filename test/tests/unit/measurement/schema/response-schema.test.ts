@@ -786,12 +786,12 @@ describe('resultSchema', () => {
 			statusCode: 200,
 			statusCodeName: 'OK',
 			timings: {
-				total: null,
-				download: null,
-				firstByte: null,
+				total: 0,
+				download: 0,
+				firstByte: 0,
 				dns: null,
 				tls: null,
-				tcp: null,
+				tcp: 0,
 			},
 			tls: {
 				authorized: true,
@@ -815,6 +815,24 @@ describe('resultSchema', () => {
 
 		Joi.assert(responseBody.results[0]?.result, httpResultSchema);
 		expect(response).to.matchApiSchema();
+	});
+
+	it('http: rejects null required timings in API responses', async () => {
+		const consoleError = sandbox.stub(console, 'error');
+
+		try {
+			for (const timing of [ 'total', 'download', 'firstByte', 'tcp' ] as const) {
+				const responseBody = _.cloneDeep(defaultHttpResponseBody);
+				(responseBody.results[0]!.result as HttpResult).timings![timing] = null;
+				getResponseBody.returns(responseBody);
+
+				const response = await request(mockServer).get('/v1/measurements/measurement-id');
+
+				expect(() => expect(response).to.matchApiSchema()).to.throw();
+			}
+		} finally {
+			consoleError.restore();
+		}
 	});
 
 	for (const failureSource of [ 'target', 'resolver', 'internal' ] as const) {

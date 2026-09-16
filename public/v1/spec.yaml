@@ -118,7 +118,7 @@ paths:
       operationId: getMeasurement
       description: |
         Returns the status and results of an existing measurement.
-        Measurements are typically available for up to 7 days after creation.
+        Measurements are typically available for up to six months after creation.
 
         > **Tip**: A link to this endpoint is returned in the `Location` response header when creating the measurement.
 

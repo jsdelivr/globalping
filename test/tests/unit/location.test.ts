@@ -1,8 +1,27 @@
 import { expect } from 'chai';
-import { getIndex, getRegionByCountry } from '../../../src/lib/location/location.js';
+import { countries } from 'countries-list';
+import { getCountryAliases, getIndex, getRegionByCountry } from '../../../src/lib/location/location.js';
+import { regions } from '../../../src/lib/location/regions.js';
 import type { ProbeLocation, Tag } from '../../../src/probe/types.js';
 
 describe('location index', () => {
+	it('maps every ISO 3166-1 country to a region', () => {
+		const nonIso3166CountryCodes = new Set([ 'AC', 'TA', 'XK' ]);
+		const iso3166CountryCodes = Object.keys(countries).filter(code => !nonIso3166CountryCodes.has(code));
+		const mappedCountryCodes = new Set(Object.values(regions).flat());
+
+		expect(iso3166CountryCodes.filter(code => !mappedCountryCodes.has(code))).to.deep.equal([]);
+	});
+
+	it('merges package and Globalping country aliases', () => {
+		expect(getCountryAliases('MM')).to.include.members([ 'mm', 'burma', 'myanmar (burma)' ]);
+		expect(getCountryAliases('GB')).to.include.members([ 'gb', 'uk', 'britain', 'great britain', 'england', 'scotland' ]);
+	});
+
+	it('normalizes package country aliases for location matching', () => {
+		expect(getCountryAliases('CZ')).to.include.members([ 'czech republic', 'ceska republika' ]);
+	});
+
 	it('adds prefixes for system tags except user-prefixed tags', () => {
 		const location: ProbeLocation = {
 			continent: 'EU',

@@ -620,14 +620,14 @@ describe('AdoptedProbes', () => {
 		expect((gotPostStub.args[0]![1] as any).json).to.deep.equal({
 			account: 'accountId',
 			type: 'probe_location_changed',
-			subject: 'Your probe\'s location has changed',
+			subject: 'Your probe probe-1 changed location',
 			message: 'Globalping detected that your probe [probe-1](/probes/p-1) with IP address **1.1.1.1** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).',
 		});
 
 		expect((gotPostStub.args[1]![1] as any).json).to.deep.equal({
 			account: 'accountId',
 			type: 'probe_location_changed',
-			subject: 'Your probe\'s location has changed',
+			subject: 'Your probe probe-2 changed location',
 			message: 'Globalping detected that your probe [probe-2](/probes/p-9) with IP address **9.9.9.9** has changed its location from Ireland to United Kingdom. The custom city value "Dublin" is not applied anymore.\n\nIf this change is not right, please follow the steps in [this issue](https://github.com/jsdelivr/globalping/issues/660).',
 		});
 
@@ -743,14 +743,14 @@ describe('AdoptedProbes', () => {
 		expect((gotPostStub.args[2]![1] as any).json).to.deep.equal({
 			account: 'accountId',
 			type: 'probe_location_changed_back',
-			subject: 'Your probe\'s location has changed back',
+			subject: 'Your probe probe-1 returned to its previous location',
 			message: 'Globalping detected that your probe [probe-1](/probes/p-1) with IP address **1.1.1.1** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 
 		expect((gotPostStub.args[3]![1] as any).json).to.deep.equal({
 			account: 'accountId',
 			type: 'probe_location_changed_back',
-			subject: `Your probe's location has changed back`,
+			subject: 'Your probe probe-2 returned to its previous location',
 			message: 'Globalping detected that your probe [probe-2](/probes/p-9) with IP address **9.9.9.9** has changed its location back from United Kingdom to Ireland. The custom city value "Dublin" is now applied again.',
 		});
 

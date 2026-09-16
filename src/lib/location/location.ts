@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import anyAscii from 'any-ascii';
 import { countries, getCountryData, TCountryCode } from 'countries-list';
 import { regions, aliases as regionAliases } from './regions.js';
 import { states } from './states.js';
@@ -133,7 +134,7 @@ const getTagCategory = _.memoize((tag: string) => {
 const getCountryCategories = _.memoize((country: string) => [
 	toIndexStrings([ country ]),
 	toIndexStrings([ getCountryIso3ByIso2(country) ]),
-	toIndexStrings([ getCountryByIso(country) ]),
+	toIndexStrings([ anyAscii(getCountryByIso(country)) ]),
 	toIndexStrings(getCountryAliases(country)),
 ]);
 
