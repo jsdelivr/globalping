@@ -299,6 +299,7 @@ export class AdoptedProbes {
 			}] : []),
 			...(adoption.publicProbes && adoption.deprecatedPrefix ? [{
 				type: 'system' as const,
+				subtype: 'deprecated' as const,
 				value: AdoptedProbes.getGlobalUserTag(adoption.deprecatedPrefix),
 			}] : []),
 			...adoption.tags,
