@@ -89,7 +89,6 @@ export class AdoptionToken {
 			.modify(filterToken(`${ORGS_TABLE}.adoption_token`))
 			.select(`${ACCOUNTS_TABLE}.id as accountId`, `${ORGS_TABLE}.adoption_token as token`);
 
-		// The extracted column inherits the utf8mb4_bin collation of the JSON column, which does not union with the other two.
 		const extraTokens = this.sql(ACCOUNTS_TABLE)
 			.join(ORGS_TABLE, `${ACCOUNTS_TABLE}.org`, `${ORGS_TABLE}.id`)
 			.joinRaw(`, JSON_TABLE(${ORGS_TABLE}.extra_adoption_tokens, '$[*]' COLUMNS (token VARCHAR(255) PATH '$.token')) t`)
@@ -98,6 +97,7 @@ export class AdoptionToken {
 					query.whereRaw('t.token = ?', [ token ]);
 				}
 			})
+			// Extracted `accountId` column inherits the utf8mb4_bin collation of the JSON column, which does not union with the other two so we need to COLLATE it.
 			.select(`${ACCOUNTS_TABLE}.id as accountId`, this.sql.raw('t.token COLLATE utf8mb4_unicode_ci as token'));
 
 		return userTokens.unionAll([ orgTokens, extraTokens ]) as unknown as Promise<AccountToken[]>;
