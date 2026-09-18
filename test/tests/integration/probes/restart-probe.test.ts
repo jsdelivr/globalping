@@ -1,6 +1,5 @@
 import config from 'config';
-import type { JWTPayload } from 'jose';
-import { SignJWT } from 'jose';
+import { getSignedJwt } from '../../../utils/session.js';
 import request, { type Agent } from 'supertest';
 import * as sinon from 'sinon';
 import type { Socket } from 'socket.io-client';
@@ -8,32 +7,47 @@ import type { AuthenticateOptions } from '../../../../src/lib/http/middleware/au
 import type { Adoption } from '../../../../src/lib/override/adopted-probes.js';
 import { addFakeProbe, deleteFakeProbes, getIoContext, getTestServer } from '../../../utils/server.js';
 import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
+import { dashboardClient } from '../../../../src/lib/sql/client.js';
+import { createOrg, createUser } from '../../../utils/fixtures.js';
+import { GP_TOKENS_TABLE } from '../../../../src/lib/http/auth.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
 
 describe('Restart Probe', () => {
 	let requestAgent: Agent;
-	let sessionKey: Buffer;
 	let sandbox: sinon.SinonSandbox;
 	let probe: Socket | undefined;
 
 	const PROBE_ID = 'mock-probe-id';
 	const PROBE_UUID = '22222222-2222-4222-8222-222222222222';
-	const PROBE_USER_ID = 'mock-u-1';
+	const MEMBER_ORG_TOKEN = 'memberorgtokentestmemberorgtoken';
+	const MEMBER_ORG_TOKEN_HASH = 'YLz5rx2xqYbmucnxXTRNMEfxLaNEYXhZsHy219Myxvo=';
+	const ADMIN_ORG_TOKEN = 'adminorgtokentestadminorgtokente';
+	const ADMIN_ORG_TOKEN_HASH = 'O6hW4LnQxR3wMHVQSD9ZEa3dnqnbrb1DQDaHKwT83aM=';
 
-	const mockAdoption = {
-		id: PROBE_ID,
-		uuid: PROBE_UUID,
-		userId: PROBE_USER_ID,
-	} as Adoption;
-
-	const getSignedJwt = (options: JWTPayload) => {
-		return new SignJWT(options).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
-	};
+	let user: { id: string; accountId: string };
+	let viewerOrg: { id: string; accountId: string };
+	let memberOrg: { id: string; accountId: string };
+	let adminOrg: { id: string; accountId: string };
+	let mockAdoption: Adoption;
 
 	before(async () => {
-		sessionKey = Buffer.from(sessionConfig.cookieSecret);
+		user = await createUser(dashboardClient);
+		viewerOrg = await createOrg(dashboardClient, { members: [{ userId: user.id, role: 'viewer' }] });
+		memberOrg = await createOrg(dashboardClient, { members: [{ userId: user.id, role: 'member' }] });
+		adminOrg = await createOrg(dashboardClient, { members: [{ userId: user.id, role: 'admin' }] });
+		mockAdoption = { id: PROBE_ID, uuid: PROBE_UUID, accountId: user.accountId } as Adoption;
+
+		await dashboardClient(GP_TOKENS_TABLE).insert([
+			{ name: 'member org token', user_created: user.id, account_id: memberOrg.accountId, value: MEMBER_ORG_TOKEN_HASH },
+			{ name: 'admin org token', user_created: user.id, account_id: adminOrg.accountId, value: ADMIN_ORG_TOKEN_HASH },
+		]);
+
 		requestAgent = request(await getTestServer());
+	});
+
+	after(async () => {
+		await dashboardClient(GP_TOKENS_TABLE).whereIn('value', [ MEMBER_ORG_TOKEN_HASH, ADMIN_ORG_TOKEN_HASH ]).delete();
 	});
 
 	beforeEach(() => {
@@ -58,6 +72,35 @@ describe('Restart Probe', () => {
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(404);
 	});
 
+	it('should respond with 404 if neither the user nor the probe has an account', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: null } as unknown as Adoption);
+		nockGeoIpProviders();
+		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
+		const jwt = await getSignedJwt({ id: 'user-without-account-id', app_access: true });
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(404);
+	});
+
+	it('should respond with 403 if the user is only a viewer of the org they act for', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, user_account_id: user.accountId });
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${viewerOrg.accountId}`)
+			.send()
+			.expect(403);
+	});
+
+	it('should respond with 403 if the user is only a member of the org they act for', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, user_account_id: user.accountId });
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${memberOrg.accountId}`)
+			.send()
+			.expect(403);
+	});
+
 	it('should respond with 404 if user is admin and probe does not exist', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(null);
 		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
@@ -67,7 +110,7 @@ describe('Restart Probe', () => {
 
 	it('should respond with 404 if probe is offline', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(404);
 	});
@@ -77,9 +120,49 @@ describe('Restart Probe', () => {
 		nockGeoIpProviders();
 		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
 		const restartSignal = new Promise<void>(resolve => probe!.once('probe:sigkill', resolve));
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(204);
+		await restartSignal;
+	});
+
+	it('should restart an org probe for an admin of that org', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: adminOrg.accountId } as Adoption);
+		nockGeoIpProviders();
+		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
+		const restartSignal = new Promise<void>(resolve => probe!.once('probe:sigkill', resolve));
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, user_account_id: user.accountId });
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${adminOrg.accountId}`)
+			.send()
+			.expect(204);
+
+		await restartSignal;
+	});
+
+	it('should respond with 403 for a token of an org where the user is only a member', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: memberOrg.accountId } as Adoption);
+		nockGeoIpProviders();
+		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
+			.set('Authorization', `Bearer ${MEMBER_ORG_TOKEN}`)
+			.send()
+			.expect(403);
+	});
+
+	it('should restart an org probe for a token of an org where the user is an admin', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: adminOrg.accountId } as Adoption);
+		nockGeoIpProviders();
+		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
+		const restartSignal = new Promise<void>(resolve => probe!.once('probe:sigkill', resolve));
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
+			.set('Authorization', `Bearer ${ADMIN_ORG_TOKEN}`)
+			.send()
+			.expect(204);
+
 		await restartSignal;
 	});
 
