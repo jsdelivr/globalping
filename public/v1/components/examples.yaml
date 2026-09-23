@@ -505,10 +505,6 @@ components:
                     "CN": "Cloudflare Inc ECC CA-3"
                   },
                   "subject": {
-                    "C": "US",
-                    "ST": "California",
-                    "L": "San Francisco",
-                    "O": "Cloudflare, Inc.",
                     "CN": "sni.cloudflaressl.com",
                     "alt": "DNS:cdn.jsdelivr.net, DNS:sni.cloudflaressl.com"
                   },
