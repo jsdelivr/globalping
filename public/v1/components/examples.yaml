@@ -530,8 +530,8 @@ components:
             "measurements": {
               "create": {
                 "type": "ip",
-                "limit": 100,
-                "remaining": 95,
+                "limit": 250,
+                "remaining": 245,
                 "reset": 3599
               }
             }
@@ -545,8 +545,8 @@ components:
             "measurements": {
               "create": {
                 "type": "user",
-                "limit": 250,
-                "remaining": 240,
+                "limit": 500,
+                "remaining": 490,
                 "reset": 3599
               }
             }
