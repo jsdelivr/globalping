@@ -7,3 +7,4 @@
 | <img src="https://github.com/user-attachments/assets/f9d6c1ce-46e5-44a6-a471-aa2226665e67" alt="ServerAstra logo" width="150" title="ServerAstra" /> | [ServerAstra Website](https://serverastra.com/) |
 | <img src="https://github.com/user-attachments/assets/009af8c1-e8b3-4aad-b6f1-78b448c3bd28" alt="KernelHost logo" width="150" title="KernelHost" /> | [KernelHost Website](https://www.kernelhost.com/) |
 | <img src="https://github.com/user-attachments/assets/7320a3a5-5655-41c8-9474-4d1f406dc01b" alt="Nevacloud logo" width="150" title="Nevacloud" /> | [Nevacloud Website](https://nevacloud.com/) |
+| <img src="https://github.com/user-attachments/assets/7320a3a5-5655-41c8-9474-4d1f406dc01b" alt="UP-Network logo" width="150" title="Nevacloud" /> | [UP-Network Website](https://up-network.ch/) |
