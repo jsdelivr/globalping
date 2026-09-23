@@ -166,7 +166,7 @@ components:
             The result count might be lower if there aren't enough probes available in this location.
             Mutually exclusive with the global `limit` property.
           minimum: 1
-          maximum: 200
+          maximum: 500
           default: 1
     MeasurementLocations:
       oneOf:
