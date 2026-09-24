@@ -7,7 +7,7 @@ import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 const handle = async (ctx: ExtendedContext): Promise<void> => {
 	const [ rateLimitState, remainingCredits ] = await Promise.all([
 		getPostMeasurementRateLimitState(ctx),
-		ctx.state.user?.id && credits.getRemainingCredits(ctx.state.user.id),
+		ctx.state.user?.accountId && credits.getRemainingCredits(ctx.state.user.accountId),
 	]);
 
 	ctx.body = {
@@ -16,7 +16,7 @@ const handle = async (ctx: ExtendedContext): Promise<void> => {
 				create: rateLimitState,
 			},
 		},
-		...(ctx.state.user?.id && {
+		...(ctx.state.user?.accountId && {
 			credits: {
 				remaining: remainingCredits,
 			},
