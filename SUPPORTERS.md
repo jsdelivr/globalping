@@ -9,3 +9,4 @@
 | <img src="https://github.com/user-attachments/assets/7320a3a5-5655-41c8-9474-4d1f406dc01b" alt="Nevacloud logo" width="150" title="Nevacloud" /> | [Nevacloud Website](https://nevacloud.com/) |
 | <img src="https://github.com/user-attachments/assets/d058eeda-ad8b-4ec9-b7f8-ca5595eba7a4" alt="UP-Network logo" width="150" title="UP-Network" /> | [UP-Network Website](https://up-network.ch/) |
 | <img src="https://github.com/user-attachments/assets/2bc02092-7775-4096-aeb8-59190c82a0d0" alt="TheHost logo" width="150" title="TheHost" /> | [TheHost Website](https://thehost.com.ua/) |
+| <img src="https://github.com/user-attachments/assets/fa9face3-1a17-4df2-9d7b-392c2d2f9873" alt="Letscloud logo" width="150" title="Letscloud" /> | [Letscloud Website](https://letscloud.io/) |
