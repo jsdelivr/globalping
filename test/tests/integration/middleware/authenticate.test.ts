@@ -42,6 +42,24 @@ describe('authenticate', () => {
 		await deleteFakeProbes();
 	});
 
+	describe('tier', () => {
+		it('should take the tier from the org when the token bills an org, and from the user otherwise', async () => {
+			const sponsor = await createUser(dashboardClient, { user_type: 'sponsor' });
+			const org = await createOrg(dashboardClient, { user_type: 'member', members: [{ userId: sponsor.id, role: 'admin' }] });
+
+			await dashboardClient(GP_TOKENS_TABLE).insert([
+				{ name: 'personal', user_created: sponsor.id, account_id: sponsor.accountId, value: 'kOSvlLIT0R9OjLXOaEqfgMIoZP8TTFFDnHXNkPJk5s0=' },
+				{ name: 'org', user_created: sponsor.id, account_id: org.accountId, value: 'RQ0R8MTk4VLUGAxaMGrUvFjNJj39v1MvNwXt0CvTEPY=' },
+			]);
+
+			const [ personalToken ] = await auth.fetchTokens({ account_id: sponsor.accountId });
+			const [ orgToken ] = await auth.fetchTokens({ account_id: org.accountId });
+
+			expect(personalToken!.user_user_type).to.equal('sponsor');
+			expect(orgToken!.user_user_type).to.equal('member');
+		});
+	});
+
 	describe('token', () => {
 		it('should accept if no "Authorization" header was passed', async () => {
 			await requestAgent.post('/v1/measurements')
