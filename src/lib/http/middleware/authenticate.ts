@@ -3,7 +3,7 @@ import { jwtVerify } from 'jose';
 import createHttpError from 'http-errors';
 import apmAgent from 'elastic-apm-node';
 
-import { type AccountRole, getAccountRole, getUserAccountId } from '../../accounts.js';
+import { type AccountRole, getOrgRole, getUserAccountId } from '../../accounts.js';
 import { auth } from '../auth.js';
 import type { ExtendedMiddleware } from '../../../types.js';
 
@@ -54,17 +54,17 @@ const resolveAccount = async (ctx: Parameters<ExtendedMiddleware>[0], payload: S
 		cookieUserId !== payload.id
 		|| !activeAccountId
 		|| activeAccountId === userAccountId) {
-		return { accountId: userAccountId, accountRole: 'owner' as AccountRole };
+		return { accountId: userAccountId, accountRole: 'owner' as const, userType: payload.user_type ?? 'member' };
 	}
 
 	// activeAccountId is a cookie set by dashboard FE so it is untrusted, unlike userAccountId which is signed by the dashboard.
-	const resolved = await getAccountRole(activeAccountId, payload.id!);
+	const resolved = await getOrgRole(activeAccountId, payload.id!);
 
 	if (!resolved) {
 		throw createHttpError(403, 'The selected account is not available.', { type: 'access_forbidden' });
 	}
 
-	return { accountId: resolved.id, accountRole: resolved.role };
+	return { accountId: resolved.id, accountRole: resolved.role, userType: resolved.userType };
 };
 
 export const verifySessionPayload = async (cookie: string, key: Uint8Array): Promise<SessionCookiePayload | undefined> => {
@@ -106,7 +106,7 @@ export const authenticate = (): ExtendedMiddleware => {
 
 			if (payload?.id && payload.app_access === true) {
 				const account = await resolveAccount(ctx, payload);
-				ctx.state.user = { id: payload.id, ...account, username: payload.github_username || null, userType: payload.user_type || 'member', authMode: 'cookie', adminAccess: payload.admin_access === true };
+				ctx.state.user = { id: payload.id, ...account, username: payload.github_username || null, authMode: 'cookie', adminAccess: payload.admin_access === true };
 				apmAgent.setUserContext({ id: payload.id, username: payload.github_username || `ID(${payload.id})` });
 			}
 		}
