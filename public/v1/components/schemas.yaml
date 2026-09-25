@@ -166,7 +166,7 @@ components:
             The result count might be lower if there aren't enough probes available in this location.
             Mutually exclusive with the global `limit` property.
           minimum: 1
-          maximum: 200
+          maximum: 500
           default: 1
     MeasurementLocations:
       oneOf:
@@ -496,10 +496,10 @@ components:
           $ref: 'schemas.yaml#/components/schemas/HttpProtocol'
         port:
           type: integer
-          description: The port number to use.
+          description: The port number to use. Defaults to `443` for `HTTPS`, `80` for `HTTP`.
           minimum: 0
           maximum: 65535
-          default: 80
+          default: 443
         ipVersion:
           $ref: 'schemas.yaml#/components/schemas/IpVersion'
     MeasurementProbesCount:
@@ -857,7 +857,7 @@ components:
       type: array
       description: |
         An array of additional values to fine-tune probe selection:
-        - Probes hosted in [AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions) and [Google Cloud](https://cloud.google.com/compute/docs/regions-zones#available) are automatically assigned the service region code. For example: `aws-eu-west-1` and `gcp-us-south1`.
+        - Probes hosted in [AWS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions), [Google Cloud](https://cloud.google.com/compute/docs/regions-zones#available), [Azure](https://learn.microsoft.com/en-us/azure/reliability/regions-list), and [Oracle Cloud](https://docs.oracle.com/en-us/iaas/Content/General/Concepts/regions.htm) are automatically assigned the service region code. For example: `aws-eu-west-1`, `gcp-us-south1`, `azure-polandcentral`, and `oci-us-ashburn-1`. They are also assigned the provider name: `aws`, `gcp`, `azure`, or `oci`.
         - Probes are automatically assigned `datacenter-network` and `eyeball-network` tags to distinguish between datacenter and end-user locations.
       items:
         type: string
