@@ -162,7 +162,7 @@ export class AdoptedProbes {
 			probeField: 'tags',
 			format: (probeTags: Tag[], _probe?: SocketProbe, dProbe?: DProbe) => [
 				...(dProbe && dProbe.publicProbes && dProbe.defaultPrefix ? [ AdoptedProbes.getGlobalUserTag(dProbe.defaultPrefix) ] : []),
-				...probeTags.filter(({ type }) => type === 'system').map(({ value }) => value),
+				...probeTags.filter(({ type, subtype }) => type === 'system' && subtype !== 'deprecated').map(({ value }) => value),
 			],
 		},
 		asn: {
@@ -299,6 +299,7 @@ export class AdoptedProbes {
 			}] : []),
 			...(adoption.publicProbes && adoption.deprecatedPrefix ? [{
 				type: 'system' as const,
+				subtype: 'deprecated' as const,
 				value: AdoptedProbes.getGlobalUserTag(adoption.deprecatedPrefix),
 			}] : []),
 			...adoption.tags,

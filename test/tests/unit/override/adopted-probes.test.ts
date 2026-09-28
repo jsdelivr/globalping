@@ -1433,7 +1433,7 @@ describe('AdoptedProbes', () => {
 		expect(updatedTags).to.deep.equal([
 			{ type: 'system', value: 'datacenter-network' },
 			{ type: 'system', value: 'u-jsdelivr' },
-			{ type: 'system', value: 'u-old-jsdelivr' },
+			{ type: 'system', subtype: 'deprecated', value: 'u-old-jsdelivr' },
 		]);
 	});
 });

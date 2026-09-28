@@ -1,6 +1,7 @@
 import type { ServerProbe } from '../types.js';
 import type { ExtendedContext, ExtendedRouter } from '../../types.js';
 import type { IoContext } from '../../lib/server.js';
+import { getPublicTagValues } from '../../lib/geoip/utils.js';
 
 export const registerGetProbesRoute = (router: ExtendedRouter, context: IoContext): void => {
 	const handle = async (ctx: ExtendedContext): Promise<void> => {
@@ -32,7 +33,7 @@ export const registerGetProbesRoute = (router: ExtendedRouter, context: IoContex
 				longitude: probe.location.longitude,
 				network: probe.location.network,
 			},
-			tags: probe.tags.map(({ value }) => value),
+			tags: getPublicTagValues(probe.tags),
 			isHardware: isAdmin ? probe.isHardware : undefined,
 			hardwareDevice: isAdmin ? probe.hardwareDevice : undefined,
 			hardwareDeviceFirmware: isAdmin ? probe.hardwareDeviceFirmware : undefined,

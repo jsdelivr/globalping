@@ -24,4 +24,8 @@ export const normalizeCoordinate = (coordinate: number) => Math.round(coordinate
 
 export const normalizeTags = (tags: Tag[]) => tags.map(tag => ({ type: tag.type, value: tag.value.toLowerCase() }));
 
+export const getPublicTagValues = (tags: Pick<Tag, 'value' | 'subtype'>[]): string[] => tags
+	.filter(({ subtype }) => subtype !== 'deprecated')
+	.map(({ value }) => value);
+
 export const getGroupingKey = (country: string, state: string | null, normalizedCity: string, asn: number) => `${country}-${state}-${normalizedCity}-${asn}`;
