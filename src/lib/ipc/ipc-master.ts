@@ -9,11 +9,11 @@ const logger = scopedLogger('ipc');
 
 export const getHandler = (target: string, method: string): (...args: unknown[]) => Promise<unknown> => {
 	if (target === 'credits' && method === 'consume') {
-		return (userId, credits) => creditsMaster!.consume(userId as string, credits as number);
+		return (accountId, credits) => creditsMaster!.consume(accountId as string, credits as number);
 	}
 
 	if (target === 'credits' && method === 'getRemainingCredits') {
-		return userId => creditsMaster!.getRemainingCredits(userId as string);
+		return accountId => creditsMaster!.getRemainingCredits(accountId as string);
 	}
 
 	throw new Error(`Unknown method "${method}" for target "${target}".`);

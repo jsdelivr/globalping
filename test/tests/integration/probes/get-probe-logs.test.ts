@@ -3,31 +3,29 @@ import { getTestServer, getIoContext } from '../../../utils/server.js';
 import request from 'supertest';
 import config from 'config';
 import type { AuthenticateOptions } from '../../../../src/lib/http/middleware/authenticate.js';
-import { JWTPayload, SignJWT } from 'jose';
+import { getSignedJwt } from '../../../utils/session.js';
 import * as redis from '../../../../src/lib/redis/measurement-client.js';
 import * as sinon from 'sinon';
 import { Adoption } from '../../../../src/lib/override/adopted-probes.js';
 import { expect } from 'chai';
 import { RedisCluster } from '../../../../src/lib/redis/shared.js';
+import { dashboardClient } from '../../../../src/lib/sql/client.js';
+import { createOrg, createUser } from '../../../utils/fixtures.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
 
 describe('Get Probe Logs', () => {
 	let requestAgent: Agent;
-	let sessionKey: Buffer;
 	let sandbox: sinon.SinonSandbox;
 	let client: RedisCluster;
 
 	const PROBE_ID = 'mock-probe-id';
 	const PROBE_UUID = 'mock-probe-uuid';
-	const PROBE_USER_ID = 'mock-u-1';
 	const REDIS_LOG_KEY = 'probe:mock-probe-uuid:logs';
 
-	const mockAdoption = {
-		id: PROBE_ID,
-		uuid: PROBE_UUID,
-		userId: PROBE_USER_ID,
-	} as Adoption;
+	let user: { id: string; accountId: string };
+	let viewerOrg: { id: string; accountId: string };
+	let mockAdoption: Adoption;
 
 	const redisLogs = [
 		{
@@ -50,12 +48,11 @@ describe('Get Probe Logs', () => {
 		},
 	];
 
-	const getSignedJwt = (options: JWTPayload) => {
-		return new SignJWT(options).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
-	};
-
 	before(async () => {
-		sessionKey = Buffer.from(sessionConfig.cookieSecret);
+		user = await createUser(dashboardClient);
+		viewerOrg = await createOrg(dashboardClient, { members: [{ userId: user.id, role: 'viewer' }] });
+		mockAdoption = { id: PROBE_ID, uuid: PROBE_UUID, accountId: user.accountId } as Adoption;
+
 		const app = await getTestServer();
 		requestAgent = request(app);
 
@@ -86,6 +83,13 @@ describe('Get Probe Logs', () => {
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).send().expect(404);
 	});
 
+	it('should respond with 404 if neither the user nor the probe has an account', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: null } as unknown as Adoption);
+		const jwt = await getSignedJwt({ id: 'user-without-account-id', app_access: true });
+
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(404);
+	});
+
 	it('should respond with 404 if user is admin and probe does not exist', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(null);
 		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
@@ -102,9 +106,19 @@ describe('Get Probe Logs', () => {
 
 	it('should respond with 200 if user is an owner of an existing probe', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(200);
+	});
+
+	it('should respond with 200 if the user is a viewer of the org owning the probe', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: viewerOrg.accountId });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, user_account_id: user.accountId });
+
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${viewerOrg.accountId}`)
+			.send()
+			.expect(200);
 	});
 
 	it('should return logs in the expected format', async () => {
@@ -123,7 +137,7 @@ describe('Get Probe Logs', () => {
 
 	it('should respect the after query parameter', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 
 		await requestAgent
 			.get(`/v1/probes/${PROBE_ID}/logs?after=1705917173120-0`)
@@ -151,7 +165,7 @@ describe('Get Probe Logs', () => {
 
 	it('should reject invalid after query parameter', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 
 		await requestAgent
 			.get(`/v1/probes/${PROBE_ID}/logs?after=foo`)

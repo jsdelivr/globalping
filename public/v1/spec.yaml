@@ -97,6 +97,8 @@ paths:
           $ref: 'components/responses.yaml#/components/responses/measurements202'
         '400':
           $ref: 'components/responses.yaml#/components/responses/400'
+        '403':
+          $ref: 'components/responses.yaml#/components/responses/403'
         '422':
           $ref: 'components/responses.yaml#/components/responses/measurements422'
         '429':

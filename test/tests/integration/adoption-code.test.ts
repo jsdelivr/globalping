@@ -55,7 +55,7 @@ describe('Adoption code', () => {
 			.set('X-Api-Key', 'system')
 			.expect(200).expect((response) => {
 				expect(response.body).to.deep.equal({
-					userId: null,
+					accountId: null,
 					ip: '1.2.3.4',
 					name: null,
 					altIps: [ '97.247.234.249' ],

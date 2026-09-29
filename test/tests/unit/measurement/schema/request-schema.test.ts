@@ -144,7 +144,7 @@ describe('command schema', async () => {
 					limit: 51,
 				};
 
-				const valid = globalSchema.validate(input, { convert: true, context: { user: { id: null } } });
+				const valid = globalSchema.validate(input, { convert: true, context: { user: { id: null, accountId: null } } });
 
 				expect(valid?.error?.details?.[0]?.message).to.equal('"limit" must be less than or equal to 50');
 			});
@@ -156,7 +156,7 @@ describe('command schema', async () => {
 					limit: 500,
 				};
 
-				const valid = globalSchema.validate(input, { convert: true, context: { user: { id: '1' } } });
+				const valid = globalSchema.validate(input, { convert: true, context: { user: { id: '1', accountId: '1' } } });
 
 				expect(valid.error).to.not.exist;
 			});
@@ -168,9 +168,21 @@ describe('command schema', async () => {
 					limit: 501,
 				};
 
-				const valid = globalSchema.validate(input, { convert: true, context: { user: { id: '1' } } });
+				const valid = globalSchema.validate(input, { convert: true, context: { user: { id: '1', accountId: '1' } } });
 
 				expect(valid?.error?.details?.[0]?.message).to.equal('"limit" must be less than or equal to 500');
+			});
+
+			it('should apply the anonymous global limit without an account', () => {
+				const input = {
+					type: 'ping',
+					target: 'abc.com',
+					limit: 51,
+				};
+
+				const valid = globalSchema.validate(input, { convert: true, context: { user: { id: '1', accountId: null } } });
+
+				expect(valid?.error?.details?.[0]?.message).to.equal('"limit" must be less than or equal to 50');
 			});
 
 			it('should return an error (locations anonymous limit sum is bigger than global limit)', () => {
@@ -210,7 +222,7 @@ describe('command schema', async () => {
 					}],
 				};
 
-				const valid = globalSchema.validate(input, { convert: true, context: { user: { id: '1' } } });
+				const valid = globalSchema.validate(input, { convert: true, context: { user: { id: '1', accountId: '1' } } });
 
 				expect(valid?.error?.details?.[0]?.message).to.equal('the sum of limits must be less than or equal to 500');
 			});
@@ -482,7 +494,7 @@ describe('command schema', async () => {
 					},
 				];
 
-				const valid = locationSchema.validate(input, { context: { user: { id: '1' } } });
+				const valid = locationSchema.validate(input, { context: { user: { id: '1', accountId: '1' } } });
 
 				expect(valid.error).to.not.exist;
 			});
@@ -495,9 +507,22 @@ describe('command schema', async () => {
 					},
 				];
 
-				const valid = locationSchema.validate(input, { context: { user: { id: '1' } } });
+				const valid = locationSchema.validate(input, { context: { user: { id: '1', accountId: '1' } } });
 
 				expect(valid?.error?.details?.[0]?.message).to.equal('"[0].limit" must be less than or equal to 500');
+			});
+
+			it('should apply the anonymous location limit without an account', () => {
+				const input = [
+					{
+						city: 'Warsaw',
+						limit: 51,
+					},
+				];
+
+				const valid = locationSchema.validate(input, { context: { user: { id: '1', accountId: null } } });
+
+				expect(valid?.error?.details?.[0]?.message).to.equal('"[0].limit" must be less than or equal to 50');
 			});
 		});
 	});

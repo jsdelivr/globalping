@@ -14,9 +14,13 @@ export const registerRestartProbeRoute = (router: ExtendedRouter, context: IoCon
 			throw createHttpError(400, `Probe ID missing.`);
 		}
 
+		if (user?.accountRole && ![ 'owner', 'admin' ].includes(user.accountRole)) {
+			throw createHttpError(403, 'Only admins can restart the probes of the organization.', { type: 'access_forbidden' });
+		}
+
 		const adoptedProbe = context.adoptedProbes.getById(id);
 
-		if (!adoptedProbe?.uuid || !user?.id || (!user.adminAccess && adoptedProbe.userId !== user.id)) {
+		if (!adoptedProbe?.uuid || !user?.id || (!user.adminAccess && (!user.accountId || adoptedProbe.accountId !== user.accountId))) {
 			throw createHttpError(404, `Probe not found.`, { type: 'not_found' });
 		}
 

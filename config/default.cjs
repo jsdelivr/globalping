@@ -12,6 +12,7 @@ module.exports = {
 		},
 		session: {
 			cookieName: 'dash_session_token',
+			activeAccountCookieName: 'gp_active_account',
 			cookieSecret: '',
 		},
 		trustedProxies: [],
@@ -21,6 +22,7 @@ module.exports = {
 		pingInterval: 3000,
 		pingTimeout: 3000,
 		minProbeVersion: '0.52.0',
+		channelPrefix: 'socket.io',
 	},
 	redis: {
 		standalonePersistent: {
@@ -111,7 +113,7 @@ module.exports = {
 		syncInterval: 60000,
 	},
 	probeLimit: {
-		asnCityPerUser: 2,
+		asnCityPerAccount: 2,
 	},
 	adminData: {
 		syncInterval: 60000,

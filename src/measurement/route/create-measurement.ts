@@ -1,4 +1,5 @@
 import config from 'config';
+import createHttpError from 'http-errors';
 import type { IoContext } from '../../lib/server.js';
 import { bodyParser } from '../../lib/http/middleware/body-parser.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
@@ -11,6 +12,10 @@ const hostConfig = config.get<string>('server.host');
 
 export const registerCreateMeasurementRoute = (router: ExtendedRouter, ioContext: IoContext): void => {
 	const handle = async (ctx: ExtendedContext): Promise<void> => {
+		if (ctx.state.user?.accountRole && ![ 'owner', 'member', 'admin' ].includes(ctx.state.user.accountRole)) {
+			throw createHttpError(403, 'Only admins and members can run measurements for the organization.', { type: 'access_forbidden' });
+		}
+
 		const { measurementId, probesCount } = await ioContext.measurementRunner.run(ctx);
 
 		ctx.status = 202;

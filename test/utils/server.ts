@@ -100,15 +100,19 @@ export const deleteFakeProbes = async (socketsToDelete?: Socket[]): Promise<void
 		socket.disconnect(true);
 	}
 
+	const socketIds = new Set(sockets.map(s => s.id!));
 	return new Promise<void>((resolve) => {
 		const checker = () => {
-			if (syncedProbeList.getProbes().length === 0) {
+			const probeIds = new Set(syncedProbeList.getProbes().map(probe => probe.client));
+
+			if ([ ...socketIds ].every(id => !probeIds.has(id))) {
 				setTimeout(resolve, syncedProbeList.syncInterval);
 				syncedProbeList.off(syncedProbeList.localUpdateEvent, checker);
 			}
 		};
 
 		syncedProbeList.on(syncedProbeList.localUpdateEvent, checker);
+		checker();
 	});
 };
 
