@@ -496,10 +496,9 @@ components:
           $ref: 'schemas.yaml#/components/schemas/HttpProtocol'
         port:
           type: integer
-          description: The port number to use. Defaults to `443` for `HTTPS`, `80` for `HTTP`.
+          description: The port number to use. Defaults to `443` for `HTTPS` and `HTTP2`, `80` for `HTTP`.
           minimum: 0
           maximum: 65535
-          default: 443
         ipVersion:
           $ref: 'schemas.yaml#/components/schemas/IpVersion'
     MeasurementProbesCount:
