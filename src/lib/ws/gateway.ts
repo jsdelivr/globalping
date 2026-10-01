@@ -14,6 +14,7 @@ import { handleIsIPv4SupportedUpdate, handleIsIPv6SupportedUpdate } from '../../
 import { handleNewLogs } from '../../probe/handler/logs.js';
 import { handleAltIps } from '../../probe/handler/alt-ips.js';
 import { handleAdoptionServerStart } from '../../probe/handler/local-adoption-server.js';
+import { handleLogScopes } from '../../probe/handler/log-scopes.js';
 import { handleSettingsUpdate } from '../../probe/handler/settings.js';
 import type { IoContext } from '../server.js';
 import { metricsAgent } from '../metrics.js';
@@ -45,6 +46,7 @@ export const initGateway = (ioContext: IoContext) => {
 			// Handlers
 			subscribeWithHandler(socket, 'probe:status:update', handleStatusUpdate(probe));
 			subscribeWithAckHandler(socket, 'probe:logs', handleNewLogs(probe));
+			subscribeWithHandler(socket, 'probe:log-scopes', handleLogScopes(probe));
 			subscribeWithAckHandler(socket, 'probe:alt-ips', handleAltIps(probe, altIpsClient));
 			subscribeWithHandler(socket, 'probe:isIPv6Supported:update', handleIsIPv6SupportedUpdate(probe));
 			subscribeWithHandler(socket, 'probe:isIPv4Supported:update', handleIsIPv4SupportedUpdate(probe));
