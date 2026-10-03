@@ -4,13 +4,13 @@ import { getPersistentRedisClient } from '../../../../src/lib/redis/persistent-c
 import { getIpKey } from '../../../../src/lib/ws/helper/probe-ip-limit.js';
 import {
 	KNOWN_SCOPES_KEY,
-	MAX_SCOPES_PER_REPORTER,
-	MIN_SCOPE_REPORTERS,
+	maxScopesPerReporter,
+	minScopeReporters,
 	ProbeLogScopesStorage,
 	REPORTER_SCOPES_KEY_PREFIX,
-	SCOPE_ACTIVE_WINDOW,
+	scopeActiveWindow,
 	SCOPE_KEY_PREFIX,
-	SCOPE_READ_CACHE_TTL,
+	scopeReadCacheTtl,
 } from '../../../../src/probe/log-scopes-storage.js';
 
 describe('Probe Log Scopes Storage', () => {
@@ -103,7 +103,7 @@ describe('Probe Log Scopes Storage', () => {
 		const key = scopeKey('rolling-window');
 		const [ redisNow ] = await redis.time();
 		const now = Number(redisNow);
-		const cutoff = now - SCOPE_ACTIVE_WINDOW;
+		const cutoff = now - scopeActiveWindow;
 
 		await redis.sAdd(KNOWN_SCOPES_KEY, 'rolling-window');
 
@@ -117,25 +117,25 @@ describe('Probe Log Scopes Storage', () => {
 		await writeScopes(storage, '192.0.2.3', [ 'rolling-window' ]);
 
 		expect(await redis.zRange(key, 0, -1)).to.deep.equal([ '192.0.2.2', '192.0.2.3' ]);
-		expect(await redis.ttl(key)).to.be.within(SCOPE_ACTIVE_WINDOW - 2, SCOPE_ACTIVE_WINDOW);
+		expect(await redis.ttl(key)).to.be.within(scopeActiveWindow - 2, scopeActiveWindow);
 	});
 
 	it('limits each IP to 64 active scopes without partially storing rejected reports', async () => {
 		const storage = createStorage();
 		const ipAddress = '192.0.2.64';
-		const initialScopes = Array.from({ length: MAX_SCOPES_PER_REPORTER - 1 }, (_, index) => `initial-${index}`);
+		const initialScopes = Array.from({ length: maxScopesPerReporter - 1 }, (_, index) => `initial-${index}`);
 		const rejectedScopes = [ initialScopes[0]!, 'rejected-one', 'rejected-two' ];
 		const reporterKey = `${REPORTER_SCOPES_KEY_PREFIX}${ipAddress}`;
 
 		expect(await writeScopes(storage, ipAddress, initialScopes)).to.equal(true);
 		expect(await writeScopes(storage, ipAddress, rejectedScopes)).to.equal(false);
-		expect(await redis.zCard(reporterKey)).to.equal(MAX_SCOPES_PER_REPORTER - 1);
+		expect(await redis.zCard(reporterKey)).to.equal(maxScopesPerReporter - 1);
 		expect(await redis.sIsMember(KNOWN_SCOPES_KEY, 'rejected-one')).to.equal(0);
 		expect(await redis.exists(scopeKey('rejected-one'))).to.equal(0);
 		expect(await redis.exists(scopeKey('rejected-two'))).to.equal(0);
 
 		expect(await writeScopes(storage, ipAddress, [ 'accepted-64th' ])).to.equal(true);
-		expect(await redis.zCard(reporterKey)).to.equal(MAX_SCOPES_PER_REPORTER);
+		expect(await redis.zCard(reporterKey)).to.equal(maxScopesPerReporter);
 	});
 
 	it('atomically enforces the per-IP limit for concurrent reports', async () => {
@@ -170,7 +170,7 @@ describe('Probe Log Scopes Storage', () => {
 		expect(await redis.zRange(generalKey, 0, -1)).to.deep.equal([ reporterIdentity ]);
 		expect(await redis.zCard(`${REPORTER_SCOPES_KEY_PREFIX}${reporterIdentity}`)).to.equal(1);
 
-		const additionalScopes = Array.from({ length: MAX_SCOPES_PER_REPORTER }, (_, index) => `additional-${index}`);
+		const additionalScopes = Array.from({ length: maxScopesPerReporter }, (_, index) => `additional-${index}`);
 		expect(await writeScopes(storage, secondIp, additionalScopes)).to.equal(false);
 	});
 
@@ -179,17 +179,17 @@ describe('Probe Log Scopes Storage', () => {
 		const ipAddress = '192.0.2.66';
 		const reporterKey = `${REPORTER_SCOPES_KEY_PREFIX}${ipAddress}`;
 		const [ redisNow ] = await redis.time();
-		const cutoff = Number(redisNow) - SCOPE_ACTIVE_WINDOW;
-		const expiredScopes = Array.from({ length: MAX_SCOPES_PER_REPORTER }, (_, index) => `expired-${index}`);
-		const replacementScopes = Array.from({ length: MAX_SCOPES_PER_REPORTER }, (_, index) => `replacement-${index}`);
+		const cutoff = Number(redisNow) - scopeActiveWindow;
+		const expiredScopes = Array.from({ length: maxScopesPerReporter }, (_, index) => `expired-${index}`);
+		const replacementScopes = Array.from({ length: maxScopesPerReporter }, (_, index) => `replacement-${index}`);
 
 		reporterIps.add(ipAddress);
 		await redis.zAdd(reporterKey, expiredScopes.map(scope => ({ score: cutoff, value: scope })));
 
 		expect(await writeScopes(storage, ipAddress, replacementScopes)).to.equal(true);
-		expect(await redis.zCard(reporterKey)).to.equal(MAX_SCOPES_PER_REPORTER);
+		expect(await redis.zCard(reporterKey)).to.equal(maxScopesPerReporter);
 		expect(await redis.zScore(reporterKey, expiredScopes[0]!)).to.equal(null);
-		expect(await redis.ttl(reporterKey)).to.be.within(SCOPE_ACTIVE_WINDOW - 2, SCOPE_ACTIVE_WINDOW);
+		expect(await redis.ttl(reporterKey)).to.be.within(scopeActiveWindow - 2, scopeActiveWindow);
 	});
 
 	it('requires both ten reporters and half of the reporting fleet', async () => {
@@ -248,7 +248,7 @@ describe('Probe Log Scopes Storage', () => {
 		const partialKey = scopeKey('partial');
 		const [ redisNow ] = await redis.time();
 		const now = Number(redisNow);
-		const expiredAt = now - SCOPE_ACTIVE_WINDOW;
+		const expiredAt = now - scopeActiveWindow;
 		const reporters = Array.from({ length: 10 }, (_, index) => `192.0.2.${index}`);
 
 		await redis.sAdd(KNOWN_SCOPES_KEY, [ 'general', 'partial' ]);
@@ -283,9 +283,9 @@ describe('Probe Log Scopes Storage', () => {
 			KNOWN_SCOPES_KEY,
 			scopes.map(scope => `${SCOPE_KEY_PREFIX}${scope}`),
 			ipAddress,
-			SCOPE_ACTIVE_WINDOW,
-			MAX_SCOPES_PER_REPORTER,
-			MIN_SCOPE_REPORTERS,
+			scopeActiveWindow,
+			maxScopesPerReporter,
+			minScopeReporters,
 			scopes,
 		)).to.equal(true);
 
@@ -301,7 +301,7 @@ describe('Probe Log Scopes Storage', () => {
 		await redis.del(scopeKey('cached'));
 		expect(await storage.readScopes()).to.deep.equal([ 'cached', 'general' ]);
 
-		clock.tick(SCOPE_READ_CACHE_TTL);
+		clock.tick(scopeReadCacheTtl);
 		expect(await storage.readScopes()).to.deep.equal([ 'general' ]);
 	});
 
@@ -313,7 +313,7 @@ describe('Probe Log Scopes Storage', () => {
 		await report(storage, 10, [ 'general' ]);
 		expect(await storage.readScopes()).to.deep.equal([]);
 
-		clock.tick(SCOPE_READ_CACHE_TTL);
+		clock.tick(scopeReadCacheTtl);
 		expect(await storage.readScopes()).to.deep.equal([ 'general' ]);
 	});
 });
