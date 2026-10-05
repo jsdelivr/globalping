@@ -113,6 +113,13 @@ module.exports = {
 	probeLimit: {
 		asnCityPerUser: 2,
 	},
+	probeLogScopes: {
+		activeWindow: 864_000, // 10 days in seconds
+		readCacheTtl: 3_600_000, // 1 hour in ms
+		minReporters: 10,
+		fleetShare: 0.5,
+		maxScopesPerReporter: 64,
+	},
 	adminData: {
 		syncInterval: 60000,
 	},
