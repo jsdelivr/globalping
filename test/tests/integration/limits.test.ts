@@ -221,7 +221,7 @@ describe('rate limiter', () => {
 					.send();
 
 				expect(response.status).to.equal(403);
-				expect(response.body.error.type).to.equal('access_forbidden');
+				expect(response.body.error.type).to.equal('insufficient_permissions');
 			});
 
 			it('should ignore the active account left by another user of the same device', async () => {

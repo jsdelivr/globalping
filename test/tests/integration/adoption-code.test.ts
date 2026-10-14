@@ -116,7 +116,7 @@ describe('Adoption code', () => {
 			})
 			.set('X-Api-Key', 'wrongkey')
 			.expect(403).expect((response) => {
-				expect(response.body.error.message).to.equal('Forbidden');
+				expect(response.body.error.message).to.equal('A valid system API key is required to send adoption codes.');
 			});
 
 		await setTimeout(20);

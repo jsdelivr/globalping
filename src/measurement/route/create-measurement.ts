@@ -13,7 +13,7 @@ const hostConfig = config.get<string>('server.host');
 export const registerCreateMeasurementRoute = (router: ExtendedRouter, ioContext: IoContext): void => {
 	const handle = async (ctx: ExtendedContext): Promise<void> => {
 		if (ctx.state.user?.accountRole && ![ 'owner', 'member', 'admin' ].includes(ctx.state.user.accountRole)) {
-			throw createHttpError(403, 'Only admins and members can run measurements for the organization.', { type: 'access_forbidden' });
+			throw createHttpError(403, 'You must be an admin or member of this organization to run measurements.', { type: 'insufficient_permissions' });
 		}
 
 		const { measurementId, probesCount } = await ioContext.measurementRunner.run(ctx);

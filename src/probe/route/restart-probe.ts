@@ -15,7 +15,7 @@ export const registerRestartProbeRoute = (router: ExtendedRouter, context: IoCon
 		}
 
 		if (user?.accountRole && ![ 'owner', 'admin' ].includes(user.accountRole)) {
-			throw createHttpError(403, 'Only admins can restart the probes of the organization.', { type: 'access_forbidden' });
+			throw createHttpError(403, 'You must be an admin of this organization to restart its probes.', { type: 'insufficient_permissions' });
 		}
 
 		const adoptedProbe = context.adoptedProbes.getById(id);

@@ -113,8 +113,8 @@ components:
             json:
               value:
                 error:
-                  type: access_forbidden
-                  message: Access from 1.2.3.4 has been forbidden for security reasons.
+                  type: insufficient_permissions
+                  message: You must be an admin or member of this organization to run measurements.
                 links:
                   documentation: https://globalping.io/docs/api.globalping.io#post-/v1/measurements
     measurements422:

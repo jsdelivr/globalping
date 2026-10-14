@@ -61,7 +61,7 @@ const resolveAccount = async (ctx: Parameters<ExtendedMiddleware>[0], payload: S
 	const resolved = await getAccountRole(activeAccountId, payload.id!);
 
 	if (!resolved) {
-		throw createHttpError(403, 'The selected account is not available.', { type: 'access_forbidden' });
+		throw createHttpError(403, 'You do not have access to the selected account.', { type: 'insufficient_permissions' });
 	}
 
 	return { accountId: resolved.id, accountRole: resolved.role };

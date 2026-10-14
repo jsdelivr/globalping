@@ -10,7 +10,7 @@ import { AdoptedProbes } from '../../lib/override/adopted-probes.js';
 export const registerSendCodeRoute = (router: ExtendedRouter, ioContext: IoContext): void => {
 	const handle = async (ctx: ExtendedContext): Promise<void> => {
 		if (!ctx['isSystem']) {
-			throw createHttpError(403, 'Forbidden', { type: 'access_forbidden' });
+			throw createHttpError(403, 'A valid system API key is required to send adoption codes.', { type: 'access_forbidden' });
 		}
 
 		const request = ctx.request.body as AdoptionCodeRequest;
