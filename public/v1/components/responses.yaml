@@ -114,7 +114,7 @@ components:
               value:
                 error:
                   type: insufficient_permissions
-                  message: You must be an admin or member of this organization to run measurements.
+                  message: Your role in the selected organization does not allow you to run measurements.
                 links:
                   documentation: https://globalping.io/docs/api.globalping.io#post-/v1/measurements
     measurements422:
