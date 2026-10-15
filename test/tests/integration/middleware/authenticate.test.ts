@@ -333,6 +333,23 @@ describe('authenticate', () => {
 				.expect(403);
 		});
 
+		it('should accept a measurement from a global admin acting as a viewer of the org', async () => {
+			const jwt = await new SignJWT({
+				id: user.id,
+				admin_access: true,
+				app_access: true,
+				user_account_id: user.accountId,
+			}).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
+
+			await requestAgent.post('/v1/measurements')
+				.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${viewerOrg.accountId}`)
+				.send({
+					type: 'ping',
+					target: 'example.com',
+				})
+				.expect(202);
+		});
+
 		it('should ignore if cookie without app_access was passed', async () => {
 			const jwt = await new SignJWT({
 				id: 'cookie-user-id',
