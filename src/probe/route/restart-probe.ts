@@ -14,7 +14,7 @@ export const registerRestartProbeRoute = (router: ExtendedRouter, context: IoCon
 			throw createHttpError(400, `Probe ID missing.`);
 		}
 
-		if (user?.accountRole && ![ 'owner', 'admin' ].includes(user.accountRole)) {
+		if (!user?.adminAccess && user?.accountRole && ![ 'owner', 'admin' ].includes(user.accountRole)) {
 			throw createHttpError(403, 'Your role in the selected organization does not allow you to restart probes.', { type: 'insufficient_permissions' });
 		}
 

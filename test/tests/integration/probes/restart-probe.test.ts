@@ -126,6 +126,21 @@ describe('Restart Probe', () => {
 		await restartSignal;
 	});
 
+	it('should restart an org probe for a global admin acting as a viewer of that org', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: viewerOrg.accountId } as Adoption);
+		nockGeoIpProviders();
+		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
+		const restartSignal = new Promise<void>(resolve => probe!.once('probe:sigkill', resolve));
+		const jwt = await getSignedJwt({ id: user.id, admin_access: true, app_access: true, user_account_id: user.accountId });
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${viewerOrg.accountId}`)
+			.send()
+			.expect(204);
+
+		await restartSignal;
+	});
+
 	it('should restart an org probe for an admin of that org', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: adminOrg.accountId } as Adoption);
 		nockGeoIpProviders();
