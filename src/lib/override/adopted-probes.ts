@@ -603,7 +603,7 @@ export class AdoptedProbes {
 			const group = dProbe.status === 'offline'
 				? [ dProbe.adoptionToken, ...dProbe.extraAdoptionTokens ]
 					.filter((token): token is string => !!token)
-					.map(token => adoptionTokenToProbes[`${token}-${dProbe.asn}-${dProbe.city}`])
+					.map(token => adoptionTokenToProbes[`${token}-${dProbe.asn}-${dProbe.originalLocation?.city ?? dProbe.city}`])
 					.find(probes => probes?.length)
 				: undefined;
 			const probe = group?.shift();

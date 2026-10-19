@@ -378,6 +378,64 @@ describe('AdoptedProbes', () => {
 		expect(sql.update.callCount).to.equal(0);
 	});
 
+	it('class should match dProbe with custom location to probe by: offline dProbe token+asn+original city -> probe token+asn+city', async () => {
+		sql.select.resolves([{
+			...defaultAdoption,
+			status: 'offline',
+			adoptionToken: 'adoptionTokenValue',
+			country: 'PL',
+			countryName: 'Poland',
+			city: 'Lomianki Dolne',
+			latitude: 52.35,
+			longitude: 20.91,
+			asn: 207156,
+			network: 'LAITO',
+			region: 'Eastern Europe',
+			allowedCountries: '["PL"]',
+			customLocation: JSON.stringify({ country: 'PL', city: 'Lomianki Dolne', latitude: 52.35, longitude: 20.91, state: null }),
+			originalLocation: JSON.stringify({ country: 'PL', city: 'Warsaw', latitude: 52.23, longitude: 21.01, state: null }),
+		}]);
+
+		getProbesWithAdminData.returns([{
+			...defaultConnectedProbe,
+			ipAddress: '2.2.2.2',
+			uuid: '2-2-2-2-2',
+			altIpAddresses: [ '2.2.2.2' ],
+			adoptionToken: 'adoptionTokenValue',
+			location: {
+				...defaultConnectedProbe.location,
+				region: 'Eastern Europe',
+				country: 'PL',
+				city: 'Warsaw',
+				normalizedCity: 'warsaw',
+				asn: 207156,
+				latitude: 52.23,
+				longitude: 21.01,
+				network: 'LAITO',
+				normalizedNetwork: 'laito',
+				allowedCountries: [ 'PL' ],
+				groupingKey: 'PL-null-warsaw-207156',
+			},
+		}]);
+
+		const adoptedProbes = new AdoptedProbes(sqlStub, getProbesWithAdminData, emitToProbe);
+		await adoptedProbes.syncDashboardData();
+
+		expect(sql.where.callCount).to.equal(1);
+		expect(sql.update.callCount).to.equal(1);
+		expect(sql.where.args[0]).to.deep.equal([{ id: 'p-1' }]);
+
+		expect(sql.update.args[0]).to.deep.equal([{
+			uuid: '2-2-2-2-2',
+			ip: '2.2.2.2',
+			altIps: '["2.2.2.2"]',
+			status: 'ready',
+		}]);
+
+		expect(sql.delete.callCount).to.equal(0);
+		expect(sql.insert.callCount).to.equal(0);
+	});
+
 	it('class should not use already matched probes in search by: offline dProbe token+asn+city -> probe token+asn+city', async () => {
 		sql.select.resolves([
 			defaultAdoption,
