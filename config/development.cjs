@@ -34,6 +34,9 @@ module.exports = {
 	adminData: {
 		syncInterval: 5000,
 	},
+	probeLogScopes: {
+		minReporters: 2,
+	},
 	reconnectProbesDelay: 0,
 	sigtermDelay: 0,
 };

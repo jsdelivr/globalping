@@ -25,6 +25,7 @@ import { measurementStoreClient } from '../lib/sql/client.js';
 import { scopedFlight } from '../lib/single-flight.js';
 import type { ExportMeta } from './types.js';
 import { metricsAgent } from '../lib/metrics.js';
+import { getPublicTagValues } from '../lib/geoip/utils.js';
 
 const logger = scopedLogger('store');
 const singleFlight = scopedFlight('store');
@@ -266,7 +267,7 @@ export class MeasurementStore {
 				longitude: probe.location.longitude,
 				latitude: probe.location.latitude,
 				network: probe.location.network,
-				tags: probe.tags.map(({ value }) => value),
+				tags: getPublicTagValues(probe.tags),
 				resolvers: probe.resolvers,
 			},
 			result: this.getInitialResult(type, probe.status),
