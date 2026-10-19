@@ -584,7 +584,7 @@ export class AdoptedProbes {
 		const adoptionTokenToProbes = _.groupBy(([ ...uuidToProbe.values() ]).filter(probe => !!probe.adoptionToken), probe => `${probe.adoptionToken}-${probe.location.asn}-${probe.location.city}`);
 
 		dProbesToCheck.forEach((dProbe) => {
-			const probes = dProbe.adoptionToken && dProbe.status === 'offline' && adoptionTokenToProbes[`${dProbe.adoptionToken}-${dProbe.asn}-${dProbe.city}`];
+			const probes = dProbe.adoptionToken && dProbe.status === 'offline' && adoptionTokenToProbes[`${dProbe.adoptionToken}-${dProbe.asn}-${dProbe.originalLocation?.city ?? dProbe.city}`];
 			const probe = probes && probes.length > 0 && probes.shift();
 
 			if (probe) {
