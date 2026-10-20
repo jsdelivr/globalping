@@ -3,22 +3,12 @@ import type { IoContext } from '../../lib/server.js';
 import { authenticate } from '../../lib/http/middleware/authenticate.js';
 import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 import { PROBES_NAMESPACE } from '../../lib/ws/server.js';
+import { getAuthorizedProbe } from './utils.js';
 import type { ExtendedContext, ExtendedRouter } from '../../types.js';
 
 export const registerRestartProbeRoute = (router: ExtendedRouter, context: IoContext): void => {
 	const handle = (ctx: ExtendedContext) => {
-		const { user } = ctx.state;
-		const { id } = ctx.params;
-
-		if (!id) {
-			throw createHttpError(400, `Probe ID missing.`);
-		}
-
-		const adoptedProbe = context.adoptedProbes.getById(id);
-
-		if (!adoptedProbe?.uuid || !user?.id || (!user.adminAccess && adoptedProbe.userId !== user.id)) {
-			throw createHttpError(404, `Probe not found.`, { type: 'not_found' });
-		}
+		const adoptedProbe = getAuthorizedProbe(ctx, context.adoptedProbes);
 
 		// TODO: possibly index this later if needed in more endpoints
 		const probe = context.syncedProbeList.getProbes().find(probe => probe.uuid === adoptedProbe.uuid);
