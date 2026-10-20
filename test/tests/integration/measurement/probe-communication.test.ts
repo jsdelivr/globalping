@@ -11,6 +11,8 @@ import { waitFor } from '../../../utils/wait.js';
 import * as id from '../../../../src/measurement/id.js';
 import { getPersistentRedisClient } from '../../../../src/lib/redis/persistent-client.js';
 import { REPORTER_SCOPES_KEY_PREFIX, SCOPE_KEY_PREFIX } from '../../../../src/probe/log-scopes-storage.js';
+import type { ProbeTestStats } from '../../../../src/probe/test-stats.js';
+import type { RedisClient } from '../../../../src/lib/redis/shared.js';
 
 describe('Create measurement request', () => {
 	const expectedHost = process.env['HOSTNAME'] ?? '';
@@ -20,6 +22,8 @@ describe('Create measurement request', () => {
 	let deleteFakeProbes: () => Promise<void>;
 	let getTestServer;
 	let requestAgent: Agent;
+	let probeTestStats: ProbeTestStats;
+	let probeTestStatsRedis: RedisClient;
 
 	const sandbox = sinon.createSandbox();
 	const locationHandlerStub = sandbox.stub();
@@ -39,6 +43,9 @@ describe('Create measurement request', () => {
 		await td.replaceEsm('../../../../src/measurement/id.ts', { ...id, generateMeasurementId }, {});
 		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getCloudTags: () => [ 'gcp-us-west4', 'gcp' ], populateMemList: () => Promise.resolve() });
 		({ getTestServer, waitForProbesUpdate, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
+		// Import after module replacement to use the server's instances.
+		probeTestStats = (await import('../../../../src/probe/test-stats.js')).getProbeTestStats();
+		probeTestStatsRedis = (await import('../../../../src/lib/redis/persistent-no-eviction-client.js')).getPersistentNoEvictionRedisClient();
 		const app = await getTestServer();
 		requestAgent = request(app);
 	});
@@ -745,5 +752,72 @@ describe('Create measurement request', () => {
 
 				expect(response).to.matchApiSchema();
 			});
+	});
+
+	describe('probe test stats', () => {
+		const statsSandbox = sinon.createSandbox();
+
+		const createReadyMeasurement = async () => {
+			probe.emit('probe:status:update', 'ready');
+			probe.emit('probe:isIPv4Supported:update', true);
+			probe.emit('probe:isIPv6Supported:update', true);
+			await waitForProbesUpdate();
+
+			await requestAgent.post('/v1/measurements').send({
+				type: 'ping',
+				target: 'jsdelivr.com',
+				locations: [{ country: 'US' }],
+				measurementOptions: { packets: 4 },
+				timeout: 10,
+			}).expect(202);
+
+			await setTimeout(20);
+		};
+
+		const emitResult = async (result: Record<string, unknown>) => {
+			probe.emit('probe:measurement:result', { testId: '0', measurementId: mockedMeasurementId, result });
+			await setTimeout(100);
+		};
+
+		afterEach(() => {
+			statsSandbox.restore();
+		});
+
+		it('should record invalid results as internal failures', async () => {
+			const resultSpy = statsSandbox.spy(probeTestStats, 'recordResult');
+			await createReadyMeasurement();
+
+			await emitResult({ status: 'invalid-status', rawOutput: 'Invalid result.' });
+
+			expect(resultSpy.args).to.deep.equal([ [ mockedMeasurementId, '0', { status: 'failed', failureSource: 'internal', rawOutput: 'The probe reported an invalid result.' }] ]);
+		});
+
+		it('should keep a failed result without a failure source unchanged', async () => {
+			const resultSpy = statsSandbox.spy(probeTestStats, 'recordResult');
+			await createReadyMeasurement();
+
+			await emitResult({ status: 'failed', rawOutput: 'Probe error output.' });
+
+			expect(resultSpy.args).to.deep.equal([ [ mockedMeasurementId, '0', { status: 'failed', rawOutput: 'Probe error output.' }] ]);
+
+			await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send().expect(200).expect((response) => {
+				expect(response.body.status).to.equal('finished');
+				expect(response.body.results[0].result).to.deep.equal({ status: 'failed', rawOutput: 'Probe error output.' });
+			});
+		});
+
+		it('should complete measurements while the probe test stats Redis is unavailable', async () => {
+			statsSandbox.stub(probeTestStatsRedis, 'recordProbeTestAssignments').rejects(new Error('Redis unavailable.'));
+			statsSandbox.stub(probeTestStatsRedis, 'settleProbeTests').rejects(new Error('Redis unavailable.'));
+			await createReadyMeasurement();
+
+			expect(requestHandlerStub.callCount).to.equal(1);
+			await emitResult({ status: 'finished', rawOutput: 'Done.', resolvedHostname: 'jsdelivr.com', resolvedAddress: '1.1.1.1', timings: [], stats: { min: 1, avg: 1, max: 1, total: 4, rcv: 4, drop: 0, loss: 0 } });
+
+			await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send().expect(200).expect((response) => {
+				expect(response.body.status).to.equal('finished');
+				expect(response.body.results[0].result.status).to.equal('finished');
+			});
+		});
 	});
 });

@@ -1,4 +1,5 @@
 import { promisify } from 'node:util';
+import { setImmediate } from 'node:timers/promises';
 import { brotliCompress as brotliCompressCallback } from 'node:zlib';
 import * as td from 'testdouble';
 import { expect } from 'chai';
@@ -83,6 +84,12 @@ describe('measurement store', () => {
 	sandbox.stub(Math, 'random').returns(0.8);
 	redisMock.withTypeMapping.returns(redisMock);
 
+	const probeTestStatsMock = {
+		recordAssignments: sandbox.stub().resolves(),
+		recordResult: sandbox.stub(),
+		recordTimeouts: sandbox.stub(),
+	};
+
 	const parseMeasurementIdStub = sandbox.stub();
 	const offloaderGetMeasurementBufferCompressedStub = sandbox.stub();
 
@@ -94,6 +101,7 @@ describe('measurement store', () => {
 		}, {});
 
 		await td.replaceEsm('../../../../src/lib/redis/measurement-client.ts', { getMeasurementRedisClient: () => redisMock });
+		await td.replaceEsm('../../../../src/probe/test-stats.ts', { getProbeTestStats: () => probeTestStatsMock });
 
 		class OffloaderMock {
 			startRetryWorker () { /* no-op */ }
@@ -120,6 +128,9 @@ describe('measurement store', () => {
 		redisMock.markFinishedByTimeout.reset();
 		redisMock.claimTimedOutMeasurements.reset();
 		redisMock.claimTimedOutMeasurements.resolves([]);
+		redisMock.json.set.reset();
+		probeTestStatsMock.recordAssignments.reset();
+		probeTestStatsMock.recordAssignments.resolves();
 		sandbox.resetHistory();
 	});
 
@@ -157,7 +168,7 @@ describe('measurement store', () => {
 				Buffer.from([ 0x00 ]),
 				Buffer.from(JSON.stringify(finishedRecord)),
 			]),
-			timedOutTests: 1,
+			timedOutTestIds: [ 0 ],
 		});
 
 		redisMock.markFinishedByTimeout.onSecondCall().resolves(null);
@@ -173,6 +184,7 @@ describe('measurement store', () => {
 		expect(redisMock.markFinishedByTimeout.callCount).to.equal(2);
 		expect(redisMock.markFinishedByTimeout.firstCall.args).to.deep.equal([ mockedMeasurementId1 ]);
 		expect(redisMock.markFinishedByTimeout.secondCall.args).to.deep.equal([ mockedMeasurementId2 ]);
+		expect(probeTestStatsMock.recordTimeouts.args).to.deep.equal([ [ mockedMeasurementId1, [ 0 ] ] ]);
 		expect(redisMock.zRem.callCount).to.equal(1);
 		expect(redisMock.zRem.firstCall.args).to.deep.equal([ 'gp:in-progress-timeouts', [ mockedMeasurementId1, mockedMeasurementId2 ] ]);
 		expect(redisMock.del.callCount).to.equal(0);
@@ -824,6 +836,40 @@ describe('measurement store', () => {
 			'testid',
 			{ status: 'finished', rawOutput: 'output' },
 		]);
+	});
+
+	it('should await recording assignments before returning', async () => {
+		const onlineProbes = new Map([ getProbe('a', '1.1.1.1'), getProbe('b', '2.2.2.2') ].entries());
+		const recording = Promise.withResolvers<void>();
+		probeTestStatsMock.recordAssignments.returns(recording.promise);
+		let completed = false;
+
+		const creation = getMeasurementStore().createMeasurement(
+			{ type: 'ping', measurementOptions: { packets: 3, ipVersion: 4, port: 80, protocol: 'ICMP' }, target: 'jsdelivr.com', locations: [], limit: 3, inProgressUpdates: false, timeout: 11 },
+			onlineProbes,
+			[ ...onlineProbes.values(), getOfflineProbe('c', '3.3.3.3') ],
+		).then(() => completed = true);
+
+		await setImmediate();
+		expect(probeTestStatsMock.recordAssignments.args).to.deep.equal([ [ mockedMeasurementId1, 'ping', onlineProbes ] ]);
+		expect(completed).to.equal(false);
+
+		recording.resolve();
+		await creation;
+		expect(completed).to.equal(true);
+	});
+
+	it('should not record assignments of a measurement that failed to be stored', async () => {
+		redisMock.json.set.onFirstCall().rejects(new Error('Redis error.'));
+
+		const error = await getMeasurementStore().createMeasurement(
+			{ type: 'ping', measurementOptions: { packets: 3, ipVersion: 4, port: 80, protocol: 'ICMP' }, target: 'jsdelivr.com', locations: [], limit: 1, inProgressUpdates: false, timeout: 11 },
+			new Map([ getProbe('a', '1.1.1.1') ].entries()),
+			[ getProbe('a', '1.1.1.1') ],
+		).catch((error: unknown) => error);
+
+		expect(error).to.be.instanceOf(Error);
+		expect(probeTestStatsMock.recordAssignments.callCount).to.equal(0);
 	});
 
 	it('getMeasurementBufferCompressed should prefer the offload DB for likely offloaded measurements', async () => {
