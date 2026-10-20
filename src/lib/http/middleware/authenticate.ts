@@ -1,9 +1,8 @@
 import config from 'config';
 import { jwtVerify } from 'jose';
-import createHttpError from 'http-errors';
 import apmAgent from 'elastic-apm-node';
 
-import { type AccountRole, getAccountRole, getUserAccountId } from '../../accounts.js';
+import { type AccountRole, getUserAccountId } from '../../accounts.js';
 import { auth } from '../auth.js';
 import type { ExtendedMiddleware } from '../../../types.js';
 
@@ -17,12 +16,13 @@ type SessionCookiePayload = {
 	github_username?: string;
 	user_type?: 'member' | 'sponsor' | 'special';
 	user_account_id?: string;
+	active_account_id?: string;
+	active_account_role?: AccountRole;
 };
 
 export type AuthenticateOptions = {
 	session: {
 		cookieName: string;
-		activeAccountCookieName: string;
 		cookieSecret: string;
 	};
 };
@@ -43,28 +43,12 @@ export type AuthenticateState = {
 	user?: AuthenticateStateUser;
 };
 
-const resolveAccount = async (ctx: Parameters<ExtendedMiddleware>[0], payload: SessionCookiePayload) => {
-	// PHASE5: drop the lookup. Directus puts the account in the cookie, but the sessions issued before that stay
-	// valid for a day, so until then it still has to be resolved here.
-	const userAccountId = payload.user_account_id ?? await getUserAccountId(payload.id!);
-	const [ cookieUserId, activeAccountId ] = (ctx.cookies.get(sessionConfig.activeAccountCookieName) ?? '').split(':');
-
-	if (
-		// If its not the cookie of the requester => fallback to the requester's account.
-		cookieUserId !== payload.id
-		|| !activeAccountId
-		|| activeAccountId === userAccountId) {
-		return { accountId: userAccountId, accountRole: 'owner' as AccountRole };
+const resolveAccount = async (payload: SessionCookiePayload): Promise<{ accountId: string | null; accountRole: AccountRole }> => {
+	if (payload.active_account_id && payload.active_account_role) {
+		return { accountId: payload.active_account_id, accountRole: payload.active_account_role };
 	}
 
-	// activeAccountId is a cookie set by dashboard FE so it is untrusted, unlike userAccountId which is signed by the dashboard.
-	const resolved = await getAccountRole(activeAccountId, payload.id!);
-
-	if (!resolved) {
-		throw createHttpError(403, 'You do not have access to the selected account.', { type: 'insufficient_permissions' });
-	}
-
-	return { accountId: resolved.id, accountRole: resolved.role };
+	return { accountId: payload.user_account_id ?? await getUserAccountId(payload.id!), accountRole: 'owner' };
 };
 
 export const verifySessionPayload = async (cookie: string, key: Uint8Array): Promise<SessionCookiePayload | undefined> => {
@@ -105,7 +89,9 @@ export const authenticate = (): ExtendedMiddleware => {
 			const payload = await verifySessionPayload(sessionCookie, sessionKey);
 
 			if (payload?.id && payload.app_access === true) {
-				const account = await resolveAccount(ctx, payload);
+				// PHASE5: remove resolveAccount, read the two claims directly. The sessions issued before Directus
+				// put the account in the cookie stay valid for a day, so until then it is resolved here.
+				const account = await resolveAccount(payload);
 				ctx.state.user = { id: payload.id, ...account, username: payload.github_username || null, userType: payload.user_type || 'member', authMode: 'cookie', adminAccess: payload.admin_access === true };
 				apmAgent.setUserContext({ id: payload.id, username: payload.github_username || `ID(${payload.id})` });
 			}

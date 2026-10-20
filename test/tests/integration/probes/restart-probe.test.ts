@@ -83,20 +83,20 @@ describe('Restart Probe', () => {
 
 	it('should respond with 403 if the user is only a viewer of the org they act for', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
-		const jwt = await getSignedJwt({ id: user.id, app_access: true, user_account_id: user.accountId });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: viewerOrg.accountId, active_account_role: 'viewer' });
 
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
-			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${viewerOrg.accountId}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(403);
 	});
 
 	it('should respond with 403 if the user is only a member of the org they act for', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
-		const jwt = await getSignedJwt({ id: user.id, app_access: true, user_account_id: user.accountId });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: memberOrg.accountId, active_account_role: 'member' });
 
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
-			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${memberOrg.accountId}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(403);
 	});
@@ -131,10 +131,10 @@ describe('Restart Probe', () => {
 		nockGeoIpProviders();
 		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
 		const restartSignal = new Promise<void>(resolve => probe!.once('probe:sigkill', resolve));
-		const jwt = await getSignedJwt({ id: user.id, admin_access: true, app_access: true, user_account_id: user.accountId });
+		const jwt = await getSignedJwt({ id: user.id, admin_access: true, app_access: true, active_account_id: viewerOrg.accountId, active_account_role: 'viewer' });
 
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
-			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${viewerOrg.accountId}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(204);
 
@@ -146,10 +146,10 @@ describe('Restart Probe', () => {
 		nockGeoIpProviders();
 		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
 		const restartSignal = new Promise<void>(resolve => probe!.once('probe:sigkill', resolve));
-		const jwt = await getSignedJwt({ id: user.id, app_access: true, user_account_id: user.accountId });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: adminOrg.accountId, active_account_role: 'admin' });
 
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
-			.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${adminOrg.accountId}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(204);
 

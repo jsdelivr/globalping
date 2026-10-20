@@ -12,7 +12,6 @@ module.exports = {
 		},
 		session: {
 			cookieName: 'dash_session_token',
-			activeAccountCookieName: 'gp_active_account',
 			cookieSecret: '',
 		},
 		trustedProxies: [],

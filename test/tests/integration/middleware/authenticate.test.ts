@@ -321,11 +321,12 @@ describe('authenticate', () => {
 			const jwt = await new SignJWT({
 				id: user.id,
 				app_access: true,
-				user_account_id: user.accountId,
+				active_account_id: viewerOrg.accountId,
+				active_account_role: 'viewer',
 			}).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
 
 			await requestAgent.post('/v1/measurements')
-				.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${viewerOrg.accountId}`)
+				.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 				.send({
 					type: 'ping',
 					target: 'example.com',
@@ -333,16 +334,56 @@ describe('authenticate', () => {
 				.expect(403);
 		});
 
+		it('should trust the role of the session cookie over the membership in the database', async () => {
+			const jwt = await new SignJWT({
+				id: user.id,
+				app_access: true,
+				active_account_id: viewerOrg.accountId,
+				active_account_role: 'member',
+			}).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
+
+			await requestAgent.post('/v1/measurements')
+				.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+				.send({
+					type: 'ping',
+					target: 'example.com',
+				})
+				.expect(202);
+		});
+
+		it('should fall back to the personal account if the cookie has an active account but no role', async () => {
+			await authenticatedRateLimiter.delete(user.accountId);
+			await authenticatedRateLimiter.delete(viewerOrg.accountId);
+
+			const jwt = await new SignJWT({
+				id: user.id,
+				app_access: true,
+				active_account_id: viewerOrg.accountId,
+			}).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
+
+			await requestAgent.post('/v1/measurements')
+				.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+				.send({
+					type: 'ping',
+					target: 'example.com',
+				})
+				.expect(202);
+
+			expect((await authenticatedRateLimiter.get(user.accountId))?.consumedPoints).to.equal(1);
+			expect(await authenticatedRateLimiter.get(viewerOrg.accountId)).to.equal(null);
+		});
+
 		it('should accept a measurement from a global admin acting as a viewer of the org', async () => {
 			const jwt = await new SignJWT({
 				id: user.id,
 				admin_access: true,
 				app_access: true,
-				user_account_id: user.accountId,
+				active_account_id: viewerOrg.accountId,
+				active_account_role: 'viewer',
 			}).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
 
 			await requestAgent.post('/v1/measurements')
-				.set('Cookie', `${sessionConfig.cookieName}=${jwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${viewerOrg.accountId}`)
+				.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 				.send({
 					type: 'ping',
 					target: 'example.com',

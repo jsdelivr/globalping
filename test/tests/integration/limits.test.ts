@@ -23,27 +23,20 @@ describe('rate limiter', () => {
 	let requestAgent: any;
 	let clientId: string;
 	let user: { id: string; accountId: string };
-	let memberOrg: { id: string; accountId: string };
-	let viewerOrg: { id: string; accountId: string };
 	let otherOrg: { id: string; accountId: string };
 
-	const getCookies = async (userId: string, activeAccountId?: string, activeAccountUserId = userId) => {
-		const jwt = await new SignJWT({ id: userId, app_access: true, user_account_id: user.accountId })
+	const getCookie = async (claims: object) => {
+		const jwt = await new SignJWT({ app_access: true, user_account_id: user.accountId, ...claims })
 			.setProtectedHeader({ alg: 'HS256' })
 			.setIssuedAt()
 			.setExpirationTime('1h')
 			.sign(Buffer.from(sessionConfig.cookieSecret));
 
-		return [
-			`${sessionConfig.cookieName}=${jwt}`,
-			...activeAccountId ? [ `${sessionConfig.activeAccountCookieName}=${activeAccountUserId}:${activeAccountId}` ] : [],
-		];
+		return `${sessionConfig.cookieName}=${jwt}`;
 	};
 
 	before(async () => {
 		user = await createUser(dashboardClient);
-		memberOrg = await createOrg(dashboardClient, { name: 'member-org', members: [{ userId: user.id, role: 'member' }] });
-		viewerOrg = await createOrg(dashboardClient, { name: 'viewer-org', members: [{ userId: user.id, role: 'viewer' }] });
 		otherOrg = await createOrg(dashboardClient, { name: 'other-org' });
 
 		app = await getTestServer();
@@ -191,56 +184,22 @@ describe('rate limiter', () => {
 				});
 			});
 
-			it('should take the account from the session cookie if no active account is set', async () => {
+			it('should take the personal account from the session cookie if it has no active account', async () => {
 				await insertCredits(user.accountId, 10);
 
 				const response = await requestAgent.get('/v1/limits')
-					.set('Cookie', await getCookies('cookie-user-id'))
+					.set('Cookie', await getCookie({ id: 'cookie-user-id' }))
 					.send();
 
 				expect(response.body.credits).to.deep.equal({ remaining: 10 });
 			});
 
-			it('should act for the org the dashboard switched to', async () => {
-				await insertCredits(user.accountId, 10);
-				await insertCredits(memberOrg.accountId, 20);
-
-				const response = await requestAgent.get('/v1/limits')
-					.set('Cookie', await getCookies(user.id, memberOrg.accountId))
-					.send();
-
-				expect(response.body.credits).to.deep.equal({ remaining: 20 });
-			});
-
-			it('should respond with 403 for an org the user is not a member of', async () => {
+			it('should trust the active account of the session cookie without checking the membership', async () => {
 				await insertCredits(user.accountId, 10);
 				await insertCredits(otherOrg.accountId, 20);
 
 				const response = await requestAgent.get('/v1/limits')
-					.set('Cookie', await getCookies(user.id, otherOrg.accountId))
-					.send();
-
-				expect(response.status).to.equal(403);
-				expect(response.body.error.type).to.equal('insufficient_permissions');
-			});
-
-			it('should ignore the active account left by another user of the same device', async () => {
-				await insertCredits(user.accountId, 10);
-				await insertCredits(memberOrg.accountId, 20);
-
-				const response = await requestAgent.get('/v1/limits')
-					.set('Cookie', await getCookies(user.id, memberOrg.accountId, 'another-user-id'))
-					.send();
-
-				expect(response.body.credits).to.deep.equal({ remaining: 10 });
-			});
-
-			it('should show the org credits to a viewer, who can see them but not spend them', async () => {
-				await insertCredits(user.accountId, 10);
-				await insertCredits(viewerOrg.accountId, 20);
-
-				const response = await requestAgent.get('/v1/limits')
-					.set('Cookie', await getCookies(user.id, viewerOrg.accountId))
+					.set('Cookie', await getCookie({ id: user.id, active_account_id: otherOrg.accountId, active_account_role: 'member' }))
 					.send();
 
 				expect(response.body.credits).to.deep.equal({ remaining: 20 });

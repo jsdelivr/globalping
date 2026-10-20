@@ -82,9 +82,9 @@ describe('Get Probe Logs', () => {
 			.expect({ logs: [], lastId: null, firstId: null, hasOlder: false });
 
 		getByIdStub.returns({ ...mockAdoption, accountId: viewerOrg.accountId });
-		const viewerJwt = await getSignedJwt({ id: user.id, app_access: true, user_account_id: user.accountId });
+		const viewerJwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: viewerOrg.accountId, active_account_role: 'viewer' });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.set('Cookie', `${sessionConfig.cookieName}=${viewerJwt}; ${sessionConfig.activeAccountCookieName}=${user.id}:${viewerOrg.accountId}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${viewerJwt}`)
 			.send()
 			.expect(200);
 
