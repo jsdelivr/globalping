@@ -57,11 +57,11 @@ describe('index file', () => {
 	});
 
 	it('master should flush non-persistent redis if commits hashes do not match', async () => {
-		redis.set('testfield', 'testvalue');
-		persistentRedis.set('testfield', 'testvalue');
+		await redis.set('testfield', 'testvalue');
+		await persistentRedis.set('testfield', 'testvalue');
 		readFile.resolves('oldCommitHash');
 
-		persistentRedis.set(lastCommitHashKey, 'commitHash');
+		await persistentRedis.set(lastCommitHashKey, 'commitHash');
 
 		await import('../../../src/index.js');
 
@@ -72,11 +72,11 @@ describe('index file', () => {
 	});
 
 	it('master should not flush non-persistent redis if commits hashes match', async () => {
-		redis.set('testfield', 'testvalue');
-		persistentRedis.set('testfield', 'testvalue');
+		await redis.set('testfield', 'testvalue');
+		await persistentRedis.set('testfield', 'testvalue');
 		readFile.resolves('commitHash');
 
-		persistentRedis.set(lastCommitHashKey, 'commitHash');
+		await persistentRedis.set(lastCommitHashKey, 'commitHash');
 
 		await import('../../../src/index.js');
 

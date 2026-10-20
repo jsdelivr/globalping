@@ -132,6 +132,16 @@ export const waitForLogSync = async (id: string, authCookie: string, after?: str
 	}
 };
 
+export const getAccountId = async (userId: string) => {
+	const account = await dashboardClient('gp_accounts').where({ user: userId }).first<{ id: string } | undefined>('id');
+
+	if (!account) {
+		throw new Error(`No account created for user ${userId}.`);
+	}
+
+	return account.id;
+};
+
 export const waitForStableProbeLogs = async (id: string, authCookie: string, quietInterval: number = 1000, timeout: number = 25000) => {
 	const start = Date.now();
 	let unchangedSince = start;

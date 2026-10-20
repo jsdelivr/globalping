@@ -8,15 +8,18 @@ import { rateLimiter as getRateLimiter } from '../../../src/lib/rate-limiter/rat
 import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
 import { CREDITS_TABLE } from '../../../src/lib/credits-master.js';
+import { createUser } from '../../utils/fixtures.js';
 import { getPersistentRedisClient } from '../../../src/lib/redis/persistent-client.js';
 
 describe('rate limiter', () => {
 	let app: Server;
 	let requestAgent: any;
 	let clientId: string;
+	let user: { id: string; accountId: string };
 	const redis = getPersistentRedisClient();
 
 	before(async () => {
+		user = await createUser(dashboardClient);
 		app = await getTestServer();
 		requestAgent = request(app);
 
@@ -38,7 +41,8 @@ describe('rate limiter', () => {
 
 		await dashboardClient(GP_TOKENS_TABLE).insert([{
 			name: 'test token',
-			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+			user_created: user.id,
+			account_id: user.accountId,
 			value: 'Xj6kuKFEQ6zI60mr+ckHG7yQcIFGMJFzvtK9PBQ69y8=', // token: qz5kdukfcr3vggv3xbujvjwvirkpkkpx
 		}, {
 			name: 'anon token',
@@ -52,7 +56,7 @@ describe('rate limiter', () => {
 		const [ getKeys ] = await Promise.all([
 			await redis.keys(`rate:get:${clientId}:*`),
 			await anonymousPostRateLimiter.delete(clientId),
-			await authenticatedPostRateLimiter.delete('89da69bd-a236-4ab7-9c5d-b5f52ce09959'),
+			await authenticatedPostRateLimiter.delete(user.accountId),
 		]);
 
 		getKeys.length && await redis.del(getKeys);
@@ -281,7 +285,7 @@ describe('rate limiter', () => {
 
 	describe('authenticated access', () => {
 		it('should succeed (limit not reached)', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 0, 0);
+			await authenticatedPostRateLimiter.set(user.accountId, 0, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -294,7 +298,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should fail (limit reached)', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0);
+			await authenticatedPostRateLimiter.set(user.accountId, 500, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -307,7 +311,7 @@ describe('rate limiter', () => {
 		});
 
 		it('should consume all points successfully or none at all (cost > remaining > 0)', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 499, 0); // 1 remaining
+			await authenticatedPostRateLimiter.set(user.accountId, 499, 0); // 1 remaining
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -350,13 +354,13 @@ describe('rate limiter', () => {
 	describe('access with credits', () => {
 		beforeEach(async () => {
 			await dashboardClient(CREDITS_TABLE).insert({
-				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				account_id: user.accountId,
 				amount: 10,
 			}).onConflict().merge();
 		});
 
 		it('should consume free credits before paid credits', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 0, 0);
+			await authenticatedPostRateLimiter.set(user.accountId, 0, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -371,12 +375,12 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.not.exist;
 			expect(response.headers['x-credits-remaining']).to.not.exist;
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ account_id: user.accountId });
 			expect(amount).to.equal(10);
 		});
 
 		it('should consume credits after limit is reached', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0);
+			await authenticatedPostRateLimiter.set(user.accountId, 500, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -391,12 +395,12 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('2');
 			expect(response.headers['x-credits-remaining']).to.equal('8');
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ account_id: user.accountId });
 			expect(amount).to.equal(8);
 		});
 
 		it('should consume part from free credits and part from paid credits if possible', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 499, 0);
+			await authenticatedPostRateLimiter.set(user.accountId, 499, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -411,17 +415,17 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('1');
 			expect(response.headers['x-credits-remaining']).to.equal('9');
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ account_id: user.accountId });
 			expect(amount).to.equal(9);
 		});
 
 		it('should not consume paid credits if there are not enough to satisfy the request', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0);
+			await authenticatedPostRateLimiter.set(user.accountId, 500, 0);
 
 			await dashboardClient(CREDITS_TABLE).update({
 				amount: 1,
 			}).where({
-				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				account_id: user.accountId,
 			});
 
 			const response = await requestAgent.post('/v1/measurements')
@@ -442,12 +446,12 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('0');
 			expect(response.headers['x-credits-remaining']).to.equal('1');
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ account_id: user.accountId });
 			expect(amount).to.equal(1);
 		});
 
 		it('should not consume more paid credits than the cost of the full request', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 505, 0);
+			await authenticatedPostRateLimiter.set(user.accountId, 505, 0);
 
 			const response = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -462,17 +466,17 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('2');
 			expect(response.headers['x-credits-remaining']).to.equal('8');
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ account_id: user.accountId });
 			expect(amount).to.equal(8);
 		});
 
 		it('should not consume free credits if there are not enough to satisfy the request', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 499, 0);
+			await authenticatedPostRateLimiter.set(user.accountId, 499, 0);
 
 			await dashboardClient(CREDITS_TABLE).update({
 				amount: 0,
 			}).where({
-				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				account_id: user.accountId,
 			});
 
 			const response = await requestAgent.post('/v1/measurements')
@@ -488,15 +492,15 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('0');
 			expect(response.headers['x-credits-remaining']).to.equal('0');
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ account_id: user.accountId });
 			expect(amount).to.equal(0);
 		});
 
 		it('should work fine if there is no credits row for that user', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0);
+			await authenticatedPostRateLimiter.set(user.accountId, 500, 0);
 
 			await dashboardClient(CREDITS_TABLE).where({
-				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				account_id: user.accountId,
 			}).delete();
 
 			const response = await requestAgent.post('/v1/measurements')
@@ -512,7 +516,7 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('0');
 			expect(response.headers['x-credits-remaining']).to.equal('0');
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const credits = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const credits = await dashboardClient(CREDITS_TABLE).select('amount').where({ account_id: user.accountId });
 			expect(credits).to.deep.equal([]);
 		});
 	});
@@ -587,10 +591,10 @@ describe('rate limiter', () => {
 		});
 
 		it('should pass when there is no recent failed credits attempt (authenticated)', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 490, 0); // 10 remaining
+			await authenticatedPostRateLimiter.set(user.accountId, 490, 0); // 10 remaining
 
 			await dashboardClient(CREDITS_TABLE).insert({
-				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				account_id: user.accountId,
 				amount: 100,
 			}).onConflict().merge();
 
@@ -606,15 +610,15 @@ describe('rate limiter', () => {
 			expect(response.headers['x-ratelimit-remaining']).to.equal('8');
 			expect(response.headers['x-credits-consumed']).to.not.exist;
 			expect(response.headers['x-request-cost']).to.equal('2');
-			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ account_id: user.accountId });
 			expect(amount).to.equal(100);
 		});
 
 		it('should reject before matching after a failed credits attempt (authenticated)', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0); // 0 remaining
+			await authenticatedPostRateLimiter.set(user.accountId, 500, 0); // 0 remaining
 
 			await dashboardClient(CREDITS_TABLE).insert({
-				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				account_id: user.accountId,
 				amount: 1,
 			}).onConflict().merge();
 
@@ -633,7 +637,7 @@ describe('rate limiter', () => {
 			expect(response.headers['x-credits-consumed']).to.equal('0');
 			expect(response.headers['x-credits-remaining']).to.equal('1');
 
-			expect(failedCreditsAttempts.get('89da69bd-a236-4ab7-9c5d-b5f52ce09959')).to.deep.equal({ requiredCredits: 2, remainingCredits: 1 });
+			expect(failedCreditsAttempts.get(user.accountId)).to.deep.equal({ requiredCredits: 2, remainingCredits: 1 });
 
 			const response2 = await requestAgent.post('/v1/measurements')
 				.set('Authorization', 'Bearer qz5kdukfcr3vggv3xbujvjwvirkpkkpx')
@@ -654,15 +658,15 @@ describe('rate limiter', () => {
 			expect(response2.headers['x-ratelimit-remaining']).to.equal('0');
 			expect(response2.headers['x-credits-consumed']).to.equal('0');
 			expect(response2.headers['x-credits-remaining']).to.equal('1');
-			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ account_id: user.accountId });
 			expect(amount).to.equal(1);
 		});
 
 		it('should keep rejecting after a donation until the failed attempt expires (authenticated)', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0); // 0 remaining
+			await authenticatedPostRateLimiter.set(user.accountId, 500, 0); // 0 remaining
 
 			await dashboardClient(CREDITS_TABLE).insert({
-				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				account_id: user.accountId,
 				amount: 1,
 			}).onConflict().merge();
 
@@ -677,7 +681,7 @@ describe('rate limiter', () => {
 			await dashboardClient(CREDITS_TABLE).update({
 				amount: 100,
 			}).where({
-				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				account_id: user.accountId,
 			});
 
 			const response = await requestAgent.post('/v1/measurements')
@@ -690,15 +694,15 @@ describe('rate limiter', () => {
 
 			expect(response.headers['x-request-cost']).to.equal('50');
 			expect(response.headers['x-credits-remaining']).to.equal('1');
-			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ account_id: user.accountId });
 			expect(amount).to.equal(100);
 		});
 
 		it('should pass a smaller request after a failed attempt on a bigger one (authenticated)', async () => {
-			await authenticatedPostRateLimiter.set('89da69bd-a236-4ab7-9c5d-b5f52ce09959', 500, 0); // 0 remaining
+			await authenticatedPostRateLimiter.set(user.accountId, 500, 0); // 0 remaining
 
 			await dashboardClient(CREDITS_TABLE).insert({
-				user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+				account_id: user.accountId,
 				amount: 1,
 			}).onConflict().merge();
 
@@ -722,7 +726,7 @@ describe('rate limiter', () => {
 			expect(response.headers['x-ratelimit-consumed']).to.equal('0');
 			expect(response.headers['x-credits-consumed']).to.equal('1');
 			expect(response.headers['x-credits-remaining']).to.equal('0');
-			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' });
+			const [{ amount }] = await dashboardClient(CREDITS_TABLE).select('amount').where({ account_id: user.accountId });
 			expect(amount).to.equal(0);
 		});
 	});

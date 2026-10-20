@@ -21,6 +21,7 @@ module.exports = {
 		pingInterval: 3000,
 		pingTimeout: 3000,
 		minProbeVersion: '0.52.0',
+		channelPrefix: 'socket.io',
 	},
 	redis: {
 		standalonePersistent: {
@@ -111,7 +112,7 @@ module.exports = {
 		syncInterval: 60000,
 	},
 	probeLimit: {
-		asnCityPerUser: 2,
+		asnCityPerAccount: 2,
 	},
 	probeLogScopes: {
 		activeWindow: 864_000, // 10 days in seconds

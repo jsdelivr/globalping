@@ -1,35 +1,27 @@
 import { expect } from 'chai';
 import config from 'config';
-import { type JWTPayload, SignJWT } from 'jose';
 import request, { type Agent } from 'supertest';
 import * as sinon from 'sinon';
 import type { AuthenticateOptions } from '../../../../src/lib/http/middleware/authenticate.js';
 import type { Adoption } from '../../../../src/lib/override/adopted-probes.js';
-import { timeSeriesClient } from '../../../../src/lib/sql/client.js';
+import { dashboardClient, timeSeriesClient } from '../../../../src/lib/sql/client.js';
+import { createOrg, createUser } from '../../../utils/fixtures.js';
 import { getIoContext, getTestServer } from '../../../utils/server.js';
+import { getSignedJwt } from '../../../utils/session.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
 
 describe('Get Probe Logs', () => {
 	let requestAgent: Agent;
-	let sessionKey: Buffer;
 	let sandbox: sinon.SinonSandbox;
 	let getByIdStub: sinon.SinonStub;
 
 	const PROBE_ID = 'mock-probe-id';
 	const PROBE_UUID = 'fb9756c9-a4d7-423f-9ed2-3b848e915159';
-	const PROBE_USER_ID = 'mock-u-1';
-	const mockAdoption = {
-		id: PROBE_ID,
-		uuid: PROBE_UUID,
-		userId: PROBE_USER_ID,
-	} as Adoption;
 
-	const getSignedJwt = (options: JWTPayload) => new SignJWT(options)
-		.setProtectedHeader({ alg: 'HS256' })
-		.setIssuedAt()
-		.setExpirationTime('1h')
-		.sign(sessionKey);
+	let user: { id: string; accountId: string };
+	let viewerOrg: { id: string; accountId: string };
+	let mockAdoption: Adoption;
 
 	const insertLogs = async (logs: Array<{
 		id: string;
@@ -48,7 +40,9 @@ describe('Get Probe Logs', () => {
 	})));
 
 	before(async () => {
-		sessionKey = Buffer.from(sessionConfig.cookieSecret);
+		user = await createUser(dashboardClient);
+		viewerOrg = await createOrg(dashboardClient, { members: [{ userId: user.id, role: 'viewer' }] });
+		mockAdoption = { id: PROBE_ID, uuid: PROBE_UUID, accountId: user.accountId } as Adoption;
 		requestAgent = request(await getTestServer());
 	});
 
@@ -72,12 +66,29 @@ describe('Get Probe Logs', () => {
 			.send()
 			.expect(404);
 
-		const ownerJwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		getByIdStub.returns({ ...mockAdoption, accountId: null } as unknown as Adoption);
+		const noAccountJwt = await getSignedJwt({ id: 'user-without-account-id', app_access: true });
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
+			.set('Cookie', `${sessionConfig.cookieName}=${noAccountJwt}`)
+			.send()
+			.expect(404);
+
+		getByIdStub.returns(mockAdoption);
+		const ownerJwt = await getSignedJwt({ id: user.id, app_access: true });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.set('Cookie', `${sessionConfig.cookieName}=${ownerJwt}`)
 			.send()
 			.expect(200)
 			.expect({ logs: [], lastId: null, firstId: null, hasOlder: false });
+
+		getByIdStub.returns({ ...mockAdoption, accountId: viewerOrg.accountId });
+		const viewerJwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: viewerOrg.accountId, active_account_role: 'viewer' });
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
+			.set('Cookie', `${sessionConfig.cookieName}=${viewerJwt}`)
+			.send()
+			.expect(200);
+
+		getByIdStub.returns(mockAdoption);
 
 		const adminJwt = await getSignedJwt({ id: 'admin-user', admin_access: true, app_access: true });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
@@ -100,7 +111,7 @@ describe('Get Probe Logs', () => {
 			scope: index < 2 ? 'archive' : 'system',
 		})));
 
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
@@ -142,7 +153,7 @@ describe('Get Probe Logs', () => {
 			message: `log ${index + 1}`,
 		})));
 
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 		const after = (firstId - 1n).toString();
 
 		const firstResponse = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
@@ -204,7 +215,7 @@ describe('Get Probe Logs', () => {
 
 	it('advances an empty filtered result and never moves an incremental cursor backwards', async () => {
 		await insertLogs([{ id: '1', message: 'first' }]);
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ search: 'missing' })
@@ -223,7 +234,7 @@ describe('Get Probe Logs', () => {
 
 	it('preserves nullable synthetic log fields in the HTTP response', async () => {
 		await insertLogs([{ id: '1', message: 'messages skipped', timestamp: null, level: null, scope: null }]);
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
@@ -244,7 +255,7 @@ describe('Get Probe Logs', () => {
 			{ id: '3', message: 'api', scope: 'api:connect' },
 		]);
 
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 
 		const filtered = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ scopes: ' system, worker,system,,api:connect, ' })
@@ -263,7 +274,7 @@ describe('Get Probe Logs', () => {
 	});
 
 	it('rejects any requested scope longer than 64 characters', async () => {
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ scopes: `system,${'s'.repeat(65)}` })
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
@@ -278,7 +289,7 @@ describe('Get Probe Logs', () => {
 			{ id: '2', message: `prefix ${longSearch} suffix` },
 		]);
 
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 
 		const oneCharacter = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ search: 'x' })
@@ -309,7 +320,7 @@ describe('Get Probe Logs', () => {
 	});
 
 	it('rejects invalid log ID cursors and other invalid query parameters', async () => {
-		const jwt = await getSignedJwt({ id: PROBE_USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 
 		for (const query of [{ after: '9223372036854775807' }, { before: '9223372036854775807' }]) {
 			await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)

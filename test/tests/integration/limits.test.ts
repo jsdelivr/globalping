@@ -1,4 +1,6 @@
 import type { Server } from 'node:http';
+import config from 'config';
+import { SignJWT } from 'jose';
 import request from 'supertest';
 import { expect } from 'chai';
 import { getTestServer, addFakeProbe, deleteFakeProbes, waitForProbesUpdate } from '../../utils/server.js';
@@ -6,14 +8,37 @@ import nockGeoIpProviders from '../../utils/nock-geo-ip.js';
 import { anonymousRateLimiter, authenticatedRateLimiter } from '../../../src/lib/rate-limiter/rate-limiter-post.js';
 import { dashboardClient } from '../../../src/lib/sql/client.js';
 import { GP_TOKENS_TABLE } from '../../../src/lib/http/auth.js';
+import { createOrg, createUser } from '../../utils/fixtures.js';
 import { CREDITS_TABLE } from '../../../src/lib/credits-master.js';
+import type { AuthenticateOptions } from '../../../src/lib/http/middleware/authenticate.js';
+
+const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
+
+const insertCredits = (accountId: string, amount: number) => {
+	return dashboardClient(CREDITS_TABLE).insert({ account_id: accountId, amount }).onConflict().merge();
+};
 
 describe('rate limiter', () => {
 	let app: Server;
 	let requestAgent: any;
 	let clientId: string;
+	let user: { id: string; accountId: string };
+	let otherOrg: { id: string; accountId: string };
+
+	const getCookie = async (claims: object) => {
+		const jwt = await new SignJWT({ app_access: true, user_account_id: user.accountId, ...claims })
+			.setProtectedHeader({ alg: 'HS256' })
+			.setIssuedAt()
+			.setExpirationTime('1h')
+			.sign(Buffer.from(sessionConfig.cookieSecret));
+
+		return `${sessionConfig.cookieName}=${jwt}`;
+	};
 
 	before(async () => {
+		user = await createUser(dashboardClient);
+		otherOrg = await createOrg(dashboardClient, { name: 'other-org' });
+
 		app = await getTestServer();
 		requestAgent = request(app);
 
@@ -31,7 +56,8 @@ describe('rate limiter', () => {
 
 		await dashboardClient(GP_TOKENS_TABLE).insert({
 			name: 'test token',
-			user_created: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+			user_created: user.id,
+			account_id: user.accountId,
 			value: 'Xj6kuKFEQ6zI60mr+ckHG7yQcIFGMJFzvtK9PBQ69y8=', // token: qz5kdukfcr3vggv3xbujvjwvirkpkkpx
 		});
 	});
@@ -39,8 +65,8 @@ describe('rate limiter', () => {
 
 	afterEach(async () => {
 		await anonymousRateLimiter.delete(clientId);
-		await authenticatedRateLimiter.delete('89da69bd-a236-4ab7-9c5d-b5f52ce09959');
-		await dashboardClient(CREDITS_TABLE).where({ user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959' }).delete();
+		await authenticatedRateLimiter.delete(user.accountId);
+		await dashboardClient(CREDITS_TABLE).delete();
 	});
 
 	after(async () => {
@@ -136,7 +162,7 @@ describe('rate limiter', () => {
 
 			it('should return current amount of user credits', async () => {
 				await dashboardClient(CREDITS_TABLE).insert({
-					user_id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
+					account_id: user.accountId,
 					amount: 10,
 				}).onConflict().merge();
 
@@ -156,6 +182,27 @@ describe('rate limiter', () => {
 					},
 					credits: { remaining: 10 },
 				});
+			});
+
+			it('should take the personal account from the session cookie if it has no active account', async () => {
+				await insertCredits(user.accountId, 10);
+
+				const response = await requestAgent.get('/v1/limits')
+					.set('Cookie', await getCookie({ id: 'cookie-user-id' }))
+					.send();
+
+				expect(response.body.credits).to.deep.equal({ remaining: 10 });
+			});
+
+			it('should trust the active account of the session cookie without checking the membership', async () => {
+				await insertCredits(user.accountId, 10);
+				await insertCredits(otherOrg.accountId, 20);
+
+				const response = await requestAgent.get('/v1/limits')
+					.set('Cookie', await getCookie({ id: user.id, active_account_id: otherOrg.accountId, active_account_role: 'member' }))
+					.send();
+
+				expect(response.body.credits).to.deep.equal({ remaining: 20 });
 			});
 		});
 	});
