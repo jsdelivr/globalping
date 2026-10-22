@@ -11,6 +11,7 @@ import { dashboardClient } from './sql/client.js';
 import type { IoContext } from './server.js';
 import { registerGuardedMetric } from './metrics.js';
 import { getMeasurementStoreFallbackQueueConnectionOptions, MEASUREMENT_STORE_FALLBACK_QUEUE_NAME } from '../measurement/store-offloader.js';
+import { getProbeTestStats, type ProbeTestStats } from '../probe/test-stats.js';
 
 const logger = scopedLogger('metrics');
 const eventLoopMonitorResolution = 10;
@@ -26,6 +27,7 @@ export class MetricsCollector {
 		private readonly sql: Knex,
 		private readonly fetchProbes: IoContext['fetchProbes'],
 		private readonly measurementOffloadQueue: BullQueue,
+		private readonly probeTestStats: ProbeTestStats,
 	) {}
 
 	run (): void {
@@ -86,6 +88,15 @@ export class MetricsCollector {
 
 			return {
 				'gp.measurement.offload.pending.count': _.sum(Object.values(counts)),
+			};
+		}, 10 * 1000);
+
+		this.registerAsyncGroupCollector('probe test stats flush backlog', async () => {
+			const { count, oldestAge } = await this.probeTestStats.getFlushBacklog();
+
+			return {
+				'gp.probe_test_stats.flush.pending.count': count,
+				'gp.probe_test_stats.flush.oldest_age.ms': oldestAge,
 			};
 		}, 10 * 1000);
 
@@ -180,5 +191,5 @@ export const initMetricsCollector = (fetchRawLocalSockets: IoContext['fetchRawLo
 		connection: getMeasurementStoreFallbackQueueConnectionOptions(),
 	});
 
-	return new MetricsCollector(fetchRawLocalSockets, getMeasurementRedisClient(), dashboardClient, fetchProbes, measurementOffloadQueue);
+	return new MetricsCollector(fetchRawLocalSockets, getMeasurementRedisClient(), dashboardClient, fetchProbes, measurementOffloadQueue, getProbeTestStats());
 };

@@ -23,6 +23,7 @@ import {
 import chaiOas from './plugins/oas/index.js';
 import { initRedisClient } from '../src/lib/redis/client.js';
 import { initPersistentRedisClient } from '../src/lib/redis/persistent-client.js';
+import { initPersistentNoEvictionRedisClient } from '../src/lib/redis/persistent-no-eviction-client.js';
 import { initMeasurementRedisClient } from '../src/lib/redis/measurement-client.js';
 import { initSubscriptionRedisClient } from '../src/lib/redis/subscription-client.js';
 import { dashboardClient, measurementStoreClient, timeSeriesClient } from '../src/lib/sql/client.js';
@@ -42,6 +43,8 @@ before(async () => {
 	await redisClient.flushDb();
 	const persistentRedisClient = await initPersistentRedisClient();
 	await persistentRedisClient.flushDb();
+	const persistentNoEvictionRedisClient = await initPersistentNoEvictionRedisClient();
+	await persistentNoEvictionRedisClient.flushDb();
 	const measurementRedisClient = await initMeasurementRedisClient();
 	await measurementRedisClient.mapMasters(client => client.flushDb());
 	const subscriptionRedisClient = await initSubscriptionRedisClient();
