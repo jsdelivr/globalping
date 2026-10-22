@@ -129,23 +129,15 @@ export class ProbeTestStats {
 	}
 
 	private toRows (hour: number, values: Record<string, string>): ProbeTestStatsRow[] {
-		const rows = new Map<string, ProbeTestStatsRow>();
+		const rows: Record<string, ProbeTestStatsRow> = {};
 
 		for (const [ field, value ] of Object.entries(values)) {
 			const [ probeUuid, testType, counter ] = field.split(':') as [ string, RequestType, ProbeTestCounter ];
-
-			const key = `${probeUuid}:${testType}`;
-			let row = rows.get(key);
-
-			if (!row) {
-				row = { probeUuid, hour: new Date(hour), testType, ...createEmptyCounters() };
-				rows.set(key, row);
-			}
-
-			row[counter] += Number(value);
+			const row = rows[`${probeUuid}:${testType}`] ??= { probeUuid, hour: new Date(hour), testType, ...createEmptyCounters() };
+			row[counter] = Number(value);
 		}
 
-		return [ ...rows.values() ];
+		return Object.values(rows);
 	}
 
 	private onError (operation: 'assignment' | 'result' | 'timeout', error: unknown) {

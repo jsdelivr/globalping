@@ -21,7 +21,7 @@ const ROLLING_PERIODS = new Map<string, { length: number; interval: Interval }>(
 	[ 'year', { length: 365 * DAY, interval: 'day' }],
 ]);
 
-const CALENDAR_PERIOD_PATTERN = /^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/;
+const CALENDAR_PERIOD_PATTERN = /^\d{4}(-\d{2}){0,2}$/;
 
 const floorTo = (time: number, unit: number) => Math.floor(time / unit) * unit;
 
@@ -32,13 +32,11 @@ const subtractMonths = (time: number, months: number) => {
 };
 
 const parseCalendarPeriod = (period: string): Period | null => {
-	const match = CALENDAR_PERIOD_PATTERN.exec(period);
-
-	if (!match) {
+	if (!CALENDAR_PERIOD_PATTERN.test(period)) {
 		return null;
 	}
 
-	const [ year, month, day ] = match.slice(1).map(value => value === undefined ? undefined : Number(value)) as [ number, number?, number? ];
+	const [ year, month, day ] = period.split('-').map(Number) as [ number, number?, number? ];
 	const from = Date.UTC(year, (month ?? 1) - 1, day ?? 1);
 	const date = new Date(from);
 
