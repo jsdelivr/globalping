@@ -65,7 +65,6 @@ describe('Probe test stats of measurements', function () {
 		({ waitForProbesUpdate, addFakeProbe, deleteFakeProbes } = server);
 		requestAgent = request(await server.getTestServer());
 
-		// Import after module replacement to use the server's instances.
 		const { getPersistentNoEvictionRedisClient } = await import('../../../../src/lib/redis/persistent-no-eviction-client.js');
 		const { getProbeTestStats } = await import('../../../../src/probe/test-stats.js');
 		const { getStreamScheduleLoader } = await import('../../../../src/schedule/loader.js');

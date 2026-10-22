@@ -43,7 +43,6 @@ describe('Create measurement request', () => {
 		await td.replaceEsm('../../../../src/measurement/id.ts', { ...id, generateMeasurementId }, {});
 		await td.replaceEsm('../../../../src/lib/cloud-ip-ranges.ts', { getCloudTags: () => [ 'gcp-us-west4', 'gcp' ], populateMemList: () => Promise.resolve() });
 		({ getTestServer, waitForProbesUpdate, addFakeProbe, deleteFakeProbes } = await import('../../../utils/server.js'));
-		// Import after module replacement to use the server's instances.
 		probeTestStats = (await import('../../../../src/probe/test-stats.js')).getProbeTestStats();
 		probeTestStatsRedis = (await import('../../../../src/lib/redis/persistent-no-eviction-client.js')).getPersistentNoEvictionRedisClient();
 		const app = await getTestServer();
@@ -396,6 +395,8 @@ describe('Create measurement request', () => {
 			},
 		});
 
+		await setTimeout(20);
+
 		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send().expect(200).expect((response) => {
 			expect(response.body.results[0].result).to.deep.include({
 				status: 'in-progress',
@@ -410,6 +411,8 @@ describe('Create measurement request', () => {
 				rawOutput: 'Valid progress value',
 			},
 		});
+
+		await setTimeout(20);
 
 		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send().expect(200).expect((response) => {
 			expect(response.body.results[0].result).to.deep.include({

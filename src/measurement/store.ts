@@ -26,7 +26,7 @@ import { scopedFlight } from '../lib/single-flight.js';
 import type { ExportMeta } from './types.js';
 import { metricsAgent } from '../lib/metrics.js';
 import { getPublicTagValues } from '../lib/geoip/utils.js';
-import { getProbeTestStats, type ProbeTestStats } from '../probe/test-stats.js';
+import { getProbeTestStats } from '../probe/test-stats.js';
 
 const logger = scopedLogger('store');
 const singleFlight = scopedFlight('store');
@@ -59,14 +59,10 @@ const subtractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unk
 
 
 export class MeasurementStore {
-	private offloader: MeasurementStoreOffloader;
+	private offloader = new MeasurementStoreOffloader(measurementStoreClient, this);
+	private probeTestStats = getProbeTestStats();
 
-	constructor (
-		private readonly redis: RedisCluster,
-		private readonly probeTestStats: ProbeTestStats,
-	) {
-		this.offloader = new MeasurementStoreOffloader(measurementStoreClient, this);
-	}
+	constructor (private readonly redis: RedisCluster) {}
 
 	async getMeasurementBufferCompressed (id: string): Promise<Buffer | null> {
 		return this.getFromRedisOrOffloaderBufferCompressed(id);
@@ -312,7 +308,7 @@ let store: MeasurementStore;
 
 export const getMeasurementStore = () => {
 	if (!store) {
-		store = new MeasurementStore(getMeasurementRedisClient(), getProbeTestStats());
+		store = new MeasurementStore(getMeasurementRedisClient());
 		store.scheduleCleanup();
 		store.startOffloadWorker();
 	}
