@@ -52,7 +52,7 @@ export class ProbeTestStats {
 		private readonly storage: ProbeTestStatsStorage,
 	) {}
 
-	async recordAssignments (measurementId: string, type: RequestType, probes: Map<number, ServerProbe>): Promise<void> {
+	recordAssignments (measurementId: string, type: RequestType, probes: Map<number, ServerProbe>): void {
 		if (probes.size === 0) {
 			return;
 		}
@@ -61,11 +61,8 @@ export class ProbeTestStats {
 		const { pending, counters } = getBucketKeys(hour);
 		const tests = Array.from(probes, ([ testId, probe ]) => ({ testKey: getTestKey(measurementId, testId), base: `${probe.uuid}:${type}` }));
 
-		try {
-			await this.redis.recordProbeTestAssignments(pending, counters, BUCKETS_KEY, hour, tests);
-		} catch (error) {
-			this.onError('assignment', error);
-		}
+		this.redis.recordProbeTestAssignments(pending, counters, BUCKETS_KEY, hour, tests)
+			.catch(error => this.onError('assignment', error));
 	}
 
 	recordResult (measurementId: string, testId: string, result: Pick<TestResult, 'status' | 'failureSource'>): void {

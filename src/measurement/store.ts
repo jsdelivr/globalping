@@ -158,7 +158,7 @@ export class MeasurementStore {
 			!_.isEmpty(testsToProbes) && this.redis.hExpire('gp:test-to-probe', Object.keys(testsToProbes), timeoutSeconds + 120),
 		]);
 
-		await this.probeTestStats.recordAssignments(id, request.type, onlineProbesMap);
+		this.probeTestStats.recordAssignments(id, request.type, onlineProbesMap);
 
 		if (isFinishedImmediately) {
 			await this.redis.compressedJsonCompress(key);

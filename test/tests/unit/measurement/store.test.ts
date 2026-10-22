@@ -1,5 +1,4 @@
 import { promisify } from 'node:util';
-import { setImmediate } from 'node:timers/promises';
 import { brotliCompress as brotliCompressCallback } from 'node:zlib';
 import * as td from 'testdouble';
 import { expect } from 'chai';
@@ -85,7 +84,7 @@ describe('measurement store', () => {
 	redisMock.withTypeMapping.returns(redisMock);
 
 	const probeTestStatsMock = {
-		recordAssignments: sandbox.stub().resolves(),
+		recordAssignments: sandbox.stub(),
 		recordResult: sandbox.stub(),
 		recordTimeouts: sandbox.stub(),
 	};
@@ -129,8 +128,6 @@ describe('measurement store', () => {
 		redisMock.claimTimedOutMeasurements.reset();
 		redisMock.claimTimedOutMeasurements.resolves([]);
 		redisMock.json.set.reset();
-		probeTestStatsMock.recordAssignments.reset();
-		probeTestStatsMock.recordAssignments.resolves();
 		sandbox.resetHistory();
 	});
 
@@ -836,27 +833,6 @@ describe('measurement store', () => {
 			'testid',
 			{ status: 'finished', rawOutput: 'output' },
 		]);
-	});
-
-	it('should await recording assignments before returning', async () => {
-		const onlineProbes = new Map([ getProbe('a', '1.1.1.1'), getProbe('b', '2.2.2.2') ].entries());
-		const recording = Promise.withResolvers<void>();
-		probeTestStatsMock.recordAssignments.returns(recording.promise);
-		let completed = false;
-
-		const creation = getMeasurementStore().createMeasurement(
-			{ type: 'ping', measurementOptions: { packets: 3, ipVersion: 4, port: 80, protocol: 'ICMP' }, target: 'jsdelivr.com', locations: [], limit: 3, inProgressUpdates: false, timeout: 11 },
-			onlineProbes,
-			[ ...onlineProbes.values(), getOfflineProbe('c', '3.3.3.3') ],
-		).then(() => completed = true);
-
-		await setImmediate();
-		expect(probeTestStatsMock.recordAssignments.args).to.deep.equal([ [ mockedMeasurementId1, 'ping', onlineProbes ] ]);
-		expect(completed).to.equal(false);
-
-		recording.resolve();
-		await creation;
-		expect(completed).to.equal(true);
 	});
 
 	it('should not record assignments of a measurement that failed to be stored', async () => {

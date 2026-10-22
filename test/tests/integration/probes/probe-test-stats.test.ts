@@ -67,8 +67,8 @@ describe('Probe test stats collection and persistence', () => {
 
 		const probes = toProbes(...Array(outcomes.length + 1).fill(PROBE_A));
 
-		await probeTestStats.recordAssignments(measurementId, 'ping', probes);
-		await probeTestStats.recordAssignments(measurementId, 'ping', probes);
+		probeTestStats.recordAssignments(measurementId, 'ping', probes);
+		probeTestStats.recordAssignments(measurementId, 'ping', probes);
 
 		outcomes.forEach((outcome, testId) => probeTestStats.recordResult(measurementId, testId.toString(), outcome));
 
@@ -93,7 +93,7 @@ describe('Probe test stats collection and persistence', () => {
 
 		for (const type of [ 'ping', 'traceroute', 'dns', 'http', 'mtr' ] as const) {
 			const measurementId = createMeasurementId();
-			await probeTestStats.recordAssignments(measurementId, type, toProbes(PROBE_A, PROBE_B, PROBE_A, PROBE_B, PROBE_A, PROBE_B));
+			probeTestStats.recordAssignments(measurementId, type, toProbes(PROBE_A, PROBE_B, PROBE_A, PROBE_B, PROBE_A, PROBE_B));
 			outcomes.forEach((outcome, testId) => probeTestStats.recordResult(measurementId, testId.toString(), outcome));
 			probeTestStats.recordTimeouts(measurementId, [ 4, 5 ]);
 		}
@@ -113,7 +113,7 @@ describe('Probe test stats collection and persistence', () => {
 	});
 
 	it('counts a test with no outcome as timed out when its hour is flushed', async () => {
-		await probeTestStats.recordAssignments(createMeasurementId(), 'ping', toProbes(PROBE_A));
+		probeTestStats.recordAssignments(createMeasurementId(), 'ping', toProbes(PROBE_A));
 		await probeTestStats.flush();
 
 		expect(await getRows()).to.deep.equal([{ probeUuid: PROBE_A, testType: 'ping', ...createEmptyCounters(), assigned: 1, failedInternal: 1, timedOut: 1 }]);
@@ -122,7 +122,7 @@ describe('Probe test stats collection and persistence', () => {
 
 	it('does not persist buckets of the current hour', async () => {
 		const measurementId = generateMeasurementId(new Date());
-		await probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A));
+		probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A));
 		probeTestStats.recordResult(measurementId, '0', { status: 'finished' });
 		await waitForCommands();
 
@@ -133,7 +133,7 @@ describe('Probe test stats collection and persistence', () => {
 
 	it('persists each bucket once across repeated and concurrent flushes', async () => {
 		const measurementId = createMeasurementId();
-		await probeTestStats.recordAssignments(measurementId, 'mtr', toProbes(PROBE_A, PROBE_B));
+		probeTestStats.recordAssignments(measurementId, 'mtr', toProbes(PROBE_A, PROBE_B));
 		probeTestStats.recordResult(measurementId, '0', { status: 'finished' });
 		probeTestStats.recordResult(measurementId, '1', { status: 'failed', failureSource: 'target' });
 		await waitForCommands();
@@ -156,7 +156,7 @@ describe('Probe test stats collection and persistence', () => {
 
 		for (const bucketHour of hours) {
 			const measurementId = generateMeasurementId(new Date(bucketHour));
-			await probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A));
+			probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A));
 			probeTestStats.recordResult(measurementId, '0', { status: 'finished' });
 		}
 
@@ -185,13 +185,13 @@ describe('Probe test stats collection and persistence', () => {
 
 	it('keeps the persisted totals when a bucket restored from an older Redis snapshot is persisted again', async () => {
 		const measurementId = createMeasurementId();
-		await probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A));
+		probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A));
 
 		const keys = await redis.keys('gp:probe-test-stats:*');
 		const dumps = await Promise.all(keys.map(key => redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).dump(key)));
 
 		const laterMeasurementId = createMeasurementId();
-		await probeTestStats.recordAssignments(laterMeasurementId, 'ping', toProbes(PROBE_A));
+		probeTestStats.recordAssignments(laterMeasurementId, 'ping', toProbes(PROBE_A));
 		probeTestStats.recordResult(measurementId, '0', { status: 'finished' });
 		probeTestStats.recordResult(laterMeasurementId, '0', { status: 'finished' });
 		await waitForCommands();
@@ -220,7 +220,7 @@ describe('Probe test stats collection and persistence', () => {
 		expect(chunk).to.deep.equal({ is_compressed: true });
 
 		const measurementId = generateMeasurementId(new Date(oldHour));
-		await probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A, PROBE_B));
+		probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A, PROBE_B));
 		probeTestStats.recordResult(measurementId, '0', { status: 'finished' });
 		probeTestStats.recordResult(measurementId, '1', { status: 'failed', failureSource: 'target' });
 		await waitForCommands();
@@ -237,17 +237,17 @@ describe('Probe test stats collection and persistence', () => {
 
 	it('rejects new assignments but settles results and persists buckets while Redis is out of memory', async () => {
 		const measurementId = createMeasurementId();
-		await probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A, PROBE_A));
+		probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A, PROBE_A));
 
 		const errorSpy = sandbox.spy(metricsAgent, 'recordProbeTestStatsError');
 		await redis.configSet('maxmemory', '1');
 
-		await probeTestStats.recordAssignments(createMeasurementId(), 'ping', toProbes(PROBE_B));
+		probeTestStats.recordAssignments(createMeasurementId(), 'ping', toProbes(PROBE_B));
 		probeTestStats.recordResult(measurementId, '0', { status: 'finished' });
 		await waitForCommands();
-		expect(errorSpy.args).to.deep.equal([ [ 'assignment' ] ]);
 
 		await probeTestStats.flush();
+		expect(errorSpy.args).to.deep.equal([ [ 'assignment' ] ]);
 		expect(await getKeys()).to.be.empty;
 
 		expect(await getRows()).to.deep.equal([{ probeUuid: PROBE_A, testType: 'ping', ...createEmptyCounters(), assigned: 2, finished: 1, failedInternal: 1, timedOut: 1 }]);
@@ -259,7 +259,7 @@ describe('Probe test stats collection and persistence', () => {
 		const errorSpy = sandbox.spy(metricsAgent, 'recordProbeTestStatsError');
 
 		const measurementId = createMeasurementId();
-		await probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A));
+		probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A));
 		probeTestStats.recordResult(measurementId, '0', { status: 'finished' });
 		await setTimeout(10);
 
@@ -268,7 +268,7 @@ describe('Probe test stats collection and persistence', () => {
 
 	it('reports the flush backlog', async () => {
 		const measurementId = createMeasurementId();
-		await probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A, PROBE_B));
+		probeTestStats.recordAssignments(measurementId, 'ping', toProbes(PROBE_A, PROBE_B));
 
 		const backlog = await probeTestStats.getFlushBacklog();
 		expect(backlog.count).to.equal(1);
