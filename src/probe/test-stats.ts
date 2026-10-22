@@ -14,7 +14,7 @@ const HOUR = 60 * 60 * 1000;
 const MAX_MEASUREMENT_DURATION = (config.get<number>('measurement.timeout') + 5) * 1000;
 const SETTLE_DELAY = 60 * 1000;
 const MAX_FLUSH_INTERVAL = 60 * 1000;
-const FLUSH_LEASE_TIME = 30 * 1000;
+const FLUSH_LEASE_TIME = 3 * 60 * 1000;
 const ERROR_LOG_INTERVAL = 60 * 1000;
 
 const KEY_PREFIX = 'gp:probe-test-stats:{probe-test-stats}';
