@@ -10,7 +10,7 @@ describe('probes sync', () => {
 		const row = await waitRowInTable(ADOPTIONS_TABLE);
 		expect(row).to.include({
 			date_updated: null,
-			userId: null,
+			account_id: null,
 			ip: '1.2.3.4',
 			altIps: '[]',
 			tags: '[]',

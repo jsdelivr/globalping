@@ -15,6 +15,7 @@ import { JWTPayload, SignJWT } from 'jose';
 import { docker } from '../docker.js';
 import _ from 'lodash';
 import { beforeTests } from '../before-tests.js';
+import { getAccountId } from '../utils.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
 
@@ -43,7 +44,7 @@ describe('probe logs', () => {
 
 		await dashboardClient('gp_probes').insert({
 			id: PROBE_ID,
-			userId: USER_ID,
+			account_id: await getAccountId(USER_ID),
 			lastSyncDate: new Date(),
 			ip: '1.2.3.4',
 			uuid: '1-1-1-1-1',

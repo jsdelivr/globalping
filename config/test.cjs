@@ -1,5 +1,6 @@
 module.exports = {
 	server: {
+		port: 3010,
 		session: {
 			cookieSecret: 'xxx',
 		},
@@ -7,8 +8,18 @@ module.exports = {
 	websocketServer: {
 		pingInterval: 2 ** 20,
 		pingTimeout: 2 ** 20,
+		channelPrefix: 'socket.io-test',
 	},
 	redis: {
+		standalonePersistent: {
+			url: 'redis://localhost:7001/2',
+		},
+		standalonePersistentNoEviction: {
+			url: 'redis://localhost:7003/2',
+		},
+		standaloneNonPersistent: {
+			url: 'redis://localhost:7002/2',
+		},
 		clusterMeasurements: {
 			options: {
 				nodeAddressMap (address) {

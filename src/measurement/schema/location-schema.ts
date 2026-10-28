@@ -52,7 +52,7 @@ export const schema = Joi.alternatives().try(
 		asn: Joi.number().integer().positive(),
 		magic: Joi.string().min(1).max(128).custom(validateMagic).custom(normalizeValue),
 		tags: Joi.array().max(32).items(Joi.string().min(1).max(128).custom(normalizeValue)),
-		limit: Joi.number().integer().min(1).when('$user.id', {
+		limit: Joi.number().integer().min(1).when('$user.accountId', {
 			is: Joi.string().required(),
 			then: Joi.number().max(authenticatedTestsPerLocation),
 			otherwise: Joi.number().max(anonymousTestsPerLocation),
@@ -62,7 +62,7 @@ export const schema = Joi.alternatives().try(
 			otherwise: Joi.number().default(1),
 		}),
 	}).or('continent', 'region', 'country', 'state', 'city', 'network', 'asn', 'magic', 'tags'))
-		.when('$user.id', {
+		.when('$user.accountId', {
 			is: Joi.string().required(),
 			then: Joi.custom(sumOfLocationsLimits('limits.sum.auth', authenticatedTestsPerMeasurement)),
 			otherwise: Joi.custom(sumOfLocationsLimits('limits.sum.anon', anonymousTestsPerMeasurement)),
