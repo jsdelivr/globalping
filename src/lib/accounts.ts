@@ -3,6 +3,7 @@ import { dashboardClient } from './sql/client.js';
 
 export const ACCOUNTS_TABLE = 'gp_accounts';
 export const MEMBERS_TABLE = 'gp_org_members';
+export const ORGS_TABLE = 'gp_orgs';
 const ACCOUNT_TTL = 60 * 60 * 1000;
 
 export type AccountRole = 'owner' | 'admin' | 'member' | 'viewer';

@@ -4,11 +4,10 @@ import { TTLCache } from '@isaacs/ttlcache';
 import { base32 } from '@scure/base';
 import { scopedLogger } from '../logger.js';
 import { dashboardClient } from '../sql/client.js';
-import { ACCOUNTS_TABLE, MEMBERS_TABLE, type AccountRole } from '../accounts.js';
+import { ACCOUNTS_TABLE, MEMBERS_TABLE, ORGS_TABLE, type AccountRole } from '../accounts.js';
 
 export const GP_TOKENS_TABLE = 'gp_tokens';
 export const USERS_TABLE = 'directus_users';
-const ORGS_TABLE = 'gp_orgs';
 
 const logger = scopedLogger('auth');
 
