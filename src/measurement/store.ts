@@ -26,6 +26,7 @@ import { scopedFlight } from '../lib/single-flight.js';
 import type { ExportMeta } from './types.js';
 import { metricsAgent } from '../lib/metrics.js';
 import { getPublicTagValues } from '../lib/geoip/utils.js';
+import { getProbeTestStats } from '../probe/test-stats.js';
 
 const logger = scopedLogger('store');
 const singleFlight = scopedFlight('store');
@@ -58,11 +59,10 @@ const subtractObjects = (obj1: Record<string, unknown>, obj2: Record<string, unk
 
 
 export class MeasurementStore {
-	private offloader: MeasurementStoreOffloader;
+	private offloader = new MeasurementStoreOffloader(measurementStoreClient, this);
+	private probeTestStats = getProbeTestStats();
 
-	constructor (private readonly redis: RedisCluster) {
-		this.offloader = new MeasurementStoreOffloader(measurementStoreClient, this);
-	}
+	constructor (private readonly redis: RedisCluster) {}
 
 	async getMeasurementBufferCompressed (id: string): Promise<Buffer | null> {
 		return this.getFromRedisOrOffloaderBufferCompressed(id);
@@ -158,6 +158,8 @@ export class MeasurementStore {
 			!_.isEmpty(testsToProbes) && this.redis.hExpire('gp:test-to-probe', Object.keys(testsToProbes), timeoutSeconds + 120),
 		]);
 
+		this.probeTestStats.recordAssignments(id, request.type, onlineProbesMap);
+
 		if (isFinishedImmediately) {
 			await this.redis.compressedJsonCompress(key);
 			this.offloader.enqueueForOffload(measurementWithoutDefaults as MeasurementRecord);
@@ -175,6 +177,7 @@ export class MeasurementStore {
 	}
 
 	async storeMeasurementResult (data: MeasurementResultMessage): Promise<MeasurementRecord | null> {
+		this.probeTestStats.recordResult(data.measurementId, data.testId, data.result);
 		const recordBuffer = await this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).recordResult(data.measurementId, data.testId, data.result);
 		const record = await parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
 
@@ -199,6 +202,7 @@ export class MeasurementStore {
 				return;
 			}
 
+			this.probeTestStats.recordTimeouts(id, result.timedOutTestIds);
 			const measurement = await parseCompressedJsonBuffer<MeasurementRecord>(result.recordBuffer);
 
 			if (!measurement) {
@@ -206,7 +210,7 @@ export class MeasurementStore {
 			}
 
 			this.offloader.enqueueForOffload(measurement);
-			metricsAgent.recordMeasurementTimeout(measurement.type, result.timedOutTests);
+			metricsAgent.recordMeasurementTimeout(measurement.type, result.timedOutTestIds.length);
 		}, { concurrency: 32 });
 
 		await this.redis.zRem('gp:in-progress-timeouts', ids);

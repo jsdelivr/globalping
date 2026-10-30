@@ -5,30 +5,19 @@ import { corsAuthHandler } from '../../lib/http/middleware/cors.js';
 import createHttpError from 'http-errors';
 import { getProbeLogStorage } from '../logs-storage.js';
 import { schema } from '../schema/get-probe-logs-schema.js';
+import { getAuthorizedProbe } from './utils.js';
 
 const probeLogStorage = getProbeLogStorage();
 
 export const registerGetProbeLogsRoute = (router: ExtendedRouter, context: IoContext): void => {
 	const handle = async (ctx: ExtendedContext) => {
-		const { user } = ctx.state;
-		const { id } = ctx.params;
-
-		if (!id) {
-			throw createHttpError(400, `Probe ID missing.`);
-		}
-
 		const valid = schema.validate(ctx.query);
 
 		if (valid.error) {
 			throw createHttpError(400, valid.error.message, { type: 'validation_error' });
 		}
 
-		const probe = context.adoptedProbes.getById(id);
-
-		if (!probe?.uuid || !user?.id || (!user.adminAccess && (!user.accountId || probe.accountId !== user.accountId))) {
-			throw createHttpError(404, `Probe not found.`, { type: 'not_found' });
-		}
-
+		const probe = getAuthorizedProbe(ctx, context.adoptedProbes);
 		const { after, before, scopes, search } = valid.value;
 		const { logs, lastId, firstId, hasOlder } = await probeLogStorage.readLogs(probe.uuid, { after, before, scopes, search });
 

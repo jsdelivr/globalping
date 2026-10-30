@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { defineScript, type CommandParser } from 'redis';
 import type { HttpProgress, MeasurementResultMessage, TestProgress } from '../../measurement/types.js';
 
@@ -145,7 +146,6 @@ const markFinishedByTimeout = defineScript({
 	local keyMeasurementAwaiting = KEYS[2]
 	local date = ARGV[1]
 	local timeoutMessage = ARGV[2]
-	local timedOutTests = 0
 
 	local measurementJson = redis.pcall('JSON.GET', keyMeasurementResults, '$')
 	if not measurementJson or measurementJson.err then
@@ -159,12 +159,14 @@ const markFinishedByTimeout = defineScript({
 		return
 	end
 
+	local timedOutTestIds = {}
+
 	redis.call('JSON.SET', keyMeasurementResults, '$.status', '"finished"')
 	redis.call('JSON.SET', keyMeasurementResults, '$.updatedAt', '"' .. date .. '"')
 
 	for index, resultObject in ipairs(measurement.results) do
 		if resultObject.result.status == 'in-progress' then
-			timedOutTests = timedOutTests + 1
+			table.insert(timedOutTestIds, index - 1)
 			local rawOutput = resultObject.result.rawOutput or ''
 			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.status', '"failed"')
 			redis.call('JSON.SET', keyMeasurementResults, '$.results[' .. (index - 1) .. '].result.failureSource', '"internal"')
@@ -174,7 +176,7 @@ const markFinishedByTimeout = defineScript({
 
 	redis.call('COMPRESSED.JSON.COMPRESS', keyMeasurementResults)
 
-	return { redis.call('COMPRESSED.JSON.GET', keyMeasurementResults), timedOutTests }
+	return { redis.call('COMPRESSED.JSON.GET', keyMeasurementResults), timedOutTestIds }
 	`,
 	parseCommand (parser: CommandParser, measurementId: string) {
 		pushMeasurementKeys(parser, measurementId);
@@ -184,14 +186,14 @@ const markFinishedByTimeout = defineScript({
 			'The measurement timed out.',
 		);
 	},
-	transformReply (reply: [Buffer, number] | null) {
+	transformReply (reply: [Buffer, number[]] | null) {
 		if (!reply) {
 			return null;
 		}
 
 		return {
 			recordBuffer: reply[0],
-			timedOutTests: reply[1],
+			timedOutTestIds: reply[1],
 		};
 	},
 });
@@ -338,6 +340,102 @@ const countProbeLogScopeReporters = defineScript({
 	},
 });
 
+const recordProbeTestAssignments = defineScript({
+	NUMBER_OF_KEYS: 3,
+	SCRIPT: `
+	local keyPending = KEYS[1]
+	local keyCounters = KEYS[2]
+	local keyBuckets = KEYS[3]
+	local hour = ARGV[1]
+
+	for index = 2, #ARGV, 2 do
+		local testKey = ARGV[index]
+		local base = ARGV[index + 1]
+
+		if redis.call('HSETNX', keyPending, testKey, base) == 1 then
+			redis.call('HINCRBY', keyCounters, base .. ':assigned', 1)
+		end
+	end
+
+	redis.call('ZADD', keyBuckets, 'NX', hour, hour)
+	`,
+	parseCommand (parser: CommandParser, pendingKey: string, countersKey: string, bucketsKey: string, hour: number, tests: Array<{ testKey: string; base: string }>) {
+		parser.pushKey(pendingKey);
+		parser.pushKey(countersKey);
+		parser.pushKey(bucketsKey);
+		parser.push(hour.toString(), ...tests.flatMap(({ testKey, base }) => [ testKey, base ]));
+	},
+	transformReply () {
+		return null;
+	},
+});
+
+const settleProbeTests = defineScript({
+	NUMBER_OF_KEYS: 2,
+	SCRIPT: `#!lua flags=allow-oom
+	local keyPending = KEYS[1]
+	local keyCounters = KEYS[2]
+	local outcome = ARGV[1]
+
+	for index = 2, #ARGV do
+		local testKey = ARGV[index]
+		local base = redis.call('HGET', keyPending, testKey)
+
+		if base then
+			redis.call('HDEL', keyPending, testKey)
+			redis.call('HINCRBY', keyCounters, base .. ':' .. outcome, 1)
+
+			if outcome == 'timedOut' then
+				redis.call('HINCRBY', keyCounters, base .. ':failedInternal', 1)
+			end
+		end
+	end
+	`,
+	parseCommand (parser: CommandParser, pendingKey: string, countersKey: string, outcome: string, testKeys: string[]) {
+		parser.pushKey(pendingKey);
+		parser.pushKey(countersKey);
+		parser.push(outcome, ...testKeys);
+	},
+	transformReply () {
+		return null;
+	},
+});
+
+const claimProbeTestStats = defineScript({
+	NUMBER_OF_KEYS: 3,
+	SCRIPT: `#!lua flags=allow-oom
+	local keyPending = KEYS[1]
+	local keyCounters = KEYS[2]
+	local keyLease = KEYS[3]
+	local now = tonumber(ARGV[1])
+	local leaseUntil = ARGV[2]
+
+	if redis.call('EXISTS', keyCounters) == 0
+		or tonumber(redis.call('GET', keyLease) or '0') > now then
+		return nil
+	end
+
+	for _, base in ipairs(redis.call('HVALS', keyPending)) do
+		redis.call('HINCRBY', keyCounters, base .. ':timedOut', 1)
+		redis.call('HINCRBY', keyCounters, base .. ':failedInternal', 1)
+	end
+
+	redis.call('DEL', keyPending)
+	redis.call('SET', keyLease, leaseUntil)
+
+	return redis.call('HGETALL', keyCounters)
+	`,
+	parseCommand (parser: CommandParser, pendingKey: string, countersKey: string, leaseKey: string, now: number, leaseUntil: number) {
+		parser.pushKey(pendingKey);
+		parser.pushKey(countersKey);
+		parser.pushKey(leaseKey);
+		parser.push(now.toString(), leaseUntil.toString());
+	},
+	transformReply (reply: string[] | null) {
+		return reply ? Object.fromEntries(_.chunk(reply, 2)) as Record<string, string> : null;
+	},
+});
+
 export const scripts = {
 	recordProgress,
 	recordProgressAppend,
@@ -346,5 +444,8 @@ export const scripts = {
 	claimTimedOutMeasurements,
 	registerProbeLogScopes,
 	countProbeLogScopeReporters,
+	recordProbeTestAssignments,
+	settleProbeTests,
+	claimProbeTestStats,
 };
 export type RedisScripts = typeof scripts;
