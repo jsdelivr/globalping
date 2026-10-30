@@ -12,7 +12,7 @@ export const getAuthorizedProbe = (ctx: ExtendedContext, adoptedProbes: AdoptedP
 
 	const probe = adoptedProbes.getById(id);
 
-	if (!probe?.uuid || !user?.id || (!user.adminAccess && probe.userId !== user.id)) {
+	if (!probe?.uuid || !user?.id || (!user.adminAccess && (!user.accountId || probe.accountId !== user.accountId))) {
 		throw createHttpError(404, `Probe not found.`, { type: 'not_found' });
 	}
 

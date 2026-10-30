@@ -44,6 +44,7 @@ export const initWsServer = async (probeOverride: ProbeOverride) => {
 	});
 
 	io.adapter(createShardedAdapter(redis, subClient1, {
+		channelPrefix: config.get<string>('websocketServer.channelPrefix'),
 		subscriptionMode: 'dynamic-private',
 	}));
 

@@ -95,6 +95,7 @@ export const deleteFakeProbes = async (socketsToDelete?: Socket[]): Promise<void
 	}
 
 	const sockets = socketsToDelete?.length ? socketsToDelete : await fetchRawSockets();
+	const socketIds = new Set(sockets.map(s => s.id!));
 
 	for (const socket of sockets) {
 		socket.disconnect(true);
@@ -102,13 +103,16 @@ export const deleteFakeProbes = async (socketsToDelete?: Socket[]): Promise<void
 
 	return new Promise<void>((resolve) => {
 		const checker = () => {
-			if (syncedProbeList.getProbes().length === 0) {
+			const probeIds = new Set(syncedProbeList.getProbes().map(probe => probe.client));
+
+			if ([ ...socketIds ].every(id => !probeIds.has(id))) {
 				setTimeout(resolve, syncedProbeList.syncInterval);
 				syncedProbeList.off(syncedProbeList.localUpdateEvent, checker);
 			}
 		};
 
 		syncedProbeList.on(syncedProbeList.localUpdateEvent, checker);
+		checker();
 	});
 };
 

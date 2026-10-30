@@ -1,12 +1,14 @@
 import { expect } from 'chai';
 import config from 'config';
-import { type JWTPayload, SignJWT } from 'jose';
+import type { JWTPayload } from 'jose';
 import request, { type Agent } from 'supertest';
 import * as sinon from 'sinon';
 import type { AuthenticateOptions } from '../../../../src/lib/http/middleware/authenticate.js';
 import type { Adoption } from '../../../../src/lib/override/adopted-probes.js';
-import { timeSeriesClient } from '../../../../src/lib/sql/client.js';
+import { dashboardClient, timeSeriesClient } from '../../../../src/lib/sql/client.js';
+import { createUser } from '../../../utils/fixtures.js';
 import { getIoContext, getTestServer } from '../../../utils/server.js';
+import { getSignedJwt } from '../../../utils/session.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
 const HOUR = 60 * 60 * 1000;
@@ -14,23 +16,16 @@ const DAY = 24 * HOUR;
 
 describe('Get Probe Stats', () => {
 	let requestAgent: Agent;
-	let sessionKey: Buffer;
 	let sandbox: sinon.SinonSandbox;
 	let getByIdStub: sinon.SinonStub;
 	let day: number;
+	let user: { id: string; accountId: string };
+	let mockAdoption: Adoption;
 
 	const PROBE_ID = 'mock-probe-id';
 	const PROBE_UUID = 'fb9756c9-a4d7-423f-9ed2-3b848e915159';
-	const PROBE_USER_ID = 'mock-u-1';
 	const OTHER_PROBE_UUID = '1b6c8f3e-7c1a-4f6e-9a0f-2d3c4b5a6e7f';
-	const mockAdoption = { id: PROBE_ID, uuid: PROBE_UUID, userId: PROBE_USER_ID } as Adoption;
 	const zeros = { assigned: 0, finished: 0, failedTarget: 0, failedResolver: 0, failedInternal: 0, timedOut: 0 };
-
-	const getSignedJwt = (options: JWTPayload) => new SignJWT(options)
-		.setProtectedHeader({ alg: 'HS256' })
-		.setIssuedAt()
-		.setExpirationTime('1h')
-		.sign(sessionKey);
 
 	const getCookie = async (payload: JWTPayload) => `${sessionConfig.cookieName}=${await getSignedJwt(payload)}`;
 	const toDate = (time: number) => new Date(time).toISOString().slice(0, 10);
@@ -44,7 +39,8 @@ describe('Get Probe Stats', () => {
 	});
 
 	before(async () => {
-		sessionKey = Buffer.from(sessionConfig.cookieSecret);
+		user = await createUser(dashboardClient);
+		mockAdoption = { id: PROBE_ID, uuid: PROBE_UUID, accountId: user.accountId } as Adoption;
 		requestAgent = request(await getTestServer());
 	});
 
@@ -66,10 +62,10 @@ describe('Get Probe Stats', () => {
 	});
 
 	it('returns stats only to the probe owner or an administrator', async () => {
-		const ownerCookie = await getCookie({ id: PROBE_USER_ID, app_access: true });
+		const ownerCookie = await getCookie({ id: user.id, app_access: true });
 		const adminCookie = await getCookie({ id: 'admin-user', admin_access: true, app_access: true });
 		const otherCookie = await getCookie({ id: 'other-user', app_access: true });
-		const noAccessCookie = await getCookie({ id: PROBE_USER_ID, app_access: false });
+		const noAccessCookie = await getCookie({ id: user.id, app_access: false });
 
 		for (const cookie of [ ownerCookie, adminCookie ]) {
 			const response = await requestAgent.get(`/v1/probes/${PROBE_ID}/stats?period=month`).set('Cookie', cookie).send().expect(200);
@@ -87,7 +83,7 @@ describe('Get Probe Stats', () => {
 	});
 
 	it('returns hourly buckets of a calendar day with all test types', async () => {
-		const cookie = await getCookie({ id: PROBE_USER_ID, app_access: true });
+		const cookie = await getCookie({ id: user.id, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/stats?period=${toDate(day)}`).set('Cookie', cookie).send().expect(200).expect({
 			stats: [
@@ -117,7 +113,7 @@ describe('Get Probe Stats', () => {
 
 	it('returns daily buckets for monthly periods', async () => {
 		await insertRow(PROBE_UUID, day, 'mtr', { assigned: 1, finished: 1 });
-		const cookie = await getCookie({ id: PROBE_USER_ID, app_access: true });
+		const cookie = await getCookie({ id: user.id, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/stats?period=month`).set('Cookie', cookie).send().expect(200).expect({
 			stats: [
@@ -140,7 +136,7 @@ describe('Get Probe Stats', () => {
 	});
 
 	it('rejects unsupported periods and parameters', async () => {
-		const cookie = await getCookie({ id: PROBE_USER_ID, app_access: true });
+		const cookie = await getCookie({ id: user.id, app_access: true });
 
 		for (const query of [ '', '?period=hour', '?period=2026-02-30', '?period=2000', `?period=${new Date().getUTCFullYear() + 2}`, '?period=day&from=2026-01-01' ]) {
 			const response = await requestAgent.get(`/v1/probes/${PROBE_ID}/stats${query}`).set('Cookie', cookie).send().expect(400);

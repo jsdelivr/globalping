@@ -8,6 +8,12 @@ import type { ExtendedContext, ExtendedRouter } from '../../types.js';
 
 export const registerRestartProbeRoute = (router: ExtendedRouter, context: IoContext): void => {
 	const handle = (ctx: ExtendedContext) => {
+		const { user } = ctx.state;
+
+		if (!user?.adminAccess && user?.accountRole && ![ 'owner', 'admin' ].includes(user.accountRole)) {
+			throw createHttpError(403, 'Your role in the selected organization does not allow you to restart probes.', { type: 'insufficient_permissions' });
+		}
+
 		const adoptedProbe = getAuthorizedProbe(ctx, context.adoptedProbes);
 
 		// TODO: possibly index this later if needed in more endpoints
