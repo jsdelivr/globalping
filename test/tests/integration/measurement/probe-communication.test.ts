@@ -389,6 +389,8 @@ describe('Create measurement request', () => {
 			},
 		});
 
+		await setTimeout(20);
+
 		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send().expect(200).expect((response) => {
 			expect(response.body.results[0].result).to.deep.include({
 				status: 'in-progress',
@@ -403,6 +405,8 @@ describe('Create measurement request', () => {
 				rawOutput: 'Valid progress value',
 			},
 		});
+
+		await setTimeout(20);
 
 		await requestAgent.get(`/v1/measurements/${mockedMeasurementId}`).send().expect(200).expect((response) => {
 			expect(response.body.results[0].result).to.deep.include({

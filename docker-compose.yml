@@ -15,6 +15,7 @@ services:
     env_file:
       - ./.env.redis
     restart: unless-stopped
+    stop_signal: SIGINT
     stop_grace_period: 3m
   redis-standalone-2:
     image: redis/redis-stack-server:7.4.0-v1
@@ -26,6 +27,7 @@ services:
     env_file:
       - ./.env.redis
     restart: unless-stopped
+    stop_signal: SIGINT
     stop_grace_period: 3m
   redis-standalone-3:
     image: redis/redis-stack-server:7.4.0-v1
@@ -37,6 +39,7 @@ services:
     env_file:
       - ./.env.redis
     restart: unless-stopped
+    stop_signal: SIGINT
     stop_grace_period: 3m
   redis-node-01:
     <<: *redis-node-image
