@@ -84,6 +84,12 @@ describe('parseHandshakeQuery', () => {
 		it('rejects malformed uuid', () => {
 			expectProbeError({ ...validQuery, uuid: '1-1-1-1-1' }, 'uuid');
 		});
+
+		it('rejects non-canonical uuid notations', () => {
+			for (const uuid of [ 'AAAAAAAA-1111-4111-8111-111111111111', '{11111111-1111-4111-8111-111111111111}', '11111111:1111:4111:8111:111111111111', '11111111111141118111111111111111' ]) {
+				expectProbeError({ ...validQuery, uuid }, 'uuid');
+			}
+		});
 	});
 
 	describe('isHardware', () => {
