@@ -177,9 +177,14 @@ export class MeasurementStore {
 	}
 
 	async storeMeasurementResult (data: MeasurementResultMessage): Promise<MeasurementRecord | null> {
+		const result = await this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).recordResult(data.measurementId, data.testId, data.result);
+
+		if (!result) {
+			return null;
+		}
+
 		this.probeTestStats.recordResult(data.measurementId, data.testId, data.result);
-		const recordBuffer = await this.redis.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer }).recordResult(data.measurementId, data.testId, data.result);
-		const record = await parseCompressedJsonBuffer<MeasurementRecord>(recordBuffer);
+		const record = await parseCompressedJsonBuffer<MeasurementRecord>(result.recordBuffer);
 
 		if (record) {
 			this.offloader.enqueueForOffload(record);

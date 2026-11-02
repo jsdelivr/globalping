@@ -784,10 +784,12 @@ describe('measurement store', () => {
 			status: 'finished',
 			results: [],
 		};
-		redisMock.recordResult.resolves(Buffer.concat([
-			Buffer.from([ 0x00 ]),
-			Buffer.from(JSON.stringify(finishedRecord)),
-		]));
+		redisMock.recordResult.resolves({
+			recordBuffer: Buffer.concat([
+				Buffer.from([ 0x00 ]),
+				Buffer.from(JSON.stringify(finishedRecord)),
+			]),
+		});
 
 		const store = getMeasurementStore();
 		const record = await store.storeMeasurementResult({
@@ -815,7 +817,8 @@ describe('measurement store', () => {
 		expect(enqueueForOffloadStub.firstCall.args).to.deep.equal([ finishedRecord ]);
 	});
 
-	it('should not mark measurement as finished if storeMeasurementResult didn\'t return record', async () => {
+	it('does not record statistics for a rejected result', async () => {
+		redisMock.recordResult.resolves(null);
 		const store = getMeasurementStore();
 		await store.storeMeasurementResult({
 			testId: 'testid',
@@ -833,6 +836,9 @@ describe('measurement store', () => {
 			'testid',
 			{ status: 'finished', rawOutput: 'output' },
 		]);
+
+		expect(probeTestStatsMock.recordResult.callCount).to.equal(0);
+		expect(enqueueForOffloadStub.callCount).to.equal(0);
 	});
 
 	it('should not record assignments of a measurement that failed to be stored', async () => {

@@ -149,6 +149,35 @@ describe('Probe test stats of measurements', function () {
 		]);
 	});
 
+	it('keeps timeout statistics when a late result arrives before timeout statistics are recorded', async () => {
+		const { getMeasurementStore } = await import('../../../../src/measurement/store.js');
+		const store = getMeasurementStore();
+		const response = await requestAgent.post('/v1/measurements').send({ type: 'dns', target: 'example.com', timeout: 5 }).expect(202);
+		const measurementId = response.body.id;
+		const recordTimeouts = probeTestStats.recordTimeouts.bind(probeTestStats);
+		const timeoutStub = sandbox.stub(probeTestStats, 'recordTimeouts');
+
+		try {
+			await store.markFinishedByTimeout([ measurementId ]);
+			expect((await store.getMeasurement(measurementId))?.results[0]?.result).to.include({ status: 'failed', failureSource: 'internal' });
+
+			await store.storeMeasurementResult({
+				measurementId,
+				testId: '0',
+				result: { status: 'finished', rawOutput: '', statusCodeName: 'NOERROR', statusCode: 0, resolver: '1.1.1.1', timings: { total: 1 }, answers: [] },
+			});
+
+			recordTimeouts(measurementId, [ 0 ]);
+			await probeTestStats.flush();
+
+			expect(await getRows()).to.deep.equal([
+				{ probeUuid: PROBE_UUID, testType: 'dns', ...createEmptyCounters(), assigned: 1, failedInternal: 1, timedOut: 1 },
+			]);
+		} finally {
+			timeoutStub.restore();
+		}
+	});
+
 	it('counts the tests of scheduled measurements', async () => {
 		requestHandlerStub.callsFake(({ measurementId, testId }) => {
 			probe.emit('probe:measurement:result', { measurementId, testId, result: { status: 'finished', rawOutput: '', statusCodeName: 'NOERROR', statusCode: 0, resolver: '1.1.1.1', timings: { total: 1 }, answers: [] } });
