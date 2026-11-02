@@ -78,6 +78,7 @@ class DockerManager {
 			],
 			HostConfig: {
 				ExtraHosts: [ 'host.docker.internal:host-gateway' ],
+				Dns: [ '1.1.1.1' ],
 			},
 		});
 

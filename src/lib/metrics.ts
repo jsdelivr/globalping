@@ -47,6 +47,11 @@ export class MetricsAgent {
 		this.incrementCounter('gp.test.timeout.count.total', testCount);
 	}
 
+	recordProbeTestStatsError (operation: 'assignment' | 'result' | 'timeout' | 'flush'): void {
+		this.incrementCounter(`gp.probe_test_stats.error.count.${operation}`);
+		this.incrementCounter('gp.probe_test_stats.error.count.total');
+	}
+
 	private incrementCounter (name: string, value: number = 1): void {
 		if (!this.counters[name]) {
 			this.registerCounter(name);

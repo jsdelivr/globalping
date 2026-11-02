@@ -29,7 +29,7 @@ const versionRangeCheck = (value: string, helpers: CustomHelpers) => {
 export const handshakeQuerySchema = Joi.object({
 	version: Joi.string().required().custom(versionRangeCheck),
 	nodeVersion: Joi.string().pattern(/^v\d+\.\d+\.\d+$/).required(),
-	uuid: Joi.string().guid().required(),
+	uuid: Joi.string().guid({ separator: '-', wrapper: false }).lowercase().prefs({ convert: false }).required(),
 	isHardware: Joi.boolean().truthy('1').falsy('0').default(false),
 	hardwareDevice: Joi.string().pattern(/^v\d+$/).empty('').default(null),
 	hardwareDeviceFirmware: Joi.string().pattern(/^v\d+\.\d+$/).empty('').default(null),

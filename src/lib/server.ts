@@ -10,6 +10,7 @@ import { populateLegalNames } from './geoip/legal-name-normalization.js';
 import { populateAsnData } from './geoip/asns.js';
 import { disconnectProbes, reconnectProbes } from './ws/helper/reconnect-probes.js';
 import { initPersistentRedisClient } from './redis/persistent-client.js';
+import { initPersistentNoEvictionRedisClient } from './redis/persistent-no-eviction-client.js';
 import { initMeasurementRedisClient } from './redis/measurement-client.js';
 import { initSubscriptionRedisClient } from './redis/subscription-client.js';
 import termListener from './term-listener.js';
@@ -30,6 +31,7 @@ import { initProbesLocationFilter } from '../probe/probes-location-filter.js';
 import type { SyncedProbeList } from './ws/synced-probe-list.js';
 import type { SocketProbe } from '../probe/types.js';
 import { initAltIpsClient, type AltIpsClient } from './alt-ips-client.js';
+import { getProbeTestStats } from '../probe/test-stats.js';
 
 type WsServerExports = Awaited<ReturnType<typeof initWsServer>>;
 
@@ -61,6 +63,7 @@ export type IoContext = {
 export const createServer = async ({ startBackgroundJobs = true }: CreateServerOptions = {}) => {
 	await initRedisClient();
 	await initPersistentRedisClient();
+	await initPersistentNoEvictionRedisClient();
 	await initMeasurementRedisClient();
 	await initSubscriptionRedisClient();
 
@@ -141,6 +144,7 @@ export const createServer = async ({ startBackgroundJobs = true }: CreateServerO
 		probeIpLimit.scheduleSync();
 		auth.scheduleSync();
 		reconnectProbes(fetchRawSockets);
+		getProbeTestStats().scheduleFlush();
 		initMetricsCollector(fetchRawLocalSockets, fetchProbes).run();
 	}
 
