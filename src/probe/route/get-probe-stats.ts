@@ -17,7 +17,7 @@ export const registerGetProbeStatsRoute = (router: ExtendedRouter, context: IoCo
 			throw createHttpError(400, valid.error.message, { type: 'validation_error' });
 		}
 
-		const probe = getAuthorizedProbe(ctx, context.adoptedProbes);
+		const probe = getAuthorizedProbe(ctx, context.adoptedProbes, true);
 
 		ctx.body = {
 			stats: await probeTestStatsStorage.readStats(probe.uuid, valid.value.period),
