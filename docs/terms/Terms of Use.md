@@ -2,7 +2,7 @@
 
 *Effective date: November 6, 2026*
 
-We are Globalping Limited (“Globalping”, "us", "we", or "our") (trading as Globalping), a company registered in England and Wales under company registration number 14984373. Our registered office is at Suite 2a1, Northside House, Mount Pleasant, Barnet, England, EN4 9EB.
+We are Globalping Limited (“Globalping”, "us", "we", or "our") (trading as Globalping), a company registered in England and Wales under company registration number 17324411. Our registered office is at Suite 2a1, Northside House, Mount Pleasant, Barnet, England, EN4 9EB.
 
 We operate the globalping.io ("Website") and the Globalping service.
 
