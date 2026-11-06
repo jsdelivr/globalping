@@ -1,8 +1,8 @@
 # Privacy Policy
 
-*Effective date: September 16, 2026*
+*Effective date: November 6, 2026*
 
-Volentio JSD Limited ("us", "we", or "our"), a company registered in England and Wales, operates the Globalping service under the globalping.io domain and the hosted Globalping Model Context Protocol (MCP) service at mcp.globalping.dev (collectively, the "Services"). This policy applies whether you access the Services directly or through ChatGPT, Codex, Claude, or another MCP client or integration.
+Globalping Limited ("us", "we", or "our"), a company registered in England and Wales, operates the Globalping service under the globalping.io domain and the hosted Globalping Model Context Protocol (MCP) service at mcp.globalping.dev (collectively, the "Services"). This policy applies whether you access the Services directly or through ChatGPT, Codex, Claude, or another MCP client or integration.
 
 When we collect, use and process personal data we are subject to the provisions of the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018. We are also subject to the EU General Data Protection Regulation (EU GDPR) in relation to personal data we collect, use and process in the European Economic Area (EEA).
 
@@ -18,7 +18,7 @@ Our Service may contain links to other sites that are not operated by us. If you
 
 2. **processing:** means any operation or actions performed on personal data; for example, collection, recording, organization, structuring, storing, altering, deleting, or otherwise using personal data;
 
-3. **we, us and our:** refers to Volentio JSD Limited and its directors;
+3. **we, us and our:** refers to Globalping Limited and its directors;
 
 4. **you and your:** refers to the person who is accessing our Services and whose data is processed;
 
