@@ -6,7 +6,7 @@ This policy should be read together with our [Privacy Policy](https://globalping
 
 ## Who we are
 
-This website is operated by Globalping Limited (_“Globalping”,_ "us", "we", or "our") (trading as Globalping).
+This website is operated by Globalping Limited ("us", "we", or "our") (trading as Globalping).
 
 ## Our website
 
