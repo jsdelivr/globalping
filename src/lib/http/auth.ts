@@ -4,7 +4,7 @@ import { TTLCache } from '@isaacs/ttlcache';
 import { base32 } from '@scure/base';
 import { scopedLogger } from '../logger.js';
 import { dashboardClient } from '../sql/client.js';
-import { ACCOUNTS_TABLE, MEMBERS_TABLE, type AccountRole } from '../accounts.js';
+import { ACCOUNTS_TABLE, MEMBERS_TABLE, ORGS_TABLE, type AccountRole } from '../accounts.js';
 
 export const GP_TOKENS_TABLE = 'gp_tokens';
 export const USERS_TABLE = 'directus_users';
@@ -97,6 +97,7 @@ export class Auth {
 				this.on(`${MEMBERS_TABLE}.org`, `${ACCOUNTS_TABLE}.org`)
 					.andOn(`${MEMBERS_TABLE}.user`, `${GP_TOKENS_TABLE}.user_created`);
 			})
+			.leftJoin(ORGS_TABLE, `${ORGS_TABLE}.id`, `${ACCOUNTS_TABLE}.org`)
 			.where(filter)
 			.select<Row[]>([
 				'user_created',
@@ -107,7 +108,7 @@ export class Auth {
 				'date_last_used',
 				'scopes',
 				'github_username as user_github_username',
-				'user_type as user_user_type',
+				this.sql.raw(`COALESCE(??, ??) AS user_user_type`, [ `${ORGS_TABLE}.user_type`, `${USERS_TABLE}.user_type` ]),
 				this.sql.raw(`IF(?? = ??, 'owner', ??) AS account_role`, [ `${ACCOUNTS_TABLE}.user`, `${GP_TOKENS_TABLE}.user_created`, `${MEMBERS_TABLE}.role` ]),
 			]);
 
