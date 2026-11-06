@@ -1,8 +1,8 @@
 # Terms of Use
 
-*Effective date: September 16, 2026*
+*Effective date: November 6, 2026*
 
-We are Volentio JSD Limited (“Volentio JSD”, "us", "we", or "our") (trading as Globalping), a company registered in England and Wales under company registration number 14984373. Our registered office is at Suite 2a1, Northside House, Mount Pleasant, Barnet, England, EN4 9EB.
+We are Globalping Limited ("us", "we", or "our") (trading as Globalping), a company registered in England and Wales under company registration number 17324411. Our registered office is at Suite 2a1, Northside House, Mount Pleasant, Barnet, England, EN4 9EB.
 
 We operate the globalping.io ("Website") and the Globalping service.
 
@@ -36,7 +36,7 @@ We do not guarantee that Measurement Data will remain available through the Serv
 
 ## 4. Proprietary Rights
 
-Volentio JSD and our licensors, vendors, and agents retain ownership of all intellectual property rights of any kind related to the Website and Globalping. We reserve all rights that are not expressly granted to you under these Terms or by law, including all rights in relation to the look and feel of the Website and Globalping. Unless agreed otherwise in these Terms, you may not duplicate, copy, or reuse any portion of the Website, or Globalping without express written permission from Volentio JSD.
+Globalping Limited and our licensors, vendors, and agents retain ownership of all intellectual property rights of any kind related to the Website and Globalping. We reserve all rights that are not expressly granted to you under these Terms or by law, including all rights in relation to the look and feel of the Website and Globalping. Unless agreed otherwise in these Terms, you may not duplicate, copy, or reuse any portion of the Website, or Globalping without express written permission from Globalping Limited.
 
 ## 5. Limits and Restrictions
 
@@ -128,7 +128,7 @@ We do not guarantee that the Services, will always be available or be uninterrup
 
 ## 15. Limitation of Liability
 
-In no event will the Volentio JSD be liable to you or any third party for any direct, indirect, incidental, special, consequential, or punitive damages arising out of or relating to your access to or use of, or your inability to access or use, the Website or Globalping or any materials or content on the Website or Globalping, whether based on warranty, contract, tort (including negligence), statute, or any other legal theory, whether or not Volentio JSD has been informed of the possibility of such damage.
+In no event will Globalping Limited be liable to you or any third party for any direct, indirect, incidental, special, consequential, or punitive damages arising out of or relating to your access to or use of, or your inability to access or use, the Website or Globalping or any materials or content on the Website or Globalping, whether based on warranty, contract, tort (including negligence), statute, or any other legal theory, whether or not Globalping Limited has been informed of the possibility of such damage.
 
 ## 16. Governing Law and Jurisdiction
 
