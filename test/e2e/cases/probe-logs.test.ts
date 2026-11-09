@@ -21,6 +21,7 @@ const sessionConfig = config.get<AuthenticateOptions['session']>('server.session
 
 describe('probe logs', () => {
 	let sessionKey: Buffer;
+	let accountId: string;
 	const USER_ID = '89da69bd-a236-4ab7-9c5d-b5f52ce11111';
 	const PROBE_ID = '89da69bd-a236-4ab7-9c5d-b5f52ce09959';
 
@@ -37,14 +38,15 @@ describe('probe logs', () => {
 			id: USER_ID,
 			adoption_token: 'adoptionTokenValue',
 			github_username: 'jimaek',
-			github_organizations: JSON.stringify([ 'jsdelivr' ]),
 			default_prefix: 'jsdelivr',
 			public_probes: true,
 		});
 
+		accountId = await getAccountId(USER_ID);
+
 		await dashboardClient('gp_probes').insert({
 			id: PROBE_ID,
-			account_id: await getAccountId(USER_ID),
+			account_id: accountId,
 			lastSyncDate: new Date(),
 			ip: '1.2.3.4',
 			uuid: '1-1-1-1-1',
@@ -87,7 +89,7 @@ describe('probe logs', () => {
 	});
 
 	it('should return logs in the expected format', async () => {
-		const jwt = await getSignedJwt({ id: USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: USER_ID, user_account_id: accountId, app_access: true });
 		const authCookie = `${sessionConfig.cookieName}=${jwt}`;
 		const response = await waitForLogSync(PROBE_ID, authCookie);
 
@@ -106,7 +108,7 @@ describe('probe logs', () => {
 	});
 
 	it('should respect the after parameter', async () => {
-		const jwt = await getSignedJwt({ id: USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: USER_ID, user_account_id: accountId, app_access: true });
 		const authCookie = `${sessionConfig.cookieName}=${jwt}`;
 
 		const initialResponse = await waitForLogSync(PROBE_ID, authCookie);
@@ -169,7 +171,7 @@ describe('probe logs', () => {
 	}).timeout(100000);
 
 	it('should return logs when probe is offline', async () => {
-		const jwt = await getSignedJwt({ id: USER_ID, app_access: true });
+		const jwt = await getSignedJwt({ id: USER_ID, user_account_id: accountId, app_access: true });
 		const authCookie = `${sessionConfig.cookieName}=${jwt}`;
 
 		await waitForLogSync(PROBE_ID, authCookie);

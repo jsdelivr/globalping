@@ -79,7 +79,7 @@ describe('Get Probe Logs', () => {
 	});
 
 	it('should return logs of an existing probe for its owner', async () => {
-		const jwt = await getSignedJwt({ id: user.id, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, user_account_id: user.accountId, app_access: true });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
@@ -129,7 +129,7 @@ describe('Get Probe Logs', () => {
 			scope: index < 2 ? 'archive' : 'system',
 		})));
 
-		const jwt = await getSignedJwt({ id: user.id, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, user_account_id: user.accountId, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
@@ -171,7 +171,7 @@ describe('Get Probe Logs', () => {
 			message: `log ${index + 1}`,
 		})));
 
-		const jwt = await getSignedJwt({ id: user.id, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, user_account_id: user.accountId, app_access: true });
 		const after = (firstId - 1n).toString();
 
 		const firstResponse = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
@@ -233,7 +233,7 @@ describe('Get Probe Logs', () => {
 
 	it('advances an empty filtered result and never moves an incremental cursor backwards', async () => {
 		await insertLogs([{ id: '1', message: 'first' }]);
-		const jwt = await getSignedJwt({ id: user.id, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, user_account_id: user.accountId, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ search: 'missing' })
@@ -252,7 +252,7 @@ describe('Get Probe Logs', () => {
 
 	it('preserves nullable synthetic log fields in the HTTP response', async () => {
 		await insertLogs([{ id: '1', message: 'messages skipped', timestamp: null, level: null, scope: null }]);
-		const jwt = await getSignedJwt({ id: user.id, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, user_account_id: user.accountId, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
@@ -273,7 +273,7 @@ describe('Get Probe Logs', () => {
 			{ id: '3', message: 'api', scope: 'api:connect' },
 		]);
 
-		const jwt = await getSignedJwt({ id: user.id, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, user_account_id: user.accountId, app_access: true });
 
 		const filtered = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ scopes: ' system, worker,system,,api:connect, ' })
@@ -292,7 +292,7 @@ describe('Get Probe Logs', () => {
 	});
 
 	it('rejects any requested scope longer than 64 characters', async () => {
-		const jwt = await getSignedJwt({ id: user.id, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, user_account_id: user.accountId, app_access: true });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ scopes: `system,${'s'.repeat(65)}` })
 			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
@@ -307,7 +307,7 @@ describe('Get Probe Logs', () => {
 			{ id: '2', message: `prefix ${longSearch} suffix` },
 		]);
 
-		const jwt = await getSignedJwt({ id: user.id, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, user_account_id: user.accountId, app_access: true });
 
 		const oneCharacter = await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
 			.query({ search: 'x' })
@@ -338,7 +338,7 @@ describe('Get Probe Logs', () => {
 	});
 
 	it('rejects invalid log ID cursors and other invalid query parameters', async () => {
-		const jwt = await getSignedJwt({ id: user.id, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, user_account_id: user.accountId, app_access: true });
 
 		for (const query of [{ after: '9223372036854775807' }, { before: '9223372036854775807' }]) {
 			await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)

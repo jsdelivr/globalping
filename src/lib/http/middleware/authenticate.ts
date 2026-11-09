@@ -2,8 +2,7 @@ import config from 'config';
 import { jwtVerify } from 'jose';
 import apmAgent from 'elastic-apm-node';
 
-import { type AccountRole, getUserAccountId } from '../../accounts.js';
-import { auth } from '../auth.js';
+import { type AccountRole, auth } from '../auth.js';
 import type { ExtendedMiddleware } from '../../../types.js';
 
 const sessionConfig = config.get<AuthenticateOptions['session']>('server.session');
@@ -43,12 +42,12 @@ export type AuthenticateState = {
 	user?: AuthenticateStateUser;
 };
 
-const resolveAccount = async (payload: SessionCookiePayload): Promise<{ accountId: string | null; accountRole: AccountRole }> => {
+const getSessionAccount = (payload: SessionCookiePayload): { accountId: string | null; accountRole: AccountRole } => {
 	if (payload.active_account_id && payload.active_account_role) {
 		return { accountId: payload.active_account_id, accountRole: payload.active_account_role };
 	}
 
-	return { accountId: payload.user_account_id ?? await getUserAccountId(payload.id!), accountRole: 'owner' };
+	return { accountId: payload.user_account_id ?? null, accountRole: 'owner' };
 };
 
 export const verifySessionPayload = async (cookie: string, key: Uint8Array): Promise<SessionCookiePayload | undefined> => {
@@ -89,9 +88,7 @@ export const authenticate = (): ExtendedMiddleware => {
 			const payload = await verifySessionPayload(sessionCookie, sessionKey);
 
 			if (payload?.id && payload.app_access === true) {
-				// PHASE5: remove resolveAccount, read the two claims directly. The sessions issued before Directus
-				// put the account in the cookie stay valid for a day, so until then it is resolved here.
-				const account = await resolveAccount(payload);
+				const account = getSessionAccount(payload);
 				ctx.state.user = { id: payload.id, ...account, username: payload.github_username || null, userType: payload.user_type || 'member', authMode: 'cookie', adminAccess: payload.admin_access === true };
 				apmAgent.setUserContext({ id: payload.id, username: payload.github_username || `ID(${payload.id})` });
 			}

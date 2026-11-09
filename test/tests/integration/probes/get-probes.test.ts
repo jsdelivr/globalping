@@ -7,7 +7,7 @@ import nockGeoIpProviders from '../../../utils/nock-geo-ip.js';
 import { PROBES_TABLE } from '../../../../src/lib/override/adopted-probes.js';
 import { dashboardClient } from '../../../../src/lib/sql/client.js';
 import { PROBES_NAMESPACE } from '../../../../src/lib/ws/server.js';
-import { createUser } from '../../../utils/fixtures.js';
+import { createOrg, createUser } from '../../../utils/fixtures.js';
 
 describe('Get Probes', () => {
 	const expectedHost = process.env['HOSTNAME'] ?? '';
@@ -348,6 +348,49 @@ describe('Get Probes', () => {
 
 				const [ updatedProbe ] = await getIoContext().syncedProbeList.fetchProbes();
 				expect(updatedProbe?.settings).to.deep.equal({ meteredConnection: true });
+			});
+		});
+
+		describe('probes adopted by an org', () => {
+			const uuid = '22222222-2222-4222-8222-222222222222';
+
+			before(async () => {
+				const org = await createOrg(dashboardClient, { name: 'acme', deprecated_prefix: 'old-acme', public_probes: true });
+
+				await dashboardClient(PROBES_TABLE).insert({
+					id: randomUUID(),
+					account_id: org.accountId,
+					lastSyncDate: new Date(),
+					uuid,
+					status: 'ready',
+					version: '0.26.0',
+					nodeVersion: 'v18.14.2',
+					country: 'AR',
+					countryName: 'Argentina',
+					continent: 'SA',
+					continentName: 'South America',
+					region: 'South America',
+					city: 'Cordoba',
+					latitude: -31.41,
+					longitude: -64.18,
+					network: 'InterBS S.R.L. (BAEHOST)',
+					asn: 61004,
+					allowedCountries: '["AR"]',
+				});
+
+				await getIoContext().adoptedProbes.fetchDProbes();
+			});
+
+			after(async () => {
+				await dashboardClient(PROBES_TABLE).where({ uuid }).delete();
+				await dashboardClient('gp_orgs').delete();
+			});
+
+			it('should use the org name and the deprecated prefix of the org', () => {
+				const dProbe = getIoContext().adoptedProbes.getByUuid(uuid);
+
+				expect(dProbe?.defaultPrefix).to.equal('acme');
+				expect(dProbe?.deprecatedPrefix).to.equal('old-acme');
 			});
 		});
 
