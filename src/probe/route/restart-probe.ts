@@ -7,8 +7,8 @@ import { getAuthorizedProbe } from './utils.js';
 import type { ExtendedContext, ExtendedRouter } from '../../types.js';
 
 export const registerRestartProbeRoute = (router: ExtendedRouter, context: IoContext): void => {
-	const handle = (ctx: ExtendedContext) => {
-		const adoptedProbe = getAuthorizedProbe(ctx, context.adoptedProbes);
+	const handle = async (ctx: ExtendedContext) => {
+		const adoptedProbe = await getAuthorizedProbe(ctx, context.adoptedProbes);
 
 		// TODO: possibly index this later if needed in more endpoints
 		const probe = context.syncedProbeList.getProbes().find(probe => probe.uuid === adoptedProbe.uuid);
