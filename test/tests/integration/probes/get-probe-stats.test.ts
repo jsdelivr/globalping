@@ -61,7 +61,7 @@ describe('Get Probe Stats', () => {
 		sandbox.restore();
 	});
 
-	it('returns stats only to the probe owner or an administrator', async () => {
+	it('returns stats only to the probe owner or a directus admin', async () => {
 		const ownerCookie = await getCookie({ id: user.id, app_access: true });
 		const adminCookie = await getCookie({ id: 'admin-user', admin_access: true, app_access: true });
 		const otherCookie = await getCookie({ id: 'other-user', app_access: true });

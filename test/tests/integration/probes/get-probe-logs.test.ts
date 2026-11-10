@@ -57,49 +57,67 @@ describe('Get Probe Logs', () => {
 		sandbox.restore();
 	});
 
-	it('preserves owner-or-administrator authorization and nonexistent-probe behavior', async () => {
+	it('should respond with 404 without a session', async () => {
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`).send().expect(404);
+	});
 
-		const wrongOwnerJwt = await getSignedJwt({ id: 'other-user', app_access: true });
+	it('should respond with 404 if user does not own the probe', async () => {
+		const jwt = await getSignedJwt({ id: 'other-user', app_access: true });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.set('Cookie', `${sessionConfig.cookieName}=${wrongOwnerJwt}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(404);
+	});
 
+	it('should respond with 404 if neither the user nor the probe has an account', async () => {
 		getByIdStub.returns({ ...mockAdoption, accountId: null } as unknown as Adoption);
-		const noAccountJwt = await getSignedJwt({ id: 'user-without-account-id', app_access: true });
+		const jwt = await getSignedJwt({ id: 'user-without-account-id', app_access: true });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.set('Cookie', `${sessionConfig.cookieName}=${noAccountJwt}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(404);
+	});
 
-		getByIdStub.returns(mockAdoption);
-		const ownerJwt = await getSignedJwt({ id: user.id, app_access: true });
+	it('should return logs of an existing probe for its owner', async () => {
+		const jwt = await getSignedJwt({ id: user.id, app_access: true });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.set('Cookie', `${sessionConfig.cookieName}=${ownerJwt}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200)
 			.expect({ logs: [], lastId: null, firstId: null, hasOlder: false });
+	});
 
+	it('should return logs of an org probe for a viewer of that org', async () => {
 		getByIdStub.returns({ ...mockAdoption, accountId: viewerOrg.accountId });
-		const viewerJwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: viewerOrg.accountId, active_account_role: 'viewer' });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: viewerOrg.accountId, active_account_role: 'viewer' });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.set('Cookie', `${sessionConfig.cookieName}=${viewerJwt}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200);
+	});
 
-		getByIdStub.returns(mockAdoption);
-
-		const adminJwt = await getSignedJwt({ id: 'admin-user', admin_access: true, app_access: true });
+	it('should return logs of a probe of an org where the user is a viewer while the session acts for another account', async () => {
+		getByIdStub.returns({ ...mockAdoption, accountId: viewerOrg.accountId });
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: user.accountId, active_account_role: 'owner' });
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
-			.set('Cookie', `${sessionConfig.cookieName}=${adminJwt}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(200);
+	});
 
+	it('should return logs of an existing probe for a directus admin', async () => {
+		const jwt = await getSignedJwt({ id: 'admin-user', admin_access: true, app_access: true });
+		await requestAgent.get(`/v1/probes/${PROBE_ID}/logs`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(200);
+	});
+
+	it('should respond with 404 if user is a directus admin and probe does not exist', async () => {
 		getByIdStub.returns(null);
-
+		const jwt = await getSignedJwt({ id: 'admin-user', admin_access: true, app_access: true });
 		await requestAgent.get('/v1/probes/nonexistent/logs')
-			.set('Cookie', `${sessionConfig.cookieName}=${adminJwt}`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
 			.send()
 			.expect(404);
 	});

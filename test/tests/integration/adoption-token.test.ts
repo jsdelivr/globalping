@@ -152,6 +152,47 @@ describe('Adoption token', () => {
 		expect(await adoptWithToken('handedOverToken')).to.equal(org.accountId);
 	});
 
+	describe('after a probe transfer the cache has not seen yet', () => {
+		afterEach(async () => {
+			await dashboardClient('directus_users').where({ id: user.id }).update({ adoption_token: 'adoptionTokenValue' });
+			await dashboardClient('gp_orgs').where({ id: org.id }).update({ extra_adoption_tokens: JSON.stringify([{ github_username: 'someone', token: 'handedOverToken' }]) });
+			await getIoContext().adoptionToken.syncTokens();
+		});
+
+		it('should not move the probe when the token cache lags a transfer', async () => {
+			await dashboardClient('gp_probes').insert({
+				id: randomUUID(),
+				uuid: '11111111-1111-4111-8111-111111111111',
+				ip: '1.2.3.4',
+				account_id: org.accountId,
+				status: 'offline',
+				version: '0.39.0',
+				nodeVersion: 'v18.17.0',
+				lastSyncDate: new Date(),
+				city: 'Dallas',
+				state: 'TX',
+				stateName: 'Texas',
+				country: 'US',
+				countryName: 'United States',
+				continent: 'NA',
+				continentName: 'North America',
+				region: 'Northern America',
+				latitude: 32.78,
+				longitude: -96.81,
+				asn: 20004,
+				network: 'The Constant Company',
+				allowedCountries: JSON.stringify([ 'US' ]),
+			});
+
+			// The probe transfer moved the user token to the org, but the cache still maps it to the user.
+			await dashboardClient('directus_users').where({ id: user.id }).update({ adoption_token: 'newUserToken' });
+			await dashboardClient('gp_orgs').where({ id: org.id }).update({ extra_adoption_tokens: JSON.stringify([{ github_username: 'user', token: 'adoptionTokenValue' }]) });
+
+			expect(await adoptWithToken('adoptionTokenValue')).to.equal(undefined);
+			expect(adoptionStatusStub.callCount).to.equal(0);
+		});
+	});
+
 	it('should warn about an unknown token', async () => {
 		nockGeoIpProviders();
 
