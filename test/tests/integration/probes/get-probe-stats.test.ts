@@ -62,7 +62,7 @@ describe('Get Probe Stats', () => {
 	});
 
 	it('returns stats only to the probe owner or a directus admin', async () => {
-		const ownerCookie = await getCookie({ id: user.id, app_access: true });
+		const ownerCookie = await getCookie({ id: user.id, user_account_id: user.accountId, app_access: true });
 		const adminCookie = await getCookie({ id: 'admin-user', admin_access: true, app_access: true });
 		const otherCookie = await getCookie({ id: 'other-user', app_access: true });
 		const noAccessCookie = await getCookie({ id: user.id, app_access: false });
@@ -83,7 +83,7 @@ describe('Get Probe Stats', () => {
 	});
 
 	it('returns hourly buckets of a calendar day with all test types', async () => {
-		const cookie = await getCookie({ id: user.id, app_access: true });
+		const cookie = await getCookie({ id: user.id, user_account_id: user.accountId, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/stats?period=${toDate(day)}`).set('Cookie', cookie).send().expect(200).expect({
 			stats: [
@@ -113,7 +113,7 @@ describe('Get Probe Stats', () => {
 
 	it('returns daily buckets for monthly periods', async () => {
 		await insertRow(PROBE_UUID, day, 'mtr', { assigned: 1, finished: 1 });
-		const cookie = await getCookie({ id: user.id, app_access: true });
+		const cookie = await getCookie({ id: user.id, user_account_id: user.accountId, app_access: true });
 
 		await requestAgent.get(`/v1/probes/${PROBE_ID}/stats?period=month`).set('Cookie', cookie).send().expect(200).expect({
 			stats: [
@@ -136,7 +136,7 @@ describe('Get Probe Stats', () => {
 	});
 
 	it('rejects unsupported periods and parameters', async () => {
-		const cookie = await getCookie({ id: user.id, app_access: true });
+		const cookie = await getCookie({ id: user.id, user_account_id: user.accountId, app_access: true });
 
 		for (const query of [ '', '?period=hour', '?period=2026-02-30', '?period=2000', `?period=${new Date().getUTCFullYear() + 2}`, '?period=day&from=2026-01-01' ]) {
 			const response = await requestAgent.get(`/v1/probes/${PROBE_ID}/stats${query}`).set('Cookie', cookie).send().expect(400);

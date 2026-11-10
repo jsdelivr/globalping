@@ -110,7 +110,7 @@ describe('Restart Probe', () => {
 
 	it('should respond with 404 if probe is offline', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
-		const jwt = await getSignedJwt({ id: user.id, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, user_account_id: user.accountId, app_access: true });
 
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(404);
 	});
@@ -120,7 +120,7 @@ describe('Restart Probe', () => {
 		nockGeoIpProviders();
 		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
 		const restartSignal = new Promise<void>(resolve => probe!.once('probe:sigkill', resolve));
-		const jwt = await getSignedJwt({ id: user.id, app_access: true });
+		const jwt = await getSignedJwt({ id: user.id, user_account_id: user.accountId, app_access: true });
 
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`).set('Cookie', `${sessionConfig.cookieName}=${jwt}`).send().expect(204);
 		await restartSignal;

@@ -15,7 +15,6 @@ describe('adopted probes', () => {
 			id: '89da69bd-a236-4ab7-9c5d-b5f52ce09959',
 			adoption_token: 'adoptionTokenValue',
 			github_username: 'jimaek',
-			github_organizations: JSON.stringify([ 'jsdelivr' ]),
 			default_prefix: 'jsdelivr',
 			public_probes: true,
 		});
