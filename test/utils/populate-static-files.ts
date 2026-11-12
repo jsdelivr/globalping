@@ -6,6 +6,7 @@ import {
 	sourceList as ipSourceList,
 	populateMemList as populateMemIpList,
 	updateList as updateListIp,
+	cloudflareRangesUrl,
 } from '../../src/lib/malware/ip.js';
 import {
 	sourceList as domainSourceList,
@@ -42,6 +43,9 @@ export const populateIpList = async (): Promise<void> => {
 			.get(url.pathname)
 			.reply(200, ipMockResult);
 	}
+
+	const cloudflareUrl = new URL(cloudflareRangesUrl);
+	nock(cloudflareUrl.origin).get(cloudflareUrl.pathname).reply(200, { result: { ipv4_cidrs: [], ipv6_cidrs: [] } });
 
 	await updateListIp();
 	await populateMemIpList();
