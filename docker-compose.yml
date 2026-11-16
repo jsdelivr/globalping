@@ -16,7 +16,7 @@ services:
       - ./.env.redis
     restart: unless-stopped
     stop_signal: SIGINT
-    stop_grace_period: 30m
+    stop_grace_period: 10m
   redis-standalone-2:
     image: redis/redis-stack-server:7.4.0-v1
     ports:
@@ -28,7 +28,7 @@ services:
       - ./.env.redis
     restart: unless-stopped
     stop_signal: SIGINT
-    stop_grace_period: 30m
+    stop_grace_period: 10m
   redis-standalone-3:
     image: redis/redis-stack-server:7.4.0-v1
     ports:
@@ -40,7 +40,7 @@ services:
       - ./.env.redis
     restart: unless-stopped
     stop_signal: SIGINT
-    stop_grace_period: 30m
+    stop_grace_period: 10m
   redis-node-01:
     <<: *redis-node-image
     command: [ "bash", "/home/runner/mounted/node.sh", "7101" ]
@@ -51,7 +51,7 @@ services:
     env_file:
       - ./.env.redis
     restart: unless-stopped
-    stop_grace_period: 30m
+    stop_grace_period: 10m
   redis-node-02:
     <<: *redis-node-image
     command: [ "bash", "/home/runner/mounted/node.sh", "7102" ]
@@ -62,7 +62,7 @@ services:
     env_file:
       - ./.env.redis
     restart: unless-stopped
-    stop_grace_period: 30m
+    stop_grace_period: 10m
   redis-node-03:
     <<: *redis-node-image
     command: [ "bash", "/home/runner/mounted/node.sh", "7103" ]
@@ -73,7 +73,7 @@ services:
     env_file:
       - ./.env.redis
     restart: unless-stopped
-    stop_grace_period: 30m
+    stop_grace_period: 10m
   redis-node-04:
     <<: *redis-node-image
     command: [ "bash", "/home/runner/mounted/node.sh", "7104" ]
@@ -84,7 +84,7 @@ services:
     env_file:
       - ./.env.redis
     restart: unless-stopped
-    stop_grace_period: 30m
+    stop_grace_period: 10m
   redis-node-05:
     <<: *redis-node-image
     command: [ "bash", "/home/runner/mounted/node.sh", "7105" ]
@@ -95,7 +95,7 @@ services:
     env_file:
       - ./.env.redis
     restart: unless-stopped
-    stop_grace_period: 30m
+    stop_grace_period: 10m
   redis-node-06:
     <<: *redis-node-image
     command: [ "bash", "/home/runner/mounted/node.sh", "7106" ]
@@ -106,7 +106,7 @@ services:
     env_file:
       - ./.env.redis
     restart: unless-stopped
-    stop_grace_period: 30m
+    stop_grace_period: 10m
   redis-cluster-creator:
     image: redis/redis-stack-server:7.4.0-v1
     command: bash -c 'redis-cli -a "$$REDIS_PASSWORD" --cluster create $$REDIS_PUBLIC_IP:7101 $$REDIS_PUBLIC_IP:7102 $$REDIS_PUBLIC_IP:7103 $$REDIS_PUBLIC_IP:7104 $$REDIS_PUBLIC_IP:7105 $$REDIS_PUBLIC_IP:7106 --cluster-replicas 0 --cluster-yes'
