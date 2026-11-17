@@ -6,6 +6,7 @@ import type RedisCache from '../../../src/lib/cache/redis-cache.js';
 describe('RedisCache', () => {
 	const sandbox = sinon.createSandbox();
 	const redisClient = {
+		withCommandOptions: sandbox.stub().returnsThis(),
 		set: sandbox.stub(),
 		get: sandbox.stub(),
 		del: sandbox.stub(),

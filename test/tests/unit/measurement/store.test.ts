@@ -53,6 +53,7 @@ describe('measurement store', () => {
 	const sandbox = sinon.createSandbox();
 	const enqueueForOffloadStub = sandbox.stub();
 	const redisMock = {
+		withCommandOptions: sandbox.stub().returnsThis(),
 		compressedJsonCompress: sandbox.stub(),
 		compressedJsonGet: sandbox.stub(),
 		compressedJsonGetBuffer: sandbox.stub(),
