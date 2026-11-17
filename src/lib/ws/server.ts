@@ -33,7 +33,7 @@ export type WsServerNamespace = Namespace<DefaultEventsMap, DefaultEventsMap, De
 export const PROBES_NAMESPACE = '/probes';
 
 export const initWsServer = async (probeOverride: ProbeOverride) => {
-	const redis = getRedisClient();
+	const redis = getRedisClient().withCommandOptions({ timeout: 5000 });
 	const [ subClient1, subClient2 ] = await Promise.all([ initSubscriptionRedisClient(), initSubscriptionRedisClient() ]);
 
 	const io: WsServer = new Server({

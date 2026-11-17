@@ -62,7 +62,9 @@ export class MeasurementStore {
 	private offloader = new MeasurementStoreOffloader(measurementStoreClient, this);
 	private probeTestStats = getProbeTestStats();
 
-	constructor (private readonly redis: RedisCluster) {}
+	constructor (private readonly redis: RedisCluster) {
+		this.redis = redis.withCommandOptions({ timeout: 60_000 }) as RedisCluster;
+	}
 
 	async getMeasurementBufferCompressed (id: string): Promise<Buffer | null> {
 		return this.getFromRedisOrOffloaderBufferCompressed(id);

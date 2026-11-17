@@ -5,7 +5,9 @@ import type { CacheInterface } from './cache-interface.js';
 const logger = scopedLogger('redis-cache');
 
 export default class RedisCache implements CacheInterface {
-	constructor (private readonly redis: RedisClient) {}
+	constructor (private readonly redis: RedisClient) {
+		this.redis = redis.withCommandOptions({ timeout: 5000 });
+	}
 
 	async set (key: string, value: unknown, ttl: number = 0): Promise<void> {
 		try {

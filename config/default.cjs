@@ -40,12 +40,18 @@ module.exports = {
 				1: 'redis://localhost:7102',
 				2: 'redis://localhost:7103',
 			},
-			options: {},
+			options: {
+				RESP: 3,
+				commandOptions: { timeout: undefined },
+			},
 		},
 		sharedOptions: {
+			RESP: 3,
+			commandOptions: { timeout: undefined },
 			password: 'PASSWORD',
 			socket: {
 				tls: false,
+				keepAliveInitialDelay: 5000,
 			},
 		},
 	},
