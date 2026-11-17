@@ -12,6 +12,7 @@ import { initSubscriptionRedisClient } from '../../../../src/lib/redis/subscript
 describe('SyncedProbeList', () => {
 	const sandbox = sinon.createSandbox();
 	const redisClient = getRedisClient().duplicate();
+	const redisWithCommandOptions = sandbox.stub(redisClient, 'withCommandOptions');
 	let subRedisClient: RedisClient;
 	const localFetchSocketsStub = sandbox.stub();
 	const redisXAdd = sandbox.stub(redisClient, 'xAdd');
@@ -51,6 +52,7 @@ describe('SyncedProbeList', () => {
 	let syncedProbeList: SyncedProbeList;
 
 	beforeEach(async () => {
+		redisWithCommandOptions.returns(redisClient);
 		redisXRange.resolves([]);
 		redisJsonGet.callThrough();
 		redisPExpire.callThrough();
@@ -68,6 +70,14 @@ describe('SyncedProbeList', () => {
 		// Clear TTLCache to cancel pending expiry timers which can fire during later tests.
 		(syncedProbeList as unknown as { nodeData: { clear(): void } }).nodeData.clear();
 		sandbox.reset();
+	});
+
+	it('handles a null stream reply without changing the probe list', async () => {
+		redisXRange.resolves(null);
+
+		await syncedProbeList.syncPull();
+
+		expect(syncedProbeList.getProbes()).to.deep.equal([]);
 	});
 
 	it('updates and emits local probes during sync', async () => {

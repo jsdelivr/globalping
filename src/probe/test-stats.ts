@@ -85,7 +85,7 @@ export class ProbeTestStats {
 
 	async getFlushBacklog (): Promise<{ count: number; oldestAge: number }> {
 		const now = Date.now();
-		const hours = await this.getClosedBuckets(now);
+		const hours = await this.getClosedBuckets(now, this.redis.withCommandOptions({ timeout: 5000 }));
 
 		return {
 			count: hours.length,
@@ -110,8 +110,8 @@ export class ProbeTestStats {
 		}, Math.round(Math.random() * MAX_FLUSH_INTERVAL)).unref();
 	}
 
-	private async getClosedBuckets (now = Date.now()): Promise<number[]> {
-		const hours = await this.redis.zRangeByScore(BUCKETS_KEY, 0, now - HOUR - MAX_MEASUREMENT_DURATION - SETTLE_DELAY);
+	private async getClosedBuckets (now = Date.now(), redis = this.redis): Promise<number[]> {
+		const hours = await redis.zRangeByScore(BUCKETS_KEY, 0, now - HOUR - MAX_MEASUREMENT_DURATION - SETTLE_DELAY);
 		return hours.map(Number);
 	}
 

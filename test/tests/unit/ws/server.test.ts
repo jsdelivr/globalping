@@ -7,6 +7,7 @@ describe('ws server', () => {
 
 	const sandbox = sinon.createSandbox();
 	const redisClient = {
+		withCommandOptions: sandbox.stub().returnsThis(),
 		duplicate: () => redisClient,
 		connect: sandbox.stub(),
 		xAdd: sandbox.stub().resolves(null),

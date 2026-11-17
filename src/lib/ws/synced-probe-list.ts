@@ -87,6 +87,7 @@ export class SyncedProbeList extends EventEmitter {
 		private readonly probeOverride: ProbeOverride,
 	) {
 		super();
+		this.redis = redis.withCommandOptions({ timeout: 5000 });
 		this.setMaxListeners(Infinity);
 		this.nodeId = randomBytes(8).toString('hex');
 		this.rawProbes = [];
@@ -417,7 +418,7 @@ export class SyncedProbeList extends EventEmitter {
 		this.lastPullTimestamp = now;
 
 		// Returns an *inclusive* range starting from this.lastReadEventId
-		const events = await this.redis.xRange(this.remoteEventsStream, this.lastReadEventId, '+');
+		const events = await this.redis.xRange(this.remoteEventsStream, this.lastReadEventId, '+') ?? [];
 		const hasMissedEvents = events[0]?.id !== this.lastReadEventId;
 
 		if (!hasMissedEvents) {

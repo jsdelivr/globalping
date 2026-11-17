@@ -6,7 +6,7 @@ This policy should be read together with our [Privacy Policy](https://globalping
 
 ## Who we are
 
-This website is operated by Volentio JSD Limited (_“Volentio JSD”,_ "us", "we", or "our") (trading as Globalping).
+This website is operated by Globalping Limited ("us", "we", or "our") (trading as Globalping).
 
 ## Our website
 
@@ -46,4 +46,4 @@ If you wish to contact our Data Protection Team, please send an email to legal@g
 
 ## Changes to this policy
 
-This policy was published on November 16, 2024 and last updated on November 16, 2024. We may change this policy from time to time. You are advised to review this Privacy Policy periodically for any changes.
+This policy was published on November 16, 2024 and last updated on November 6, 2026. We may change this policy from time to time. You are advised to review this Privacy Policy periodically for any changes.
