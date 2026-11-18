@@ -17,7 +17,7 @@ export const registerGetProbeLogsRoute = (router: ExtendedRouter, context: IoCon
 			throw createHttpError(400, valid.error.message, { type: 'validation_error' });
 		}
 
-		const probe = getAuthorizedProbe(ctx, context.adoptedProbes, true);
+		const probe = await getAuthorizedProbe(ctx, context.adoptedProbes, true);
 		const { after, before, scopes, search } = valid.value;
 		const { logs, lastId, firstId, hasOlder } = await probeLogStorage.readLogs(probe.uuid, { after, before, scopes, search });
 

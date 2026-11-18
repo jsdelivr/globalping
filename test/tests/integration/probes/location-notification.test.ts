@@ -73,7 +73,7 @@ describe('Probe location notifications', () => {
 		nockGeoIpProviders();
 		await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
 
-		let payload: { account?: string; type?: string } | undefined;
+		let payload: { account_id?: string; type?: string } | undefined;
 
 		nock('https://dash-directus.globalping.io').post('/notifications', (body) => {
 			payload = body as typeof payload;
@@ -83,7 +83,7 @@ describe('Probe location notifications', () => {
 		await getIoContext().adoptedProbes.syncDashboardData();
 		await setTimeout(100);
 
-		expect(payload?.account).to.equal(org.accountId);
+		expect(payload?.account_id).to.equal(org.accountId);
 		expect(payload?.type).to.equal('probe_location_changed');
 	});
 

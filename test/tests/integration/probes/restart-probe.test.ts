@@ -82,7 +82,7 @@ describe('Restart Probe', () => {
 	});
 
 	it('should respond with 403 if the user is only a viewer of the org they act for', async () => {
-		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: viewerOrg.accountId } as Adoption);
 		const jwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: viewerOrg.accountId, active_account_role: 'viewer' });
 
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
@@ -92,7 +92,7 @@ describe('Restart Probe', () => {
 	});
 
 	it('should respond with 403 if the user is only a member of the org they act for', async () => {
-		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: memberOrg.accountId } as Adoption);
 		const jwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: memberOrg.accountId, active_account_role: 'member' });
 
 		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
@@ -101,7 +101,7 @@ describe('Restart Probe', () => {
 			.expect(403);
 	});
 
-	it('should respond with 404 if user is admin and probe does not exist', async () => {
+	it('should respond with 404 if user is a directus admin and probe does not exist', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(null);
 		const jwt = await getSignedJwt({ id: 'admin-user-id', admin_access: true, app_access: true });
 
@@ -126,7 +126,7 @@ describe('Restart Probe', () => {
 		await restartSignal;
 	});
 
-	it('should restart an org probe for a global admin acting as a viewer of that org', async () => {
+	it('should restart an org probe for a directus admin acting as a viewer of that org', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: viewerOrg.accountId } as Adoption);
 		nockGeoIpProviders();
 		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
@@ -141,7 +141,7 @@ describe('Restart Probe', () => {
 		await restartSignal;
 	});
 
-	it('should restart an org probe for an admin of that org', async () => {
+	it('should restart an org probe for an org admin', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: adminOrg.accountId } as Adoption);
 		nockGeoIpProviders();
 		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
@@ -156,6 +156,68 @@ describe('Restart Probe', () => {
 		await restartSignal;
 	});
 
+	it('should restart a personal probe while the session acts for an org', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
+		nockGeoIpProviders();
+		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
+		const restartSignal = new Promise<void>(resolve => probe!.once('probe:sigkill', resolve));
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: viewerOrg.accountId, active_account_role: 'viewer' });
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(204);
+
+		await restartSignal;
+	});
+
+	it('should restart a probe of an org where the user is an org admin while the session acts for another account', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: adminOrg.accountId } as Adoption);
+		nockGeoIpProviders();
+		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
+		const restartSignal = new Promise<void>(resolve => probe!.once('probe:sigkill', resolve));
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: user.accountId, active_account_role: 'owner' });
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(204);
+
+		await restartSignal;
+	});
+
+	it('should respond with 403 for a probe of an org where the user is only a member while the session acts for another account', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: memberOrg.accountId } as Adoption);
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: user.accountId, active_account_role: 'owner' });
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(403);
+	});
+
+	it('should respond with 404 for a probe of an org the user is not in while the session acts for another account', async () => {
+		const otherOrg = await createOrg(dashboardClient);
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: otherOrg.accountId } as Adoption);
+		const jwt = await getSignedJwt({ id: user.id, app_access: true, active_account_id: user.accountId, active_account_role: 'owner' });
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
+			.set('Cookie', `${sessionConfig.cookieName}=${jwt}`)
+			.send()
+			.expect(404);
+	});
+
+	it('should respond with 404 for a token of another account than the probe', async () => {
+		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
+		nockGeoIpProviders();
+		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
+
+		await requestAgent.post(`/v1/probes/${PROBE_ID}/restart`)
+			.set('Authorization', `Bearer ${ADMIN_ORG_TOKEN}`)
+			.send()
+			.expect(404);
+	});
+
 	it('should respond with 403 for a token of an org where the user is only a member', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: memberOrg.accountId } as Adoption);
 		nockGeoIpProviders();
@@ -167,7 +229,7 @@ describe('Restart Probe', () => {
 			.expect(403);
 	});
 
-	it('should restart an org probe for a token of an org where the user is an admin', async () => {
+	it('should restart an org probe for a token of an org where the user is an org admin', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns({ ...mockAdoption, accountId: adminOrg.accountId } as Adoption);
 		nockGeoIpProviders();
 		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });
@@ -181,7 +243,7 @@ describe('Restart Probe', () => {
 		await restartSignal;
 	});
 
-	it('should restart an existing probe for an admin', async () => {
+	it('should restart an existing probe for a directus admin', async () => {
 		sandbox.stub(getIoContext().adoptedProbes, 'getById').returns(mockAdoption);
 		nockGeoIpProviders();
 		probe = await addFakeProbe({}, { query: { uuid: PROBE_UUID } });

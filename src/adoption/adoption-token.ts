@@ -134,17 +134,23 @@ export class AdoptionToken {
 	}
 
 	async validateToken (token: string, probe: SocketProbe): Promise<{ message: string | null; level?: 'info' | 'warn'; adopted: boolean }> {
-		const accountId = await this.getAccountByToken(token);
+		let accountId = await this.getAccountByToken(token);
 
 		if (!accountId) {
-			logger.info('User not found for the provided adoption token.', { token });
-			return { message: `User not found for the provided adoption token: ${token}.`, level: 'warn', adopted: false };
+			return this.unknownToken(token);
 		}
 
 		let dProbe: DProbe | null = this.adoptedProbes.getByIp(probe.ipAddress) || this.adoptedProbes.getByUuid(probe.uuid);
 
 		if (!dProbe || dProbe.accountId !== accountId) {
-			dProbe = await this.fetchDProbe(probe);
+			[ dProbe, accountId ] = await Promise.all([
+				this.fetchDProbe(probe),
+				this.fetchSpecificAccount(token), // Tokens and probes caches can lag a probe transfer by up to a minute, so the DB re-checks before the probe is moved.
+			]);
+
+			if (!accountId) {
+				return this.unknownToken(token);
+			}
 		}
 
 		if (dProbe && dProbe.accountId === accountId) {
@@ -154,6 +160,11 @@ export class AdoptionToken {
 		await this.adoptProbe(probe, accountId);
 
 		return { message: 'Probe successfully adopted by token.', adopted: true };
+	}
+
+	private unknownToken (token: string) {
+		logger.info('User not found for the provided adoption token.', { token });
+		return { message: `User not found for the provided adoption token: ${token}.`, level: 'warn' as const, adopted: false };
 	}
 
 	private async fetchDProbe (probe: SocketProbe) {

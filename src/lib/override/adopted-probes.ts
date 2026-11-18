@@ -839,7 +839,7 @@ export class AdoptedProbes {
 		}
 
 		await got.post(`${directusUrl}/notifications`, {
-			json: { account: accountId, type, subject, message },
+			json: { account_id: accountId, type, subject, message },
 			headers: {
 				Authorization: `Bearer ${systemKey}`,
 			},
