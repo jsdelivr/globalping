@@ -38,6 +38,8 @@ export const scopedLoggerWithPrefix = (scope: string, prefix: string, parent: Lo
 			};
 		}
 
+		// Preserve the Proxy receiver so forwarded methods use the prefixed log method.
+		// eslint-disable-next-line @typescript-eslint/unbound-method
 		return target[prop];
 	},
 });

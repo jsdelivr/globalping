@@ -21,6 +21,8 @@ describe('index file', () => {
 	before(async () => {
 		redis = getRedisClient();
 		persistentRedis = getPersistentRedisClient();
+		sandbox.stub(redis, 'disconnect').resolves();
+		sandbox.stub(persistentRedis, 'disconnect').resolves();
 	});
 
 	beforeEach(async () => {
@@ -31,6 +33,7 @@ describe('index file', () => {
 
 	after(() => {
 		td.reset();
+		sandbox.restore();
 		redis.del('testfield');
 		persistentRedis.del('testfield');
 	});

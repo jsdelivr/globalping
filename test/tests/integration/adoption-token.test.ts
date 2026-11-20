@@ -44,19 +44,20 @@ describe('Adoption token', () => {
 		await dashboardClient('directus_users').where({ id: user.id }).delete();
 	});
 
-	const adoptWithToken = async (adoptionToken: string) => {
+	const adoptWithToken = async (adoptionToken: string, expectAdoption = true) => {
 		nockGeoIpProviders();
 
 		let adoptedForAccount: string | undefined;
 
-		nock('https://dash-directus.globalping.io').put('/adoption-code/adopt-by-token', (body) => {
+		const adoption = nock('https://dash-directus.globalping.io').put('/adoption-code/adopt-by-token', (body) => {
 			adoptedForAccount = (body as { account: { id: string } }).account.id;
 			return true;
-		}).reply(200);
+		}).optionally(!expectAdoption).reply(200);
 
 		await addFakeProbe({ 'api:connect:adoption': adoptionStatusStub }, { query: { adoptionToken } });
 		await setTimeout(100);
 
+		adoption.done();
 		return adoptedForAccount;
 	};
 
@@ -188,7 +189,7 @@ describe('Adoption token', () => {
 			await dashboardClient('directus_users').where({ id: user.id }).update({ adoption_token: 'newUserToken' });
 			await dashboardClient('gp_orgs').where({ id: org.id }).update({ extra_adoption_tokens: JSON.stringify([{ github_username: 'user', token: 'adoptionTokenValue' }]) });
 
-			expect(await adoptWithToken('adoptionTokenValue')).to.equal(undefined);
+			expect(await adoptWithToken('adoptionTokenValue', false)).to.equal(undefined);
 			expect(adoptionStatusStub.callCount).to.equal(0);
 		});
 	});
