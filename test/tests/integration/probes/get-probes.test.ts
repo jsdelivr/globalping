@@ -352,10 +352,11 @@ describe('Get Probes', () => {
 		});
 
 		describe('probes adopted by an org', () => {
+			const orgId = randomUUID();
 			const uuid = '22222222-2222-4222-8222-222222222222';
 
 			before(async () => {
-				const org = await createOrg(dashboardClient, { name: 'acme', deprecated_prefix: 'old-acme', public_probes: true });
+				const org = await createOrg(dashboardClient, { id: orgId, name: 'acme', deprecated_prefix: 'old-acme', public_probes: true });
 
 				await dashboardClient(PROBES_TABLE).insert({
 					id: randomUUID(),
@@ -383,7 +384,8 @@ describe('Get Probes', () => {
 
 			after(async () => {
 				await dashboardClient(PROBES_TABLE).where({ uuid }).delete();
-				await dashboardClient('gp_orgs').delete();
+				await dashboardClient('gp_accounts').where({ org: orgId }).delete();
+				await dashboardClient('gp_orgs').where({ id: orgId }).delete();
 			});
 
 			it('should use the org name and the deprecated prefix of the org', () => {
