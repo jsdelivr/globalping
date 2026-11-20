@@ -321,6 +321,7 @@ describe('authenticate', () => {
 		it('should accept if valid cookie was passed', async () => {
 			const jwt = await new SignJWT({
 				id: user.id,
+				user_account_id: user.accountId,
 				app_access: true,
 			}).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);
 
@@ -375,6 +376,7 @@ describe('authenticate', () => {
 
 			const jwt = await new SignJWT({
 				id: user.id,
+				user_account_id: user.accountId,
 				app_access: true,
 				active_account_id: viewerOrg.accountId,
 			}).setProtectedHeader({ alg: 'HS256' }).setIssuedAt().setExpirationTime('1h').sign(sessionKey);

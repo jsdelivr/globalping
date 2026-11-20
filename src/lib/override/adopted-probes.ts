@@ -391,7 +391,7 @@ export class AdoptedProbes {
 				`${PROBES_TABLE}.*`,
 				this.sql.raw(`IF(${USERS_TABLE}.id IS NOT NULL OR ${ORGS_TABLE}.id IS NOT NULL, ${PROBES_TABLE}.account_id, NULL) AS accountId`),
 				this.sql.raw(`COALESCE(${ORGS_TABLE}.name, ${USERS_TABLE}.default_prefix) AS defaultPrefix`),
-				`${USERS_TABLE}.deprecated_prefix AS deprecatedPrefix`,
+				this.sql.raw(`COALESCE(${ORGS_TABLE}.deprecated_prefix, ${USERS_TABLE}.deprecated_prefix) AS deprecatedPrefix`),
 				this.sql.raw(`COALESCE(${ORGS_TABLE}.public_probes, ${USERS_TABLE}.public_probes) AS publicProbes`),
 				this.sql.raw(`COALESCE(${ORGS_TABLE}.adoption_token, ${USERS_TABLE}.adoption_token) AS adoptionToken`),
 				this.sql.raw(`${ORGS_TABLE}.extra_adoption_tokens AS extraAdoptionTokens`),
