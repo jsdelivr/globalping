@@ -92,6 +92,7 @@
 		"@types/sinon": "^22.0.2",
 		"@types/supertest": "^7.2.1",
 		"@types/validator": "^13.15.10",
+		"@typescript/native": "npm:typescript@^7.0.2",
 		"ajv": "^8.20.0",
 		"ajv-formats": "^3.0.1",
 		"better-ajv-errors": "^3.0.3",
@@ -113,11 +114,10 @@
 		"testdouble": "^4.0.0",
 		"ts-node": "^10.9.2",
 		"tsx": "^4.23.15",
-		"typescript": "npm:@typescript/typescript6@^6.0.2",
-		"typescript7": "npm:typescript@^7.0.2"
+		"typescript": "npm:@typescript/typescript6@^6.0.2"
 	},
 	"scripts": {
-		"build": "node node_modules/typescript7/bin/tsc && npm run download:files && npm run commit:hash && cp -r public dist",
+		"build": "tsc && npm run download:files && npm run commit:hash && cp -r public dist",
 		"commit:hash": "git rev-parse HEAD > data/LAST_API_COMMIT_HASH.txt || echo 'Failed to write the commit hash'",
 		"coverage": "npm run clean && c8 mocha 'test/tests/unit/**/*.test.ts' 'test/tests/integration/**/*.test.ts'",
 		"clean": "rimraf coverage",
@@ -134,7 +134,7 @@
 		"lint:docs": "spectral lint public/**/spec.yaml",
 		"lint:js": "eslint --cache .",
 		"lint:js:fix": "eslint --cache --fix .",
-		"lint:types": "node node_modules/typescript7/bin/tsc --noEmit",
+		"lint:types": "tsc --noEmit",
 		"test": "npm run lint && npm run test:mocha && npm run test:portman",
 		"test:dist": "node --test-reporter=spec test/dist.js",
 		"test:mocha": "TS_NODE_TRANSPILE_ONLY=false mocha 'test/tests/unit/**/*.test.ts' 'test/tests/integration/**/*.test.ts'",
