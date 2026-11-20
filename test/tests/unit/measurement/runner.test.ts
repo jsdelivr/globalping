@@ -26,7 +26,9 @@ describe('MeasurementRunner', () => {
 	const to = sandbox.stub();
 	const io = sandbox.createStubInstance(Server);
 	const store = sandbox.createStubInstance(MeasurementStore);
-	const router = sandbox.createStubInstance(ProbeRouter);
+	const router = sandbox.createStubInstance(ProbeRouter, {
+		findMatchingProbes: sandbox.stub(),
+	});
 	const recordMeasurement = sandbox.stub();
 	const recordMeasurementTime = sandbox.stub();
 	const recordNoProbesFound = sandbox.stub();

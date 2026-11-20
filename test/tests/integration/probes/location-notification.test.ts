@@ -75,7 +75,7 @@ describe('Probe location notifications', () => {
 
 		let payload: { account_id?: string; type?: string } | undefined;
 
-		nock('https://dash-directus.globalping.io').post('/notifications', (body) => {
+		const notification = nock('https://dash-directus.globalping.io').post('/notifications', (body) => {
 			payload = body as typeof payload;
 			return true;
 		}).reply(200);
@@ -83,6 +83,7 @@ describe('Probe location notifications', () => {
 		await getIoContext().adoptedProbes.syncDashboardData();
 		await setTimeout(100);
 
+		notification.done();
 		expect(payload?.account_id).to.equal(org.accountId);
 		expect(payload?.type).to.equal('probe_location_changed');
 	});
@@ -94,13 +95,14 @@ describe('Probe location notifications', () => {
 
 		let message = '';
 
-		nock('https://dash-directus.globalping.io').post('/notifications', (body) => {
+		const notification = nock('https://dash-directus.globalping.io').post('/notifications', (body) => {
 			message = (body as { message: string }).message;
 			return true;
 		}).reply(200);
 
 		await getIoContext().adoptedProbes.syncDashboardData();
 		await setTimeout(100);
+		notification.done();
 		expect(message).to.not.equal('');
 
 		// Directus fans an org notification out to its admins; here only the second one has it.

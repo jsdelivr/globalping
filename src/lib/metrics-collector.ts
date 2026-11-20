@@ -15,7 +15,7 @@ import { getProbeTestStats, type ProbeTestStats } from '../probe/test-stats.js';
 
 const logger = scopedLogger('metrics');
 const eventLoopMonitorResolution = 10;
-const measurementOffloadPendingStates = [ 'waiting', 'active', 'delayed', 'paused' ] as const;
+const measurementOffloadPendingStates = [ 'waiting', 'active', 'delayed' ] as const;
 
 export class MetricsCollector {
 	private readonly asyncSeries: Record<string, number[]> = {};

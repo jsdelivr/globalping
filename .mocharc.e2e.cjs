@@ -5,6 +5,7 @@ module.exports = {
 	'timeout': 40000,
 	'retries': process.env.CI ? 2 : 0,
 	'check-leaks': true,
+	'require': [ 'ts-node/register' ],
 	'file': [
 		path.join(__dirname, 'test/e2e/setup.ts'),
 	],
