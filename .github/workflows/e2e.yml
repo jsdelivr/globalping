@@ -73,10 +73,8 @@ jobs:
         run: |
           cp config/redis/.env.redis ./
           docker compose up -d
-      - name: Build
-        run: |
-          npm ci
-          npm run build
+      - name: Install test dependencies
+        run: npm ci
       - name: Test E2E
         run: |
           npm run test:e2e
