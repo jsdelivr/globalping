@@ -896,6 +896,24 @@ describe('resultSchema', () => {
 		}
 	});
 
+	it('ping: rejects out-of-range packet stats', () => {
+		for (const [ stat, value ] of [ [ 'total', -1 ], [ 'rcv', -1 ], [ 'drop', -1 ], [ 'loss', -1 ], [ 'loss', 101 ] ] as const) {
+			const result = _.cloneDeep(defaultPingResponseBody.results[0]!.result);
+			result.stats![stat] = value;
+
+			expect(pingResultSchema.validate(result).error, `${stat}: ${value}`).to.not.be.undefined;
+		}
+	});
+
+	it('mtr: rejects out-of-range packet stats', () => {
+		for (const [ stat, value ] of [ [ 'total', -1 ], [ 'rcv', -1 ], [ 'drop', -1 ], [ 'loss', -1 ], [ 'loss', 101 ] ] as const) {
+			const result = _.cloneDeep(defaultMtrResponseBody.results[0]!.result);
+			result.hops![0]!.stats[stat] = value;
+
+			expect(mtrResultSchema.validate(result).error, `${stat}: ${value}`).to.not.be.undefined;
+		}
+	});
+
 	it('mtr: rejects negative timing stats', () => {
 		for (const stat of [ 'min', 'max', 'avg', 'stDev', 'jMin', 'jMax', 'jAvg' ] as const) {
 			const result = _.cloneDeep(defaultMtrResponseBody.results[0]!.result);

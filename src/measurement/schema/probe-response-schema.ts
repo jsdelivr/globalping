@@ -42,10 +42,10 @@ export const pingResultSchema = Joi.object<PingResult>({
 		min: Joi.number().min(0).allow(null).required(),
 		max: Joi.number().min(0).allow(null).required(),
 		avg: Joi.number().min(0).allow(null).required(),
-		total: Joi.number().integer().allow(null).required(),
-		loss: Joi.number().allow(null).required(),
-		rcv: Joi.number().integer().allow(null).required(),
-		drop: Joi.number().integer().allow(null).required(),
+		total: Joi.number().integer().min(0).allow(null).required(),
+		loss: Joi.number().min(0).max(100).allow(null).required(),
+		rcv: Joi.number().integer().min(0).allow(null).required(),
+		drop: Joi.number().integer().min(0).allow(null).required(),
 	}),
 }).options({ convert: false });
 
@@ -70,7 +70,7 @@ export const dnsResultSchema = Joi.alternatives([
 		failureSource: failureSourceSchema,
 		rawOutput: Joi.string().max(10000).allow('').required(),
 		statusCodeName: Joi.string().max(1024).allow(null),
-		statusCode: Joi.number().integer().allow(null),
+		statusCode: Joi.number().integer().min(0).allow(null),
 		resolver: Joi.string().max(1024).allow(null),
 		timings: Joi.object({
 			total: Joi.number().min(0).required(),
@@ -79,7 +79,7 @@ export const dnsResultSchema = Joi.alternatives([
 			Joi.object({
 				name: Joi.string().max(1024).required(),
 				type: Joi.string().max(1024).required(),
-				ttl: Joi.number().integer().required(),
+				ttl: Joi.number().integer().min(0).required(),
 				class: Joi.string().max(1024).required(),
 				value: Joi.string().max(1024).required(),
 			}),
@@ -99,7 +99,7 @@ export const dnsResultSchema = Joi.alternatives([
 				Joi.object({
 					name: Joi.string().max(1024).required(),
 					type: Joi.string().max(1024).required(),
-					ttl: Joi.number().integer().required(),
+					ttl: Joi.number().integer().min(0).required(),
 					class: Joi.string().max(1024).required(),
 					value: Joi.string().max(1024).required(),
 				}),
@@ -116,7 +116,7 @@ export const mtrResultSchema = Joi.object<MtrResult>({
 	resolvedAddress: resolvedAddressSchema,
 	resolvedHostname: Joi.string().max(1024).allow(null),
 	hops: Joi.array().max(1024).items(Joi.object({
-		asn: Joi.array().max(1024).items(Joi.number().integer()).required(),
+		asn: Joi.array().max(1024).items(Joi.number().integer().min(0)).required(),
 		resolvedAddress: resolvedAddressSchema.required(),
 		resolvedHostname: Joi.string().max(1024).allow(null).required(),
 		stats: Joi.object({
@@ -127,10 +127,10 @@ export const mtrResultSchema = Joi.object<MtrResult>({
 			jMin: Joi.number().min(0).allow(null).required(),
 			jMax: Joi.number().min(0).allow(null).required(),
 			jAvg: Joi.number().min(0).allow(null).required(),
-			total: Joi.number().integer().required(),
-			loss: Joi.number().required(),
-			rcv: Joi.number().integer().required(),
-			drop: Joi.number().integer().required(),
+			total: Joi.number().integer().min(0).required(),
+			loss: Joi.number().min(0).max(100).required(),
+			rcv: Joi.number().integer().min(0).required(),
+			drop: Joi.number().integer().min(0).required(),
 		}).required(),
 		timings: Joi.array().max(1024).items(Joi.object({
 			rtt: Joi.number().min(0),
@@ -150,7 +150,7 @@ export const httpResultSchema = Joi.object<HttpResult>({
 		Joi.array().max(1024).items(Joi.string().max(10000).allow('')),
 	])),
 	truncated: Joi.boolean(),
-	statusCode: Joi.number().integer().allow(null),
+	statusCode: Joi.number().integer().min(0).allow(null),
 	statusCodeName: Joi.string().max(1024).allow('', null),
 	timings: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.number().integer().min(0).allow(null)),
 	tls: Joi.object({
@@ -170,7 +170,7 @@ export const httpResultSchema = Joi.object<HttpResult>({
 			CN: Joi.string().max(20000),
 		}).required(),
 		keyType: Joi.string().max(1024).valid('RSA', 'EC').allow(null).required(),
-		keyBits: Joi.number().integer().allow(null).required(),
+		keyBits: Joi.number().integer().min(0).allow(null).required(),
 		serialNumber: Joi.string().max(1024).required(),
 		fingerprint256: Joi.string().max(1024).required(),
 		publicKey: Joi.string().max(10000).allow(null).required(),
