@@ -152,7 +152,7 @@ export const httpResultSchema = Joi.object<HttpResult>({
 	truncated: Joi.boolean(),
 	statusCode: Joi.number().integer().allow(null),
 	statusCodeName: Joi.string().max(1024).allow('', null),
-	timings: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.number().integer().allow(null)),
+	timings: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.number().integer().min(0).allow(null)),
 	tls: Joi.object({
 		authorized: Joi.boolean().required(),
 		protocol: Joi.string().max(1024).allow(null).required(),

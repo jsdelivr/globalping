@@ -874,6 +874,15 @@ describe('resultSchema', () => {
 		}
 	});
 
+	it('http: rejects negative timings', () => {
+		for (const timing of [ 'total', 'download', 'firstByte', 'dns', 'tls', 'tcp' ] as const) {
+			const result = _.cloneDeep(defaultHttpResponseBody.results[0]!.result);
+			result.timings![timing] = -1;
+
+			expect(httpResultSchema.validate(result).error, timing).to.not.be.undefined;
+		}
+	});
+
 	for (const failureSource of [ 'target', 'resolver', 'internal' ] as const) {
 		it(`accepts failed results with the ${failureSource} failure source`, async () => {
 			const responseBody = _.cloneDeep(defaultPingResponseBody);
