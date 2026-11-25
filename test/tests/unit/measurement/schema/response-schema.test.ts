@@ -877,8 +877,10 @@ describe('resultSchema', () => {
 	it('http: rejects negative timings', () => {
 		for (const timing of [ 'total', 'download', 'firstByte', 'dns', 'tls', 'tcp' ] as const) {
 			const result = _.cloneDeep(defaultHttpResponseBody.results[0]!.result);
-			result.timings![timing] = -1;
+			result.timings![timing] = 0;
+			Joi.assert(result, httpResultSchema);
 
+			result.timings![timing] = -1;
 			expect(httpResultSchema.validate(result).error, timing).to.not.be.undefined;
 		}
 	});
@@ -886,8 +888,10 @@ describe('resultSchema', () => {
 	it('ping: rejects negative timing stats', () => {
 		for (const stat of [ 'min', 'max', 'avg' ] as const) {
 			const result = _.cloneDeep(defaultPingResponseBody.results[0]!.result);
-			result.stats![stat] = -1;
+			result.stats![stat] = 0;
+			Joi.assert(result, pingResultSchema);
 
+			result.stats![stat] = -1;
 			expect(pingResultSchema.validate(result).error, stat).to.not.be.undefined;
 		}
 	});
@@ -895,8 +899,10 @@ describe('resultSchema', () => {
 	it('mtr: rejects negative timing stats', () => {
 		for (const stat of [ 'min', 'max', 'avg', 'stDev', 'jMin', 'jMax', 'jAvg' ] as const) {
 			const result = _.cloneDeep(defaultMtrResponseBody.results[0]!.result);
-			result.hops![0]!.stats[stat] = -1;
+			result.hops![0]!.stats[stat] = 0;
+			Joi.assert(result, mtrResultSchema);
 
+			result.hops![0]!.stats[stat] = -1;
 			expect(mtrResultSchema.validate(result).error, stat).to.not.be.undefined;
 		}
 	});
