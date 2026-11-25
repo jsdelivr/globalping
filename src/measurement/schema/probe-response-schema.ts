@@ -1,5 +1,15 @@
 import Joi from 'joi';
+import { isIP } from 'node:net';
 import { DnsRegularResult, DnsTraceResult, HttpResult, MeasurementProgressMessage, MeasurementResultMessage, MtrResult, PingResult, TestResult, TracerouteResult } from '../types.js';
+
+const resolvedAddressSchema = Joi.string().max(1024).allow(null).custom((address: string, helpers) => {
+	// Node rejects leading zeros in IPv4 octets, which Joi's IP rule accepts.
+	if (!address.includes('%') && isIP(address)) {
+		return address;
+	}
+
+	return helpers.message({ custom: '{{#label}} must be a valid IP address' });
+});
 
 const failureSourceSchema = Joi.when('status', {
 	is: 'failed',
@@ -22,7 +32,7 @@ export const pingResultSchema = Joi.object<PingResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
 	failureSource: failureSourceSchema,
 	rawOutput: Joi.string().max(10000).allow('').required(),
-	resolvedAddress: Joi.string().max(1024).allow(null),
+	resolvedAddress: resolvedAddressSchema,
 	resolvedHostname: Joi.string().max(1024).allow(null),
 	timings: Joi.array().max(1024).items(Joi.object({
 		rtt: Joi.number().min(0).required(),
@@ -43,10 +53,10 @@ export const tracerouteResultSchema = Joi.object<TracerouteResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
 	failureSource: failureSourceSchema,
 	rawOutput: Joi.string().max(10000).allow('').required(),
-	resolvedAddress: Joi.string().max(1024).allow(null),
+	resolvedAddress: resolvedAddressSchema,
 	resolvedHostname: Joi.string().max(1024).allow(null),
 	hops: Joi.array().max(1024).items(Joi.object({
-		resolvedAddress: Joi.string().max(1024).allow(null).required(),
+		resolvedAddress: resolvedAddressSchema.required(),
 		resolvedHostname: Joi.string().max(1024).allow(null).required(),
 		timings: Joi.array().max(1024).items(Joi.object({
 			rtt: Joi.number().min(0).required(),
@@ -103,11 +113,11 @@ export const mtrResultSchema = Joi.object<MtrResult>({
 	status: Joi.string().valid('finished', 'failed').required(),
 	failureSource: failureSourceSchema,
 	rawOutput: Joi.string().max(10000).allow('').required(),
-	resolvedAddress: Joi.string().max(1024).allow(null),
+	resolvedAddress: resolvedAddressSchema,
 	resolvedHostname: Joi.string().max(1024).allow(null),
 	hops: Joi.array().max(1024).items(Joi.object({
 		asn: Joi.array().max(1024).items(Joi.number().integer()).required(),
-		resolvedAddress: Joi.string().max(1024).allow(null).required(),
+		resolvedAddress: resolvedAddressSchema.required(),
 		resolvedHostname: Joi.string().max(1024).allow(null).required(),
 		stats: Joi.object({
 			min: Joi.number().allow(null).required(),
@@ -134,7 +144,7 @@ export const httpResultSchema = Joi.object<HttpResult>({
 	rawOutput: Joi.string().max(20200).allow('').required(),
 	rawHeaders: Joi.string().max(10100).allow('', null),
 	rawBody: Joi.string().max(10100).allow('', null),
-	resolvedAddress: Joi.string().max(1024).allow(null),
+	resolvedAddress: resolvedAddressSchema,
 	headers: Joi.object().max(1024).pattern(Joi.string().max(1024), Joi.alternatives([
 		Joi.string().max(10000).allow(''),
 		Joi.array().max(1024).items(Joi.string().max(10000).allow('')),

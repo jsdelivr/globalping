@@ -3,7 +3,7 @@ import request from 'supertest';
 import { expect } from 'chai';
 import { createServer } from 'node:http';
 import * as sinon from 'sinon';
-import { dnsResultSchema, httpResultSchema, mtrResultSchema, pingResultSchema, tracerouteResultSchema } from '../../../../../src/measurement/schema/probe-response-schema.js';
+import { dnsResultSchema, httpResultSchema, mtrResultSchema, pingResultSchema, resultSchema, tracerouteResultSchema } from '../../../../../src/measurement/schema/probe-response-schema.js';
 import _ from 'lodash';
 import { DnsResult, HttpResult, MtrResult, PingResult, TracerouteResult } from '../../../../../src/measurement/types.js';
 
@@ -532,6 +532,45 @@ describe('resultSchema', () => {
 	beforeEach(async () => {
 		sandbox.reset();
 	});
+
+	for (const { type, results } of [ defaultPingResponseBody, defaultTracerouteResponseBody, defaultMtrResponseBody, defaultHttpResponseBody ]) {
+		it(`${type}: validates resolvedAddress as a nullable IP address`, () => {
+			const result = { ...results[0]!.result };
+			const message = { measurementId: 'measurement-id', testId: 'test-id', result };
+
+			delete result.resolvedAddress;
+			Joi.assert(message, resultSchema);
+
+			for (const address of [ '192.168.2.1', '2001:db8::1', '::ffff:192.168.2.1', null ]) {
+				result.resolvedAddress = address;
+				Joi.assert(message, resultSchema);
+			}
+
+			for (const address of [ 'example.com', '192.168.2.1/32', '192.0.2.08', '::ffff:192.0.2.08', 'fe80::1%eth0' ]) {
+				result.resolvedAddress = address;
+				expect(resultSchema.validate(message).error, address).to.not.be.undefined;
+			}
+		});
+	}
+
+	for (const { type, results } of [ defaultTracerouteResponseBody, defaultMtrResponseBody ]) {
+		it(`${type}: validates hop resolvedAddress as a nullable IP address`, () => {
+			const result = _.cloneDeep(results[0]!.result);
+			const message = { measurementId: 'measurement-id', testId: 'test-id', result };
+			const hop = result.hops![0]!;
+
+			for (const address of [ '192.168.2.1', '2001:db8::1', null ]) {
+				hop.resolvedAddress = address;
+				Joi.assert(message, resultSchema);
+			}
+
+			hop.resolvedAddress = '::::';
+			expect(resultSchema.validate(message).error).to.not.be.undefined;
+
+			_.unset(hop, 'resolvedAddress');
+			expect(resultSchema.validate(message).error).to.not.be.undefined;
+		});
+	}
 
 	it('ping: accept regular valid response', async () => {
 		const responseBody = _.cloneDeep(defaultPingResponseBody);
