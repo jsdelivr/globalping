@@ -874,6 +874,57 @@ describe('resultSchema', () => {
 		}
 	});
 
+	it('http: rejects negative timings', () => {
+		for (const timing of [ 'total', 'download', 'firstByte', 'dns', 'tls', 'tcp' ] as const) {
+			const result = _.cloneDeep(defaultHttpResponseBody.results[0]!.result);
+			result.timings![timing] = 0;
+			Joi.assert(result, httpResultSchema);
+
+			result.timings![timing] = -1;
+			expect(httpResultSchema.validate(result).error, timing).to.not.be.undefined;
+		}
+	});
+
+	it('ping: rejects negative timing stats', () => {
+		for (const stat of [ 'min', 'max', 'avg' ] as const) {
+			const result = _.cloneDeep(defaultPingResponseBody.results[0]!.result);
+			result.stats![stat] = 0;
+			Joi.assert(result, pingResultSchema);
+
+			result.stats![stat] = -1;
+			expect(pingResultSchema.validate(result).error, stat).to.not.be.undefined;
+		}
+	});
+
+	it('ping: rejects out-of-range packet stats', () => {
+		for (const [ stat, value ] of [ [ 'total', -1 ], [ 'rcv', -1 ], [ 'drop', -1 ], [ 'loss', -1 ], [ 'loss', 101 ] ] as const) {
+			const result = _.cloneDeep(defaultPingResponseBody.results[0]!.result);
+			result.stats![stat] = value;
+
+			expect(pingResultSchema.validate(result).error, `${stat}: ${value}`).to.not.be.undefined;
+		}
+	});
+
+	it('mtr: rejects out-of-range packet stats', () => {
+		for (const [ stat, value ] of [ [ 'total', -1 ], [ 'rcv', -1 ], [ 'drop', -1 ], [ 'loss', -1 ], [ 'loss', 101 ] ] as const) {
+			const result = _.cloneDeep(defaultMtrResponseBody.results[0]!.result);
+			result.hops![0]!.stats[stat] = value;
+
+			expect(mtrResultSchema.validate(result).error, `${stat}: ${value}`).to.not.be.undefined;
+		}
+	});
+
+	it('mtr: rejects negative timing stats', () => {
+		for (const stat of [ 'min', 'max', 'avg', 'stDev', 'jMin', 'jMax', 'jAvg' ] as const) {
+			const result = _.cloneDeep(defaultMtrResponseBody.results[0]!.result);
+			result.hops![0]!.stats[stat] = 0;
+			Joi.assert(result, mtrResultSchema);
+
+			result.hops![0]!.stats[stat] = -1;
+			expect(mtrResultSchema.validate(result).error, stat).to.not.be.undefined;
+		}
+	});
+
 	for (const failureSource of [ 'target', 'resolver', 'internal' ] as const) {
 		it(`accepts failed results with the ${failureSource} failure source`, async () => {
 			const responseBody = _.cloneDeep(defaultPingResponseBody);
