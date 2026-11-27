@@ -700,6 +700,15 @@ describe('resultSchema', () => {
 					},
 					resolver: 'a.root-servers.net',
 				},
+				{
+					statusCodeName: null,
+					statusCode: null,
+					answers: [],
+					timings: {
+						total: 7,
+					},
+					resolver: 'a.gtld-servers.net',
+				},
 			],
 		};
 

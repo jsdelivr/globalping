@@ -120,7 +120,7 @@ type DnsAnswer = {
 };
 
 export type DnsRegularResult = {
-	statusCodeName?: string;
+	statusCodeName?: string | null;
 	statusCode?: number | null;
 	answers?: DnsAnswer[];
 	resolver?: string | null;
