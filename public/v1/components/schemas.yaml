@@ -1080,7 +1080,14 @@ components:
               type: array
               description: An array containing details about each hop.
               items:
-                $ref: 'schemas.yaml#/components/schemas/DnsTestHopResult'
+                allOf:
+                  - type: object
+                    properties:
+                      statusCode:
+                        $ref: 'schemas.yaml#/components/schemas/DnsStatusCode'
+                      statusCodeName:
+                        $ref: 'schemas.yaml#/components/schemas/DnsStatusCodeName'
+                  - $ref: 'schemas.yaml#/components/schemas/DnsTestHopResult'
     DnsTestHopResult:
       type: object
       required:

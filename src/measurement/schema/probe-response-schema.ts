@@ -91,6 +91,8 @@ export const dnsResultSchema = Joi.alternatives([
 		failureSource: failureSourceSchema,
 		rawOutput: Joi.string().max(10000).allow('').required(),
 		hops: Joi.array().max(1024).items(Joi.object({
+			statusCodeName: Joi.string().max(1024).allow(null),
+			statusCode: Joi.number().integer().min(0).allow(null),
 			resolver: Joi.string().max(1024).allow(null).required(),
 			timings: Joi.object({
 				total: Joi.number().min(0).required(),
