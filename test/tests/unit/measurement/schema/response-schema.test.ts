@@ -678,6 +678,48 @@ describe('resultSchema', () => {
 		expect(response).to.matchApiSchema();
 	});
 
+	it('dns: accept trace response with and without the hop status', async () => {
+		const responseBody = _.cloneDeep(defaultDnsResponseBody);
+		(responseBody.results[0]!.result as DnsResult) = {
+			status: 'finished',
+			rawOutput: '',
+			hops: [
+				{
+					answers: [],
+					timings: {
+						total: 9,
+					},
+					resolver: '8.8.8.8',
+				},
+				{
+					statusCodeName: 'NXDOMAIN',
+					statusCode: 3,
+					answers: [],
+					timings: {
+						total: 11,
+					},
+					resolver: 'a.root-servers.net',
+				},
+				{
+					statusCodeName: null,
+					statusCode: null,
+					answers: [],
+					timings: {
+						total: 7,
+					},
+					resolver: 'a.gtld-servers.net',
+				},
+			],
+		};
+
+		getResponseBody.returns(responseBody);
+
+		const response = await request(mockServer).get('/v1/measurements/measurement-id');
+
+		Joi.assert(responseBody.results[0]?.result, dnsResultSchema);
+		expect(response).to.matchApiSchema();
+	});
+
 	it('traceroute: accept regular valid response', async () => {
 		const responseBody = _.cloneDeep(defaultTracerouteResponseBody);
 		getResponseBody.returns(responseBody);

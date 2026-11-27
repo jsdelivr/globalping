@@ -120,7 +120,7 @@ type DnsAnswer = {
 };
 
 export type DnsRegularResult = {
-	statusCodeName?: string;
+	statusCodeName?: string | null;
 	statusCode?: number | null;
 	answers?: DnsAnswer[];
 	resolver?: string | null;
@@ -130,7 +130,7 @@ export type DnsRegularResult = {
 };
 
 export type DnsTraceResult = {
-	hops?: Omit<DnsRegularResult, 'statusCode' | 'statusCodeName'>[];
+	hops?: DnsRegularResult[];
 };
 
 export type DnsResult = TestResult & (DnsRegularResult | DnsTraceResult);

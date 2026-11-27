@@ -68,7 +68,7 @@ export const dnsResultSchema = Joi.alternatives([
 	Joi.object<TestResult & DnsRegularResult>({
 		status: Joi.string().valid('finished', 'failed').required(),
 		failureSource: failureSourceSchema,
-		rawOutput: Joi.string().max(10000).allow('').required(),
+		rawOutput: Joi.string().max(20000).allow('').required(),
 		statusCodeName: Joi.string().max(1024).allow(null),
 		statusCode: Joi.number().integer().min(0).allow(null),
 		resolver: Joi.string().max(1024).allow(null),
@@ -89,8 +89,10 @@ export const dnsResultSchema = Joi.alternatives([
 	Joi.object<TestResult & DnsTraceResult>({
 		status: Joi.string().valid('finished', 'failed').required(),
 		failureSource: failureSourceSchema,
-		rawOutput: Joi.string().max(10000).allow('').required(),
+		rawOutput: Joi.string().max(20000).allow('').required(),
 		hops: Joi.array().max(1024).items(Joi.object({
+			statusCodeName: Joi.string().max(1024).allow(null),
+			statusCode: Joi.number().integer().min(0).allow(null),
 			resolver: Joi.string().max(1024).allow(null).required(),
 			timings: Joi.object({
 				total: Joi.number().min(0).required(),
